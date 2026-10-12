@@ -7494,9 +7494,7 @@ export class GameManager {
           action: () => {
             const res = EconomyManager.getInstance().openPack(curItem.id);
             if (res) {
-              this.packOpeningResult = res;
-              this.audio.playFanfare();
-              confetti({ particleCount: 90, spread: 80, origin: { x: centerX / w, y: actionAreaY / h } });
+              this.startPackOpeningAnimation(curItem, res);
             }
           },
           x: buyBtnX,
@@ -7660,112 +7658,276 @@ export class GameManager {
       }
     }
 
-    // === PACK OPENING REVEAL MODAL OVERLAY ===
-    if (this.packOpeningResult) {
-      const res = this.packOpeningResult;
+    // === CINEMATIC PACK OPENING & REVEAL MODAL OVERLAY ===
+    if (this.packOpeningAnim || this.packOpeningResult) {
+      const anim = this.packOpeningAnim;
+      const res = anim?.result || this.packOpeningResult!;
+      const elapsed = anim ? performance.now() - anim.startTime : 3500;
 
-      // Dark backdrop
-      this.ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      // Dark cinematic backdrop
+      this.ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
       this.ctx.fillRect(0, 0, w, h);
 
-      const cardW = 380;
-      const cardH = 340;
-      const cardX = w / 2 - cardW / 2;
-      const cardY = h / 2 - cardH / 2;
+      if (elapsed < 2400) {
+        // === PHASES 1 & 2: 3D MYSTERY LOOT CRATE DROP & VIBRATION ===
+        const isDropping = elapsed < 550;
+        const dropT = Math.min(1.0, elapsed / 500);
+        const dropY = isDropping
+          ? (h / 2) - (1 - Math.sin((dropT * Math.PI) / 2)) * 320
+          : h / 2;
 
-      this.ctx.save();
-      this.ctx.shadowColor = res.previewColor;
-      this.ctx.shadowBlur = 30;
-      this.drawRoundedRect(cardX, cardY + 4, cardW, cardH, 18, '#0F172A');
-      this.drawRoundedRect(cardX, cardY, cardW, cardH, 18, '#FFFFFF', res.previewColor, 3);
-      this.ctx.restore();
+        const intensity = isDropping ? 0 : Math.min(14, (elapsed - 550) * 0.009);
+        const shakeX = (Math.random() - 0.5) * intensity;
+        const shakeY = (Math.random() - 0.5) * intensity * 0.6;
+        const crateX = w / 2 + shakeX;
+        const crateY = dropY + shakeY;
 
-      // Crate / Reveal Icon
-      this.ctx.beginPath();
-      this.ctx.arc(w / 2, cardY + 54, 30, 0, Math.PI * 2);
-      this.ctx.fillStyle = res.previewColor;
-      this.ctx.fill();
-      this.ctx.strokeStyle = '#FFFFFF';
-      this.ctx.lineWidth = 2.5;
-      this.ctx.stroke();
+        // Expanding shadow on floor
+        this.ctx.save();
+        const shadowScale = isDropping ? dropT : 1.0;
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        this.ctx.beginPath();
+        this.ctx.ellipse(w / 2, h / 2 + 80, 80 * shadowScale, 24 * shadowScale, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
 
-      this.ctx.fillStyle = '#FFFFFF';
-      this.ctx.font = '24px sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(res.itemType === 'skin' ? '🎭' : res.itemType === 'arena' ? '🏟️' : '⚡', w / 2, cardY + 62);
+        // 3D Wooden & Reinforced Steel Loot Crate
+        const crateSize = 130;
+        this.ctx.save();
+        this.ctx.shadowColor = res.previewColor;
+        this.ctx.shadowBlur = 18 + intensity * 2;
 
-      // Title
-      this.ctx.fillStyle = '#0F172A';
-      this.ctx.font = '900 20px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(res.name, w / 2, cardY + 114);
+        // Crate Body
+        this.drawRoundedRect(crateX - crateSize / 2, crateY - crateSize / 2, crateSize, crateSize, 16, '#78350F', '#B45309', 3);
+        // Steel Rim Brackets
+        this.ctx.strokeStyle = '#94A3B8';
+        this.ctx.lineWidth = 4;
+        this.ctx.strokeRect(crateX - crateSize / 2 + 8, crateY - crateSize / 2 + 8, crateSize - 16, crateSize - 16);
+        // Corner rivets
+        const rivets = [
+          { x: crateX - crateSize / 2 + 14, y: crateY - crateSize / 2 + 14 },
+          { x: crateX + crateSize / 2 - 14, y: crateY - crateSize / 2 + 14 },
+          { x: crateX - crateSize / 2 + 14, y: crateY + crateSize / 2 - 14 },
+          { x: crateX + crateSize / 2 - 14, y: crateY + crateSize / 2 - 14 }
+        ];
+        this.ctx.fillStyle = '#CBD5E1';
+        for (const rv of rivets) {
+          this.ctx.beginPath();
+          this.ctx.arc(rv.x, rv.y, 3, 0, Math.PI * 2);
+          this.ctx.fill();
+        }
 
-      // Rarity Pill
-      const resRc = rarityColors[res.rarity] || rarityColors.Rare;
-      this.drawRoundedRect(w / 2 - 50, cardY + 124, 100, 20, 6, resRc.bg, resRc.border, 1);
-      this.ctx.fillStyle = resRc.text;
-      this.ctx.font = '900 10.5px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(res.rarity.toUpperCase(), w / 2, cardY + 138);
-
-      // Duplicate vs New Unlock Banner
-      if (res.isDuplicate) {
-        this.drawRoundedRect(cardX + 24, cardY + 156, cardW - 48, 52, 10, '#FFFBEB', '#F59E0B', 2);
-        this.ctx.fillStyle = '#B45309';
-        this.ctx.font = '900 12.5px Montserrat, sans-serif';
+        // Center Glowing Hologram Core
+        const corePulse = 1 + 0.15 * Math.sin(performance.now() * 0.015);
+        this.ctx.fillStyle = res.previewColor;
+        this.ctx.shadowColor = res.previewColor;
+        this.ctx.shadowBlur = 25;
+        this.ctx.beginPath();
+        this.ctx.arc(crateX, crateY, 26 * corePulse, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.font = '24px sans-serif';
         this.ctx.textAlign = 'center';
-        this.ctx.fillText('⚠️ DUPLICATE ITEM DETECTED!', w / 2, cardY + 176);
+        this.ctx.fillText(res.itemType === 'skin' ? '🎭' : res.itemType === 'arena' ? '🏟️' : '⚡', crateX, crateY + 8);
 
-        this.ctx.fillStyle = '#92400E';
-        this.ctx.font = 'bold 11.5px Montserrat, sans-serif';
-        this.ctx.fillText(`+${res.refundCoins} COINS REFUNDED (50% VALUE)`, w / 2, cardY + 195);
+        // Radiant Energy Cracks spider-webbing across crate
+        if (!isDropping) {
+          const crackProgress = Math.min(1.0, (elapsed - 550) / 1400);
+          this.ctx.strokeStyle = res.previewColor;
+          this.ctx.lineWidth = 2.5;
+          this.ctx.shadowColor = '#FFFFFF';
+          this.ctx.shadowBlur = 8;
+          for (let i = 0; i < 6; i++) {
+            const crackAngle = (i * Math.PI) / 3;
+            const crackDist = 26 + crackProgress * 42;
+            this.ctx.beginPath();
+            this.ctx.moveTo(crateX + Math.cos(crackAngle) * 26, crateY + Math.sin(crackAngle) * 26);
+            this.ctx.lineTo(crateX + Math.cos(crackAngle + 0.2) * (crackDist * 0.6), crateY + Math.sin(crackAngle + 0.2) * (crackDist * 0.6));
+            this.ctx.lineTo(crateX + Math.cos(crackAngle) * crackDist, crateY + Math.sin(crackAngle) * crackDist);
+            this.ctx.stroke();
+          }
+        }
+        this.ctx.restore();
+
+        // Text prompt
+        this.ctx.fillStyle = '#CBD5E1';
+        this.ctx.font = '900 13px Montserrat, sans-serif';
+        this.ctx.textAlign = 'center';
+        const dots = '.'.repeat(1 + (Math.floor(elapsed / 300) % 3));
+        this.ctx.fillText(`✨ UNLOCKING MYSTERY CRATE${dots}`, w / 2, h / 2 + 115);
+        this.ctx.fillStyle = '#64748B';
+        this.ctx.font = 'bold 11px Montserrat, sans-serif';
+        this.ctx.fillText('[TAP ANYWHERE TO SKIP]', w / 2, h / 2 + 138);
+
+        // Skip Hitbox (Click anywhere to fast-forward to card reveal)
+        this.shopHitBoxes.push({
+          id: 'skip_pack_animation',
+          action: () => {
+            if (this.packOpeningAnim) {
+              this.packOpeningAnim.startTime = performance.now() - 2600;
+              this.audio.playTap();
+            }
+          },
+          x: 0,
+          y: 0,
+          w,
+          h
+        });
       } else {
-        this.drawRoundedRect(cardX + 24, cardY + 156, cardW - 48, 52, 10, '#ECFDF5', '#10B981', 2);
-        this.ctx.fillStyle = '#047857';
-        this.ctx.font = '900 12.5px Montserrat, sans-serif';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('✨ NEW REWARD UNLOCKED!', w / 2, cardY + 176);
+        // === PHASES 3 & 4: EXPLOSIVE BURST & 3D CARD FLIP REVEAL ===
+        const revealElapsed = elapsed - 2400;
 
-        this.ctx.fillStyle = '#065F46';
-        this.ctx.font = 'bold 11.5px Montserrat, sans-serif';
-        this.ctx.fillText('Added directly to your Mascot Locker & Wardrobe!', w / 2, cardY + 195);
+        // White Flash Bloom on burst
+        if (revealElapsed < 300) {
+          const flashAlpha = (1 - revealElapsed / 300) * 0.75;
+          this.ctx.fillStyle = `rgba(255, 255, 255, ${flashAlpha})`;
+          this.ctx.fillRect(0, 0, w, h);
+        }
+
+        // Render Burst Confetti Particles
+        if (anim && anim.particles) {
+          this.ctx.save();
+          for (const p of anim.particles) {
+            p.x += p.vx * 0.016;
+            p.y += p.vy * 0.016;
+            p.vy += 220 * 0.016; // gravity
+            p.alpha = Math.max(0, p.alpha - 0.012);
+            this.ctx.fillStyle = p.color;
+            this.ctx.globalAlpha = p.alpha;
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            this.ctx.fill();
+          }
+          this.ctx.restore();
+        }
+
+        // 3D Card Flip Animation (0 to 450ms of reveal)
+        const flipT = Math.min(1.0, revealElapsed / 400);
+        const scaleX = Math.abs(Math.cos(flipT * Math.PI));
+        const isCardFront = flipT >= 0.5;
+
+        const cardW = 380;
+        const cardH = 340;
+        const cardCenterX = w / 2;
+        const cardY = h / 2 - cardH / 2;
+
+        this.ctx.save();
+        this.ctx.translate(cardCenterX, 0);
+        this.ctx.scale(scaleX, 1.0);
+        this.ctx.translate(-cardCenterX, 0);
+
+        const cardX = cardCenterX - cardW / 2;
+
+        if (!isCardFront) {
+          // Card Back: High-Tech Holographic Crest
+          this.ctx.shadowColor = res.previewColor;
+          this.ctx.shadowBlur = 24;
+          this.drawRoundedRect(cardX, cardY + 4, cardW, cardH, 18, '#0F172A');
+          this.drawRoundedRect(cardX, cardY, cardW, cardH, 18, '#1E293B', res.previewColor, 3);
+          this.ctx.strokeStyle = '#38BDF8';
+          this.ctx.lineWidth = 1.5;
+          this.ctx.strokeRect(cardX + 16, cardY + 16, cardW - 32, cardH - 32);
+          this.ctx.fillStyle = '#FFFFFF';
+          this.ctx.font = '900 28px Montserrat, sans-serif';
+          this.ctx.textAlign = 'center';
+          this.ctx.fillText('ANTIGRAVITY', cardCenterX, cardY + cardH / 2 + 10);
+        } else {
+          // Card Front: Full Item Reward
+          this.ctx.shadowColor = res.previewColor;
+          this.ctx.shadowBlur = 30;
+          this.drawRoundedRect(cardX, cardY + 4, cardW, cardH, 18, '#0F172A');
+          this.drawRoundedRect(cardX, cardY, cardW, cardH, 18, '#FFFFFF', res.previewColor, 3);
+
+          // Crate / Reveal Icon
+          this.ctx.beginPath();
+          this.ctx.arc(cardCenterX, cardY + 54, 30, 0, Math.PI * 2);
+          this.ctx.fillStyle = res.previewColor;
+          this.ctx.fill();
+          this.ctx.strokeStyle = '#FFFFFF';
+          this.ctx.lineWidth = 2.5;
+          this.ctx.stroke();
+
+          this.ctx.fillStyle = '#FFFFFF';
+          this.ctx.font = '24px sans-serif';
+          this.ctx.textAlign = 'center';
+          this.ctx.fillText(res.itemType === 'skin' ? '🎭' : res.itemType === 'arena' ? '🏟️' : '⚡', cardCenterX, cardY + 62);
+
+          // Title
+          this.ctx.fillStyle = '#0F172A';
+          this.ctx.font = '900 20px Montserrat, sans-serif';
+          this.ctx.textAlign = 'center';
+          this.ctx.fillText(res.name, cardCenterX, cardY + 114);
+
+          // Rarity Pill
+          const resRc = rarityColors[res.rarity] || rarityColors.Rare;
+          this.drawRoundedRect(cardCenterX - 50, cardY + 124, 100, 20, 6, resRc.bg, resRc.border, 1);
+          this.ctx.fillStyle = resRc.text;
+          this.ctx.font = '900 10.5px Montserrat, sans-serif';
+          this.ctx.textAlign = 'center';
+          this.ctx.fillText(res.rarity.toUpperCase(), cardCenterX, cardY + 138);
+
+          // Duplicate vs New Unlock Banner
+          if (res.isDuplicate) {
+            this.drawRoundedRect(cardX + 24, cardY + 156, cardW - 48, 52, 10, '#FFFBEB', '#F59E0B', 2);
+            this.ctx.fillStyle = '#B45309';
+            this.ctx.font = '900 12.5px Montserrat, sans-serif';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('⚠️ DUPLICATE ITEM DETECTED!', cardCenterX, cardY + 176);
+
+            this.ctx.fillStyle = '#92400E';
+            this.ctx.font = 'bold 11.5px Montserrat, sans-serif';
+            this.ctx.fillText(`+${res.refundCoins} COINS REFUNDED (50% VALUE)`, cardCenterX, cardY + 195);
+          } else {
+            this.drawRoundedRect(cardX + 24, cardY + 156, cardW - 48, 52, 10, '#ECFDF5', '#10B981', 2);
+            this.ctx.fillStyle = '#047857';
+            this.ctx.font = '900 12.5px Montserrat, sans-serif';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('✨ NEW REWARD UNLOCKED!', cardCenterX, cardY + 176);
+
+            this.ctx.fillStyle = '#065F46';
+            this.ctx.font = 'bold 11.5px Montserrat, sans-serif';
+            this.ctx.fillText('Added directly to your Mascot Locker & Wardrobe!', cardCenterX, cardY + 195);
+          }
+
+          // Description
+          this.ctx.fillStyle = '#475569';
+          this.ctx.font = '600 11.5px sans-serif';
+          this.ctx.textAlign = 'center';
+          this.wrapText(res.description, cardCenterX, cardY + 226, cardW - 50, 16);
+
+          // Claim & Continue Button
+          const claimBtnW = 200;
+          const claimBtnH = 38;
+          const claimBtnX = cardCenterX - claimBtnW / 2;
+          const claimBtnY = cardY + cardH - 52;
+
+          this.ctx.save();
+          this.ctx.shadowColor = 'rgba(37, 99, 235, 0.4)';
+          this.ctx.shadowBlur = 10;
+          this.drawRoundedRect(claimBtnX, claimBtnY + 2, claimBtnW, claimBtnH, 10, '#1D4ED8');
+          this.drawRoundedRect(claimBtnX, claimBtnY, claimBtnW, claimBtnH, 10, '#2563EB', '#60A5FA', 1.5);
+          this.ctx.restore();
+
+          this.ctx.fillStyle = '#FFFFFF';
+          this.ctx.font = '900 12.5px Montserrat, sans-serif';
+          this.ctx.textAlign = 'center';
+          this.ctx.fillText('COLLECT & CONTINUE', cardCenterX, claimBtnY + 24);
+
+          this.shopHitBoxes.push({
+            id: 'dismiss_pack_reveal',
+            action: () => {
+              this.packOpeningAnim = null;
+              this.packOpeningResult = null;
+              this.audio.playTap();
+            },
+            x: claimBtnX,
+            y: claimBtnY,
+            w: claimBtnW,
+            h: claimBtnH
+          });
+        }
+        this.ctx.restore();
       }
-
-      // Description
-      this.ctx.fillStyle = '#475569';
-      this.ctx.font = '600 11.5px sans-serif';
-      this.ctx.textAlign = 'center';
-      this.wrapText(res.description, w / 2, cardY + 226, cardW - 50, 16);
-
-      // Claim & Continue Button
-      const claimBtnW = 200;
-      const claimBtnH = 38;
-      const claimBtnX = w / 2 - claimBtnW / 2;
-      const claimBtnY = cardY + cardH - 52;
-
-      this.ctx.save();
-      this.ctx.shadowColor = 'rgba(37, 99, 235, 0.4)';
-      this.ctx.shadowBlur = 10;
-      this.drawRoundedRect(claimBtnX, claimBtnY + 2, claimBtnW, claimBtnH, 10, '#1D4ED8');
-      this.drawRoundedRect(claimBtnX, claimBtnY, claimBtnW, claimBtnH, 10, '#2563EB', '#60A5FA', 1.5);
-      this.ctx.restore();
-
-      this.ctx.fillStyle = '#FFFFFF';
-      this.ctx.font = '900 12.5px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText('COLLECT & CONTINUE', w / 2, claimBtnY + 24);
-
-      this.shopHitBoxes.push({
-        id: 'dismiss_pack_reveal',
-        action: () => {
-          this.packOpeningResult = null;
-          this.audio.playTap();
-        },
-        x: claimBtnX,
-        y: claimBtnY,
-        w: claimBtnW,
-        h: claimBtnH
-      });
     }
   }
 
