@@ -4687,23 +4687,74 @@ function drawGravityGolfArt(ctx: CanvasRenderingContext2D, x: number, y: number,
 
 // [G-61] Cyber Disc Art
 function drawCyberDiscArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Tron cyber grid arena floor
   ctx.fillStyle = '#050814';
   ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
 
-  // Neon grid lines
-  ctx.strokeStyle = 'rgba(6, 182, 212, 0.25)';
+  // Perspective floor grid
+  ctx.strokeStyle = 'rgba(6, 182, 212, 0.2)';
   ctx.lineWidth = 1;
-  ctx.strokeRect(x + 10, y + 10, w - 20, h - 20);
+  for (let gx = -20; gx <= 20; gx += 10) {
+    ctx.beginPath();
+    ctx.moveTo(cx + gx * 0.4, cy - 14);
+    ctx.lineTo(cx + gx * 1.6, y + h);
+    ctx.stroke();
+  }
 
-  // Energized Disc
-  ctx.fillStyle = '#38BDF8';
+  // Cyan Player Identity Disc (In flight)
+  const d1X = cx - 8;
+  const d1Y = cy;
+  ctx.save();
+  ctx.translate(d1X, d1Y);
+  ctx.rotate(-0.3);
+
+  // Outer neon glow ring
+  ctx.strokeStyle = '#38bdf8';
+  ctx.shadowColor = '#00e5ff';
+  ctx.shadowBlur = 8;
+  ctx.lineWidth = 3.5;
   ctx.beginPath();
-  ctx.arc(x + w / 2, y + h / 2, 14, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, 16, 7, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Inner solid core ring
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 11, 4.5, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  ctx.restore();
 
-  ctx.fillStyle = '#FFFFFF';
+  // Cyan disc velocity light ribbon trail
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+  ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.arc(x + w / 2, y + h / 2, 6, 0, Math.PI * 2);
+  ctx.moveTo(x + 8, cy + 12);
+  ctx.quadraticCurveTo(cx - 16, cy + 8, d1X, d1Y);
+  ctx.stroke();
+
+  // Red Enemy Disc ricocheting on right
+  const d2X = cx + 18;
+  const d2Y = cy - 8;
+  ctx.strokeStyle = '#ef4444';
+  ctx.shadowColor = '#f43f5e';
+  ctx.shadowBlur = 8;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.ellipse(d2X, d2Y, 12, 5, 0.5, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Impact Sparks
+  ctx.fillStyle = '#fde047';
+  ctx.beginPath();
+  ctx.arc(d2X + 6, d2Y - 2, 2, 0, Math.PI * 2);
+  ctx.arc(d2X + 10, d2Y + 3, 1.5, 0, Math.PI * 2);
   ctx.fill();
 }
 
@@ -10137,24 +10188,92 @@ function drawPressureGaugeLockArt(ctx: CanvasRenderingContext2D, x: number, y: n
 }
 
 function drawCopperConduitArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#1c100c';
+  // Industrial Victorian boiler room
+  ctx.fillStyle = '#180d08';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Copper Pipe
-  ctx.strokeStyle = '#b87333';
-  ctx.lineWidth = 6;
+
+  // Background riveted boiler plates
+  ctx.fillStyle = '#291811';
+  ctx.fillRect(x + 6, y + 6, w - 12, h - 12);
+  ctx.strokeStyle = '#451a03';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + 6, y + 6, w - 12, h - 12);
+
+  // Escaping white steam pressure plumes
+  ctx.fillStyle = 'rgba(254, 240, 138, 0.2)';
   ctx.beginPath();
-  ctx.moveTo(cx, y + 6);
-  ctx.lineTo(cx, cy);
-  ctx.lineTo(cx + 16, cy);
-  ctx.lineTo(cx + 16, y + h - 6);
-  ctx.stroke();
-  // Molten Copper Droplet
-  ctx.fillStyle = '#ff6600';
-  ctx.beginPath();
-  ctx.arc(cx, cy - 4, 4, 0, Math.PI * 2);
+  ctx.arc(cx - 14, cy - 12, 6, 0, Math.PI * 2);
+  ctx.arc(cx - 10, cy - 18, 8, 0, Math.PI * 2);
   ctx.fill();
+
+  // Gleaming Polished Copper Conduit Pipe System
+  ctx.strokeStyle = '#b45309';
+  ctx.lineWidth = 9;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x + 10, cy - 10);
+  ctx.lineTo(cx - 4, cy - 10);
+  ctx.lineTo(cx - 4, cy + 12);
+  ctx.lineTo(x + w - 10, cy + 12);
+  ctx.stroke();
+
+  // Shiny Metallic Copper Core Highlight
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  ctx.strokeStyle = '#fef08a';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // Heavy Brass Flange Elbow Joints
+  const joints = [
+    [cx - 4, cy - 10],
+    [cx - 4, cy + 12]
+  ];
+  for (const [jx, jy] of joints) {
+    ctx.fillStyle = '#78350f';
+    ctx.beginPath();
+    ctx.arc(jx, jy, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#facc15';
+    ctx.beginPath();
+    ctx.arc(jx, jy, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Molten Glowing Copper Alloy Surge in center glass sight tube
+  ctx.fillStyle = '#f97316';
+  ctx.shadowColor = '#fb923c';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.arc(cx - 4, cy + 1, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(cx - 5, cy, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Brass Steam Pressure Gauge with red danger needle
+  const gX = cx + 18;
+  const gY = cy - 8;
+  ctx.fillStyle = '#fef08a';
+  ctx.beginPath();
+  ctx.arc(gX, gY, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#78350f';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  // Danger red needle pointing into the red
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(gX, gY);
+  ctx.lineTo(gX + 4, gY - 3);
+  ctx.stroke();
 }
 
 function drawMonocycleDerbyArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
@@ -10183,47 +10302,159 @@ function drawMonocycleDerbyArt(ctx: CanvasRenderingContext2D, x: number, y: numb
 }
 
 function drawCyberSamuraiSlashArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#100a1c';
+  // Neo-Tokyo dark cyber ambiance
+  ctx.fillStyle = '#090414';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Neon Katana Slash Arc
-  ctx.strokeStyle = '#ff007f';
-  ctx.lineWidth = 4;
-  ctx.shadowColor = '#ff007f';
+
+  // Background neon rain streaks
+  ctx.strokeStyle = 'rgba(6, 182, 212, 0.25)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x + 14, y); ctx.lineTo(x + 6, y + h);
+  ctx.moveTo(x + w - 12, y); ctx.lineTo(x + w - 20, y + h);
+  ctx.stroke();
+
+  // Armored Cyber-Samurai Silhouette in low ready stance
+  const sX = cx - 10;
+  const sY = cy + 4;
+
+  // Carbon-fiber Kabuto helmet & gold crest horns
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.arc(sX, sY - 8, 9, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Golden samurai helmet crescent crest (Maedate)
+  ctx.fillStyle = '#facc15';
+  ctx.beginPath();
+  ctx.moveTo(sX - 8, sY - 14);
+  ctx.quadraticCurveTo(sX, sY - 20, sX + 8, sY - 14);
+  ctx.quadraticCurveTo(sX, sY - 16, sX - 8, sY - 14);
+  ctx.closePath();
+  ctx.fill();
+
+  // Glowing Cyan Optical Visor Slit
+  ctx.fillStyle = '#00ffff';
+  ctx.shadowColor = '#00ffff';
+  ctx.shadowBlur = 6;
+  ctx.fillRect(sX - 4, sY - 9, 10, 2.5);
+  ctx.shadowBlur = 0;
+
+  // Armored shoulder guard (Sode)
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(sX - 10, sY - 2, 7, 10);
+
+  // Blazing Plasma Katana Slash Arc across canvas
+  ctx.strokeStyle = '#f43f5e';
+  ctx.lineWidth = 5;
+  ctx.shadowColor = '#fb7185';
   ctx.shadowBlur = 10;
   ctx.beginPath();
-  ctx.arc(cx, cy, 22, -Math.PI * 0.3, Math.PI * 0.4);
+  ctx.arc(cx - 4, cy, 26, -Math.PI * 0.45, Math.PI * 0.28);
+  ctx.stroke();
+
+  // Inner White-Hot Cutting Laser Core
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2;
   ctx.stroke();
   ctx.shadowBlur = 0;
-  // Samurai Helmet Silhouette
-  ctx.fillStyle = '#00ffff';
-  ctx.fillRect(cx - 8, cy - 8, 16, 16);
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(cx - 5, cy - 4, 10, 3);
+
+  // Sliced energy spark bloom at slash impact point
+  const sparkX = cx + 18;
+  const sparkY = cy + 8;
+  ctx.fillStyle = '#fde047';
+  ctx.beginPath();
+  ctx.arc(sparkX, sparkY, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#fde047';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(sparkX - 6, sparkY - 6); ctx.lineTo(sparkX + 6, sparkY + 6);
+  ctx.moveTo(sparkX + 6, sparkY - 6); ctx.lineTo(sparkX - 6, sparkY + 6);
+  ctx.stroke();
 }
 
 function drawMainframeBreachArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#060a17';
+  // Deep mainframe cyber void
+  ctx.fillStyle = '#030712';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Core
-  ctx.fillStyle = '#00e5ff';
+
+  // Perspective 3D cyber grid
+  ctx.strokeStyle = 'rgba(14, 165, 233, 0.2)';
+  ctx.lineWidth = 1;
+  for (let gx = -24; gx <= 24; gx += 12) {
+    ctx.beginPath();
+    ctx.moveTo(cx + gx * 0.4, cy - 18);
+    ctx.lineTo(cx + gx * 1.5, y + h);
+    ctx.stroke();
+  }
+
+  // Fractured Purple ICE Security Ring Barrier (Breaking open)
+  ctx.strokeStyle = '#a855f7';
+  ctx.lineWidth = 3.5;
+  ctx.shadowColor = '#c084fc';
+  ctx.shadowBlur = 6;
   ctx.beginPath();
-  ctx.arc(cx, cy, 8, 0, Math.PI * 2);
-  ctx.fill();
-  // ICE Ring with gap
-  ctx.strokeStyle = '#d500f9';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(cx, cy, 18, 0.4, Math.PI * 1.8);
+  ctx.arc(cx, cy, 20, 0.5, Math.PI * 1.7);
   ctx.stroke();
-  // Incoming data packet
-  ctx.fillStyle = '#ffd700';
+  ctx.shadowBlur = 0;
+
+  // ICE Fracture shards flying off
+  ctx.fillStyle = '#c084fc';
+  ctx.fillRect(cx + 16, cy - 10, 3, 3);
+  ctx.fillRect(cx + 20, cy - 2, 2.5, 2.5);
+
+  // Central Luminous Neural Intelligence Data Core
+  const coreGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 12);
+  coreGrad.addColorStop(0, '#ffffff');
+  coreGrad.addColorStop(0.35, '#38bdf8');
+  coreGrad.addColorStop(0.8, '#0284c7');
+  coreGrad.addColorStop(1, '#0369a1');
+  ctx.fillStyle = coreGrad;
+  ctx.shadowColor = '#38bdf8';
+  ctx.shadowBlur = 8;
   ctx.beginPath();
-  ctx.arc(cx + 20, cy - 12, 3, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 10, 0, Math.PI * 2);
   ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Concentric Core Hexagon Data Frame
+  ctx.strokeStyle = '#e0f2fe';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = (i * Math.PI) / 3;
+    const hx = cx + Math.cos(angle) * 7;
+    const hy = cy + Math.sin(angle) * 7;
+    if (i === 0) ctx.moveTo(hx, hy);
+    else ctx.lineTo(hx, hy);
+  }
+  ctx.closePath();
+  ctx.stroke();
+
+  // Golden Trojan Breach Data Worm piercing the perimeter
+  const wX = cx + 18;
+  const wY = cy - 12;
+  ctx.strokeStyle = '#facc15';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(wX + 8, wY - 6);
+  ctx.lineTo(wX, wY);
+  ctx.lineTo(cx + 4, cy - 4);
+  ctx.stroke();
+
+  // Trojan Drill Tip glowing gold
+  ctx.fillStyle = '#fde047';
+  ctx.shadowColor = '#eab308';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.arc(cx + 4, cy - 4, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
 }
 
 function drawHovercarSkylineArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
