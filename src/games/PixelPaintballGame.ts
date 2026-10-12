@@ -546,32 +546,79 @@ export class PixelPaintballGame extends BaseGame {
       }
     }
 
+    // Initialize bot timers if missing
+    if (ps.botBurstTimer === undefined) ps.botBurstTimer = 0;
+    if (ps.botBurstPause === undefined) ps.botBurstPause = 0;
+
+    const target = nearestPinata && minPinDist < 240 ? nearestPinata : nearestOpp;
+
     if (difficulty === 'bot_easy') {
-      if (Math.random() < 0.04) {
+      // Easy: frequently wanders, aims loosely, shoots infrequently
+      if (Math.random() < 0.03) {
         ps.angle = Math.random() * Math.PI * 2;
       }
-      this.input.setBotPressed(botId, Math.random() < 0.25);
-    } else if (difficulty === 'bot_normal') {
-      const target = nearestPinata && minPinDist < 250 ? nearestPinata : nearestOpp;
-      if (target) {
-        ps.angle = Math.atan2(target.y - ps.y, target.x - ps.x);
-        this.input.setBotPressed(botId, Math.random() < 0.65);
+      if (target && Math.hypot(target.x - ps.x, target.y - ps.y) < 220) {
+        const rawAngle = Math.atan2(target.y - ps.y, target.x - ps.x);
+        ps.angle = rawAngle + (Math.random() - 0.5) * 0.70; // High aim inaccuracy
+        this.input.setBotPressed(botId, Math.random() < 0.35);
+      } else {
+        this.input.setBotPressed(botId, Math.random() < 0.20);
+      }
+      return;
+    }
+
+    if (difficulty === 'bot_normal') {
+      // Normal: Fun and beatable! Keeps tactical distance, smooth turning, aim jitter, burst pauses
+      if (!target) return;
+
+      // Tactical distance: if closer than 140px to human player, back away or strafe!
+      if (nearestOpp && minOppDist < 140) {
+        const awayAngle = Math.atan2(ps.y - nearestOpp.y, ps.x - nearestOpp.x);
+        ps.angle = awayAngle + (Math.random() - 0.5) * 0.6;
+        this.input.setBotPressed(botId, true);
+        return;
+      }
+
+      // Smooth aim tracking with realistic human inaccuracy
+      const rawTargetAngle = Math.atan2(target.y - ps.y, target.x - ps.x);
+      const aimJitter = (Math.sin(Date.now() * 0.003 + botId) * 0.22) + (Math.random() - 0.5) * 0.15;
+      const desiredAngle = rawTargetAngle + aimJitter;
+
+      let angleDiff = desiredAngle - ps.angle;
+      while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+      while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+      ps.angle += angleDiff * Math.min(1.0, 5.0 * dt);
+
+      // Burst firing: shoot in controlled bursts with pauses so humans have room to dodge/counter
+      ps.botBurstTimer -= dt;
+      if (ps.botBurstPause > 0) {
+        ps.botBurstPause -= dt;
+        this.input.setBotPressed(botId, false);
+      } else {
+        this.input.setBotPressed(botId, true);
+        if (ps.botBurstTimer <= 0) {
+          ps.botBurstTimer = 0.45 + Math.random() * 0.35;
+          ps.botBurstPause = 0.40 + Math.random() * 0.35;
+        }
       }
     } else {
-      // Hard: tactical kiting & rapid pinpoint bursts
-      const target = nearestPinata || nearestOpp;
-      if (target) {
-        const leadX = target.x + (target.vx || 0) * 0.15;
-        const leadY = target.y + (target.vy || 0) * 0.15;
-        ps.angle = Math.atan2(leadY - ps.y, leadX - ps.x);
-
-        // Keep distance if opponent is rushing
-        if (minOppDist < 120 && nearestOpp) {
-          ps.angle = Math.atan2(ps.y - nearestOpp.y, ps.x - nearestOpp.x);
-        }
-
+      // Hard: tactical kiting with lead compensation, but still avoids ramming into player
+      if (!target) return;
+      if (nearestOpp && minOppDist < 120) {
+        ps.angle = Math.atan2(ps.y - nearestOpp.y, ps.x - nearestOpp.x);
         this.input.setBotPressed(botId, true);
+        return;
       }
+
+      const leadX = target.x + (target.vx || 0) * 0.12;
+      const leadY = target.y + (target.vy || 0) * 0.12;
+      const desiredAngle = Math.atan2(leadY - ps.y, leadX - ps.x) + (Math.random() - 0.5) * 0.08;
+      let angleDiff = desiredAngle - ps.angle;
+      while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+      while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+      ps.angle += angleDiff * Math.min(1.0, 7.5 * dt);
+
+      this.input.setBotPressed(botId, true);
     }
   }
 
@@ -698,6 +745,27 @@ export class PixelPaintballGame extends BaseGame {
       ctx.fillStyle = '#334155';
       ctx.fillRect(8, -3.5, 12, 7);
 
+      // Laser Aim Guide for Human Players
+      const isHuman = !p.type.startsWith('bot_');
+      if (isHuman && ps.stunTimer <= 0) {
+        ctx.save();
+        ctx.strokeStyle = p.colorLight + '99';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(20, 0);
+        ctx.lineTo(60, 0);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Small laser crosshair dot
+        ctx.fillStyle = p.colorLight;
+        ctx.beginPath();
+        ctx.arc(60, 0, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
       // Rover Body
       ctx.shadowColor = p.colorDark;
       ctx.shadowBlur = 8;
@@ -768,6 +836,24 @@ export class PixelPaintballGame extends BaseGame {
     }).join('   •   ');
     ctx.fillStyle = '#FFFFFF';
     ctx.fillText(summary, width / 2, hudY + 17);
+
+    // On-screen control instructions banner at bottom
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(width / 2 - 215, height - 36, 430, 26, 6);
+    else ctx.rect(width / 2 - 215, height - 36, 430, 26);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = '600 11px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#94A3B8';
+    ctx.fillText('P1: [W A S D] Move • [SPACE] Shoot   |   P2: [ARROWS] Move • [ENTER] Shoot', width / 2, height - 23);
+    ctx.restore();
   }
 
   public isRoundOver(): boolean {
