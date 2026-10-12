@@ -29,7 +29,18 @@ export interface MascotSkin {
     | 'magma_eruption'
     | 'valkyrie_wings'
     | 'dragon_scales'
-    | 'void_singularity';
+    | 'void_singularity'
+    | 'alien_beam'
+    | 'western_spurs'
+    | 'chef_steam'
+    | 'disco_lights'
+    | 'holy_radiance'
+    | 'hero_energy'
+    | 'arcane_runes'
+    | 'pirate_cannon'
+    | 'viking_frost'
+    | 'kitsune_wisps'
+    | 'astro_thruster';
 }
 
 export const SKIN_CATALOG: MascotSkin[] = [
@@ -230,6 +241,105 @@ export const SKIN_CATALOG: MascotSkin[] = [
     price: 250,
     previewColor: '#4F46E5',
     cosmeticEffect: 'quantum_overlord'
+  },
+  {
+    id: 'alien_invader',
+    name: 'Alien Star Invader',
+    rarity: 'Legendary',
+    description: 'Translucent alien glass saucer dome housing a glowing neon brain with hypnotic 3-eye gaze and tractor beam.',
+    price: 230,
+    previewColor: '#10B981',
+    cosmeticEffect: 'alien_beam'
+  },
+  {
+    id: 'cactus_gunslinger',
+    name: 'Desperado Gunslinger',
+    rarity: 'Epic',
+    description: 'Rugged leather stetson cowboy hat, sheriff star badge, bullet bandolier, and spinning tumbleweed aura.',
+    price: 95,
+    previewColor: '#D97706',
+    cosmeticEffect: 'western_spurs'
+  },
+  {
+    id: 'chef_supreme',
+    name: 'Master Chef Toque',
+    rarity: 'Rare',
+    description: 'Puffy white chef hat with crossed golden kitchen spatulas and aromatic sizzle smoke.',
+    price: 50,
+    previewColor: '#F8FAFC',
+    cosmeticEffect: 'chef_steam'
+  },
+  {
+    id: 'disco_king',
+    name: 'Disco Inferno King',
+    rarity: 'Epic',
+    description: 'Glorious retro 70s afro with mirrorball star sunglasses and spinning RGB dancefloor spotlights.',
+    price: 110,
+    previewColor: '#EC4899',
+    cosmeticEffect: 'disco_lights'
+  },
+  {
+    id: 'knight_templar',
+    name: 'Crusader Greathelm',
+    rarity: 'Epic',
+    description: 'Solid steel crusader helmet with golden cross visor, royal crest plume, and sacred shield radiance.',
+    price: 115,
+    previewColor: '#64748B',
+    cosmeticEffect: 'holy_radiance'
+  },
+  {
+    id: 'hero_avenger',
+    name: 'Cosmic Masked Avenger',
+    rarity: 'Legendary',
+    description: 'Dynamic heroic domino mask with fluttering battle cape and crackling comic energy lightning.',
+    price: 210,
+    previewColor: '#3B82F6',
+    cosmeticEffect: 'hero_energy'
+  },
+  {
+    id: 'wizard_archmage',
+    name: 'Celestial Star Archmage',
+    rarity: 'Legendary',
+    description: 'Pointed starry wizard hat, floating arcane crystal orb, and glowing runic spell glyphs.',
+    price: 240,
+    previewColor: '#8B5CF6',
+    cosmeticEffect: 'arcane_runes'
+  },
+  {
+    id: 'pirate_captain',
+    name: 'Dread Buccaneer Captain',
+    rarity: 'Epic',
+    description: 'Jolly Roger captain bicorne hat with gold trim, skull eyepatch, brass hoop earring, and gunpowder plumes.',
+    price: 105,
+    previewColor: '#0F172A',
+    cosmeticEffect: 'pirate_cannon'
+  },
+  {
+    id: 'viking_berserker',
+    name: 'Valhalla War Berserker',
+    rarity: 'Epic',
+    description: 'Heavy riveted iron horned helmet with battle braid, crossed bearded axes, and frozen blizzard frost.',
+    price: 120,
+    previewColor: '#78350F',
+    cosmeticEffect: 'viking_frost'
+  },
+  {
+    id: 'kitsune_fox',
+    name: 'Mystic Kitsune Nine-Tail',
+    rarity: 'Legendary',
+    description: 'Japanese fox spirit with twitching ears, painted ceremonial mask, swaying spirit tails, and blue foxfire.',
+    price: 225,
+    previewColor: '#F97316',
+    cosmeticEffect: 'kitsune_wisps'
+  },
+  {
+    id: 'astro_bubble',
+    name: 'Orbital Astro-Explorer',
+    rarity: 'Epic',
+    description: 'Retro bubble space helmet with gold reflective visor, life-support pack, and zero-G rocket thrusters.',
+    price: 100,
+    previewColor: '#0284C7',
+    cosmeticEffect: 'astro_thruster'
   }
 ];
 
@@ -250,7 +360,11 @@ export interface ArenaTheme {
     | 'volcanic_fissures'
     | 'gilded_inlays'
     | 'sakura_petals'
-    | 'space_hull';
+    | 'space_hull'
+    | 'arcade_cabinet'
+    | 'haunted_dungeon'
+    | 'atlantis_deep'
+    | 'candy_land';
 }
 
 export const ARENA_CATALOG: ArenaTheme[] = [
@@ -258,7 +372,7 @@ export const ARENA_CATALOG: ArenaTheme[] = [
     id: 'arena_classic',
     name: 'Modern Clean Slate',
     rarity: 'Common',
-    description: 'Minimalist competition arena with crisp matte boundaries and high-visibility lines.',
+    description: 'Minimalist competition arena with crisp matte boundaries, tactile corner bumpers, and high-visibility lines.',
     price: 0,
     previewColor: '#0F172A',
     borderColor: '#38BDF8',
@@ -269,7 +383,7 @@ export const ARENA_CATALOG: ArenaTheme[] = [
     id: 'arena_neon_synth',
     name: 'Neon Sunset Grid',
     rarity: 'Rare',
-    description: 'Electric 80s synthwave floor with glowing magenta and cyan perimeter lasers.',
+    description: 'Electric 80s synthwave floor with glowing magenta and cyan perimeter lasers, horizon grid lines, and sunset pulses.',
     price: 60,
     previewColor: '#2E0854',
     borderColor: '#EC4899',
@@ -280,7 +394,7 @@ export const ARENA_CATALOG: ArenaTheme[] = [
     id: 'arena_cyber_matrix',
     name: 'Cyberpunk Terminal',
     rarity: 'Rare',
-    description: 'Deep terminal phosphor backdrop with digital rain scanlines and emerald circuitry.',
+    description: 'Deep terminal phosphor backdrop with cascading digital rain code, green laser circuitry, and pulsing data nodes.',
     price: 75,
     previewColor: '#021B0D',
     borderColor: '#10B981',
@@ -288,10 +402,32 @@ export const ARENA_CATALOG: ArenaTheme[] = [
     floorPattern: 'matrix_rain'
   },
   {
+    id: 'arena_arcade_cabinet',
+    name: 'Retro 8-Bit Pixel Arcade',
+    rarity: 'Rare',
+    description: 'Vintage wood-grain arcade machine with CRT phosphor scanlines, 8-bit marquee art, pixelated grid, and CRT curvature.',
+    price: 70,
+    previewColor: '#1E1B4B',
+    borderColor: '#A855F7',
+    glowColor: 'rgba(168, 85, 247, 0.45)',
+    floorPattern: 'arcade_cabinet'
+  },
+  {
+    id: 'arena_candy_land',
+    name: 'Sugar Rush Kingdom',
+    rarity: 'Rare',
+    description: 'Vibrant candy wonderland with striped peppermint boundary posts, gumdrop corner towers, and rainbow sugar sparkles.',
+    price: 65,
+    previewColor: '#4A0427',
+    borderColor: '#F472B6',
+    glowColor: 'rgba(244, 114, 182, 0.45)',
+    floorPattern: 'candy_land'
+  },
+  {
     id: 'arena_subzero_ice',
     name: 'Glacial Ice Sheet',
     rarity: 'Epic',
-    description: 'Crystalline polar ice field with sub-zero perimeter frost and drifting snowflakes.',
+    description: 'Crystalline polar ice field with jagged perimeter frost, drifting blizzard snowflakes, and sub-zero chill vapor.',
     price: 100,
     previewColor: '#082F49',
     borderColor: '#38BDF8',
@@ -302,7 +438,7 @@ export const ARENA_CATALOG: ArenaTheme[] = [
     id: 'arena_sakura_temple',
     name: 'Sakura Zen Sanctuary',
     rarity: 'Epic',
-    description: 'Traditional vermillion lacquered borders with drifting pink cherry blossom petals.',
+    description: 'Traditional vermillion lacquered borders, torii shrine silhouettes, and drifting pink cherry blossom petals.',
     price: 105,
     previewColor: '#831843',
     borderColor: '#F472B6',
@@ -313,7 +449,7 @@ export const ARENA_CATALOG: ArenaTheme[] = [
     id: 'arena_volcanic_magma',
     name: 'Molten Obsidian Core',
     rarity: 'Epic',
-    description: 'Cracked volcanic basalt ground with pulsing orange magma fissures along the perimeter.',
+    description: 'Cracked volcanic basalt ground with pulsing orange magma fissures, rising heat shimmers, and flying fire embers.',
     price: 110,
     previewColor: '#1C0603',
     borderColor: '#F97316',
@@ -321,10 +457,32 @@ export const ARENA_CATALOG: ArenaTheme[] = [
     floorPattern: 'volcanic_fissures'
   },
   {
+    id: 'arena_haunted_dungeon',
+    name: 'Spooky Crypt Catacombs',
+    rarity: 'Epic',
+    description: 'Ancient gothic dungeon with creeping green ground mist, wrought-iron fencing, and glowing gargoyle torch sconces.',
+    price: 115,
+    previewColor: '#0B0F19',
+    borderColor: '#10B981',
+    glowColor: 'rgba(16, 185, 129, 0.5)',
+    floorPattern: 'haunted_dungeon'
+  },
+  {
+    id: 'arena_atlantis_deep',
+    name: 'Sunken Atlantis Trench',
+    rarity: 'Epic',
+    description: 'Bioluminescent deep ocean ruin with underwater light caustics, floating air bubbles, and waving sea kelp fronds.',
+    price: 120,
+    previewColor: '#032B44',
+    borderColor: '#06B6D4',
+    glowColor: 'rgba(6, 182, 212, 0.5)',
+    floorPattern: 'atlantis_deep'
+  },
+  {
     id: 'arena_golden_palace',
     name: 'Imperial Gilded Colosseum',
     rarity: 'Legendary',
-    description: 'Grand royal marble arena adorned with 24-karat gold molding and celestial starlight columns.',
+    description: 'Grand royal marble arena adorned with 24-karat gold molding, laurel wreath banners, and celestial starlight columns.',
     price: 160,
     previewColor: '#171206',
     borderColor: '#F59E0B',
@@ -335,7 +493,7 @@ export const ARENA_CATALOG: ArenaTheme[] = [
     id: 'arena_deep_space_station',
     name: 'Orbital Star Cruiser',
     rarity: 'Legendary',
-    description: 'Futuristic cruiser airlock with starlight windows and glowing cyan forcefield perimeter.',
+    description: 'Futuristic cruiser airlock with starlight windows, rotating hazard beacons, and glowing cyan forcefield perimeter.',
     price: 175,
     previewColor: '#0F172A',
     borderColor: '#38BDF8',
@@ -360,7 +518,7 @@ export const BOOSTER_CATALOG: PowerUpBooster[] = [
     id: 'booster_time',
     name: 'Time Booster Chrono',
     rarity: 'Epic',
-    description: 'Grants +5 clutch overtime seconds when round clock drops below 5s in tense battles.',
+    description: 'Automatic in-match trigger: Instantly grants +5s clutch overtime when round clock drops below 5s in tense battles!',
     price: 75,
     previewColor: '#38BDF8',
     icon: '⏱️',
@@ -370,7 +528,7 @@ export const BOOSTER_CATALOG: PowerUpBooster[] = [
     id: 'booster_siphon',
     name: 'Coin Siphon Beacon',
     rarity: 'Epic',
-    description: 'Siphons +10 flat bonus coins for every victory (+25 for Tournament champions), boosting earnings fast!',
+    description: 'Automatic victory perk: Passive beacon siphons +10 flat bonus coins on round win (+25 for Tournament champions)!',
     price: 85,
     previewColor: '#FBBF24',
     icon: '🧲',
@@ -380,7 +538,7 @@ export const BOOSTER_CATALOG: PowerUpBooster[] = [
     id: 'booster_double_coins',
     name: 'Double Bounty Magnet',
     rarity: 'Epic',
-    description: 'Doubles all victory coins awarded from round wins and tournament championships (2x Coins!).',
+    description: 'Automatic victory perk: Passive bounty multiplier doubles all round and tournament coin earnings (2x Coins)!',
     price: 90,
     previewColor: '#F59E0B',
     icon: '💰',
@@ -390,7 +548,7 @@ export const BOOSTER_CATALOG: PowerUpBooster[] = [
     id: 'booster_shield',
     name: 'Aegis Overcharge Shield',
     rarity: 'Epic',
-    description: 'Spawns an electric bumper barrier absorbing one hazard strike or bumper impact.',
+    description: 'Automatic in-match defense: Spawns an electric Aegis forcefield ring that absorbs your first hazard strike or impact!',
     price: 100,
     previewColor: '#10B981',
     icon: '🛡️',
@@ -400,7 +558,7 @@ export const BOOSTER_CATALOG: PowerUpBooster[] = [
     id: 'booster_turbo',
     name: 'Hyperdrive Turbo Surge',
     rarity: 'Legendary',
-    description: 'Provides +15% enhanced steering responsiveness and instantaneous booster acceleration.',
+    description: 'Automatic in-match boost: Provides +15% enhanced speed and acceleration with twin blue rocket jet thruster flames!',
     price: 125,
     previewColor: '#EC4899',
     icon: '⚡',
