@@ -279,6 +279,8 @@ export class LandscapeArtilleryGame extends BaseGame {
       this.camera.targetY = p1.y - 25;
       this.camera.targetZoom = 1.45;
     }
+
+    this.syncDebug();
   }
 
   private generateProceduralTerrain(width: number, height: number): void {
@@ -334,17 +336,7 @@ export class LandscapeArtilleryGame extends BaseGame {
     return this.playersState.get(pid) ?? null;
   }
 
-  public update(dt: number, width: number, height: number): void {
-    if (this.isFinished) return;
-
-    this.roundTimer = Math.max(0, this.roundTimer - dt);
-    this.stateTimer += dt;
-
-    if (this.screenShake > 0) {
-      this.screenShake = Math.max(0, this.screenShake - dt * 25);
-    }
-
-    // Expose debug hook for testing
+  public syncDebug(): void {
     if (typeof window !== 'undefined') {
       (window as any).__LANDSCAPE_ARTILLERY_DEBUG__ = {
         players: Array.from(this.playersState.values()),
@@ -361,6 +353,19 @@ export class LandscapeArtilleryGame extends BaseGame {
         isFinished: this.isFinished
       };
     }
+  }
+
+  public update(dt: number, width: number, height: number): void {
+    if (this.isFinished) return;
+
+    this.roundTimer = Math.max(0, this.roundTimer - dt);
+    this.stateTimer += dt;
+
+    if (this.screenShake > 0) {
+      this.screenShake = Math.max(0, this.screenShake - dt * 25);
+    }
+
+    this.syncDebug();
 
     // Process Turn State Machine
     switch (this.turnState) {
