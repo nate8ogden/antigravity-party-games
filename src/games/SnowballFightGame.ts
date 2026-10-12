@@ -403,6 +403,16 @@ export class SnowballFightGame extends BaseGame {
       }
     }
 
+    if (typeof window !== 'undefined') {
+      (window as any).__SNOWBALL_FIGHT_DEBUG__ = {
+        players: Array.from(this.playersState.values()),
+        snowballs: this.snowballs,
+        blocks: this.blocks,
+        roundTimer: this.roundTimer,
+        isFinished: this.isFinished
+      };
+    }
+
     // Process Bot AI
     this.updateBots(dt, width, height);
 
@@ -1280,6 +1290,37 @@ export class SnowballFightGame extends BaseGame {
     enemies.sort((a, b) => Math.hypot(a.x - ps.x, a.y - ps.y) - Math.hypot(b.x - ps.x, b.y - ps.y));
     const target = enemies[0];
 
+    // Compute tactical movement target position on bot's territory
+    let idealX = ps.baseX;
+    let idealY = target.y + Math.sin(performance.now() * 0.0025 + botId) * 60;
+
+    const midX = width / 2;
+    if (ps.side === 'west') {
+      idealX = Math.max(50, Math.min(midX - 55, width * 0.28));
+    } else if (ps.side === 'east') {
+      idealX = Math.max(midX + 55, Math.min(width - 50, width * 0.72));
+    }
+
+    // Dodge incoming snowballs
+    for (const b of this.snowballs) {
+      if (b.ownerId !== botId) {
+        const d = Math.hypot(b.x - ps.x, b.y - ps.y);
+        if (d < 150) {
+          // If ball is flying toward us, dodge vertically
+          const dodgeDir = b.y > ps.y ? -1 : 1;
+          idealY = ps.y + dodgeDir * 80;
+          break;
+        }
+      }
+    }
+
+    // Clamp ideal position within bot's legal bounds
+    idealY = Math.max(65, Math.min(height - 40, idealY));
+
+    const moveX = Math.max(-1, Math.min(1, (idealX - ps.x) / 35));
+    const moveY = Math.max(-1, Math.min(1, (idealY - ps.y) / 35));
+    const navThrottle = -moveY; // throttle: +1 up, -1 down
+
     const dx = target.x - ps.x;
     const dy = target.y - ps.y;
     const dist = Math.hypot(dx, dy);
@@ -1294,9 +1335,8 @@ export class SnowballFightGame extends BaseGame {
       // Slower reaction, large aim dispersion
       aimTolerance = 0.45;
       powerTolerance = 0.3;
-      // Occasionally idle
       if (Math.random() < 0.03) {
-        this.input.setBotInput(botId, false, 0, 0, false);
+        this.input.setBotInput(botId, false, moveX * 0.5, navThrottle * 0.5, false);
         return;
       }
     } else if (difficulty === 'bot_hard') {
@@ -1319,8 +1359,7 @@ export class SnowballFightGame extends BaseGame {
     }
 
     // Calculate required throw power for distance
-    // Snowball flight distance at power P is approximately: D = 140 + P * 380
-    const rawPower = Math.min(1.0, Math.max(0.3, (dist - 90) / 360));
+    const rawPower = Math.min(1.0, Math.max(0.3, (dist - 80) / 370));
     const powerJitter =
       difficulty === 'bot_easy'
         ? (Math.random() - 0.5) * 0.2
@@ -1329,13 +1368,12 @@ export class SnowballFightGame extends BaseGame {
         : 0;
     const targetPower = Math.min(1.0, Math.max(0.28, rawPower + powerJitter));
 
-    // Decision: charge or release
+    // Decision: charge or release or move
     if (Math.abs(angleDiff) <= aimTolerance) {
       if (!ps.isCharging) {
         // Start charging
         this.input.setBotInput(botId, true, steerDir, 0, true);
       } else {
-        // Check if power reached
         if (ps.chargePower >= targetPower) {
           // Release throw!
           this.input.setBotInput(botId, false, 0, 0, false);
@@ -1345,8 +1383,12 @@ export class SnowballFightGame extends BaseGame {
         }
       }
     } else {
-      // Not yet aligned: guide aim without charging, or cancel charge if misaligned
-      this.input.setBotInput(botId, false, steerDir, 0, false);
+      // Not yet aligned: move toward ideal tactical spot and guide aim
+      if (ps.isCharging) {
+        this.input.setBotInput(botId, true, steerDir, 0, true);
+      } else {
+        this.input.setBotInput(botId, false, moveX, navThrottle, false);
+      }
     }
   }
 }
