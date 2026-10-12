@@ -52,6 +52,7 @@ export class CyberGridRunnerGame extends BaseGame {
   private nextNodeId: number = 0;
   private nodeSpawnTimer: number = 0;
   private botReactionTimers: Map<PlayerId, number> = new Map();
+  private botBoostCooldowns: Map<PlayerId, number> = new Map();
   private touchBtnRect = { x: 0, y: 0, w: 100, h: 48 };
   private pointerdownHandler: ((e: PointerEvent) => void) | null = null;
 
@@ -116,6 +117,7 @@ export class CyberGridRunnerGame extends BaseGame {
     this.nextNodeId = 0;
     this.nodeSpawnTimer = 0;
     this.botReactionTimers.clear();
+    this.botBoostCooldowns.clear();
 
     const active = this.getActivePlayers();
     const count = active.length;
@@ -286,38 +288,34 @@ export class CyberGridRunnerGame extends BaseGame {
         }
       }
 
-      const isBot = p.type.startsWith('bot_');
+      const steer = this.input.getSteer(p.id);
+      const throttle = this.input.getThrottle(p.id);
+      const isAction = this.input.justAction(p.id) || this.input.isActionPressed(p.id) || this.input.justPressed(p.id);
 
-      if (!isBot) {
-        const steer = this.input.getSteer(p.id);
-        const throttle = this.input.getThrottle(p.id);
-        const justAction = this.input.justAction(p.id) || this.input.justPressed(p.id);
+      if (isAction && !ps.isBoosting) {
+        this.triggerPlayerBoost(ps);
+      }
 
-        if (justAction) {
-          this.triggerPlayerBoost(ps);
-        }
+      const isSupercharged = ps.overclockTimer > 0;
+      const currentSpeedLimit = ps.isBoosting ? 440 : isSupercharged ? 320 : 230;
+      const accelRate = ps.isBoosting ? 26 : 14;
 
-        const isSupercharged = ps.overclockTimer > 0;
-        const currentSpeedLimit = ps.isBoosting ? 440 : isSupercharged ? 320 : 230;
-        const accelRate = ps.isBoosting ? 26 : 14;
+      if (steer !== 0 || throttle !== 0) {
+        const targetAngle = Math.atan2(-throttle, steer);
+        // Smooth angular turning
+        let diff = targetAngle - ps.angle;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        ps.angle += diff * Math.min(1, dt * 12);
 
-        if (steer !== 0 || throttle !== 0) {
-          const targetAngle = Math.atan2(-throttle, steer);
-          // Smooth angular turning
-          let diff = targetAngle - ps.angle;
-          while (diff > Math.PI) diff -= Math.PI * 2;
-          while (diff < -Math.PI) diff += Math.PI * 2;
-          ps.angle += diff * Math.min(1, dt * 12);
-
-          const targetVx = Math.cos(targetAngle) * currentSpeedLimit;
-          const targetVy = Math.sin(targetAngle) * currentSpeedLimit;
-          ps.vx += (targetVx - ps.vx) * Math.min(1, dt * accelRate);
-          ps.vy += (targetVy - ps.vy) * Math.min(1, dt * accelRate);
-        } else {
-          // Hover drift friction
-          ps.vx *= Math.pow(0.92, dt * 60);
-          ps.vy *= Math.pow(0.92, dt * 60);
-        }
+        const targetVx = Math.cos(targetAngle) * currentSpeedLimit;
+        const targetVy = Math.sin(targetAngle) * currentSpeedLimit;
+        ps.vx += (targetVx - ps.vx) * Math.min(1, dt * accelRate);
+        ps.vy += (targetVy - ps.vy) * Math.min(1, dt * accelRate);
+      } else {
+        // Hover drift friction
+        ps.vx *= Math.pow(0.92, dt * 60);
+        ps.vy *= Math.pow(0.92, dt * 60);
       }
 
       // Apply velocity
@@ -538,54 +536,108 @@ export class CyberGridRunnerGame extends BaseGame {
     const bot = this.playersState.get(botId);
     if (!bot || bot.stunTimer > 0) return;
 
-    let timer = this.botReactionTimers.get(botId) || 0;
-    timer -= dt;
+    let boostCd = (this.botBoostCooldowns.get(botId) || 0) - dt;
+    if (boostCd > 0) this.botBoostCooldowns.set(botId, boostCd);
 
+    let timer = (this.botReactionTimers.get(botId) || 0) - dt;
     if (timer > 0) {
       this.botReactionTimers.set(botId, timer);
       return;
     }
 
-    const interval = difficulty === 'bot_hard' ? 0.08 : difficulty === 'bot_normal' ? 0.14 : 0.26;
+    // Reaction update intervals: Easy (0.42s), Normal (0.28s), Hard (0.15s)
+    const interval = difficulty === 'bot_hard' ? 0.15 : difficulty === 'bot_normal' ? 0.28 : 0.42;
     this.botReactionTimers.set(botId, interval);
 
-    // Target Selection: Find nearest high-value data node
-    if (this.dataNodes.length > 0) {
-      let bestNode: DataNode | null = null;
-      let bestScore = -Infinity;
+    // Target Selection:
+    // Easy: only perceives nodes within 240px, 30% chance to drift
+    // Normal: perceives nodes within 380px, balanced distance-to-points ratio
+    // Hard: perceives nodes up to 550px
+    const maxVisionDist = difficulty === 'bot_hard' ? 550 : difficulty === 'bot_normal' ? 380 : 240;
+    const wanderChance = difficulty === 'bot_easy' ? 0.30 : difficulty === 'bot_normal' ? 0.08 : 0;
 
+    let bestNode: DataNode | null = null;
+    let bestScore = -Infinity;
+
+    if (Math.random() > wanderChance && this.dataNodes.length > 0) {
       for (const node of this.dataNodes) {
         const dist = Math.hypot(node.x - bot.x, node.y - bot.y);
-        const score = (node.points * 40) - dist;
+        if (dist > maxVisionDist) continue;
+
+        // Weight points fairly: Normal bot seeks nearby nodes rather than instantly cross-mapping high-value nodes
+        const pointWeight = difficulty === 'bot_hard' ? 35 : difficulty === 'bot_normal' ? 16 : 6;
+        const score = (node.points * pointWeight) - dist;
         if (score > bestScore) {
           bestScore = score;
           bestNode = node;
         }
       }
+    }
 
-      if (bestNode) {
-        let targetAngle = Math.atan2(bestNode.y - bot.y, bestNode.x - bot.x);
+    let targetX = width / 2;
+    let targetY = (height + 50) / 2;
 
-        if (difficulty === 'bot_easy') {
-          targetAngle += (Math.random() - 0.5) * 0.4;
-        }
+    if (bestNode) {
+      targetX = bestNode.x;
+      targetY = bestNode.y;
+    } else {
+      // Gentle patrol around center
+      targetX += Math.sin(this.roundTimer * 1.5 + botId) * 120;
+      targetY += Math.cos(this.roundTimer * 1.5 + botId) * 90;
+    }
 
-        let diff = targetAngle - bot.angle;
-        while (diff > Math.PI) diff -= Math.PI * 2;
-        while (diff < -Math.PI) diff += Math.PI * 2;
-        bot.angle += diff * Math.min(1, dt * 14);
+    let targetAngle = Math.atan2(targetY - bot.y, targetX - bot.x);
 
-        const speed = bot.isBoosting ? 440 : bot.overclockTimer > 0 ? 320 : 230;
-        bot.vx = Math.cos(targetAngle) * speed;
-        bot.vy = Math.sin(targetAngle) * speed;
+    // Add human-like steering imperfection
+    if (difficulty === 'bot_easy') {
+      targetAngle += (Math.random() - 0.5) * 0.45;
+    } else if (difficulty === 'bot_normal') {
+      targetAngle += (Math.random() - 0.5) * 0.16;
+    }
 
-        // Tactical Nitro Boost: Trigger boost if far from overclock node or chasing a rival
-        const distToTarget = Math.hypot(bestNode.x - bot.x, bestNode.y - bot.y);
-        if (distToTarget > 180 && bot.nitroEnergy >= 45 && Math.random() < (difficulty === 'bot_hard' ? 0.65 : 0.35)) {
-          this.triggerPlayerBoost(bot);
+    // Hazard Avoidance: Active laser gates
+    for (const gate of this.laserGates) {
+      if (gate.isActive && gate.hackedBy !== bot.id && !bot.isBoosting) {
+        const d = this.distToSegment(bot.x, bot.y, gate.x1, gate.y1, gate.x2, gate.y2);
+        if (d < 50) {
+          const gateAngle = Math.atan2((gate.y1 + gate.y2) / 2 - bot.y, (gate.x1 + gate.x2) / 2 - bot.x);
+          targetAngle = gateAngle + Math.PI * 0.8;
         }
       }
     }
+
+    // Wall repulsion so bot doesn't pin itself on arena edges
+    const margin = 50;
+    if (bot.x < 26 + margin) targetAngle = 0;
+    else if (bot.x > width - 26 - margin) targetAngle = Math.PI;
+    if (bot.y < 62 + margin) targetAngle = Math.PI / 2;
+    else if (bot.y > height - 26 - margin) targetAngle = -Math.PI / 2;
+
+    const steer = Math.cos(targetAngle);
+    const throttle = -Math.sin(targetAngle); // Negative Y is up in InputRouter
+
+    // Tactical Nitro Boost: Gated by energy and cooldown
+    let wantsBoost = false;
+    if (boostCd <= 0 && !bot.isBoosting && bot.nitroEnergy >= (difficulty === 'bot_hard' ? 45 : 65)) {
+      if (difficulty === 'bot_hard') {
+        const dist = bestNode ? Math.hypot(bestNode.x - bot.x, bestNode.y - bot.y) : 0;
+        if (dist > 180 && Math.random() < 0.40) wantsBoost = true;
+      } else if (difficulty === 'bot_normal') {
+        if (bestNode && bestNode.points >= 2) {
+          const dist = Math.hypot(bestNode.x - bot.x, bestNode.y - bot.y);
+          if (dist > 160 && dist < 320 && Math.random() < 0.25) {
+            wantsBoost = true;
+          }
+        }
+      }
+    }
+
+    if (wantsBoost) {
+      this.botBoostCooldowns.set(botId, 3.2); // 3.2s cooldown on boost
+    }
+
+    // Supply input through the router so bot uses identical hovercraft physics as human
+    this.input.setBotInput(botId, true, steer, throttle, wantsBoost);
   }
 
   public isRoundOver(): boolean {
