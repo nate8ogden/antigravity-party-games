@@ -186,17 +186,21 @@ export class VolleySpikeGame extends BaseGame {
       const justUp = this.input.justUp(p.id);
       const justDown = this.input.justDown(p.id);
       const throttle = this.input.getThrottle(p.id);
+      const rawThrottle = this.input.getRawThrottle(p.id);
 
       // Clean, responsive jump & dive inputs
-      const isJump = justUp || (justAction && throttle >= -0.2) || throttle > 0.4;
-      const isDive = justDown || throttle < -0.5 || (justAction && throttle < -0.3);
+      const isJump = justUp || (justAction && throttle >= -0.2) || throttle > 0.4 || rawThrottle > 0;
+      const isDive = justDown || throttle < -0.4 || rawThrottle < 0;
 
-      // Dive / Slide Save
-      if (isDive && ps.isGrounded && !ps.isDiving) {
+      // Dive / Slide Save (grounded slide or mid-air diving dig)
+      if (isDive && !ps.isDiving) {
         ps.isDiving = true;
         ps.diveTimer = 0.38;
         const diveDir = effectiveSteer !== 0 ? Math.sign(effectiveSteer) : (ps.team === 'LEFT' ? 1 : -1);
         ps.vx = diveDir * 380;
+        if (!ps.isGrounded) {
+          ps.vy = 260; // Fast diving dig towards the sand
+        }
         this.audio.playWhoosh();
         this.particles.spawnDust(ps.x, ps.y + ps.radius, 8);
         this.particles.showFloatingText('DIVE!', ps.x, ps.y - 20, '#38BDF8', 18);
@@ -396,14 +400,15 @@ export class VolleySpikeGame extends BaseGame {
 
   public syncDebug(): void {
     if (typeof window !== 'undefined') {
+      const self = this;
       (window as any).__VOLLEY_SPIKE_DEBUG__ = {
-        players: Array.from(this.playersState.values()),
-        ball: this.ball,
-        teamLeftScore: this.teamLeftScore,
-        teamRightScore: this.teamRightScore,
-        isFinished: this.isFinished,
-        roundTimer: this.roundTimer,
-        handlePointScored: (team: 'LEFT' | 'RIGHT', reason: string) => this.handlePointScored(team, reason)
+        get players() { return Array.from(self.playersState.values()); },
+        get ball() { return self.ball; },
+        get teamLeftScore() { return self.teamLeftScore; },
+        get teamRightScore() { return self.teamRightScore; },
+        get isFinished() { return self.isFinished; },
+        get roundTimer() { return self.roundTimer; },
+        handlePointScored: (team: 'LEFT' | 'RIGHT', reason: string) => self.handlePointScored(team, reason)
       };
     }
   }

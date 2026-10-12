@@ -29,12 +29,10 @@ test.describe('Volley Spike - Snappy Controls & 2v2 Team Mechanics', () => {
     expect(p0.team).toBe('LEFT');
     expect(p0.vx).toBe(0);
 
-    // Player 1 is teammate on LEFT team
-    const p1 = debug.players[1];
-    expect(p1.team).toBe('LEFT');
-
-    // Player 2 and 3 are on RIGHT team
-    expect(debug.players[2].team).toBe('RIGHT');
+    // In 2-player local multiplayer (WASD vs Arrows), P0 & P2 are LEFT team (Blue), P1 & P3 are RIGHT team (Red)
+    expect(debug.players[0].team).toBe('LEFT');
+    expect(debug.players[1].team).toBe('RIGHT');
+    expect(debug.players[2].team).toBe('LEFT');
     expect(debug.players[3].team).toBe('RIGHT');
   });
 
@@ -44,15 +42,19 @@ test.describe('Volley Spike - Snappy Controls & 2v2 Team Mechanics', () => {
     await skipCountdown(page);
     await page.waitForTimeout(100);
 
-    // Hold 'KeyD' to run right
-    await page.keyboard.down('KeyD');
-    await page.waitForTimeout(150);
+    // Dispatch KeyD down for Player 0 (WASD)
+    await page.evaluate(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyD' }));
+    });
+    await page.waitForTimeout(120);
 
     let debug = await page.evaluate(() => (window as any).__VOLLEY_SPIKE_DEBUG__);
     expect(debug.players[0].vx).toBeGreaterThan(0);
 
-    // Release 'KeyD' - player must stop with zero drift (no auto-patrol)
-    await page.keyboard.up('KeyD');
+    // Release KeyD - player must stop with zero drift (no auto-patrol)
+    await page.evaluate(() => {
+      window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyD' }));
+    });
     await page.waitForTimeout(100);
 
     debug = await page.evaluate(() => (window as any).__VOLLEY_SPIKE_DEBUG__);
@@ -65,26 +67,34 @@ test.describe('Volley Spike - Snappy Controls & 2v2 Team Mechanics', () => {
     await skipCountdown(page);
     await page.waitForTimeout(100);
 
-    // Press 'KeyW' to jump
-    await page.keyboard.press('KeyW');
+    // Dispatch KeyS down for sliding dive save
+    await page.evaluate(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyS' }));
+    });
     await page.waitForTimeout(80);
 
     let debug = await page.evaluate(() => (window as any).__VOLLEY_SPIKE_DEBUG__);
-    expect(debug.players[0].isGrounded).toBe(false);
-    expect(debug.players[0].vy).toBeLessThan(0);
-
-    // Wait until landed
-    await page.waitForTimeout(700);
-
-    // Press 'KeyS' to initiate sliding dive save
-    await page.keyboard.down('KeyS');
-    await page.waitForTimeout(80);
-
-    debug = await page.evaluate(() => (window as any).__VOLLEY_SPIKE_DEBUG__);
     expect(debug.players[0].isDiving).toBe(true);
     expect(debug.players[0].diveTimer).toBeGreaterThan(0);
 
-    await page.keyboard.up('KeyS');
+    await page.evaluate(() => {
+      window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyS' }));
+    });
+    await page.waitForTimeout(400);
+
+    // Dispatch KeyW down for jumping
+    await page.evaluate(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyW' }));
+    });
+    await page.waitForTimeout(80);
+
+    debug = await page.evaluate(() => (window as any).__VOLLEY_SPIKE_DEBUG__);
+    expect(debug.players[0].isGrounded).toBe(false);
+    expect(debug.players[0].vy).toBeLessThan(0);
+
+    await page.evaluate(() => {
+      window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyW' }));
+    });
   });
 
   test('scoring awards points to both 2v2 teammates and Duo Combo bonus on assist + spike', async ({ page }) => {
@@ -101,17 +111,17 @@ test.describe('Volley Spike - Snappy Controls & 2v2 Team Mechanics', () => {
 
     let debug = await page.evaluate(() => (window as any).__VOLLEY_SPIKE_DEBUG__);
     expect(debug.teamLeftScore).toBe(1);
-    // Both teammate 0 and teammate 1 should have received 100 points
+    // Both teammate 0 and teammate 2 on LEFT team should have received 100 points
     expect(debug.players[0].score).toBe(100);
-    expect(debug.players[1].score).toBe(100);
+    expect(debug.players[2].score).toBe(100);
 
-    // Now simulate a Duo Combo (P0 set, P1 spike)
+    // Now simulate a Duo Combo (P0 set, P2 spike)
     await page.evaluate(() => {
       const debug = (window as any).__VOLLEY_SPIKE_DEBUG__;
       // P0 touched ball first
       debug.ball.previousTouchPlayer = 0;
-      // P1 spiked ball
-      debug.ball.lastTouchPlayer = 1;
+      // P2 spiked ball
+      debug.ball.lastTouchPlayer = 2;
       debug.ball.lastTouchTeam = 'LEFT';
       debug.handlePointScored('LEFT', 'SPIKE!');
     });
@@ -120,8 +130,8 @@ test.describe('Volley Spike - Snappy Controls & 2v2 Team Mechanics', () => {
     expect(debug.teamLeftScore).toBe(2);
     // P0 gets 100 + 30 assist bonus = 130 + previous 100 = 230
     expect(debug.players[0].score).toBe(230);
-    // P1 gets 100 + 30 spike bonus = 130 + previous 100 = 230
-    expect(debug.players[1].score).toBe(230);
+    // P2 gets 100 + 30 spike bonus = 130 + previous 100 = 230
+    expect(debug.players[2].score).toBe(230);
   });
 
   test('winning team gives shared 1st place podium rankings (place: 1) for both teammates', async ({ page }) => {
@@ -152,12 +162,12 @@ test.describe('Volley Spike - Snappy Controls & 2v2 Team Mechanics', () => {
     // In 2v2, both players on the winning team share 1st place (place: 1)
     const firstPlacePlayers = result.rankings.filter((r: any) => r.place === 1);
     expect(firstPlacePlayers.length).toBe(2);
-    expect(firstPlacePlayers.map((r: any) => r.playerId).sort()).toEqual([0, 1]);
+    expect(firstPlacePlayers.map((r: any) => r.playerId).sort()).toEqual([0, 2]);
 
     // Both players on losing team share 2nd place (place: 2)
     const secondPlacePlayers = result.rankings.filter((r: any) => r.place === 2);
     expect(secondPlacePlayers.length).toBe(2);
-    expect(secondPlacePlayers.map((r: any) => r.playerId).sort()).toEqual([2, 3]);
+    expect(secondPlacePlayers.map((r: any) => r.playerId).sort()).toEqual([1, 3]);
 
     expect(result.mvpHighlight).toContain('Blue Duo');
   });
