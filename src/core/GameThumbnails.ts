@@ -5240,83 +5240,315 @@ function drawDroneDeliveryArt(ctx: CanvasRenderingContext2D, x: number, y: numbe
 
 // [G-83] Rocket Skates Art
 function drawRocketSkatesArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0A0A14';
+  ctx.fillStyle = '#0F0C20';
   ctx.fillRect(x, y, w, h);
 
-  // Velodrome oval
-  ctx.strokeStyle = '#00E5FF';
-  ctx.lineWidth = 2;
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.52;
+
+  // Cyber Halfpipe Ramp Curve
+  ctx.strokeStyle = '#06B6D4';
+  ctx.lineWidth = 3;
+  ctx.shadowColor = '#06B6D4';
+  ctx.shadowBlur = 8;
   ctx.beginPath();
-  ctx.ellipse(x + w / 2, y + h / 2, w * 0.38, h * 0.3, 0, 0, Math.PI * 2);
+  ctx.moveTo(x + 10, y + h - 14);
+  ctx.quadraticCurveTo(cx - 15, y + h - 14, cx + 25, y + 24);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // High-Top Sneaker Boot
+  ctx.save();
+  ctx.translate(cx - 4, cy - 8);
+  ctx.rotate(-0.35);
+
+  // Twin Rocket Thruster Chambers
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(-18, 12, 32, 8);
+  ctx.strokeStyle = '#94A3B8';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(-18, 12, 32, 8);
+
+  // Twin Thruster Exhaust Flames
+  const flameGrad = ctx.createLinearGradient(-18, 16, -38, 16);
+  flameGrad.addColorStop(0, '#FFFFFF');
+  flameGrad.addColorStop(0.3, '#FACC15');
+  flameGrad.addColorStop(0.7, '#EF4444');
+  flameGrad.addColorStop(1, 'rgba(239, 68, 68, 0)');
+  ctx.fillStyle = flameGrad;
+  ctx.beginPath();
+  ctx.moveTo(-18, 12);
+  ctx.lineTo(-38, 16);
+  ctx.lineTo(-18, 20);
+  ctx.closePath();
+  ctx.fill();
+
+  // Sneaker Sole
+  ctx.fillStyle = '#F8FAFC';
+  ctx.fillRect(-14, 6, 32, 6);
+
+  // Sneaker Canvas Upper Body (Red with White Stripe)
+  ctx.fillStyle = '#EF4444';
+  ctx.beginPath();
+  ctx.moveTo(-14, 6);
+  ctx.lineTo(-14, -14);
+  ctx.lineTo(-2, -14);
+  ctx.lineTo(8, -2);
+  ctx.lineTo(18, 6);
+  ctx.closePath();
+  ctx.fill();
+
+  // White Racing Swoosh
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(-10, -4);
+  ctx.quadraticCurveTo(2, -2, 16, 4);
   ctx.stroke();
 
-  // Rocket flare
-  ctx.fillStyle = '#FF5722';
+  // Toe Cap
+  ctx.fillStyle = '#FFFFFF';
   ctx.beginPath();
-  ctx.arc(x + w * 0.7, y + h * 0.35, 5, 0, Math.PI * 2);
+  ctx.arc(16, 6, 5, -Math.PI / 2, Math.PI / 2);
+  ctx.fill();
+
+  ctx.restore();
+
+  // Speed Spark Particles
+  ctx.fillStyle = '#FDE047';
+  ctx.beginPath();
+  ctx.arc(cx - 32, cy + 12, 2.5, 0, Math.PI * 2);
+  ctx.arc(cx - 42, cy + 8, 1.8, 0, Math.PI * 2);
+  ctx.arc(cx - 24, cy + 22, 2, 0, Math.PI * 2);
   ctx.fill();
 }
 
 // [G-84] Cyber Demolition Art
 function drawCyberDemolitionArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#14141C';
+  ctx.fillStyle = '#0F172A';
   ctx.fillRect(x, y, w, h);
 
-  // Scrap Tower
-  ctx.fillStyle = '#455A64';
-  ctx.beginPath();
-  ctx.arc(x + w * 0.7, y + h * 0.5, 12, 0, Math.PI * 2);
-  ctx.fill();
+  const cx = x + w * 0.52;
+  const cy = y + h * 0.5;
 
-  // Wrecking ball chain
-  ctx.strokeStyle = '#B0BEC5';
-  ctx.lineWidth = 1.5;
+  // Hazard Caution Stripes on Floor
+  ctx.save();
+  ctx.fillStyle = '#EAB308';
+  ctx.fillRect(x + 10, y + h - 16, w - 20, 10);
+  ctx.fillStyle = '#0F172A';
+  for (let s = x + 12; s < x + w - 12; s += 16) {
+    ctx.beginPath();
+    ctx.moveTo(s, y + h - 6);
+    ctx.lineTo(s + 8, y + h - 16);
+    ctx.lineTo(s + 12, y + h - 16);
+    ctx.lineTo(s + 4, y + h - 6);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Steel Tower Frame
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(x + 15, y + h * 0.5);
-  ctx.lineTo(x + w * 0.5, y + h * 0.5);
+  ctx.moveTo(x + 18, y + 10);
+  ctx.lineTo(x + 28, y + h - 18);
+  ctx.moveTo(x + 18, y + 10);
+  ctx.lineTo(cx, y + 16);
   ctx.stroke();
 
-  // Wrecking ball
-  ctx.fillStyle = '#212121';
+  // Swinging Steel Chain
+  ctx.strokeStyle = '#94A3B8';
+  ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.5, 7, 0, Math.PI * 2);
+  ctx.moveTo(x + 18, y + 10);
+  ctx.quadraticCurveTo(cx - 15, y + 25, cx + 8, cy - 2);
+  ctx.stroke();
+
+  // Spiked Wrecking Ball
+  ctx.save();
+  ctx.translate(cx + 8, cy - 2);
+  ctx.fillStyle = '#1E293B';
+  ctx.beginPath();
+  ctx.arc(0, 0, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#38BDF8';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Spikes radiating
+  ctx.fillStyle = '#E2E8F0';
+  for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+    const sx = Math.cos(a) * 18;
+    const sy = Math.sin(a) * 18;
+    const px = Math.cos(a) * 26;
+    const py = Math.sin(a) * 26;
+    ctx.beginPath();
+    ctx.moveTo(sx - Math.sin(a) * 4, sy + Math.cos(a) * 4);
+    ctx.lineTo(px, py);
+    ctx.lineTo(sx + Math.sin(a) * 4, sy - Math.cos(a) * 4);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Smashing Concrete Debris / Sparks
+  ctx.fillStyle = '#F59E0B';
+  ctx.beginPath();
+  ctx.arc(cx + 36, cy + 8, 3, 0, Math.PI * 2);
+  ctx.arc(cx + 42, cy - 6, 2, 0, Math.PI * 2);
+  ctx.arc(cx + 32, cy - 18, 2.5, 0, Math.PI * 2);
   ctx.fill();
 }
 
 // [G-85] Laser Speedway Art
 function drawLaserSpeedwayArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0A0A14';
+  ctx.fillStyle = '#060714';
   ctx.fillRect(x, y, w, h);
 
-  // Glowing laser slot rails
-  ctx.strokeStyle = '#00E5FF';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(x + 12, y + 12, w - 24, h - 24);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.38;
 
-  // Micro slot-car
-  ctx.fillStyle = '#FF1744';
-  ctx.fillRect(x + w * 0.45, y + 8, 12, 8);
+  // 3D Perspective Grid Speedway Road
+  const roadTopW = 20;
+  const roadBotW = w * 0.85;
+  const roadBotY = y + h - 8;
+
+  ctx.fillStyle = '#0F172A';
+  ctx.beginPath();
+  ctx.moveTo(cx - roadTopW, cy);
+  ctx.lineTo(cx + roadTopW, cy);
+  ctx.lineTo(cx + roadBotW / 2, roadBotY);
+  ctx.lineTo(cx - roadBotW / 2, roadBotY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Glowing Neon Cyan & Pink Guardrail Lasers
+  ctx.strokeStyle = '#06B6D4';
+  ctx.lineWidth = 3;
+  ctx.shadowColor = '#06B6D4';
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.moveTo(cx - roadTopW, cy);
+  ctx.lineTo(cx - roadBotW / 2, roadBotY);
+  ctx.stroke();
+
+  ctx.strokeStyle = '#EC4899';
+  ctx.shadowColor = '#EC4899';
+  ctx.beginPath();
+  ctx.moveTo(cx + roadTopW, cy);
+  ctx.lineTo(cx + roadBotW / 2, roadBotY);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Center Dashed Dividing Laser
+  ctx.strokeStyle = '#FACC15';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([8, 8]);
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx, roadBotY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Red Anti-Grav Speeder
+  ctx.save();
+  ctx.translate(cx - 24, y + h * 0.68);
+  ctx.fillStyle = '#EF4444';
+  ctx.beginPath();
+  ctx.moveTo(-10, 10);
+  ctx.lineTo(10, 10);
+  ctx.lineTo(5, -12);
+  ctx.lineTo(-5, -12);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#38BDF8';
+  ctx.fillRect(-3, -8, 6, 8); // cockpit
+  // Jet thrust flame
+  ctx.fillStyle = '#F97316';
+  ctx.fillRect(-6, 10, 12, 7);
+  ctx.restore();
+
+  // Cyan Rival Speeder
+  ctx.save();
+  ctx.translate(cx + 22, y + h * 0.58);
+  ctx.fillStyle = '#0EA5E9';
+  ctx.beginPath();
+  ctx.moveTo(-8, 8);
+  ctx.lineTo(8, 8);
+  ctx.lineTo(4, -10);
+  ctx.lineTo(-4, -10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#FDE047';
+  ctx.fillRect(-2, -6, 4, 6);
+  // Jet flame
+  ctx.fillStyle = '#38BDF8';
+  ctx.fillRect(-5, 8, 10, 6);
+  ctx.restore();
 }
 
 // [G-86] Gravity Pods Art
 function drawGravityPodsArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#06060E';
+  ctx.fillStyle = '#050714';
   ctx.fillRect(x, y, w, h);
 
-  // Perspective tunnel rings
-  ctx.strokeStyle = '#00E5FF';
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Concentric Wormhole Gravity Rings receding into depth
+  const ringColors = ['#1E1B4B', '#312E81', '#4338CA', '#06B6D4', '#22D3EE'];
+  for (let r = 5; r >= 1; r--) {
+    const rad = r * 11;
+    ctx.strokeStyle = ringColors[r - 1];
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rad * 1.35, rad * 0.85, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Center Graviton Core
+  const coreGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 14);
+  coreGrad.addColorStop(0, '#FFFFFF');
+  coreGrad.addColorStop(0.5, '#38BDF8');
+  coreGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+  ctx.fillStyle = coreGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Orbiting Golden Gravity Pod
+  ctx.save();
+  const podAngle = 0.75;
+  const podX = cx + Math.cos(podAngle) * 44;
+  const podY = cy + Math.sin(podAngle) * 28;
+  ctx.translate(podX, podY);
+  ctx.rotate(podAngle + Math.PI / 2);
+
+  // Pod Hull
+  ctx.fillStyle = '#F59E0B';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 10, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#FDE68A';
   ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.arc(x + w / 2, y + h / 2, 18, 0, Math.PI * 2);
   ctx.stroke();
 
+  // Viewport Dome
+  ctx.fillStyle = '#38BDF8';
   ctx.beginPath();
-  ctx.arc(x + w / 2, y + h / 2, 8, 0, Math.PI * 2);
-  ctx.stroke();
+  ctx.arc(0, -1, 3.5, 0, Math.PI * 2);
+  ctx.fill();
 
-  // Pod on outer edge
-  ctx.fillStyle = '#FB8C00';
-  ctx.fillRect(x + w / 2 + 14, y + h / 2 - 4, 7, 8);
+  // Ion thruster trail
+  ctx.fillStyle = '#67E8F9';
+  ctx.beginPath();
+  ctx.moveTo(-4, 6);
+  ctx.lineTo(0, 14);
+  ctx.lineTo(4, 6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 }
 
 // [G-87] Pancake Flipper Art
