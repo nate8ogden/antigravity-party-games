@@ -5552,8 +5552,8 @@ export class GameManager {
   }
 
   private renderScrollableGallery(w: number, h: number, galleryY: number = 178) {
-    const isDesktop = w >= 1100;
-    const galleryH = h - galleryY - (isDesktop ? 86 : 42);
+    const isDesktop = w >= 1000;
+    const galleryH = h - galleryY - (isDesktop ? 86 : 98);
     const galleryX = isDesktop ? 198 : 16;
     const galleryW = isDesktop ? w - 396 : w - 32;
 
@@ -7796,9 +7796,9 @@ export class GameManager {
         this.ctx.restore();
       });
     } else {
-      // Mobile / Tablet: Sleek compact player dock bar along the bottom
-      const dockY = h - 34;
-      const dockH = 26;
+      // Mobile / Tablet: Sleek compact player dock bar sitting cleanly above the bottom utility bar
+      const dockH = 28;
+      const dockY = h - 90;
       const maxDockW = Math.min(460, w - 24);
       const dockGap = 6;
       const chipW = Math.max(48, Math.floor((maxDockW - 3 * dockGap) / 4));
@@ -7816,7 +7816,7 @@ export class GameManager {
           this.ctx.fillStyle = '#94A3B8';
           this.ctx.font = '700 9.5px Montserrat, sans-serif';
           this.ctx.textAlign = 'center';
-          this.ctx.fillText(`+ P${idx + 1}`, chipX + chipW / 2, dockY + 16.5);
+          this.ctx.fillText(`+ P${idx + 1}`, chipX + chipW / 2, dockY + 17.5);
         } else {
           this.ctx.shadowColor = 'rgba(15, 23, 42, 0.08)';
           this.ctx.shadowBlur = 4;
@@ -7835,7 +7835,7 @@ export class GameManager {
           this.ctx.fillStyle = '#0F172A';
           this.ctx.font = '800 9px Montserrat, sans-serif';
           this.ctx.textAlign = 'center';
-          this.ctx.fillText(chipLabel, chipX + chipW / 2 + 3, dockY + 15.5);
+          this.ctx.fillText(chipLabel, chipX + chipW / 2 + 3, dockY + 16.5);
         }
         this.ctx.restore();
       });
@@ -7866,8 +7866,9 @@ export class GameManager {
       this.ctx.font = '900 11px Montserrat, sans-serif';
       const textW = this.ctx.measureText(pillText).width;
       
-      // Ensure player HUD pills never touch or block the central timer on any resolution
-      const maxPillW = Math.max(70, Math.floor((w / 2 - centerZoneW / 2) - 18));
+      // Ensure player HUD pills never touch or block the central timer or utility controls on any resolution
+      const centerReserve = (hp.y > h / 2) ? 170 : centerZoneW;
+      const maxPillW = Math.max(60, Math.floor((w / 2 - centerReserve / 2) - 14));
       const pillW = Math.min(textW + 48, maxPillW);
       const pillH = 30;
       const pillX = hp.align === 'left' ? hp.x : hp.x - pillW;
@@ -8690,8 +8691,8 @@ export class GameManager {
 
       // 4. Check scrollable game gallery cards (opens instructions modal)
       const galleryY = w < 780 ? 206 : 178;
-      const isDesktop = w >= 1100;
-      const galleryH = h - galleryY - (isDesktop ? 86 : 42);
+      const isDesktop = w >= 1000;
+      const galleryH = h - galleryY - (isDesktop ? 86 : 98);
       const galleryX = isDesktop ? 198 : 16;
       const galleryW = isDesktop ? w - 396 : w - 32;
 
@@ -8930,8 +8931,8 @@ export class GameManager {
 
       // Gallery cards
       const galleryY = w < 780 ? 206 : 178;
-      const isDesktop = w >= 1100;
-      const galleryH = h - galleryY - (isDesktop ? 86 : 42);
+      const isDesktop = w >= 1000;
+      const galleryH = h - galleryY - (isDesktop ? 86 : 98);
       const galleryX = isDesktop ? 198 : 16;
       const galleryW = isDesktop ? w - 396 : w - 32;
 
