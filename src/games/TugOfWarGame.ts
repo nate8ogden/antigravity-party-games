@@ -272,6 +272,13 @@ export class TugOfWarGame extends BaseGame {
           const ps = this.playersState.get(pid);
           const p = this.getPlayer(pid);
           if (ps && p) this.executePull(ps, p.color);
+        },
+        setNeedle: (pid: PlayerId, needle: number) => {
+          const ps = this.playersState.get(pid);
+          if (ps) ps.needle = needle;
+        },
+        setRopeOffset: (offset: number) => {
+          this.ropeOffset = offset;
         }
       };
     }

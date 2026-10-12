@@ -61,14 +61,13 @@ test.describe('Tug of War - AI Calibration, Sweet Spot Windows & Comeback Adrena
     for (let i = 0; i < 8; i++) {
       await page.evaluate(() => {
         const debug = (window as any).__TUG_OF_WAR_DEBUG__;
-        if (debug && debug.executePull) {
-          const p0 = debug.players[0];
+        if (debug && debug.executePull && debug.setNeedle) {
           // Force needle to sweet spot to simulate skillful timing
-          p0.needle = 0.50;
+          debug.setNeedle(0, 0.50);
           debug.executePull(0);
         }
       });
-      await page.waitForTimeout(250);
+      await page.waitForTimeout(150);
     }
 
     const debug = await page.evaluate(() => (window as any).__TUG_OF_WAR_DEBUG__);
@@ -87,20 +86,18 @@ test.describe('Tug of War - AI Calibration, Sweet Spot Windows & Comeback Adrena
 
     const pullDifference = await page.evaluate(() => {
       const debug = (window as any).__TUG_OF_WAR_DEBUG__;
-      const game = (window as any).__GAME_MANAGER__?.currentGame;
-      if (!debug || !game) return null;
+      if (!debug || !debug.executePull || !debug.setNeedle || !debug.setRopeOffset) return null;
 
       // 1. Measure normal pull force at ropeOffset = 0
-      debug.ropeOffset = 0;
-      const p0 = debug.players[0];
-      p0.needle = 0.50; // Perfect
-      game.executePull(p0, '#EF4444');
+      debug.setRopeOffset(0);
+      debug.setNeedle(0, 0.50); // Perfect
+      debug.executePull(0);
       const normalPullDelta = Math.abs(debug.ropeOffset);
 
       // 2. Measure pull force when losing (ropeOffset = 0.40 towards opponent)
-      debug.ropeOffset = 0.40;
-      p0.needle = 0.50; // Perfect
-      game.executePull(p0, '#EF4444');
+      debug.setRopeOffset(0.40);
+      debug.setNeedle(0, 0.50); // Perfect
+      debug.executePull(0);
       const comebackPullDelta = 0.40 - debug.ropeOffset;
 
       return {
