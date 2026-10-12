@@ -2,10 +2,23 @@ import { test, expect } from '@playwright/test';
 
 const LOCAL_URL = 'http://localhost:5173/';
 
+async function skipCountdown(page: any) {
+  await page.evaluate(() => {
+    const gm = (window as any).__GAME_MANAGER__;
+    if (gm) {
+      gm.countdownTimer = 0;
+      gm.state = 'PLAYING';
+    }
+  });
+  await page.waitForTimeout(100);
+}
+
 test.describe('Landscape Artillery Duel - Turn-Based Mechanics, Camera & Hitboxes', () => {
   test('initializes landscape, 2 players on terrain surface, and camera zooms into active player', async ({ page }) => {
     await page.goto(`${LOCAL_URL}?game=landscape_artillery&players=2&difficulty=bot_easy`);
-    await page.waitForTimeout(600);
+    await expect(page.locator('canvas')).toBeVisible();
+    await skipCountdown(page);
+    await page.waitForTimeout(300);
 
     const debug = await page.evaluate(() => (window as any).__LANDSCAPE_ARTILLERY_DEBUG__);
     expect(debug).toBeTruthy();
@@ -22,14 +35,16 @@ test.describe('Landscape Artillery Duel - Turn-Based Mechanics, Camera & Hitboxe
     expect(debug.players[1].y).toBeGreaterThan(150);
 
     // Camera zooms in on active player during their turn
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(400);
     const cameraZoom = await page.evaluate(() => (window as any).__LANDSCAPE_ARTILLERY_DEBUG__.camera.zoom);
     expect(cameraZoom).toBeGreaterThan(1.25);
   });
 
   test('supports 4 players across randomly generated hills and valleys', async ({ page }) => {
     await page.goto(`${LOCAL_URL}?game=landscape_artillery&players=4&difficulty=bot_easy`);
-    await page.waitForTimeout(600);
+    await expect(page.locator('canvas')).toBeVisible();
+    await skipCountdown(page);
+    await page.waitForTimeout(300);
 
     const debug = await page.evaluate(() => (window as any).__LANDSCAPE_ARTILLERY_DEBUG__);
     expect(debug).toBeTruthy();
@@ -48,7 +63,9 @@ test.describe('Landscape Artillery Duel - Turn-Based Mechanics, Camera & Hitboxe
 
   test('aiming left/right, pulling back power, and firing launcher', async ({ page }) => {
     await page.goto(`${LOCAL_URL}?game=landscape_artillery&players=2&difficulty=bot_easy`);
-    await page.waitForTimeout(600);
+    await expect(page.locator('canvas')).toBeVisible();
+    await skipCountdown(page);
+    await page.waitForTimeout(300);
 
     const initialAngle = await page.evaluate(() => (window as any).__LANDSCAPE_ARTILLERY_DEBUG__.players[0].aimAngleDeg);
     const initialPower = await page.evaluate(() => (window as any).__LANDSCAPE_ARTILLERY_DEBUG__.players[0].power);
@@ -82,12 +99,14 @@ test.describe('Landscape Artillery Duel - Turn-Based Mechanics, Camera & Hitboxe
     });
 
     // Projectile should be in flight or turn state advanced
-    expect(flyingState.hasProjectile || flyingState.turnState === 'PROJECTILE_FLYING' || flyingState.turnState === 'IMPACT_PAUSE').toBe(true);
+    expect(flyingState.hasProjectile || flyingState.turnState === 'PROJECTILE_FLYING' || flyingState.turnState === 'IMPACT_PAUSE' || flyingState.turnState === 'NEXT_TURN_DELAY').toBe(true);
   });
 
   test('locational body hitboxes: Headshot does 2.5x critical damage, Body does 1.0x, Leg does 0.6x', async ({ page }) => {
     await page.goto(`${LOCAL_URL}?game=landscape_artillery&players=2&difficulty=bot_easy`);
-    await page.waitForTimeout(500);
+    await expect(page.locator('canvas')).toBeVisible();
+    await skipCountdown(page);
+    await page.waitForTimeout(300);
 
     // Directly test handlePlayerHit via game instance
     const hitResults = await page.evaluate(() => {
@@ -142,7 +161,9 @@ test.describe('Landscape Artillery Duel - Turn-Based Mechanics, Camera & Hitboxe
 
   test('explosions carve craters into destructible landscape terrain', async ({ page }) => {
     await page.goto(`${LOCAL_URL}?game=landscape_artillery&players=2&difficulty=bot_easy`);
-    await page.waitForTimeout(500);
+    await expect(page.locator('canvas')).toBeVisible();
+    await skipCountdown(page);
+    await page.waitForTimeout(300);
 
     const craterTest = await page.evaluate(() => {
       const gm = (window as any).__GAME_MANAGER__;

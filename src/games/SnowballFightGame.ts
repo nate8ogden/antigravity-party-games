@@ -252,6 +252,20 @@ export class SnowballFightGame extends BaseGame {
         });
       });
     }
+
+    this.syncDebug();
+  }
+
+  public syncDebug(): void {
+    if (typeof window !== 'undefined') {
+      (window as any).__SNOWBALL_FIGHT_DEBUG__ = {
+        players: Array.from(this.playersState.values()),
+        snowballs: this.snowballs,
+        blocks: this.blocks,
+        roundTimer: this.roundTimer,
+        isFinished: this.isFinished
+      };
+    }
   }
 
   private generateProceduralMap(width: number, height: number, isTwoPlayer: boolean): void {
@@ -403,15 +417,7 @@ export class SnowballFightGame extends BaseGame {
       }
     }
 
-    if (typeof window !== 'undefined') {
-      (window as any).__SNOWBALL_FIGHT_DEBUG__ = {
-        players: Array.from(this.playersState.values()),
-        snowballs: this.snowballs,
-        blocks: this.blocks,
-        roundTimer: this.roundTimer,
-        isFinished: this.isFinished
-      };
-    }
+    this.syncDebug();
 
     // Process Bot AI
     this.updateBots(dt, width, height);

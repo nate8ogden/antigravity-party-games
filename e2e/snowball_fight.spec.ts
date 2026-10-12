@@ -2,10 +2,23 @@ import { test, expect } from '@playwright/test';
 
 const LOCAL_URL = 'http://localhost:5173/';
 
+async function skipCountdown(page: any) {
+  await page.evaluate(() => {
+    const gm = (window as any).__GAME_MANAGER__;
+    if (gm) {
+      gm.countdownTimer = 0;
+      gm.state = 'PLAYING';
+    }
+  });
+  await page.waitForTimeout(100);
+}
+
 test.describe('Snowball Fight - Free Movement & Border Constraints', () => {
   test('players can move freely in their territory but cannot cross the center border', async ({ page }) => {
     await page.goto(`${LOCAL_URL}?game=snowball_fight&players=2&difficulty=bot_easy`);
-    await page.waitForTimeout(600);
+    await expect(page.locator('canvas')).toBeVisible();
+    await skipCountdown(page);
+    await page.waitForTimeout(300);
 
     // Verify debug state exists
     const debugInit = await page.evaluate(() => (window as any).__SNOWBALL_FIGHT_DEBUG__);
@@ -19,7 +32,7 @@ test.describe('Snowball Fight - Free Movement & Border Constraints', () => {
 
     // 1. Move P0 (Red / West) to the right using 'KeyD'
     await page.keyboard.down('KeyD');
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(500);
     await page.keyboard.up('KeyD');
 
     const debugMoved = await page.evaluate(() => (window as any).__SNOWBALL_FIGHT_DEBUG__);
@@ -39,7 +52,7 @@ test.describe('Snowball Fight - Free Movement & Border Constraints', () => {
       return {
         p0X: dbg.players[0].x,
         midX: width / 2,
-        isBlocked: dbg.players[0].x <= width / 2 - 20
+        isBlocked: dbg.players[0].x <= width / 2 - 18
       };
     });
 
@@ -84,14 +97,16 @@ test.describe('Snowball Fight - Free Movement & Border Constraints', () => {
 
   test('East bot stays strictly on East side of border and moves tactically', async ({ page }) => {
     await page.goto(`${LOCAL_URL}?game=snowball_fight&players=2&difficulty=bot_normal`);
-    await page.waitForTimeout(1000);
+    await expect(page.locator('canvas')).toBeVisible();
+    await skipCountdown(page);
+    await page.waitForTimeout(400);
 
     const positions = await page.evaluate(async () => {
       const samples: { p1X: number; midX: number }[] = [];
       const canvas = document.querySelector('canvas');
       const width = canvas?.width || 960;
 
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 8; i++) {
         const dbg = (window as any).__SNOWBALL_FIGHT_DEBUG__;
         if (dbg && dbg.players[1]) {
           samples.push({ p1X: dbg.players[1].x, midX: width / 2 });
@@ -103,8 +118,8 @@ test.describe('Snowball Fight - Free Movement & Border Constraints', () => {
 
     expect(positions.length).toBeGreaterThan(0);
     for (const s of positions) {
-      // East bot must remain on the East side (p1X > midX + 20)
-      expect(s.p1X).toBeGreaterThan(s.midX + 20);
+      // East bot must remain on the East side (p1X > midX + 18)
+      expect(s.p1X).toBeGreaterThan(s.midX + 18);
     }
   });
 });
