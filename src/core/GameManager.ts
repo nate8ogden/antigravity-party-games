@@ -3166,143 +3166,313 @@ export class GameManager {
     const t = performance.now() * 0.002;
     const pulse = 0.8 + 0.2 * Math.sin(t * 3);
 
-    // Glowing outer screen border
+    // 1. Glowing outer screen border
     this.ctx.strokeStyle = arena.borderColor;
     this.ctx.lineWidth = 4;
     this.ctx.shadowColor = arena.glowColor;
     this.ctx.shadowBlur = 12 * pulse;
     this.ctx.strokeRect(4, 4, w - 8, h - 8);
 
-    // Themed Corner Brackets & Ambient Accents
-    const cornerSize = 28;
-    this.ctx.lineWidth = 3;
-
+    // 2. Animated Thematic Environmental Features per Arena
     if (arenaId === 'arena_neon_synth') {
+      this.ctx.save();
+      // Moving 3D perspective synthwave floor grid lines
+      this.ctx.strokeStyle = 'rgba(236, 72, 153, 0.22)';
+      this.ctx.lineWidth = 1.2;
+      for (let i = 0; i < 6; i++) {
+        const gy = h - ((t * 40 + i * 28) % (h * 0.32));
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, gy);
+        this.ctx.lineTo(w, gy);
+        this.ctx.stroke();
+      }
+      this.ctx.strokeStyle = 'rgba(6, 182, 212, 0.15)';
+      for (let i = -4; i <= 4; i++) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(w / 2 + i * 35, h * 0.68);
+        this.ctx.lineTo(w / 2 + i * 160, h);
+        this.ctx.stroke();
+      }
+      // Laser corners
       const corners = [
         { x: 8, y: 8, dx: 1, dy: 1, c: '#06B6D4' },
         { x: w - 8, y: 8, dx: -1, dy: 1, c: '#06B6D4' },
         { x: 8, y: h - 8, dx: 1, dy: -1, c: '#EC4899' },
         { x: w - 8, y: h - 8, dx: -1, dy: -1, c: '#EC4899' }
       ];
-      corners.forEach(({ x, y, dx, dy, c }) => {
+      for (const { x, y, dx, dy, c } of corners) {
         this.ctx.strokeStyle = c;
+        this.ctx.lineWidth = 3;
         this.ctx.beginPath();
-        this.ctx.moveTo(x, y + dy * cornerSize);
+        this.ctx.moveTo(x, y + dy * 28);
         this.ctx.lineTo(x, y);
-        this.ctx.lineTo(x + dx * cornerSize, y);
+        this.ctx.lineTo(x + dx * 28, y);
         this.ctx.stroke();
-      });
+      }
+      this.ctx.restore();
     } else if (arenaId === 'arena_cyber_matrix') {
+      this.ctx.save();
+      // Cascading green matrix digital code rain columns
+      this.ctx.fillStyle = '#22C55E';
+      this.ctx.font = 'bold 9px monospace';
+      const glyphs = '01<>/_#ABCDEF';
+      for (let c = 0; c < 8; c++) {
+        const gx = c < 4 ? 12 + c * 16 : w - 70 + (c - 4) * 16;
+        const streamOffset = (t * 50 + c * 35) % (h * 0.8);
+        for (let r = 0; r < 5; r++) {
+          const gy = 40 + (streamOffset + r * 16) % (h - 80);
+          this.ctx.globalAlpha = r === 4 ? 0.8 : (r + 1) * 0.15;
+          const char = glyphs[(c * 3 + r + Math.floor(t * 4)) % glyphs.length];
+          this.ctx.fillText(char, gx, gy);
+        }
+      }
+      this.ctx.globalAlpha = 1.0;
+      // Circuit trace corner brackets
       this.ctx.strokeStyle = '#10B981';
-      this.ctx.fillStyle = '#10B981';
+      this.ctx.lineWidth = 3;
       const corners = [
         { x: 8, y: 8, dx: 1, dy: 1 },
         { x: w - 8, y: 8, dx: -1, dy: 1 },
         { x: 8, y: h - 8, dx: 1, dy: -1 },
         { x: w - 8, y: h - 8, dx: -1, dy: -1 }
       ];
-      corners.forEach(({ x, y, dx, dy }) => {
+      for (const { x, y, dx, dy } of corners) {
         this.ctx.beginPath();
-        this.ctx.moveTo(x, y + dy * cornerSize);
+        this.ctx.moveTo(x, y + dy * 28);
         this.ctx.lineTo(x, y);
-        this.ctx.lineTo(x + dx * cornerSize, y);
+        this.ctx.lineTo(x + dx * 28, y);
         this.ctx.stroke();
         this.ctx.fillRect(x + dx * 6 - 2, y + dy * 6 - 2, 4, 4);
-      });
+      }
+      this.ctx.restore();
+    } else if (arenaId === 'arena_arcade_cabinet') {
+      this.ctx.save();
+      // Retro CRT scanlines raster
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+      for (let y = 0; y < h; y += 4) {
+        this.ctx.fillRect(0, y, w, 1.5);
+      }
+      // Top & Bottom 8-bit marquee flashing bulbs
+      const bulbColors = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#EC4899'];
+      for (let i = 0; i < Math.floor(w / 40); i++) {
+        const bx = 20 + i * 40;
+        const bColor = bulbColors[(i + Math.floor(t * 3)) % bulbColors.length];
+        this.ctx.fillStyle = bColor;
+        this.ctx.shadowColor = bColor;
+        this.ctx.shadowBlur = 6;
+        this.ctx.beginPath();
+        this.ctx.arc(bx, 6, 2.5, 0, Math.PI * 2);
+        this.ctx.arc(bx, h - 6, 2.5, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      this.ctx.restore();
+    } else if (arenaId === 'arena_candy_land') {
+      this.ctx.save();
+      // Candy cane gumdrop corner towers
+      const gumdrops = [
+        { x: 16, y: 16, c: '#EC4899' },
+        { x: w - 16, y: 16, c: '#06B6D4' },
+        { x: 16, y: h - 16, c: '#10B981' },
+        { x: w - 16, y: h - 16, c: '#F59E0B' }
+      ];
+      for (const g of gumdrops) {
+        this.ctx.fillStyle = g.c;
+        this.ctx.shadowColor = g.c;
+        this.ctx.shadowBlur = 8;
+        this.ctx.beginPath();
+        this.ctx.arc(g.x, g.y, 8, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.beginPath();
+        this.ctx.arc(g.x - 2, g.y - 2, 2.5, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      // Floating confection sugar sparkles
+      for (let i = 0; i < 6; i++) {
+        const sx = (i * (w / 6) + Math.sin(t * 2 + i) * 30 + 40) % (w - 40);
+        const sy = h - ((t * 25 + i * 45) % (h - 60)) - 30;
+        this.ctx.fillStyle = '#F472B6';
+        this.ctx.beginPath();
+        this.ctx.arc(sx, sy, 2.5, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      this.ctx.restore();
     } else if (arenaId === 'arena_subzero_ice') {
+      this.ctx.save();
+      // Hanging crystalline icicles from top border
+      this.ctx.fillStyle = 'rgba(224, 242, 254, 0.7)';
       this.ctx.strokeStyle = '#38BDF8';
-      const corners = [
-        { x: 8, y: 8, dx: 1, dy: 1 },
-        { x: w - 8, y: 8, dx: -1, dy: 1 },
-        { x: 8, y: h - 8, dx: 1, dy: -1 },
-        { x: w - 8, y: h - 8, dx: -1, dy: -1 }
-      ];
-      corners.forEach(({ x, y, dx, dy }) => {
+      this.ctx.lineWidth = 1;
+      for (let i = 0; i < Math.floor(w / 30); i++) {
+        const ix = 15 + i * 30;
+        const ih = 8 + Math.sin(i * 1.7) * 5;
         this.ctx.beginPath();
-        this.ctx.moveTo(x, y + dy * cornerSize);
-        this.ctx.lineTo(x + dx * (cornerSize * 0.5), y + dy * (cornerSize * 0.5));
-        this.ctx.lineTo(x + dx * cornerSize, y);
-        this.ctx.stroke();
-      });
-    } else if (arenaId === 'arena_volcanic_magma') {
-      this.ctx.strokeStyle = '#EF4444';
-      const corners = [
-        { x: 8, y: 8, dx: 1, dy: 1 },
-        { x: w - 8, y: 8, dx: -1, dy: 1 },
-        { x: 8, y: h - 8, dx: 1, dy: -1 },
-        { x: w - 8, y: h - 8, dx: -1, dy: -1 }
-      ];
-      corners.forEach(({ x, y, dx, dy }) => {
-        this.ctx.beginPath();
-        this.ctx.moveTo(x, y + dy * cornerSize);
-        this.ctx.lineTo(x, y);
-        this.ctx.lineTo(x + dx * cornerSize, y);
-        this.ctx.stroke();
-      });
-    } else if (arenaId === 'arena_golden_palace') {
-      this.ctx.strokeStyle = '#F59E0B';
-      this.ctx.fillStyle = '#FEF3C7';
-      const corners = [
-        { x: 12, y: 12 },
-        { x: w - 12, y: 12 },
-        { x: 12, y: h - 12 },
-        { x: w - 12, y: h - 12 }
-      ];
-      corners.forEach(({ x, y }) => {
-        this.ctx.beginPath();
-        this.ctx.moveTo(x, y - 8);
-        this.ctx.lineTo(x + 8, y);
-        this.ctx.lineTo(x, y + 8);
-        this.ctx.lineTo(x - 8, y);
+        this.ctx.moveTo(ix - 6, 6);
+        this.ctx.lineTo(ix, 6 + ih);
+        this.ctx.lineTo(ix + 6, 6);
         this.ctx.closePath();
         this.ctx.fill();
         this.ctx.stroke();
-      });
+      }
+      // Drifting swirling blizzard snowflakes
+      for (let i = 0; i < 14; i++) {
+        const fx = (w + ((t * 45 + i * 73) % w) + Math.sin(t * 3 + i) * 20) % w;
+        const fy = ((t * 60 + i * 41) % h);
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+        this.ctx.beginPath();
+        this.ctx.arc(fx, fy, 2, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      this.ctx.restore();
     } else if (arenaId === 'arena_sakura_temple') {
-      // Lacquered vermillion brackets with floating blossom petal motifs
-      this.ctx.strokeStyle = '#F472B6';
-      this.ctx.fillStyle = 'rgba(244, 114, 182, 0.45)';
-      const corners = [
-        { x: 8, y: 8, dx: 1, dy: 1 },
-        { x: w - 8, y: 8, dx: -1, dy: 1 },
-        { x: 8, y: h - 8, dx: 1, dy: -1 },
-        { x: w - 8, y: h - 8, dx: -1, dy: -1 }
-      ];
-      corners.forEach(({ x, y, dx, dy }) => {
+      this.ctx.save();
+      // Floating pink cherry blossom petals tumbling across the wind
+      for (let i = 0; i < 12; i++) {
+        const px = (w + ((t * 30 + i * 67) % w) + Math.sin(t * 2 + i) * 35) % w;
+        const py = ((t * 35 + i * 53) % h);
+        this.ctx.save();
+        this.ctx.translate(px, py);
+        this.ctx.rotate(t * 1.5 + i);
+        this.ctx.fillStyle = '#F472B6';
+        this.ctx.shadowColor = '#EC4899';
+        this.ctx.shadowBlur = 6;
         this.ctx.beginPath();
-        this.ctx.moveTo(x, y + dy * cornerSize);
-        this.ctx.lineTo(x, y);
-        this.ctx.lineTo(x + dx * cornerSize, y);
-        this.ctx.stroke();
-        // Delicate blossom petal
-        this.ctx.beginPath();
-        this.ctx.ellipse(x + dx * 14, y + dy * 14, 6, 3, Math.PI / 4, 0, Math.PI * 2);
+        this.ctx.ellipse(0, 0, 5, 2.5, 0, 0, Math.PI * 2);
         this.ctx.fill();
+        this.ctx.restore();
+      }
+      this.ctx.restore();
+    } else if (arenaId === 'arena_volcanic_magma') {
+      this.ctx.save();
+      // Molten magma fissures along bottom border
+      this.ctx.strokeStyle = '#F97316';
+      this.ctx.lineWidth = 2.5;
+      this.ctx.shadowColor = '#EA580C';
+      this.ctx.shadowBlur = 10;
+      this.ctx.beginPath();
+      this.ctx.moveTo(20, h - 8);
+      for (let x = 40; x < w - 20; x += 35) {
+        const yFiss = h - 8 + Math.sin(x * 0.05 + t * 4) * 3;
+        this.ctx.lineTo(x, yFiss);
+      }
+      this.ctx.stroke();
+      // Rising fire embers
+      for (let i = 0; i < 10; i++) {
+        const ex = (i * (w / 10) + Math.sin(t * 3 + i) * 20 + 30) % (w - 40);
+        const ey = h - ((t * 50 + i * 40) % (h * 0.5)) - 10;
+        this.ctx.fillStyle = i % 2 === 0 ? '#EF4444' : '#FBBF24';
+        this.ctx.beginPath();
+        this.ctx.arc(ex, ey, 2.2, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      this.ctx.restore();
+    } else if (arenaId === 'arena_haunted_dungeon') {
+      this.ctx.save();
+      // Creeping green ectoplasmic ground mist waves rolling along bottom
+      this.ctx.fillStyle = 'rgba(16, 185, 129, 0.12)';
+      this.ctx.beginPath();
+      this.ctx.moveTo(0, h);
+      for (let x = 0; x <= w; x += 40) {
+        const my = h - 22 + Math.sin(x * 0.02 + t * 2) * 8;
+        this.ctx.lineTo(x, my);
+      }
+      this.ctx.lineTo(w, h);
+      this.ctx.closePath();
+      this.ctx.fill();
+      // 4 Corner Torch Sconces
+      const torches = [
+        { x: 18, y: 18 },
+        { x: w - 18, y: 18 },
+        { x: 18, y: h - 18 },
+        { x: w - 18, y: h - 18 }
+      ];
+      for (const tc of torches) {
+        const flameFlicker = Math.sin(t * 12 + tc.x) * 2;
+        this.ctx.fillStyle = '#10B981';
+        this.ctx.shadowColor = '#34D399';
+        this.ctx.shadowBlur = 12;
+        this.ctx.beginPath();
+        this.ctx.arc(tc.x, tc.y, 6 + flameFlicker, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.fillStyle = '#A7F3D0';
+        this.ctx.beginPath();
+        this.ctx.arc(tc.x, tc.y, 2.5, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      this.ctx.restore();
+    } else if (arenaId === 'arena_atlantis_deep') {
+      this.ctx.save();
+      // Aquatic sunlight caustics shimmer waves across the display
+      this.ctx.strokeStyle = 'rgba(6, 182, 212, 0.14)';
+      this.ctx.lineWidth = 3;
+      for (let i = 0; i < 4; i++) {
+        this.ctx.beginPath();
+        const cy = 60 + i * (h / 4);
+        this.ctx.moveTo(0, cy + Math.sin(t * 2 + i) * 15);
+        for (let x = 40; x <= w; x += 40) {
+          this.ctx.lineTo(x, cy + Math.sin(x * 0.015 + t * 2.5 + i) * 12);
+        }
         this.ctx.stroke();
-      });
+      }
+      // Rising bioluminescent oxygen bubbles
+      for (let i = 0; i < 10; i++) {
+        const bx = (i * (w / 10) + Math.sin(t * 2 + i) * 25 + 40) % (w - 40);
+        const by = h - ((t * 35 + i * 50) % h);
+        this.ctx.strokeStyle = '#67E8F9';
+        this.ctx.lineWidth = 1.2;
+        this.ctx.beginPath();
+        this.ctx.arc(bx, by, 3 + (i % 3) * 1.5, 0, Math.PI * 2);
+        this.ctx.stroke();
+      }
+      this.ctx.restore();
+    } else if (arenaId === 'arena_golden_palace') {
+      this.ctx.save();
+      // Inner delicate gold filigree and sparkling starlight
+      this.ctx.strokeStyle = 'rgba(254, 243, 199, 0.6)';
+      this.ctx.lineWidth = 1.5;
+      this.ctx.setLineDash([8, 6]);
+      this.ctx.strokeRect(14, 14, w - 28, h - 28);
+      // Twinkling golden starlight glints along borders
+      for (let i = 0; i < 6; i++) {
+        const sx = 40 + ((t * 80 + i * 140) % (w - 80));
+        const sy = i % 2 === 0 ? 11 : h - 11;
+        this.ctx.fillStyle = '#FEF3C7';
+        this.ctx.shadowColor = '#F59E0B';
+        this.ctx.shadowBlur = 8;
+        this.ctx.beginPath();
+        this.ctx.arc(sx, sy, 3, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      this.ctx.restore();
     } else if (arenaId === 'arena_deep_space_station') {
-      // Sci-fi cruiser bulkhead airlocks with cyan forcefield energy
-      this.ctx.strokeStyle = '#38BDF8';
-      this.ctx.fillStyle = '#0284C7';
-      const corners = [
-        { x: 8, y: 8, dx: 1, dy: 1 },
-        { x: w - 8, y: 8, dx: -1, dy: 1 },
-        { x: 8, y: h - 8, dx: 1, dy: -1 },
-        { x: w - 8, y: h - 8, dx: -1, dy: -1 }
-      ];
-      corners.forEach(({ x, y, dx, dy }) => {
+      this.ctx.save();
+      // Distant twinkling stars
+      for (let i = 0; i < 12; i++) {
+        const sx = (i * 71) % (w - 30) + 15;
+        const sy = (i * 53) % (h - 30) + 15;
+        const sAlpha = 0.3 + 0.5 * Math.sin(t * 3 + i * 1.5);
+        this.ctx.fillStyle = `rgba(224, 242, 254, ${sAlpha})`;
         this.ctx.beginPath();
-        this.ctx.moveTo(x, y + dy * cornerSize);
-        this.ctx.lineTo(x + dx * 8, y + dy * 8);
-        this.ctx.lineTo(x + dx * cornerSize, y);
-        this.ctx.stroke();
-        // Pulsing amber docking beacon LED
-        const beaconPulse = Math.sin(t * 6) > 0;
-        this.ctx.fillStyle = beaconPulse ? '#FBBF24' : '#78350F';
-        this.ctx.beginPath();
-        this.ctx.arc(x + dx * 16, y + dy * 16, 3, 0, Math.PI * 2);
+        this.ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
         this.ctx.fill();
-      });
+      }
+      // Rotating amber hazard beacons on corners
+      const beacons = [
+        { x: 14, y: 14 },
+        { x: w - 14, y: 14 },
+        { x: 14, y: h - 14 },
+        { x: w - 14, y: h - 14 }
+      ];
+      for (const b of beacons) {
+        const beaconFlash = (Math.sin(t * 8 + b.x) + 1) * 0.5;
+        this.ctx.fillStyle = `rgba(245, 158, 11, ${0.4 + beaconFlash * 0.6})`;
+        this.ctx.shadowColor = '#F59E0B';
+        this.ctx.shadowBlur = 10;
+        this.ctx.beginPath();
+        this.ctx.arc(b.x, b.y, 5, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      this.ctx.restore();
     }
 
     this.ctx.restore();
