@@ -103,6 +103,10 @@ export class InputRouter {
     return this.controlMode;
   }
 
+  public getCanvas(): HTMLCanvasElement {
+    return this.canvas;
+  }
+
   private lastHapticTime: number = 0;
 
   private triggerHaptic(durationMs = 12) {
