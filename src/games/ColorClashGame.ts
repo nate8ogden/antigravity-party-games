@@ -639,7 +639,7 @@ export class ColorClashGame extends BaseGame {
 
     let curOffset = barX;
     for (const rover of this.rovers.values()) {
-      const pColor = this.players[rover.id]?.color || '#38BDF8';
+      const pColor = this.getPlayer(rover.id)?.color || '#38BDF8';
       const segmentW = (rover.tileCount / this.totalTiles) * barW;
       if (segmentW > 0) {
         ctx.fillStyle = pColor;
