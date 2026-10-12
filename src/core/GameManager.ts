@@ -615,8 +615,8 @@ export const GAME_CATALOG: MinigameMetadata[] = [
     tagline: '90-Second Vertical Tower Rush',
     category: 'Physics',
     icon: '[G-39]',
-    instructions: 'Ascend a perilous vertical tower! Auto-bounce across floating circles, crystals, hexagons, clouds, and moving beams. Reach the summit first or climb the highest before the 90s timer runs out! Press 1-3 to switch map themes.',
-    controlPrompt: 'A/D or Left/Right: Steer • Hold Space/Enter or W/Up: Spring Leap Boost • 1-3: Switch Map'
+    instructions: 'Ascend a perilous vertical tower! Jump across floating triangles, planetary spheres, crystal diamonds, and tech hexagons. Press Space/W or Enter/Up for instant zero-stall leaps and mid-air flutter jumps! Press 1-3 to switch map themes.',
+    controlPrompt: 'A/D or Left/Right: Steer • Space/W or Enter/Up: Instant Leap & Air Jump • 1-3: Switch Map'
   },
   {
     id: 'snowball_fight',
