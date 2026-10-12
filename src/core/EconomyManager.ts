@@ -340,6 +340,33 @@ export const SKIN_CATALOG: MascotSkin[] = [
     price: 100,
     previewColor: '#0284C7',
     cosmeticEffect: 'astro_thruster'
+  },
+  {
+    id: 'cyber_samurai_ronin',
+    name: 'Cyber Ronin 2099',
+    rarity: 'Legendary',
+    description: 'Holographic straw jingasa hat with dual energised plasma katanas and cherry blossom slash trails.',
+    price: 235,
+    previewColor: '#06B6D4',
+    cosmeticEffect: 'samurai_ronin'
+  },
+  {
+    id: 'space_pirate_corsair',
+    name: 'Captain Void Corsair',
+    rarity: 'Legendary',
+    description: 'Pirate tricorne with holographic skull emblem, brass telescope visor, and orbiting parrot drone.',
+    price: 240,
+    previewColor: '#EF4444',
+    cosmeticEffect: 'pirate_cannon'
+  },
+  {
+    id: 'retro_gameboy_classic',
+    name: 'Chomp-Boy 1989',
+    rarity: 'Epic',
+    description: 'Iconic dot-matrix green LCD chassis with tactile directional D-pad, crimson buttons, and 8-bit chiptune trail.',
+    price: 140,
+    previewColor: '#84CC16',
+    cosmeticEffect: 'arcade_retro'
   }
 ];
 
@@ -364,7 +391,10 @@ export interface ArenaTheme {
     | 'arcade_cabinet'
     | 'haunted_dungeon'
     | 'atlantis_deep'
-    | 'candy_land';
+    | 'candy_land'
+    | 'steampunk_forge'
+    | 'synthwave_highway'
+    | 'jade_dragon';
 }
 
 export const ARENA_CATALOG: ArenaTheme[] = [
@@ -499,6 +529,39 @@ export const ARENA_CATALOG: ArenaTheme[] = [
     borderColor: '#38BDF8',
     glowColor: 'rgba(56, 189, 248, 0.6)',
     floorPattern: 'space_hull'
+  },
+  {
+    id: 'arena_steampunk_forge',
+    name: 'Steampunk Clockwork Forge',
+    rarity: 'Legendary',
+    description: 'Victorian industrial foundry with ticking brass gear cogs in the corners, venting steam geysers, and polished copper rivet trim.',
+    price: 180,
+    previewColor: '#271B11',
+    borderColor: '#B45309',
+    glowColor: 'rgba(217, 119, 6, 0.65)',
+    floorPattern: 'steampunk_forge'
+  },
+  {
+    id: 'arena_synthwave_highway',
+    name: 'Sunset Synthwave Highway',
+    rarity: 'Legendary',
+    description: 'Retro-futuristic 1980s neon highway with an illuminated wireframe horizon sun, speeding magenta grids, and glowing palm tree silhouettes.',
+    price: 190,
+    previewColor: '#1E112A',
+    borderColor: '#EC4899',
+    glowColor: 'rgba(236, 72, 153, 0.65)',
+    floorPattern: 'synthwave_highway'
+  },
+  {
+    id: 'arena_jade_dragon',
+    name: 'Jade Dragon Sanctuary',
+    rarity: 'Legendary',
+    description: 'Sacred imperial dragon pagoda with swirling ethereal emerald mist, celestial jade lanterns, and golden dragon crests.',
+    price: 210,
+    previewColor: '#06281E',
+    borderColor: '#10B981',
+    glowColor: 'rgba(16, 185, 129, 0.65)',
+    floorPattern: 'jade_dragon'
   }
 ];
 

@@ -3473,6 +3473,109 @@ export class GameManager {
         this.ctx.fill();
       }
       this.ctx.restore();
+    } else if (arenaId === 'arena_steampunk_forge') {
+      this.ctx.save();
+      // Rotating brass corner gear cogs
+      const gears = [
+        { x: 18, y: 18, dir: 1 },
+        { x: w - 18, y: 18, dir: -1 },
+        { x: 18, y: h - 18, dir: -1 },
+        { x: w - 18, y: h - 18, dir: 1 }
+      ];
+      for (const g of gears) {
+        this.ctx.save();
+        this.ctx.translate(g.x, g.y);
+        this.ctx.rotate(t * 1.8 * g.dir);
+        this.ctx.fillStyle = '#B45309';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 14, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.strokeStyle = '#F59E0B';
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
+        // Gear teeth
+        for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+          this.ctx.fillRect(Math.cos(a) * 13 - 2, Math.sin(a) * 13 - 2, 4, 4);
+        }
+        // Center axle
+        this.ctx.fillStyle = '#78350F';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 4, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
+      }
+      // Venting steam puffs
+      for (let i = 0; i < 6; i++) {
+        const sx = i % 2 === 0 ? 25 + (i * 20) : w - 25 - (i * 20);
+        const sy = h - 15 - ((t * 40 + i * 25) % 45);
+        this.ctx.fillStyle = 'rgba(254, 243, 199, 0.25)';
+        this.ctx.beginPath();
+        this.ctx.arc(sx, sy, 5 + (i % 3) * 2, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      this.ctx.restore();
+    } else if (arenaId === 'arena_synthwave_highway') {
+      this.ctx.save();
+      // Glowing neon horizon sun at top center
+      const sunX = w / 2;
+      const sunY = 48;
+      const sunR = 26;
+      const sunGrad = this.ctx.createLinearGradient(sunX, sunY - sunR, sunX, sunY + sunR);
+      sunGrad.addColorStop(0, '#FDE047');
+      sunGrad.addColorStop(0.5, '#F43F5E');
+      sunGrad.addColorStop(1, '#9333EA');
+      this.ctx.fillStyle = sunGrad;
+      this.ctx.beginPath();
+      this.ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+      this.ctx.fill();
+      // Horizontal laser slats through sun
+      this.ctx.fillStyle = '#0F172A';
+      for (let y = sunY - 4; y < sunY + sunR; y += 7) {
+        this.ctx.fillRect(sunX - sunR, y, sunR * 2, 2.5);
+      }
+      // Neon Palm Tree silhouettes in bottom corners
+      const palms = [{ x: 28, y: h - 12 }, { x: w - 28, y: h - 12 }];
+      this.ctx.fillStyle = '#EC4899';
+      for (const p of palms) {
+        this.ctx.fillRect(p.x - 2, p.y - 28, 4, 28); // Trunk
+        for (let a = -1.2; a <= 1.2; a += 0.6) {
+          this.ctx.beginPath();
+          this.ctx.arc(p.x + Math.sin(a) * 14, p.y - 28 + Math.cos(a) * 4, 8, 0, Math.PI);
+          this.ctx.fill();
+        }
+      }
+      this.ctx.restore();
+    } else if (arenaId === 'arena_jade_dragon') {
+      this.ctx.save();
+      // Swirling ethereal emerald dragon energy trail
+      this.ctx.strokeStyle = 'rgba(52, 211, 153, 0.45)';
+      this.ctx.lineWidth = 3;
+      this.ctx.beginPath();
+      for (let i = 0; i < 18; i++) {
+        const orbitAngle = t * 2 + (i / 18) * Math.PI * 2;
+        const ox = w / 2 + Math.cos(orbitAngle) * (w * 0.46);
+        const oy = h / 2 + Math.sin(orbitAngle) * (h * 0.44);
+        if (i === 0) this.ctx.moveTo(ox, oy);
+        else this.ctx.lineTo(ox, oy);
+      }
+      this.ctx.closePath();
+      this.ctx.stroke();
+      // Hanging Jade Lanterns in top corners
+      const lanterns = [{ x: 26, y: 22 }, { x: w - 26, y: 22 }];
+      for (const lt of lanterns) {
+        const sway = Math.sin(t * 3 + lt.x) * 4;
+        this.ctx.fillStyle = '#10B981';
+        this.ctx.shadowColor = '#34D399';
+        this.ctx.shadowBlur = 10;
+        this.ctx.beginPath();
+        this.ctx.roundRect(lt.x + sway - 6, lt.y - 8, 12, 16, 4);
+        this.ctx.fill();
+        this.ctx.fillStyle = '#FEF08A';
+        this.ctx.beginPath();
+        this.ctx.arc(lt.x + sway, lt.y, 3, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      this.ctx.restore();
     }
 
     this.ctx.restore();
