@@ -14,9 +14,9 @@ interface ClimberPlayer {
   vy: number;
   radius: number;
   grounded: boolean;
+  coyoteTimer: number;    // Grace window for instant jump after leaving a platform
+  canDoubleJump: boolean; // Mid-air air jump
   facing: 1 | -1;
-  chargeJump?: number; // legacy optional
-  isCharging?: boolean;
   highestAltitude: number; // in meters
   currentAltitude: number;
   fallDistance: number;
@@ -24,10 +24,9 @@ interface ClimberPlayer {
   animTimer: number;
   score: number;
   reachedSummit: boolean;
-  springBoostActive?: boolean;
 }
 
-export type PlatformShape = 'rectangle' | 'circle' | 'diamond' | 'hexagon' | 'cloud' | 'triangle';
+export type PlatformShape = 'triangle' | 'circle' | 'diamond' | 'hexagon' | 'rectangle';
 
 interface Platform {
   x: number;
@@ -73,7 +72,6 @@ export class DontLookDownGame extends BaseGame {
   }
 
   public init(width: number, height: number): void {
-    // 90 seconds high-stakes vertical ascent rush
     this.roundTimer = 90.0;
     this.isFinished = false;
     this.summitReachedWinnerId = null;
@@ -112,6 +110,8 @@ export class DontLookDownGame extends BaseGame {
         vy: 0,
         radius: 14,
         grounded: true,
+        coyoteTimer: 0.2,
+        canDoubleJump: true,
         facing: idx % 2 === 0 ? 1 : -1,
         highestAltitude: 0,
         currentAltitude: 0,
@@ -119,8 +119,7 @@ export class DontLookDownGame extends BaseGame {
         fallSoundPlayed: false,
         animTimer: 0,
         score: 0,
-        reachedSummit: false,
-        springBoostActive: false
+        reachedSummit: false
       });
     });
 
@@ -138,67 +137,108 @@ export class DontLookDownGame extends BaseGame {
             p.vy = vy;
           }
         },
-        setRoundTimer: (t: number) => { this.roundTimer = t; },
-        getRoundTimer: () => this.roundTimer,
-        setMapTheme: (t: MapTheme) => this.setMapTheme(t)
+        reachSummit: (id: PlayerId) => {
+          const p = this.playersState.get(id);
+          if (p) {
+            p.x = this.worldWidth / 2;
+            p.y = this.summitY;
+            p.reachedSummit = true;
+            this.summitReachedWinnerId = id;
+            this.isFinished = true;
+          }
+        },
+        setTheme: (theme: MapTheme) => {
+          this.setMapTheme(theme);
+        }
       };
     }
 
-    if (this.keydownListener) {
-      window.removeEventListener('keydown', this.keydownListener);
-    }
+    this.bindKeyboardShortcuts();
+  }
+
+  private bindKeyboardShortcuts(): void {
+    if (typeof window === 'undefined') return;
+    this.unbindKeyboardShortcuts();
+
     this.keydownListener = (e: KeyboardEvent) => {
-      if (e.code === 'Digit1' || e.code === 'Numpad1' || e.key === '1') {
-        this.setMapTheme('cyber', this.worldWidth, height);
-      } else if (e.code === 'Digit2' || e.code === 'Numpad2' || e.key === '2') {
-        this.setMapTheme('sky', this.worldWidth, height);
-      } else if (e.code === 'Digit3' || e.code === 'Numpad3' || e.key === '3') {
-        this.setMapTheme('magma', this.worldWidth, height);
+      if (e.key === '1') {
+        this.setMapTheme('cyber');
+      } else if (e.key === '2') {
+        this.setMapTheme('sky');
+      } else if (e.key === '3') {
+        this.setMapTheme('magma');
       }
     };
     window.addEventListener('keydown', this.keydownListener);
   }
 
-  public setMapTheme(theme: MapTheme, width?: number, height?: number): void {
-    if (this.mapTheme === theme) return;
-    this.mapTheme = theme;
-    this.audio.playTap();
-    this.generateMapPlatforms();
-    this.particles.shake(0.3);
-  }
-
-  public destroy(): void {
-    if (this.keydownListener) {
+  private unbindKeyboardShortcuts(): void {
+    if (typeof window !== 'undefined' && this.keydownListener) {
       window.removeEventListener('keydown', this.keydownListener);
       this.keydownListener = null;
     }
   }
 
+  public destroy(): void {
+    this.unbindKeyboardShortcuts();
+    if (typeof window !== 'undefined' && (window as any).__DONT_LOOK_DOWN_DEBUG__) {
+      delete (window as any).__DONT_LOOK_DOWN_DEBUG__;
+    }
+  }
+
+  public setMapTheme(theme: MapTheme): void {
+    if (this.mapTheme === theme) return;
+    this.mapTheme = theme;
+    this.generateMapPlatforms();
+
+    // Reposition active players safely at the base
+    const active = this.getActivePlayers();
+    active.forEach((p, idx) => {
+      const ps = this.playersState.get(p.id);
+      if (ps) {
+        const spacing = this.worldWidth / (active.length + 1);
+        ps.x = spacing * (idx + 1);
+        ps.y = this.groundY - 18;
+        ps.vx = 0;
+        ps.vy = 0;
+        ps.grounded = true;
+        ps.coyoteTimer = 0.2;
+        ps.canDoubleJump = true;
+        ps.currentAltitude = 0;
+        ps.fallDistance = 0;
+      }
+    });
+
+    const themeName = theme === 'cyber' ? 'CYBER SPIRE' : (theme === 'sky' ? 'SKY RUINS' : 'MAGMA CALDERA');
+    this.particles.showFloatingText(`MAP: ${themeName}`, this.worldWidth / 2, this.cameraY + 120, '#38BDF8', 22);
+    this.audio.playTone(520, 0.12, 'sine');
+  }
+
   private generateMapPlatforms(): void {
     this.platforms = [];
 
-    // Base ground platform (Ground Level 0m)
+    // Base ground platform
     this.platforms.push({
       x: 0,
       y: this.groundY,
       w: this.worldWidth,
-      h: 80,
+      h: 50,
       shape: 'rectangle',
       type: 'standard'
     });
 
-    // Summit platform (Goal Peak ~320m)
+    // Summit Victory Platform at Top (320m)
     this.platforms.push({
-      x: this.worldWidth / 2 - 120,
+      x: this.worldWidth / 2 - 90,
       y: this.summitY,
-      w: 240,
-      h: 30,
+      w: 180,
+      h: 28,
       shape: 'rectangle',
       type: 'bouncy'
     });
 
-    // Procedural Vertical Ascent Platforms with diverse geometric shapes
-    const stepY = 105;
+    // Procedural Vertical Ascent Platforms with guaranteed diverse geometric shapes
+    const stepY = 100;
     const totalSteps = Math.floor((this.groundY - this.summitY - 170) / stepY);
 
     let lastX = this.worldWidth / 2;
@@ -207,50 +247,34 @@ export class DontLookDownGame extends BaseGame {
       const y = this.groundY - 90 - i * stepY;
       const progress = i / totalSteps;
 
-      // Select diverse shape
-      const shapeRoll = Math.random();
-      let shape: PlatformShape = 'rectangle';
-      if (this.mapTheme === 'cyber') {
-        if (shapeRoll < 0.28) shape = 'hexagon';
-        else if (shapeRoll < 0.52) shape = 'diamond';
-        else if (shapeRoll < 0.74) shape = 'circle';
-        else shape = 'rectangle';
-      } else if (this.mapTheme === 'sky') {
-        if (shapeRoll < 0.30) shape = 'cloud';
-        else if (shapeRoll < 0.55) shape = 'circle';
-        else if (shapeRoll < 0.76) shape = 'diamond';
-        else shape = 'rectangle';
-      } else {
-        if (shapeRoll < 0.30) shape = 'triangle';
-        else if (shapeRoll < 0.55) shape = 'hexagon';
-        else if (shapeRoll < 0.76) shape = 'circle';
-        else shape = 'rectangle';
-      }
+      // Guaranteed cyclic distribution so Triangles, Circles, Diamonds, Hexagons, and Beams are prominent on EVERY run
+      const shapeCycle = i % 5;
+      let shape: PlatformShape = 'triangle';
+      if (shapeCycle === 0) shape = 'triangle';
+      else if (shapeCycle === 1) shape = 'circle';
+      else if (shapeCycle === 2) shape = 'diamond';
+      else if (shapeCycle === 3) shape = 'hexagon';
+      else shape = 'rectangle';
 
-      // Proportional dimensions for each shape
+      // Bold, unmistakable dimensions for each shape so they are visibly distinct
       let w = 85;
-      let h = 20;
+      let h = 50;
 
-      if (shape === 'circle') {
-        w = Math.round(56 + Math.random() * 24);
-        h = w;
-      } else if (shape === 'hexagon') {
-        w = Math.round(75 + Math.random() * 25);
-        h = Math.round(w * 0.65);
+      if (shape === 'triangle') {
+        w = 82;
+        h = 56; // Bold tall neon pyramid
+      } else if (shape === 'circle') {
+        w = 68;
+        h = 68; // Full round planetary orb
       } else if (shape === 'diamond') {
-        w = Math.round(65 + Math.random() * 25);
-        h = Math.round(w * 0.75);
-      } else if (shape === 'cloud') {
-        w = Math.round(90 + Math.random() * 30);
-        h = 24;
-      } else if (shape === 'triangle') {
-        w = Math.round(72 + Math.random() * 24);
-        h = 32;
+        w = 76;
+        h = 58; // Faceted crystal gem
+      } else if (shape === 'hexagon') {
+        w = 82;
+        h = 46; // Chunky techno-honeycomb plate
       } else {
-        const minW = this.mapTheme === 'magma' ? 65 : 75;
-        const maxW = this.mapTheme === 'cyber' ? 130 : 115;
-        w = Math.max(minW, maxW - progress * 35 + (Math.random() - 0.5) * 20);
-        h = 20;
+        w = 90;
+        h = 24; // Classic metallic girder beam
       }
 
       // Horizontal offset
@@ -259,21 +283,24 @@ export class DontLookDownGame extends BaseGame {
       x = Math.max(45, Math.min(this.worldWidth - w - 45, x));
       lastX = x;
 
-      // Determine platform special type based on map theme and shape
+      // Platform special modifiers
       let type: Platform['type'] = 'standard';
       const roll = Math.random();
 
-      if (shape === 'cloud') {
-        type = 'standard'; // Soft buoyant spring
-      } else if (this.mapTheme === 'cyber') {
-        if (roll < 0.22) type = 'bouncy';
-        else if (roll < 0.44 && (shape === 'rectangle' || shape === 'hexagon')) type = 'moving';
-      } else if (this.mapTheme === 'sky') {
-        if (roll < 0.24) type = 'updraft';
-        else if (roll < 0.44 && (shape === 'rectangle' || shape === 'circle')) type = 'moving';
-      } else if (this.mapTheme === 'magma') {
-        if (roll < 0.32) type = 'sinking';
-        else if (roll < 0.52) type = 'bouncy';
+      if (shape === 'circle') {
+        if (roll < 0.28) type = 'bouncy';
+        else if (roll < 0.50) type = 'moving';
+      } else if (shape === 'triangle') {
+        if (roll < 0.25) type = 'bouncy';
+        else if (roll < 0.45 && this.mapTheme === 'sky') type = 'updraft';
+      } else if (shape === 'diamond') {
+        if (roll < 0.30) type = 'bouncy';
+      } else if (shape === 'hexagon') {
+        if (roll < 0.30) type = 'moving';
+        else if (this.mapTheme === 'magma' && roll < 0.55) type = 'sinking';
+      } else {
+        if (this.mapTheme === 'magma' && roll < 0.35) type = 'sinking';
+        else if (roll < 0.30) type = 'moving';
       }
 
       const plat: Platform = {
@@ -286,9 +313,9 @@ export class DontLookDownGame extends BaseGame {
       };
 
       if (type === 'moving') {
-        plat.vx = (Math.random() > 0.5 ? 1 : -1) * (60 + Math.random() * 40);
-        plat.minX = Math.max(30, x - 100);
-        plat.maxX = Math.min(this.worldWidth - w - 30, x + 100);
+        plat.vx = (Math.random() > 0.5 ? 1 : -1) * (65 + Math.random() * 45);
+        plat.minX = Math.max(30, x - 110);
+        plat.maxX = Math.min(this.worldWidth - w - 30, x + 110);
       } else if (type === 'sinking') {
         plat.sinkTimer = 1.0;
         plat.sunk = false;
@@ -340,10 +367,12 @@ export class DontLookDownGame extends BaseGame {
       if (!ps) continue;
 
       ps.animTimer += dt;
+      if (ps.coyoteTimer > 0) ps.coyoteTimer -= dt;
 
       // Handle Inputs
       const steer = this.input.getSteer(p.id);
       const isActionPressed = this.input.isPressed(p.id) || this.input.isActionPressed(p.id);
+      const justJump = this.input.justAction(p.id) || this.input.justPressed(p.id) || this.input.justUp(p.id);
 
       // Horizontal movement & crisp air steering
       if (steer !== 0) {
@@ -351,6 +380,25 @@ export class DontLookDownGame extends BaseGame {
         ps.facing = steer > 0 ? 1 : -1;
       } else {
         ps.vx *= Math.pow(0.92, dt * 60);
+      }
+
+      // INSTANT JUMP - NO STALL!
+      if (justJump) {
+        if (ps.grounded || ps.coyoteTimer > 0) {
+          // Instant ground / platform jump
+          ps.vy = -690;
+          ps.grounded = false;
+          ps.coyoteTimer = 0;
+          this.audio.playTap();
+          this.particles.spawnSparks(ps.x, ps.y + ps.radius, '#FACC15', 8);
+        } else if (ps.canDoubleJump) {
+          // Responsive mid-air air jump
+          ps.vy = -630;
+          ps.canDoubleJump = false;
+          this.audio.playBoost();
+          this.particles.spawnSparks(ps.x, ps.y + ps.radius, '#38BDF8', 10);
+          this.particles.showFloatingText('AIR JUMP! 🚀', ps.x, ps.y - 18, '#38BDF8', 14);
+        }
       }
 
       // In-Air Gravity & Fall Physics
@@ -383,7 +431,6 @@ export class DontLookDownGame extends BaseGame {
       }
 
       // Platform Collision Detection with Multi-Shape Geometry
-      ps.grounded = false;
       const feetY = ps.y + ps.radius;
       const prevFeetY = feetY - ps.vy * dt;
 
@@ -411,13 +458,13 @@ export class DontLookDownGame extends BaseGame {
             const cx = plat.x + radius;
             const cy = plat.y + radius;
             const dx = ps.x - cx;
-            if (Math.abs(dx) <= radius + ps.radius * 0.8 && ps.y <= cy + 6) {
+            if (Math.abs(dx) <= radius + ps.radius * 0.75 && ps.y <= cy + 12) {
               const insideRad = Math.max(0, radius * radius - dx * dx);
               const topArcY = cy - Math.sqrt(insideRad);
-              if (prevFeetY <= topArcY + 14 && feetY >= topArcY - 8) {
+              if (prevFeetY <= topArcY + 16 && feetY >= topArcY - 10) {
                 hasLanded = true;
                 landY = topArcY;
-                lateralPush = (dx / radius) * 45;
+                lateralPush = (dx / radius) * 35;
               }
             }
           } else if (plat.shape === 'triangle') {
@@ -425,23 +472,36 @@ export class DontLookDownGame extends BaseGame {
             const dx = Math.abs(ps.x - cx);
             if (dx <= plat.w / 2 + 6) {
               const slopeY = plat.y + (dx / (plat.w / 2)) * plat.h;
-              if (prevFeetY <= slopeY + 14 && feetY >= slopeY - 8) {
+              if (prevFeetY <= slopeY + 16 && feetY >= slopeY - 10) {
                 hasLanded = true;
                 landY = slopeY;
-                lateralPush = Math.sign(ps.x - cx) * 35;
+                lateralPush = Math.sign(ps.x - cx) * 30;
               }
             }
           } else if (plat.shape === 'diamond') {
             const cx = plat.x + plat.w / 2;
             const dx = Math.abs(ps.x - cx);
-            if (dx <= plat.w * 0.46 && prevFeetY <= plat.y + 14 && feetY >= plat.y - 8) {
-              hasLanded = true;
-              landY = plat.y;
+            if (dx <= plat.w / 2) {
+              const slopeY = plat.y + (dx / (plat.w / 2)) * (plat.h / 2);
+              if (prevFeetY <= slopeY + 16 && feetY >= slopeY - 10) {
+                hasLanded = true;
+                landY = slopeY;
+              }
+            }
+          } else if (plat.shape === 'hexagon') {
+            const cx = plat.x + plat.w / 2;
+            const dx = Math.abs(ps.x - cx);
+            if (dx <= plat.w / 2 + 4) {
+              const shoulderY = plat.y + (Math.max(0, dx - plat.w * 0.25) / (plat.w * 0.25)) * (plat.h * 0.25);
+              if (prevFeetY <= shoulderY + 16 && feetY >= shoulderY - 10) {
+                hasLanded = true;
+                landY = shoulderY;
+              }
             }
           } else {
-            // Rectangle, Cloud, Hexagon
+            // Rectangle / Beam
             if (ps.x >= plat.x - 8 && ps.x <= plat.x + plat.w + 8) {
-              if (prevFeetY <= plat.y + 14 && feetY >= plat.y - 8) {
+              if (prevFeetY <= plat.y + 16 && feetY >= plat.y - 10) {
                 hasLanded = true;
                 landY = plat.y;
               }
@@ -452,6 +512,8 @@ export class DontLookDownGame extends BaseGame {
             ps.y = landY - ps.radius;
             ps.vx += lateralPush;
             ps.grounded = true;
+            ps.coyoteTimer = 0.22;
+            ps.canDoubleJump = true;
 
             // Landing impact if fell from high
             if (ps.fallDistance > 200) {
@@ -462,25 +524,23 @@ export class DontLookDownGame extends BaseGame {
             ps.fallDistance = 0;
             ps.fallSoundPlayed = false;
 
-            // AUTOMATIC JUMP BOUNCE!
-            let bounceForce = 540;
-            if (isActionPressed) {
-              bounceForce = 670; // Spring leap boost!
-              ps.springBoostActive = true;
-              this.particles.spawnSparks(ps.x, ps.y + ps.radius, '#FACC15', 7);
-            } else {
-              ps.springBoostActive = false;
-            }
+            // Instant responsive bounce (boosted if holding jump/action)
+            let bounceForce = isActionPressed ? 720 : 560;
 
             if (plat.type === 'bouncy') {
-              bounceForce = Math.max(bounceForce, 740);
+              bounceForce = Math.max(bounceForce, 780);
               this.audio.playBounce();
               this.particles.spawnExplosion(ps.x, ps.y + ps.radius, '#FACC15', 12);
-            } else if (plat.shape === 'cloud') {
-              bounceForce = Math.max(bounceForce, 630);
+            } else if (plat.shape === 'triangle') {
+              bounceForce = Math.max(bounceForce, 640);
+              this.audio.playTone(420, 0.08, 'triangle');
+              this.particles.spawnSparks(ps.x, ps.y + ps.radius, '#EF4444', 8);
+            } else if (plat.shape === 'circle') {
+              bounceForce = Math.max(bounceForce, 600);
+              this.audio.playTone(380, 0.08, 'sine');
               this.particles.spawnSparks(ps.x, ps.y + ps.radius, '#38BDF8', 6);
             } else if (plat.shape === 'diamond') {
-              bounceForce = Math.max(bounceForce, 590);
+              bounceForce = Math.max(bounceForce, 620);
               this.particles.spawnSparks(ps.x, ps.y + ps.radius, '#C084FC', 6);
             } else {
               this.audio.playTone(320 + Math.min(280, ps.currentAltitude * 0.9), 0.08, 'triangle');
@@ -504,10 +564,13 @@ export class DontLookDownGame extends BaseGame {
         }
       }
 
-      // Base Ground Automatic Bounce
+      // Base Ground Instant Bounce
       if (ps.y >= this.groundY - ps.radius) {
         ps.y = this.groundY - ps.radius;
-        const bounceForce = isActionPressed ? 670 : 540;
+        ps.grounded = true;
+        ps.coyoteTimer = 0.22;
+        ps.canDoubleJump = true;
+        const bounceForce = isActionPressed ? 720 : 560;
         ps.vy = -bounceForce;
         ps.grounded = false;
         ps.fallDistance = 0;
@@ -520,23 +583,24 @@ export class DontLookDownGame extends BaseGame {
       ps.currentAltitude = Math.max(0, Math.floor((this.groundY - ps.y) / 10));
       if (ps.currentAltitude > ps.highestAltitude) {
         ps.highestAltitude = ps.currentAltitude;
-        ps.score = ps.highestAltitude;
       }
 
-      // Reached Summit Victory Check
-      if (ps.y <= this.summitY + 20 && !ps.reachedSummit) {
+      // Summit Victory Check
+      if (ps.y <= this.summitY + 10 && !ps.reachedSummit) {
         ps.reachedSummit = true;
-        this.summitReachedWinnerId = p.id;
+        this.summitReachedWinnerId = ps.id;
         this.isFinished = true;
         this.audio.playFanfare();
-        this.particles.spawnExplosion(ps.x, ps.y, '#FACC15', 40);
-        this.particles.showFloatingText('🏆 SUMMIT CONQUERED!', ps.x, ps.y - 25, '#FACC15', 22);
+        this.particles.spawnExplosion(ps.x, ps.y, '#FACC15', 60);
+        this.particles.showFloatingText('👑 SUMMIT CONQUERED!', ps.x, ps.y - 30, '#FACC15', 28);
       }
     }
 
-    // Smooth Camera Tracking (Follows highest player)
+    // Smooth Dynamic Camera Tracking
     let highestPlayerY = this.groundY;
-    for (const ps of this.playersState.values()) {
+    for (const p of active) {
+      const ps = this.playersState.get(p.id);
+      if (!ps) continue;
       if (ps.y < highestPlayerY) {
         highestPlayerY = ps.y;
       }
@@ -571,11 +635,9 @@ export class DontLookDownGame extends BaseGame {
       if (plat.sunk) continue;
       const dy = ps.y - plat.y;
 
-      // Must be above bot within reachable bounce height
       if (dy > 15 && dy < maxReachY) {
         let platCenterX = plat.x + plat.w / 2;
 
-        // Lead moving platforms based on arrival time
         if (plat.type === 'moving' && plat.vx) {
           const timeToReach = Math.sqrt((2 * dy) / 760);
           platCenterX += plat.vx * timeToReach;
@@ -584,15 +646,14 @@ export class DontLookDownGame extends BaseGame {
 
         const dx = Math.abs(ps.x - platCenterX);
         if (dx < maxReachX) {
-          // Score formula: prioritize upward climbing, closer distance, and bonus platforms
           let score = dy * 1.6 - dx * 1.1;
 
           if (plat.type === 'bouncy') score += 60;
-          if (plat.shape === 'cloud') score += 40;
+          if (plat.shape === 'triangle') score += 40;
+          if (plat.shape === 'circle') score += 35;
           if (plat.shape === 'diamond') score += 30;
           if (plat.type === 'sinking') score -= 50;
 
-          // Summit platform has highest priority
           if (plat.y <= this.summitY + 30) score += 250;
 
           if (score > bestScore) {
@@ -617,13 +678,11 @@ export class DontLookDownGame extends BaseGame {
       if (dx > alignThreshold) steer = 1;
       else if (dx < -alignThreshold) steer = -1;
 
-      // Activate Spring Leap Boost if target platform is high up or far across
       const dy = ps.y - bestPlat.y;
       const wantsSpringBoost = dy > (isHard ? 110 : 140) || Math.abs(dx) > 90;
 
       this.input.setBotInput(botId, wantsSpringBoost, steer);
     } else {
-      // If no platforms directly above, steer towards center corridor
       const centerDist = width / 2 - ps.x;
       const steer = Math.abs(centerDist) > 35 ? Math.sign(centerDist) : 0;
       this.input.setBotInput(botId, false, steer);
@@ -652,60 +711,61 @@ export class DontLookDownGame extends BaseGame {
       ctx.moveTo(30, bannerY);
       ctx.lineTo(this.worldWidth - 30, bannerY);
       ctx.stroke();
-      ctx.setLineDash([]);
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.font = '800 11px Montserrat, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(`🚩 ${alt}m`, 35, bannerY - 4);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.font = '700 11px Montserrat, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(`${alt}m`, this.worldWidth - 38, bannerY - 4);
       ctx.restore();
     }
 
-    // Render Summit Beacon
+    // Render Summit Crown
     this.renderSummitBeacon(ctx);
 
-    // Render Players
+    // Render Climbers
     this.renderPlayers(ctx);
 
     ctx.restore();
 
-    // Screen-space UI Overlays
+    // Screen-Space HUD & Overlays
     this.renderAltitudeGauge(ctx, width, height);
-    this.renderMapSelectorPill(ctx, width, height);
     this.renderCenterHUD(ctx, width);
+    this.renderMapSelectorPill(ctx, width, height);
   }
 
   private renderBackground(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    // Dynamic Altitude-based Sky Gradient
+    const progress = Math.max(0, Math.min(1, (this.groundY - this.cameraY) / (this.groundY - this.summitY)));
 
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
     if (this.mapTheme === 'cyber') {
-      bgGrad.addColorStop(0, '#0F051D');
-      bgGrad.addColorStop(0.5, '#1E1B4B');
-      bgGrad.addColorStop(1, '#0B0F19');
+      bgGrad.addColorStop(0, '#040714');
+      bgGrad.addColorStop(0.6, '#0B112C');
+      bgGrad.addColorStop(1, '#1A0B2E');
     } else if (this.mapTheme === 'sky') {
-      bgGrad.addColorStop(0, '#0369A1');
-      bgGrad.addColorStop(0.4, '#38BDF8');
+      bgGrad.addColorStop(0, '#0284C7');
+      bgGrad.addColorStop(0.5, '#38BDF8');
       bgGrad.addColorStop(1, '#E0F2FE');
     } else {
-      bgGrad.addColorStop(0, '#180808');
+      // Magma Caldera
+      bgGrad.addColorStop(0, '#1C0A0A');
       bgGrad.addColorStop(0.5, '#450A0A');
-      bgGrad.addColorStop(1, '#1C0606');
+      bgGrad.addColorStop(1, '#7F1D1D');
     }
 
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
-    // Parallax vertical stars / dust
-    ctx.save();
+    // Parallax Stars / Ash Particles
+    ctx.fillStyle = '#FFFFFF';
     for (const s of this.bgStars) {
-      const screenY = (s.y - this.cameraY * 0.3) % height;
-      const drawY = screenY < 0 ? screenY + height : screenY;
-      ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+      const drawY = ((s.y - this.cameraY * 0.4) % height + height) % height;
+      ctx.globalAlpha = s.alpha * (0.3 + progress * 0.7);
       ctx.beginPath();
       ctx.arc(s.x, drawY, s.r, 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.restore();
+    ctx.globalAlpha = 1.0;
   }
 
   private renderPlatforms(ctx: CanvasRenderingContext2D): void {
@@ -717,17 +777,58 @@ export class DontLookDownGame extends BaseGame {
       const cy = plat.y + plat.h / 2;
 
       // Render Distinct Geometric Shapes
-      if (plat.shape === 'circle') {
+      if (plat.shape === 'triangle') {
+        // === BOLD NEON TRIANGLE / PYRAMID ===
+        ctx.beginPath();
+        ctx.moveTo(cx, plat.y);
+        ctx.lineTo(plat.x + plat.w, plat.y + plat.h);
+        ctx.lineTo(plat.x, plat.y + plat.h);
+        ctx.closePath();
+
+        // 3D Facet Shading: Left slope illuminated, right slope shadowed
+        const triCol = plat.type === 'bouncy' ? '#FACC15' : (this.mapTheme === 'cyber' ? '#F43F5E' : (this.mapTheme === 'sky' ? '#FB923C' : '#DC2626'));
+        ctx.fillStyle = triCol;
+        ctx.shadowColor = triCol;
+        ctx.shadowBlur = plat.type === 'bouncy' ? 16 : 8;
+        ctx.fill();
+
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // Center spine reflection
+        ctx.beginPath();
+        ctx.moveTo(cx, plat.y);
+        ctx.lineTo(cx, plat.y + plat.h);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Glowing Apex Bead
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(cx, plat.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Triangle Icon
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '900 12px Montserrat, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('▲', cx, plat.y + plat.h * 0.65);
+
+      } else if (plat.shape === 'circle') {
+        // === BOLD 3D PLANETARY ORB ===
         const radius = plat.w / 2;
         const orbGrad = ctx.createRadialGradient(cx - radius * 0.35, cy - radius * 0.35, radius * 0.1, cx, cy, radius);
         if (this.mapTheme === 'cyber') {
-          orbGrad.addColorStop(0, '#A5F3FC');
-          orbGrad.addColorStop(0.5, '#06B6D4');
-          orbGrad.addColorStop(1, '#083344');
+          orbGrad.addColorStop(0, '#E0F2FE');
+          orbGrad.addColorStop(0.5, '#0284C7');
+          orbGrad.addColorStop(1, '#082F49');
         } else if (this.mapTheme === 'sky') {
           orbGrad.addColorStop(0, '#FDF4FF');
-          orbGrad.addColorStop(0.5, '#F472B6');
-          orbGrad.addColorStop(1, '#831843');
+          orbGrad.addColorStop(0.5, '#A855F7');
+          orbGrad.addColorStop(1, '#581C87');
         } else {
           orbGrad.addColorStop(0, '#FEF08A');
           orbGrad.addColorStop(0.5, '#EA580C');
@@ -737,20 +838,30 @@ export class DontLookDownGame extends BaseGame {
         ctx.beginPath();
         ctx.arc(cx, cy, radius, 0, Math.PI * 2);
         ctx.fillStyle = orbGrad;
-        ctx.shadowColor = plat.type === 'bouncy' ? '#FACC15' : (this.mapTheme === 'cyber' ? '#06B6D4' : '#F97316');
-        ctx.shadowBlur = plat.type === 'bouncy' ? 16 : 8;
+        ctx.shadowColor = plat.type === 'bouncy' ? '#FACC15' : '#38BDF8';
+        ctx.shadowBlur = plat.type === 'bouncy' ? 16 : 10;
         ctx.fill();
+
         ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // Planetary Orbital Ring
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, radius * 1.35, radius * 0.42, 0.25, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Celestial orbital ring
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, radius * 1.25, radius * 0.4, 0.25, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+        // Circle Core Icon
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '900 13px Montserrat, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('●', cx, cy);
+
       } else if (plat.shape === 'diamond') {
+        // === TALL FACETED CRYSTAL GEM ===
         ctx.beginPath();
         ctx.moveTo(cx, plat.y);
         ctx.lineTo(plat.x + plat.w, cy);
@@ -758,23 +869,34 @@ export class DontLookDownGame extends BaseGame {
         ctx.lineTo(plat.x, cy);
         ctx.closePath();
 
-        const gemCol = this.mapTheme === 'cyber' ? '#818CF8' : (this.mapTheme === 'sky' ? '#C084FC' : '#FB923C');
+        const gemCol = plat.type === 'bouncy' ? '#FACC15' : (this.mapTheme === 'cyber' ? '#818CF8' : (this.mapTheme === 'sky' ? '#C084FC' : '#FB923C'));
         ctx.fillStyle = gemCol;
         ctx.shadowColor = gemCol;
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 12;
         ctx.fill();
+
         ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.stroke();
 
-        // Facet reflection line
+        // Horizontal and vertical facets
         ctx.beginPath();
         ctx.moveTo(cx, plat.y);
         ctx.lineTo(cx, plat.y + plat.h);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.moveTo(plat.x, cy);
+        ctx.lineTo(plat.x + plat.w, cy);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
         ctx.lineWidth = 1.5;
         ctx.stroke();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '900 13px Montserrat, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('◆', cx, cy);
+
       } else if (plat.shape === 'hexagon') {
+        // === HONEYCOMB TECHNO PLATE ===
         const rx = plat.w / 2;
         const ry = plat.h / 2;
         ctx.beginPath();
@@ -789,81 +911,56 @@ export class DontLookDownGame extends BaseGame {
 
         ctx.fillStyle = plat.type === 'bouncy' ? '#F59E0B' : (this.mapTheme === 'cyber' ? '#0F172A' : '#1E293B');
         ctx.shadowColor = plat.type === 'bouncy' ? '#FACC15' : '#38BDF8';
-        ctx.shadowBlur = plat.type === 'bouncy' ? 14 : 6;
+        ctx.shadowBlur = plat.type === 'bouncy' ? 14 : 8;
         ctx.fill();
+
         ctx.strokeStyle = plat.type === 'bouncy' ? '#FEF08A' : '#38BDF8';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      } else if (plat.shape === 'cloud') {
-        const r = plat.h / 2;
-        ctx.beginPath();
-        if (ctx.roundRect) ctx.roundRect(plat.x, plat.y, plat.w, plat.h, r);
-        else ctx.rect(plat.x, plat.y, plat.w, plat.h);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-        ctx.shadowColor = '#38BDF8';
-        ctx.shadowBlur = 12;
-        ctx.fill();
-        ctx.strokeStyle = '#38BDF8';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.stroke();
 
-        // Puffy cloud arcs
-        ctx.beginPath();
-        ctx.arc(plat.x + plat.w * 0.35, plat.y, 11, Math.PI, Math.PI * 2);
-        ctx.arc(plat.x + plat.w * 0.65, plat.y - 3, 14, Math.PI, Math.PI * 2);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fill();
-      } else if (plat.shape === 'triangle') {
-        ctx.beginPath();
-        ctx.moveTo(cx, plat.y);
-        ctx.lineTo(plat.x + plat.w, plat.y + plat.h);
-        ctx.lineTo(plat.x, plat.y + plat.h);
-        ctx.closePath();
-        ctx.fillStyle = this.mapTheme === 'magma' ? '#7F1D1D' : '#1E293B';
-        ctx.shadowColor = '#EF4444';
-        ctx.shadowBlur = 8;
-        ctx.fill();
-        ctx.strokeStyle = this.mapTheme === 'magma' ? '#EF4444' : '#F59E0B';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        ctx.fillStyle = '#38BDF8';
+        ctx.font = '900 12px Montserrat, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('⬡', cx, cy);
+
       } else {
-        // Standard Rectangle / Beam
-        if (this.mapTheme === 'cyber') {
-          ctx.shadowColor = plat.type === 'bouncy' ? '#FACC15' : '#38BDF8';
-          ctx.shadowBlur = plat.type === 'bouncy' ? 14 : 8;
-          ctx.fillStyle = plat.type === 'bouncy' ? '#F59E0B' : '#0F172A';
-          ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
-          ctx.strokeStyle = plat.type === 'bouncy' ? '#FEF08A' : '#38BDF8';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
-        } else if (this.mapTheme === 'sky') {
-          ctx.fillStyle = '#F8FAFC';
-          ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
-          ctx.strokeStyle = '#94A3B8';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
-          ctx.fillStyle = '#22C55E';
-          ctx.fillRect(plat.x, plat.y, plat.w, 4);
-        } else {
-          ctx.fillStyle = plat.type === 'sinking' ? '#78350F' : '#1C1917';
-          ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
-          ctx.strokeStyle = plat.type === 'sinking' ? '#EF4444' : '#F97316';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
-        }
+        // === METALLIC RECTANGULAR GIRDER ===
+        const isBouncy = plat.type === 'bouncy';
+        ctx.shadowColor = isBouncy ? '#FACC15' : '#38BDF8';
+        ctx.shadowBlur = isBouncy ? 14 : 6;
+        ctx.fillStyle = isBouncy ? '#F59E0B' : (this.mapTheme === 'cyber' ? '#0F172A' : (this.mapTheme === 'sky' ? '#334155' : '#1C1917'));
+        ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
+
+        ctx.strokeStyle = isBouncy ? '#FEF08A' : '#38BDF8';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
+
+        // Corner rivets
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(plat.x + 3, plat.y + 3, 3, 3);
+        ctx.fillRect(plat.x + plat.w - 6, plat.y + 3, 3, 3);
+        ctx.fillRect(plat.x + 3, plat.y + plat.h - 6, 3, 3);
+        ctx.fillRect(plat.x + plat.w - 6, plat.y + plat.h - 6, 3, 3);
+
+        ctx.fillStyle = isBouncy ? '#000000' : '#FFFFFF';
+        ctx.font = '900 11px Montserrat, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('▬', cx, cy);
       }
 
-      // Overlays: Bounce text, Updraft beam, Sinking warning
+      // Modifiers: Bounce indicator, Updraft beam, Sinking warning
       if (plat.type === 'bouncy') {
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = '900 10px Montserrat, sans-serif';
+        ctx.font = '900 9px Montserrat, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('▲ BOOST ▲', cx, plat.y + 13);
+        ctx.fillText('BOOST', cx, plat.y - 6);
       } else if (plat.type === 'sinking') {
         ctx.fillStyle = '#FCA5A5';
         ctx.font = '900 9px Montserrat, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('⚠️ SINKING', cx, plat.y + 13);
+        ctx.fillText('⚠️ SINKING', cx, plat.y - 6);
       } else if (plat.type === 'updraft') {
         ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
         ctx.fillRect(plat.x, plat.y - 100, plat.w, 100);
@@ -885,7 +982,7 @@ export class DontLookDownGame extends BaseGame {
     ctx.shadowColor = '#FACC15';
     ctx.shadowBlur = 24;
 
-    // Glowing Summit Trophy / Crown
+    // Glowing Summit Trophy
     ctx.fillStyle = '#FACC15';
     ctx.beginPath();
     ctx.arc(bx, by, 22, 0, Math.PI * 2);
@@ -910,23 +1007,14 @@ export class DontLookDownGame extends BaseGame {
 
   private renderPlayers(ctx: CanvasRenderingContext2D): void {
     const active = this.getActivePlayers();
+    const now = performance.now();
+
     for (const p of active) {
       const ps = this.playersState.get(p.id);
       if (!ps) continue;
 
       ctx.save();
       ctx.translate(ps.x, ps.y);
-
-      // Spring Boost Aura Ring
-      if (ps.springBoostActive) {
-        ctx.strokeStyle = '#FACC15';
-        ctx.lineWidth = 3;
-        ctx.shadowColor = '#FACC15';
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.arc(0, 0, ps.radius + 5, 0, Math.PI * 2);
-        ctx.stroke();
-      }
 
       // Speed lines when in long freefall (Don't Look Down!)
       if (ps.fallDistance > 180) {
@@ -940,26 +1028,17 @@ export class DontLookDownGame extends BaseGame {
         }
       }
 
-      // Tactile Climber Character
-      ctx.shadowColor = p.colorDark;
-      ctx.shadowBlur = 8;
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(0, 0, ps.radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      // Render Chosen Player Mascot Skin (NO generic circle or annoying ring!)
+      const mood = ps.fallDistance > 200 ? 'shocked' : (ps.vy < -120 ? 'triumph' : 'idle');
+      this.drawPlayerMascot(ctx, p.id, 0, 0, ps.radius, mood, now * 0.001);
 
-      // Eyes facing movement direction
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(ps.facing * 4, -3, 3.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.arc(ps.facing * 5, -3, 1.8, 0, Math.PI * 2);
-      ctx.fill();
+      // Jump foot thruster sparks when leaping upwards
+      if (ps.vy < -180) {
+        ctx.fillStyle = '#FACC15';
+        ctx.beginPath();
+        ctx.arc(0, ps.radius + 3, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       ctx.restore();
 
@@ -972,7 +1051,6 @@ export class DontLookDownGame extends BaseGame {
   }
 
   private renderAltitudeGauge(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // Vertical Altitude Bar on Left Screen Margin
     const barX = 18;
     const barY = 90;
     const barW = 10;
@@ -985,7 +1063,6 @@ export class DontLookDownGame extends BaseGame {
     ctx.lineWidth = 1;
     ctx.strokeRect(barX, barY, barW, barH);
 
-    // Player Pin Markers on Altitude Gauge
     const active = this.getActivePlayers();
     for (const p of active) {
       const ps = this.playersState.get(p.id);
@@ -1005,7 +1082,6 @@ export class DontLookDownGame extends BaseGame {
   }
 
   private renderMapSelectorPill(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // Map Selector Pill at Bottom Left
     const pillX = 24;
     const pillY = height - 42;
     const themeName = this.mapTheme === 'cyber' ? 'CYBER SPIRE' : (this.mapTheme === 'sky' ? 'SKY RUINS' : 'MAGMA CALDERA');
@@ -1030,7 +1106,7 @@ export class DontLookDownGame extends BaseGame {
 
   private renderCenterHUD(ctx: CanvasRenderingContext2D, width: number): void {
     const active = this.getActivePlayers();
-    const hudW = 380;
+    const hudW = 400;
     const hudH = 28;
     const hudX = width / 2 - hudW / 2;
     const hudY = 56;
@@ -1048,7 +1124,6 @@ export class DontLookDownGame extends BaseGame {
     ctx.stroke();
     ctx.restore();
 
-    // Format 90s countdown timer
     const secsLeft = Math.ceil(this.roundTimer);
     const timeStr = `⏱️ ${secsLeft}s`;
 
