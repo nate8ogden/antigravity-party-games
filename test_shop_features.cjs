@@ -63,11 +63,11 @@ async function testShopFeatures() {
   await page.evaluate(() => {
     const gm = window.__GAME_MANAGER__;
     if (gm) {
-      gm.economy.unlockBooster('booster_shield');
-      gm.economy.unlockBooster('booster_turbo');
+      gm.economy.unlockBooster('booster_shield', true);
+      gm.economy.unlockBooster('booster_turbo', true);
       gm.economy.equipBooster(0, 'booster_shield');
       gm.economy.equipBooster(1, 'booster_turbo');
-      gm.economy.unlockArena('arena_neon_synth');
+      gm.economy.unlockArena('arena_neon_synth', true);
       gm.economy.equipArena('arena_neon_synth');
       gm.startGame('tanks');
     }
