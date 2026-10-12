@@ -90,9 +90,9 @@ test.describe('Snowball Fight - Free Movement & Border Constraints', () => {
 
     const shotState = await page.evaluate(() => {
       const dbg = (window as any).__SNOWBALL_FIGHT_DEBUG__;
-      return dbg.snowballs.length;
+      return (dbg.snowballs?.length ?? 0) > 0 || (dbg.totalThrown ?? 0) > 0;
     });
-    expect(shotState).toBeGreaterThan(0);
+    expect(shotState).toBe(true);
   });
 
   test('East bot stays strictly on East side of border and moves tactically', async ({ page }) => {

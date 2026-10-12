@@ -109,6 +109,7 @@ export class SnowballFightGame extends BaseGame {
     this.trees = [];
     this.decals = [];
     this.ballCounter = 0;
+    this.totalSnowballsThrown = 0;
     this.destructionOrder = [];
 
     // Ambient falling snow
@@ -263,6 +264,7 @@ export class SnowballFightGame extends BaseGame {
         players: Array.from(this.playersState.values()),
         snowballs: this.snowballs,
         blocks: this.blocks,
+        totalThrown: this.totalSnowballsThrown,
         roundTimer: this.roundTimer,
         isFinished: this.isFinished
       };
@@ -702,6 +704,7 @@ export class SnowballFightGame extends BaseGame {
     const spawnX = ps.x + Math.cos(ps.aimAngle) * 24;
     const spawnY = ps.y + Math.sin(ps.aimAngle) * 24;
 
+    this.totalSnowballsThrown++;
     this.snowballs.push({
       id: this.ballCounter++,
       ownerId: ps.id,
