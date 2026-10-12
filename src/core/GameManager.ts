@@ -6800,13 +6800,19 @@ export class GameManager {
     this.ctx.textAlign = 'left';
     this.ctx.fillText(`${userCoins} COINS`, pillX + 32, pillY + 20.5);
 
-    // Category Tabs: [ALL (29)] [SKINS (16)] [ARENAS (6)] [LUCKY PACKS (3)] [BOOSTERS (4)]
+    // Category Tabs: Dynamic counts from live catalogs
+    const totalSkins = SKIN_CATALOG.length;
+    const totalArenas = ARENA_CATALOG.length;
+    const totalPacks = PACK_CATALOG.length;
+    const totalBoosters = BOOSTER_CATALOG.length;
+    const totalAll = totalSkins + totalArenas + totalPacks + totalBoosters;
+
     const tabs: { id: 'ALL' | 'SKINS' | 'ARENAS' | 'PACKS' | 'BOOSTERS'; label: string; count: number }[] = [
-      { id: 'ALL', label: 'ALL', count: 29 },
-      { id: 'SKINS', label: 'SKINS', count: 16 },
-      { id: 'ARENAS', label: 'ARENAS', count: 6 },
-      { id: 'PACKS', label: 'LUCKY PACKS', count: 3 },
-      { id: 'BOOSTERS', label: 'BOOSTERS', count: 4 }
+      { id: 'ALL', label: 'ALL', count: totalAll },
+      { id: 'SKINS', label: 'SKINS', count: totalSkins },
+      { id: 'ARENAS', label: 'ARENAS', count: totalArenas },
+      { id: 'PACKS', label: 'LUCKY PACKS', count: totalPacks },
+      { id: 'BOOSTERS', label: 'BOOSTERS', count: totalBoosters }
     ];
 
     const tabY = modalY + 58;
