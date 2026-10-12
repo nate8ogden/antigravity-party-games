@@ -13,6 +13,8 @@ interface PaintPlayer {
   score: number;
   fireCooldown: number;
   stunTimer: number;
+  botBurstTimer?: number;
+  botBurstPause?: number;
 }
 
 interface PaintPellet {
@@ -107,6 +109,27 @@ export class PixelPaintballGame extends BaseGame {
     for (let i = 0; i < 2; i++) {
       this.spawnPinata(width, height);
     }
+
+    // Expose debug hook for testing
+    (window as any).__PIXEL_PAINTBALL_DEBUG__ = {
+      getPlayerState: (pid: PlayerId) => {
+        const ps = this.playersState.get(pid);
+        return ps ? { ...ps } : null;
+      },
+      setPlayerPos: (pid: PlayerId, x: number, y: number, angle = 0) => {
+        const ps = this.playersState.get(pid);
+        if (ps) {
+          ps.x = x;
+          ps.y = y;
+          ps.vx = 0;
+          ps.vy = 0;
+          ps.angle = angle;
+        }
+      },
+      getPellets: () => this.pellets.map((p) => ({ x: p.x, y: p.y, vx: p.vx, vy: p.vy, ownerId: p.ownerId })),
+      getPinatas: () => this.pinatas.map((p) => ({ x: p.x, y: p.y, hp: p.hp })),
+      getBunkers: () => [...this.bunkers]
+    };
   }
 
   public currentMapName: string = 'Speedball X';
@@ -228,24 +251,55 @@ export class PixelPaintballGame extends BaseGame {
       if (ps.fireCooldown > 0) ps.fireCooldown -= dt;
 
       const steer = this.input.getSteer(p.id);
+      const throttle = this.input.getThrottle(p.id); // +1 up, -1 down
       const isAction = this.input.isActionPressed(p.id);
-      const isFiring = isAction || (this.input.isPressed(p.id) && steer === 0);
+      const isButtonHeld = this.input.isPressed(p.id);
 
-      if (steer !== 0) {
-        ps.angle += steer * 4.2 * dt;
-        const speed = isAction ? 240 : 200;
-        ps.vx = Math.cos(ps.angle) * speed;
-        ps.vy = Math.sin(ps.angle) * speed;
-      } else if (isFiring) {
-        // Single-button mobile mode or Space hold: drive forward while firing!
-        const speed = 190;
-        ps.vx = Math.cos(ps.angle) * speed;
-        ps.vy = Math.sin(ps.angle) * speed;
+      // 8-directional input vector: steer is X (right +1, left -1), throttle is Y (up +1, down -1)
+      const inputX = steer;
+      const inputY = -throttle; // Canvas Y (down is positive, up is negative)
+      const inputMag = Math.hypot(inputX, inputY);
+
+      const pCfg = this.getPlayer(p.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+
+      if (!isBot) {
+        if (inputMag > 0.15) {
+          // Direct, intuitive 8-directional WASD / Arrow movement!
+          const normX = inputX / inputMag;
+          const normY = inputY / inputMag;
+          const moveSpeed = 220;
+          ps.vx = normX * moveSpeed;
+          ps.vy = normY * moveSpeed;
+          // Aim in movement direction
+          ps.angle = Math.atan2(normY, normX);
+        } else if (isButtonHeld && this.input.getControlMode() === 'single_button') {
+          // Single-button mobile fallback: hold button to drive forward in current scan direction
+          const driveSpeed = 190;
+          ps.vx = Math.cos(ps.angle) * driveSpeed;
+          ps.vy = Math.sin(ps.angle) * driveSpeed;
+        } else {
+          // Decelerate smoothly to a stop when no movement keys are pressed
+          ps.vx *= Math.pow(0.80, dt * 60);
+          ps.vy *= Math.pow(0.80, dt * 60);
+          if (Math.abs(ps.vx) < 1) ps.vx = 0;
+          if (Math.abs(ps.vy) < 1) ps.vy = 0;
+
+          // If in single-button mode without directional keys, slowly rotate scanner
+          if (this.input.getControlMode() === 'single_button') {
+            ps.angle += 2.0 * dt;
+          }
+        }
       } else {
-        // Idle scan when not holding button
-        ps.angle += 2.2 * dt;
-        ps.vx *= Math.pow(0.85, dt * 60);
-        ps.vy *= Math.pow(0.85, dt * 60);
+        // Bot physics: bot sets ps.angle and presses thrust/fire
+        if (isButtonHeld) {
+          const botSpeed = 185;
+          ps.vx = Math.cos(ps.angle) * botSpeed;
+          ps.vy = Math.sin(ps.angle) * botSpeed;
+        } else {
+          ps.vx *= Math.pow(0.85, dt * 60);
+          ps.vy *= Math.pow(0.85, dt * 60);
+        }
       }
 
       ps.x += ps.vx * dt;
@@ -267,7 +321,8 @@ export class PixelPaintballGame extends BaseGame {
       ps.x = Math.max(r + 10, Math.min(width - r - 10, ps.x));
       ps.y = Math.max(r + 65, Math.min(height - r - 65, ps.y));
 
-      // Firing Paint Pellets
+      // Firing Paint Pellets (Action key / Space / Enter / button hold)
+      const isFiring = isAction || (isButtonHeld && (isBot || inputMag < 0.15 || this.input.getControlMode() !== 'single_button'));
       if (isFiring && ps.fireCooldown <= 0) {
         ps.fireCooldown = 0.22;
         this.audio.playLaser();
@@ -283,6 +338,51 @@ export class PixelPaintballGame extends BaseGame {
           bounces: 0,
           lifetime: 1.4
         });
+      }
+    }
+
+    // Solid Player-to-Player Collision & Separation (prevents players/bots from going on top of each other!)
+    const activeList = active
+      .map((p) => this.playersState.get(p.id))
+      .filter((ps): ps is PaintPlayer => Boolean(ps));
+
+    for (let i = 0; i < activeList.length; i++) {
+      for (let j = i + 1; j < activeList.length; j++) {
+        const p1 = activeList[i];
+        const p2 = activeList[j];
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+        const dist = Math.hypot(dx, dy);
+        const minDist = 34; // Sum of radii (17 + 17)
+
+        if (dist < minDist) {
+          const overlap = minDist - (dist || 0.01);
+          const nx = dist > 0.001 ? dx / dist : 1;
+          const ny = dist > 0.001 ? dy / dist : 0;
+
+          // Push apart symmetrically
+          p1.x -= nx * (overlap * 0.5);
+          p1.y -= ny * (overlap * 0.5);
+          p2.x += nx * (overlap * 0.5);
+          p2.y += ny * (overlap * 0.5);
+
+          // Elastic bounce impulse
+          const rvx = p2.vx - p1.vx;
+          const rvy = p2.vy - p1.vy;
+          const velAlongNormal = rvx * nx + rvy * ny;
+
+          if (velAlongNormal < 0) {
+            const restitution = 0.75;
+            const impulse = -(1 + restitution) * velAlongNormal;
+            p1.vx -= nx * (impulse * 0.5);
+            p1.vy -= ny * (impulse * 0.5);
+            p2.vx += nx * (impulse * 0.5);
+            p2.vy += ny * (impulse * 0.5);
+
+            this.audio.playBounce();
+            this.particles.spawnSparks((p1.x + p2.x) * 0.5, (p1.y + p2.y) * 0.5, '#FFFFFF', 3);
+          }
+        }
       }
     }
 
