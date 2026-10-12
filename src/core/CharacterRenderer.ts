@@ -338,8 +338,90 @@ export function drawCharacter(
   ctx.fill();
   ctx.restore();
 
-  // 2. Player-Specific Headgear / Silhouette Accents (Behind Head)
-  if (playerId === 0) {
+  // 2. Headgear & Silhouette Accents (Behind Head - Custom for Skins, or Player Default)
+  if (activeSkin === 'hero_avenger') {
+    // Fluttering superhero cape on back
+    ctx.save();
+    ctx.fillStyle = '#DC2626';
+    ctx.strokeStyle = '#991B1B';
+    ctx.lineWidth = 1.5 * scale;
+    const flap = Math.sin(animTime * 6) * 4 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.7, drawY);
+    ctx.quadraticCurveTo(cx - radius * 1.2, drawY + radius * 1.3, cx - radius * 0.9 + flap, drawY + radius * 1.6);
+    ctx.lineTo(cx + radius * 0.9 + flap, drawY + radius * 1.6);
+    ctx.quadraticCurveTo(cx + radius * 1.2, drawY + radius * 1.3, cx + radius * 0.7, drawY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'samurai_ronin') {
+    // Crossed Katana blades on back
+    ctx.save();
+    ctx.strokeStyle = '#CBD5E1';
+    ctx.lineWidth = 2.5 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - 24 * scale, drawY - 28 * scale);
+    ctx.lineTo(cx + 24 * scale, drawY + 24 * scale);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + 24 * scale, drawY - 28 * scale);
+    ctx.lineTo(cx - 24 * scale, drawY + 24 * scale);
+    ctx.stroke();
+    ctx.fillStyle = '#F59E0B';
+    ctx.fillRect(cx - 16 * scale, drawY - 18 * scale, 5 * scale, 5 * scale);
+    ctx.fillRect(cx + 11 * scale, drawY - 18 * scale, 5 * scale, 5 * scale);
+    ctx.restore();
+  } else if (activeSkin === 'viking_berserker') {
+    // Crossed Battle Axes on back
+    ctx.save();
+    ctx.strokeStyle = '#78350F';
+    ctx.lineWidth = 3 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - 24 * scale, drawY - 28 * scale);
+    ctx.lineTo(cx + 24 * scale, drawY + 24 * scale);
+    ctx.moveTo(cx + 24 * scale, drawY - 28 * scale);
+    ctx.lineTo(cx - 24 * scale, drawY + 24 * scale);
+    ctx.stroke();
+    ctx.fillStyle = '#94A3B8';
+    ctx.beginPath();
+    ctx.arc(cx - 20 * scale, drawY - 22 * scale, 8 * scale, Math.PI * 0.6, Math.PI * 1.8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx + 20 * scale, drawY - 22 * scale, 8 * scale, Math.PI * 1.2, Math.PI * 0.4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'kitsune_fox') {
+    // 3 Swaying fluffy fox tails behind
+    ctx.save();
+    for (let tIdx = -1; tIdx <= 1; tIdx++) {
+      const tailSway = Math.sin(animTime * 3 + tIdx * 1.2) * 5 * scale;
+      const tx = cx + tIdx * 14 * scale + tailSway;
+      const ty = drawY + radius * 0.3;
+      ctx.fillStyle = '#EA580C';
+      ctx.beginPath();
+      ctx.ellipse(tx, ty + 16 * scale, 8 * scale, 16 * scale, tIdx * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.ellipse(tx, ty + 24 * scale, 5 * scale, 7 * scale, tIdx * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'astro_bubble') {
+    // Twin pressurized life-support rocket tanks on back
+    ctx.save();
+    ctx.fillStyle = '#E2E8F0';
+    ctx.strokeStyle = '#94A3B8';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.fillRect(cx - 24 * scale, drawY - 14 * scale, 9 * scale, 26 * scale);
+    ctx.strokeRect(cx - 24 * scale, drawY - 14 * scale, 9 * scale, 26 * scale);
+    ctx.fillRect(cx + 15 * scale, drawY - 14 * scale, 9 * scale, 26 * scale);
+    ctx.strokeRect(cx + 15 * scale, drawY - 14 * scale, 9 * scale, 26 * scale);
+    ctx.restore();
+  } else if (playerId === 0) {
     // P1: Winged Crest (Behind)
     ctx.save();
     ctx.fillStyle = theme.dark;
