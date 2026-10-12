@@ -6501,220 +6501,708 @@ function drawZeroGTetherArt(ctx: CanvasRenderingContext2D, x: number, y: number,
 function drawSaloonBrawlerArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
   ctx.fillStyle = '#27170E';
   ctx.fillRect(x, y, w, h);
-  // Bar counter
-  ctx.fillStyle = '#4E342E';
-  ctx.fillRect(x + 10, y + h * 0.6, w - 20, h * 0.35);
-  // Sliding beer mug
-  ctx.fillStyle = '#FBBF24';
-  ctx.fillRect(x + w * 0.45, y + h * 0.5, 18, 22);
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(x + w * 0.45, y + h * 0.47, 18, 5);
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.48;
+
+  // Weathered Wood Saloon Floor & Wall Panel
+  ctx.fillStyle = '#451A03';
+  ctx.fillRect(x + 6, y + h * 0.62, w - 12, h * 0.38);
+  ctx.strokeStyle = '#27170E';
+  ctx.lineWidth = 1.5;
+  for (let fx = x + 16; fx < x + w - 10; fx += 22) {
+    ctx.beginPath();
+    ctx.moveTo(fx, y + h * 0.62);
+    ctx.lineTo(fx, y + h);
+    ctx.stroke();
+  }
+
+  // Swinging Batwing Saloon Doors
+  ctx.fillStyle = '#78350F';
+  ctx.fillRect(cx - 36, cy - 24, 22, 34);
+  ctx.fillRect(cx + 14, cy - 24, 22, 34);
+  ctx.strokeStyle = '#B45309';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(cx - 36, cy - 24, 22, 34);
+  ctx.strokeRect(cx + 14, cy - 24, 22, 34);
+
+  // Red & Blue Clashing Brawler Fists
+  ctx.save();
+  // Red Left Fist
+  ctx.fillStyle = '#EF4444';
+  ctx.beginPath();
+  ctx.arc(cx - 12, cy + 2, 10, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#991B1B';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Blue Right Fist
+  ctx.fillStyle = '#3B82F6';
+  ctx.beginPath();
+  ctx.arc(cx + 12, cy - 2, 10, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#1D4ED8';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Impact Clashing Starburst
+  ctx.fillStyle = '#FACC15';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Flying Shattered Whiskey Glass & Droplets
+  ctx.fillStyle = '#FDE047';
+  ctx.beginPath();
+  ctx.arc(cx + 26, cy - 18, 3, 0, Math.PI * 2);
+  ctx.arc(cx - 24, cy - 14, 2.5, 0, Math.PI * 2);
+  ctx.arc(cx + 4, cy - 22, 2, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 // 118. Train Heist
 function drawTrainHeistArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#EA580C';
+  ctx.fillStyle = '#1C1917';
   ctx.fillRect(x, y, w, h);
-  // Train roof
-  ctx.fillStyle = '#374151';
-  ctx.fillRect(x, y + h * 0.65, w, h * 0.35);
-  // Cowboy running
-  ctx.fillStyle = '#E53935';
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Desert Sunset Canyon Sky
+  const skyGrad = ctx.createLinearGradient(x, y, x, y + h * 0.6);
+  skyGrad.addColorStop(0, '#7C2D12');
+  skyGrad.addColorStop(1, '#EA580C');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(x, y, w, h * 0.55);
+
+  // Distant Canyon Mesa Silhouette
+  ctx.fillStyle = '#431407';
   ctx.beginPath();
-  ctx.arc(x + w * 0.35, y + h * 0.52, 10, 0, Math.PI * 2);
+  ctx.moveTo(x, y + h * 0.55);
+  ctx.lineTo(x + w * 0.25, y + h * 0.42);
+  ctx.lineTo(x + w * 0.45, y + h * 0.42);
+  ctx.lineTo(x + w * 0.6, y + h * 0.55);
+  ctx.lineTo(x + w * 0.8, y + h * 0.46);
+  ctx.lineTo(x + w, y + h * 0.55);
+  ctx.closePath();
   ctx.fill();
-  // Gold sack
-  ctx.fillStyle = '#FBBF24';
+
+  // Steam Locomotive Roof Top
+  ctx.fillStyle = '#1E293B';
+  ctx.fillRect(x + 4, cy + 4, w - 8, h * 0.38);
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x + 4, cy + 4, w - 8, h * 0.38);
+
+  // Rivet Studs along roof edge
+  ctx.fillStyle = '#94A3B8';
+  for (let rx = x + 12; rx < x + w - 10; rx += 16) {
+    ctx.beginPath();
+    ctx.arc(rx, cy + 8, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Running Heist Cowboy with Hat
+  ctx.save();
+  ctx.translate(cx - 16, cy - 2);
+  // Stetson Hat
+  ctx.fillStyle = '#78350F';
   ctx.beginPath();
-  ctx.arc(x + w * 0.7, y + h * 0.45, 9, 0, Math.PI * 2);
+  ctx.ellipse(0, -10, 11, 3.5, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.fillRect(-5, -16, 10, 7);
+  // Red Bandana & Duster
+  ctx.fillStyle = '#DC2626';
+  ctx.beginPath();
+  ctx.arc(0, -4, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillRect(-7, 2, 14, 12);
+  ctx.restore();
+
+  // Swag Bag of Gold with $ Sign
+  ctx.save();
+  ctx.translate(cx + 22, cy);
+  ctx.fillStyle = '#D97706';
+  ctx.beginPath();
+  ctx.arc(0, 0, 11, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#FDE68A';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = '#FEF08A';
+  ctx.font = 'bold 9px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('$', 0, 3.5);
+  ctx.restore();
 }
 
 // 119. Gold Panning
 function drawGoldPanningArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0284C7';
+  ctx.fillStyle = '#0C4A6E';
   ctx.fillRect(x, y, w, h);
-  // Pan
-  ctx.fillStyle = '#475569';
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // River Ripple Waves
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.28)';
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.5, 26, 0, Math.PI * 2);
-  ctx.fill();
-  // Silt
-  ctx.fillStyle = '#78350F';
+  ctx.arc(cx, cy, 48, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Heavy Cast-Iron Prospector Pan
+  ctx.fillStyle = '#334155';
   ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.5, 20, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 32, 0, Math.PI * 2);
   ctx.fill();
-  // Gold nugget
-  ctx.fillStyle = '#FBBF24';
+  ctx.strokeStyle = '#64748B';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Inner Pan Water & Dark Gravel
+  ctx.fillStyle = '#1E293B';
   ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.5, 6, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 24, 0, Math.PI * 2);
   ctx.fill();
+
+  // Shimmering Golden Nuggets & Dust
+  const goldPositions = [
+    { x: cx, y: cy, r: 6 },
+    { x: cx - 9, y: cy + 7, r: 4.5 },
+    { x: cx + 11, y: cy - 6, r: 4 },
+    { x: cx - 6, y: cy - 9, r: 3.5 },
+    { x: cx + 8, y: cy + 9, r: 3 }
+  ];
+
+  ctx.shadowColor = '#FACC15';
+  ctx.shadowBlur = 8;
+  for (const g of goldPositions) {
+    ctx.fillStyle = '#FBBF24';
+    ctx.beginPath();
+    ctx.arc(g.x, g.y, g.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#FEF08A';
+    ctx.beginPath();
+    ctx.arc(g.x - g.r * 0.3, g.y - g.r * 0.3, g.r * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
 }
 
 // 120. Rodeo Bull
 function drawRodeoBullArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
   ctx.fillStyle = '#451A03';
   ctx.fillRect(x, y, w, h);
-  // Bull body tilted
-  ctx.fillStyle = '#78350F';
-  ctx.save();
-  ctx.translate(x + w * 0.5, y + h * 0.55);
-  ctx.rotate(-0.25);
-  ctx.fillRect(-22, -12, 44, 24);
-  // Horns
-  ctx.strokeStyle = '#FBBF24';
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.54;
+
+  // Rodeo Arena Fence Rails
+  ctx.strokeStyle = '#78350F';
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(20, -10);
-  ctx.lineTo(28, -20);
+  ctx.moveTo(x + 4, y + 22);
+  ctx.lineTo(x + w - 4, y + 22);
+  ctx.moveTo(x + 4, y + 36);
+  ctx.lineTo(x + w - 4, y + 36);
   ctx.stroke();
-  // Rider
-  ctx.fillStyle = '#1E88E5';
+
+  // Bucking Mechanical Bull Body
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(-0.32);
+
+  // Bull Torso & Muscular Shoulders
+  ctx.fillStyle = '#1C1917';
   ctx.beginPath();
-  ctx.arc(0, -20, 9, 0, Math.PI * 2);
+  ctx.ellipse(-4, 0, 26, 16, 0, 0, Math.PI * 2);
   ctx.fill();
+
+  // Bull Head
+  ctx.beginPath();
+  ctx.arc(20, -6, 12, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Golden Wicked Horns
+  ctx.strokeStyle = '#FEF08A';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(20, -14);
+  ctx.quadraticCurveTo(24, -26, 32, -24);
+  ctx.stroke();
+
+  // Glowing Red Nostrils / Eye
+  ctx.fillStyle = '#EF4444';
+  ctx.beginPath();
+  ctx.arc(22, -8, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Cowboy Rider Holding Rope
+  ctx.fillStyle = '#0284C7';
+  ctx.beginPath();
+  ctx.arc(-4, -20, 8, 0, Math.PI * 2);
+  ctx.fill();
+  // Stetson Hat on Rider
+  ctx.fillStyle = '#F59E0B';
+  ctx.beginPath();
+  ctx.ellipse(-4, -26, 12, 3.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillRect(-8, -32, 8, 7);
+
   ctx.restore();
+
+  // Kicked Up Dust Billows
+  ctx.fillStyle = 'rgba(217, 119, 6, 0.45)';
+  ctx.beginPath();
+  ctx.arc(cx - 28, cy + 16, 14, 0, Math.PI * 2);
+  ctx.arc(cx - 14, cy + 18, 11, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 // 121. Horseshoe Toss
 function drawHorseshoeTossArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
   ctx.fillStyle = '#78350F';
   ctx.fillRect(x, y, w, h);
-  // Stake
-  ctx.fillStyle = '#E5E7EB';
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.52;
+
+  // Sandy Dirt Pit
+  ctx.fillStyle = '#D97706';
   ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.45, 6, 0, Math.PI * 2);
+  ctx.ellipse(cx, cy + 8, 38, 22, 0, 0, Math.PI * 2);
   ctx.fill();
-  // Horseshoe ringing stake
-  ctx.strokeStyle = '#94A3B8';
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.45, 14, 0.4 * Math.PI, 1.6 * Math.PI);
+  ctx.strokeStyle = '#92400E';
+  ctx.lineWidth = 2;
   ctx.stroke();
+
+  // Iron Ground Stake
+  ctx.fillStyle = '#94A3B8';
+  ctx.fillRect(cx - 3, cy - 24, 6, 32);
+  ctx.fillStyle = '#E2E8F0';
+  ctx.beginPath();
+  ctx.arc(cx, cy - 24, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Cast Iron Horseshoe Ringer around Stake
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.arc(0, 0, 16, 0.35 * Math.PI, 1.65 * Math.PI);
+  ctx.stroke();
+  // Calks on tips
+  ctx.fillStyle = '#64748B';
+  ctx.fillRect(8, 10, 6, 5);
+  ctx.fillRect(8, -15, 6, 5);
+  ctx.restore();
+
+  // Clinking Ringer Impact Sparks
+  ctx.fillStyle = '#FEF08A';
+  ctx.beginPath();
+  ctx.arc(cx - 6, cy - 8, 2.5, 0, Math.PI * 2);
+  ctx.arc(cx + 8, cy - 12, 2, 0, Math.PI * 2);
+  ctx.arc(cx - 10, cy + 4, 2, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 // 122. Dynamite Tumble
 function drawDynamiteTumbleArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#292524';
+  ctx.fillStyle = '#1C1917';
   ctx.fillRect(x, y, w, h);
-  // Red TNT Stick
-  ctx.fillStyle = '#DC2626';
-  ctx.fillRect(x + w * 0.35, y + h * 0.42, 28, 16);
-  // Spark fuse
-  ctx.strokeStyle = '#D97706';
-  ctx.lineWidth = 2;
+
+  const cx = x + w * 0.48;
+  const cy = y + h * 0.5;
+
+  // Rocky Cavern Wall
+  ctx.fillStyle = '#292524';
   ctx.beginPath();
-  ctx.moveTo(x + w * 0.35 + 28, y + h * 0.5);
-  ctx.lineTo(x + w * 0.35 + 36, y + h * 0.44);
-  ctx.stroke();
-  ctx.fillStyle = '#FBBF24';
-  ctx.beginPath();
-  ctx.arc(x + w * 0.35 + 36, y + h * 0.44, 4, 0, Math.PI * 2);
+  ctx.moveTo(x + 10, y + h - 8);
+  ctx.lineTo(x + w * 0.3, y + h * 0.4);
+  ctx.lineTo(x + w * 0.7, y + h * 0.35);
+  ctx.lineTo(x + w - 10, y + h - 8);
+  ctx.closePath();
   ctx.fill();
+
+  // 3-Stick Red TNT Dynamite Bundle
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(-0.25);
+
+  // Bottom 2 Sticks
+  ctx.fillStyle = '#DC2626';
+  ctx.fillRect(-22, -6, 44, 12);
+  ctx.fillRect(-22, 6, 44, 12);
+  // Top Stick
+  ctx.fillRect(-20, -18, 44, 12);
+
+  // Black Hazard Binding Tape
+  ctx.fillStyle = '#0C0A09';
+  ctx.fillRect(-12, -18, 6, 36);
+  ctx.fillRect(8, -18, 6, 36);
+
+  // White "TNT" Stencil Text
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = '900 10px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('TNT', -2, -8);
+
+  // Sizzling Fuse Line
+  ctx.strokeStyle = '#D97706';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(24, -12);
+  ctx.quadraticCurveTo(34, -18, 38, -26);
+  ctx.stroke();
+
+  // Blazing Fuse Spark Burst
+  ctx.fillStyle = '#FEF08A';
+  ctx.beginPath();
+  ctx.arc(38, -26, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#EF4444';
+  ctx.beginPath();
+  ctx.arc(38, -26, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 // 123. Cactus Slalom
 function drawCactusSlalomArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#D97706';
+  ctx.fillStyle = '#9A3412';
   ctx.fillRect(x, y, w, h);
-  // Saguaro Cactus
-  ctx.fillStyle = '#15803D';
+
   const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  ctx.fillRect(cx - 3, cy - 14, 6, 28);
-  ctx.fillRect(cx - 10, cy - 6, 8, 3);
-  ctx.fillRect(cx - 10, cy - 12, 3, 8);
-  ctx.fillRect(cx + 2, cy - 2, 8, 3);
-  ctx.fillRect(cx + 7, cy - 8, 3, 8);
+  const cy = y + h * 0.52;
+
+  // Huge Setting Desert Sun on Horizon
+  const sunGrad = ctx.createRadialGradient(cx, y + h * 0.45, 4, cx, y + h * 0.45, 34);
+  sunGrad.addColorStop(0, '#FEF08A');
+  sunGrad.addColorStop(0.5, '#F97316');
+  sunGrad.addColorStop(1, 'rgba(249, 115, 22, 0)');
+  ctx.fillStyle = sunGrad;
+  ctx.beginPath();
+  ctx.arc(cx, y + h * 0.45, 34, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rolling Sand Dunes
+  ctx.fillStyle = '#EA580C';
+  ctx.beginPath();
+  ctx.moveTo(x, y + h * 0.6);
+  ctx.quadraticCurveTo(cx - 20, y + h * 0.5, cx + 15, y + h * 0.65);
+  ctx.quadraticCurveTo(cx + 35, y + h * 0.72, x + w, y + h * 0.62);
+  ctx.lineTo(x + w, y + h);
+  ctx.lineTo(x, y + h);
+  ctx.closePath();
+  ctx.fill();
+
+  // Center Saguaro Cactus with Dual Branches & Ribs
+  ctx.fillStyle = '#15803D';
+  // Main Trunk
+  ctx.fillRect(cx - 4, cy - 22, 8, 38);
+  ctx.beginPath();
+  ctx.arc(cx, cy - 22, 4, Math.PI, 0);
+  ctx.fill();
+
+  // Left Arm
+  ctx.fillRect(cx - 15, cy - 6, 12, 5);
+  ctx.fillRect(cx - 15, cy - 16, 5, 12);
+  ctx.beginPath();
+  ctx.arc(cx - 12.5, cy - 16, 2.5, Math.PI, 0);
+  ctx.fill();
+
+  // Right Arm
+  ctx.fillRect(cx + 3, cy - 1, 12, 5);
+  ctx.fillRect(cx + 10, cy - 11, 5, 12);
+  ctx.beginPath();
+  ctx.arc(cx + 12.5, cy - 11, 2.5, Math.PI, 0);
+  ctx.fill();
+
+  // Highlights on Cactus Ribs
+  ctx.fillStyle = '#4ADE80';
+  ctx.fillRect(cx - 2, cy - 20, 2, 34);
+
+  // Speeding Red Buggy Kart Slalom Silhouette
+  ctx.save();
+  ctx.translate(cx + 26, y + h * 0.72);
+  ctx.fillStyle = '#EF4444';
+  ctx.fillRect(-8, -4, 16, 8);
+  ctx.fillStyle = '#0F172A';
+  ctx.fillRect(-9, -6, 5, 3);
+  ctx.fillRect(4, -6, 5, 3);
+  ctx.fillRect(-9, 4, 5, 3);
+  ctx.fillRect(4, 4, 5, 3);
+  ctx.restore();
 }
 
 // 124. Bandit Chase
 function drawBanditChaseArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#92400E';
+  ctx.fillStyle = '#78350F';
   ctx.fillRect(x, y, w, h);
-  // Center coach
+
+  const cx = x + w * 0.46;
+  const cy = y + h * 0.52;
+
+  // Canyon Road Ground
+  ctx.fillStyle = '#B45309';
+  ctx.fillRect(x, y + h * 0.65, w, h * 0.35);
+
+  // Stagecoach Body (Rich Mahogany & Gold)
   ctx.fillStyle = '#571C0C';
-  ctx.fillRect(x + w * 0.38, y + h * 0.4, 24, 20);
-  // Reticle
+  ctx.fillRect(cx - 24, cy - 14, 34, 22);
+  ctx.strokeStyle = '#FACC15';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(cx - 24, cy - 14, 34, 22);
+
+  // Coach Windows with Warm Yellow Glow
+  ctx.fillStyle = '#FEF08A';
+  ctx.fillRect(cx - 18, cy - 8, 8, 8);
+  ctx.fillRect(cx - 4, cy - 8, 8, 8);
+
+  // 4 Spoked Stagecoach Wheels
+  const wheelPositions = [
+    { x: cx - 18, y: cy + 12, r: 8 },
+    { x: cx + 6, y: cy + 12, r: 9 }
+  ];
+  ctx.strokeStyle = '#D97706';
+  ctx.lineWidth = 2;
+  for (const wh of wheelPositions) {
+    ctx.beginPath();
+    ctx.arc(wh.x, wh.y, wh.r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(wh.x - wh.r, wh.y);
+    ctx.lineTo(wh.x + wh.r, wh.y);
+    ctx.moveTo(wh.x, wh.y - wh.r);
+    ctx.lineTo(wh.x, wh.y + wh.r);
+    ctx.stroke();
+  }
+
+  // Crosshair Gun Reticle Locking On
   ctx.strokeStyle = '#EF4444';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.arc(x + w * 0.72, y + h * 0.45, 10, 0, Math.PI * 2);
+  ctx.arc(cx + 28, cy - 6, 12, 0, Math.PI * 2);
+  ctx.moveTo(cx + 28 - 16, cy - 6);
+  ctx.lineTo(cx + 28 + 16, cy - 6);
+  ctx.moveTo(cx + 28, cy - 6 - 16);
+  ctx.lineTo(cx + 28, cy - 6 + 16);
   ctx.stroke();
 }
 
 // 125. Rattlesnake Reflex
 function drawRattlesnakeReflexArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#431407';
+  ctx.fillStyle = '#3F1508';
   ctx.fillRect(x, y, w, h);
-  // Snake coils
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.52;
+
+  // Desert Stone Ledge
+  ctx.fillStyle = '#78350F';
+  ctx.fillRect(x + 8, y + h * 0.65, w - 16, h * 0.35);
+
+  // Coiled Rattlesnake Body (Diamond Scales)
   ctx.strokeStyle = '#15803D';
+  ctx.lineWidth = 8;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.arc(cx, cy + 4, 18, 0, Math.PI * 1.75);
+  ctx.stroke();
+
+  // Outer Coil Overlap
+  ctx.strokeStyle = '#166534';
   ctx.lineWidth = 6;
   ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.52, 16, 0, Math.PI * 1.8);
+  ctx.arc(cx, cy + 4, 26, 0.4 * Math.PI, 1.35 * Math.PI);
   ctx.stroke();
-  // Snake eyes
-  ctx.fillStyle = '#EF4444';
+
+  // Snake Head with Amber Eyes
+  ctx.fillStyle = '#22C55E';
   ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.4, 5, 0, Math.PI * 2);
+  ctx.ellipse(cx + 4, cy - 14, 9, 6, 0.3, 0, Math.PI * 2);
   ctx.fill();
+  ctx.fillStyle = '#FEF08A';
+  ctx.beginPath();
+  ctx.arc(cx + 7, cy - 16, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Forked Red Tongue
+  ctx.strokeStyle = '#EF4444';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx + 12, cy - 13);
+  ctx.lineTo(cx + 20, cy - 14);
+  ctx.lineTo(cx + 24, cy - 17);
+  ctx.moveTo(cx + 20, cy - 14);
+  ctx.lineTo(cx + 24, cy - 11);
+  ctx.stroke();
+
+  // Vibrating Tail Rattle with Motion Blur Lines
+  ctx.fillStyle = '#F59E0B';
+  ctx.fillRect(cx - 18, cy - 6, 10, 5);
+  ctx.strokeStyle = '#FDE68A';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx - 24, cy - 9);
+  ctx.lineTo(cx - 24, cy - 3);
+  ctx.moveTo(cx - 21, cy - 10);
+  ctx.lineTo(cx - 21, cy - 2);
+  ctx.stroke();
 }
 
 // 126. Western Poker
 function drawWesternPokerArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
   ctx.fillStyle = '#064E3B';
   ctx.fillRect(x, y, w, h);
-  // Two playing cards
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(x + w * 0.32, y + h * 0.35, 18, 26);
-  ctx.strokeStyle = '#1F2937';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(x + w * 0.32, y + h * 0.35, 18, 26);
-  ctx.fillStyle = '#DC2626';
-  ctx.font = 'bold 9px sans-serif';
-  ctx.fillText('A♥', x + w * 0.35, y + h * 0.5);
 
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.48;
+
+  // Casino Green Felt Table Rim
+  ctx.strokeStyle = '#78350F';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(x + 6, y + 6, w - 12, h - 12);
+
+  // Fanned Playing Cards (Ace of Spades, King of Hearts)
+  // Card 1: King of Hearts
+  ctx.save();
+  ctx.translate(cx - 14, cy);
+  ctx.rotate(-0.18);
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(x + w * 0.52, y + h * 0.35, 18, 26);
-  ctx.strokeRect(x + w * 0.52, y + h * 0.35, 18, 26);
-  ctx.fillStyle = '#111827';
-  ctx.fillText('K♠', x + w * 0.55, y + h * 0.5);
+  ctx.fillRect(-12, -18, 24, 36);
+  ctx.strokeStyle = '#CBD5E1';
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(-12, -18, 24, 36);
+  ctx.fillStyle = '#DC2626';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('K♥', 0, 4);
+  ctx.restore();
+
+  // Card 2: Ace of Spades (On Top)
+  ctx.save();
+  ctx.translate(cx + 8, cy);
+  ctx.rotate(0.12);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(-12, -18, 24, 36);
+  ctx.strokeStyle = '#CBD5E1';
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(-12, -18, 24, 36);
+  ctx.fillStyle = '#0F172A';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('A♠', 0, 4);
+  ctx.restore();
+
+  // Stacks of Clay Poker Chips
+  const chipColors = ['#EF4444', '#3B82F6', '#10B981', '#F59E0B'];
+  for (let c = 0; c < 4; c++) {
+    ctx.fillStyle = chipColors[c];
+    ctx.beginPath();
+    ctx.ellipse(cx + 34, cy + 12 - c * 4, 9, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
 }
 
 // 127. Laser Tripwire
 function drawLaserTripwireArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0F172A';
+  ctx.fillStyle = '#080C1A';
   ctx.fillRect(x, y, w, h);
-  // Red lasers criss-crossed
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Vault Security Corridor Grid
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.14)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + 12, y + 10, w - 24, h - 20);
+
+  // Criss-Crossing Crimson Lasers with Glow
   ctx.strokeStyle = '#EF4444';
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = '#EF4444';
+  ctx.shadowBlur = 10;
   ctx.beginPath();
-  ctx.moveTo(x, y + h * 0.35);
-  ctx.lineTo(x + w, y + h * 0.35);
-  ctx.moveTo(x, y + h * 0.65);
-  ctx.lineTo(x + w, y + h * 0.65);
+  ctx.moveTo(x + 6, y + h * 0.32);
+  ctx.lineTo(x + w - 6, y + h * 0.38);
+  ctx.moveTo(x + 6, y + h * 0.72);
+  ctx.lineTo(x + w - 6, y + h * 0.64);
+  ctx.moveTo(x + w * 0.28, y + 6);
+  ctx.lineTo(x + w * 0.76, y + h - 6);
   ctx.stroke();
-  // Spy crouching
-  ctx.fillStyle = '#38BDF8';
+  ctx.shadowBlur = 0;
+
+  // Crouching Stealth Agent Silhouette
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.fillStyle = '#0284C7';
   ctx.beginPath();
-  ctx.ellipse(x + w * 0.5, y + h * 0.5, 12, 6, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, 14, 8, 0, 0, Math.PI * 2);
   ctx.fill();
+  // Head & Night Vision Goggles
+  ctx.fillStyle = '#0F172A';
+  ctx.beginPath();
+  ctx.arc(-8, -6, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#22C55E';
+  ctx.fillRect(-11, -8, 5, 2.5);
+  ctx.restore();
 }
 
 // 128. Vault Safe
 function drawVaultSafeArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#1E293B';
+  ctx.fillStyle = '#0F172A';
   ctx.fillRect(x, y, w, h);
-  // Safe Dial
-  ctx.fillStyle = '#475569';
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.48;
+
+  // Massive Steel Vault Door Bezel
+  ctx.fillStyle = '#334155';
   ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.5, 22, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 32, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = '#FBBF24';
+  ctx.strokeStyle = '#64748B';
   ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Radial Steel Locking Bolts
+  ctx.fillStyle = '#E2E8F0';
+  for (let b = 0; b < Math.PI * 2; b += Math.PI / 4) {
+    const bx = cx + Math.cos(b) * 28;
+    const by = cy + Math.sin(b) * 28;
+    ctx.beginPath();
+    ctx.arc(bx, by, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Central Gold Safe Dial Wheel
+  ctx.fillStyle = '#D97706';
   ctx.beginPath();
-  ctx.moveTo(x + w * 0.5, y + h * 0.5);
-  ctx.lineTo(x + w * 0.5 + 14, y + h * 0.5 - 14);
+  ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#FDE68A';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Stethoscope Sound Waves
+  ctx.strokeStyle = '#38BDF8';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(cx + 20, cy - 14, 8, -0.6, 0.6);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(cx + 20, cy - 14, 13, -0.6, 0.6);
   ctx.stroke();
 }
 
