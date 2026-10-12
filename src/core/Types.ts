@@ -283,7 +283,8 @@ export type MinigameId =
   | 'crt_scanline_sniper'
   | 'cyber_grid_runner'
   | 'synth_drum_pad'
-  | 'matrix_code_rain';
+  | 'matrix_code_rain'
+  | 'sharks_and_minnows';
 
 export interface MinigameMetadata {
   id: MinigameId;

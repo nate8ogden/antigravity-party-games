@@ -823,6 +823,9 @@ function drawThumbnailDirect(
     case 'matrix_code_rain':
       drawMatrixCodeRainArt(ctx, x, y, w, h);
       break;
+    case 'sharks_and_minnows':
+      drawSharksAndMinnowsArt(ctx, x, y, w, h);
+      break;
     default:
       drawDefaultArt(ctx, x, y, w, h);
       break;
@@ -9388,6 +9391,57 @@ function drawMatrixCodeRainArt(ctx: CanvasRenderingContext2D, x: number, y: numb
   ctx.fillStyle = '#fbbf24';
   ctx.beginPath();
   ctx.arc(cx + 12, cy, 3, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawSharksAndMinnowsArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Deep ocean gradient
+  const grad = ctx.createLinearGradient(x, y, x, y + h);
+  grad.addColorStop(0, '#38BDF8');
+  grad.addColorStop(0.5, '#0284C7');
+  grad.addColorStop(1, '#0369A1');
+  ctx.fillStyle = grad;
+  ctx.fillRect(x, y, w, h);
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Wave ripples
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(cx - 20, cy, 32, -0.6, 0.6);
+  ctx.stroke();
+
+  // Shark Fin slicing through water
+  ctx.fillStyle = '#0F172A';
+  ctx.beginPath();
+  ctx.moveTo(cx - 16, cy + 10);
+  ctx.lineTo(cx - 4, cy - 20);
+  ctx.lineTo(cx + 12, cy + 10);
+  ctx.closePath();
+  ctx.fill();
+
+  // Water wake splash around fin
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - 22, cy + 10);
+  ctx.lineTo(cx + 18, cy + 10);
+  ctx.stroke();
+
+  // Little Golden Minnow darting ahead
+  ctx.fillStyle = '#FBBF24';
+  ctx.beginPath();
+  ctx.ellipse(cx + 28, cy - 12, 10, 5, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Minnow tail
+  ctx.beginPath();
+  ctx.moveTo(cx + 19, cy - 8);
+  ctx.lineTo(cx + 13, cy - 13);
+  ctx.lineTo(cx + 13, cy - 3);
+  ctx.closePath();
   ctx.fill();
 }
 

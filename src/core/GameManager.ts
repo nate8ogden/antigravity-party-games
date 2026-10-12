@@ -268,6 +268,7 @@ import { CrtScanlineSniperGame } from '../games/CrtScanlineSniperGame';
 import { CyberGridRunnerGame } from '../games/CyberGridRunnerGame';
 import { SynthDrumPadGame } from '../games/SynthDrumPadGame';
 import { MatrixCodeRainGame } from '../games/MatrixCodeRainGame';
+import { SharksAndMinnowsGame } from '../games/SharksAndMinnowsGame';
 import { renderGameThumbnailArt } from './GameThumbnails';
 import { drawCharacter } from './CharacterRenderer';
 import {
@@ -2584,6 +2585,15 @@ export const GAME_CATALOG: MinigameMetadata[] = [
     icon: '[G-256]',
     instructions: 'Catch golden cipher keys falling through green digital code rain to charge your decryption buffer while evading corrupt red glitch fragments.',
     controlPrompt: 'Steer: Slide Hacker Terminal | Catch Keys'
+  },
+  {
+    id: 'sharks_and_minnows',
+    title: 'Sharks & Minnows',
+    tagline: 'Deep Ocean Lagoon Dash',
+    category: 'Action',
+    icon: '[G-257]',
+    instructions: 'The classic pool duel! Minnows must sprint across the deep ocean channel from shore to shore. The Shark patrols the deep water with sudden chomp lunges. Score points for safe crossings and catching minnows!',
+    controlPrompt: 'WASD / Arrows: Swim • Space / Enter: Dash / Lunge'
   }
 ];
 
@@ -2888,6 +2898,7 @@ export class GameManager {
       if (gameParam === 'maze_escape' || gameParam === 'maze' || gameParam === 'labyrinth' || gameParam === 'dungeon') gameParam = 'maze_escape';
       if (gameParam === 'pinball_battle' || gameParam === 'pinball' || gameParam === 'flipper' || gameParam === 'flipper_battle') gameParam = 'pinball_battle';
       if (gameParam === 'mole_panic' || gameParam === 'mole' || gameParam === 'moles' || gameParam === 'whack' || gameParam === 'whackamole') gameParam = 'mole_panic';
+      if (gameParam === 'sharks_and_minnows' || gameParam === 'shark_and_minnows' || gameParam === 'sharks' || gameParam === 'minnows' || gameParam === 'shark') gameParam = 'sharks_and_minnows';
 
       const idx = GAME_CATALOG.findIndex((g) => g.id === gameParam);
       if (idx !== -1) {
@@ -4483,6 +4494,9 @@ export class GameManager {
         break;
       case 'matrix_code_rain':
         this.activeGame = new MatrixCodeRainGame(this.players, this.input, this.audio, this.particles);
+        break;
+      case 'sharks_and_minnows':
+        this.activeGame = new SharksAndMinnowsGame(this.players, this.input, this.audio, this.particles);
         break;
     }
 
