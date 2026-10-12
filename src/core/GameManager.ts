@@ -1619,12 +1619,12 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   },
   {
     id: 'balloon_dart',
-    title: 'Balloon Dart',
-    tagline: 'Spinning Wheel Pop',
-    category: 'Party',
+    title: 'Balloon Dart Gallery',
+    tagline: 'Multi-Tier Conveyor Pop Gallery',
+    category: 'Action',
     icon: '[G-149]',
-    instructions: 'The carnival cork wheel spins with colorful balloons! Tap to launch darts, targeting rare golden star balloons for bonus points.',
-    controlPrompt: 'Tap: Throw Dart'
+    instructions: 'Aim your dart catapult and pop balloons along 3 moving conveyor tiers! Snipe golden star balloons for bonus points and trigger chain-reaction bomb balloons to wipe entire rows. Watch out for crosswinds!',
+    controlPrompt: 'Steer: Aim Angle | Tap/Space: Pitch Dart | 1-3: Switch Gallery'
   },
   {
     id: 'dunk_tank',
