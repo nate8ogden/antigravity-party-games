@@ -7208,136 +7208,496 @@ function drawVaultSafeArt(ctx: CanvasRenderingContext2D, x: number, y: number, w
 
 // 129. Security Camera
 function drawSecurityCameraArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0F172A';
+  ctx.fillStyle = '#090D1A';
   ctx.fillRect(x, y, w, h);
-  // Yellow vision cone
-  ctx.fillStyle = 'rgba(254, 240, 138, 0.3)';
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.45;
+
+  // Modern High-Tech CCTV Camera Mounting Arm
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(x + 12, y + 10, 16, 12);
+  ctx.strokeStyle = '#64748B';
+  ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(x + w * 0.3, y + 10);
-  ctx.lineTo(x + w * 0.1, y + h);
-  ctx.lineTo(x + w * 0.8, y + h);
+  ctx.moveTo(x + 20, y + 18);
+  ctx.lineTo(cx - 8, cy - 14);
+  ctx.stroke();
+
+  // Cylindrical Dome Camera Body
+  ctx.save();
+  ctx.translate(cx - 8, cy - 14);
+  ctx.rotate(0.42);
+  ctx.fillStyle = '#E2E8F0';
+  ctx.fillRect(-14, -8, 28, 16);
+  ctx.fillStyle = '#0F172A';
+  ctx.fillRect(8, -8, 6, 16);
+
+  // Blinking Red Record LED
+  ctx.fillStyle = '#EF4444';
+  ctx.shadowColor = '#EF4444';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.arc(-8, -10, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.restore();
+
+  // Translucent Amber/Gold Security Scanning Laser Cone
+  const coneGrad = ctx.createLinearGradient(cx - 4, cy - 10, cx + 18, y + h);
+  coneGrad.addColorStop(0, 'rgba(250, 204, 21, 0.45)');
+  coneGrad.addColorStop(1, 'rgba(250, 204, 21, 0.04)');
+  ctx.fillStyle = coneGrad;
+  ctx.beginPath();
+  ctx.moveTo(cx - 4, cy - 10);
+  ctx.lineTo(x + 8, y + h - 6);
+  ctx.lineTo(x + w - 8, y + h - 6);
   ctx.closePath();
   ctx.fill();
-  // Camera mount
-  ctx.fillStyle = '#64748B';
-  ctx.beginPath();
-  ctx.arc(x + w * 0.3, y + 10, 8, 0, Math.PI * 2);
-  ctx.fill();
+
+  // Target Lock Hexagon Frame on Floor
+  ctx.strokeStyle = '#EF4444';
+  ctx.lineWidth = 1.8;
+  ctx.strokeRect(cx + 8, y + h - 24, 26, 16);
+  ctx.fillStyle = '#EF4444';
+  ctx.font = 'bold 8px monospace';
+  ctx.fillText('TARGET', cx + 10, y + h - 13);
 }
 
 // 130. Briefcase Snatch
 function drawBriefcaseSnatchArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#1E293B';
+  ctx.fillStyle = '#0B0F19';
   ctx.fillRect(x, y, w, h);
-  // Golden Briefcase
-  ctx.fillStyle = '#D97706';
-  ctx.fillRect(x + w * 0.35, y + h * 0.4, 28, 18);
-  ctx.strokeStyle = '#FDE68A';
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Rainy City Skyline Silhouettes
+  ctx.fillStyle = '#1E293B';
+  ctx.fillRect(x + 10, y + h * 0.25, 24, h * 0.75);
+  ctx.fillRect(x + 38, y + h * 0.15, 30, h * 0.85);
+  ctx.fillRect(x + 72, y + h * 0.3, 26, h * 0.7);
+  ctx.fillRect(x + 102, y + h * 0.2, 34, h * 0.8);
+
+  // Searchlight Beam slicing across the rooftop
+  const lightGrad = ctx.createLinearGradient(x + w, y, cx, cy);
+  lightGrad.addColorStop(0, 'rgba(254, 240, 138, 0.25)');
+  lightGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+  ctx.fillStyle = lightGrad;
+  ctx.beginPath();
+  ctx.moveTo(x + w - 4, y + 4);
+  ctx.lineTo(cx - 30, y + h);
+  ctx.lineTo(cx + 45, y + h);
+  ctx.closePath();
+  ctx.fill();
+
+  // High-Tech Carbon Fiber Briefcase
+  ctx.save();
+  ctx.translate(cx, cy + 4);
+  ctx.rotate(-0.1);
+
+  // Briefcase Body
+  ctx.fillStyle = '#18181B';
+  ctx.fillRect(-24, -14, 48, 28);
+  ctx.strokeStyle = '#FACC15';
   ctx.lineWidth = 2;
-  ctx.strokeRect(x + w * 0.35, y + h * 0.4, 28, 18);
+  ctx.strokeRect(-24, -14, 48, 28);
+
+  // Metal Corner Protectors
+  ctx.fillStyle = '#E2E8F0';
+  ctx.fillRect(-24, -14, 6, 6);
+  ctx.fillRect(18, -14, 6, 6);
+  ctx.fillRect(-24, 8, 6, 6);
+  ctx.fillRect(18, 8, 6, 6);
+
   // Handle
-  ctx.strokeRect(x + w * 0.44, y + h * 0.34, 10, 6);
+  ctx.strokeStyle = '#D97706';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-10, -14);
+  ctx.lineTo(-10, -22);
+  ctx.lineTo(10, -22);
+  ctx.lineTo(10, -14);
+  ctx.stroke();
+
+  // Digital Glowing Neon Classified Lock
+  ctx.fillStyle = '#06B6D4';
+  ctx.shadowColor = '#06B6D4';
+  ctx.shadowBlur = 8;
+  ctx.fillRect(-6, -3, 12, 6);
+  ctx.shadowBlur = 0;
+  ctx.restore();
+
+  // Diagonal Rain Streaks
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+  ctx.lineWidth = 1;
+  for (let r = 0; r < 8; r++) {
+    const rx = x + 16 + r * 18;
+    const ry = y + 10 + (r % 3) * 12;
+    ctx.beginPath();
+    ctx.moveTo(rx, ry);
+    ctx.lineTo(rx - 8, ry + 22);
+    ctx.stroke();
+  }
 }
 
 // 131. Hack Terminal
 function drawHackTerminalArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
   ctx.fillStyle = '#030712';
   ctx.fillRect(x, y, w, h);
-  // Green cyber code lines
-  ctx.fillStyle = '#10B981';
-  ctx.font = 'bold 10px monospace';
-  ctx.fillText('0x7F A4 C9', x + 10, y + h * 0.4);
-  ctx.fillText('SYS_OK >_', x + 10, y + h * 0.65);
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Curved CRT Cyber Monitor Bezel
+  ctx.fillStyle = '#111827';
+  ctx.strokeStyle = '#1F2937';
+  ctx.lineWidth = 3;
+  if (ctx.roundRect) {
+    ctx.beginPath();
+    ctx.roundRect(x + 10, y + 10, w - 20, h - 20, 8);
+    ctx.fill();
+    ctx.stroke();
+  } else {
+    ctx.fillRect(x + 10, y + 10, w - 20, h - 20);
+  }
+
+  // Glowing Phosphor Green Screen Interior
+  ctx.fillStyle = '#022C22';
+  ctx.fillRect(x + 14, y + 14, w - 28, h - 28);
+
+  // Digital Matrix Rain Columns
+  ctx.fillStyle = 'rgba(16, 185, 129, 0.35)';
+  ctx.font = 'bold 7px monospace';
+  for (let col = 0; col < 6; col++) {
+    const mx = x + 20 + col * 16;
+    ctx.fillText('0 1 0 1', mx, y + 26);
+    ctx.fillText('1 1 0 0', mx, y + 36);
+    ctx.fillText('1 0 1 1', mx, y + 46);
+  }
+
+  // Glowing Green Command Prompts
+  ctx.fillStyle = '#34D399';
+  ctx.font = 'bold 9px monospace';
+  ctx.shadowColor = '#10B981';
+  ctx.shadowBlur = 6;
+  ctx.fillText('> ROOT_ACCESS', x + 18, y + h * 0.62);
+  ctx.fillText('> BYPASS [99%]', x + 18, y + h * 0.74);
+
+  // Holographic Cyber Key Icon in Center
+  ctx.strokeStyle = '#FACC15';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.arc(cx + 28, cy - 6, 6, 0, Math.PI * 2);
+  ctx.moveTo(cx + 28 + 6, cy - 6);
+  ctx.lineTo(cx + 28 + 14, cy - 6);
+  ctx.lineTo(cx + 28 + 14, cy - 3);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Monitor Scanlines
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.28)';
+  ctx.lineWidth = 1;
+  for (let sy = y + 16; sy < y + h - 16; sy += 4) {
+    ctx.beginPath();
+    ctx.moveTo(x + 14, sy);
+    ctx.lineTo(x + w - 14, sy);
+    ctx.stroke();
+  }
 }
 
 // 132. Smoke Bomb Escape
 function drawSmokeBombEscapeArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0B132B';
+  ctx.fillStyle = '#09090B';
   ctx.fillRect(x, y, w, h);
-  // Smoke plume
-  ctx.fillStyle = 'rgba(148, 163, 184, 0.6)';
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.52;
+
+  // Dark Rooftop Tiles
+  ctx.fillStyle = '#18181B';
+  ctx.fillRect(x + 8, y + h * 0.7, w - 16, h * 0.3);
+
+  // Volumetric Purple & Midnight Smoke Clouds with Gradient
+  const smokePuffs = [
+    { x: cx, y: cy, r: 28, c: 'rgba(107, 33, 168, 0.75)' },
+    { x: cx - 18, y: cy + 4, r: 22, c: 'rgba(88, 28, 135, 0.85)' },
+    { x: cx + 18, y: cy + 2, r: 24, c: 'rgba(126, 34, 206, 0.8)' },
+    { x: cx - 8, y: cy - 14, r: 20, c: 'rgba(147, 51, 234, 0.65)' },
+    { x: cx + 12, y: cy - 12, r: 22, c: 'rgba(168, 85, 247, 0.55)' }
+  ];
+
+  for (const p of smokePuffs) {
+    ctx.fillStyle = p.c;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Steel Ninja Shuriken Flying through Smoke
+  ctx.save();
+  ctx.translate(cx + 26, cy - 14);
+  ctx.rotate(0.6);
+  ctx.fillStyle = '#E2E8F0';
   ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.5, 24, 0, Math.PI * 2);
-  ctx.arc(x + w * 0.38, y + h * 0.45, 18, 0, Math.PI * 2);
-  ctx.arc(x + w * 0.62, y + h * 0.45, 18, 0, Math.PI * 2);
+  ctx.moveTo(0, -12);
+  ctx.lineTo(3, -3);
+  ctx.lineTo(12, 0);
+  ctx.lineTo(3, 3);
+  ctx.lineTo(0, 12);
+  ctx.lineTo(-3, 3);
+  ctx.lineTo(-12, 0);
+  ctx.lineTo(-3, -3);
+  ctx.closePath();
   ctx.fill();
+  ctx.fillStyle = '#0F172A';
+  ctx.beginPath();
+  ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Glowing Yellow Ninja Eyes in the Smoke
+  ctx.fillStyle = '#FACC15';
+  ctx.shadowColor = '#FACC15';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.ellipse(cx - 7, cy - 2, 4, 2, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(cx + 7, cy - 2, 4, 2, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
 }
 
 // 133. Micro Wiretap
 function drawMicroWiretapArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#18181B';
+  ctx.fillStyle = '#0C0A09';
   ctx.fillRect(x, y, w, h);
-  // Microphone bug
-  ctx.fillStyle = '#71717A';
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Circuit Board Copper Traces
+  ctx.strokeStyle = '#D97706';
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.5, 16, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.moveTo(x + 10, cy);
+  ctx.lineTo(cx - 16, cy);
+  ctx.lineTo(cx - 16, cy + 18);
+  ctx.lineTo(cx + 16, cy + 18);
+  ctx.moveTo(cx + 16, cy);
+  ctx.lineTo(x + w - 10, cy);
+  ctx.stroke();
+
+  // Expanding Neon Green Radio Audio Waves
   ctx.strokeStyle = '#22C55E';
-  ctx.lineWidth = 3;
-  ctx.stroke();
-  // Radio waves
-  ctx.strokeStyle = '#38BDF8';
   ctx.lineWidth = 2;
+  ctx.shadowColor = '#22C55E';
+  ctx.shadowBlur = 8;
+  for (let rad = 24; rad <= 38; rad += 7) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, rad, -0.55 * Math.PI, 0.55 * Math.PI);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx, cy, rad, 0.45 * Math.PI, 1.55 * Math.PI);
+    ctx.stroke();
+  }
+  ctx.shadowBlur = 0;
+
+  // Mini Stealth Microphone Bug Body
+  ctx.fillStyle = '#262626';
   ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.5, 26, -0.6, 0.6);
+  ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#737373';
+  ctx.lineWidth = 2.5;
   ctx.stroke();
+
+  // Center Microphone Grille & Pulsing LED
+  ctx.fillStyle = '#171717';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#EF4444';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 // 134. Rooftop Zipline
 function drawRooftopZiplineArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0F172A';
+  ctx.fillStyle = '#020617';
   ctx.fillRect(x, y, w, h);
-  // Cable wire
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Night City Skyline Towers
+  ctx.fillStyle = '#0F172A';
+  ctx.fillRect(x + 10, y + 24, 28, h);
+  ctx.fillRect(x + w - 38, y + 42, 28, h);
+
+  // High-Tension Steel Cable Wire
   ctx.strokeStyle = '#94A3B8';
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.moveTo(x, y + 10);
-  ctx.lineTo(x + w, y + h - 10);
+  ctx.moveTo(x + 24, y + 28);
+  ctx.lineTo(x + w - 24, y + h - 16);
   ctx.stroke();
-  // Zipliner
+
+  // Speeding Zipliner Agent with Pulley
+  ctx.save();
+  ctx.translate(cx, cy - 2);
+  ctx.rotate(0.36);
+
+  // Pulley Wheel on Cable
+  ctx.fillStyle = '#FACC15';
+  ctx.beginPath();
+  ctx.arc(0, -10, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#E2E8F0';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, -10);
+  ctx.lineTo(0, 0);
+  ctx.stroke();
+
+  // Agent Body & Flying Cape/Scarf
   ctx.fillStyle = '#EF4444';
   ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.5, 9, 0, Math.PI * 2);
+  ctx.arc(0, 4, 6, 0, Math.PI * 2);
+  ctx.fill();
+  // Flying scarf
+  ctx.fillStyle = '#F59E0B';
+  ctx.beginPath();
+  ctx.moveTo(-4, 2);
+  ctx.lineTo(-18, -4);
+  ctx.lineTo(-14, 6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // Cable Friction Sparks
+  ctx.fillStyle = '#FEF08A';
+  ctx.beginPath();
+  ctx.arc(cx - 8, cy - 8, 2, 0, Math.PI * 2);
+  ctx.arc(cx + 4, cy - 2, 2.5, 0, Math.PI * 2);
   ctx.fill();
 }
 
 // 135. Drone Intercept
 function drawDroneInterceptArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0F172A';
+  ctx.fillStyle = '#030712';
   ctx.fillRect(x, y, w, h);
-  // Drone frame
-  ctx.strokeStyle = '#64748B';
-  ctx.lineWidth = 3;
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.48;
+
+  // Radar Sweep Rings
+  ctx.strokeStyle = 'rgba(6, 182, 212, 0.25)';
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(x + w * 0.35, y + h * 0.35);
-  ctx.lineTo(x + w * 0.65, y + h * 0.65);
-  ctx.moveTo(x + w * 0.65, y + h * 0.35);
-  ctx.lineTo(x + w * 0.35, y + h * 0.65);
+  ctx.arc(cx, cy, 36, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 22, 0, Math.PI * 2);
   ctx.stroke();
-  // Red sensor
-  ctx.fillStyle = '#EF4444';
+
+  // Quadcopter Drone Carbon-X Arms
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 3.5;
   ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.5, 5, 0, Math.PI * 2);
+  ctx.moveTo(cx - 22, cy - 14);
+  ctx.lineTo(cx + 22, cy + 14);
+  ctx.moveTo(cx + 22, cy - 14);
+  ctx.lineTo(cx - 22, cy + 14);
+  ctx.stroke();
+
+  // 4 Spinning Rotor Blur Discs
+  const rotors = [
+    { x: cx - 22, y: cy - 14 },
+    { x: cx + 22, y: cy - 14 },
+    { x: cx - 22, y: cy + 14 },
+    { x: cx + 22, y: cy + 14 }
+  ];
+  ctx.fillStyle = 'rgba(56, 189, 248, 0.45)';
+  for (const r of rotors) {
+    ctx.beginPath();
+    ctx.arc(r.x, r.y, 9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0F172A';
+    ctx.beginPath();
+    ctx.arc(r.x, r.y, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.45)';
+  }
+
+  // Central Avionics Pod & Glowing Red Targeting Eye
+  ctx.fillStyle = '#1E293B';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 10, 0, Math.PI * 2);
   ctx.fill();
+  ctx.strokeStyle = '#06B6D4';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = '#EF4444';
+  ctx.shadowColor = '#EF4444';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
 }
 
 // 136. Disguise Shuffle
 function drawDisguiseShuffleArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
   ctx.fillStyle = '#1E1B4B';
   ctx.fillRect(x, y, w, h);
-  // Golden Venetian Mask
-  ctx.fillStyle = '#FBBF24';
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.48;
+
+  // Stage Velvet Curtain Drape Silhouettes
+  ctx.fillStyle = '#312E81';
   ctx.beginPath();
-  ctx.ellipse(x + w * 0.5, y + h * 0.5, 20, 10, 0, 0, Math.PI * 2);
+  ctx.moveTo(x, y);
+  ctx.quadraticCurveTo(x + 24, cy, x, y + h);
+  ctx.lineTo(x, y);
+  ctx.moveTo(x + w, y);
+  ctx.quadraticCurveTo(x + w - 24, cy, x + w, y + h);
+  ctx.lineTo(x + w, y);
   ctx.fill();
-  ctx.strokeStyle = '#F59E0B';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  // Mask eyeholes
-  ctx.fillStyle = '#1E1B4B';
+
+  // Golden Venetian Disguise Mask
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.fillStyle = '#F59E0B';
   ctx.beginPath();
-  ctx.ellipse(x + w * 0.42, y + h * 0.5, 4, 3, 0, 0, Math.PI * 2);
-  ctx.ellipse(x + w * 0.58, y + h * 0.5, 4, 3, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, 26, 14, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#FDE68A';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Mask Eyeholes
+  ctx.fillStyle = '#0F172A';
+  ctx.beginPath();
+  ctx.ellipse(-10, -1, 5, 3.5, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(10, -1, 5, 3.5, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Fancy Feather Plume
+  ctx.fillStyle = '#EC4899';
+  ctx.beginPath();
+  ctx.moveTo(0, -14);
+  ctx.quadraticCurveTo(-6, -28, -2, -34);
+  ctx.quadraticCurveTo(6, -26, 0, -14);
+  ctx.fill();
+  ctx.restore();
+
+  // Sparkles
+  ctx.fillStyle = '#FEF08A';
+  ctx.beginPath();
+  ctx.arc(cx - 24, cy - 16, 2.5, 0, Math.PI * 2);
+  ctx.arc(cx + 26, cy + 14, 2, 0, Math.PI * 2);
   ctx.fill();
 }
 
@@ -10496,14 +10856,56 @@ function drawSpamClickShowdownArt(ctx: CanvasRenderingContext2D, x: number, y: n
   ctx.fillText('⚡ 1000 PSI!', x + w * 0.5, y + h * 0.92);
 }
 
-// Fallback Default
+// Fallback Default Arcade Token
 function drawDefaultArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#1E293B';
+  ctx.fillStyle = '#0F172A';
   ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = '#38BDF8';
-  ctx.font = 'bold 20px Montserrat, sans-serif';
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.46;
+
+  // Golden Arcade Token
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  // Outer Token Ring with Drop Shadow
+  ctx.fillStyle = '#78350F';
+  ctx.beginPath();
+  ctx.arc(0, 3, 28, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#F59E0B';
+  ctx.beginPath();
+  ctx.arc(0, 0, 28, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = '#FEF08A';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Inner Token Bezel
+  ctx.strokeStyle = '#D97706';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(0, 0, 20, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Star Engraving
+  ctx.fillStyle = '#FEF08A';
+  ctx.font = '900 16px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('ARCADE', x + w / 2, y + h / 2 + 7);
+  ctx.fillText('★', 0, 6);
+
+  ctx.restore();
+
+  // Glowing Arcade Marquee Text
+  ctx.fillStyle = '#38BDF8';
+  ctx.shadowColor = '#38BDF8';
+  ctx.shadowBlur = 8;
+  ctx.font = '900 11px Montserrat, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('MINIGAME', cx, y + h - 12);
+  ctx.shadowBlur = 0;
 }
 
 
