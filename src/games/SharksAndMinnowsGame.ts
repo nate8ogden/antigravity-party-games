@@ -354,13 +354,14 @@ export class SharksAndMinnowsGame extends BaseGame {
 
       const steer = Math.abs(rawSteer) > 0 ? rawSteer : smoothSteer;
       const throttle = Math.abs(rawThrottle) > 0 ? rawThrottle : smoothThrottle;
-      const isAction = this.input.isPressed(p.id) || this.input.isActionPressed(p.id);
+      const isAction = this.input.isPressed(p.id) || this.input.isActionPressed(p.id) || this.input.justAction(p.id) || this.input.justPressed(p.id);
 
       // Handle abilities
       if (s.role === 'minnow') {
         if (isAction && s.dashCooldown <= 0 && s.dashDuration <= 0 && s.stunTimer <= 0) {
           s.dashDuration = 0.35;
           s.dashCooldown = 1.4;
+          this.input.consumeAction(p.id);
           this.audio.playTone(740, 0.08, 'sine');
           this.particles.spawnSparks(s.x, s.y, '#38BDF8', 8);
         }
@@ -368,6 +369,7 @@ export class SharksAndMinnowsGame extends BaseGame {
         if (isAction && s.lungeCooldown <= 0 && s.lungeDuration <= 0 && s.stunTimer <= 0) {
           s.lungeDuration = 0.4;
           s.lungeCooldown = 1.6;
+          this.input.consumeAction(p.id);
           this.audio.playTone(320, 0.12, 'sawtooth');
           this.particles.spawnSparks(s.x, s.y, '#EF4444', 10);
         }

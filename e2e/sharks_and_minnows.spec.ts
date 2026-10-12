@@ -80,8 +80,10 @@ test.describe('Sharks and Minnows Minigame Verification', () => {
     expect(p0AfterW.y).toBeLessThan(p0Before.y);
 
     // Test Dart Juke with 'Space'
-    await page.keyboard.press('Space');
-    await page.waitForTimeout(100);
+    await page.keyboard.down('Space');
+    await page.waitForTimeout(80);
+    await page.keyboard.up('Space');
+    await page.waitForTimeout(40);
 
     const p0AfterDash = await page.evaluate(() => {
       const dbg = (window as any).__SHARKS_AND_MINNOWS_DEBUG__;
