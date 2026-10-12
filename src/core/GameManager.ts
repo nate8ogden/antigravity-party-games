@@ -594,7 +594,7 @@ export const GAME_CATALOG: MinigameMetadata[] = [
     category: 'Puzzle',
     icon: '[G-37]',
     instructions: 'Sprint through a high-stakes cyber hex minefield! Observe proximity warning runes (1, 2, 3) to deduce concealed explosive triggers. Extract golden battery cores and survive the blast shockwaves!',
-    controlPrompt: 'Steer / Arrows / Tap: Leap To Adjacent Hex Tile'
+    controlPrompt: 'WASD / Arrows: Move • Space / Enter: Dash Sprint'
   },
   {
     id: 'asteroid_miner',

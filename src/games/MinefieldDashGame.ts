@@ -50,6 +50,8 @@ export class MinefieldDashGame extends BaseGame {
     this.isFinished = false;
     this.playersState.clear();
 
+    this.input.setControlMode('directional');
+
     this.cols = Math.min(11, Math.max(8, Math.floor((width - 120) / 60)));
     this.rows = Math.min(8, Math.max(6, Math.floor((height - 180) / 55)));
     this.tileW = Math.floor((width - 140) / this.cols);
@@ -62,7 +64,7 @@ export class MinefieldDashGame extends BaseGame {
 
     const active = this.getActivePlayers();
     active.forEach((p, idx) => {
-      const startX = this.gridStartX + (idx + 1) * (this.cols * this.tileW) / (active.length + 1);
+      const startX = this.gridStartX + ((idx + 1) * (this.cols * this.tileW)) / (active.length + 1);
       const startY = this.gridStartY + this.rows * this.tileH + 25;
 
       this.playersState.set(p.id, {
@@ -76,6 +78,37 @@ export class MinefieldDashGame extends BaseGame {
         sweepDir: 1
       });
     });
+
+    if (typeof window !== 'undefined') {
+      (window as any).__MINEFIELD_DASH_DEBUG__ = {
+        game: this,
+        cols: this.cols,
+        rows: this.rows,
+        tileW: this.tileW,
+        tileH: this.tileH,
+        gridStartX: this.gridStartX,
+        gridStartY: this.gridStartY,
+        getGrid: () => this.grid,
+        getPlayersState: () => {
+          const out: Record<string, any> = {};
+          for (const [id, ps] of this.playersState.entries()) {
+            out[id] = { ...ps };
+          }
+          return out;
+        },
+        forceExplode: (c: number, r: number) => {
+          if (this.grid[c]?.[r]) {
+            this.grid[c][r].exploded = true;
+            this.grid[c][r].revealed = true;
+            this.grid[c][r].detonateTimer = 0;
+            this.ensureFieldSolvable();
+          }
+        },
+        isBarricaded: (c: number, r: number) => {
+          return !!this.grid[c]?.[r]?.exploded;
+        }
+      };
+    }
   }
 
   private generateMinefield() {
@@ -135,6 +168,138 @@ export class MinefieldDashGame extends BaseGame {
     }
   }
 
+  /**
+   * BFS graph search ensuring that at least one walkable (non-exploded) corridor
+   * connects the bottom row to the extraction goal at row 0.
+   * If barricades completely seal the lane, automatically breach the obstruction.
+   */
+  private ensureFieldSolvable(): void {
+    const visited: boolean[][] = Array.from({ length: this.cols }, () => Array(this.rows).fill(false));
+    const queue: [number, number][] = [];
+
+    // All unexploded tiles in the bottom buffer row are candidate start points
+    for (let c = 0; c < this.cols; c++) {
+      if (!this.grid[c][this.rows - 1].exploded) {
+        queue.push([c, this.rows - 1]);
+        visited[c][this.rows - 1] = true;
+      }
+    }
+
+    let canReachGoal = false;
+    const dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+
+    while (queue.length > 0) {
+      const [curC, curR] = queue.shift()!;
+      if (curR === 0) {
+        canReachGoal = true;
+        break;
+      }
+
+      for (const [dc, dr] of dirs) {
+        const nc = curC + dc;
+        const nr = curR + dr;
+        if (nc >= 0 && nc < this.cols && nr >= 0 && nr < this.rows) {
+          if (!visited[nc][nr] && !this.grid[nc][nr].exploded) {
+            visited[nc][nr] = true;
+            queue.push([nc, nr]);
+          }
+        }
+      }
+    }
+
+    // If completely blocked by exploded barricades, breach the blocking row
+    if (!canReachGoal) {
+      for (let r = this.rows - 2; r >= 1; r--) {
+        for (let c = 0; c < this.cols; c++) {
+          if (this.grid[c][r].exploded) {
+            this.grid[c][r].exploded = false;
+            this.grid[c][r].hasMine = false;
+            this.grid[c][r].revealed = true;
+            this.grid[c][r].adjacentMines = 0;
+
+            const bx = this.gridStartX + c * this.tileW + this.tileW / 2;
+            const by = this.gridStartY + r * this.tileH + this.tileH / 2;
+            this.particles.spawnExplosion(bx, by, '#F59E0B', 20);
+            this.particles.showFloatingText('⚡ BARRICADE BREACHED!', bx, by - 12, '#FACC15', 16);
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Circle vs AABB collision response keeping players outside exploded barricade tiles.
+   */
+  private resolveBarricadeCollisions(ps: DashPlayer): void {
+    const radius = 13;
+    for (let c = 0; c < this.cols; c++) {
+      for (let r = 0; r < this.rows; r++) {
+        if (!this.grid[c][r].exploded) continue;
+
+        const tileLeft = this.gridStartX + c * this.tileW;
+        const tileRight = tileLeft + this.tileW;
+        const tileTop = this.gridStartY + r * this.tileH;
+        const tileBottom = tileTop + this.tileH;
+
+        // Broad-phase AABB test
+        if (
+          ps.x + radius < tileLeft ||
+          ps.x - radius > tileRight ||
+          ps.y + radius < tileTop ||
+          ps.y - radius > tileBottom
+        ) {
+          continue;
+        }
+
+        // Closest point on the barricade box
+        const clampX = Math.max(tileLeft, Math.min(tileRight, ps.x));
+        const clampY = Math.max(tileTop, Math.min(tileBottom, ps.y));
+        const dx = ps.x - clampX;
+        const dy = ps.y - clampY;
+        const distSq = dx * dx + dy * dy;
+
+        if (distSq < radius * radius) {
+          const dist = Math.sqrt(distSq);
+          if (dist > 0.0001) {
+            const nx = dx / dist;
+            const ny = dy / dist;
+            const overlap = radius - dist;
+            ps.x += nx * overlap;
+            ps.y += ny * overlap;
+
+            // Zero velocity entering the solid barrier
+            const velDot = ps.vx * nx + ps.vy * ny;
+            if (velDot < 0) {
+              ps.vx -= velDot * nx;
+              ps.vy -= velDot * ny;
+            }
+          } else {
+            // Player center ended up inside the box: push to nearest face
+            const dL = ps.x - tileLeft;
+            const dR = tileRight - ps.x;
+            const dT = ps.y - tileTop;
+            const dB = tileBottom - ps.y;
+            const minD = Math.min(dL, dR, dT, dB);
+            if (minD === dL) {
+              ps.x = tileLeft - radius;
+              ps.vx = Math.min(0, ps.vx);
+            } else if (minD === dR) {
+              ps.x = tileRight + radius;
+              ps.vx = Math.max(0, ps.vx);
+            } else if (minD === dT) {
+              ps.y = tileTop - radius;
+              ps.vy = Math.min(0, ps.vy);
+            } else {
+              ps.y = tileBottom + radius;
+              ps.vy = Math.max(0, ps.vy);
+            }
+          }
+        }
+      }
+    }
+  }
+
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
 
@@ -145,7 +310,7 @@ export class MinefieldDashGame extends BaseGame {
       return;
     }
 
-    // Update active mines countdown
+    // Update active mines countdown & detonation
     for (let c = 0; c < this.cols; c++) {
       for (let r = 0; r < this.rows; r++) {
         const tile = this.grid[c][r];
@@ -159,19 +324,23 @@ export class MinefieldDashGame extends BaseGame {
             const tx = this.gridStartX + c * this.tileW + this.tileW / 2;
             const ty = this.gridStartY + r * this.tileH + this.tileH / 2;
 
-            // Shrapnel
-            this.particles.spawnExplosion(tx, ty, '#EF4444', 16);
+            // Shrapnel blast
+            this.particles.spawnExplosion(tx, ty, '#EF4444', 20);
 
-            // Check if any player caught in blast
-            for (const [id, ps] of this.playersState.entries()) {
-              if (Math.hypot(ps.x - tx, ps.y - ty) < this.tileW) {
-                ps.stunTimer = 1.2;
-                ps.y = this.gridStartY + this.rows * this.tileH + 25; // Knocked back to start line!
+            // Blast wave knocks back nearby players
+            for (const ps of this.playersState.values()) {
+              if (Math.hypot(ps.x - tx, ps.y - ty) < this.tileW * 0.95) {
+                ps.stunTimer = 1.0;
+                ps.y = this.gridStartY + this.rows * this.tileH + 25; // Knocked back to starting line!
                 ps.vx = 0;
                 ps.vy = 0;
                 this.audio.playStun();
+                this.particles.showFloatingText('💥 KNOCKED BACK!', ps.x, ps.y - 12, '#EF4444', 16);
               }
             }
+
+            // Ensure route remains solvable
+            this.ensureFieldSolvable();
           }
         }
       }
@@ -189,45 +358,65 @@ export class MinefieldDashGame extends BaseGame {
         continue;
       }
 
-      const steer = this.input.getSteer(p.id);
-      const isDown = this.input.isPressed(p.id);
-      const speed = isDown ? 210 : 160;
+      // Responsive direct 8-way movement: WASD for P1, Arrow Keys for P2
+      const rawSteer = this.input.getRawSteer(p.id);
+      const rawThrottle = this.input.getRawThrottle(p.id);
+      const smoothSteer = this.input.getSteer(p.id);
+      const smoothThrottle = this.input.getThrottle(p.id);
 
-      if (steer !== 0) {
-        ps.vx = steer * speed;
-        ps.vy = -speed * 0.7;
-      } else if (isDown) {
-        // Single-button mobile mode: dash forward in aimed heading
+      const steer = Math.abs(rawSteer) > 0 ? rawSteer : smoothSteer;
+      const throttle = Math.abs(rawThrottle) > 0 ? rawThrottle : smoothThrottle;
+      const isAction = this.input.isPressed(p.id) || this.input.isActionPressed(p.id);
+
+      const baseSpeed = 160;
+      const dashSpeed = 240;
+      const speed = isAction ? dashSpeed : baseSpeed;
+
+      // In Canvas space: +X is Right, -X is Left; -Y is Up (throttle > 0), +Y is Down (throttle < 0)
+      const inputX = steer;
+      const inputY = -throttle;
+      const mag = Math.hypot(inputX, inputY);
+
+      if (mag > 0.15) {
+        const normX = inputX / mag;
+        const normY = inputY / mag;
+        ps.vx = normX * speed;
+        ps.vy = normY * speed;
+        ps.aimAngle = Math.atan2(normY, normX);
+
+        if (isAction && Math.random() < 0.25) {
+          this.particles.spawnSparks(ps.x, ps.y + 6, p.color, 4);
+        }
+      } else if (isAction && this.input.controlMode === 'single_button') {
+        // Single-button mobile fallback: dash forward in aimed angle
         ps.vx = Math.cos(ps.aimAngle) * speed;
         ps.vy = Math.sin(ps.aimAngle) * speed;
       } else {
-        // Idle aim sweep across forward cone (-135deg to -45deg)
-        ps.aimAngle += ps.sweepDir * 2.2 * dt;
-        if (ps.aimAngle > -Math.PI * 0.25) {
-          ps.aimAngle = -Math.PI * 0.25;
-          ps.sweepDir = -1;
-        } else if (ps.aimAngle < -Math.PI * 0.75) {
-          ps.aimAngle = -Math.PI * 0.75;
-          ps.sweepDir = 1;
-        }
-        ps.vx *= Math.pow(0.85, dt * 60);
-        ps.vy *= Math.pow(0.85, dt * 60);
+        // Crisp stop so players can stop precisely on safe tiles
+        ps.vx = 0;
+        ps.vy = 0;
       }
 
       ps.x += ps.vx * dt;
       ps.y += ps.vy * dt;
 
+      // Resolve solid barricade collisions against exploded tiles
+      this.resolveBarricadeCollisions(ps);
+
       // Clamp to arena
-      ps.x = Math.max(this.gridStartX + 10, Math.min(this.gridStartX + this.cols * this.tileW - 10, ps.x));
+      ps.x = Math.max(this.gridStartX + 12, Math.min(this.gridStartX + this.cols * this.tileW - 12, ps.x));
       ps.y = Math.max(this.gridStartY - 30, Math.min(this.gridStartY + this.rows * this.tileH + 45, ps.y));
 
-      // Check current grid tile
+      // Resolve barricade collisions again after arena clamp
+      this.resolveBarricadeCollisions(ps);
+
+      // Check current grid tile for reveal or mine trip
       const col = Math.floor((ps.x - this.gridStartX) / this.tileW);
       const row = Math.floor((ps.y - this.gridStartY) / this.tileH);
 
       if (col >= 0 && col < this.cols && row >= 0 && row < this.rows) {
         const tile = this.grid[col][row];
-        if (!tile.revealed) {
+        if (!tile.revealed && !tile.exploded) {
           tile.revealed = true;
           this.audio.playTap();
 
@@ -256,12 +445,35 @@ export class MinefieldDashGame extends BaseGame {
           active.forEach((pl, i) => {
             const st = this.playersState.get(pl.id);
             if (st) {
-              st.x = this.gridStartX + (i + 1) * (this.cols * this.tileW) / (active.length + 1);
+              st.x = this.gridStartX + ((i + 1) * (this.cols * this.tileW)) / (active.length + 1);
               st.y = this.gridStartY + this.rows * this.tileH + 25;
               st.vx = 0;
               st.vy = 0;
+              st.stunTimer = 0;
             }
           });
+        }
+      }
+    }
+
+    // Player-to-player physical separation (prevent stacking on top of each other)
+    const playerList = Array.from(this.playersState.values());
+    for (let i = 0; i < playerList.length; i++) {
+      for (let j = i + 1; j < playerList.length; j++) {
+        const p1 = playerList[i];
+        const p2 = playerList[j];
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+        const dist = Math.hypot(dx, dy);
+        const minDist = 24;
+        if (dist < minDist && dist > 0.001) {
+          const overlap = (minDist - dist) / 2;
+          const nx = dx / dist;
+          const ny = dy / dist;
+          p1.x -= nx * overlap;
+          p1.y -= ny * overlap;
+          p2.x += nx * overlap;
+          p2.y += ny * overlap;
         }
       }
     }
@@ -279,54 +491,130 @@ export class MinefieldDashGame extends BaseGame {
 
     const curCol = Math.max(0, Math.min(this.cols - 1, Math.floor((ps.x - this.gridStartX) / this.tileW)));
     const curRow = Math.max(0, Math.min(this.rows - 1, Math.floor((ps.y - this.gridStartY) / this.tileH)));
+    const targetRow = Math.max(0, curRow - 1);
+
+    // Default intent: move up towards extraction line
+    let throttle = 1.0;
+    let steer = 0;
+    let action = false;
+
+    // Check if current tile is ticking - emergency lateral escape!
+    const curTile = this.grid[curCol]?.[curRow];
+    if (curTile?.detonateTimer > 0) {
+      const canLeft = curCol > 0 && !this.grid[curCol - 1][curRow].exploded && this.grid[curCol - 1][curRow].detonateTimer <= 0;
+      const canRight = curCol < this.cols - 1 && !this.grid[curCol + 1][curRow].exploded && this.grid[curCol + 1][curRow].detonateTimer <= 0;
+      if (canLeft && canRight) {
+        steer = Math.random() > 0.5 ? -1 : 1;
+      } else if (canLeft) {
+        steer = -1;
+      } else if (canRight) {
+        steer = 1;
+      }
+      throttle = 0.4;
+      action = difficulty !== 'bot_easy'; // Sprint away from fuse
+      this.input.setBotInput(botId, true, steer, throttle, action);
+      return;
+    }
 
     if (difficulty === 'bot_easy') {
-      // Recklessly dashes forward towards the core
-      const steer = (Math.random() - 0.5) * 0.8;
-      this.input.setBotInput(botId, true, steer);
-    } else if (difficulty === 'bot_normal') {
-      // Looks ahead at next row tile
-      let nextCol = curCol;
-      const targetRow = Math.max(0, curRow - 1);
+      // Easy Bot: walks forward, turns away from barricades when bumping into them
+      const frontTile = this.grid[curCol]?.[targetRow];
+      if (frontTile?.exploded || frontTile?.detonateTimer > 0) {
+        const canLeft = curCol > 0 && !this.grid[curCol - 1][curRow].exploded;
+        const canRight = curCol < this.cols - 1 && !this.grid[curCol + 1][curRow].exploded;
+        steer = canLeft ? -1 : (canRight ? 1 : 0);
+        throttle = 0.4;
+      } else {
+        steer = (Math.random() - 0.5) * 0.35;
+        throttle = 0.7;
+      }
+      this.input.setBotInput(botId, true, steer, throttle, false);
+      return;
+    }
 
-      // Check if current tile is ticking, flee sideways!
-      if (this.grid[curCol][curRow]?.detonateTimer > 0) {
-        nextCol = curCol > 0 ? curCol - 1 : curCol + 1;
-      } else if (this.grid[curCol][targetRow]?.revealed && this.grid[curCol][targetRow].hasMine) {
-        // Step to adjacent column
-        nextCol = curCol > 0 ? curCol - 1 : curCol + 1;
+    // Normal and Hard: lookahead and evaluate pathing options
+    let bestCol = curCol;
+    let bestScore = -99999;
+
+    const candidateCols = [curCol, curCol - 1, curCol + 1].filter(c => c >= 0 && c < this.cols);
+
+    for (const c of candidateCols) {
+      const tile = this.grid[c][targetRow];
+      if (tile.exploded) continue; // SOLID IMPASSABLE BARRICADE
+
+      let score = 100;
+
+      // Favor straight vertical progress
+      score -= Math.abs(c - curCol) * 15;
+
+      if (tile.detonateTimer > 0) {
+        score -= 500; // Ticking bomb
       }
 
-      const steer = nextCol < curCol ? -1 : (nextCol > curCol ? 1 : 0);
-      this.input.setBotInput(botId, true, steer);
-    } else {
-      // Hard: Checks revealed numbers and avoids proximity risk
-      let bestX = ps.x;
-      let minMines = 99;
-
-      const targetRow = Math.max(0, curRow - 1);
-      for (let dc = -1; dc <= 1; dc++) {
-        const c = curCol + dc;
-        if (c >= 0 && c < this.cols) {
-          const t = this.grid[c][targetRow];
-          if (!t.exploded && (!t.revealed || !t.hasMine)) {
-            const risk = t.revealed ? t.adjacentMines : 1;
-            if (risk < minMines) {
-              minMines = risk;
-              bestX = this.gridStartX + c * this.tileW + this.tileW / 2;
+      if (tile.revealed) {
+        if (tile.hasMine) {
+          score -= 1000;
+        } else {
+          score += 200; // Confirmed safe
+        }
+      } else {
+        // Unrevealed tile: in Hard mode, evaluate surrounding revealed numbers
+        if (difficulty === 'bot_hard') {
+          let knownSafe = false;
+          let adjacentMineSum = 0;
+          let neighborRevealedCount = 0;
+          for (let dc = -1; dc <= 1; dc++) {
+            for (let dr = -1; dr <= 1; dr++) {
+              const nc = c + dc;
+              const nr = targetRow + dr;
+              if (nc >= 0 && nc < this.cols && nr >= 0 && nr < this.rows) {
+                const nt = this.grid[nc][nr];
+                if (nt.revealed && !nt.hasMine) {
+                  if (nt.adjacentMines === 0) knownSafe = true;
+                  adjacentMineSum += nt.adjacentMines;
+                  neighborRevealedCount++;
+                }
+              }
             }
+          }
+          if (knownSafe) {
+            score += 150;
+            action = true; // Confident dash sprint
+          } else if (neighborRevealedCount > 0) {
+            score -= (adjacentMineSum / neighborRevealedCount) * 40;
           }
         }
       }
 
-      // If current tile is ticking, emergency escape
-      if (this.grid[curCol][curRow]?.detonateTimer > 0) {
-        bestX = ps.x + (Math.random() > 0.5 ? 50 : -50);
+      if (score > bestScore) {
+        bestScore = score;
+        bestCol = c;
       }
-
-      const steer = bestX < ps.x - 12 ? -1 : (bestX > ps.x + 12 ? 1 : 0);
-      this.input.setBotInput(botId, true, steer);
     }
+
+    // If all candidate forward tiles are barricaded, find lateral non-barricaded tile
+    if (bestScore === -99999) {
+      const lateralOptions = [curCol - 1, curCol + 1].filter(c => c >= 0 && c < this.cols && !this.grid[c][curRow].exploded);
+      if (lateralOptions.length > 0) {
+        bestCol = lateralOptions[0];
+        throttle = 0.2;
+      }
+    }
+
+    const targetCenterX = this.gridStartX + bestCol * this.tileW + this.tileW / 2;
+    const diffX = targetCenterX - ps.x;
+
+    if (Math.abs(diffX) > 8) {
+      steer = Math.sign(diffX);
+    } else {
+      steer = 0;
+    }
+
+    if (difficulty === 'bot_hard' && bestScore > 150) {
+      action = true;
+    }
+
+    this.input.setBotInput(botId, true, steer, throttle, action);
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
@@ -348,7 +636,7 @@ export class MinefieldDashGame extends BaseGame {
     ctx.textAlign = 'center';
     ctx.fillText('⚡ ENERGY EXTRACTION LINE ⚡', this.gridStartX + (this.cols * this.tileW) / 2, goalY - 16);
 
-    // Render Grid Hex-Plates
+    // Render Grid Hex-Plates / Barricades
     for (let c = 0; c < this.cols; c++) {
       for (let r = 0; r < this.rows; r++) {
         const t = this.grid[c][r];
@@ -358,15 +646,55 @@ export class MinefieldDashGame extends BaseGame {
         const h = this.tileH - 4;
 
         if (t.exploded) {
-          ctx.fillStyle = '#450A0A';
+          // Tactical Solid Impassable Barricade
+          ctx.save();
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(x, y, w, h, 4);
+          else ctx.rect(x, y, w, h);
+          ctx.clip();
+
+          // Dark charred concrete floor
+          ctx.fillStyle = '#18181B';
           ctx.fillRect(x, y, w, h);
-          ctx.strokeStyle = '#EF4444';
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(x, y, w, h);
-          ctx.fillStyle = '#F87171';
-          ctx.font = '900 13px sans-serif';
+
+          // Diagonal Hazard Caution Stripes (Yellow & Black)
+          const stripeW = 9;
+          ctx.fillStyle = '#EAB308';
+          for (let sx = -h; sx < w + h; sx += stripeW * 2) {
+            ctx.beginPath();
+            ctx.moveTo(x + sx, y + h);
+            ctx.lineTo(x + sx + stripeW, y + h);
+            ctx.lineTo(x + sx + stripeW + h, y);
+            ctx.lineTo(x + sx + h, y);
+            ctx.closePath();
+            ctx.fill();
+          }
+
+          // Heavy reinforced steel red border
+          ctx.strokeStyle = '#DC2626';
+          ctx.lineWidth = 2.5;
+          ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+
+          // Center Barricade Badge
+          const badgeW = Math.min(w - 12, 42);
+          const badgeH = 18;
+          const badgeX = x + w / 2 - badgeW / 2;
+          const badgeY = y + h / 2 - badgeH / 2;
+          ctx.fillStyle = '#7F1D1D';
+          ctx.strokeStyle = '#F87171';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 3);
+          else ctx.rect(badgeX, badgeY, badgeW, badgeH);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = '900 8.5px Montserrat, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('💥', x + w / 2, y + h / 2 + 5);
+          ctx.fillText('⛔ BLOCK', x + w / 2, y + h / 2 + 3);
+
+          ctx.restore();
         } else if (t.detonateTimer > 0) {
           // Warning blink
           const isBlink = Math.floor(t.detonateTimer * 10) % 2 === 0;
@@ -489,12 +817,36 @@ export class MinefieldDashGame extends BaseGame {
 
     ctx.font = '900 11px Montserrat, sans-serif';
     ctx.textAlign = 'center';
-    let summary = active.map((p) => {
+    const summary = active.map((p) => {
       const ps = this.playersState.get(p.id);
       return `${p.name}: ${ps?.score || 0}/3 CORES`;
     }).join('   •   ');
     ctx.fillStyle = '#FFFFFF';
     ctx.fillText(summary, width / 2, hudY + 17);
+
+    // On-Screen Controls Hint Banner at bottom
+    const bannerW = Math.min(width - 32, 540);
+    const bannerH = 24;
+    const bannerX = width / 2 - bannerW / 2;
+    const bannerY = height - 32;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.strokeStyle = '#38BDF8';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(bannerX, bannerY, bannerW, bannerH, 12);
+    else ctx.rect(bannerX, bannerY, bannerW, bannerH);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = '700 10.5px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#94A3B8';
+    const p1Text = 'P1: [W A S D] Move • [SPACE] Dash';
+    const p2Text = 'P2: [ARROWS] Move • [ENTER] Dash';
+    ctx.fillText(`${p1Text}   │   ${p2Text}`, width / 2, bannerY + 16);
+    ctx.restore();
   }
 
   public isRoundOver(): boolean {
