@@ -366,7 +366,7 @@ export class MazeEscapeGame extends BaseGame {
         y: hy,
         vx: 105,
         vy: 0,
-        radius: 14,
+        radius: 15,
         speed: 105,
         baseSpeed: 105,
         chaseSpeed: 165,
@@ -409,7 +409,7 @@ export class MazeEscapeGame extends BaseGame {
           id: ++this.gemCounter,
           x: this.offsetX + (midC + 0.5) * this.cellW,
           y: this.offsetY + (midR + 0.5) * this.cellH,
-          radius: 14,
+          radius: 15,
           isRelic: true,
           collected: false
         });
