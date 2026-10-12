@@ -5039,7 +5039,24 @@ export class GameManager {
     // Dynamic achievement toast notifications
     AchievementManager.getInstance().renderToasts(this.ctx, this.logicalWidth, this.logicalHeight);
 
+    // Synchronize DOM classes to prevent floating utility bar from colliding with modals & overlays
+    this.updateOverlayDOMClass();
+
     this.ctx.restore();
+  }
+
+  private updateOverlayDOMClass() {
+    const isOverlayActive =
+      this.isModalOpen ||
+      this.isSettingsOpen ||
+      this.isShopOpen ||
+      this.isTrophiesOpen ||
+      this.state === 'PAUSED' ||
+      this.state === 'ROUND_OVER' ||
+      this.state === 'PODIUM';
+    if (document.body.classList.contains('modal-open') !== isOverlayActive) {
+      document.body.classList.toggle('modal-open', isOverlayActive);
+    }
   }
 
   private drawRoundedRect(
@@ -5181,82 +5198,12 @@ export class GameManager {
       this.ctx.fillRect(0, 0, w, h);
     }
 
-    // 2. Title Header with Subtitle & Interactive Wardrobe / Coin Badges
-    const coins = EconomyManager.getInstance().getCoins();
-    const isNarrowHeader = w < 640;
-    
-    // Top-Right: Coin Badge
-    const badgeW = isNarrowHeader ? 86 : 106;
-    const badgeH = 30;
-    const badgeX = w - badgeW - (isNarrowHeader ? 10 : 16);
-    const badgeY = 14;
+    // 2. Title Header with Subtitle (Shop & Trophies are housed in bottom utility bar for zero-collision layout)
+    this.shopCoinBadgeHitbox = null;
+    this.trophyLobbyBannerHitbox = null;
+    this.shopLobbyBannerHitbox = null;
 
-    this.shopCoinBadgeHitbox = { x: badgeX, y: badgeY, w: badgeW, h: badgeH };
-
-    this.ctx.save();
-    this.ctx.shadowColor = 'rgba(245, 158, 11, 0.25)';
-    this.ctx.shadowBlur = 8;
-    this.ctx.shadowOffsetY = 2;
-    this.drawRoundedRect(badgeX, badgeY + 2, badgeW, badgeH, 10, '#D97706');
-    this.drawRoundedRect(badgeX, badgeY, badgeW, badgeH, 10, '#FFFBEB', '#FDE68A', 1.5);
-    this.ctx.restore();
-
-    this.drawCoinIcon(badgeX + (isNarrowHeader ? 12 : 15), badgeY + 15, 8);
-
-    this.ctx.fillStyle = '#92400E';
-    this.ctx.font = '900 11.5px Montserrat, sans-serif';
-    this.ctx.textAlign = 'left';
-    this.ctx.fillText(isNarrowHeader ? `${coins}` : `${coins} COINS`, badgeX + (isNarrowHeader ? 25 : 28), badgeY + 19.5);
-
-    // Top-Right: Trophy Room Quick Access Pill (Adjacent to Coin Badge)
-    const trophyW = isNarrowHeader ? 90 : 104;
-    const trophyH = 30;
-    const trophyX = badgeX - trophyW - (isNarrowHeader ? 6 : 8);
-    const trophyY = 14;
-
-    this.trophyLobbyBannerHitbox = { x: trophyX, y: trophyY, w: trophyW, h: trophyH };
-
-    this.ctx.save();
-    this.ctx.shadowColor = 'rgba(217, 119, 6, 0.2)';
-    this.ctx.shadowBlur = 8;
-    this.ctx.shadowOffsetY = 2;
-    this.drawRoundedRect(trophyX, trophyY + 2, trophyW, trophyH, 10, '#B45309');
-    const trophyGrad = this.ctx.createLinearGradient(trophyX, trophyY, trophyX, trophyY + trophyH);
-    trophyGrad.addColorStop(0, '#F59E0B');
-    trophyGrad.addColorStop(1, '#D97706');
-    this.drawRoundedRect(trophyX, trophyY, trophyW, trophyH, 10, trophyGrad, '#FDE68A', 1.5);
-    this.ctx.restore();
-
-    this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.font = '900 11px Montserrat, sans-serif';
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText('🏆 TROPHIES', trophyX + trophyW / 2, trophyY + 19.5);
-
-    // Top-Left: Mascot Skins & Wardrobe Quick Access Pill
-    const lockerW = isNarrowHeader ? 96 : 118;
-    const lockerH = 30;
-    const lockerX = isNarrowHeader ? 10 : 16;
-    const lockerY = 14;
-
-    this.shopLobbyBannerHitbox = { x: lockerX, y: lockerY, w: lockerW, h: lockerH };
-
-    this.ctx.save();
-    this.ctx.shadowColor = 'rgba(79, 70, 229, 0.2)';
-    this.ctx.shadowBlur = 8;
-    this.ctx.shadowOffsetY = 2;
-    this.drawRoundedRect(lockerX, lockerY + 2, lockerW, lockerH, 10, '#4338CA');
-    const lockerGrad = this.ctx.createLinearGradient(lockerX, lockerY, lockerX, lockerY + lockerH);
-    lockerGrad.addColorStop(0, '#6366F1');
-    lockerGrad.addColorStop(1, '#4F46E5');
-    this.drawRoundedRect(lockerX, lockerY, lockerW, lockerH, 10, lockerGrad, '#A5B4FC', 1.5);
-    this.ctx.restore();
-
-    this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.font = '900 11px Montserrat, sans-serif';
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText(isNarrowHeader ? '🎨 SHOP' : '🎨 SKINS & SHOP', lockerX + lockerW / 2, lockerY + 19.5);
-
-    // Center Title Header (Unobstructed channel between locker and trophy button)
+    // Center Title Header (Unobstructed, zero overlap with desktop player cards or mobile borders)
     this.ctx.save();
     this.ctx.fillStyle = '#0F172A';
     this.ctx.font = w < 500 ? '900 15px Montserrat, sans-serif' : (w < 720 ? '900 18px Montserrat, sans-serif' : '900 20px Montserrat, sans-serif');
