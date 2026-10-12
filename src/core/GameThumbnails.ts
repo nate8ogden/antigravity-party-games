@@ -5004,127 +5004,363 @@ function drawBlacksmithForgeArt(ctx: CanvasRenderingContext2D, x: number, y: num
   ctx.fillStyle = '#1C1917';
   ctx.fillRect(x, y, w, h);
 
-  // Anvil body
-  ctx.fillStyle = '#44403C';
-  ctx.fillRect(x + w * 0.3, y + h * 0.55, w * 0.4, h * 0.25);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.52;
 
-  // Glowing hot blade
-  ctx.fillStyle = '#F97316';
-  ctx.fillRect(x + w * 0.25, y + h * 0.52, w * 0.5, 6);
+  // Stone Hearth & Glowing Firebox
+  ctx.fillStyle = '#292524';
+  ctx.fillRect(x + 12, y + 16, w - 24, h * 0.45);
+  const fireGrad = ctx.createRadialGradient(cx, y + h * 0.35, 4, cx, y + h * 0.35, 26);
+  fireGrad.addColorStop(0, '#FEF08A');
+  fireGrad.addColorStop(0.4, '#F97316');
+  fireGrad.addColorStop(0.8, '#DC2626');
+  fireGrad.addColorStop(1, 'rgba(220, 38, 38, 0)');
+  ctx.fillStyle = fireGrad;
+  ctx.beginPath();
+  ctx.arc(cx, y + h * 0.35, 26, 0, Math.PI * 2);
+  ctx.fill();
 
-  // Striking hammer
+  // Heavy Cast-Iron Anvil
+  ctx.fillStyle = '#334155';
+  ctx.beginPath();
+  ctx.moveTo(cx - 28, cy + 2);
+  ctx.lineTo(cx + 22, cy + 2);
+  ctx.lineTo(cx + 28, cy + 8);
+  ctx.lineTo(cx + 12, cy + 18);
+  ctx.lineTo(cx + 18, cy + 28);
+  ctx.lineTo(cx - 24, cy + 28);
+  ctx.lineTo(cx - 16, cy + 18);
+  ctx.lineTo(cx - 28, cy + 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#64748B';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Glowing Red-Hot Sword Blade on Anvil
+  const bladeGrad = ctx.createLinearGradient(cx - 24, cy + 1, cx + 18, cy + 1);
+  bladeGrad.addColorStop(0, '#FEF08A');
+  bladeGrad.addColorStop(0.5, '#F97316');
+  bladeGrad.addColorStop(1, '#EF4444');
+  ctx.fillStyle = bladeGrad;
+  ctx.fillRect(cx - 24, cy - 2, 42, 6);
+
+  // Blacksmith Hammer Striking Downward
+  ctx.save();
+  ctx.translate(cx + 4, cy - 14);
+  ctx.rotate(0.35);
+  ctx.fillStyle = '#78350F';
+  ctx.fillRect(-3, -22, 6, 22); // wooden handle
   ctx.fillStyle = '#94A3B8';
-  ctx.fillRect(x + w * 0.5, y + h * 0.25, 14, 20);
+  ctx.fillRect(-10, -32, 20, 10); // steel hammer head
+  ctx.restore();
+
+  // Explosive Hammer Strike Spark Bursts
+  ctx.fillStyle = '#FEF08A';
+  ctx.beginPath();
+  ctx.arc(cx + 4, cy - 2, 3, 0, Math.PI * 2);
+  ctx.arc(cx - 6, cy - 8, 2, 0, Math.PI * 2);
+  ctx.arc(cx + 14, cy - 10, 2.5, 0, Math.PI * 2);
+  ctx.arc(cx - 12, cy - 16, 2, 0, Math.PI * 2);
+  ctx.arc(cx + 10, cy - 20, 1.8, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 // [G-73] Potion Alchemist Art
 function drawPotionAlchemistArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#12121E';
+  ctx.fillStyle = '#0F0E1E';
   ctx.fillRect(x, y, w, h);
 
-  // Cast-iron cauldron
-  ctx.fillStyle = '#212121';
-  ctx.beginPath();
-  ctx.arc(x + w / 2, y + h * 0.62, 22, 0, Math.PI);
-  ctx.fill();
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.54;
 
-  // Glowing magic liquid & bubbles
-  ctx.fillStyle = '#8B5CF6';
-  ctx.beginPath();
-  ctx.ellipse(x + w / 2, y + h * 0.62, 20, 6, 0, 0, Math.PI * 2);
-  ctx.fill();
+  // Wooden Laboratory Shelf Table
+  ctx.fillStyle = '#3E2723';
+  ctx.fillRect(x + 8, cy + 16, w - 16, h * 0.3);
+  ctx.strokeStyle = '#5D4037';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x + 8, cy + 16, w - 16, h * 0.3);
 
-  ctx.fillStyle = '#A78BFA';
+  // Heavy Witch Cauldron
+  ctx.fillStyle = '#18181B';
   ctx.beginPath();
-  ctx.arc(x + w / 2 - 6, y + h * 0.48, 4, 0, Math.PI * 2);
-  ctx.arc(x + w / 2 + 8, y + h * 0.42, 5, 0, Math.PI * 2);
+  ctx.arc(cx - 12, cy + 6, 22, 0, Math.PI);
   ctx.fill();
+  ctx.strokeStyle = '#3F3F46';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Cauldron Glowing Purple Potion Surface
+  ctx.fillStyle = '#A855F7';
+  ctx.shadowColor = '#A855F7';
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.ellipse(cx - 12, cy + 6, 20, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Rising Carbonated Magic Bubbles
+  const bubbleColors = ['#C084FC', '#34D399', '#38BDF8'];
+  for (let b = 0; b < 6; b++) {
+    ctx.fillStyle = bubbleColors[b % bubbleColors.length];
+    ctx.beginPath();
+    ctx.arc(cx - 20 + b * 7, cy - 4 - (b % 3) * 10, 3 + (b % 2) * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Emerald Glass Flask with Cork
+  ctx.save();
+  ctx.translate(cx + 24, cy);
+  // Flask Glass Body
+  ctx.fillStyle = 'rgba(16, 185, 129, 0.75)';
+  ctx.beginPath();
+  ctx.arc(0, 8, 12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#6EE7B7';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  // Flask Neck & Cork
+  ctx.fillStyle = '#065F46';
+  ctx.fillRect(-3, -6, 6, 8);
+  ctx.fillStyle = '#B45309';
+  ctx.fillRect(-4, -10, 8, 4);
+  ctx.restore();
 }
 
 // [G-74] Royal Feast Art
 function drawRoyalFeastArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#261C14';
+  ctx.fillStyle = '#1C1917';
   ctx.fillRect(x, y, w, h);
 
-  // Golden platter
-  ctx.fillStyle = '#FFD700';
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Royal Velvet Tablecloth with Gold Trim
+  ctx.fillStyle = '#831843';
+  ctx.fillRect(x + 6, cy + 12, w - 12, h * 0.4);
+  ctx.fillStyle = '#F59E0B';
+  ctx.fillRect(x + 6, cy + 12, w - 12, 3);
+
+  // Large Polished Silver/Gold Platter
+  ctx.fillStyle = '#FBBF24';
   ctx.beginPath();
-  ctx.ellipse(x + w / 2, y + h * 0.72, 26, 6, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, cy + 8, 34, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#FEF08A';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Succulent Golden Roasted Turkey Feast
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.fillStyle = '#B45309';
+  ctx.beginPath();
+  ctx.ellipse(-2, -4, 18, 12, -0.1, 0, Math.PI * 2);
+  ctx.fill();
+  // Golden Glaze Highlight
+  ctx.fillStyle = '#F59E0B';
+  ctx.beginPath();
+  ctx.ellipse(-4, -6, 12, 6, -0.1, 0, Math.PI * 2);
   ctx.fill();
 
-  // Roast turkey drumstick
-  ctx.fillStyle = '#8D6E63';
+  // Drumstick Bone
+  ctx.fillStyle = '#F8FAFC';
   ctx.beginPath();
-  ctx.ellipse(x + w / 2, y + h * 0.5, 12, 8, 0, 0, Math.PI * 2);
+  ctx.rect(14, -6, 10, 5);
+  ctx.arc(24, -7, 3, 0, Math.PI * 2);
+  ctx.arc(24, -3, 3, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(x + w / 2 + 10, y + h * 0.48, 6, 4);
+  ctx.restore();
+
+  // Golden Goblet of Wine
+  ctx.save();
+  ctx.translate(cx - 30, cy + 2);
+  ctx.fillStyle = '#F59E0B';
+  ctx.beginPath();
+  ctx.arc(0, 0, 7, 0, Math.PI);
+  ctx.fill();
+  ctx.fillRect(-2, 0, 4, 10);
+  ctx.fillRect(-6, 10, 12, 3);
+  ctx.fillStyle = '#BE123C';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 6, 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 // [G-75] Sword in Stone Art
 function drawSwordInStoneArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0D1B1E';
+  ctx.fillStyle = '#06101E';
   ctx.fillRect(x, y, w, h);
 
-  // Boulder
-  ctx.fillStyle = '#455A64';
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.52;
+
+  // Divine Beam of Celestial Light from the Heavens
+  const lightGrad = ctx.createLinearGradient(cx, y, cx, cy + 18);
+  lightGrad.addColorStop(0, 'rgba(254, 240, 138, 0.40)');
+  lightGrad.addColorStop(1, 'rgba(254, 240, 138, 0.05)');
+  ctx.fillStyle = lightGrad;
   ctx.beginPath();
-  ctx.ellipse(x + w / 2, y + h * 0.75, 28, 16, 0, 0, Math.PI * 2);
+  ctx.moveTo(cx - 16, y);
+  ctx.lineTo(cx + 16, y);
+  ctx.lineTo(cx + 34, cy + 24);
+  ctx.lineTo(cx - 34, cy + 24);
+  ctx.closePath();
   ctx.fill();
 
-  // Excalibur embedded
-  ctx.fillStyle = '#ECEFF1';
-  ctx.fillRect(x + w / 2 - 2, y + h * 0.28, 4, 30);
-  ctx.fillStyle = '#FFD700';
-  ctx.fillRect(x + w / 2 - 10, y + h * 0.25, 20, 4); // crossguard
+  // Ancient Mossy Granite Boulder
+  ctx.fillStyle = '#334155';
   ctx.beginPath();
-  ctx.arc(x + w / 2, y + h * 0.18, 3, 0, Math.PI * 2); // pommel
+  ctx.moveTo(cx - 36, cy + 28);
+  ctx.lineTo(cx - 24, cy + 2);
+  ctx.lineTo(cx + 8, cy);
+  ctx.lineTo(cx + 34, cy + 12);
+  ctx.lineTo(cx + 38, cy + 28);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Excalibur Broadsword Embedded in Stone
+  // Gleaming Steel Blade
+  ctx.fillStyle = '#F8FAFC';
+  ctx.shadowColor = '#67E8F9';
+  ctx.shadowBlur = 8;
+  ctx.fillRect(cx - 2.5, cy - 18, 5, 24);
+  ctx.shadowBlur = 0;
+
+  // Golden Ornate Crossguard
+  ctx.fillStyle = '#F59E0B';
+  ctx.fillRect(cx - 14, cy - 21, 28, 4);
+  ctx.strokeStyle = '#FEF08A';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(cx - 14, cy - 21, 28, 4);
+
+  // Leather Hilt Grip
+  ctx.fillStyle = '#991B1B';
+  ctx.fillRect(cx - 2, cy - 30, 4, 9);
+
+  // Crowned Golden Pommel
+  ctx.fillStyle = '#F59E0B';
+  ctx.beginPath();
+  ctx.arc(cx, cy - 31, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Floating Runic Sparkles
+  ctx.fillStyle = '#FEF08A';
+  ctx.beginPath();
+  ctx.arc(cx - 18, cy - 8, 2, 0, Math.PI * 2);
+  ctx.arc(cx + 20, cy - 14, 2.5, 0, Math.PI * 2);
+  ctx.arc(cx - 8, cy - 26, 2, 0, Math.PI * 2);
   ctx.fill();
 }
 
 // [G-76] Dungeon Escape Art
 function drawDungeonEscapeArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#151520';
+  ctx.fillStyle = '#0B0F19';
   ctx.fillRect(x, y, w, h);
 
-  // Golden Portcullis bars
-  ctx.fillStyle = '#FFD700';
-  ctx.fillRect(x + w * 0.25, y + 10, w * 0.5, 6);
-  for (let bx = x + w * 0.3; bx <= x + w * 0.7; bx += 8) {
-    ctx.fillRect(bx, y + 14, 3, 14);
-  }
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.48;
 
-  // Swinging axe blade
-  ctx.strokeStyle = '#B0BEC5';
-  ctx.lineWidth = 2;
+  // Stone Dungeon Archway
+  ctx.fillStyle = '#1E293B';
   ctx.beginPath();
-  ctx.moveTo(x + w * 0.5, y + h * 0.35);
-  ctx.lineTo(x + w * 0.7, y + h * 0.65);
+  ctx.arc(cx, cy + 4, 34, Math.PI, 0);
+  ctx.lineTo(cx + 34, y + h - 8);
+  ctx.lineTo(cx - 34, y + h - 8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 3;
   ctx.stroke();
 
-  ctx.fillStyle = '#CFD8DC';
+  // Heavy Iron Spiked Portcullis Grille
+  ctx.fillStyle = '#0F172A';
+  ctx.fillRect(cx - 28, cy - 16, 56, 38);
+  ctx.strokeStyle = '#64748B';
+  ctx.lineWidth = 2.5;
+  for (let px = cx - 22; px <= cx + 22; px += 11) {
+    ctx.beginPath();
+    ctx.moveTo(px, cy - 16);
+    ctx.lineTo(px, cy + 22);
+    ctx.stroke();
+    // Bottom spike
+    ctx.fillStyle = '#94A3B8';
+    ctx.beginPath();
+    ctx.moveTo(px - 3, cy + 22);
+    ctx.lineTo(px, cy + 27);
+    ctx.lineTo(px + 3, cy + 22);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Torches on Dungeon Pillars
+  ctx.fillStyle = '#F59E0B';
+  ctx.shadowColor = '#F59E0B';
+  ctx.shadowBlur = 10;
   ctx.beginPath();
-  ctx.arc(x + w * 0.7, y + h * 0.65, 10, 0, Math.PI * 2);
+  ctx.arc(cx - 36, cy, 4, 0, Math.PI * 2);
+  ctx.arc(cx + 36, cy, 4, 0, Math.PI * 2);
   ctx.fill();
+  ctx.shadowBlur = 0;
 }
 
 // [G-77] Neon Drifters Art
 function drawNeonDriftersArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0A0A14';
+  ctx.fillStyle = '#090814';
   ctx.fillRect(x, y, w, h);
 
-  // Curved drift line
-  ctx.strokeStyle = '#00E5FF';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(x + w * 0.4, y + h * 0.6, 22, -1.2, 1.2);
-  ctx.stroke();
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.52;
 
-  // Drifting car
-  ctx.fillStyle = '#E53935';
-  ctx.fillRect(x + w * 0.5, y + h * 0.4, 18, 10);
-  ctx.fillStyle = '#00E5FF';
-  ctx.fillRect(x + w * 0.45, y + h * 0.46, 5, 2); // tire smoke
+  // Wet Asphalt Ground with Neon Reflections
+  ctx.fillStyle = '#131124';
+  ctx.fillRect(x + 4, y + h * 0.55, w - 8, h * 0.45);
+
+  // Twin Neon Glowing Drift Skid Marks
+  ctx.strokeStyle = '#EC4899';
+  ctx.lineWidth = 3;
+  ctx.shadowColor = '#EC4899';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.arc(cx - 8, cy + 8, 30, -0.6 * Math.PI, 0.45 * Math.PI);
+  ctx.stroke();
+  ctx.strokeStyle = '#06B6D4';
+  ctx.shadowColor = '#06B6D4';
+  ctx.beginPath();
+  ctx.arc(cx - 8, cy + 8, 37, -0.6 * Math.PI, 0.45 * Math.PI);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Drifting Pink Sports Car
+  ctx.save();
+  ctx.translate(cx + 8, cy - 2);
+  ctx.rotate(0.35);
+
+  // Car Body
+  ctx.fillStyle = '#F43F5E';
+  ctx.fillRect(-18, -10, 36, 20);
+  ctx.fillStyle = '#0F172A';
+  ctx.fillRect(-6, -8, 12, 16); // windshield / roof
+
+  // Cyan Neon Underglow
+  ctx.fillStyle = '#06B6D4';
+  ctx.shadowColor = '#06B6D4';
+  ctx.shadowBlur = 10;
+  ctx.fillRect(-16, -11, 32, 2);
+  ctx.fillRect(-16, 9, 32, 2);
+  ctx.shadowBlur = 0;
+
+  // Glowing Headlight Beams
+  ctx.fillStyle = '#FEF08A';
+  ctx.beginPath();
+  ctx.arc(18, -6, 2.5, 0, Math.PI * 2);
+  ctx.arc(18, 6, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 // [G-78] Hoverboard Rail Art
