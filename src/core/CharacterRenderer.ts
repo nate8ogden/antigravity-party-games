@@ -1384,6 +1384,293 @@ export function drawCharacter(
       ctx.fill();
     }
     ctx.restore();
+  } else if (activeSkin === 'alien_invader') {
+    // Green tractor beam pulse & hovering scout probe
+    ctx.save();
+    const beamPulse = 0.25 + Math.sin(animTime * 4) * 0.1;
+    ctx.fillStyle = `rgba(34, 197, 94, ${beamPulse})`;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.7, drawY + radius * 0.5);
+    ctx.lineTo(cx - radius * 1.3, drawY + radius * 1.5);
+    ctx.lineTo(cx + radius * 1.3, drawY + radius * 1.5);
+    ctx.lineTo(cx + radius * 0.7, drawY + radius * 0.5);
+    ctx.closePath();
+    ctx.fill();
+
+    // Hovering mini scout probe
+    const probeA = animTime * 2;
+    const px = cx + Math.cos(probeA) * (radius * 1.35);
+    const py = drawY - radius * 0.8 + Math.sin(probeA * 1.5) * 4 * scale;
+    ctx.fillStyle = '#86EFAC';
+    ctx.beginPath();
+    ctx.ellipse(px, py, 4 * scale, 2 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#22C55E';
+    ctx.beginPath();
+    ctx.arc(px, py - 1.5 * scale, 1.8 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'cactus_gunslinger') {
+    // Orbiting tumbleweed dust and golden revolver sparks
+    ctx.save();
+    for (let i = 0; i < 3; i++) {
+      const a = animTime * 2.2 + i * 2.1;
+      const sx = cx + Math.cos(a) * (radius * 1.25);
+      const sy = drawY + Math.sin(a) * (radius * 0.6);
+      ctx.fillStyle = '#F59E0B';
+      ctx.shadowColor = '#D97706';
+      ctx.shadowBlur = 6 * scale;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 2 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'chef_supreme') {
+    // Rising aromatic culinary steam spirals
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.lineWidth = 1.5 * scale;
+    for (let i = 0; i < 3; i++) {
+      const sx = cx + (i - 1) * 12 * scale;
+      const syOffset = ((animTime * 20 + i * 15) % (radius * 1.4));
+      const sy = drawY - radius * 0.9 - syOffset;
+      const sway = Math.sin(animTime * 3 + i) * 4 * scale;
+      ctx.beginPath();
+      ctx.arc(sx + sway, sy, 3 * scale, 0, Math.PI);
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'disco_king') {
+    // Rotating 70s dancefloor spotlights and mirrorball sparkles
+    ctx.save();
+    const colors = ['#EC4899', '#8B5CF6', '#06B6D4', '#EAB308'];
+    for (let i = 0; i < 4; i++) {
+      const angle = animTime * 1.8 + (i * Math.PI) / 2;
+      const sx = cx + Math.cos(angle) * (radius * 1.3);
+      const sy = drawY + Math.sin(angle) * (radius * 0.7);
+      ctx.fillStyle = colors[i];
+      ctx.shadowColor = colors[i];
+      ctx.shadowBlur = 8 * scale;
+      drawStarSparkle(ctx, sx, sy, 3.5 * scale);
+    }
+    ctx.restore();
+  } else if (activeSkin === 'knight_templar') {
+    // Holy radiant sunburst aura & cross glint
+    ctx.save();
+    ctx.strokeStyle = 'rgba(250, 204, 21, 0.55)';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.shadowColor = '#FBBF24';
+    ctx.shadowBlur = 10 * scale;
+    for (let i = 0; i < 8; i++) {
+      const rayA = animTime * 0.8 + (i * Math.PI) / 4;
+      const r1 = radius * 1.15;
+      const r2 = radius * 1.35 + Math.sin(animTime * 4 + i) * 3 * scale;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(rayA) * r1, drawY + Math.sin(rayA) * r1);
+      ctx.lineTo(cx + Math.cos(rayA) * r2, drawY + Math.sin(rayA) * r2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'hero_avenger') {
+    // Heroic plasma sparks and crackling lightning
+    ctx.save();
+    ctx.strokeStyle = '#38BDF8';
+    ctx.lineWidth = 1.8 * scale;
+    ctx.shadowColor = '#0284C7';
+    ctx.shadowBlur = 10 * scale;
+    const lAngle = animTime * 5;
+    const lx1 = cx + Math.cos(lAngle) * (radius * 1.15);
+    const ly1 = drawY + Math.sin(lAngle) * (radius * 1.15);
+    ctx.beginPath();
+    ctx.moveTo(lx1, ly1);
+    ctx.lineTo(lx1 + Math.sin(animTime * 8) * 6 * scale, ly1 - 10 * scale);
+    ctx.stroke();
+    drawStarSparkle(ctx, cx, drawY - radius * 1.3, 4 * scale);
+    ctx.restore();
+  } else if (activeSkin === 'wizard_archmage') {
+    // Mystic arcane runes orbiting mascot
+    ctx.save();
+    ctx.fillStyle = '#C084FC';
+    ctx.shadowColor = '#9333EA';
+    ctx.shadowBlur = 10 * scale;
+    for (let i = 0; i < 4; i++) {
+      const ra = animTime * 1.6 + (i * Math.PI * 2) / 4;
+      const rx = cx + Math.cos(ra) * (radius * 1.3);
+      const ry = drawY + Math.sin(ra) * (radius * 0.7);
+      ctx.save();
+      ctx.translate(rx, ry);
+      ctx.rotate(animTime * 2 + i);
+      ctx.fillRect(-2 * scale, -2 * scale, 4 * scale, 4 * scale);
+      ctx.restore();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'pirate_captain') {
+    // Cannon smoke puffs and drifting gold dubloon glints
+    ctx.save();
+    for (let i = 0; i < 3; i++) {
+      const pa = animTime * 1.8 + i * 2.1;
+      const px = cx + Math.cos(pa) * (radius * 1.2);
+      const py = drawY + Math.sin(pa) * (radius * 0.55);
+      ctx.fillStyle = '#F59E0B';
+      ctx.beginPath();
+      ctx.arc(px, py, 2.5 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'viking_berserker') {
+    // Raging crimson fury sparks & frost shards
+    ctx.save();
+    for (let i = 0; i < 4; i++) {
+      const a = animTime * 3.5 + i * 1.7;
+      const fx = cx + Math.cos(a) * (radius * 1.1);
+      const fy = drawY - ((animTime * 30 + i * 18) % (radius * 1.5));
+      ctx.fillStyle = i % 2 === 0 ? '#EF4444' : '#38BDF8';
+      ctx.shadowColor = '#DC2626';
+      ctx.shadowBlur = 6 * scale;
+      ctx.beginPath();
+      ctx.arc(fx, fy, 2.2 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'kitsune_fox') {
+    // 3 Orbiting ethereal turquoise Foxfire spirit wisps
+    ctx.save();
+    for (let i = 0; i < 3; i++) {
+      const fa = animTime * 2.5 + (i * Math.PI * 2) / 3;
+      const fx = cx + Math.cos(fa) * (radius * 1.3);
+      const fy = drawY + Math.sin(fa) * (radius * 0.7);
+      ctx.fillStyle = '#67E8F9';
+      ctx.shadowColor = '#06B6D4';
+      ctx.shadowBlur = 12 * scale;
+      ctx.beginPath();
+      ctx.arc(fx, fy, 3.5 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(fx, fy, 1.5 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'astro_bubble') {
+    // Orbiting rainbow stardust bubbles & telemetry ring
+    ctx.save();
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+    ctx.lineWidth = 1 * scale;
+    ctx.beginPath();
+    ctx.ellipse(cx, drawY, radius * 1.4, radius * 0.6, animTime * 0.5, 0, Math.PI * 2);
+    ctx.stroke();
+    for (let i = 0; i < 3; i++) {
+      const ba = -animTime * 2 + (i * Math.PI * 2) / 3;
+      const bx = cx + Math.cos(ba) * (radius * 1.4);
+      const by = drawY + Math.sin(ba) * (radius * 0.6);
+      ctx.fillStyle = 'rgba(224, 242, 254, 0.8)';
+      ctx.beginPath();
+      ctx.arc(bx, by, 3 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // 10. Equipped Booster Visual Signatures (In-Game Active Feedback)
+  const equippedBooster = EconomyManager.getInstance().getEquippedBooster(playerId);
+  if (equippedBooster === 'booster_shield') {
+    // Aegis Kinetic Barrier: Shimmering cyan forcefield bubble with rotating energy nodes
+    ctx.save();
+    const shieldPulse = 1 + Math.sin(animTime * 4) * 0.05;
+    const shieldR = radius * 1.32 * shieldPulse;
+    
+    // Outer forcefield glow ring
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.8)';
+    ctx.lineWidth = Math.max(1.5, 2.5 * scale);
+    ctx.shadowColor = '#06B6D4';
+    ctx.shadowBlur = 12 * scale;
+    ctx.beginPath();
+    ctx.arc(cx, drawY, shieldR, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Inner translucent energy dome
+    ctx.fillStyle = 'rgba(6, 182, 212, 0.12)';
+    ctx.beginPath();
+    ctx.arc(cx, drawY, shieldR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 3 Orbiting Aegis shield node satellites
+    for (let i = 0; i < 3; i++) {
+      const sa = animTime * 3 + (i * Math.PI * 2) / 3;
+      const sx = cx + Math.cos(sa) * shieldR;
+      const sy = drawY + Math.sin(sa) * shieldR;
+      ctx.fillStyle = '#22D3EE';
+      ctx.shadowColor = '#67E8F9';
+      ctx.shadowBlur = 8 * scale;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 3 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  } else if (equippedBooster === 'booster_turbo') {
+    // Turbo Overdrive Engine: Twin blue/cyan plasma rocket thrusters flaring from back
+    ctx.save();
+    const flameH = (8 + Math.sin(animTime * 20) * 4) * scale;
+    const leftNozzleX = cx - radius * 0.45;
+    const rightNozzleX = cx + radius * 0.45;
+    const nozzleY = drawY + radius * 0.75;
+
+    // Left Thruster Flame
+    const leftGrad = ctx.createLinearGradient(leftNozzleX, nozzleY, leftNozzleX, nozzleY + flameH);
+    leftGrad.addColorStop(0, '#FFFFFF');
+    leftGrad.addColorStop(0.3, '#38BDF8');
+    leftGrad.addColorStop(0.8, '#0284C7');
+    leftGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = leftGrad;
+    ctx.shadowColor = '#38BDF8';
+    ctx.shadowBlur = 8 * scale;
+    ctx.beginPath();
+    ctx.moveTo(leftNozzleX - 4 * scale, nozzleY);
+    ctx.lineTo(leftNozzleX, nozzleY + flameH);
+    ctx.lineTo(leftNozzleX + 4 * scale, nozzleY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Right Thruster Flame
+    const rightGrad = ctx.createLinearGradient(rightNozzleX, nozzleY, rightNozzleX, nozzleY + flameH);
+    rightGrad.addColorStop(0, '#FFFFFF');
+    rightGrad.addColorStop(0.3, '#38BDF8');
+    rightGrad.addColorStop(0.8, '#0284C7');
+    rightGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = rightGrad;
+    ctx.beginPath();
+    ctx.moveTo(rightNozzleX - 4 * scale, nozzleY);
+    ctx.lineTo(rightNozzleX, nozzleY + flameH);
+    ctx.lineTo(rightNozzleX + 4 * scale, nozzleY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  } else if (equippedBooster === 'booster_time') {
+    // Chrono Stabilizer: Subtle ticking golden gear tick aura
+    ctx.save();
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.45)';
+    ctx.lineWidth = 1.2 * scale;
+    ctx.setLineDash([4 * scale, 4 * scale]);
+    ctx.beginPath();
+    ctx.arc(cx, drawY, radius * 1.25, 0, Math.PI * 2);
+    ctx.stroke();
+    // Ticking needle
+    const handA = animTime * 4;
+    ctx.beginPath();
+    ctx.moveTo(cx, drawY - radius * 1.15);
+    ctx.lineTo(cx + Math.cos(handA) * 6 * scale, drawY - radius * 1.15 + Math.sin(handA) * 6 * scale);
+    ctx.stroke();
+    ctx.restore();
+  } else if (equippedBooster === 'booster_double_coins') {
+    // Midas Coin Multiplier: Gold sparkles orbiting mascot
+    ctx.save();
+    for (let i = 0; i < 2; i++) {
+      const ca = animTime * 2 + i * Math.PI;
+      const cxPos = cx + Math.cos(ca) * (radius * 1.25);
+      const cyPos = drawY + Math.sin(ca) * (radius * 0.6);
+      drawStarSparkle(ctx, cxPos, cyPos, 3 * scale);
+    }
+    ctx.restore();
   }
 
   ctx.restore();
