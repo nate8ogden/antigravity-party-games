@@ -21,6 +21,9 @@ interface TugPlayer {
   slipCount: number;
   inPit: boolean;
   botReactionTimer: number;
+  botTargetOffset: number;
+  botCooldown: number;
+  botHesitating: boolean;
 }
 
 export class TugOfWarGame extends BaseGame {
@@ -119,7 +122,10 @@ export class TugOfWarGame extends BaseGame {
         perfectCount: 0,
         slipCount: 0,
         inPit: false,
-        botReactionTimer: 0.2 + idx * 0.1
+        botReactionTimer: 0.2 + idx * 0.1,
+        botTargetOffset: 0,
+        botCooldown: 0.3,
+        botHesitating: false
       });
     });
   }
