@@ -44,6 +44,8 @@ export class RhythmDuelGame extends BaseGame {
   private nextNoteId: number = 0;
   private beatMetronomeTimer: number = 0;
   private eqBars: number[] = [0.3, 0.7, 0.5, 0.9, 0.4, 0.8, 0.6, 0.4];
+  private readonly TOTAL_ROUND_DURATION: number = 34.0;
+  private boundPointerDown: ((e: PointerEvent) => void) | null = null;
 
   constructor(
     players: PlayerConfig[],
@@ -52,7 +54,7 @@ export class RhythmDuelGame extends BaseGame {
     particles: ParticleSystem
   ) {
     super(players, input, audio, particles);
-    this.roundTimer = 34.0;
+    this.roundTimer = this.TOTAL_ROUND_DURATION;
   }
 
   public init(width: number, height: number): void {
@@ -60,7 +62,7 @@ export class RhythmDuelGame extends BaseGame {
   }
 
   public reset(width: number = 800, height: number = 600): void {
-    this.roundTimer = 34.0;
+    this.roundTimer = this.TOTAL_ROUND_DURATION;
     this.isFinished = false;
     this.songTime = 0;
     this.nextBeatIndex = 2; // initial 2-beat lead in
@@ -98,39 +100,170 @@ export class RhythmDuelGame extends BaseGame {
       });
     });
 
-    // Generate procedural syncopated rhythm song map (~65 beats)
+    // Ensure pointerdown listener is bound to canvas for direct lane/hit clicking
+    const canvas = this.input.getCanvas();
+    if (canvas && !this.boundPointerDown) {
+      this.boundPointerDown = this.handlePointerDown.bind(this);
+      canvas.addEventListener('pointerdown', this.boundPointerDown);
+    }
+
+    // Expose debug hook for tests and evaluation
+    (window as any).__RHYTHM_DUEL_DEBUG__ = {
+      getNotes: () => this.notes.map((n) => ({ id: n.id, playerId: n.playerId, targetTime: n.targetTime, hit: n.hit, missed: n.missed })),
+      getLastNoteTargetTime: () => {
+        if (this.notes.length === 0) return 0;
+        return Math.max(...this.notes.map((n) => n.targetTime));
+      },
+      getFirstNoteTargetTime: () => {
+        if (this.notes.length === 0) return 0;
+        return Math.min(...this.notes.map((n) => n.targetTime));
+      },
+      getRoundTimer: () => this.roundTimer,
+      getSongTime: () => this.songTime,
+      getPlayerState: (pid: PlayerId) => {
+        const st = this.playerStates.get(pid);
+        return st ? { ...st } : null;
+      },
+      tapPlayer: (pid: PlayerId) => {
+        const st = this.playerStates.get(pid);
+        if (st) {
+          st.keyPulseAnim = 1.0;
+          this.evaluatePlayerTap(st);
+        }
+      }
+    };
+
+    // Generate procedural syncopated rhythm song map with dynamic patterns lasting till 0.5s left
     this.generateSongMap();
+  }
+
+  private handlePointerDown(e: PointerEvent): void {
+    const canvas = this.input.getCanvas();
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const clickX = (e.clientX - rect.left) * scaleX;
+    const clickY = (e.clientY - rect.top) * scaleY;
+
+    // Check which active human player's lane was clicked
+    for (const st of this.playerStates.values()) {
+      const p = this.getPlayer(st.id);
+      if (p && !p.type.startsWith('bot_') && p.type !== 'disabled') {
+        if (clickX >= st.laneX && clickX <= st.laneX + st.laneW && clickY >= 140) {
+          st.keyPulseAnim = 1.0;
+          this.evaluatePlayerTap(st);
+          break;
+        }
+      }
+    }
+  }
+
+  public override destroy(): void {
+    if (this.boundPointerDown) {
+      const canvas = this.input.getCanvas();
+      if (canvas) {
+        canvas.removeEventListener('pointerdown', this.boundPointerDown);
+      }
+      this.boundPointerDown = null;
+    }
   }
 
   private generateSongMap(): void {
     const active = this.getActivePlayers();
-    // Patterns of beats: 1 = note, 0 = rest
+
+    // 12 diverse rhythm patterns (1 = beat note, 0 = rest)
     const patterns = [
       [1, 0, 1, 0, 1, 1, 0, 1], // Standard groove
-      [1, 1, 0, 1, 1, 0, 1, 0], // Driving
-      [1, 0, 0, 1, 0, 1, 1, 1], // Syncopated
-      [1, 1, 1, 0, 1, 1, 0, 0]  // Triplet rush
+      [1, 1, 0, 1, 1, 0, 1, 0], // Driving kick/snare
+      [1, 0, 0, 1, 0, 1, 1, 1], // Syncopated funk
+      [1, 1, 1, 0, 1, 1, 0, 0], // Triplet rush
+      [1, 0, 1, 0, 1, 0, 1, 0], // Steady four-on-the-floor
+      [1, 0, 0, 1, 1, 0, 1, 0], // Double-kick bounce
+      [0, 1, 0, 1, 0, 1, 0, 1], // Off-beat reggae bounce
+      [1, 0, 0, 1, 0, 0, 1, 0], // Latin clave pulse
+      [1, 1, 0, 0, 1, 1, 0, 1], // Staccato bursts
+      [1, 0, 1, 1, 0, 1, 0, 0], // Gallop shuffle
+      [1, 0, 0, 0, 1, 0, 1, 0], // Half-time chill drop
+      [1, 1, 1, 0, 1, 0, 1, 1]  // High-energy climax
     ];
 
-    const totalBars = 16;
-    for (let bar = 0; bar < totalBars; bar++) {
-      const pattern = patterns[bar % patterns.length];
+    const leadIn = 1.2; // Initial preparation lead-in
+    const stepDuration = this.beatInterval * 0.5; // ~0.234s per sixteenth step
+    // Notes must last until exactly half a second (0.5s) left in the round!
+    const lastPossibleBeatTime = this.TOTAL_ROUND_DURATION - 0.5;
+
+    let bar = 0;
+    const generatedTimes: number[] = [];
+
+    while (true) {
+      // Procedurally select a randomized pattern from the library
+      const basePattern = patterns[Math.floor(Math.random() * patterns.length)];
+      const pattern = [...basePattern];
+
+      // Random micro-mutations for high variety (25% chance per step)
+      for (let s = 0; s < 8; s++) {
+        if (Math.random() < 0.25) {
+          pattern[s] = pattern[s] === 1 ? 0 : 1;
+        }
+      }
+
+      // Prevent more than 3 consecutive 16th-note hits for fair human physical playability
+      let consecutive = 0;
+      for (let s = 0; s < 8; s++) {
+        if (pattern[s] === 1) {
+          consecutive++;
+          if (consecutive > 3) {
+            pattern[s] = 0;
+            consecutive = 0;
+          }
+        } else {
+          consecutive = 0;
+        }
+      }
+
+      let barFinished = false;
       for (let step = 0; step < 8; step++) {
         if (pattern[step] === 1) {
-          const beatTime = (bar * 8 + step) * (this.beatInterval * 0.5) + 1.2;
-          if (beatTime < this.roundTimer - 2.0) {
-            for (const p of active) {
-              this.notes.push({
-                id: this.nextNoteId++,
-                playerId: p.id,
-                targetTime: beatTime,
-                hit: false,
-                missed: false,
-                y: -100
-              });
-            }
+          // Add subtle organic micro-swing variance to 16th upbeats (+-0.012s)
+          const swing = step % 2 === 1 ? (Math.random() - 0.5) * 0.024 : 0;
+          const beatTime = (bar * 8 + step) * stepDuration + leadIn + swing;
+
+          if (beatTime > lastPossibleBeatTime) {
+            barFinished = true;
+            break;
+          }
+
+          // Ensure minimum 0.16s gap from previous note
+          if (generatedTimes.length === 0 || beatTime - generatedTimes[generatedTimes.length - 1] >= 0.16) {
+            generatedTimes.push(beatTime);
           }
         }
+      }
+
+      if (barFinished) break;
+      bar++;
+      if (bar > 45) break; // Safety cap
+    }
+
+    // Ensure beats last right up until half a second (0.5s) left!
+    // If the last generated note is before (lastPossibleBeatTime - 0.4s), add a finisher beat
+    if (generatedTimes.length === 0 || generatedTimes[generatedTimes.length - 1] < lastPossibleBeatTime - 0.35) {
+      generatedTimes.push(lastPossibleBeatTime - 0.05);
+    }
+
+    // Spawn notes for all active players at identical times for 100% fair competitive duel
+    for (const t of generatedTimes) {
+      for (const p of active) {
+        this.notes.push({
+          id: this.nextNoteId++,
+          playerId: p.id,
+          targetTime: t,
+          hit: false,
+          missed: false,
+          y: -100
+        });
       }
     }
   }
@@ -317,24 +450,30 @@ export class RhythmDuelGame extends BaseGame {
     if (st.botNextTargetNoteId !== nextNote.id) {
       st.botNextTargetNoteId = nextNote.id;
 
-      // Precision calibration
+      // Precision calibration (significantly less hard, authentic human performance)
       let timingOffset = 0;
       let willMiss = false;
 
       if (difficulty === 'bot_easy') {
-        willMiss = Math.random() < 0.28;
-        timingOffset = (Math.random() - 0.5) * 0.22;
+        // Easy bot: drops ~35% of notes, hits mostly OK/GREAT, rarely PERFECT
+        willMiss = Math.random() < 0.35;
+        timingOffset = (Math.random() - 0.5) * 0.40;
       } else if (difficulty === 'bot_normal') {
-        willMiss = Math.random() < 0.08;
-        timingOffset = (Math.random() - 0.5) * 0.10;
+        // Normal bot: beatable and fun! Drops combo naturally (~18% miss, higher on streaks)
+        const streakDropChance = st.combo >= 8 ? 0.28 : 0.16;
+        willMiss = Math.random() < streakDropChance;
+        // Jitter offset across [-0.13, +0.13]
+        // diff <= 0.065 is PERFECT (~40%), 0.065..0.135 is GREAT (~45%), 0.135..0.210 is OK (~15%)
+        timingOffset = (Math.random() - 0.5) * 0.26;
       } else {
-        // bot_hard: razor-sharp timing
-        willMiss = Math.random() < 0.02;
-        timingOffset = (Math.random() - 0.5) * 0.035;
+        // Hard bot: skilled challenger but human (~6% miss, timing across [-0.065, +0.065])
+        const streakDropChance = st.combo >= 15 ? 0.12 : 0.05;
+        willMiss = Math.random() < streakDropChance;
+        timingOffset = (Math.random() - 0.5) * 0.13;
       }
 
       if (willMiss) {
-        st.botPlannedHitTime = 99999; // Never hits
+        st.botPlannedHitTime = 99999; // Never hits this note, naturally drops combo
       } else {
         st.botPlannedHitTime = nextNote.targetTime + timingOffset;
       }
