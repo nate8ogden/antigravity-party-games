@@ -273,7 +273,7 @@ test.describe('Wire Cutter Minigame - Sequences, AI & Controls', () => {
 
   test('Bot AI operates with faster competitive reaction times and scores', async ({ page }) => {
     // 1 Human (P1) vs 1 Bot (P2) on Hard difficulty
-    await page.goto('http://localhost:5173/?game=wire_cutter&players=2&difficulty=hard');
+    await page.goto('http://localhost:5173/?game=wire_cutter&players=1&difficulty=hard');
     await expect(page.locator('#game-canvas')).toBeVisible({ timeout: 10000 });
 
     await page.evaluate(() => {
