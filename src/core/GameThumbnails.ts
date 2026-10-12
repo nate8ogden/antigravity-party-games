@@ -4759,21 +4759,111 @@ function drawSkyGlidersArt(ctx: CanvasRenderingContext2D, x: number, y: number, 
 
 // [G-64] Whack-A-Thief Art
 function drawWhackAThiefArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#1E293B';
+  // Bank vault room
+  ctx.fillStyle = '#0f172a';
   ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
 
-  // Vault box
-  ctx.fillStyle = '#0F172A';
-  ctx.fillRect(x + w / 2 - 20, y + h / 2 - 16, 40, 32);
-
-  // Raccoon with mask
-  ctx.fillStyle = '#64748B';
+  // Vault steel hatch rim
+  ctx.fillStyle = '#334155';
   ctx.beginPath();
-  ctx.arc(x + w / 2, y + h / 2 - 4, 12, 0, Math.PI * 2);
+  ctx.ellipse(cx - 4, cy + 12, 22, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#020617';
+  ctx.beginPath();
+  ctx.ellipse(cx - 4, cy + 12, 18, 7, 0, 0, Math.PI * 2);
   ctx.fill();
 
+  // Sneaky Thief Raccoon popping out of hatch
+  const rX = cx - 4;
+  const rY = cy + 2;
+
+  // Raccoon grey head & furry cheeks
+  ctx.fillStyle = '#64748b';
+  ctx.beginPath();
+  ctx.arc(rX, rY, 11, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Pointed ears with pink inner
+  ctx.fillStyle = '#475569';
+  ctx.beginPath();
+  ctx.moveTo(rX - 10, rY - 6); ctx.lineTo(rX - 14, rY - 16); ctx.lineTo(rX - 4, rY - 10);
+  ctx.moveTo(rX + 10, rY - 6); ctx.lineTo(rX + 14, rY - 16); ctx.lineTo(rX + 4, rY - 10);
+  ctx.fill();
+  ctx.fillStyle = '#f472b6';
+  ctx.beginPath();
+  ctx.moveTo(rX - 9, rY - 7); ctx.lineTo(rX - 12, rY - 14); ctx.lineTo(rX - 5, rY - 10);
+  ctx.moveTo(rX + 9, rY - 7); ctx.lineTo(rX + 12, rY - 14); ctx.lineTo(rX + 5, rY - 10);
+  ctx.fill();
+
+  // Black bandit mask
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.ellipse(rX, rY - 2, 11, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Expressive white eyes & startled pupils
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(rX - 4, rY - 2, 3, 0, Math.PI * 2);
+  ctx.arc(rX + 4, rY - 2, 3, 0, Math.PI * 2);
+  ctx.fill();
   ctx.fillStyle = '#000000';
-  ctx.fillRect(x + w / 2 - 10, y + h / 2 - 8, 20, 5);
+  ctx.beginPath();
+  ctx.arc(rX - 3.5, rY - 3, 1.5, 0, Math.PI * 2);
+  ctx.arc(rX + 4.5, rY - 3, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Black nose tip
+  ctx.beginPath();
+  ctx.arc(rX, rY + 4, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Loot sack with golden coins ($)
+  ctx.fillStyle = '#b45309';
+  ctx.beginPath();
+  ctx.ellipse(rX + 16, rY + 6, 8, 10, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#facc15';
+  ctx.font = 'bold 7px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('$', rX + 16, rY + 8);
+
+  // Big Comic Whack Mallet swinging from upper left
+  const mX = cx + 8;
+  const mY = cy - 14;
+  ctx.save();
+  ctx.translate(mX, mY);
+  ctx.rotate(0.45);
+
+  // Wooden mallet handle
+  ctx.fillStyle = '#92400e';
+  ctx.fillRect(-3, -16, 6, 24);
+
+  // Red heavy squeaky hammer head
+  ctx.fillStyle = '#ef4444';
+  ctx.shadowColor = '#f87171';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(-14, 6, 28, 14, 3);
+  else ctx.rect(-14, 6, 28, 14);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Yellow hammer face caps
+  ctx.fillStyle = '#facc15';
+  ctx.fillRect(-14, 6, 4, 14);
+  ctx.fillRect(10, 6, 4, 14);
+  ctx.restore();
+
+  // Comic impact speed lines
+  ctx.strokeStyle = '#fef08a';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx - 2, cy - 14); ctx.lineTo(cx - 4, cy - 8);
+  ctx.moveTo(cx + 6, cy - 16); ctx.lineTo(cx + 4, cy - 8);
+  ctx.stroke();
 }
 
 // [G-65] Pixel Curling Art
@@ -5434,20 +5524,97 @@ function drawNitroKartArt(ctx: CanvasRenderingContext2D, x: number, y: number, w
 
 // [G-81] Monorail Hijack Art
 function drawMonorailHijackArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0A0A14';
+  // Cyberpunk metropolis night sky
+  ctx.fillStyle = '#060614';
   ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
 
-  // Train car
-  ctx.fillStyle = '#37474F';
-  ctx.fillRect(x + 10, y + h * 0.6, w - 20, 24);
+  // Distant glowing neon skyscraper skyline
+  const buildings = [
+    { bx: x + 8, bw: 14, bh: 26, col: '#1e1b4b', winCol: '#38bdf8' },
+    { bx: x + 26, bw: 18, bh: 36, col: '#0f172a', winCol: '#f43f5e' },
+    { bx: cx + 10, bw: 16, bh: 30, col: '#1e1b4b', winCol: '#facc15' },
+    { bx: x + w - 24, bw: 16, bh: 22, col: '#0f172a', winCol: '#38bdf8' }
+  ];
+  for (const b of buildings) {
+    ctx.fillStyle = b.col;
+    ctx.fillRect(b.bx, cy - b.bh + 14, b.bw, b.bh);
+    ctx.fillStyle = b.winCol;
+    ctx.fillRect(b.bx + 3, cy - b.bh + 18, 2, 2);
+    ctx.fillRect(b.bx + 8, cy - b.bh + 22, 2, 2);
+    ctx.fillRect(b.bx + 3, cy - b.bh + 26, 2, 2);
+  }
 
-  // Window streak
-  ctx.fillStyle = '#00E5FF';
-  ctx.fillRect(x + 15, y + h * 0.68, w - 30, 4);
+  // Glowing High-Speed Maglev Rail Track (Cyan/Blue)
+  ctx.strokeStyle = '#0284c7';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(x, cy + 18);
+  ctx.lineTo(x + w, cy + 18);
+  ctx.stroke();
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
 
-  // Overhead gantry
-  ctx.fillStyle = '#E53935';
-  ctx.fillRect(x + w * 0.55, y + 10, 14, 26);
+  // Aerodynamic Bullet Monorail Train Car
+  const trkY = cy + 4;
+  // Train Car Body
+  ctx.fillStyle = '#334155';
+  ctx.beginPath();
+  ctx.moveTo(x + 12, trkY + 12);
+  ctx.lineTo(x + w - 16, trkY + 12);
+  ctx.lineTo(x + w - 8, trkY + 4);
+  ctx.lineTo(x + w - 18, trkY - 6);
+  ctx.lineTo(x + 12, trkY - 6);
+  ctx.closePath();
+  ctx.fill();
+
+  // Silver Rooftop & Aerodynamic nose cone
+  ctx.fillStyle = '#64748b';
+  ctx.fillRect(x + 12, trkY - 6, w - 30, 3);
+
+  // Glowing Cyan Panoramic Window Ribbon
+  ctx.fillStyle = '#00e5ff';
+  ctx.shadowColor = '#00e5ff';
+  ctx.shadowBlur = 6;
+  ctx.fillRect(x + 16, trkY - 1, w - 34, 4);
+  ctx.shadowBlur = 0;
+
+  // Maglev speed motion streaks underneath
+  ctx.strokeStyle = 'rgba(6, 182, 212, 0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x + 4, trkY + 14); ctx.lineTo(x + 22, trkY + 14);
+  ctx.moveTo(x + 16, trkY + 16); ctx.lineTo(cx + 8, trkY + 16);
+  ctx.stroke();
+
+  // Agent / Infiltrator on train roof shooting grapple
+  const agX = cx - 8;
+  const agY = trkY - 6;
+  ctx.fillStyle = '#f43f5e';
+  // Head / Visor
+  ctx.beginPath();
+  ctx.arc(agX + 2, agY - 6, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  // Crouched body
+  ctx.fillRect(agX - 3, agY - 4, 8, 4);
+
+  // High-Tech Grapple Cable extending up to overhead gantry
+  ctx.strokeStyle = '#facc15';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(agX + 4, agY - 4);
+  ctx.lineTo(cx + 18, y + 8);
+  ctx.stroke();
+
+  // Overhead Surveillance Gantry at top
+  ctx.fillStyle = '#dc2626';
+  ctx.fillRect(cx + 12, y + 4, 14, 6);
+  ctx.fillStyle = '#f87171';
+  ctx.beginPath();
+  ctx.arc(cx + 19, y + 10, 2.5, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 // [G-82] Drone Delivery Art
@@ -8859,158 +9026,547 @@ function drawVikingLongshipArt(ctx: CanvasRenderingContext2D, x: number, y: numb
 
 // --- Batch 12: Deep Space Odyssey & Cosmic Anomalies ---
 function drawAntimatterContainmentArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0a0a14';
+  // Deep space laboratory void
+  ctx.fillStyle = '#050510';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Torus ring
-  ctx.strokeStyle = '#2c3e50';
-  ctx.lineWidth = 6;
+
+  // Background stars
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
   ctx.beginPath();
-  ctx.arc(cx, cy, 22, 0, Math.PI * 2);
-  ctx.stroke();
-  // Singularity Core
-  ctx.fillStyle = '#00e5ff';
-  ctx.beginPath();
-  ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+  ctx.arc(x + 10, y + 8, 1, 0, Math.PI * 2);
+  ctx.arc(x + w - 12, y + 14, 1.2, 0, Math.PI * 2);
+  ctx.arc(x + 14, y + h - 10, 1, 0, Math.PI * 2);
   ctx.fill();
+
+  // Magnetic Confinement Ring (Titanium Chasis with Coils)
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 21, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Superconducting magnetic coil nodes
+  const coils = [0, Math.PI / 2, Math.PI, Math.PI * 1.5];
+  for (const angle of coils) {
+    const kx = cx + Math.cos(angle) * 21;
+    const ky = cy + Math.sin(angle) * 21;
+    ctx.fillStyle = '#0284c7';
+    ctx.beginPath();
+    ctx.arc(kx, ky, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#38bdf8';
+    ctx.beginPath();
+    ctx.arc(kx, ky, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Antimatter Accretion Disc Bloom
+  const coreGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 18);
+  coreGrad.addColorStop(0, '#ffffff');
+  coreGrad.addColorStop(0.3, '#38bdf8');
+  coreGrad.addColorStop(0.7, '#a855f7');
+  coreGrad.addColorStop(1, 'rgba(168, 85, 247, 0)');
+  ctx.fillStyle = coreGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Pure Singularity Core (Black Void Center)
+  ctx.fillStyle = '#020617';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 5.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Magnetic Flux Arcs connecting to containment ring
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(cx - 5, cy); ctx.lineTo(cx - 16, cy - 8);
+  ctx.moveTo(cx + 5, cy); ctx.lineTo(cx + 16, cy + 8);
+  ctx.moveTo(cx, cy - 5); ctx.lineTo(cx + 8, cy - 16);
+  ctx.stroke();
 }
 
 function drawWarpGateJumpArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#080410';
+  // Deep space backdrop
+  ctx.fillStyle = '#04020e';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Warp Gate
-  ctx.strokeStyle = '#00e5ff';
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.arc(cx, cy, 20, 0, Math.PI * 2);
-  ctx.stroke();
-  // Green slot
-  ctx.strokeStyle = '#00e676';
-  ctx.lineWidth = 6;
-  ctx.beginPath();
-  ctx.arc(cx, cy, 20, -0.4, 0.4);
-  ctx.stroke();
-  // Starship
-  ctx.fillStyle = '#f1c40f';
-  ctx.beginPath();
-  ctx.moveTo(cx, cy - 6);
-  ctx.lineTo(cx + 6, cy + 6);
-  ctx.lineTo(cx - 6, cy + 6);
-  ctx.closePath();
-  ctx.fill();
-}
 
-function drawSolarSailRiderArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  const bgGrad = ctx.createLinearGradient(x, y, x + w, y);
-  bgGrad.addColorStop(0, '#f39c12');
-  bgGrad.addColorStop(1, '#0e0b12');
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.55;
-  const cy = y + h * 0.5;
-  // Diamond sail
-  ctx.fillStyle = 'rgba(0, 229, 255, 0.75)';
-  ctx.beginPath();
-  ctx.moveTo(cx - 6, cy - 18);
-  ctx.lineTo(cx + 12, cy);
-  ctx.lineTo(cx - 6, cy + 18);
-  ctx.lineTo(cx - 10, cy);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-}
-
-function drawPlanetaryRoverArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#2d140e';
-  ctx.fillRect(x, y, w, h);
-  // Red ground
-  ctx.fillStyle = '#7b3a2c';
-  ctx.fillRect(x, y + h * 0.7, w, h * 0.3);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.65;
-  // Rover
-  ctx.fillStyle = '#e67e22';
-  ctx.fillRect(cx - 12, cy - 10, 24, 12);
-  // Wheels
-  ctx.fillStyle = '#2c3e50';
-  ctx.beginPath();
-  ctx.arc(cx - 8, cy + 4, 4, 0, Math.PI * 2);
-  ctx.arc(cx, cy + 4, 4, 0, Math.PI * 2);
-  ctx.arc(cx + 8, cy + 4, 4, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawPulsarSignalArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#070b14';
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  // Radar circle
-  ctx.strokeStyle = 'rgba(0, 229, 255, 0.3)';
-  ctx.lineWidth = 2;
+  // Massive Circular Warp Portal Ring
+  ctx.strokeStyle = '#1e1b4b';
+  ctx.lineWidth = 7;
   ctx.beginPath();
   ctx.arc(cx, cy, 22, 0, Math.PI * 2);
   ctx.stroke();
-  // Dish needle
-  ctx.strokeStyle = '#00e5ff';
+
+  // Hyperspace Event Horizon Vortex
+  const vGrad = ctx.createRadialGradient(cx, cy, 1, cx, cy, 20);
+  vGrad.addColorStop(0, '#ffffff');
+  vGrad.addColorStop(0.3, '#38bdf8');
+  vGrad.addColorStop(0.7, '#6366f1');
+  vGrad.addColorStop(1, '#0f172a');
+  ctx.fillStyle = vGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 19, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Swirling Hyperspace Tunnel Rings
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 14, 8, 0.4, 0, Math.PI * 2);
+  ctx.ellipse(cx, cy, 7, 4, 0.4, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Warp Gate Pylon Emitters (Cyan & Emerald)
+  for (let p = 0; p < 6; p++) {
+    const angle = (p * Math.PI) / 3;
+    const px = cx + Math.cos(angle) * 22;
+    const py = cy + Math.sin(angle) * 22;
+    ctx.fillStyle = p % 2 === 0 ? '#00e5ff' : '#10b981';
+    ctx.beginPath();
+    ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Starship Diving into Portal
+  const sX = cx - 2;
+  const sY = cy + 2;
+  ctx.save();
+  ctx.translate(sX, sY);
+  ctx.rotate(-0.75);
+
+  // Wedge hull
+  ctx.fillStyle = '#f8fafc';
+  ctx.beginPath();
+  ctx.moveTo(12, 0);
+  ctx.lineTo(-8, -6);
+  ctx.lineTo(-4, 0);
+  ctx.lineTo(-8, 6);
+  ctx.closePath();
+  ctx.fill();
+
+  // Twin Cyan Ion Thruster Plumes
+  ctx.fillStyle = '#38bdf8';
+  ctx.beginPath();
+  ctx.moveTo(-6, -4); ctx.lineTo(-14, -4); ctx.lineTo(-6, -2);
+  ctx.moveTo(-6, 2); ctx.lineTo(-14, 4); ctx.lineTo(-6, 4);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawSolarSailRiderArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Blazing solar corona gradient
+  const bgGrad = ctx.createLinearGradient(x, y, x + w, y + h);
+  bgGrad.addColorStop(0, '#f97316');
+  bgGrad.addColorStop(0.4, '#b45309');
+  bgGrad.addColorStop(1, '#090514');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Sun flare glow on left
+  const sunGrad = ctx.createRadialGradient(x, y + h * 0.5, 5, x, y + h * 0.5, 38);
+  sunGrad.addColorStop(0, '#fef08a');
+  sunGrad.addColorStop(0.4, 'rgba(249, 115, 22, 0.4)');
+  sunGrad.addColorStop(1, 'rgba(249, 115, 22, 0)');
+  ctx.fillStyle = sunGrad;
+  ctx.beginPath();
+  ctx.arc(x, y + h * 0.5, 38, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Giant Gossamer Iridescent Solar Sail (Diamond)
+  const sailX = cx + 4;
+  const sailY = cy;
+
+  // Diamond sail body
+  const sailGrad = ctx.createLinearGradient(sailX - 18, sailY, sailX + 16, sailY);
+  sailGrad.addColorStop(0, 'rgba(254, 240, 138, 0.85)');
+  sailGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.8)');
+  sailGrad.addColorStop(1, 'rgba(244, 63, 94, 0.7)');
+  ctx.fillStyle = sailGrad;
+  ctx.beginPath();
+  ctx.moveTo(sailX - 8, sailY - 20);
+  ctx.lineTo(sailX + 18, sailY);
+  ctx.lineTo(sailX - 8, sailY + 20);
+  ctx.lineTo(sailX - 16, sailY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Carbon composite sail spars
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(sailX - 8, sailY - 20); ctx.lineTo(sailX - 8, sailY + 20);
+  ctx.moveTo(sailX - 16, sailY); ctx.lineTo(sailX + 18, sailY);
+  ctx.stroke();
+
+  // Central Science Payload Capsule
+  ctx.fillStyle = '#e2e8f0';
+  ctx.beginPath();
+  ctx.arc(sailX - 8, sailY, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#0284c7';
+  ctx.fillRect(sailX - 10, sailY - 1, 4, 2);
+}
+
+function drawPlanetaryRoverArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Red planet starry night sky
+  ctx.fillStyle = '#1c0a06';
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Ringed Gas Giant visible on horizon
+  const pX = x + w - 16;
+  const pY = y + 14;
+  ctx.fillStyle = '#f59e0b';
+  ctx.beginPath();
+  ctx.arc(pX, pY, 7, 0, Math.PI * 2);
+  ctx.fill();
+  // Planetary Rings
+  ctx.strokeStyle = 'rgba(254, 240, 138, 0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.ellipse(pX, pY, 14, 4, -0.4, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Layered Martian Dunes
+  ctx.fillStyle = '#7c2d12';
+  ctx.beginPath();
+  ctx.moveTo(x, cy + 4);
+  ctx.quadraticCurveTo(cx - 10, cy, cx + 10, cy + 6);
+  ctx.quadraticCurveTo(cx + 25, cy + 10, x + w, cy + 4);
+  ctx.lineTo(x + w, y + h);
+  ctx.lineTo(x, y + h);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = '#9a3412';
+  ctx.beginPath();
+  ctx.moveTo(x, cy + 12);
+  ctx.quadraticCurveTo(cx, cy + 8, x + w, cy + 14);
+  ctx.lineTo(x + w, y + h);
+  ctx.lineTo(x, y + h);
+  ctx.closePath();
+  ctx.fill();
+
+  // High-Tech 6-Wheel Exploration Rover
+  const rX = cx - 6;
+  const rY = cy + 6;
+
+  // Rover Chassis Body
+  ctx.fillStyle = '#e2e8f0';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(rX - 12, rY - 8, 24, 10, 2);
+  else ctx.rect(rX - 12, rY - 8, 24, 10);
+  ctx.fill();
+
+  // Solar array panel on rover top
+  ctx.fillStyle = '#0284c7';
+  ctx.fillRect(rX - 8, rY - 10, 16, 2);
+
+  // Camera Mast with optical lens
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(rX + 6, rY - 8);
+  ctx.lineTo(rX + 6, rY - 16);
+  ctx.stroke();
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.arc(rX + 6, rY - 16, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 6 Rugged All-Terrain Rover Wheels
+  const wheelXs = [-9, 0, 9];
+  for (const wx of wheelXs) {
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(rX + wx, rY + 4, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#cbd5e1';
+    ctx.beginPath();
+    ctx.arc(rX + wx, rY + 4, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Glowing Alien Crystal sample discovered on right
+  const cryX = cx + 22;
+  const cryY = cy + 10;
+  ctx.fillStyle = '#38bdf8';
+  ctx.shadowColor = '#00e5ff';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.moveTo(cryX, cryY - 6);
+  ctx.lineTo(cryX + 3, cryY);
+  ctx.lineTo(cryX, cryY + 4);
+  ctx.lineTo(cryX - 3, cryY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+function drawPulsarSignalArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Deep cosmos
+  ctx.fillStyle = '#050714';
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Spinning Pulsar Neutron Star
+  const pulX = cx + 12;
+  const pulY = cy - 8;
+
+  // Relativistic Radiation Jet Cones (Opposing beams)
+  const jetGrad1 = ctx.createLinearGradient(pulX, pulY, pulX - 22, pulY + 16);
+  jetGrad1.addColorStop(0, '#ffffff');
+  jetGrad1.addColorStop(0.5, '#38bdf8');
+  jetGrad1.addColorStop(1, 'rgba(56, 189, 248, 0)');
+  ctx.fillStyle = jetGrad1;
+  ctx.beginPath();
+  ctx.moveTo(pulX, pulY);
+  ctx.lineTo(pulX - 24, pulY + 10);
+  ctx.lineTo(pulX - 18, pulY + 20);
+  ctx.closePath();
+  ctx.fill();
+
+  // Opposite jet cone
+  const jetGrad2 = ctx.createLinearGradient(pulX, pulY, pulX + 18, pulY - 14);
+  jetGrad2.addColorStop(0, '#ffffff');
+  jetGrad2.addColorStop(0.5, '#a855f7');
+  jetGrad2.addColorStop(1, 'rgba(168, 85, 247, 0)');
+  ctx.fillStyle = jetGrad2;
+  ctx.beginPath();
+  ctx.moveTo(pulX, pulY);
+  ctx.lineTo(pulX + 16, pulY - 16);
+  ctx.lineTo(pulX + 22, pulY - 8);
+  ctx.closePath();
+  ctx.fill();
+
+  // Pulsar Star Core
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = '#38bdf8';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.arc(pulX, pulY, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Deep-Space Radio Parabolic Observatory Dish on left
+  const dishX = cx - 14;
+  const dishY = cy + 10;
+  ctx.save();
+  ctx.translate(dishX, dishY);
+  ctx.rotate(-0.65);
+
+  // Dish bowl
+  ctx.strokeStyle = '#94a3b8';
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(cx, cy);
-  ctx.lineTo(cx + 16, cy - 14);
+  ctx.arc(0, 0, 14, -Math.PI / 2, Math.PI / 2);
   ctx.stroke();
-  // Pulsar star
-  ctx.fillStyle = '#f1c40f';
+
+  // Receiver horn & mount
+  ctx.fillStyle = '#0284c7';
+  ctx.fillRect(-6, -2, 6, 4);
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.arc(cx + 16, cy - 14, 4, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.moveTo(0, 0); ctx.lineTo(10, 0);
+  ctx.stroke();
+  ctx.restore();
+
+  // Concentric Radio Wave Signal Rings arriving
+  ctx.strokeStyle = 'rgba(250, 204, 21, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(pulX, pulY, 12, 2.2, 3.8);
+  ctx.arc(pulX, pulY, 20, 2.2, 3.8);
+  ctx.stroke();
 }
 
 function drawAsteroidCatcherArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0a0d14';
+  // Deep space asteroid belt
+  ctx.fillStyle = '#080c16';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
-  // Gantry
-  ctx.fillStyle = '#2c3e50';
-  ctx.fillRect(cx - 16, y + 8, 32, 10);
-  // Harpoon Cable
-  ctx.strokeStyle = '#bdc3c7';
+  const cy = y + h * 0.5;
+
+  // Distant space rocks
+  ctx.fillStyle = '#334155';
+  ctx.beginPath();
+  ctx.arc(x + 12, y + 12, 3, 0, Math.PI * 2);
+  ctx.arc(x + w - 14, y + 16, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Industrial Mining Tug Ship at top
+  const shipX = cx;
+  const shipY = y + 10;
+  ctx.fillStyle = '#3b82f6';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(shipX - 16, shipY, 32, 12, 3);
+  else ctx.rect(shipX - 16, shipY, 32, 12);
+  ctx.fill();
+
+  // Cockpit canopy & hazard stripes
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillRect(shipX - 8, shipY + 2, 16, 4);
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillRect(shipX - 16, shipY + 9, 32, 3);
+
+  // Reinforced Tungsten Harpoon Cable extending down
+  const astX = cx - 4;
+  const astY = cy + 10;
+  ctx.strokeStyle = '#e2e8f0';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(cx, y + 18);
-  ctx.lineTo(cx - 8, y + h * 0.65);
+  ctx.moveTo(shipX, shipY + 12);
+  ctx.lineTo(astX, astY);
   ctx.stroke();
-  // Gold Asteroid
-  ctx.fillStyle = '#f1c40f';
+
+  // Golden Mineral-Rich Asteroid
+  const aGrad = ctx.createRadialGradient(astX - 3, astY - 3, 2, astX, astY, 14);
+  aGrad.addColorStop(0, '#fef08a');
+  aGrad.addColorStop(0.5, '#f59e0b');
+  aGrad.addColorStop(1, '#78350f');
+  ctx.fillStyle = aGrad;
+  ctx.shadowColor = '#fbbf24';
+  ctx.shadowBlur = 6;
+
+  // Organic asteroid polygon
   ctx.beginPath();
-  ctx.arc(cx - 8, y + h * 0.65, 10, 0, Math.PI * 2);
+  ctx.moveTo(astX - 12, astY - 4);
+  ctx.lineTo(astX - 6, astY - 12);
+  ctx.lineTo(astX + 8, astY - 10);
+  ctx.lineTo(astX + 14, astY - 2);
+  ctx.lineTo(astX + 10, astY + 10);
+  ctx.lineTo(astX - 4, astY + 12);
+  ctx.lineTo(astX - 12, astY + 6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Impact Harpoon Tip & Mining Drill Sparks
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(astX, astY, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fbbf24';
+  ctx.beginPath();
+  ctx.arc(astX - 4, astY - 2, 1.5, 0, Math.PI * 2);
+  ctx.arc(astX + 5, astY + 3, 1.5, 0, Math.PI * 2);
   ctx.fill();
 }
 
 function drawAlienAbductionArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0a1628';
+  // Midnight country pasture under starlight
+  ctx.fillStyle = '#060b18';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
-  // Tractor beam
-  ctx.fillStyle = 'rgba(0, 229, 255, 0.3)';
+  const cy = y + h * 0.5;
+
+  // Full Moon in upper right
+  ctx.fillStyle = '#f8fafc';
   ctx.beginPath();
-  ctx.moveTo(cx, y + 24);
-  ctx.lineTo(cx + 18, y + h * 0.85);
-  ctx.lineTo(cx - 18, y + h * 0.85);
+  ctx.arc(x + w - 14, y + 12, 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Pasture ground hill at bottom
+  ctx.fillStyle = '#14532d';
+  ctx.beginPath();
+  ctx.ellipse(cx, y + h, w * 0.6, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Wooden fence posts on ground
+  ctx.fillStyle = '#78350f';
+  ctx.fillRect(x + 12, y + h - 14, 3, 14);
+  ctx.fillRect(x + 22, y + h - 14, 3, 14);
+  ctx.fillRect(x + 10, y + h - 10, 16, 2);
+
+  // Glowing Conical Tractor Beam (Neon Cyan / Lime)
+  const beamGrad = ctx.createLinearGradient(cx, y + 18, cx, y + h - 4);
+  beamGrad.addColorStop(0, 'rgba(56, 189, 248, 0.7)');
+  beamGrad.addColorStop(0.6, 'rgba(163, 230, 53, 0.45)');
+  beamGrad.addColorStop(1, 'rgba(163, 230, 53, 0.05)');
+  ctx.fillStyle = beamGrad;
+  ctx.beginPath();
+  ctx.moveTo(cx - 8, y + 16);
+  ctx.lineTo(cx + 8, y + 16);
+  ctx.lineTo(cx + 22, y + h - 4);
+  ctx.lineTo(cx - 22, y + h - 4);
   ctx.closePath();
   ctx.fill();
-  // UFO Saucer
-  ctx.fillStyle = '#00e5ff';
+
+  // Floating Abducted Cow in zero-gravity
+  const cowX = cx;
+  const cowY = cy + 4;
+  ctx.save();
+  ctx.translate(cowX, cowY);
+  ctx.rotate(0.2);
+
+  // Cow body (White)
+  ctx.fillStyle = '#ffffff';
   ctx.beginPath();
-  ctx.ellipse(cx, y + 20, 18, 6, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, 9, 6, 0, 0, Math.PI * 2);
   ctx.fill();
-  // Cow
-  ctx.fillStyle = '#ecf0f1';
-  ctx.fillRect(cx - 6, y + h * 0.6, 12, 8);
+
+  // Black Holstein patches
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.arc(-2, -2, 3, 0, Math.PI * 2);
+  ctx.arc(4, 1, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Cow head & pink muzzle
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(9, -2, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#f472b6';
+  ctx.beginPath();
+  ctx.arc(11, -1, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Dangling legs
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(-6, 4, 2, 5);
+  ctx.fillRect(4, 4, 2, 5);
+  ctx.restore();
+
+  // Metallic UFO Saucer hovering above
+  const ufoY = y + 14;
+  // Glass dome cockpit
+  ctx.fillStyle = 'rgba(56, 189, 248, 0.85)';
+  ctx.beginPath();
+  ctx.arc(cx, ufoY - 2, 7, Math.PI, 0);
+  ctx.fill();
+
+  // Alien pilot silhouette in dome
+  ctx.fillStyle = '#10b981';
+  ctx.beginPath();
+  ctx.arc(cx, ufoY - 3, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Metallic Saucer Disk
+  ctx.fillStyle = '#94a3b8';
+  ctx.beginPath();
+  ctx.ellipse(cx, ufoY, 20, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rotating glowing perimeter lights
+  const ufoLights = [-14, -7, 0, 7, 14];
+  for (const lx of ufoLights) {
+    ctx.fillStyle = '#facc15';
+    ctx.beginPath();
+    ctx.arc(cx + lx, ufoY + 1, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 function drawSpaceElevatorArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
