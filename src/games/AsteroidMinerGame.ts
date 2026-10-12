@@ -16,6 +16,7 @@ interface MinerShip {
   bankedScore: number;
   drillSpin: number;
   bumpCooldown: number;
+  raidCooldown: number;
   respawnTimer: number;
   alive: boolean;
 }
@@ -131,6 +132,7 @@ export class AsteroidMinerGame extends BaseGame {
         bankedScore: 0,
         drillSpin: 0,
         bumpCooldown: 0,
+        raidCooldown: 0,
         respawnTimer: 0,
         alive: true
       });
@@ -142,6 +144,34 @@ export class AsteroidMinerGame extends BaseGame {
     }
     for (let i = 0; i < 4; i++) {
       this.spawnAsteroid(width, height, 1);
+    }
+
+    if (typeof window !== 'undefined') {
+      (window as any).__ASTEROID_MINER_DEBUG__ = {
+        game: this,
+        getShip: (id: PlayerId) => this.ships.get(id),
+        getDepots: () => this.depots,
+        getAsteroids: () => this.asteroids,
+        getGems: () => this.gems,
+        setShipPos: (id: PlayerId, x: number, y: number) => {
+          const s = this.ships.get(id);
+          if (s) {
+            s.x = x;
+            s.y = y;
+            s.vx = 0;
+            s.vy = 0;
+          }
+        },
+        setCargo: (id: PlayerId, cargo: number) => {
+          const s = this.ships.get(id);
+          if (s) s.cargo = cargo;
+        },
+        setBankedScore: (id: PlayerId, score: number) => {
+          const s = this.ships.get(id);
+          if (s) s.bankedScore = score;
+        },
+        getRoundTimer: () => this.roundTimer
+      };
     }
   }
 
