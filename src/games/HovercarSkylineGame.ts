@@ -23,6 +23,8 @@ interface Hovercar {
   stumbleTimer: number;
   obstacles: CyberObstacle[];
   spawnTimer: number;
+  switchCooldown: number;
+  lastThrottle: number;
 }
 
 export class HovercarSkylineGame extends BaseGame {
@@ -69,7 +71,9 @@ export class HovercarSkylineGame extends BaseGame {
         shield: 100,
         stumbleTimer: 0,
         obstacles: [],
-        spawnTimer: 0.5 + Math.random() * 0.4
+        spawnTimer: 0.5 + Math.random() * 0.4,
+        switchCooldown: 0,
+        lastThrottle: 0
       });
 
       this.botReactionTimers.set(p.id, 0.2 + Math.random() * 0.3);
@@ -106,12 +110,32 @@ export class HovercarSkylineGame extends BaseGame {
 
       car.score += Math.round(car.speed * dt * 0.1);
 
-      // Handle lane switch on tap
-      if (this.input.justPressed(car.id) && car.stumbleTimer <= 0) {
-        car.laneIdx = (car.laneIdx + 1) % 3;
-        this.audio.playTone(520, 0.05, 'triangle');
-        this.particles.emit(70, car.currentY, 4, '#00ffff');
+      // Support discrete Up/Down directional lane switching as well as tap cycling
+      if (car.switchCooldown > 0) car.switchCooldown -= dt;
+
+      const throttle = this.input.getThrottle(car.id);
+      const isUp = this.input.justUp(car.id) || (throttle > 0.4 && car.lastThrottle <= 0.4);
+      const isDown = this.input.justDown(car.id) || (throttle < -0.4 && car.lastThrottle >= -0.4);
+      const isTap = this.input.justAction(car.id) || (this.input.justPressed(car.id) && !isUp && !isDown);
+
+      if (car.stumbleTimer <= 0) {
+        if (isUp && car.laneIdx > 0) {
+          car.laneIdx--;
+          car.switchCooldown = 0.20;
+          this.audio.playTone(460 + (2 - car.laneIdx) * 80, 0.05, 'triangle');
+          this.particles.emit(70, car.currentY, 4, '#00ffff');
+        } else if (isDown && car.laneIdx < 2) {
+          car.laneIdx++;
+          car.switchCooldown = 0.20;
+          this.audio.playTone(460 + (2 - car.laneIdx) * 80, 0.05, 'triangle');
+          this.particles.emit(70, car.currentY, 4, '#00ffff');
+        } else if (isTap) {
+          car.laneIdx = (car.laneIdx + 1) % 3;
+          this.audio.playTone(520, 0.05, 'triangle');
+          this.particles.emit(70, car.currentY, 4, '#00ffff');
+        }
       }
+      car.lastThrottle = throttle;
 
       car.targetY = baseY + car.laneIdx * subLaneH + subLaneH * 0.5;
       car.currentY += (car.targetY - car.currentY) * 12 * dt;
