@@ -68,6 +68,8 @@ export class BumperHovercraftGame extends BaseGame {
     // Procedural Random Map Generation
     this.generateRandomMap(cx, cy);
 
+    this.input.setControlMode('directional');
+
     // Spawn active players in arena corners facing center
     const active = this.getActivePlayers();
     const spawnOffsets = [
@@ -87,7 +89,7 @@ export class BumperHovercraftGame extends BaseGame {
         vx: 0,
         vy: 0,
         angle: aimAngle,
-        angularVel: 2.4, // Idle rotational steering
+        angularVel: 0, // Direct responsive steering - no involuntary idle spin
         radius: 24,
         shields: 3,
         maxShields: 3,
@@ -97,6 +99,15 @@ export class BumperHovercraftGame extends BaseGame {
         score: 0
       });
     });
+
+    if (typeof window !== 'undefined') {
+      (window as any).__HOVERCRAFT_DEBUG__ = {
+        game: this,
+        cars: this.cars,
+        bumpers: this.pinballBumpers,
+        batteries: this.batteries
+      };
+    }
   }
 
   public currentMapName: string = 'Cross Pinball';
@@ -214,34 +225,58 @@ export class BumperHovercraftGame extends BaseGame {
       if (car.invulnTimer > 0) car.invulnTimer = Math.max(0, car.invulnTimer - dt);
       if (car.superChargeTimer > 0) car.superChargeTimer = Math.max(0, car.superChargeTimer - dt);
 
-      const isThrusting = this.input.isPressed(car.id);
-      const steer = this.input.getSteer(car.id);
+      // Direct directional inputs (WASD / Arrows / Joystick / Buttons)
+      const rawSteer = this.input.getRawSteer(car.id);
+      const smoothSteer = this.input.getSteer(car.id);
+      const steer = Math.abs(rawSteer) > 0 ? rawSteer : smoothSteer;
 
-      // Steering: direct steer if steering key pressed, else auto-rotate when not thrusting
-      if (steer !== 0) {
-        car.angle += steer * 4.2 * dt;
-      } else if (!isThrusting) {
-        car.angle += car.angularVel * dt;
+      const rawThrottle = this.input.getRawThrottle(car.id);
+      const smoothThrottle = this.input.getThrottle(car.id);
+      const throttle = Math.abs(rawThrottle) > 0 ? rawThrottle : smoothThrottle;
+
+      const isThrusting = throttle > 0.05 || this.input.isPressed(car.id) || this.input.isActionPressed(car.id);
+      const isReversing = throttle < -0.1;
+
+      // Steering: responsive direct turning, ZERO auto-spin/phantom drift when idling
+      if (Math.abs(steer) > 0.05) {
+        car.angle += steer * 5.2 * dt;
       }
 
-      // Thrusting
+      // High-traction vehicle dynamics: eliminate floaty sideways drift
+      const forwardX = Math.cos(car.angle);
+      const forwardY = Math.sin(car.angle);
+      const lateralX = -Math.sin(car.angle);
+      const lateralY = Math.cos(car.angle);
+
+      let forwardVel = car.vx * forwardX + car.vy * forwardY;
+      let lateralVel = car.vx * lateralX + car.vy * lateralY;
+
+      // High-octane propulsion and active braking
       if (isThrusting) {
-        const thrust = car.superChargeTimer > 0 ? 560 : 380;
-        car.vx += Math.cos(car.angle) * thrust * dt;
-        car.vy += Math.sin(car.angle) * thrust * dt;
+        const targetSpeed = car.superChargeTimer > 0 ? 840 : 540;
+        forwardVel += (targetSpeed - forwardVel) * Math.min(1, 9.5 * dt);
 
         // Exhaust sparks
-        if (Math.random() < 0.4) {
-          const tailX = car.x - Math.cos(car.angle) * (car.radius + 4);
-          const tailY = car.y - Math.sin(car.angle) * (car.radius + 4);
+        if (Math.random() < 0.45) {
+          const tailX = car.x - forwardX * (car.radius + 4);
+          const tailY = car.y - forwardY * (car.radius + 4);
           const pColor = car.superChargeTimer > 0 ? '#FACC15' : this.players[car.id]?.color || '#38BDF8';
-          this.particles.spawnSparks(tailX, tailY, pColor, 1);
+          this.particles.spawnSparks(tailX, tailY, pColor, 2);
         }
+      } else if (isReversing) {
+        const targetReverse = -240;
+        forwardVel += (targetReverse - forwardVel) * Math.min(1, 10.0 * dt);
+      } else {
+        // Crisp coasting deceleration
+        forwardVel *= Math.pow(0.92, dt * 60);
       }
 
-      // Drag friction
-      car.vx *= Math.pow(0.88, dt * 60);
-      car.vy *= Math.pow(0.88, dt * 60);
+      // Strong lateral tire grip: aggressively stops sideways slipping
+      lateralVel *= Math.pow(0.65, dt * 60);
+
+      // Recompose world velocity
+      car.vx = forwardVel * forwardX + lateralVel * lateralX;
+      car.vy = forwardVel * forwardY + lateralVel * lateralY;
 
       // Position step
       car.x += car.vx * dt;
