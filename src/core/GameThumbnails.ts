@@ -4970,21 +4970,91 @@ function drawBumperBoatsArt(ctx: CanvasRenderingContext2D, x: number, y: number,
 
 // [G-67] Target Sniper Art
 function drawTargetSniperArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#7F1D1D';
+  // Carnival shooting booth background
+  ctx.fillStyle = '#450a0a';
   ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
 
-  // Duck cutout
-  ctx.fillStyle = '#FBBF24';
+  // Red and white awning stripes at top
+  const stripeW = w / 6;
+  for (let s = 0; s < 6; s++) {
+    ctx.fillStyle = s % 2 === 0 ? '#dc2626' : '#f8fafc';
+    ctx.fillRect(x + s * stripeW, y, stripeW, 8);
+  }
+
+  // Wooden counter ledge at bottom
+  ctx.fillStyle = '#78350f';
+  ctx.fillRect(x, y + h - 12, w, 12);
+  ctx.fillStyle = '#92400e';
+  ctx.fillRect(x, y + h - 12, w, 2);
+
+  // Moving Mechanical Yellow Target Duck in center
+  const dX = cx + 2;
+  const dY = cy + 2;
+
+  // Duck body
+  ctx.fillStyle = '#facc15';
   ctx.beginPath();
-  ctx.arc(x + w / 2, y + h / 2, 12, 0, Math.PI * 2);
+  ctx.ellipse(dX, dY, 13, 9, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Reticle
-  ctx.strokeStyle = '#FFFFFF';
-  ctx.lineWidth = 2;
+  // Duck head & bill
   ctx.beginPath();
-  ctx.arc(x + w / 2, y + h / 2, 16, 0, Math.PI * 2);
+  ctx.arc(dX + 8, dY - 6, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#f97316';
+  ctx.beginPath();
+  ctx.moveTo(dX + 12, dY - 7);
+  ctx.lineTo(dX + 19, dY - 5);
+  ctx.lineTo(dX + 12, dY - 3);
+  ctx.closePath();
+  ctx.fill();
+
+  // Duck eye
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.arc(dX + 9, dY - 7, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Red Bullseye Star painted on duck chest
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.arc(dX - 2, dY, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(dX - 2, dY, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Precision Sniper Rifle Scope Crosshair
+  ctx.strokeStyle = '#22c55e';
+  ctx.shadowColor = '#4ade80';
+  ctx.shadowBlur = 6;
+  ctx.lineWidth = 1.8;
+
+  // Outer crosshair ring
+  ctx.beginPath();
+  ctx.arc(cx - 2, cy, 18, 0, Math.PI * 2);
   ctx.stroke();
+
+  // Inner precision circle
+  ctx.beginPath();
+  ctx.arc(cx - 2, cy, 7, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Hashmark crosshairs
+  ctx.beginPath();
+  ctx.moveTo(cx - 24, cy); ctx.lineTo(cx + 20, cy);
+  ctx.moveTo(cx - 2, cy - 22); ctx.lineTo(cx - 2, cy + 22);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Center red laser lock dot
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.arc(cx - 2, cy, 2, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 // [G-68] Fruit Chopper Art
@@ -5554,23 +5624,95 @@ function drawTrafficJamArt(ctx: CanvasRenderingContext2D, x: number, y: number, 
 
 // [G-80] Nitro Kart Arena Art
 function drawNitroKartArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#10101C';
+  // Asphalt race track arena
+  ctx.fillStyle = '#1e293b';
   ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
 
-  // Kart
-  ctx.fillStyle = '#FB8C00';
-  ctx.fillRect(x + w * 0.35, y + h * 0.45, 18, 14);
+  // Red and White Checkered Racing Curbs on outer turn
+  const curbGrad = ctx.createLinearGradient(x, y, x + w, y);
+  ctx.fillStyle = '#ef4444';
+  ctx.fillRect(x, y, w, 5);
+  ctx.fillStyle = '#f8fafc';
+  for (let c = 0; c < 8; c++) {
+    if (c % 2 === 0) ctx.fillRect(x + c * (w / 8), y, w / 8, 5);
+  }
 
-  // Homing missile
-  ctx.fillStyle = '#E53935';
+  // Drift skid marks on track
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.arc(x + w * 0.7, y + h * 0.35, 4, 0, Math.PI * 2);
+  ctx.arc(cx - 6, cy + 18, 16, 2.8, 4.4);
+  ctx.arc(cx + 8, cy + 14, 18, 2.8, 4.4);
+  ctx.stroke();
+
+  // Floating Holographic Question Mark Mystery Item Box
+  const boxX = cx + 18;
+  const boxY = cy - 10;
+  ctx.fillStyle = 'rgba(250, 204, 21, 0.85)';
+  ctx.shadowColor = '#eab308';
+  ctx.shadowBlur = 8;
+  ctx.fillRect(boxX - 6, boxY - 6, 12, 12);
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(boxX - 6, boxY - 6, 12, 12);
+  ctx.shadowBlur = 0;
+  // Question Mark
+  ctx.fillStyle = '#0f172a';
+  ctx.font = 'bold 8px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('?', boxX, boxY + 3);
+
+  // Speeding Orange & Cyan Nitro Kart in mid-drift
+  const kX = cx - 6;
+  const kY = cy + 4;
+  ctx.save();
+  ctx.translate(kX, kY);
+  ctx.rotate(-0.25);
+
+  // Big racing rubber tires
+  ctx.fillStyle = '#020617';
+  ctx.fillRect(-14, -10, 6, 5); // Front Left
+  ctx.fillRect(8, -10, 6, 5);  // Front Right
+  ctx.fillRect(-16, 6, 7, 7);  // Rear Left
+  ctx.fillRect(9, 6, 7, 7);   // Rear Right
+
+  // Aerodynamic Kart Body (Vibrant Orange & Yellow)
+  ctx.fillStyle = '#f97316';
+  ctx.beginPath();
+  ctx.moveTo(0, -14); // Nose
+  ctx.lineTo(8, -4);
+  ctx.lineTo(8, 8);
+  ctx.lineTo(-8, 8);
+  ctx.lineTo(-8, -4);
+  ctx.closePath();
   ctx.fill();
 
-  // Mystery Box
-  ctx.strokeStyle = '#FFD700';
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(x + 10, y + 12, 10, 10);
+  // Kart racing stripe & spoiler
+  ctx.fillStyle = '#fde047';
+  ctx.fillRect(-2, -12, 4, 18);
+  ctx.fillStyle = '#ea580c';
+  ctx.fillRect(-10, 8, 20, 3); // Rear spoiler
+
+  // Racer Helmet (Cyan)
+  ctx.fillStyle = '#06b6d4';
+  ctx.beginPath();
+  ctx.arc(0, -1, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#020617';
+  ctx.fillRect(-2, -3, 4, 2); // Visor
+
+  // Twin Nitro Exhaust Boost Plumes (Cyan / Violet Flames)
+  ctx.fillStyle = '#38bdf8';
+  ctx.shadowColor = '#00e5ff';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.moveTo(-5, 11); ctx.lineTo(-7, 21); ctx.lineTo(-3, 11);
+  ctx.moveTo(3, 11); ctx.lineTo(5, 21); ctx.lineTo(7, 11);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.restore();
 }
 
 // [G-81] Monorail Hijack Art
@@ -8609,22 +8751,111 @@ function drawRingTossArt(ctx: CanvasRenderingContext2D, x: number, y: number, w:
 
 // 148. Rollercoaster Thrill
 function drawRollercoasterThrillArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#090D16';
+  // Twilight theme park sky
+  const sky = ctx.createLinearGradient(x, y, x, y + h);
+  sky.addColorStop(0, '#1e1b4b');
+  sky.addColorStop(0.5, '#4c1d95');
+  sky.addColorStop(1, '#831843');
+  ctx.fillStyle = sky;
   ctx.fillRect(x, y, w, h);
-  // Coaster track rails
-  ctx.strokeStyle = '#94A3B8';
-  ctx.lineWidth = 3;
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Distant glowing illuminated Ferris Wheel on left
+  const fwX = x + 16;
+  const fwY = cy + 4;
+  ctx.strokeStyle = 'rgba(250, 204, 21, 0.35)';
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(x + 10, y + h * 0.75);
-  ctx.bezierCurveTo(x + w * 0.4, y + h * 0.8, x + w * 0.6, y + h * 0.2, x + w - 10, y + h * 0.35);
+  ctx.arc(fwX, fwY, 14, 0, Math.PI * 2);
   ctx.stroke();
-  // Coaster Cart
-  ctx.fillStyle = '#EF4444';
+  for (let s = 0; s < 6; s++) {
+    const a = (s * Math.PI) / 3;
+    ctx.beginPath();
+    ctx.moveTo(fwX, fwY);
+    ctx.lineTo(fwX + Math.cos(a) * 14, fwY + Math.sin(a) * 14);
+    ctx.stroke();
+  }
+
+  // Steel Tubular Coaster Rail Track (Loop-de-loop curve)
+  ctx.strokeStyle = '#0284c7';
+  ctx.lineWidth = 4;
   ctx.beginPath();
-  ctx.roundRect(x + w * 0.52, y + h * 0.35, 18, 12, 3);
-  ctx.fill();
-  ctx.strokeStyle = '#FFFFFF';
+  ctx.moveTo(x + 6, cy + 18);
+  ctx.bezierCurveTo(cx - 14, cy + 22, cx - 18, cy - 18, cx, cy - 18);
+  ctx.bezierCurveTo(cx + 18, cy - 18, cx + 14, cy + 20, x + w - 4, cy - 6);
+  ctx.stroke();
+
+  // Highlight rail tube
+  ctx.strokeStyle = '#38bdf8';
   ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Rail Cross-Ties along track
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 1.2;
+  const ties = [
+    [x + 14, cy + 19, x + 16, cy + 16],
+    [cx - 10, cy - 6, cx - 8, cy - 9],
+    [cx - 2, cy - 18, cx + 2, cy - 18],
+    [cx + 12, cy - 2, cx + 14, cy - 5],
+    [x + w - 12, cy + 2, x + w - 10, cy - 1]
+  ];
+  for (const [x1, y1, x2, y2] of ties) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+
+  // Speeding Red Coaster Cart plunging down the drop
+  const cartX = cx + 8;
+  const cartY = cy - 8;
+  ctx.save();
+  ctx.translate(cartX, cartY);
+  ctx.rotate(0.55);
+
+  // Cart Chassis (Vibrant Red)
+  ctx.fillStyle = '#ef4444';
+  ctx.shadowColor = '#f87171';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(-10, -6, 20, 11, 2);
+  else ctx.rect(-10, -6, 20, 11);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Cart silver trim & headlights
+  ctx.fillStyle = '#facc15';
+  ctx.beginPath();
+  ctx.arc(8, -1, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Thrilled Passengers (Hands up in the air!)
+  ctx.fillStyle = '#f8fafc';
+  // Passenger 1 (Front)
+  ctx.beginPath();
+  ctx.arc(4, -9, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  // Hands up
+  ctx.strokeStyle = '#f8fafc';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(3, -9); ctx.lineTo(1, -15);
+  ctx.moveTo(5, -9); ctx.lineTo(7, -15);
+  // Passenger 2 (Back)
+  ctx.arc(-4, -8, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.moveTo(-5, -8); ctx.lineTo(-7, -14);
+  ctx.moveTo(-3, -8); ctx.lineTo(-1, -14);
+  ctx.stroke();
+  ctx.restore();
+
+  // Wind speed motion streaks
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cartX - 6, cartY - 14); ctx.lineTo(cartX - 18, cartY - 20);
+  ctx.moveTo(cartX, cartY + 12); ctx.lineTo(cartX - 12, cartY + 6);
   ctx.stroke();
 }
 
