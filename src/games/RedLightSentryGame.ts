@@ -19,6 +19,12 @@ interface Runner {
   finishTime: number;
 }
 
+interface BotSentryState {
+  greenReactionTimer: number;
+  willMistimeYellow: boolean;
+  mistimeReleaseDelay: number;
+}
+
 type SentryPhase = 'green' | 'yellow' | 'red';
 
 export class RedLightSentryGame extends BaseGame {
@@ -33,6 +39,7 @@ export class RedLightSentryGame extends BaseGame {
   private laserSweepAngle: number = 0;
   private zappedLaserBeam: { x: number; y: number; timer: number } | null = null;
   private trophyX: number = 0;
+  private botStates: Map<PlayerId, BotSentryState> = new Map();
 
   constructor(
     players: PlayerConfig[],
@@ -48,18 +55,19 @@ export class RedLightSentryGame extends BaseGame {
   }
 
   public reset(width: number = 800, height: number = 600): void {
-    this.roundTimer = 50;
+    this.roundTimer = 55;
     this.isFinished = false;
     this.runners.clear();
+    this.botStates.clear();
     this.trophyX = width / 2;
     this.greenCycleCount = 0;
     this.zappedLaserBeam = null;
 
     const active = this.getActivePlayers();
     active.forEach((p, idx) => {
-      // 2 players: P1 starts on left running right, P2 starts on right running left
+      // 2 players: P1 starts on left edge, P2 starts on right edge
       const isLeft = idx % 2 === 0;
-      const startX = isLeft ? 50 : width - 50;
+      const startX = isLeft ? 26 : width - 26;
       const laneY = active.length === 2 ? (idx === 0 ? height * 0.42 : height * 0.58) : height * 0.32 + idx * 75;
 
       this.runners.set(p.id, {
@@ -69,14 +77,48 @@ export class RedLightSentryGame extends BaseGame {
         startX,
         targetX: this.trophyX,
         dir: isLeft ? 1 : -1,
-        speed: 135, // Balanced speed requiring multiple green light cycles to reach trophy
+        speed: 92, // Requires substantial distance travelled across multiple green-yellow-red light cycles
         isRunning: false,
         stunTimer: 0,
         runAnim: 0,
         hasFinished: false,
         finishTime: 0
       });
+
+      this.botStates.set(p.id, {
+        greenReactionTimer: 0,
+        willMistimeYellow: false,
+        mistimeReleaseDelay: 0
+      });
     });
+
+    // Expose debug hook for testing
+    (window as any).__RED_LIGHT_DEBUG__ = {
+      getRunners: () => Array.from(this.runners.values()).map(r => ({
+        id: r.id,
+        x: r.x,
+        y: r.y,
+        startX: r.startX,
+        targetX: r.targetX,
+        dir: r.dir,
+        speed: r.speed,
+        isRunning: r.isRunning,
+        stunTimer: r.stunTimer,
+        hasFinished: r.hasFinished
+      })),
+      getPhase: () => this.sentryPhase,
+      getPhaseTimer: () => this.phaseTimer,
+      getYellowDuration: () => this.currentYellowDuration,
+      setPhase: (phase: SentryPhase, duration: number) => {
+        this.sentryPhase = phase;
+        this.phaseTimer = duration;
+        this.currentPhaseDuration = duration;
+        if (phase === 'yellow') this.currentYellowDuration = duration;
+      },
+      triggerHold: (pid: PlayerId, holding: boolean) => {
+        this.input.setBotInput(pid, holding);
+      }
+    };
 
     this.triggerGreenPhase();
   }
@@ -85,12 +127,16 @@ export class RedLightSentryGame extends BaseGame {
     this.sentryPhase = 'green';
     this.greenCycleCount++;
 
+    for (const [pid, state] of this.botStates.entries()) {
+      const p = this.players[pid];
+      if (p?.type.startsWith('bot_')) {
+        const diff = p.type as 'bot_easy' | 'bot_normal' | 'bot_hard';
+        state.greenReactionTimer = diff === 'bot_easy' ? (0.42 + Math.random() * 0.32) : diff === 'bot_normal' ? (0.24 + Math.random() * 0.20) : (0.08 + Math.random() * 0.08);
+        state.willMistimeYellow = false;
+      }
+    }
+
     // Unpredictable green durations with distinct behavioral archetypes:
-    // 1. First green: 1.0s - 1.4s (forces the first red light scan before anyone can reach the trophy!)
-    // 2. Blitz Snap (28%): 0.65s - 1.0s (super fast turn to catch careless runners)
-    // 3. Twitch Fake-Out (22%): 0.45s - 0.75s (immediate yellow warning!)
-    // 4. Steady Sprint (35%): 1.4s - 2.1s (generous sprint window)
-    // 5. Long Sprint (15%): 2.2s - 2.8s
     let duration: number;
     if (this.greenCycleCount === 1) {
       duration = 1.0 + Math.random() * 0.4;
@@ -116,12 +162,23 @@ export class RedLightSentryGame extends BaseGame {
 
   private triggerYellowPhase(): void {
     this.sentryPhase = 'yellow';
-    // Variable yellow warning: 0.5s - 0.85s
-    const yellowDur = 0.5 + Math.random() * 0.35;
+    // Variable yellow warning: 0.6s - 0.95s
+    const yellowDur = 0.6 + Math.random() * 0.35;
     this.phaseTimer = yellowDur;
     this.currentPhaseDuration = yellowDur;
     this.currentYellowDuration = yellowDur;
     this.warningBeepTimer = 0;
+
+    for (const [pid, state] of this.botStates.entries()) {
+      const p = this.players[pid];
+      if (p?.type.startsWith('bot_')) {
+        const diff = p.type as 'bot_easy' | 'bot_normal' | 'bot_hard';
+        const mistimeChance = diff === 'bot_easy' ? 0.45 : diff === 'bot_normal' ? 0.24 : 0.08;
+        state.willMistimeYellow = Math.random() < mistimeChance;
+        state.mistimeReleaseDelay = 0.12;
+      }
+    }
+
     this.particles.showFloatingText('⚠️ YELLOW LIGHT: BRAKE!', this.trophyX, 150, '#F59E0B', 20);
   }
 
