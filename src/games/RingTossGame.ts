@@ -4,81 +4,182 @@ import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
 
-interface Bottle {
-  x: number;
-  y: number;
+export type RingTheme = 'midway' | 'neon' | 'retro';
+
+interface BottleTarget {
+  id: number;
+  ringTier: number; // 0 (center), 1 (inner), 2 (outer)
+  angle: number;
+  dist: number;
   points: number;
   isGold: boolean;
-  ringsCount: number;
+  ringsAttached: number;
+  color: string;
 }
 
-interface FlyingRing {
+interface FlyingHoop {
+  id: number;
+  playerId: PlayerId;
+  color: string;
+  startX: number;
+  startY: number;
   x: number;
   y: number;
   targetX: number;
   targetY: number;
-  startX: number;
-  startY: number;
+  targetBottleId: number | null;
   progress: number;
   speed: number;
-  playerId: PlayerId;
-  ringColor: string;
+  scale: number;
+  alive: boolean;
 }
 
-interface PlayerTossState {
+interface PitchPlayer {
+  id: PlayerId;
+  baseX: number;
+  baseY: number;
   aimAngle: number;
-  aimDir: number;
+  ringsLeft: number;
+  cooldown: number;
   score: number;
-  tossCooldown: number;
-  ringsThrown: number;
+  ringersCount: number;
+  combo: number;
+  botReactionTimer: number;
 }
 
 export class RingTossGame extends BaseGame {
-  private bottles: Bottle[] = [];
-  private playerStates: Map<PlayerId, PlayerTossState> = new Map();
-  private activeRings: FlyingRing[] = [];
+  public ringTheme: RingTheme = 'midway';
+  private bottles: BottleTarget[] = [];
+  private flyingHoops: FlyingHoop[] = [];
+  private playerStates: Map<PlayerId, PitchPlayer> = new Map();
+  private hoopCounter: number = 0;
+  private trayAngles: number[] = [0, 0, 0];
+  private traySpeeds: number[] = [0.4, -0.65, 0.85];
+  private boothCenterX: number = 0;
+  private boothCenterY: number = 0;
+  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
 
-  constructor(players: PlayerConfig[], input: InputRouter, audio: AudioEngine, particles: ParticleSystem) {
+  constructor(
+    players: PlayerConfig[],
+    input: InputRouter,
+    audio: AudioEngine,
+    particles: ParticleSystem
+  ) {
     super(players, input, audio, particles);
   }
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+
+    if (typeof window !== 'undefined') {
+      this.keydownListener = (e: KeyboardEvent) => {
+        if (e.key === '1') this.switchTheme('midway', width, height);
+        else if (e.key === '2') this.switchTheme('neon', width, height);
+        else if (e.key === '3') this.switchTheme('retro', width, height);
+      };
+      window.addEventListener('keydown', this.keydownListener);
+    }
+  }
+
+  public destroy(): void {
+    if (typeof window !== 'undefined' && this.keydownListener) {
+      window.removeEventListener('keydown', this.keydownListener);
+      this.keydownListener = null;
+    }
+  }
+
+  public switchTheme(theme: RingTheme, width: number, height: number): void {
+    this.ringTheme = theme;
+    this.audio.playChime();
+    this.particles.showFloatingText(
+      `RING TOSS: ${theme.toUpperCase()}!`,
+      width / 2,
+      height / 2 - 40,
+      theme === 'midway' ? '#F59E0B' : theme === 'neon' ? '#38BDF8' : '#EC4899',
+      24
+    );
   }
 
   public reset(width: number = 800, height: number = 600): void {
-    this.playerStates.clear();
-    this.activeRings = [];
-    this.bottles = [];
-    this.roundTimer = 25.0;
+    this.roundTimer = 35.0;
     this.isFinished = false;
+    this.flyingHoops = [];
+    this.hoopCounter = 0;
+    this.trayAngles = [0, 0, 0];
 
-    // 3x3 Bottle Stand in Upper Center
-    const cx = width / 2;
-    const cy = height * 0.35;
-    const colSpacing = 60;
-    const rowSpacing = 45;
+    this.boothCenterX = width / 2;
+    this.boothCenterY = height * 0.38;
 
-    for (let r = -1; r <= 1; r++) {
-      for (let c = -1; c <= 1; c++) {
-        const isCenter = r === 0 && c === 0;
-        this.bottles.push({
-          x: cx + c * colSpacing,
-          y: cy + r * rowSpacing,
-          points: isCenter ? 100 : (Math.abs(r) + Math.abs(c) === 1 ? 50 : 25),
-          isGold: isCenter,
-          ringsCount: 0
-        });
-      }
+    this.initPlayers(width, height);
+    this.initBottles();
+  }
+
+  private initPlayers(width: number, height: number): void {
+    this.playerStates.clear();
+    const active = this.getActivePlayers();
+    const count = active.length;
+    const spacing = width / (count + 1);
+
+    active.forEach((p, idx) => {
+      const px = spacing * (idx + 1);
+      const py = height - 55;
+      this.playerStates.set(p.id, {
+        id: p.id,
+        baseX: px,
+        baseY: py,
+        aimAngle: -Math.PI / 2,
+        ringsLeft: 99,
+        cooldown: 0,
+        score: 0,
+        ringersCount: 0,
+        combo: 0,
+        botReactionTimer: 0.15 + idx * 0.08
+      });
+    });
+  }
+
+  private initBottles(): void {
+    this.bottles = [];
+    let bId = 0;
+
+    // Center Golden Decanter
+    this.bottles.push({
+      id: ++bId,
+      ringTier: 0,
+      angle: 0,
+      dist: 0,
+      points: 300,
+      isGold: true,
+      ringsAttached: 0,
+      color: '#FACC15'
+    });
+
+    // Inner Ring: 6 Bottles
+    for (let i = 0; i < 6; i++) {
+      this.bottles.push({
+        id: ++bId,
+        ringTier: 1,
+        angle: (i / 6) * Math.PI * 2,
+        dist: 75,
+        points: 150,
+        isGold: i % 2 === 0,
+        ringsAttached: 0,
+        color: i % 2 === 0 ? '#FDE047' : '#38BDF8'
+      });
     }
 
-    for (const p of this.getActivePlayers()) {
-      this.playerStates.set(p.id, {
-        aimAngle: (Math.random() - 0.5) * 0.8,
-        aimDir: Math.random() < 0.5 ? 1 : -1,
-        score: 0,
-        tossCooldown: 0,
-        ringsThrown: 0
+    // Outer Ring: 10 Bottles
+    const outerColors = ['#EF4444', '#10B981', '#A855F7', '#EC4899', '#06B6D4'];
+    for (let i = 0; i < 10; i++) {
+      this.bottles.push({
+        id: ++bId,
+        ringTier: 2,
+        angle: (i / 10) * Math.PI * 2,
+        dist: 145,
+        points: 80,
+        isGold: false,
+        ringsAttached: 0,
+        color: outerColors[i % outerColors.length]
       });
     }
   }
@@ -86,283 +187,437 @@ export class RingTossGame extends BaseGame {
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
 
-    this.roundTimer -= dt;
-    if (this.roundTimer <= 0) {
-      this.roundTimer = 0;
-      this.isFinished = true;
-      return;
-    }
+    this.roundTimer = Math.max(0, this.roundTimer - dt);
 
+    // Update Bot AI
     this.updateBots(dt, width, height);
 
-    const active = this.getActivePlayers();
-    const count = active.length;
+    // Rotate Concentric Trays
+    for (let t = 0; t < 3; t++) {
+      this.trayAngles[t] += this.traySpeeds[t] * dt;
+    }
 
-    // Update Player Aim & Input
-    active.forEach((p, idx) => {
-      const state = this.playerStates.get(p.id);
-      if (!state) return;
+    // Update Players
+    for (const p of this.getActivePlayers()) {
+      const ps = this.playerStates.get(p.id);
+      if (!ps) continue;
 
-      // Oscillate aim angle
-      state.aimAngle += state.aimDir * dt * 2.2;
-      if (state.aimAngle > 0.75) {
-        state.aimAngle = 0.75;
-        state.aimDir = -1;
-      } else if (state.aimAngle < -0.75) {
-        state.aimAngle = -0.75;
-        state.aimDir = 1;
+      ps.cooldown = Math.max(0, ps.cooldown - dt);
+
+      // Analog Aim Steering
+      const steer = this.input.getSteer(p.id);
+      if (Math.abs(steer) > 0.15) {
+        ps.aimAngle += steer * 2.6 * dt;
       }
 
-      if (state.tossCooldown > 0) {
-        state.tossCooldown -= dt;
-      }
+      // Clamp aim arc
+      const minA = -Math.PI * 0.85;
+      const maxA = -Math.PI * 0.15;
+      ps.aimAngle = Math.max(minA, Math.min(maxA, ps.aimAngle));
 
-      // Toss Ring
-      if (this.input.justPressed(p.id) && state.tossCooldown <= 0) {
-        state.tossCooldown = 0.35;
-        state.ringsThrown++;
-        this.audio.playWhoosh();
+      // Pitch Ring (Tap / Space / Action)
+      const shoot = this.input.justAction(p.id) || (this.input.justPressed(p.id) && Math.abs(steer) < 0.2);
+      if (shoot && ps.cooldown <= 0) {
+        ps.cooldown = 0.32; // Snappy throwing cadence
 
-        const startX = (width / (count + 1)) * (idx + 1);
-        const startY = height - 40;
+        // Calculate target location based on aim line intersecting the bottle stand
+        const rayLen = 220 + Math.random() * 80;
+        const targetX = ps.baseX + Math.cos(ps.aimAngle) * rayLen;
+        const targetY = ps.baseY + Math.sin(ps.aimAngle) * rayLen;
 
-        // Calculate target location based on aim angle and random throw power
-        const targetDist = height * 0.55;
-        const targetX = startX + Math.sin(state.aimAngle) * targetDist * 0.8;
-        const targetY = startY - Math.cos(state.aimAngle) * targetDist;
-
-        this.activeRings.push({
-          x: startX,
-          y: startY,
-          startX,
-          startY,
+        this.flyingHoops.push({
+          id: ++this.hoopCounter,
+          playerId: p.id,
+          color: p.color,
+          startX: ps.baseX,
+          startY: ps.baseY - 14,
+          x: ps.baseX,
+          y: ps.baseY - 14,
           targetX,
           targetY,
+          targetBottleId: null,
           progress: 0,
-          speed: 2.2,
-          playerId: p.id,
-          ringColor: p.color
+          speed: 1.8,
+          scale: 1.0,
+          alive: true
         });
+
+        this.audio.playWhoosh();
       }
-    });
+    }
 
-    // Update Flying Rings
-    for (let i = this.activeRings.length - 1; i >= 0; i--) {
-      const ring = this.activeRings[i];
-      ring.progress += ring.speed * dt;
+    // Update Flying Hoops in 3D perspective
+    for (let i = this.flyingHoops.length - 1; i >= 0; i--) {
+      const hoop = this.flyingHoops[i];
+      if (!hoop.alive) {
+        this.flyingHoops.splice(i, 1);
+        continue;
+      }
 
-      // Parabolic flight
-      const p = Math.min(1, ring.progress);
-      ring.x = ring.startX + (ring.targetX - ring.startX) * p;
-      const linearY = ring.startY + (ring.targetY - ring.startY) * p;
-      const arc = Math.sin(p * Math.PI) * 70;
-      ring.y = linearY - arc;
+      hoop.progress += hoop.speed * dt;
+      // Parabolic flight arc
+      const t = hoop.progress;
+      hoop.x = hoop.startX + (hoop.targetX - hoop.startX) * t;
+      hoop.y = hoop.startY + (hoop.targetY - hoop.startY) * t - Math.sin(t * Math.PI) * 65;
+      hoop.scale = 1.0 - t * 0.45; // Shrinks as it travels deeper into the booth
 
-      if (ring.progress >= 1) {
-        // Landing check with bottles
-        let hitBottle: Bottle | null = null;
+      // Landing check when t >= 1.0
+      if (t >= 1.0) {
+        hoop.alive = false;
+
+        // Check if landed around any bottle neck
+        let ringer = false;
         for (const b of this.bottles) {
-          const d = Math.hypot(ring.targetX - b.x, ring.targetY - b.y);
-          if (d < 28) {
-            hitBottle = b;
+          const bAngle = b.angle + this.trayAngles[b.ringTier];
+          const bx = this.boothCenterX + Math.cos(bAngle) * b.dist;
+          const by = this.boothCenterY + Math.sin(bAngle) * b.dist;
+
+          const dist = Math.hypot(hoop.targetX - bx, hoop.targetY - by);
+          if (dist <= 24) {
+            ringer = true;
+            b.ringsAttached++;
+
+            const ps = this.playerStates.get(hoop.playerId);
+            if (ps) {
+              ps.ringersCount++;
+              ps.combo++;
+              const mult = ps.combo >= 3 ? 2.0 : ps.combo >= 2 ? 1.5 : 1.0;
+              const earned = Math.round(b.points * mult);
+              ps.score += earned;
+
+              this.audio.playCoin();
+              this.particles.spawnConfetti(bx, by, 14);
+
+              const label = ps.combo >= 2 ? `RINGER! +${earned} (${mult}x)` : `RINGER! +${earned}`;
+              this.particles.showFloatingText(label, bx, by - 24, b.color, 24);
+
+              if (b.isGold) {
+                this.audio.playScore();
+                this.particles.showFloatingText('★ GOLDEN RINGER! ★', bx, by - 44, '#FACC15', 26);
+              }
+            }
             break;
           }
         }
 
-        if (hitBottle) {
-          hitBottle.ringsCount++;
-          const state = this.playerStates.get(ring.playerId);
-          if (state) {
-            state.score += hitBottle.points;
-          }
-          this.audio.playTone(hitBottle.isGold ? 880 : 540, 0.12, 'triangle');
-          this.particles.emit(hitBottle.x, hitBottle.y, hitBottle.isGold ? 20 : 10, ring.ringColor);
-        } else {
-          this.audio.playTone(180, 0.05, 'sine');
-        }
-
-        this.activeRings.splice(i, 1);
-      }
-    }
-  }
-
-  protected updateBotAI(_dt: number, botId: PlayerId, difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard', width: number, height: number): void {
-    const state = this.playerStates.get(botId);
-    if (!state || state.tossCooldown > 0) {
-      this.input.setBotInput(botId, false);
-      return;
-    }
-
-    const active = this.getActivePlayers();
-    const idx = active.findIndex(p => p.id === botId);
-    const startX = (width / (active.length + 1)) * (idx + 1);
-    const startY = height - 40;
-
-    // Pick target bottle (Center gold bottle preferred by Hard bots)
-    const targetBottle = difficulty === 'bot_hard'
-      ? this.bottles.find(b => b.isGold) || this.bottles[0]
-      : this.bottles[Math.floor(Math.random() * this.bottles.length)];
-
-    const dx = targetBottle.x - startX;
-    const dy = startY - targetBottle.y;
-    const targetAngle = Math.atan2(dx, dy);
-
-    const tolerance = difficulty === 'bot_hard' ? 0.08 : difficulty === 'bot_normal' ? 0.18 : 0.35;
-    if (Math.abs(state.aimAngle - targetAngle) < tolerance) {
-      this.input.setBotInput(botId, true);
-    } else {
-      this.input.setBotInput(botId, false);
-    }
-  }
-
-  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // Striped Carnival Booth Backdrop
-    ctx.fillStyle = '#7F1D1D';
-    ctx.fillRect(0, 0, width, height);
-
-    // Awning stripes
-    const stripeW = 40;
-    for (let sx = 0; sx < width; sx += stripeW * 2) {
-      ctx.fillStyle = '#991B1B';
-      ctx.fillRect(sx, 0, stripeW, height);
-    }
-
-    // Wooden Booth Table
-    const tableY = height * 0.48;
-    ctx.fillStyle = '#78350F';
-    ctx.fillRect(width * 0.1, height * 0.22, width * 0.8, tableY - height * 0.18);
-    ctx.strokeStyle = '#B45309';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(width * 0.1, height * 0.22, width * 0.8, tableY - height * 0.18);
-
-    // Bottles
-    for (const b of this.bottles) {
-      // Bottle shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.35)';
-      ctx.beginPath();
-      ctx.ellipse(b.x, b.y + 16, 18, 7, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Bottle body
-      ctx.fillStyle = b.isGold ? '#F59E0B' : '#047857';
-      ctx.beginPath();
-      ctx.roundRect(b.x - 12, b.y - 10, 24, 28, 4);
-      ctx.fill();
-      // Bottle neck
-      ctx.beginPath();
-      ctx.roundRect(b.x - 5, b.y - 26, 10, 18, 2);
-      ctx.fill();
-      // Bottle rim
-      ctx.fillStyle = b.isGold ? '#FCD34D' : '#34D399';
-      ctx.fillRect(b.x - 7, b.y - 28, 14, 3);
-
-      // Points label
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 11px system-ui, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${b.points}`, b.x, b.y + 8);
-
-      // Rings stacked on bottle
-      if (b.ringsCount > 0) {
-        ctx.strokeStyle = '#FACC15';
-        ctx.lineWidth = 3;
-        for (let r = 0; r < Math.min(4, b.ringsCount); r++) {
-          ctx.beginPath();
-          ctx.ellipse(b.x, b.y + 12 - r * 5, 16, 6, 0, 0, Math.PI * 2);
-          ctx.stroke();
+        if (!ringer) {
+          // Miss / clatter
+          this.audio.playTap();
+          const ps = this.playerStates.get(hoop.playerId);
+          if (ps) ps.combo = 0;
         }
       }
     }
 
-    // Flying Rings
-    for (const ring of this.activeRings) {
-      const p = ring.progress;
-      const scale = 1 - p * 0.35; // Perspective shrinking
-      ctx.save();
-      ctx.translate(ring.x, ring.y);
-      ctx.scale(scale, scale * 0.5);
-      ctx.strokeStyle = ring.ringColor;
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      ctx.arc(0, 0, 22, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
+    if (this.roundTimer <= 0) {
+      this.isFinished = true;
     }
-
-    // Player Toss Stations at Bottom
-    const active = this.getActivePlayers();
-    const count = active.length;
-    active.forEach((p, idx) => {
-      const state = this.playerStates.get(p.id);
-      if (!state) return;
-
-      const px = (width / (count + 1)) * (idx + 1);
-      const py = height - 40;
-
-      // Aim Line / Trajectory
-      ctx.save();
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 3;
-      ctx.setLineDash([6, 6]);
-      ctx.beginPath();
-      ctx.moveTo(px, py);
-      const aimLen = 100;
-      ctx.lineTo(px + Math.sin(state.aimAngle) * aimLen, py - Math.cos(state.aimAngle) * aimLen);
-      ctx.stroke();
-      ctx.restore();
-
-      // Player Ring Launcher
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(px, py, 18, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      // Score Pill
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.roundRect(px - 32, py - 60, 64, 22, 6);
-      ctx.fill();
-      ctx.font = 'bold 12px monospace';
-      ctx.fillStyle = '#F8FAFC';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${state.score} PTS`, px, py - 45);
-    });
-
-    // Timer & Carnival Header
-    ctx.fillStyle = '#F8FAFC';
-    ctx.font = 'bold 15px system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`RING TOSS • TIME: ${Math.ceil(this.roundTimer)}s`, width / 2, 28);
   }
 
   public isRoundOver(): boolean {
     return this.isFinished;
   }
 
-  public getRoundResult(): RoundResult {
-    const rankings = this.getActivePlayers()
-      .map(p => ({
-        playerId: p.id,
-        score: this.playerStates.get(p.id)?.score || 0,
-        place: 1
-      }))
-      .sort((a, b) => b.score - a.score);
+  protected updateBotAI(
+    dt: number,
+    botId: PlayerId,
+    difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
+    width: number,
+    height: number
+  ): void {
+    const ps = this.playerStates.get(botId);
+    if (!ps) return;
 
-    for (let i = 0; i < rankings.length; i++) {
-      rankings[i].place = i + 1;
+    ps.botReactionTimer -= dt;
+    if (ps.botReactionTimer > 0) return;
+
+    ps.botReactionTimer = difficulty === 'bot_hard' ? 0.08 : difficulty === 'bot_normal' ? 0.18 : 0.35;
+
+    // Pick best bottle target
+    let bestTarget: BottleTarget | null = null;
+    let bestScore = -9999;
+
+    for (const b of this.bottles) {
+      const bAngle = b.angle + this.trayAngles[b.ringTier];
+      const bx = this.boothCenterX + Math.cos(bAngle) * b.dist;
+      const by = this.boothCenterY + Math.sin(bAngle) * b.dist;
+
+      const dx = bx - ps.baseX;
+      const dy = by - ps.baseY;
+      const dist = Math.hypot(dx, dy);
+
+      let val = b.points;
+      if (b.isGold) val += 150;
+
+      const score = val - dist * 0.15;
+      if (score > bestScore) {
+        bestScore = score;
+        bestTarget = b;
+      }
     }
 
-    const winnerId = rankings.length > 0 && rankings[0].score > (rankings[1]?.score ?? -1)
-      ? rankings[0].playerId
-      : null;
+    if (!bestTarget) {
+      this.input.setBotInput(botId, false, 0, 0, false);
+      return;
+    }
+
+    // Lead calculation on rotating tray
+    const bAngle = bestTarget.angle + this.trayAngles[bestTarget.ringTier];
+    let bx = this.boothCenterX + Math.cos(bAngle) * bestTarget.dist;
+    let by = this.boothCenterY + Math.sin(bAngle) * bestTarget.dist;
+
+    if (difficulty !== 'bot_easy') {
+      const distToB = Math.hypot(bx - ps.baseX, by - ps.baseY);
+      const flightTime = distToB / 450;
+      const leadAngle = bAngle + this.traySpeeds[bestTarget.ringTier] * flightTime;
+      bx = this.boothCenterX + Math.cos(leadAngle) * bestTarget.dist;
+      by = this.boothCenterY + Math.sin(leadAngle) * bestTarget.dist;
+    }
+
+    const desiredAngle = Math.atan2(by - ps.baseY, bx - ps.baseX);
+    const angleDiff = desiredAngle - ps.aimAngle;
+    const tolerance = difficulty === 'bot_hard' ? 0.06 : difficulty === 'bot_normal' ? 0.14 : 0.28;
+
+    if (Math.abs(angleDiff) < tolerance && ps.cooldown <= 0) {
+      if (difficulty === 'bot_easy' && Math.random() < 0.25) {
+        this.input.setBotInput(botId, false, 0, 0, false);
+        return;
+      }
+      this.input.setBotInput(botId, true, 0, 0, true);
+    } else {
+      const steer = angleDiff > 0 ? 1 : -1;
+      this.input.setBotInput(botId, true, steer, 0, false);
+    }
+  }
+
+  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    // 1. Midway Booth Background
+    this.renderBooth(ctx, width, height);
+
+    // 2. Concentric Trays & Glass Bottles
+    this.renderTraysAndBottles(ctx);
+
+    // 3. Flying Hoops (3D perspective scaling)
+    this.renderHoops(ctx);
+
+    // 4. Players Pitch Stations & Mascots
+    this.renderPlayers(ctx);
+
+    // 5. Theme Pill (bottom-left)
+    this.renderThemePill(ctx, height);
+  }
+
+  private renderBooth(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    if (this.ringTheme === 'midway') {
+      ctx.fillStyle = '#451A03'; // Rich mahogany wood
+    } else if (this.ringTheme === 'neon') {
+      ctx.fillStyle = '#0F172A'; // Dark sci-fi arena
+    } else {
+      ctx.fillStyle = '#1E1B4B'; // Retro twilight
+    }
+    ctx.fillRect(0, 0, width, height);
+
+    // Carnival Pennants & Velvet Backdrop
+    const pennantCount = 16;
+    const pw = width / pennantCount;
+    for (let i = 0; i < pennantCount; i++) {
+      ctx.fillStyle = i % 2 === 0 ? '#EF4444' : '#FDE047';
+      ctx.beginPath();
+      ctx.moveTo(i * pw, 0);
+      ctx.lineTo((i + 1) * pw, 0);
+      ctx.lineTo((i + 0.5) * pw, 26);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Wooden Counter Barrier at bottom
+    ctx.fillStyle = '#78350F';
+    ctx.fillRect(0, height - 32, width, 32);
+    ctx.strokeStyle = '#451A03';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, height - 32, width, 32);
+  }
+
+  private renderTraysAndBottles(ctx: CanvasRenderingContext2D): void {
+    ctx.save();
+    ctx.translate(this.boothCenterX, this.boothCenterY);
+
+    // Draw 3 Concentric Wooden / Neon Tray Discs
+    const radii = [35, 95, 165];
+    radii.forEach((r, idx) => {
+      ctx.fillStyle = this.ringTheme === 'neon' ? 'rgba(6, 182, 212, 0.15)' : 'rgba(120, 53, 15, 0.55)';
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = this.ringTheme === 'neon' ? '#06B6D4' : '#B45309';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    });
+
+    ctx.restore();
+
+    // Draw Glass Bottles
+    for (const b of this.bottles) {
+      const bAngle = b.angle + this.trayAngles[b.ringTier];
+      const bx = this.boothCenterX + Math.cos(bAngle) * b.dist;
+      const by = this.boothCenterY + Math.sin(bAngle) * b.dist;
+
+      ctx.save();
+      ctx.translate(bx, by);
+
+      // Bottle Shadow
+      ctx.fillStyle = 'rgba(2, 6, 23, 0.35)';
+      ctx.beginPath();
+      ctx.ellipse(0, 8, 8, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Bottle Base
+      ctx.fillStyle = b.color;
+      ctx.beginPath();
+      ctx.roundRect(-6, -6, 12, 16, 3);
+      ctx.fill();
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      // Bottle Neck
+      ctx.fillStyle = b.color;
+      ctx.fillRect(-3, -16, 6, 10);
+      ctx.strokeRect(-3, -16, 6, 10);
+
+      // Gold Sparkle on Gold Bottles
+      if (b.isGold) {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '700 10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('★', 0, 3);
+      }
+
+      // Render Attached Rings stacked around the neck
+      for (let k = 0; k < Math.min(4, b.ringsAttached); k++) {
+        ctx.strokeStyle = '#F43F5E';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.ellipse(0, -10 + k * 4, 8, 3, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+  }
+
+  private renderHoops(ctx: CanvasRenderingContext2D): void {
+    for (const hoop of this.flyingHoops) {
+      if (!hoop.alive) continue;
+
+      ctx.save();
+      ctx.translate(hoop.x, hoop.y);
+      ctx.scale(hoop.scale, hoop.scale * 0.7); // Perspective oval
+
+      // Glowing Neon Hoop Ring
+      ctx.strokeStyle = hoop.color;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(0, 0, 16, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Inner Highlight Ring
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(0, 0, 14, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+  }
+
+  private renderPlayers(ctx: CanvasRenderingContext2D): void {
+    for (const p of this.getActivePlayers()) {
+      const ps = this.playerStates.get(p.id);
+      if (!ps) continue;
+
+      ctx.save();
+      ctx.translate(ps.baseX, ps.baseY);
+
+      // Aim Arrow Line (laser guide)
+      ctx.save();
+      ctx.rotate(ps.aimAngle);
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(45, 0);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+
+      // Mascot Pitcher
+      const mood = ps.combo >= 2 ? 'triumph' : 'focused';
+      this.drawPlayerMascot(ctx, ps.id, 0, 4, 13, mood, performance.now() * 0.001);
+
+      ctx.restore();
+
+      // Score Label
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '800 12px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      const comboLabel = ps.combo >= 2 ? ` (${ps.combo}x COMBO!)` : '';
+      ctx.fillText(`${ps.score} pts${comboLabel}`, ps.baseX, ps.baseY - 28);
+    }
+  }
+
+  private renderThemePill(ctx: CanvasRenderingContext2D, height: number): void {
+    const pillW = 175;
+    const pillH = 26;
+    const pillX = 20;
+    const pillY = height - 44;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, 13);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.font = '700 11px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = this.ringTheme === 'midway' ? '#F59E0B' : this.ringTheme === 'neon' ? '#38BDF8' : '#EC4899';
+    ctx.fillText(`RING TOSS: ${this.ringTheme.toUpperCase()} [1-3]`, pillX + pillW / 2, pillY + 17);
+  }
+
+  public getRoundResult(): RoundResult {
+    const active = this.getActivePlayers();
+    const rankings = active
+      .map((p) => {
+        const ps = this.playerStates.get(p.id);
+        const score = ps ? ps.score : 0;
+        return { playerId: p.id, score, place: 1 };
+      })
+      .sort((a, b) => b.score - a.score);
+
+    rankings.forEach((r, idx) => {
+      r.place = idx + 1;
+    });
+
+    const winnerId =
+      rankings.length > 0 && (rankings.length === 1 || rankings[0].score > rankings[1].score)
+        ? rankings[0].playerId
+        : null;
+
+    let mvpHighlight = 'Carnival Hoop Master!';
+    if (winnerId !== null) {
+      const ps = this.playerStates.get(winnerId);
+      mvpHighlight = `Player ${Number(winnerId) + 1} scored ${ps?.ringersCount || 0} ringers!`;
+    }
 
     return {
       winnerId,
       rankings,
-      mvpHighlight: winnerId !== null ? `${this.getPlayer(winnerId)?.name} mastered carnival geometry!` : 'The glass bottles stood tall!'
+      mvpHighlight
     };
   }
 }

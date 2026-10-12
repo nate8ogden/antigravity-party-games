@@ -1601,12 +1601,12 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   },
   {
     id: 'ring_toss',
-    title: 'Ring Toss',
-    tagline: 'Carnival Bottle Hoop',
-    category: 'Party',
+    title: 'Neon Ring Pitch',
+    tagline: 'Rotating Bottle Tray Toss',
+    category: 'Reflex',
     icon: '[G-147]',
-    instructions: 'Toss hoops onto glass bottles! Center golden bottle awards 100 points. Time your parabolic toss as the trajectory arc sweeps across the stand.',
-    controlPrompt: 'Tap: Pitch Ring'
+    instructions: 'Pitch glowing neon hoops onto 3 rotating concentric trays of glass bottles! Land consecutive ringers for combo multipliers, and aim for the center Golden Decanter for 300 bonus points!',
+    controlPrompt: 'Steer: Aim Angle | Tap/Space: Pitch Hoop | 1-3: Switch Theme'
   },
   {
     id: 'rollercoaster_thrill',
