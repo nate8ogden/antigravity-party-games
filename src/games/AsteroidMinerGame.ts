@@ -58,11 +58,23 @@ interface SalvageDepot {
   pulseTimer: number;
 }
 
+interface FloatingText {
+  id: number;
+  x: number;
+  y: number;
+  text: string;
+  color: string;
+  life: number;
+  maxLife: number;
+}
+
 export class AsteroidMinerGame extends BaseGame {
   private ships: Map<PlayerId, MinerShip> = new Map();
   private asteroids: Asteroid[] = [];
   private gems: GemShard[] = [];
   private depots: SalvageDepot[] = [];
+  private floatingTexts: FloatingText[] = [];
+  private nextTextId = 1;
   private nextAsteroidId = 1;
   private nextGemId = 1;
   private asteroidSpawnTimer = 2.0;
@@ -84,6 +96,7 @@ export class AsteroidMinerGame extends BaseGame {
     this.asteroids = [];
     this.gems = [];
     this.depots = [];
+    this.floatingTexts = [];
     this.nextAsteroidId = 1;
     this.nextGemId = 1;
     this.asteroidSpawnTimer = 1.0;
@@ -153,13 +166,13 @@ export class AsteroidMinerGame extends BaseGame {
         getDepots: () => this.depots,
         getAsteroids: () => this.asteroids,
         getGems: () => this.gems,
-        setShipPos: (id: PlayerId, x: number, y: number) => {
+        setShipPos: (id: PlayerId, x: number, y: number, vx = 0, vy = 0) => {
           const s = this.ships.get(id);
           if (s) {
             s.x = x;
             s.y = y;
-            s.vx = 0;
-            s.vy = 0;
+            s.vx = vx;
+            s.vy = vy;
           }
         },
         setCargo: (id: PlayerId, cargo: number) => {
@@ -170,9 +183,24 @@ export class AsteroidMinerGame extends BaseGame {
           const s = this.ships.get(id);
           if (s) s.bankedScore = score;
         },
+        setRoundTimer: (t: number) => {
+          this.roundTimer = t;
+        },
         getRoundTimer: () => this.roundTimer
       };
     }
+  }
+
+  private addFloatingText(x: number, y: number, text: string, color: string): void {
+    this.floatingTexts.push({
+      id: this.nextTextId++,
+      x,
+      y,
+      text,
+      color,
+      life: 1.2,
+      maxLife: 1.2
+    });
   }
 
   private spawnAsteroid(width: number, height: number, tier: 1 | 2): void {
@@ -247,8 +275,11 @@ export class AsteroidMinerGame extends BaseGame {
       if (ship.bumpCooldown > 0) {
         ship.bumpCooldown -= dt;
       }
+      if (ship.raidCooldown > 0) {
+        ship.raidCooldown -= dt;
+      }
 
-      const isThrusting = this.input.isPressed(ship.id);
+      const isThrusting = this.input.isPressed(ship.id) || this.input.isActionPressed(ship.id);
       const steer = this.input.getSteer(ship.id);
 
       // Steering
@@ -324,12 +355,35 @@ export class AsteroidMinerGame extends BaseGame {
           this.audio.playTone(587.33, 0.08, 'triangle'); // D5
           setTimeout(() => this.audio.playTone(880.0, 0.12, 'sine'), 90); // A5
           this.particles.spawnExplosion(myDepot.x, myDepot.y, '#10B981', ship.cargo * 6);
+          this.addFloatingText(myDepot.x, myDepot.y - 20, `+${ship.cargo} SECURED!`, '#10B981');
           ship.cargo = 0;
+        }
+      }
+
+      // Check Rival Depot Raiding: Hovering near rival depot siphons banked gems!
+      if (ship.cargo < 5 && ship.raidCooldown <= 0) {
+        for (const rivalDepot of this.depots) {
+          if (rivalDepot.playerId !== ship.id) {
+            const distRivalDepot = Math.hypot(ship.x - rivalDepot.x, ship.y - rivalDepot.y);
+            if (distRivalDepot < rivalDepot.radius + ship.radius) {
+              const rivalShip = this.ships.get(rivalDepot.playerId);
+              if (rivalShip && rivalShip.bankedScore > 0) {
+                rivalShip.bankedScore--;
+                ship.cargo++;
+                ship.raidCooldown = 1.0;
+                this.audio.playTone(349.23, 0.14, 'sawtooth');
+                this.particles.spawnExplosion(rivalDepot.x, rivalDepot.y, '#EF4444', 10);
+                this.addFloatingText(rivalDepot.x, rivalDepot.y - 20, '🚨 RAIDED! -1', '#EF4444');
+                this.addFloatingText(ship.x, ship.y - 20, '💎 STOLEN! +1', '#10B981');
+                break;
+              }
+            }
+          }
         }
       }
     }
 
-    // Ship-to-Ship Collisions
+    // Ship-to-Ship Collisions & Kinetic Stealing
     const shipList = Array.from(this.ships.values()).filter((s) => s.alive);
     for (let i = 0; i < shipList.length; i++) {
       for (let j = i + 1; j < shipList.length; j++) {
@@ -363,16 +417,43 @@ export class AsteroidMinerGame extends BaseGame {
           this.audio.playTone(160, 0.08, 'square');
           this.particles.spawnSparks((s1.x + s2.x) / 2, (s1.y + s2.y) / 2, '#FFFFFF', 6);
 
-          // Kinetic impact: cargo spills!
-          if (s1.bumpCooldown <= 0 && s1.cargo > 0 && Math.random() < 0.6) {
-            s1.cargo--;
-            s1.bumpCooldown = 0.8;
-            this.dropGem(s1.x, s1.y, -nx * 120, -ny * 120);
-          }
-          if (s2.bumpCooldown <= 0 && s2.cargo > 0 && Math.random() < 0.6) {
-            s2.cargo--;
-            s2.bumpCooldown = 0.8;
-            this.dropGem(s2.x, s2.y, nx * 120, ny * 120);
+          // Kinetic impact cargo stealing!
+          if (s1.bumpCooldown <= 0 && s2.bumpCooldown <= 0) {
+            const vRel = (s1.vx - s2.vx) * nx + (s1.vy - s2.vy) * ny;
+            const dot1 = Math.cos(s1.angle) * nx + Math.sin(s1.angle) * ny;
+            const dot2 = Math.cos(s2.angle) * (-nx) + Math.sin(s2.angle) * (-ny);
+
+            let attacker: MinerShip;
+            let victim: MinerShip;
+
+            if (vRel > 15 || (Math.abs(vRel) <= 15 && dot1 >= dot2)) {
+              attacker = s1;
+              victim = s2;
+            } else {
+              attacker = s2;
+              victim = s1;
+            }
+
+            if (victim.cargo > 0) {
+              victim.cargo--;
+              s1.bumpCooldown = 0.6;
+              s2.bumpCooldown = 0.6;
+
+              if (attacker.cargo < 5) {
+                attacker.cargo++;
+                this.audio.playTone(659.25, 0.12, 'sawtooth');
+                this.particles.spawnExplosion(attacker.x, attacker.y, '#10B981', 8);
+                this.addFloatingText(attacker.x, attacker.y - 25, '💎 STOLEN! +1', '#10B981');
+                this.addFloatingText(victim.x, victim.y - 25, '💥 -1 GEM!', '#EF4444');
+              } else {
+                // Attacker cargo full: gem spills into space!
+                const spillDirX = attacker === s1 ? nx : -nx;
+                const spillDirY = attacker === s1 ? ny : -ny;
+                this.dropGem(victim.x, victim.y, spillDirX * 150, spillDirY * 150);
+                this.audio.playTone(280, 0.1, 'square');
+                this.addFloatingText(victim.x, victim.y - 25, '💥 GEM SPILLED!', '#EF4444');
+              }
+            }
           }
         }
       }
