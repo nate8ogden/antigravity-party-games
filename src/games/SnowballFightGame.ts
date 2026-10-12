@@ -12,6 +12,7 @@ interface SnowballPlayer {
   vy: number;
   baseX: number;
   baseY: number;
+  side: 'west' | 'east' | 'nw' | 'ne' | 'sw' | 'se';
   aimAngle: number;
   sweepDir: number;
   minAimAngle: number;
@@ -141,6 +142,7 @@ export class SnowballFightGame extends BaseGame {
         vy: 0,
         baseX: width * 0.16,
         baseY: height * 0.5,
+        side: 'west',
         aimAngle: 0,
         sweepDir: 1,
         minAimAngle: -Math.PI * 0.32,
@@ -164,6 +166,7 @@ export class SnowballFightGame extends BaseGame {
         vy: 0,
         baseX: width * 0.84,
         baseY: height * 0.5,
+        side: 'east',
         aimAngle: Math.PI,
         sweepDir: 1,
         minAimAngle: Math.PI * 0.68,
@@ -186,34 +189,39 @@ export class SnowballFightGame extends BaseGame {
         centerAngle: number;
         minA: number;
         maxA: number;
+        side: 'nw' | 'ne' | 'sw' | 'se';
       }[] = [
         {
           x: width * 0.18,
           y: height * 0.22,
           centerAngle: Math.PI * 0.25,
           minA: 0,
-          maxA: Math.PI * 0.5
+          maxA: Math.PI * 0.5,
+          side: 'nw'
         }, // P1 (Top-Left)
         {
           x: width * 0.82,
           y: height * 0.22,
           centerAngle: Math.PI * 0.75,
           minA: Math.PI * 0.5,
-          maxA: Math.PI
+          maxA: Math.PI,
+          side: 'ne'
         }, // P2 (Top-Right)
         {
           x: width * 0.18,
           y: height * 0.78,
           centerAngle: -Math.PI * 0.25,
           minA: -Math.PI * 0.5,
-          maxA: 0
+          maxA: 0,
+          side: 'sw'
         }, // P3 (Bottom-Left)
         {
           x: width * 0.82,
           y: height * 0.78,
           centerAngle: -Math.PI * 0.75,
           minA: -Math.PI,
-          maxA: -Math.PI * 0.5
+          maxA: -Math.PI * 0.5,
+          side: 'se'
         }  // P4 (Bottom-Right)
       ];
 
@@ -227,6 +235,7 @@ export class SnowballFightGame extends BaseGame {
           vy: 0,
           baseX: c.x,
           baseY: c.y,
+          side: c.side,
           aimAngle: c.centerAngle,
           sweepDir: 1,
           minAimAngle: c.minA - 0.2,
@@ -415,19 +424,27 @@ export class SnowballFightGame extends BaseGame {
         continue;
       }
 
-      // Read steer input (allows manual fast aim sweep or directional steering)
+      // Read directional and action inputs
       const steer = this.input.getSteer(p.id);
-      const isPressed = this.input.isPressed(p.id) || this.input.isActionPressed(p.id);
+      const throttle = this.input.getThrottle(p.id);
+      const isAction = this.input.isActionPressed(p.id);
+      const isPressed = this.input.isPressed(p.id) || isAction;
+
+      const hasMoveInput = Math.abs(steer) > 0.08 || Math.abs(throttle) > 0.08;
 
       if (!ps.isCharging) {
-        // Sweeping aim arrow
-        if (steer !== 0) {
-          ps.aimAngle += steer * 2.8 * dt;
+        if (hasMoveInput) {
+          // Walk freely inside player's territory
+          const speed = 210;
+          ps.vx = steer * speed;
+          ps.vy = -throttle * speed;
         } else {
-          ps.aimAngle += ps.sweepDir * 1.6 * dt;
+          ps.vx *= 0.82;
+          ps.vy *= 0.82;
         }
 
-        // Clamp & bounce sweep within aim cone
+        // Automatic gentle sweep so player always has a dynamic target cone
+        ps.aimAngle += ps.sweepDir * 1.8 * dt;
         if (ps.aimAngle > ps.maxAimAngle) {
           ps.aimAngle = ps.maxAimAngle;
           ps.sweepDir = -1;
@@ -436,10 +453,18 @@ export class SnowballFightGame extends BaseGame {
           ps.sweepDir = 1;
         }
       } else {
-        // While charging, slight fine-tuning steer
-        if (steer !== 0) {
-          ps.aimAngle += steer * 1.1 * dt;
+        // While charging: slow down foot movement, and allow steer to adjust aim angle directly!
+        if (hasMoveInput) {
+          const chargeSpeed = 70;
+          ps.vx = steer * chargeSpeed;
+          ps.vy = -throttle * chargeSpeed;
+          ps.aimAngle += steer * 2.2 * dt;
+        } else {
+          ps.vx *= 0.85;
+          ps.vy *= 0.85;
         }
+        // Clamp aim angle
+        ps.aimAngle = Math.max(ps.minAimAngle, Math.min(ps.maxAimAngle, ps.aimAngle));
       }
 
       // Handle power charging & throwing
@@ -465,23 +490,69 @@ export class SnowballFightGame extends BaseGame {
         ps.isCharging = false;
         ps.chargePower = 0;
         ps.chargeTime = 0;
-        ps.throwCooldown = 0.4;
+        ps.throwCooldown = 0.35;
       }
 
-      // Slight gentle dampening on player knockback
-      ps.vx *= 0.9;
-      ps.vy *= 0.9;
-      ps.x += ps.vx * dt * 60;
-      ps.y += ps.vy * dt * 60;
+      // Apply velocity
+      ps.x += ps.vx * dt;
+      ps.y += ps.vy * dt;
 
-      // Keep player inside camp boundary
-      const campRadius = 45;
-      const dBaseX = ps.x - ps.baseX;
-      const dBaseY = ps.y - ps.baseY;
-      const dist = Math.hypot(dBaseX, dBaseY);
-      if (dist > campRadius) {
-        ps.x = ps.baseX + (dBaseX / dist) * campRadius;
-        ps.y = ps.baseY + (dBaseY / dist) * campRadius;
+      // Strict Boundary Constraints: Player CANNOT cross center border!
+      const r = 16;
+      const borderGap = 20;
+      const wallPadding = 24;
+      const topPadding = 56;
+      const bottomPadding = 26;
+
+      const midX = width / 2;
+      const midY = height / 2;
+
+      if (ps.side === 'west') {
+        ps.x = Math.max(wallPadding, Math.min(midX - borderGap - r, ps.x));
+        ps.y = Math.max(topPadding, Math.min(height - bottomPadding, ps.y));
+      } else if (ps.side === 'east') {
+        ps.x = Math.max(midX + borderGap + r, Math.min(width - wallPadding, ps.x));
+        ps.y = Math.max(topPadding, Math.min(height - bottomPadding, ps.y));
+      } else if (ps.side === 'nw') {
+        ps.x = Math.max(wallPadding, Math.min(midX - borderGap - r, ps.x));
+        ps.y = Math.max(topPadding, Math.min(midY - borderGap - r, ps.y));
+      } else if (ps.side === 'ne') {
+        ps.x = Math.max(midX + borderGap + r, Math.min(width - wallPadding, ps.x));
+        ps.y = Math.max(topPadding, Math.min(midY - borderGap - r, ps.y));
+      } else if (ps.side === 'sw') {
+        ps.x = Math.max(wallPadding, Math.min(midX - borderGap - r, ps.x));
+        ps.y = Math.max(midY + borderGap + r, Math.min(height - bottomPadding, ps.y));
+      } else if (ps.side === 'se') {
+        ps.x = Math.max(midX + borderGap + r, Math.min(width - wallPadding, ps.x));
+        ps.y = Math.max(midY + borderGap + r, Math.min(height - bottomPadding, ps.y));
+      }
+
+      // Block collisions (cannot walk through snow blocks)
+      for (const block of this.blocks) {
+        const closestX = Math.max(block.x, Math.min(ps.x, block.x + block.w));
+        const closestY = Math.max(block.y, Math.min(ps.y, block.y + block.h));
+        const dx = ps.x - closestX;
+        const dy = ps.y - closestY;
+        const dist = Math.hypot(dx, dy);
+        if (dist < r) {
+          if (dist > 0.01) {
+            ps.x = closestX + (dx / dist) * r;
+            ps.y = closestY + (dy / dist) * r;
+          } else {
+            ps.x += (ps.x < midX ? -1 : 1) * 2;
+          }
+        }
+      }
+
+      // Pine tree collisions (cannot walk through trees)
+      for (const tree of this.trees) {
+        const d = Math.hypot(ps.x - tree.x, ps.y - tree.y);
+        if (d < tree.radius + r && d > 0.01) {
+          const nx = (ps.x - tree.x) / d;
+          const ny = (ps.y - tree.y) / d;
+          ps.x = tree.x + nx * (tree.radius + r);
+          ps.y = tree.y + ny * (tree.radius + r);
+        }
       }
     }
 
@@ -660,12 +731,99 @@ export class SnowballFightGame extends BaseGame {
     ctx.lineWidth = 4;
     ctx.strokeRect(16, 16, width - 32, height - 32);
 
-    // Center divider / decorative frozen ring
+    // Prominent Center Ice Dividing Border (Players cannot cross!)
+    const isTwoPlayer = this.getActivePlayers().length === 2;
+    const midX = width / 2;
+    const midY = height / 2;
+
+    // Glowing Frost Zone Strip
+    ctx.fillStyle = 'rgba(186, 230, 253, 0.22)';
+    if (isTwoPlayer) {
+      ctx.fillRect(midX - 16, 16, 32, height - 32);
+    } else {
+      ctx.fillRect(midX - 16, 16, 32, height - 32);
+      ctx.fillRect(16, midY - 16, width - 32, 32);
+    }
+
+    // Dashed Cyan Boundary Lines
+    ctx.save();
+    ctx.strokeStyle = '#38BDF8';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([8, 6]);
+
+    // Vertical Border
     ctx.beginPath();
-    ctx.arc(width / 2, height / 2, 70, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(186, 230, 253, 0.45)';
-    ctx.lineWidth = 2;
+    ctx.moveTo(midX, 20);
+    ctx.lineTo(midX, height - 20);
     ctx.stroke();
+
+    // Horizontal Border (4-player mode)
+    if (!isTwoPlayer) {
+      ctx.beginPath();
+      ctx.moveTo(20, midY);
+      ctx.lineTo(width - 20, midY);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Boundary Ice Stakes / Posts along divider
+    const stakeSpacing = 48;
+    const startY = 40;
+    for (let sy = startY; sy <= height - 35; sy += stakeSpacing) {
+      ctx.save();
+      ctx.translate(midX, sy);
+      // Ice crystal diamond stake
+      ctx.beginPath();
+      ctx.moveTo(0, -7);
+      ctx.lineTo(6, 0);
+      ctx.lineTo(0, 7);
+      ctx.lineTo(-6, 0);
+      ctx.closePath();
+      ctx.fillStyle = '#E0F2FE';
+      ctx.fill();
+      ctx.strokeStyle = '#0284C7';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Frost glint
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(-2, -3, 3, 3);
+      ctx.restore();
+    }
+
+    // Center Icy Medallion & Border Label
+    ctx.beginPath();
+    ctx.arc(midX, midY, 24, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(224, 242, 254, 0.85)';
+    ctx.fill();
+    ctx.strokeStyle = '#0284C7';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#0369A1';
+    ctx.font = 'bold 11px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('❄️', midX, midY);
+
+    // Border warning indicators near top
+    ctx.fillStyle = '#0284C7';
+    ctx.font = '900 10px system-ui, sans-serif';
+    ctx.fillText('ICE BORDER', midX, 32);
+
+    // Check proximity of any player to border and render soft barrier glow
+    for (const p of this.getActivePlayers()) {
+      const ps = this.playersState.get(p.id);
+      if (!ps || !ps.alive) continue;
+      const distToBorder = Math.abs(ps.x - midX);
+      if (distToBorder < 40) {
+        const alpha = Math.max(0, (40 - distToBorder) / 40) * 0.45;
+        ctx.fillStyle = `rgba(56, 189, 248, ${alpha})`;
+        ctx.beginPath();
+        ctx.ellipse(midX, ps.y, 8, 22, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
 
     // Render Snow Splat Decals
     for (const decal of this.decals) {
