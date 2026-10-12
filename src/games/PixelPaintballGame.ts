@@ -252,7 +252,7 @@ export class PixelPaintballGame extends BaseGame {
 
       const steer = this.input.getSteer(p.id);
       const throttle = this.input.getThrottle(p.id); // +1 up, -1 down
-      const isAction = this.input.isActionPressed(p.id);
+      const isAction = this.input.isActionPressed(p.id) || this.input.justAction(p.id) || this.input.justPressed(p.id);
       const isButtonHeld = this.input.isPressed(p.id);
 
       // 8-directional input vector: steer is X (right +1, left -1), throttle is Y (up +1, down -1)
@@ -325,6 +325,7 @@ export class PixelPaintballGame extends BaseGame {
       const isFiring = isAction || (isButtonHeld && (isBot || inputMag < 0.15 || this.input.getControlMode() !== 'single_button'));
       if (isFiring && ps.fireCooldown <= 0) {
         ps.fireCooldown = 0.22;
+        this.input.consumeAction(p.id);
         this.audio.playLaser();
 
         const pelletSpeed = 520;
