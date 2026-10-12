@@ -771,6 +771,307 @@ export function drawCharacter(
     ctx.restore();
   }
 
+  // 8.5 Unique Custom Headgear & Masks for Skins (Unmistakable Silhouettes)
+  if (activeSkin === 'pirate_captain') {
+    // Pirate Tricorn Hat with Skull & Crossbones & Gold Hoop Earring
+    ctx.save();
+    const hatW = radius * 2.2;
+    const hatH = radius * 0.95;
+    const hatX = cx - hatW / 2;
+    const hatY = drawY - radius * 1.4;
+    ctx.fillStyle = '#0F172A';
+    ctx.strokeStyle = '#F59E0B';
+    ctx.lineWidth = 2 * scale;
+    ctx.beginPath();
+    ctx.moveTo(hatX, hatY + hatH);
+    ctx.quadraticCurveTo(cx - radius * 0.4, hatY + hatH * 0.1, cx, hatY);
+    ctx.quadraticCurveTo(cx + radius * 0.4, hatY + hatH * 0.1, hatX + hatW, hatY + hatH);
+    ctx.quadraticCurveTo(cx, hatY + hatH * 0.7, hatX, hatY + hatH);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Skull & Bones emblem
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(cx, hatY + hatH * 0.55, 3.5 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    // Pirate Eyepatch
+    ctx.fillStyle = '#020617';
+    ctx.beginPath();
+    ctx.arc(cx - eyeOffset, eyeY, 6 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - eyeOffset - 10 * scale, eyeY - 8 * scale);
+    ctx.lineTo(cx - eyeOffset + 10 * scale, eyeY + 8 * scale);
+    ctx.stroke();
+    // Gold Earring
+    ctx.strokeStyle = '#F59E0B';
+    ctx.lineWidth = 2 * scale;
+    ctx.beginPath();
+    ctx.arc(cx + radius * 0.95, drawY + 2 * scale, 4 * scale, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'cactus_gunslinger') {
+    // Western Stetson Cowboy Hat & Gold Sheriff Star
+    ctx.save();
+    const brimW = radius * 2.4;
+    const brimY = drawY - radius * 0.85;
+    ctx.fillStyle = '#78350F';
+    ctx.strokeStyle = '#451A03';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.7, brimY);
+    ctx.lineTo(cx - radius * 0.55, brimY - radius * 0.75);
+    ctx.quadraticCurveTo(cx, brimY - radius * 0.95, cx + radius * 0.55, brimY - radius * 0.75);
+    ctx.lineTo(cx + radius * 0.7, brimY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Hat Band with gold buckle
+    ctx.fillStyle = '#B45309';
+    ctx.fillRect(cx - radius * 0.68, brimY - 6 * scale, radius * 1.36, 5 * scale);
+    ctx.fillStyle = '#FBBF24';
+    ctx.fillRect(cx - 3 * scale, brimY - 7 * scale, 6 * scale, 7 * scale);
+    // Wide Curved Brim
+    ctx.fillStyle = '#92400E';
+    ctx.beginPath();
+    ctx.ellipse(cx, brimY, brimW * 0.5, 7 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    // Sheriff Star on chest
+    ctx.fillStyle = '#F59E0B';
+    ctx.strokeStyle = '#FEF08A';
+    ctx.lineWidth = 1 * scale;
+    drawStarSparkle(ctx, cx, drawY + radius * 0.55, 6 * scale);
+    ctx.restore();
+  } else if (activeSkin === 'chef_supreme') {
+    // Tall Pleated Chef's Toque Hat
+    ctx.save();
+    const hatY = drawY - radius * 0.95;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.strokeStyle = '#CBD5E1';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.beginPath();
+    ctx.arc(cx, hatY - 22 * scale, 14 * scale, 0, Math.PI * 2);
+    ctx.arc(cx - 16 * scale, hatY - 14 * scale, 12 * scale, 0, Math.PI * 2);
+    ctx.arc(cx + 16 * scale, hatY - 14 * scale, 12 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#F8FAFC';
+    ctx.fillRect(cx - radius * 0.7, hatY - 8 * scale, radius * 1.4, 10 * scale);
+    ctx.strokeRect(cx - radius * 0.7, hatY - 8 * scale, radius * 1.4, 10 * scale);
+    ctx.restore();
+  } else if (activeSkin === 'disco_king') {
+    // Giant 70s Retro Afro & Neon Star Sunglasses
+    ctx.save();
+    ctx.fillStyle = '#451A03';
+    ctx.beginPath();
+    ctx.arc(cx, drawY - radius * 0.7, radius * 1.1, 0, Math.PI * 2);
+    ctx.arc(cx - radius * 0.8, drawY - radius * 0.3, radius * 0.7, 0, Math.PI * 2);
+    ctx.arc(cx + radius * 0.8, drawY - radius * 0.3, radius * 0.7, 0, Math.PI * 2);
+    ctx.fill();
+    // Star-shaped Neon Party Sunglasses
+    ctx.fillStyle = '#EC4899';
+    drawStarSparkle(ctx, cx - eyeOffset, eyeY, 9 * scale);
+    drawStarSparkle(ctx, cx + eyeOffset, eyeY, 9 * scale);
+    ctx.strokeStyle = '#F472B6';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - eyeOffset + 5 * scale, eyeY);
+    ctx.lineTo(cx + eyeOffset - 5 * scale, eyeY);
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'knight_templar') {
+    // Medieval Crusader Greathelm & Golden Cross Visor
+    ctx.save();
+    ctx.fillStyle = '#475569';
+    ctx.strokeStyle = '#94A3B8';
+    ctx.lineWidth = 2 * scale;
+    ctx.beginPath();
+    ctx.roundRect
+      ? ctx.roundRect(cx - radius * 0.8, drawY - radius * 0.8, radius * 1.6, radius * 0.5, 4 * scale)
+      : ctx.rect(cx - radius * 0.8, drawY - radius * 0.8, radius * 1.6, radius * 0.5);
+    ctx.fill();
+    ctx.stroke();
+    // Gold Cross Visor Slit
+    ctx.strokeStyle = '#F59E0B';
+    ctx.lineWidth = 2 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - 18 * scale, eyeY);
+    ctx.lineTo(cx + 18 * scale, eyeY);
+    ctx.moveTo(cx, eyeY - 8 * scale);
+    ctx.lineTo(cx, eyeY + 8 * scale);
+    ctx.stroke();
+    // Red plume feather on top
+    ctx.fillStyle = '#DC2626';
+    ctx.beginPath();
+    ctx.ellipse(cx, drawY - radius * 1.1, 5 * scale, 12 * scale, Math.PI * 0.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'wizard_archmage') {
+    // Pointed Starry Wizard Hat & Arcane Moon Buckle
+    ctx.save();
+    const hatY = drawY - radius * 0.8;
+    ctx.fillStyle = '#4C1D95';
+    ctx.strokeStyle = '#C084FC';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.8, hatY);
+    ctx.quadraticCurveTo(cx - radius * 0.3, hatY - radius * 1.4, cx + 8 * scale, hatY - radius * 1.8);
+    ctx.quadraticCurveTo(cx + radius * 0.4, hatY - radius * 1.1, cx + radius * 0.8, hatY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Gold Moon Buckle on Hat
+    ctx.fillStyle = '#FBBF24';
+    ctx.beginPath();
+    ctx.arc(cx, hatY - 4 * scale, 5 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    // Wide Hat Brim
+    ctx.fillStyle = '#581C87';
+    ctx.beginPath();
+    ctx.ellipse(cx, hatY, radius * 1.25, 6 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'viking_berserker') {
+    // Riveted Iron Horned Helmet
+    ctx.save();
+    ctx.fillStyle = '#78350F';
+    ctx.strokeStyle = '#CBD5E1';
+    ctx.lineWidth = 2 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.6, drawY - radius * 0.5);
+    ctx.quadraticCurveTo(cx - radius * 1.4, drawY - radius * 0.9, cx - radius * 1.3, drawY - radius * 1.3);
+    ctx.quadraticCurveTo(cx - radius * 0.8, drawY - radius * 0.8, cx - radius * 0.4, drawY - radius * 0.7);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + radius * 0.6, drawY - radius * 0.5);
+    ctx.quadraticCurveTo(cx + radius * 1.4, drawY - radius * 0.9, cx + radius * 1.3, drawY - radius * 1.3);
+    ctx.quadraticCurveTo(cx + radius * 0.8, drawY - radius * 0.8, cx + radius * 0.4, drawY - radius * 0.7);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'kitsune_fox') {
+    // Pointed Fox Ears with Pink Inner Fluff
+    ctx.save();
+    ctx.fillStyle = '#EA580C';
+    ctx.strokeStyle = '#7C2D12';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.7, drawY - radius * 0.4);
+    ctx.lineTo(cx - radius * 0.75, drawY - radius * 1.35);
+    ctx.lineTo(cx - radius * 0.15, drawY - radius * 0.85);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#FBCFE8';
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.62, drawY - radius * 0.5);
+    ctx.lineTo(cx - radius * 0.68, drawY - radius * 1.2);
+    ctx.lineTo(cx - radius * 0.25, drawY - radius * 0.85);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#EA580C';
+    ctx.beginPath();
+    ctx.moveTo(cx + radius * 0.7, drawY - radius * 0.4);
+    ctx.lineTo(cx + radius * 0.75, drawY - radius * 1.35);
+    ctx.lineTo(cx + radius * 0.15, drawY - radius * 0.85);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#FBCFE8';
+    ctx.beginPath();
+    ctx.moveTo(cx + radius * 0.62, drawY - radius * 0.5);
+    ctx.lineTo(cx + radius * 0.68, drawY - radius * 1.2);
+    ctx.lineTo(cx + radius * 0.25, drawY - radius * 0.85);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'alien_invader') {
+    // Glass UFO Dome & Glowing Brain & 3 Alien Eyes
+    ctx.save();
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.25)';
+    ctx.strokeStyle = '#10B981';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.beginPath();
+    ctx.arc(cx, drawY - radius * 0.6, radius * 0.85, Math.PI, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#34D399';
+    const brainPulse = Math.sin(animTime * 5) * 1.5 * scale;
+    ctx.beginPath();
+    ctx.arc(cx, drawY - radius * 0.85, 8 * scale + brainPulse, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#064E3B';
+    ctx.beginPath();
+    ctx.arc(cx, eyeY - 10 * scale, 3 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'astro_bubble') {
+    // Reflective Space Helmet Glass Dome & Gold Visor Shine
+    ctx.save();
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
+    ctx.lineWidth = 2 * scale;
+    ctx.beginPath();
+    ctx.arc(cx, drawY, radius * 1.15, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(251, 191, 36, 0.45)';
+    ctx.beginPath();
+    ctx.ellipse(cx - radius * 0.35, drawY - radius * 0.4, radius * 0.5, radius * 0.25, -Math.PI / 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'samurai_ronin') {
+    // Samurai Horned Kabuto Helmet Crest
+    ctx.save();
+    ctx.fillStyle = '#DC2626';
+    ctx.strokeStyle = '#F59E0B';
+    ctx.lineWidth = 2 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.8, drawY - radius * 0.4);
+    ctx.lineTo(cx - radius * 0.6, drawY - radius * 1.1);
+    ctx.lineTo(cx, drawY - radius * 0.9);
+    ctx.lineTo(cx + radius * 0.6, drawY - radius * 1.1);
+    ctx.lineTo(cx + radius * 0.8, drawY - radius * 0.4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#FBBF24';
+    ctx.beginPath();
+    ctx.arc(cx, drawY - radius * 1.1, 10 * scale, Math.PI * 0.8, Math.PI * 2.2);
+    ctx.arc(cx, drawY - radius * 1.05, 7 * scale, Math.PI * 2.2, Math.PI * 0.8, true);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'golden_champion' && mood !== 'triumph') {
+    // Royal Golden Crown (always on for Golden Sovereign)
+    ctx.save();
+    const crownW = radius * 1.15;
+    const crownH = radius * 0.65;
+    const crownX = cx - crownW / 2;
+    const crownY = drawY - radius * 1.1;
+    ctx.fillStyle = '#F59E0B';
+    ctx.strokeStyle = '#FEF08A';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.beginPath();
+    ctx.moveTo(crownX, crownY + crownH);
+    ctx.lineTo(crownX + crownW, crownY + crownH);
+    ctx.lineTo(crownX + crownW, crownY + crownH * 0.25);
+    ctx.lineTo(crownX + crownW * 0.75, crownY + crownH * 0.55);
+    ctx.lineTo(cx, crownY);
+    ctx.lineTo(crownX + crownW * 0.25, crownY + crownH * 0.55);
+    ctx.lineTo(crownX, crownY + crownH * 0.25);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
   // 9. Custom Cosmetic Skin Auras & Dynamic Visual Signatures
   if (activeSkin === 'golden_champion') {
     for (let i = 0; i < 3; i++) {
