@@ -405,24 +405,13 @@ export class AsteroidMinerGame extends BaseGame {
           s2.x += nx * overlap * 0.5;
           s2.y += ny * overlap * 0.5;
 
-          // Elastic bounce
-          const kx = s1.vx - s2.vx;
-          const ky = s1.vy - s2.vy;
-          const p = 2 * (nx * kx + ny * ky) / 2;
-          s1.vx -= p * nx * 1.2;
-          s1.vy -= p * ny * 1.2;
-          s2.vx += p * nx * 1.2;
-          s2.vy += p * ny * 1.2;
-
-          this.audio.playTone(160, 0.08, 'square');
-          this.particles.spawnSparks((s1.x + s2.x) / 2, (s1.y + s2.y) / 2, '#FFFFFF', 6);
+          // Relative approach velocity along collision normal (positive if s1 approaching s2)
+          const vRel = (s1.vx - s2.vx) * nx + (s1.vy - s2.vy) * ny;
+          const dot1 = Math.cos(s1.angle) * nx + Math.sin(s1.angle) * ny;
+          const dot2 = Math.cos(s2.angle) * (-nx) + Math.sin(s2.angle) * (-ny);
 
           // Kinetic impact cargo stealing!
           if (s1.bumpCooldown <= 0 && s2.bumpCooldown <= 0) {
-            const vRel = (s1.vx - s2.vx) * nx + (s1.vy - s2.vy) * ny;
-            const dot1 = Math.cos(s1.angle) * nx + Math.sin(s1.angle) * ny;
-            const dot2 = Math.cos(s2.angle) * (-nx) + Math.sin(s2.angle) * (-ny);
-
             let attacker: MinerShip;
             let victim: MinerShip;
 
@@ -455,6 +444,18 @@ export class AsteroidMinerGame extends BaseGame {
               }
             }
           }
+
+          // Elastic bounce
+          const kx = s1.vx - s2.vx;
+          const ky = s1.vy - s2.vy;
+          const p = 2 * (nx * kx + ny * ky) / 2;
+          s1.vx -= p * nx * 1.2;
+          s1.vy -= p * ny * 1.2;
+          s2.vx += p * nx * 1.2;
+          s2.vy += p * ny * 1.2;
+
+          this.audio.playTone(160, 0.08, 'square');
+          this.particles.spawnSparks((s1.x + s2.x) / 2, (s1.y + s2.y) / 2, '#FFFFFF', 6);
         }
       }
     }

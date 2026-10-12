@@ -110,7 +110,8 @@ test.describe('Asteroid Miner - Time-based & Stealing Mechanics', () => {
       dbg.setCargo(0, 0);       // Raider has room
       s0.raidCooldown = 0;
 
-      // Place raider right on top of rival depot
+      // Place raider right on top of rival depot, and keep rival ship away
+      dbg.setShipPos(1, 400, 400, 0, 0);
       dbg.setShipPos(0, rivalDepot.x, rivalDepot.y, 0, 0);
     });
 
