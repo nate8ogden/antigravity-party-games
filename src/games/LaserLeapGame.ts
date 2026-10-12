@@ -129,7 +129,8 @@ export class LaserLeapGame extends BaseGame {
       },
       jump: (pid: PlayerId) => {
         this.input.setBotInput(pid, true);
-      }
+      },
+      getBotState: (pid: PlayerId) => this.botStates.get(pid)
     };
   }
 
@@ -153,6 +154,16 @@ export class LaserLeapGame extends BaseGame {
       this.audio.playLaser();
       this.particles.spawnSparks(this.arenaCenterX, this.arenaCenterY, '#FACC15', 20);
       this.particles.showFloatingText('REVERSE! ⚡', this.arenaCenterX, this.arenaCenterY - 40, '#FACC15', 22);
+
+      // Inflict surprise latency on bots so reversals catch them off guard like humans
+      for (const [pid, bState] of this.botStates.entries()) {
+        const p = this.getPlayer(pid);
+        if (!p || !p.type.startsWith('bot_')) continue;
+        const diff = p.type as 'bot_easy' | 'bot_normal' | 'bot_hard';
+        const surprise = diff === 'bot_easy' ? 0.32 : diff === 'bot_normal' ? 0.20 : 0.07;
+        bState.surpriseTimer = surprise;
+        bState.hasPlannedCurrentSweep = false;
+      }
     }
 
     // Advance laser sweep angle
@@ -168,7 +179,7 @@ export class LaserLeapGame extends BaseGame {
       if (!j.alive) continue;
 
       // Handle jump inputs
-      const justPressed = this.input.justPressed(j.id);
+      const justPressed = this.input.justPressed(j.id) || this.input.justAction(j.id);
       if (justPressed && !j.isJumping) {
         j.isJumping = true;
         j.jumpTimer = 0;
@@ -251,7 +262,17 @@ export class LaserLeapGame extends BaseGame {
     height: number
   ): void {
     const j = this.jumpers.get(botId);
-    if (!j || !j.alive || j.isJumping) return;
+    if (!j || !j.alive || j.isJumping) {
+      this.input.setBotInput(botId, false);
+      return;
+    }
+
+    const bState = this.botStates.get(botId);
+    if (bState && bState.surpriseTimer > 0) {
+      bState.surpriseTimer -= dt;
+      this.input.setBotInput(botId, false);
+      return;
+    }
 
     const twoPi = Math.PI * 2;
     let podAngle = ((j.angle % twoPi) + twoPi) % twoPi;
@@ -270,28 +291,58 @@ export class LaserLeapGame extends BaseGame {
     // Time until impact in seconds
     const timeToImpact = angularDist / (this.laserSpeed || 1);
 
-    // AI timing window calibration
-    let optimalLead = 0.18; // Bot jumps ~0.18s before beam arrives so it's at apex of 0.44s jump
-    let errorMargin = 0;
-
-    if (difficulty === 'bot_hard') {
-      errorMargin = 0.02; // Very tight precision
-    } else if (difficulty === 'bot_normal') {
-      errorMargin = 0.06; // Human-like reaction
-    } else {
-      // Easy bot makes mistakes (18% chance of early/late miss)
-      errorMargin = 0.16;
-      if (Math.random() < 0.12 && timeToImpact < 0.25) {
-        return; // Fumbles the jump
+    if (bState) {
+      // Beam is far away or swept past: reset plan for the next sweep
+      if (timeToImpact > 0.60) {
+        bState.hasPlannedCurrentSweep = false;
       }
-    }
 
-    const targetTime = optimalLead + (Math.random() - 0.5) * errorMargin;
+      // Beam approaches: commit to a planned jump lead time once per sweep
+      if (!bState.hasPlannedCurrentSweep && timeToImpact <= 0.60) {
+        bState.hasPlannedCurrentSweep = true;
+        const roll = Math.random();
 
-    if (timeToImpact <= targetTime && timeToImpact > 0.03) {
-      this.input.setBotInput(botId, true);
+        if (difficulty === 'bot_easy') {
+          // Easy: 24% early jump (lands on beam), 16% late jump (clipped before clearing 16px), 60% safe
+          if (roll < 0.24) {
+            bState.plannedLeadTime = 0.40 + Math.random() * 0.05;
+          } else if (roll < 0.40) {
+            bState.plannedLeadTime = 0.015 + Math.random() * 0.03;
+          } else {
+            bState.plannedLeadTime = 0.15 + Math.random() * 0.12;
+          }
+        } else if (difficulty === 'bot_normal') {
+          // Normal: 10% early jump, 8% late jump, 82% safe jump (~18% fatal blunder rate per sweep)
+          if (roll < 0.10) {
+            bState.plannedLeadTime = 0.395 + Math.random() * 0.04;
+          } else if (roll < 0.18) {
+            bState.plannedLeadTime = 0.02 + Math.random() * 0.025;
+          } else {
+            bState.plannedLeadTime = 0.16 + Math.random() * 0.12;
+          }
+        } else {
+          // Hard: 3% early jump, 2% late jump, 95% safe
+          if (roll < 0.03) {
+            bState.plannedLeadTime = 0.395 + Math.random() * 0.03;
+          } else if (roll < 0.05) {
+            bState.plannedLeadTime = 0.025 + Math.random() * 0.02;
+          } else {
+            bState.plannedLeadTime = 0.18 + Math.random() * 0.08;
+          }
+        }
+      }
+
+      if (timeToImpact <= bState.plannedLeadTime && timeToImpact > 0.01) {
+        this.input.setBotInput(botId, true);
+      } else {
+        this.input.setBotInput(botId, false);
+      }
     } else {
-      this.input.setBotInput(botId, false);
+      if (timeToImpact <= 0.20 && timeToImpact > 0.03) {
+        this.input.setBotInput(botId, true);
+      } else {
+        this.input.setBotInput(botId, false);
+      }
     }
   }
 
