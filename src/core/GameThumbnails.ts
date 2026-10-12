@@ -829,6 +829,9 @@ function drawThumbnailDirect(
     case 'power_path_clash':
       drawPowerPathClashArt(ctx, x, y, w, h);
       break;
+    case 'landscape_artillery':
+      drawLandscapeArtilleryArt(ctx, x, y, w, h);
+      break;
     default:
       drawDefaultArt(ctx, x, y, w, h);
       break;
@@ -9475,6 +9478,76 @@ function drawPowerPathClashArt(ctx: CanvasRenderingContext2D, x: number, y: numb
   // Clash Sword in center
   ctx.font = '22px sans-serif';
   ctx.fillText('⚔️', cx, cy + 24);
+}
+
+function drawLandscapeArtilleryArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Dusk Sky
+  const skyGrad = ctx.createLinearGradient(x, y, x, y + h);
+  skyGrad.addColorStop(0, '#0F172A');
+  skyGrad.addColorStop(0.6, '#334155');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(x, y, w, h);
+
+  // Curved Rolling Hill
+  ctx.beginPath();
+  ctx.moveTo(x, y + h);
+  ctx.lineTo(x, y + h * 0.65);
+  ctx.quadraticCurveTo(x + w * 0.35, y + h * 0.45, x + w * 0.7, y + h * 0.6);
+  ctx.quadraticCurveTo(x + w * 0.88, y + h * 0.7, x + w, y + h * 0.55);
+  ctx.lineTo(x + w, y + h);
+  ctx.closePath();
+  ctx.fillStyle = '#15803D';
+  ctx.fill();
+
+  // Lime Crest
+  ctx.beginPath();
+  ctx.moveTo(x, y + h * 0.65);
+  ctx.quadraticCurveTo(x + w * 0.35, y + h * 0.45, x + w * 0.7, y + h * 0.6);
+  ctx.quadraticCurveTo(x + w * 0.88, y + h * 0.7, x + w, y + h * 0.55);
+  ctx.strokeStyle = '#4ADE80';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Red Player on Left Hill
+  const p1X = x + w * 0.25;
+  const p1Y = y + h * 0.52;
+  ctx.fillStyle = '#EF4444';
+  ctx.beginPath();
+  ctx.arc(p1X, p1Y - 8, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillRect(p1X - 5, p1Y - 2, 10, 8);
+
+  // Blue Player on Right Hill
+  const p2X = x + w * 0.78;
+  const p2Y = y + h * 0.62;
+  ctx.fillStyle = '#3B82F6';
+  ctx.beginPath();
+  ctx.arc(p2X, p2Y - 8, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillRect(p2X - 5, p2Y - 2, 10, 8);
+
+  // Ballistic Trajectory Arc from Red towards Blue
+  ctx.save();
+  ctx.strokeStyle = '#FACC15';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(p1X + 4, p1Y - 10);
+  ctx.quadraticCurveTo(x + w * 0.5, y + h * 0.15, p2X - 4, p2Y - 14);
+  ctx.stroke();
+  ctx.restore();
+
+  // Glowing Projectile
+  ctx.fillStyle = '#F97316';
+  ctx.beginPath();
+  ctx.arc(x + w * 0.52, y + h * 0.24, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Target Crosshair
+  ctx.font = 'bold 12px sans-serif';
+  ctx.fillStyle = '#EF4444';
+  ctx.textAlign = 'center';
+  ctx.fillText('🎯', p2X, p2Y - 20);
 }
 
 // Fallback Default
