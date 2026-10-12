@@ -284,7 +284,8 @@ export type MinigameId =
   | 'cyber_grid_runner'
   | 'synth_drum_pad'
   | 'matrix_code_rain'
-  | 'sharks_and_minnows';
+  | 'sharks_and_minnows'
+  | 'power_path_clash';
 
 export interface MinigameMetadata {
   id: MinigameId;
