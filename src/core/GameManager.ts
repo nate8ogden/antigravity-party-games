@@ -1628,12 +1628,12 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   },
   {
     id: 'dunk_tank',
-    title: 'Dunk Tank',
-    tagline: 'Carnival Clown Splash',
-    category: 'Party',
+    title: 'Plunger Dunk Splashdown',
+    tagline: '4-Player Trapdoor Water Duel',
+    category: 'Action',
     icon: '[G-150]',
-    instructions: 'Hit the swinging mechanical bullseye target to release the perch and dunk the carnival clown into the water tank!',
-    controlPrompt: 'Tap: Pitch Baseball'
+    instructions: 'Perched high above individual water tanks, fire rubber plunger cannons at rival bullseye levers! Land 3 hits to trigger their trapdoor and plunge them into the water. Mash your button to climb back up!',
+    controlPrompt: 'Steer: Aim Cannon | Tap/Space: Fire Plunger | Mash Tap: Climb Ladder | 1-3: Switch Tank'
   },
   {
     id: 'ferris_wheel',
