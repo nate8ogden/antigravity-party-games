@@ -20,21 +20,136 @@ export function renderGameThumbnailArt(
 ) {
   const rw = Math.max(1, Math.round(w));
   const rh = Math.max(1, Math.round(h));
-  const cacheKey = `${gameId}_${rw}x${rh}`;
+  // 2x Retina supersampling for crystal-clear render quality
+  const scale = 2;
+  const sw = rw * scale;
+  const sh = rh * scale;
+  const cacheKey = `${gameId}_${sw}x${sh}`;
   let cached = thumbnailCache.get(cacheKey);
 
   if (!cached) {
     cached = document.createElement('canvas');
-    cached.width = rw;
-    cached.height = rh;
+    cached.width = sw;
+    cached.height = sh;
     const offCtx = cached.getContext('2d');
     if (offCtx) {
+      offCtx.scale(scale, scale);
       drawThumbnailDirect(offCtx, gameId, 0, 0, rw, rh);
     }
     thumbnailCache.set(cacheKey, cached);
   }
 
   ctx.drawImage(cached, Math.round(x), Math.round(y), rw, rh);
+}
+
+function parseColorToRgb(color: string): [number, number, number] {
+  if (!color || typeof color !== 'string') return [15, 23, 42];
+  if (color.startsWith('#')) {
+    let hex = color.slice(1);
+    if (hex.length === 3) {
+      hex = hex.split('').map((c) => c + c).join('');
+    }
+    const num = parseInt(hex, 16);
+    if (!isNaN(num) && hex.length === 6) {
+      return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+    }
+  } else if (color.startsWith('rgb')) {
+    const parts = color.match(/\d+/g);
+    if (parts && parts.length >= 3) {
+      return [parseInt(parts[0], 10), parseInt(parts[1], 10), parseInt(parts[2], 10)];
+    }
+  }
+  return [15, 23, 42];
+}
+
+function adjustColorRgb(rgb: [number, number, number], factor: number): string {
+  const r = Math.min(255, Math.max(0, Math.round(rgb[0] * factor)));
+  const g = Math.min(255, Math.max(0, Math.round(rgb[1] * factor)));
+  const b = Math.min(255, Math.max(0, Math.round(rgb[2] * factor)));
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function drawEnhancedAtmosphericBackground(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  baseColor: string,
+  gameId: string
+) {
+  const rgb = parseColorToRgb(baseColor);
+  const topColor = adjustColorRgb(rgb, 1.45);
+  const midColor = adjustColorRgb(rgb, 1.0);
+  const botColor = adjustColorRgb(rgb, 0.45);
+
+  // Multi-stop atmospheric vertical gradient
+  const bgGrad = ctx.createLinearGradient(x, y, x, y + h);
+  bgGrad.addColorStop(0, topColor);
+  bgGrad.addColorStop(0.35, midColor);
+  bgGrad.addColorStop(1, botColor);
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(x, y, w, h);
+
+  // Radial ambient centerpiece spotlight behind main subjects
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.46;
+  const glowRad = Math.max(w, h) * 0.72;
+  const spotGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, glowRad);
+  spotGrad.addColorStop(0, adjustColorRgb(rgb, 1.85) + '55');
+  spotGrad.addColorStop(0.45, adjustColorRgb(rgb, 1.3) + '22');
+  spotGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = spotGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, glowRad, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Thematic ambient environmental details based on deterministic hash
+  let hash = 0;
+  for (let i = 0; i < gameId.length; i++) {
+    hash = ((hash << 5) - hash + gameId.charCodeAt(i)) | 0;
+  }
+  const seed = Math.abs(hash);
+
+  const brightness = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000;
+
+  if (brightness < 110 || rgb[2] > rgb[0] + 15) {
+    // Cyber / Space / Night ambiance: soft glowing stars & horizon line
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+    for (let s = 0; s < 12; s++) {
+      const sx = x + (((seed * (s + 1) * 31) % Math.round(w - 14)) + 7);
+      const sy = y + (((seed * (s + 1) * 67) % Math.round(h * 0.62)) + 6);
+      const sz = s % 4 === 0 ? 1.8 : 1.0;
+      ctx.beginPath();
+      ctx.arc(sx, sy, sz, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Horizon glow line
+    const horizonY = y + h * 0.72;
+    const horizGrad = ctx.createLinearGradient(x, horizonY, x + w, horizonY);
+    horizGrad.addColorStop(0, 'rgba(56, 189, 248, 0)');
+    horizGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.22)');
+    horizGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+    ctx.strokeStyle = horizGrad;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, horizonY);
+    ctx.lineTo(x + w, horizonY);
+    ctx.stroke();
+  } else {
+    // Warm / Earth / Action ambiance: warm horizon glow
+    const horizonY = y + h * 0.75;
+    const horizGrad = ctx.createLinearGradient(x, horizonY, x + w, horizonY);
+    horizGrad.addColorStop(0, 'rgba(254, 240, 138, 0)');
+    horizGrad.addColorStop(0.5, 'rgba(254, 240, 138, 0.28)');
+    horizGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+    ctx.strokeStyle = horizGrad;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x, horizonY);
+    ctx.lineTo(x + w, horizonY);
+    ctx.stroke();
+  }
 }
 
 function drawThumbnailDirect(
@@ -53,6 +168,22 @@ function drawThumbnailDirect(
     ctx.rect(x, y, w, h);
   }
   ctx.clip();
+
+  // Smart Backdrop Interceptor:
+  // Converts flat single-color fillRects into luminous, multi-stop atmospheric gradients
+  const originalFillRect = ctx.fillRect;
+  let bgApplied = false;
+
+  ctx.fillRect = function (fx: number, fy: number, fw: number, fh: number) {
+    if (!bgApplied && Math.abs(fx - x) < 2 && Math.abs(fy - y) < 2 && Math.abs(fw - w) < 4 && Math.abs(fh - h) < 4) {
+      bgApplied = true;
+      if (typeof ctx.fillStyle === 'string') {
+        drawEnhancedAtmosphericBackground(ctx, x, y, w, h, ctx.fillStyle, gameId);
+        return;
+      }
+    }
+    originalFillRect.call(ctx, fx, fy, fw, fh);
+  };
 
   switch (gameId) {
     case 'tanks':
@@ -839,6 +970,14 @@ function drawThumbnailDirect(
       drawDefaultArt(ctx, x, y, w, h);
       break;
   }
+  ctx.fillRect = originalFillRect;
+
+  // Luminous central ambient bloom
+  const centerGlow = ctx.createRadialGradient(x + w * 0.5, y + h * 0.5, 4, x + w * 0.5, y + h * 0.5, w * 0.65);
+  centerGlow.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
+  centerGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  ctx.fillStyle = centerGlow;
+  ctx.fillRect(x, y, w, h);
 
   // Premium angled arcade glass reflection & vignette
   ctx.save();
@@ -849,7 +988,7 @@ function drawThumbnailDirect(
   ctx.lineTo(x, y + h * 0.6);
   ctx.closePath();
   const glassGrad = ctx.createLinearGradient(x, y, x, y + h * 0.6);
-  glassGrad.addColorStop(0, 'rgba(255, 255, 255, 0.30)');
+  glassGrad.addColorStop(0, 'rgba(255, 255, 255, 0.32)');
   glassGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.12)');
   glassGrad.addColorStop(1, 'rgba(255, 255, 255, 0.0)');
   ctx.fillStyle = glassGrad;
@@ -858,16 +997,20 @@ function drawThumbnailDirect(
   // Subtle bottom vignette inside artwork
   const botVignette = ctx.createLinearGradient(x, y + h - 28, x, y + h);
   botVignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
-  botVignette.addColorStop(1, 'rgba(0, 0, 0, 0.42)');
+  botVignette.addColorStop(1, 'rgba(0, 0, 0, 0.44)');
   ctx.fillStyle = botVignette;
   ctx.fillRect(x, y + h - 28, w, 28);
 
-  // Crisp inner bezel border
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+  // Crisp dual inner bezel borders (bright specular rim + dark inset)
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.38)';
   ctx.lineWidth = 1.5;
   ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
-  ctx.restore();
 
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.22)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+
+  ctx.restore();
   ctx.restore();
 }
 
