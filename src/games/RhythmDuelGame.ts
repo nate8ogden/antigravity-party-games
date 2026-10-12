@@ -46,6 +46,8 @@ export class RhythmDuelGame extends BaseGame {
   private eqBars: number[] = [0.3, 0.7, 0.5, 0.9, 0.4, 0.8, 0.6, 0.4];
   private readonly TOTAL_ROUND_DURATION: number = 34.0;
   private boundPointerDown: ((e: PointerEvent) => void) | null = null;
+  private lastWidth: number = 800;
+  private lastHeight: number = 600;
 
   constructor(
     players: PlayerConfig[],
@@ -62,6 +64,8 @@ export class RhythmDuelGame extends BaseGame {
   }
 
   public reset(width: number = 800, height: number = 600): void {
+    this.lastWidth = width;
+    this.lastHeight = height;
     this.roundTimer = this.TOTAL_ROUND_DURATION;
     this.isFinished = false;
     this.songTime = 0;
@@ -142,10 +146,9 @@ export class RhythmDuelGame extends BaseGame {
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const clickX = (e.clientX - rect.left) * scaleX;
-    const clickY = (e.clientY - rect.top) * scaleY;
+    // Normalize click into logical game coordinates matching reset(width, height)
+    const clickX = ((e.clientX - rect.left) / rect.width) * this.lastWidth;
+    const clickY = ((e.clientY - rect.top) / rect.height) * this.lastHeight;
 
     // Check which active human player's lane was clicked
     for (const st of this.playerStates.values()) {
@@ -248,9 +251,11 @@ export class RhythmDuelGame extends BaseGame {
     }
 
     // Ensure beats last right up until half a second (0.5s) left!
-    // If the last generated note is before (lastPossibleBeatTime - 0.4s), add a finisher beat
-    if (generatedTimes.length === 0 || generatedTimes[generatedTimes.length - 1] < lastPossibleBeatTime - 0.35) {
-      generatedTimes.push(lastPossibleBeatTime - 0.05);
+    const targetLastBeat = Math.round((this.TOTAL_ROUND_DURATION - 0.5) * 100) / 100;
+    if (generatedTimes.length === 0 || targetLastBeat - generatedTimes[generatedTimes.length - 1] >= 0.16) {
+      generatedTimes.push(targetLastBeat);
+    } else {
+      generatedTimes[generatedTimes.length - 1] = targetLastBeat;
     }
 
     // Spawn notes for all active players at identical times for 100% fair competitive duel
@@ -270,6 +275,9 @@ export class RhythmDuelGame extends BaseGame {
 
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
+
+    this.lastWidth = width;
+    this.lastHeight = height;
 
     this.songTime += dt;
     this.roundTimer = Math.max(0, this.roundTimer - dt);

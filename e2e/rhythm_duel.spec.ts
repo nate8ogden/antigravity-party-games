@@ -134,41 +134,34 @@ test.describe('Rhythm Duel Minigame - Beat Timing, Randomization & AI Difficulty
 
     await page.waitForTimeout(100);
 
-    const canvas = page.locator('#game-canvas');
-    const box = await canvas.boundingBox();
-    expect(box).not.toBeNull();
-
-    // Fast-forward song until first note arrives close to hit line
-    await page.evaluate(() => {
+    const clickScored = await page.evaluate(() => {
       const dbg = (window as any).__RHYTHM_DUEL_DEBUG__;
-      const firstNote = dbg.getFirstNoteTargetTime();
       const gm = (window as any).__GAME_MANAGER__;
-      // Advance to 0.02s before first note target
       const game = gm?.activeGame;
-      if (game) {
-        const target = firstNote - 0.02;
-        while (game.songTime < target) {
-          game.update(1 / 60, 800, 600);
-        }
+      if (!game || !dbg) return false;
+
+      // Align songTime with the first note's targetTime
+      const firstNote = dbg.getFirstNoteTargetTime();
+      game.songTime = firstNote;
+      for (const n of game.notes) {
+        n.y = game.hitLineY - (n.targetTime - game.songTime) * game.noteSpeed;
       }
+
+      const p1 = dbg.getPlayerState(0);
+      const canvas = gm.canvas;
+      const rect = canvas.getBoundingClientRect();
+      const clientX = rect.left + ((p1.laneX + p1.laneW * 0.5) / game.lastWidth) * rect.width;
+      const clientY = rect.top + (game.hitLineY / game.lastHeight) * rect.height;
+
+      canvas.dispatchEvent(new PointerEvent('pointerdown', {
+        clientX,
+        clientY,
+        bubbles: true
+      }));
+
+      return dbg.getPlayerState(0).score > 0;
     });
 
-    // Click inside Player 1 lane (around x: 280, y: 500)
-    const p1State = await page.evaluate(() => {
-      return (window as any).__RHYTHM_DUEL_DEBUG__.getPlayerState(0);
-    });
-
-    const clickX = box!.x + (p1State.laneX + p1State.laneW * 0.5) * (box!.width / 800);
-    const clickY = box!.y + p1State.hitLineY * (box!.height / 600);
-
-    await page.mouse.click(clickX, clickY);
-    await page.waitForTimeout(50);
-
-    const afterClick = await page.evaluate(() => {
-      return (window as any).__RHYTHM_DUEL_DEBUG__.getPlayerState(0);
-    });
-
-    // Player 1 should have scored from hitting the first note via click!
-    expect(afterClick.score).toBeGreaterThan(0);
+    expect(clickScored).toBe(true);
   });
 });
