@@ -33,6 +33,9 @@ export class CosmicVortexGame extends BaseGame {
   private vortexPulse: number = 0;
   private nextOrbSpawnTimer: number = 1.5;
 
+  private lastWidth: number = 800;
+  private lastHeight: number = 600;
+
   constructor(
     players: PlayerConfig[],
     input: InputRouter,
@@ -43,12 +46,15 @@ export class CosmicVortexGame extends BaseGame {
   }
 
   public init(width: number, height: number): void {
+    this.lastWidth = width;
+    this.lastHeight = height;
     this.roundTimer = 45;
     this.isFinished = false;
     this.playersState.clear();
     this.orbs = [];
     this.vortexAngle = 0;
     this.vortexPulse = 0;
+    this.nextOrbSpawnTimer = 1.0;
 
     const cx = width / 2;
     const cy = height / 2;
@@ -78,32 +84,62 @@ export class CosmicVortexGame extends BaseGame {
       });
     });
 
-    for (let i = 0; i < 5; i++) {
+    // Spawn initial field of 7 cosmic bubbles
+    for (let i = 0; i < 7; i++) {
       this.spawnOrb(width, height);
     }
+
+    // Expose debug hook for testing
+    (window as any).__COSMIC_VORTEX_DEBUG__ = {
+      getOrbs: () => this.orbs.map((o) => ({ x: o.x, y: o.y, vx: o.vx, vy: o.vy, radius: o.radius, hue: o.hue })),
+      getOrbCount: () => this.orbs.length,
+      getPlayerState: (pid: PlayerId) => {
+        const ps = this.playersState.get(pid);
+        return ps ? { ...ps } : null;
+      },
+      setPlayerPos: (pid: PlayerId, x: number, y: number, vx = 0, vy = 0, angle = 0) => {
+        const ps = this.playersState.get(pid);
+        if (ps) {
+          ps.x = x;
+          ps.y = y;
+          ps.vx = vx;
+          ps.vy = vy;
+          ps.angle = angle;
+        }
+      },
+      spawnOrb: () => this.spawnOrb(this.lastWidth, this.lastHeight)
+    };
   }
 
   private spawnOrb(width: number, height: number) {
     const cx = width / 2;
     const cy = height / 2;
-    const minR = 85;
-    const maxR = Math.min(width, height) * 0.42;
+    const minR = 90;
+    const maxR = Math.min(width, height) * 0.40;
     const r = minR + Math.random() * (maxR - minR);
     const angle = Math.random() * Math.PI * 2;
-    const speed = 70 + Math.random() * 40;
+    const speed = 65 + Math.random() * 45;
+    const radialDrift = (Math.random() - 0.5) * 20;
+
+    // Iridescent cosmic bubble hues: Cyan (180), Magenta (310), Amber (45), Emerald (140), Purple (270)
+    const hues = [180, 310, 45, 140, 270];
+    const hue = hues[Math.floor(Math.random() * hues.length)];
 
     this.orbs.push({
       x: cx + Math.cos(angle) * r,
       y: cy + Math.sin(angle) * r,
-      vx: -Math.sin(angle) * speed,
-      vy: Math.cos(angle) * speed,
+      vx: -Math.sin(angle) * speed + Math.cos(angle) * radialDrift,
+      vy: Math.cos(angle) * speed + Math.sin(angle) * radialDrift,
       radius: 9,
-      hue: Math.random() > 0.5 ? 180 : 310
+      hue
     });
   }
 
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
+
+    this.lastWidth = width;
+    this.lastHeight = height;
 
     this.roundTimer -= dt;
     if (this.roundTimer <= 0) {
@@ -119,32 +155,69 @@ export class CosmicVortexGame extends BaseGame {
     const cy = height / 2;
     const eventHorizonR = 48;
 
-    // Spawn orbs
+    // Continuous bubble spawning (maintain 6 to 9 active bubbles at all times)
+    const MAX_ORBS = 9;
+    const MIN_ORBS = 6;
     this.nextOrbSpawnTimer -= dt;
-    if (this.nextOrbSpawnTimer <= 0 && this.orbs.length < 8) {
+
+    if (this.orbs.length < MIN_ORBS) {
+      // Rapid catch-up replenishment if bubbles were collected or consumed
       this.spawnOrb(width, height);
-      this.nextOrbSpawnTimer = 3.0;
+      this.nextOrbSpawnTimer = 0.4;
+    } else if (this.nextOrbSpawnTimer <= 0 && this.orbs.length < MAX_ORBS) {
+      this.spawnOrb(width, height);
+      this.nextOrbSpawnTimer = 1.0 + Math.random() * 0.6;
     }
 
-    // Update orbs with gravity
+    // Update bubbles with gravity, containment, and boundary reflections
     for (let i = this.orbs.length - 1; i >= 0; i--) {
       const orb = this.orbs[i];
       const dx = cx - orb.x;
       const dy = cy - orb.y;
       const dist = Math.hypot(dx, dy);
 
+      // Event horizon consumption with sparkling implosion
       if (dist < eventHorizonR + 5) {
+        this.particles.spawnSparks(orb.x, orb.y, orb.hue === 180 ? '#38BDF8' : '#F472B6', 8);
         this.orbs.splice(i, 1);
         continue;
       }
 
-      // Gravitational acceleration
+      // Despawn if drifted far outside arena bounds
+      if (dist > Math.max(width, height) * 0.68) {
+        this.orbs.splice(i, 1);
+        continue;
+      }
+
+      // Gravitational acceleration (with baseline inward cosmic drift so bubbles don't linger in outer darkness)
       const safeDist = Math.max(1, dist);
-      const gravity = 45000 / (safeDist * safeDist + 2000);
+      const gravity = 45000 / (safeDist * safeDist + 2000) + 15;
       orb.vx += (dx / safeDist) * gravity * dt;
       orb.vy += (dy / safeDist) * gravity * dt;
+
+      // Subtle drag to stabilize orbital flight
+      orb.vx *= Math.pow(0.99, dt * 60);
+      orb.vy *= Math.pow(0.99, dt * 60);
+
       orb.x += orb.vx * dt;
       orb.y += orb.vy * dt;
+
+      // Arena boundary bounce for bubbles (keeps bubbles inside play area!)
+      const orbMargin = 22;
+      if (orb.x < orbMargin) {
+        orb.x = orbMargin;
+        orb.vx = Math.abs(orb.vx) * 0.85 + 20;
+      } else if (orb.x > width - orbMargin) {
+        orb.x = width - orbMargin;
+        orb.vx = -Math.abs(orb.vx) * 0.85 - 20;
+      }
+      if (orb.y < orbMargin) {
+        orb.y = orbMargin;
+        orb.vy = Math.abs(orb.vy) * 0.85 + 20;
+      } else if (orb.y > height - orbMargin) {
+        orb.y = height - orbMargin;
+        orb.vy = -Math.abs(orb.vy) * 0.85 - 20;
+      }
     }
 
     // Process Bot Inputs
@@ -160,7 +233,7 @@ export class CosmicVortexGame extends BaseGame {
         ps.respawnTimer -= dt;
         if (ps.respawnTimer <= 0) {
           ps.alive = true;
-          const spawnR = Math.min(width, height) * 0.40;
+          const spawnR = Math.min(width, height) * 0.38;
           const angle = Math.random() * Math.PI * 2;
           ps.x = cx + Math.cos(angle) * spawnR;
           ps.y = cy + Math.sin(angle) * spawnR;
@@ -181,10 +254,13 @@ export class CosmicVortexGame extends BaseGame {
 
       if (steer !== 0) {
         ps.angle += steer * 4.0 * dt;
-      } else if (!thrust) {
-        // Single-button mobile fallback: gentle rotational scan when idle
-        ps.angle += 2.2 * dt;
+      } else {
+        // Continuous rotation in single-button mode: holding thrust creates an arc
+        // and players NEVER get stuck pointing in one direction!
+        const rotSpeed = thrust ? 2.6 : 3.6;
+        ps.angle += rotSpeed * dt;
       }
+
       if (thrust) {
         const thrustPower = 340;
         ps.vx += Math.cos(ps.angle) * thrustPower * dt;
@@ -225,13 +301,13 @@ export class CosmicVortexGame extends BaseGame {
         }
       }
 
-      // Gravitational pull toward event horizon
+      // Gravitational pull toward event horizon (with baseline cosmic vortex inward current)
       const dx = cx - ps.x;
       const dy = cy - ps.y;
       const dist = Math.hypot(dx, dy);
 
       const safeDist = Math.max(1, dist);
-      const gravity = 62000 / (safeDist * safeDist + 1800);
+      const gravity = 62000 / (safeDist * safeDist + 1800) + 25; // Inward drift everywhere in arena!
       ps.vx += (dx / safeDist) * gravity * dt;
       ps.vy += (dy / safeDist) * gravity * dt;
 
@@ -263,12 +339,50 @@ export class CosmicVortexGame extends BaseGame {
         continue;
       }
 
-      // World boundary bounce
-      const margin = 20;
-      if (ps.x < margin) { ps.x = margin; ps.vx *= -0.7; }
-      if (ps.x > width - margin) { ps.x = width - margin; ps.vx *= -0.7; }
-      if (ps.y < margin) { ps.y = margin; ps.vy *= -0.7; }
-      if (ps.y > height - margin) { ps.y = height - margin; ps.vy *= -0.7; }
+      // Arena boundary collision with firm inward deflection (prevents sticking against walls)
+      const margin = 32;
+      let hitWall = false;
+      if (ps.x < margin) {
+        ps.x = margin;
+        ps.vx = Math.max(Math.abs(ps.vx) * 0.75, 120);
+        hitWall = true;
+      } else if (ps.x > width - margin) {
+        ps.x = width - margin;
+        ps.vx = -Math.max(Math.abs(ps.vx) * 0.75, 120);
+        hitWall = true;
+      }
+      if (ps.y < margin) {
+        ps.y = margin;
+        ps.vy = Math.max(Math.abs(ps.vy) * 0.75, 120);
+        hitWall = true;
+      } else if (ps.y > height - margin) {
+        ps.y = height - margin;
+        ps.vy = -Math.max(Math.abs(ps.vy) * 0.75, 120);
+        hitWall = true;
+      }
+
+      if (hitWall) {
+        this.particles.spawnSparks(ps.x, ps.y, p.colorLight, 2);
+      }
+
+      // Corner Anti-Trap Cushion: If in any corner pocket, apply diagonal push and steer toward center
+      const cornerPocket = 85;
+      const inCornerX = ps.x < cornerPocket || ps.x > width - cornerPocket;
+      const inCornerY = ps.y < cornerPocket || ps.y > height - cornerPocket;
+      if (inCornerX && inCornerY) {
+        const toCenterX = (cx - ps.x) / dist;
+        const toCenterY = (cy - ps.y) / dist;
+        const cornerPush = 280; // Strong spring force pushing out of corner
+        ps.vx += toCenterX * cornerPush * dt;
+        ps.vy += toCenterY * cornerPush * dt;
+
+        // Smoothly steer ship angle toward center if facing into corner
+        const centerAngle = Math.atan2(cy - ps.y, cx - ps.x);
+        let angleDiff = centerAngle - ps.angle;
+        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+        while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+        ps.angle += angleDiff * Math.min(1.0, 5.0 * dt);
+      }
 
       // Orb Collection
       for (let i = this.orbs.length - 1; i >= 0; i--) {
@@ -284,6 +398,50 @@ export class CosmicVortexGame extends BaseGame {
 
           if (ps.score >= 5) {
             this.isFinished = true;
+          }
+        }
+      }
+    }
+
+    // Player-to-Player Elastic Collision (prevents pinning/wedging each other in corners)
+    const activeList = active
+      .map((p) => ({ cfg: p, state: this.playersState.get(p.id)! }))
+      .filter((item) => item.state && item.state.alive);
+
+    for (let i = 0; i < activeList.length; i++) {
+      for (let j = i + 1; j < activeList.length; j++) {
+        const p1 = activeList[i].state;
+        const p2 = activeList[j].state;
+        const pdx = p2.x - p1.x;
+        const pdy = p2.y - p1.y;
+        const pdist = Math.hypot(pdx, pdy);
+        const minDist = 30; // Ship collision diameter
+
+        if (pdist < minDist && pdist > 0.01) {
+          const overlap = minDist - pdist;
+          const nx = pdx / pdist;
+          const ny = pdy / pdist;
+
+          // Push positions apart
+          p1.x -= nx * (overlap * 0.5);
+          p1.y -= ny * (overlap * 0.5);
+          p2.x += nx * (overlap * 0.5);
+          p2.y += ny * (overlap * 0.5);
+
+          // Relative velocity bounce
+          const rvx = p2.vx - p1.vx;
+          const rvy = p2.vy - p1.vy;
+          const velAlongNormal = rvx * nx + rvy * ny;
+
+          if (velAlongNormal < 0) {
+            const impulse = -(1 + 0.9) * velAlongNormal;
+            p1.vx -= nx * (impulse * 0.5);
+            p1.vy -= ny * (impulse * 0.5);
+            p2.vx += nx * (impulse * 0.5);
+            p2.vy += ny * (impulse * 0.5);
+
+            this.audio.playBounce();
+            this.particles.spawnSparks((p1.x + p2.x) * 0.5, (p1.y + p2.y) * 0.5, '#FFFFFF', 4);
           }
         }
       }
@@ -306,11 +464,30 @@ export class CosmicVortexGame extends BaseGame {
     const dy = cy - ps.y;
     const dist = Math.hypot(dx, dy);
 
-    // Find nearest orb
+    // Corner & Wall Avoidance: if near boundary or corner, prioritize escaping to center
+    const wallMargin = 80;
+    const cornerMargin = 110;
+    const nearLeft = ps.x < wallMargin;
+    const nearRight = ps.x > width - wallMargin;
+    const nearTop = ps.y < wallMargin;
+    const nearBottom = ps.y > height - wallMargin;
+    const inCorner = (nearLeft || nearRight) && (nearTop || nearBottom) || (ps.x < cornerMargin && ps.y < cornerMargin);
+
+    if (inCorner || nearLeft || nearRight || nearTop || nearBottom) {
+      // Steer firmly towards the central playfield and thrust out
+      ps.angle = Math.atan2(cy - ps.y, cx - ps.x);
+      this.input.setBotPressed(botId, true);
+      return;
+    }
+
+    // Find nearest safe orb
     let bestOrb: AntimatterOrb | null = null;
     let bestDist = Infinity;
     for (const orb of this.orbs) {
       const d = Math.hypot(orb.x - ps.x, orb.y - ps.y);
+      const orbDistFromCenter = Math.hypot(cx - orb.x, cy - orb.y);
+      // Skip orbs that are dangerously close to the black hole event horizon
+      if (orbDistFromCenter < 68) continue;
       if (d < bestDist) {
         bestDist = d;
         bestOrb = orb;
@@ -318,10 +495,13 @@ export class CosmicVortexGame extends BaseGame {
     }
 
     if (difficulty === 'bot_easy') {
-      // Wanders and occasionally counters gravity
+      // Wanders, avoids singularity, and occasionally chases orbs
       if (dist < 130) {
         // Thrust outwards away from center
         ps.angle = Math.atan2(-dy, -dx);
+        this.input.setBotPressed(botId, true);
+      } else if (bestOrb && bestDist < 180 && Math.random() < 0.6) {
+        ps.angle = Math.atan2(bestOrb.y - ps.y, bestOrb.x - ps.x);
         this.input.setBotPressed(botId, true);
       } else if (Math.random() < 0.05 && ps.pulseCooldown <= 0) {
         this.input.setBotPressed(botId, true);
