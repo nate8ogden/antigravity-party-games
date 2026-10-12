@@ -592,6 +592,67 @@ export class HighwayHopGame extends BaseGame {
     }
   }
 
+  private isSafeAt(
+    laneIndex: number,
+    testX: number,
+    timeWindowStart: number,
+    timeWindowEnd: number,
+    width: number
+  ): boolean {
+    if (laneIndex < 0 || laneIndex >= this.totalLanes) return false;
+    const lane = this.lanes[laneIndex];
+    if (!lane) return false;
+
+    if (lane.type === 'SAFE') {
+      return true;
+    }
+
+    if (lane.type === 'RAIL') {
+      if (lane.trainActive) return false;
+      if (lane.railWarning !== undefined && lane.railWarning < timeWindowEnd + 0.8) {
+        return false;
+      }
+      return true;
+    }
+
+    if (lane.type === 'ROAD') {
+      const playerMargin = 16;
+      for (const ent of lane.entities) {
+        const steps = 4;
+        for (let s = 0; s <= steps; s++) {
+          const t = timeWindowStart + (s / steps) * (timeWindowEnd - timeWindowStart);
+          let entX = ent.x + ent.speed * t;
+          const wrapWidth = width + ent.width * 2;
+          entX = ((entX % wrapWidth) + wrapWidth) % wrapWidth - ent.width;
+
+          const entLeft = entX;
+          const entRight = entX + ent.width;
+
+          if (testX + playerMargin > entLeft && testX - playerMargin < entRight) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    if (lane.type === 'RIVER') {
+      const landingTime = timeWindowStart;
+      for (const ent of lane.entities) {
+        let logX = ent.x + ent.speed * landingTime;
+        const wrapWidth = width + ent.width * 2;
+        logX = ((logX % wrapWidth) + wrapWidth) % wrapWidth - ent.width;
+
+        if (testX >= logX - 2 && testX <= logX + ent.width + 2) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    return true;
+  }
+
   protected updateBotAI(
     dt: number,
     botId: PlayerId,
@@ -601,75 +662,140 @@ export class HighwayHopGame extends BaseGame {
   ): void {
     const ps = this.playersState.get(botId);
     if (!ps || !ps.alive || ps.hasFinished || ps.isHopping) {
-      this.input.setBotInput(botId, false, 0, 0, false);
       return;
     }
 
     ps.botDecisionTimer -= dt;
     if (ps.botDecisionTimer > 0) return;
 
-    // Reset decision cadence by difficulty
-    const interval =
+    // Decision cadence by difficulty
+    const cadence =
       difficulty === 'bot_hard'
-        ? 0.16 + Math.random() * 0.06
+        ? 0.11 + Math.random() * 0.04
         : difficulty === 'bot_normal'
-        ? 0.26 + Math.random() * 0.12
-        : 0.42 + Math.random() * 0.22;
-    ps.botDecisionTimer = interval;
+        ? 0.18 + Math.random() * 0.08
+        : 0.32 + Math.random() * 0.14;
+    ps.botDecisionTimer = cadence;
 
-    const nextLaneIdx = ps.laneIndex + 1;
-    if (nextLaneIdx >= this.totalLanes) return;
-
-    const nextLane = this.lanes[nextLaneIdx];
     const curLane = this.lanes[ps.laneIndex];
+    const nextLaneIdx = ps.laneIndex + 1;
+    const prevLaneIdx = ps.laneIndex - 1;
 
-    // Evaluate danger of hopping forward
-    let isForwardSafe = true;
-
-    if (nextLane.type === 'ROAD' || nextLane.type === 'RAIL') {
-      const hopDuration = 0.16;
-      for (const ent of nextLane.entities) {
-        const futureX = ent.x + ent.speed * hopDuration;
-        const targetX = (ps.colIndex + 0.5) * this.colWidth;
-        if (targetX >= futureX - 16 && targetX <= futureX + ent.width + 16) {
-          isForwardSafe = false;
-          break;
-        }
-      }
-      if (nextLane.type === 'RAIL' && nextLane.trainActive) {
-        isForwardSafe = false;
-      }
-    } else if (nextLane.type === 'RIVER') {
-      const hopDuration = 0.16;
-      let logFound = false;
-      const targetX = (ps.colIndex + 0.5) * this.colWidth;
-      for (const ent of nextLane.entities) {
-        const futureX = ent.x + ent.speed * hopDuration;
-        if (targetX >= futureX + 12 && targetX <= futureX + ent.width - 12) {
-          logFound = true;
-          break;
-        }
-      }
-      isForwardSafe = logFound;
+    // 1. Current Lane Emergency: Is a car/train about to hit the bot on its current lane?
+    let currentLaneThreat = false;
+    if (curLane && (curLane.type === 'ROAD' || curLane.type === 'RAIL')) {
+      currentLaneThreat = !this.isSafeAt(ps.laneIndex, ps.x, 0.0, 0.55, width);
     }
 
-    // Bot decision: Hop forward if safe, else evade or adjust column
-    if (isForwardSafe) {
-      if (difficulty === 'bot_easy' && Math.random() < 0.25) {
+    // 2. River Drift Emergency: Is the bot about to drift off-screen on a log?
+    let riverDriftThreat = false;
+    if (curLane && curLane.type === 'RIVER') {
+      if (curLane.speed < 0 && ps.x < width * 0.18) riverDriftThreat = true;
+      if (curLane.speed > 0 && ps.x > width * 0.82) riverDriftThreat = true;
+    }
+
+    // Time window for hopping: hop takes 0.15s, evaluate safety up to ~0.5s
+    const windowStart = 0.15;
+    const windowEnd = difficulty === 'bot_hard' ? 0.6 : difficulty === 'bot_normal' ? 0.45 : 0.32;
+
+    const isForwardSafe =
+      nextLaneIdx < this.totalLanes && this.isSafeAt(nextLaneIdx, ps.x, windowStart, windowEnd, width);
+
+    // If in danger on current lane or drifting off:
+    if (currentLaneThreat || riverDriftThreat) {
+      // Option A: Jump forward if safe
+      if (isForwardSafe) {
+        this.attemptHop(ps, 0, 1, width);
         return;
       }
+
+      // Option B: Dodge sideways on current lane
+      if (riverDriftThreat) {
+        const dodgeDir = curLane.speed < 0 ? 1 : -1;
+        this.attemptHop(ps, dodgeDir, 0, width);
+        return;
+      }
+
+      const canDodgeLeft =
+        ps.x > this.colWidth && this.isSafeAt(ps.laneIndex, ps.x - this.colWidth, windowStart, windowEnd, width);
+      const canDodgeRight =
+        ps.x < width - this.colWidth && this.isSafeAt(ps.laneIndex, ps.x + this.colWidth, windowStart, windowEnd, width);
+
+      if (canDodgeLeft && !canDodgeRight) {
+        this.attemptHop(ps, -1, 0, width);
+        return;
+      } else if (canDodgeRight && !canDodgeLeft) {
+        this.attemptHop(ps, 1, 0, width);
+        return;
+      } else if (canDodgeLeft && canDodgeRight) {
+        this.attemptHop(ps, Math.random() < 0.5 ? -1 : 1, 0, width);
+        return;
+      }
+
+      // Option C: Retreat backward to safe lane behind
+      if (prevLaneIdx >= 0 && this.isSafeAt(prevLaneIdx, ps.x, windowStart, windowEnd, width)) {
+        this.attemptHop(ps, 0, -1, width);
+        return;
+      }
+    }
+
+    // 3. Normal Forward Progression
+    if (isForwardSafe) {
+      if (difficulty === 'bot_easy' && Math.random() < 0.15) {
+        return; // slight hesitation on easy
+      }
       this.attemptHop(ps, 0, 1, width);
-    } else {
-      if (curLane && curLane.type === 'RIVER') {
-        const curCol = ps.colIndex;
-        if (curLane.speed > 0 && curCol > 2) {
-          this.attemptHop(ps, -1, 0, width);
-        } else if (curLane.speed < 0 && curCol < this.columnCount - 3) {
-          this.attemptHop(ps, 1, 0, width);
+      return;
+    }
+
+    // 4. Forward is blocked: check if moving left or right finds an opening or approaching river log
+    if (nextLaneIdx < this.totalLanes) {
+      const nextLane = this.lanes[nextLaneIdx];
+
+      if (nextLane.type === 'RIVER') {
+        // Find nearest river log on next lane and step toward it
+        let bestLogDist = Infinity;
+        let bestLogDir = 0;
+
+        for (const ent of nextLane.entities) {
+          const futureLogCenter = ent.x + ent.speed * 0.4 + ent.width / 2;
+          const diff = futureLogCenter - ps.x;
+          if (Math.abs(diff) < bestLogDist) {
+            bestLogDist = Math.abs(diff);
+            bestLogDir = Math.sign(diff);
+          }
         }
-      } else if (Math.random() < 0.4) {
-        const dCol = Math.random() < 0.5 ? -1 : 1;
-        this.attemptHop(ps, dCol, 0, width);
+
+        if (bestLogDir !== 0) {
+          const stepX = ps.x + bestLogDir * this.colWidth;
+          const isSidewaysSafe = this.isSafeAt(ps.laneIndex, stepX, windowStart, windowEnd, width);
+          if (isSidewaysSafe && stepX > this.colWidth && stepX < width - this.colWidth) {
+            this.attemptHop(ps, bestLogDir, 0, width);
+            return;
+          }
+        }
+      } else {
+        // On road / rail: check if shifting left or right has a clear gap ahead
+        const leftX = ps.x - this.colWidth;
+        const rightX = ps.x + this.colWidth;
+
+        const leftAheadSafe =
+          leftX > this.colWidth &&
+          this.isSafeAt(nextLaneIdx, leftX, windowStart, windowEnd, width) &&
+          this.isSafeAt(ps.laneIndex, leftX, windowStart, windowEnd, width);
+
+        const rightAheadSafe =
+          rightX < width - this.colWidth &&
+          this.isSafeAt(nextLaneIdx, rightX, windowStart, windowEnd, width) &&
+          this.isSafeAt(ps.laneIndex, rightX, windowStart, windowEnd, width);
+
+        if (leftAheadSafe && !rightAheadSafe) {
+          this.attemptHop(ps, -1, 0, width);
+          return;
+        } else if (rightAheadSafe && !leftAheadSafe) {
+          this.attemptHop(ps, 1, 0, width);
+          return;
+        }
       }
     }
   }
