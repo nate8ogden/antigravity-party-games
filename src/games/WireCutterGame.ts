@@ -6,10 +6,16 @@ import { ParticleSystem } from '../core/ParticleSystem';
 
 interface WireModule {
   instructionText: string;
+  subPrompt?: string;
+  type: 'single' | 'sequence' | 'all_except_then';
+  sequence?: number[];
+  exceptWireIndex?: number;
   correctWireIndex: number; // 0: Up (Red), 1: Right (Blue), 2: Down (Green), 3: Left (Yellow)
   avoidWireIndex?: number;
   wires: { color: string; label: string; keyHint: string }[];
   timer: number;
+  maxTimer: number;
+  totalSteps: number;
 }
 
 interface WirePlayer {
@@ -21,20 +27,29 @@ interface WirePlayer {
   feedbackTimer: number;
   scissorsAngle: number;
   inputDebounceTimer: number;
+  sequenceStep: number;
+  cutWiresThisModule: Set<number>;
+  lastDirection: number | null;
+  activeKeysDown: Set<string>;
+  pointerQueue: number[];
 }
 
 export class WireCutterGame extends BaseGame {
   private wirePlayers: WirePlayer[] = [];
   private currentModule: WireModule = {
     instructionText: '',
+    type: 'single',
     correctWireIndex: 0,
     wires: [],
-    timer: 4.0
+    timer: 4.0,
+    maxTimer: 4.0,
+    totalSteps: 1
   };
 
   private selectedWireIndex: number = 0;
   private botReactionTimers: Map<PlayerId, number> = new Map();
   private moduleRound: number = 0;
+  private boundPointerDown: ((e: PointerEvent) => void) | null = null;
 
   constructor(players: PlayerConfig[], input: InputRouter, audio: AudioEngine, particles: ParticleSystem) {
     super(players, input, audio, particles);
@@ -62,11 +77,103 @@ export class WireCutterGame extends BaseGame {
         feedbackColor: '#FFFFFF',
         feedbackTimer: 0,
         scissorsAngle: 0,
-        inputDebounceTimer: 0
+        inputDebounceTimer: 0,
+        sequenceStep: 0,
+        cutWiresThisModule: new Set(),
+        lastDirection: null,
+        activeKeysDown: new Set(),
+        pointerQueue: []
       });
     });
 
+    // Ensure pointerdown listener is bound to canvas for direct wire clicking
+    const canvas = this.input.getCanvas();
+    if (canvas && !this.boundPointerDown) {
+      this.boundPointerDown = this.handlePointerDown.bind(this);
+      canvas.addEventListener('pointerdown', this.boundPointerDown);
+    }
+
+    // Expose debug hook for testing
+    (window as any).__WIRE_CUTTER_DEBUG__ = {
+      getCurrentModule: () => ({
+        type: this.currentModule.type,
+        prompt: this.currentModule.instructionText,
+        subPrompt: this.currentModule.subPrompt,
+        sequence: this.currentModule.sequence,
+        exceptWireIndex: this.currentModule.exceptWireIndex,
+        correctWireIndex: this.currentModule.correctWireIndex,
+        totalSteps: this.currentModule.totalSteps
+      }),
+      cutWire: (pid: PlayerId, wireIndex: number) => {
+        const wp = this.wirePlayers.find((p) => p.id === pid);
+        if (wp) this.executeWireCut(wp, wireIndex, 800, 600);
+      },
+      getPlayerState: (pid: PlayerId) => {
+        const wp = this.wirePlayers.find((p) => p.id === pid);
+        return wp ? {
+          score: wp.score,
+          stunTimer: wp.stunTimer,
+          sequenceStep: wp.sequenceStep,
+          cutWiresThisModule: Array.from(wp.cutWiresThisModule)
+        } : null;
+      },
+      setModule: (moduleConfig: Partial<WireModule>) => {
+        Object.assign(this.currentModule, moduleConfig);
+        this.wirePlayers.forEach((wp) => {
+          wp.sequenceStep = 0;
+          wp.cutWiresThisModule.clear();
+        });
+      }
+    };
+
     this.generateNewModule();
+  }
+
+  private handlePointerDown(e: PointerEvent): void {
+    const canvas = this.input.getCanvas();
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const clickX = (e.clientX - rect.left) * scaleX;
+    const clickY = (e.clientY - rect.top) * scaleY;
+
+    const cx = canvas.width / 2;
+    const bombH = Math.min(380, canvas.height * 0.72);
+    const bombY = canvas.height / 2 - bombH / 2 + 10;
+    const screenH = 65;
+    const cy = bombY + 16 + screenH + (bombH - screenH - 32) / 2;
+    const wireLength = 95;
+    const wirePositions = [
+      { idx: 0, x: cx, y: cy - wireLength },
+      { idx: 1, x: cx + wireLength, y: cy },
+      { idx: 2, x: cx, y: cy + wireLength },
+      { idx: 3, x: cx - wireLength, y: cy }
+    ];
+
+    for (const w of wirePositions) {
+      if (Math.hypot(clickX - w.x, clickY - w.y) <= 32) {
+        const human = this.wirePlayers.find((wp) => {
+          const pl = this.getPlayer(wp.id);
+          return pl && !pl.type.startsWith('bot_');
+        });
+        if (human && human.stunTimer <= 0) {
+          human.pointerQueue.push(w.idx);
+        }
+        break;
+      }
+    }
+  }
+
+  public override destroy(): void {
+    if (this.boundPointerDown) {
+      const canvas = this.input.getCanvas();
+      if (canvas) {
+        canvas.removeEventListener('pointerdown', this.boundPointerDown);
+      }
+      this.boundPointerDown = null;
+    }
   }
 
   private generateNewModule() {
@@ -77,46 +184,104 @@ export class WireCutterGame extends BaseGame {
       { color: '#10B981', label: 'GREEN', keyHint: 'DOWN [S / ↓]' },
       { color: '#F59E0B', label: 'YELLOW', keyHint: 'LEFT [A / ←]' }
     ];
+    const dirs = ['UP', 'RIGHT', 'DOWN', 'LEFT'];
 
-    // Pick instruction type
-    const types = ['direct', 'direct', 'direct_color', 'avoid', 'direction'];
-    const type = types[Math.floor(Math.random() * types.length)];
+    // Roll instruction pattern:
+    // 35% sequence (directions or colors)
+    // 25% all_except_then ("cut all but red, then red")
+    // 40% single / avoid
+    const roll = Math.random();
 
-    let targetIdx = Math.floor(Math.random() * 4);
+    let moduleType: 'single' | 'sequence' | 'all_except_then' = 'single';
     let prompt = '';
-
+    let subPrompt = '';
+    let sequence: number[] | undefined = undefined;
+    let exceptIdx: number | undefined = undefined;
+    let targetIdx = 0;
     let avoidIdx: number | undefined = undefined;
+    let timer = 3.5;
+    let totalSteps = 1;
 
-    if (type === 'direct') {
-      prompt = `⚡ SNIP THE ${wireColors[targetIdx].label} WIRE!`;
-    } else if (type === 'direct_color') {
-      prompt = `✂️ CUT COLOR: ${wireColors[targetIdx].label}`;
-    } else if (type === 'avoid') {
-      avoidIdx = Math.floor(Math.random() * 4);
-      targetIdx = (avoidIdx + 1) % 4;
-      prompt = `⚠️ DO NOT CUT ${wireColors[avoidIdx].label}!`;
+    if (roll < 0.35) {
+      moduleType = 'sequence';
+      const step1 = Math.floor(Math.random() * 4);
+      let step2 = Math.floor(Math.random() * 4);
+      while (step2 === step1) {
+        step2 = Math.floor(Math.random() * 4);
+      }
+      sequence = [step1, step2];
+      totalSteps = 2;
+      timer = 4.8;
+
+      const isDirection = Math.random() < 0.5;
+      if (isDirection) {
+        prompt = `⚡ CUT: ${dirs[step1]} ➔ ${dirs[step2]}!`;
+        subPrompt = `Execute sequence: ${dirs[step1]} then ${dirs[step2]}`;
+      } else {
+        prompt = `✂️ CUT: ${wireColors[step1].label} ➔ ${wireColors[step2].label}!`;
+        subPrompt = `Execute sequence: ${wireColors[step1].label} then ${wireColors[step2].label}`;
+      }
+      targetIdx = step1;
+    } else if (roll < 0.60) {
+      moduleType = 'all_except_then';
+      exceptIdx = Math.floor(Math.random() * 4);
+      targetIdx = exceptIdx;
+      totalSteps = 4;
+      timer = 6.0;
+
+      prompt = `⚠️ CUT ALL BUT ${wireColors[exceptIdx].label}, THEN ${wireColors[exceptIdx].label}!`;
+      subPrompt = `Cut the other 3 wires first, then snip ${wireColors[exceptIdx].label}!`;
     } else {
-      const dirs = ['UP', 'RIGHT', 'DOWN', 'LEFT'];
+      moduleType = 'single';
+      const types = ['direct', 'direct_color', 'avoid', 'direction'];
+      const st = types[Math.floor(Math.random() * types.length)];
       targetIdx = Math.floor(Math.random() * 4);
-      prompt = `🎯 CUT DIRECTION: ${dirs[targetIdx]}`;
+      totalSteps = 1;
+      timer = 3.5;
+
+      if (st === 'direct') {
+        prompt = `⚡ SNIP THE ${wireColors[targetIdx].label} WIRE!`;
+      } else if (st === 'direct_color') {
+        prompt = `✂️ CUT COLOR: ${wireColors[targetIdx].label}`;
+      } else if (st === 'avoid') {
+        avoidIdx = Math.floor(Math.random() * 4);
+        targetIdx = (avoidIdx + 1) % 4;
+        prompt = `⚠️ DO NOT CUT ${wireColors[avoidIdx].label}!`;
+        subPrompt = `Cut any wire except ${wireColors[avoidIdx].label}`;
+      } else {
+        targetIdx = Math.floor(Math.random() * 4);
+        prompt = `🎯 CUT DIRECTION: ${dirs[targetIdx]}`;
+      }
     }
 
     this.currentModule = {
       instructionText: prompt,
+      subPrompt,
+      type: moduleType,
+      sequence,
+      exceptWireIndex: exceptIdx,
       correctWireIndex: targetIdx,
       avoidWireIndex: avoidIdx,
       wires: wireColors,
-      timer: 3.5
+      timer,
+      maxTimer: timer,
+      totalSteps
     };
 
-    // Reset bot reaction timers with human latency
+    // Reset bot reaction timers with calibrated human-like competitive latency (harder AI)
     this.wirePlayers.forEach((wp) => {
-      const p = this.players[wp.id];
-      if (p.type.startsWith('bot_')) {
-        let delay = 0.45;
-        if (p.type === 'bot_easy') delay = 0.85 + Math.random() * 0.4;
-        else if (p.type === 'bot_normal') delay = 0.5 + Math.random() * 0.25;
-        else if (p.type === 'bot_hard') delay = 0.22 + Math.random() * 0.15;
+      wp.sequenceStep = 0;
+      wp.cutWiresThisModule.clear();
+      wp.lastDirection = null;
+      wp.activeKeysDown.clear();
+      wp.pointerQueue = [];
+
+      const p = this.getPlayer(wp.id);
+      if (p && p.type.startsWith('bot_')) {
+        let delay = 0.35;
+        if (p.type === 'bot_easy') delay = 0.55 + Math.random() * 0.25;
+        else if (p.type === 'bot_normal') delay = 0.28 + Math.random() * 0.16;
+        else if (p.type === 'bot_hard') delay = 0.14 + Math.random() * 0.08;
         this.botReactionTimers.set(wp.id, delay);
       }
     });
