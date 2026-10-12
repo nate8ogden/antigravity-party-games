@@ -1655,12 +1655,12 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   },
   {
     id: 'cotton_candy',
-    title: 'Cotton Candy Spin',
-    tagline: 'Sugar Floss Vortex',
+    title: 'Sugar Cloud Stacker',
+    tagline: 'Candy Tower Balance Rush',
     category: 'Party',
     icon: '[G-153]',
-    instructions: 'Spin your paper stick in the sweet sugar drum! Match the vortex resonance to roll the largest, fluffiest cotton candy puff.',
-    controlPrompt: 'Tap: Spin Stick'
+    instructions: 'Slide your paper stick to catch falling pastel sugar drops and build towering, wobbly cotton candy clouds! Tap to cash in your stack for banked bonus multipliers before it tips over. Beware burnt crisps!',
+    controlPrompt: 'Steer: Slide Stick | Tap/Space: Cash In Stack | 1-3: Switch Theme'
   },
   {
     id: 'test_strength',
