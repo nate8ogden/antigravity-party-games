@@ -403,6 +403,7 @@ export class SequenceClashGame extends BaseGame {
   public getRoundResult(): RoundResult {
     const sorted = Array.from(this.duelists.values()).sort((a, b) => b.score - a.score);
     const winnerId = sorted.length > 0 && sorted[0].score > 0 ? sorted[0].id : null;
+    const winnerName = winnerId !== null ? (this.getPlayer(winnerId)?.name || 'Player') : '';
 
     return {
       winnerId,
@@ -411,7 +412,7 @@ export class SequenceClashGame extends BaseGame {
         score: d.score,
         place: idx + 1
       })),
-      mvpHighlight: winnerId !== null ? `${this.players[winnerId].name} CRACKED THE SEQUENCE CLASH!` : 'SEQUENCE OVERLOAD!'
+      mvpHighlight: winnerId !== null ? `${winnerName} CRACKED THE SEQUENCE CLASH!` : 'SEQUENCE OVERLOAD!'
     };
   }
 
@@ -441,29 +442,49 @@ export class SequenceClashGame extends BaseGame {
 
     padOffsets.forEach(({ x, y, id }) => {
       const isDemoActive = this.activeDemoPad === id;
+
+      // Check if any alive duelist is flashing this pad upon input
+      let isPlayerFlashing = false;
+      let flashColor = '#FFFFFF';
+      for (const d of this.duelists.values()) {
+        if (d.flashPad === id && d.flashTimer > 0) {
+          isPlayerFlashing = true;
+          const p = this.getPlayer(d.id);
+          flashColor = p?.color || '#FFFFFF';
+          break;
+        }
+      }
+
+      const isLit = isDemoActive || isPlayerFlashing;
       const baseColor = PAD_COLORS[id];
 
       ctx.save();
-      ctx.shadowColor = isDemoActive ? '#FFFFFF' : baseColor;
-      ctx.shadowBlur = isDemoActive ? 28 : 12;
+      ctx.shadowColor = isLit ? (isPlayerFlashing ? flashColor : '#FFFFFF') : baseColor;
+      ctx.shadowBlur = isLit ? 26 : 10;
 
       // Outer Bezel
-      ctx.fillStyle = isDemoActive ? '#FFFFFF' : baseColor;
+      ctx.fillStyle = isLit ? (isPlayerFlashing ? flashColor : '#FFFFFF') : baseColor;
       ctx.beginPath();
       ctx.roundRect(x - padRadius, y - padRadius, padRadius * 2, padRadius * 2, 14);
       ctx.fill();
 
       // Inner Core
-      ctx.fillStyle = isDemoActive ? baseColor : '#0F172A';
+      ctx.fillStyle = isLit ? baseColor : '#0F172A';
       ctx.beginPath();
       ctx.roundRect(x - padRadius + 4, y - padRadius + 4, (padRadius - 4) * 2, (padRadius - 4) * 2, 10);
       ctx.fill();
 
       // Symbol
-      ctx.fillStyle = isDemoActive ? '#FFFFFF' : baseColor;
-      ctx.font = 'bold 24px Montserrat, sans-serif';
+      ctx.fillStyle = isLit ? '#FFFFFF' : baseColor;
+      ctx.font = 'bold 22px Montserrat, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(PAD_SYMBOLS[id], x, y + 8);
+      ctx.fillText(PAD_SYMBOLS[id], x, y + 2);
+
+      // Key Hint Label under symbol
+      ctx.fillStyle = isLit ? '#FFFFFF' : 'rgba(255, 255, 255, 0.75)';
+      ctx.font = '800 10px Montserrat, sans-serif';
+      ctx.fillText(PAD_KEY_HINTS[id], x, y + 20);
+
       ctx.restore();
     });
 
@@ -509,7 +530,7 @@ export class SequenceClashGame extends BaseGame {
       ctx.strokeStyle = d.alive ? p.color : '#475569';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.roundRect(px - 60, py - 40, 120, 80, 12);
+      ctx.roundRect(px - 60, py - 44, 120, 88, 12);
       ctx.fill();
       ctx.stroke();
 
@@ -517,27 +538,33 @@ export class SequenceClashGame extends BaseGame {
       ctx.fillStyle = d.alive ? '#FFFFFF' : '#64748B';
       ctx.font = 'bold 12px Montserrat, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(p.name, px, py - 20);
+      ctx.fillText(p.name, px, py - 22);
 
       // Status
       if (!d.alive) {
         ctx.fillStyle = '#EF4444';
         ctx.font = 'bold 11px Montserrat, sans-serif';
-        ctx.fillText('❌ ELIMINATED', px, py + 2);
+        ctx.fillText('❌ ELIMINATED', px, py);
       } else if (d.completedCurrentSequence) {
         ctx.fillStyle = '#10B981';
         ctx.font = 'bold 11px Montserrat, sans-serif';
-        ctx.fillText('✓ CLEARED!', px, py + 2);
+        ctx.fillText('✓ CLEARED!', px, py);
       } else {
         ctx.fillStyle = '#38BDF8';
         ctx.font = 'bold 11px monospace';
-        ctx.fillText(`STEP: ${d.inputIndex}/${this.sequence.length}`, px, py + 2);
+        ctx.fillText(`STEP: ${d.inputIndex}/${this.sequence.length}`, px, py);
       }
 
       // Score
       ctx.fillStyle = '#F59E0B';
       ctx.font = '900 13px Montserrat, sans-serif';
-      ctx.fillText(`${d.score} PTS`, px, py + 24);
+      ctx.fillText(`${d.score} PTS`, px, py + 20);
+
+      // Controller Key Guide
+      const keyGuide = p.id === 0 ? 'W A S D / TAP' : p.id === 1 ? '↑ ← ↓ →' : p.id === 2 ? 'I J K L' : 'T F G H';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.font = '700 9px monospace';
+      ctx.fillText(keyGuide, px, py + 33);
 
       ctx.restore();
     });
