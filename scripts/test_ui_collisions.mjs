@@ -35,7 +35,7 @@ async function run() {
 
     // 3. Check GameManager hitboxes via page evaluate
     const hitboxes = await page.evaluate(() => {
-      const gm = window.gameManager;
+      const gm = window.__GAME_MANAGER__;
       if (!gm) return null;
       return {
         shopCoin: gm.shopCoinBadgeHitbox,
@@ -68,7 +68,7 @@ async function run() {
     // 4. Test Opening Game Modal: Utility bar should hide completely
     console.log('- Opening Game Details Modal...');
     await page.evaluate(() => {
-      const gm = window.gameManager;
+      const gm = window.__GAME_MANAGER__;
       if (gm) gm.openGameModal(0);
     });
     await page.waitForTimeout(300);
@@ -83,7 +83,7 @@ async function run() {
 
     // Close modal
     await page.evaluate(() => {
-      const gm = window.gameManager;
+      const gm = window.__GAME_MANAGER__;
       if (gm) gm.closeGameModal();
     });
     await page.waitForTimeout(200);
@@ -91,7 +91,7 @@ async function run() {
     // 5. Test Settings Modal: Utility bar should hide completely
     console.log('- Opening Settings Modal...');
     await page.evaluate(() => {
-      const gm = window.gameManager;
+      const gm = window.__GAME_MANAGER__;
       if (gm) gm.openSettings();
     });
     await page.waitForTimeout(300);
