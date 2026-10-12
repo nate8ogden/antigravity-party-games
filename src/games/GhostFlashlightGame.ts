@@ -213,10 +213,15 @@ export class GhostFlashlightGame extends BaseGame {
       let moveDirX = steer;
       let moveDirY = -throttle; // Up is negative Y
 
+      const pInfo = this.getPlayer(mp.id);
+      const isBot = pInfo ? pInfo.type.startsWith('bot_') : false;
+
       if (Math.hypot(moveDirX, moveDirY) > 0.1) {
         const inputAngle = Math.atan2(moveDirY, moveDirX);
         mp.angle = inputAngle;
-        mp.flashlightAngle = inputAngle;
+        if (!isBot) {
+          mp.flashlightAngle = inputAngle;
+        }
 
         // Accelerate smoothly
         const accel = 650;
@@ -635,10 +640,10 @@ export class GhostFlashlightGame extends BaseGame {
 
     // 3. Draw Players (Mascots & Spectral Phantom)
     for (const mp of this.mPlayers.values()) {
-      ctx.save();
-      ctx.translate(mp.x, mp.y);
-
       if (mp.isGhost) {
+        ctx.save();
+        ctx.translate(mp.x, mp.y);
+
         // --- EERIE SPECTRAL GHOST ---
         const isRevealed = mp.revealedTimer > 0;
         const floatY = Math.sin(now * 0.007) * 4;
@@ -696,10 +701,10 @@ export class GhostFlashlightGame extends BaseGame {
         ctx.restore();
       } else {
         // --- HUMAN INVESTIGATOR MASCOT ---
-        ctx.save();
         this.drawPlayerMascot(ctx, mp.id, mp.x, mp.y, 15, mp.isUltraBeam ? 'focused' : 'idle', now * 0.001, mp.flashlightAngle);
 
         // Flashlight cylinder in player's hand
+        ctx.save();
         ctx.translate(mp.x, mp.y);
         ctx.rotate(mp.flashlightAngle);
         ctx.fillStyle = '#94A3B8';
