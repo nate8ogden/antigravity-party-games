@@ -33,7 +33,7 @@ async function testShopFeatures() {
 
   // Trigger pack opening
   await page.evaluate(() => {
-    const gm = window.gameManager;
+    const gm = window.__GAME_MANAGER__;
     if (gm) {
       const curItem = gm.getUnifiedShopItems().find(i => i.id === 'pack_standard');
       if (curItem) {
@@ -52,6 +52,27 @@ async function testShopFeatures() {
   await page.waitForTimeout(2200);
   await page.screenshot({ path: 'test_pack_reveal.png' });
   console.log('Saved test_pack_reveal.png');
+
+  // Dismiss pack reveal and close shop
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+
+  // Equip boosters and arena via evaluate, then launch a game
+  await page.evaluate(() => {
+    const gm = window.__GAME_MANAGER__;
+    if (gm) {
+      gm.economy.equipBooster(0, 'booster_shield');
+      gm.economy.equipBooster(1, 'booster_turbo');
+      gm.economy.equipArena('arena_neon_synth');
+      gm.startGame(0);
+    }
+  });
+
+  await page.waitForTimeout(1500); // During countdown / play
+  await page.screenshot({ path: 'test_in_game_boosters.png' });
+  console.log('Saved test_in_game_boosters.png');
 
   await browser.close();
   console.log('Test completed successfully!');
