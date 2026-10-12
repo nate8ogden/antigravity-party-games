@@ -1637,12 +1637,12 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   },
   {
     id: 'ferris_wheel',
-    title: 'Ferris Wheel Jump',
-    tagline: 'Apex Gondola Hop',
-    category: 'Action',
+    title: 'Sky Wheel Balance',
+    tagline: 'High-Altitude Spoke Tilt',
+    category: 'Physics',
     icon: '[G-151]',
-    instructions: 'Hop upward across spinning gondolas of the giant Ferris wheel! Reach the highest zenith for maximum multiplier points.',
-    controlPrompt: 'Tap: Jump Gondola'
+    instructions: 'Traverse the rotating structural iron spokes of the giant carnival ferris wheel 100 feet in the air! Gather golden star tokens and crystal gems while fighting slope gravity and high-altitude wind gusts. Don\'t slip off the outer rim!',
+    controlPrompt: 'Up/Down: Climb Spoke | Left/Right/Space: Jump Adjacent Spoke | 1-3: Switch Theme'
   },
   {
     id: 'funhouse_mirrors',
