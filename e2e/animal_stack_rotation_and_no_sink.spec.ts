@@ -32,7 +32,7 @@ test.describe('Animal Stack Overhaul: Rotation, Unique Shapes, No Sinking, Wood 
     expect(debug.heldAnimal).toBeDefined();
     expect(debug.tilt).toBe(0);
 
-    // Rotate using KeyR
+    // Rotate using KeyR (45° step)
     await page.keyboard.press('KeyR');
     await page.waitForTimeout(150);
 
@@ -40,9 +40,9 @@ test.describe('Animal Stack Overhaul: Rotation, Unique Shapes, No Sinking, Wood 
       const dbg = (window as unknown as { __ANIMAL_STACK_DEBUG__?: { getHeldRotation: () => number } }).__ANIMAL_STACK_DEBUG__;
       return dbg?.getHeldRotation();
     });
-    expect(rotAfterR).toBeCloseTo(Math.PI / 2, 2);
+    expect(rotAfterR).toBeCloseTo(Math.PI / 4, 2);
 
-    // Rotate using KeyW (Player 0)
+    // Rotate using KeyW (Player 0) (another 45° step -> 90°)
     await page.keyboard.press('KeyW');
     await page.waitForTimeout(250);
 
@@ -50,9 +50,9 @@ test.describe('Animal Stack Overhaul: Rotation, Unique Shapes, No Sinking, Wood 
       const dbg = (window as unknown as { __ANIMAL_STACK_DEBUG__?: { getHeldRotation: () => number } }).__ANIMAL_STACK_DEBUG__;
       return dbg?.getHeldRotation();
     });
-    expect(rotAfterW).toBeCloseTo(Math.PI, 2);
+    expect(rotAfterW).toBeCloseTo(Math.PI / 2, 2);
 
-    // Click on rotate button on screen
+    // Click on rotate button on screen (another 45° step -> 135°)
     const canvas = page.locator('canvas');
     const box = await canvas.boundingBox();
     if (box) {
@@ -64,7 +64,7 @@ test.describe('Animal Stack Overhaul: Rotation, Unique Shapes, No Sinking, Wood 
         const dbg = (window as unknown as { __ANIMAL_STACK_DEBUG__?: { getHeldRotation: () => number } }).__ANIMAL_STACK_DEBUG__;
         return dbg?.getHeldRotation();
       });
-      expect(rotAfterClick).toBeCloseTo(3 * Math.PI / 2, 2);
+      expect(rotAfterClick).toBeCloseTo(3 * Math.PI / 4, 2);
     }
   });
 

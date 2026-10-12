@@ -30,11 +30,11 @@ export interface StackedAnimal {
   vx: number;
   vy: number;
   settled: boolean;
-  angle: number; // 0, PI/2, PI, 3*PI/2
+  angle: number; // 45° step increments: 0, PI/4, PI/2, 3PI/4, PI, 5PI/4, 3PI/2, 7PI/4
 }
 
 export class AnimalStackGame extends BaseGame {
-  // Moored Sturdy Raft (Cannot tip!)
+  // Moored Sturdy Raft (Level & Firmly Moored)
   private raftX: number = 0;
   private raftY: number = 0;
   private raftWidth: number = 260;
@@ -47,7 +47,7 @@ export class AnimalStackGame extends BaseGame {
   private craneSpeed: number = 190;
   private craneDir: number = 1;
   private currentAnimalIndex: number = 0;
-  private heldRotation: number = 0; // Active rotation angle for crane clamp
+  private heldRotation: number = 0; // Active rotation angle for crane clamp (45° steps)
   private prevThrottle: number = 0;
   private rotateCooldown: number = 0;
 
@@ -66,7 +66,7 @@ export class AnimalStackGame extends BaseGame {
   private botDropDelay: number = 0;
 
   // Interactive On-screen Rotate Button bounds
-  private rotateBtnRect = { x: 0, y: 0, w: 130, h: 32 };
+  private rotateBtnRect = { x: 0, y: 0, w: 146, h: 32 };
   private rotateBtnHover: boolean = false;
 
   // Event handlers
@@ -106,20 +106,19 @@ export class AnimalStackGame extends BaseGame {
       if (this.isFinished || this.fallingAnimal || this.nextTurnTimer > 0) return;
       const currentPid = this.activePlayerOrder[this.activePlayerIndex];
 
-      // Key R rotates for any active human player
-      // Key R rotates for any active human player
+      // Key R rotates 45° for any active human player
       if (e.code === 'KeyR') {
         this.rotateCurrentAnimal(1);
         return;
       }
 
-      // Player 0 keys (W, S)
+      // Player 0 keys (W, S) rotate 45° clockwise / counter-clockwise
       if (currentPid === 0 && (e.code === 'KeyW' || e.code === 'KeyS')) {
         this.rotateCurrentAnimal(e.code === 'KeyW' ? 1 : -1);
         return;
       }
 
-      // Player 1 keys (ArrowUp, ArrowDown)
+      // Player 1 keys (ArrowUp, ArrowDown) rotate 45°
       if (currentPid === 1 && (e.code === 'ArrowUp' || e.code === 'ArrowDown')) {
         this.rotateCurrentAnimal(e.code === 'ArrowUp' ? 1 : -1);
         return;
@@ -203,7 +202,7 @@ export class AnimalStackGame extends BaseGame {
     this.prevThrottle = 0;
     this.rotateCooldown = 0;
 
-    const btnW = 146;
+    const btnW = 154;
     const btnH = 30;
     this.rotateBtnRect = { x: width / 2 - btnW / 2, y: 94, w: btnW, h: btnH };
 
@@ -232,10 +231,14 @@ export class AnimalStackGame extends BaseGame {
     this.botDropDelay = 0.6;
   }
 
+  // 45-Degree Rotation Step (0, 45, 90, 135, 180, 225, 270, 315)
   public rotateCurrentAnimal(dir: number = 1): void {
     if (this.fallingAnimal || this.nextTurnTimer > 0) return;
-    this.heldRotation = (this.heldRotation + dir * (Math.PI / 2)) % (Math.PI * 2);
-    if (this.heldRotation < 0) this.heldRotation += Math.PI * 2;
+    const step = Math.PI / 4; // 45 degrees
+    let newRot = Math.round((this.heldRotation + dir * step) / step) * step;
+    newRot = ((newRot % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    if (Math.abs(newRot - Math.PI * 2) < 0.01) newRot = 0;
+    this.heldRotation = newRot;
     this.audio.playTap();
     this.particles.spawnSparks(this.craneX, this.craneY + 36, '#38BDF8', 6);
   }
@@ -280,15 +283,15 @@ export class AnimalStackGame extends BaseGame {
     }
     this.craneX = Math.max(minCraneX, Math.min(maxCraneX, this.craneX));
 
-    // Check throttle input for rotation (W / S or Up / Down or analog stick)
+    // Check throttle input for rotation (W / S or Up / Down or analog stick in 45° steps)
     const throttle = this.input.getThrottle(currentTurnPid);
     if (this.rotateCooldown <= 0) {
       if (throttle > 0.4 && this.prevThrottle <= 0.4) {
         this.rotateCurrentAnimal(1);
-        this.rotateCooldown = 0.22;
+        this.rotateCooldown = 0.20;
       } else if (throttle < -0.4 && this.prevThrottle >= -0.4) {
         this.rotateCurrentAnimal(-1);
-        this.rotateCooldown = 0.22;
+        this.rotateCooldown = 0.20;
       }
     }
     this.prevThrottle = throttle;
@@ -304,7 +307,7 @@ export class AnimalStackGame extends BaseGame {
       }
     }
 
-    // Process Falling Animal Physics
+    // Process Falling Animal Physics with Realistic Center of Mass & Overhang Tipping
     if (this.fallingAnimal) {
       const fa = this.fallingAnimal;
       fa.vy += 700 * dt;
@@ -316,27 +319,37 @@ export class AnimalStackGame extends BaseGame {
       const raftLeft = this.raftX - this.raftWidth / 2;
       const raftRight = this.raftX + this.raftWidth / 2;
 
-      // Accurate rotated bounding extents
+      // Accurate rotated bounding extents (handles 0, 45, 90, 135, etc.)
       const faExt = AnimalStackGame.getExtents(fa.type, fa.angle);
 
       let highestLandedY = Infinity;
       let landedOnSomething = false;
+      let supportLeft = 0;
+      let supportRight = 0;
 
       // 1. Check collision with already settled animals
       for (const sa of this.animals) {
         if (!sa.settled) continue;
         const saExt = AnimalStackGame.getExtents(sa.type, sa.angle);
-        const minOverlap = (faExt.halfW + saExt.halfW) * 0.85;
+        const saL = sa.x - saExt.halfW;
+        const saR = sa.x + saExt.halfW;
 
-        if (Math.abs(fa.x - sa.x) < minOverlap) {
+        // Check horizontal overlap
+        const overlapL = Math.max(fa.x - faExt.halfW, saL);
+        const overlapR = Math.min(fa.x + faExt.halfW, saR);
+        const overlapW = overlapR - overlapL;
+
+        if (overlapW > 8) {
           const saTopY = sa.y - saExt.halfH;
           const targetFaY = saTopY - faExt.halfH;
 
-          // When descending downward and bottom touches or passes top of sa
-          if (fa.vy > 0 && fa.y + faExt.halfH >= saTopY - 10 && fa.y - faExt.halfH <= saTopY + 14) {
+          // Descending downward and bottom touches or passes top of sa
+          if (fa.vy > 0 && fa.y + faExt.halfH >= saTopY - 12 && fa.y - faExt.halfH <= saTopY + 16) {
             if (!landedOnSomething || targetFaY < highestLandedY) {
               highestLandedY = targetFaY;
               landedOnSomething = true;
+              supportLeft = saL;
+              supportRight = saR;
             }
           }
         }
@@ -344,32 +357,62 @@ export class AnimalStackGame extends BaseGame {
 
       // 2. Check collision with solid raft wood surface (Zero sinking!)
       if (!landedOnSomething) {
-        const withinRaftBounds = fa.x >= raftLeft - faExt.halfW * 0.4 && fa.x <= raftRight + faExt.halfW * 0.4;
-        if (withinRaftBounds && fa.vy > 0 && fa.y + faExt.halfH >= raftTopY - 10 && fa.y - faExt.halfH <= raftTopY + 18) {
+        const raftOverlapL = Math.max(fa.x - faExt.halfW, raftLeft);
+        const raftOverlapR = Math.min(fa.x + faExt.halfW, raftRight);
+        const raftOverlapW = raftOverlapR - raftOverlapL;
+
+        if (raftOverlapW > 8 && fa.vy > 0 && fa.y + faExt.halfH >= raftTopY - 10 && fa.y - faExt.halfH <= raftTopY + 18) {
           highestLandedY = raftTopY - faExt.halfH; // Flush on wood surface!
           landedOnSomething = true;
+          supportLeft = raftLeft;
+          supportRight = raftRight;
         }
       }
 
+      // 3. Realistic Physics Resolution: Center of Mass Balance Check
       if (landedOnSomething) {
-        fa.y = highestLandedY; // Exact flush alignment with zero pixel sinking
-        fa.settled = true;
-        fa.vy = 0;
-        fa.vx = 0;
-        this.animals.push(fa);
-        this.fallingAnimal = null;
-        this.audio.playTap();
-        this.particles.spawnSparks(fa.x, fa.y + faExt.halfH, '#F59E0B', 8);
+        // Center of mass balance check: Is fa.x supported beneath it?
+        const leftOverhang = supportLeft - fa.x;
+        const rightOverhang = fa.x - supportRight;
 
-        // Award points based on placement and tower stack height bonus
-        const cur = this.playerScores.get(currentTurnPid) || 0;
-        const stackHeightAboveRaft = Math.max(0, raftTopY - (fa.y - faExt.halfH));
-        const heightBonus = Math.floor(stackHeightAboveRaft / 18) * 2;
-        const points = 10 + heightBonus;
-        this.playerScores.set(currentTurnPid, cur + points);
-        this.particles.showFloatingText(`+${points} BALANCED!`, fa.x, fa.y - 20, '#10B981', 18);
+        // If center of mass is past the support edge, the animal is overbalanced and tilts/slides off!
+        if (leftOverhang > 4) {
+          // Unbalanced to the left: slide and tumble off edge!
+          fa.vx = -Math.max(120, leftOverhang * 6 + fa.type.mass * 1.5);
+          fa.vy = Math.max(80, fa.vy * 0.4);
+          fa.angle -= 0.16;
+          this.audio.playWhoosh();
+          this.particles.showFloatingText('TIPPING!', fa.x, fa.y - 15, '#F59E0B', 16);
+          this.particles.spawnSparks(supportLeft, fa.y + faExt.halfH, '#F59E0B', 6);
+        } else if (rightOverhang > 4) {
+          // Unbalanced to the right: slide and tumble off edge!
+          fa.vx = Math.max(120, rightOverhang * 6 + fa.type.mass * 1.5);
+          fa.vy = Math.max(80, fa.vy * 0.4);
+          fa.angle += 0.16;
+          this.audio.playWhoosh();
+          this.particles.showFloatingText('TIPPING!', fa.x, fa.y - 15, '#F59E0B', 16);
+          this.particles.spawnSparks(supportRight, fa.y + faExt.halfH, '#F59E0B', 6);
+        } else {
+          // Stably Balanced! Flush settle with zero pixel sinking
+          fa.y = highestLandedY;
+          fa.settled = true;
+          fa.vy = 0;
+          fa.vx = 0;
+          this.animals.push(fa);
+          this.fallingAnimal = null;
+          this.audio.playTap();
+          this.particles.spawnSparks(fa.x, fa.y + faExt.halfH, '#F59E0B', 8);
 
-        this.advanceToNextTurn();
+          // Award points based on placement and tower stack height bonus
+          const cur = this.playerScores.get(currentTurnPid) || 0;
+          const stackHeightAboveRaft = Math.max(0, raftTopY - (fa.y - faExt.halfH));
+          const heightBonus = Math.floor(stackHeightAboveRaft / 18) * 2;
+          const points = 10 + heightBonus;
+          this.playerScores.set(currentTurnPid, cur + points);
+          this.particles.showFloatingText(`+${points} BALANCED!`, fa.x, fa.y - 20, '#10B981', 18);
+
+          this.advanceToNextTurn();
+        }
       } else if (fa.y > this.raftY + 45) {
         // Splashed directly into water!
         this.triggerSplash(fa.x, this.raftY + 20);
@@ -464,7 +507,7 @@ export class AnimalStackGame extends BaseGame {
       targetX = topSa.x;
     }
 
-    // Bot rotation strategy on hard / normal
+    // Bot rotation strategy in 45° increments
     const currentAnimal = ANIMAL_TYPES[this.currentAnimalIndex];
     if (difficulty !== 'bot_easy' && Math.random() < 0.05) {
       if ((currentAnimal.id === 'giraffe' || currentAnimal.id === 'crocodile') && this.heldRotation === 0) {
@@ -684,7 +727,7 @@ export class AnimalStackGame extends BaseGame {
     ctx.closePath();
     ctx.fill();
 
-    // 11. HUD: Turn Banner & Interactive Rotate Button
+    // 11. HUD: Turn Banner & Interactive Rotate Button (showing 45° increments)
     this.renderHUD(ctx, width, height);
 
     ctx.restore();
@@ -722,8 +765,8 @@ export class AnimalStackGame extends BaseGame {
     ctx.fillText(`${curPlayer.name.toUpperCase()}'S TURN — DROP TO STACK!`, bannerX + bannerW / 2 + 8, bannerY + 21.5);
     ctx.restore();
 
-    // Interactive On-screen [ 🔄 ROTATE ] Pill Button
-    const btnW = 146;
+    // Interactive On-screen [ 🔄 ROTATE 45° ] Pill Button
+    const btnW = 154;
     const btnH = 30;
     const btnX = width / 2 - btnW / 2;
     const btnY = 94;
@@ -742,7 +785,7 @@ export class AnimalStackGame extends BaseGame {
     ctx.textAlign = 'center';
     ctx.fillStyle = '#F0F9FF';
     const rotDeg = Math.round((this.heldRotation * 180) / Math.PI) % 360;
-    ctx.fillText(`🔄 ROTATE (${rotDeg}°)`, btnX + btnW / 2, btnY + 19.5);
+    ctx.fillText(`🔄 ROTATE 45° (${rotDeg}°)`, btnX + btnW / 2, btnY + 19.5);
     ctx.restore();
 
     // Rotation Control Hint below button
@@ -750,10 +793,10 @@ export class AnimalStackGame extends BaseGame {
     ctx.font = '700 10.5px Montserrat, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#CBD5E1';
-    ctx.fillText('Keys: [W/S] or [↑/↓] or [R] or Tap Button', width / 2, btnY + btnH + 13);
+    ctx.fillText('Keys: [W/S] or [↑/↓] or [R] or Tap Button to rotate 45°', width / 2, btnY + btnH + 13);
     ctx.restore();
 
-    // Bottom HUD: Stack Height & Player Lives Counter (replacing old inclinometer)
+    // Bottom HUD: Stack Height & Player Lives Counter
     const hudW = Math.min(width - 32, 420);
     const hudH = 34;
     const hudX = width / 2 - hudW / 2;
@@ -856,7 +899,7 @@ export class AnimalStackGame extends BaseGame {
     ctx.restore();
   }
 
-  // 1. CROCODILE: Ultra-wide horizontal bridge (76x24) or tall pillar when rotated 90°
+  // 1. CROCODILE: Authentic elongated reptilian shape with jaws, teeth, arched back, dorsal spikes, and clawed legs
   private renderCrocodile(
     ctx: CanvasRenderingContext2D,
     def: AnimalDef,
@@ -864,40 +907,66 @@ export class AnimalStackGame extends BaseGame {
     halfH: number,
     pColor: string
   ) {
-    // Body gradient
-    const grad = ctx.createLinearGradient(-halfW, 0, halfW, 0);
-    grad.addColorStop(0, '#047857');
-    grad.addColorStop(0.5, '#059669');
-    grad.addColorStop(1, '#10B981');
+    ctx.save();
 
-    ctx.fillStyle = grad;
+    // 1. Tail with tapering dorsal scutes
+    ctx.fillStyle = '#047857';
     ctx.beginPath();
-    ctx.roundRect(-halfW, -halfH, def.width, def.height, [6, 12, 12, 6]);
+    ctx.moveTo(-halfW, 0);
+    ctx.quadraticCurveTo(-halfW + 12, -halfH + 2, -halfW + 24, -halfH + 4);
+    ctx.lineTo(-halfW + 24, halfH - 4);
+    ctx.quadraticCurveTo(-halfW + 10, halfH - 2, -halfW, 0);
+    ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = 'rgba(15, 23, 42, 0.25)';
+
+    // 2. Main Crocodile Body Silhouette
+    const bodyGrad = ctx.createLinearGradient(-halfW, 0, halfW, 0);
+    bodyGrad.addColorStop(0, '#047857');
+    bodyGrad.addColorStop(0.5, '#059669');
+    bodyGrad.addColorStop(1, '#10B981');
+
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    // Start at snout tip
+    ctx.moveTo(halfW, 2);
+    // Lower jaw
+    ctx.lineTo(halfW - 20, 6);
+    // Belly curve
+    ctx.quadraticCurveTo(0, halfH, -halfW + 22, halfH - 3);
+    // Tail base
+    ctx.lineTo(-halfW + 22, -halfH + 5);
+    // Arched scaly back
+    ctx.quadraticCurveTo(-8, -halfH - 2, halfW - 22, -halfH + 4);
+    // Cranial eye bump
+    ctx.quadraticCurveTo(halfW - 14, -halfH - 2, halfW - 10, -halfH + 3);
+    // Upper snout
+    ctx.lineTo(halfW, -2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#064E3B';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Spiky dorsal ridges on back
+    // 3. Dorsal Spikes / Osteoderm ridges along spine
     ctx.fillStyle = '#064E3B';
-    for (let rx = -halfW + 12; rx < halfW - 16; rx += 10) {
+    for (let sx = -halfW + 26; sx < halfW - 24; sx += 8) {
       ctx.beginPath();
-      ctx.moveTo(rx, -halfH);
-      ctx.lineTo(rx + 4, -halfH - 5);
-      ctx.lineTo(rx + 8, -halfH);
+      ctx.moveTo(sx, -halfH + 2);
+      ctx.lineTo(sx + 3.5, -halfH - 4);
+      ctx.lineTo(sx + 7, -halfH + 2);
       ctx.closePath();
       ctx.fill();
     }
 
-    // Pale yellow-green underbelly stripe
+    // 4. Pale cream underbelly scales
     ctx.fillStyle = '#D9F99D';
     ctx.beginPath();
-    ctx.roundRect(-halfW + 4, halfH - 6, def.width - 24, 4, 2);
+    ctx.roundRect(-halfW + 25, halfH - 7, def.width - 52, 5, 2);
     ctx.fill();
 
-    // Toothy grin on right snout
+    // 5. Interlocking White Teeth along jawline
     ctx.fillStyle = '#FFFFFF';
-    for (let tx = halfW - 18; tx < halfW - 4; tx += 4) {
+    for (let tx = halfW - 20; tx < halfW - 4; tx += 4) {
       ctx.beginPath();
       ctx.moveTo(tx, 0);
       ctx.lineTo(tx + 2, 4);
@@ -906,14 +975,33 @@ export class AnimalStackGame extends BaseGame {
       ctx.fill();
     }
 
-    // Eyes
-    this.drawChibiEyes(ctx, halfW - 22, -halfH + 4, 5);
+    // 6. Clawed front & back legs
+    ctx.fillStyle = '#047857';
+    // Back leg
+    ctx.beginPath();
+    ctx.roundRect(-halfW + 24, halfH - 4, 10, 6, [2, 2, 4, 4]);
+    ctx.fill();
+    // Front leg
+    ctx.beginPath();
+    ctx.roundRect(halfW - 32, halfH - 4, 10, 6, [2, 2, 4, 4]);
+    ctx.fill();
 
-    // Player Collar & Bell
-    this.drawCollar(ctx, -halfW + 10, 0, 14, pColor);
+    // 7. Reptilian Eye with slit pupil
+    ctx.fillStyle = '#FEF08A';
+    ctx.beginPath();
+    ctx.arc(halfW - 14, -halfH + 6, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0F172A';
+    ctx.beginPath();
+    ctx.ellipse(halfW - 14, -halfH + 6, 1.2, 2.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Collar
+    this.drawCollar(ctx, -halfW + 18, 0, 14, pColor);
+    ctx.restore();
   }
 
-  // 2. GIRAFFE: Ultra-tall vertical pillar (26x74) or wide horizontal roof when rotated 90°
+  // 2. GIRAFFE: Authentic tall giraffe silhouette with long neck, head, ossicones, mane, spots, and hooves
   private renderGiraffe(
     ctx: CanvasRenderingContext2D,
     def: AnimalDef,
@@ -921,24 +1009,37 @@ export class AnimalStackGame extends BaseGame {
     halfH: number,
     pColor: string
   ) {
-    // Ossicones (horns) with fuzzy pom-poms
-    ctx.strokeStyle = '#D97706';
-    ctx.lineWidth = 3;
+    ctx.save();
+
+    // 1. Ossicones (horns with velvety knobs)
+    ctx.strokeStyle = '#92400E';
+    ctx.lineWidth = 2.5;
     ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(-5, -halfH);
-    ctx.lineTo(-6, -halfH - 9);
-    ctx.moveTo(5, -halfH);
-    ctx.lineTo(6, -halfH - 9);
+    ctx.moveTo(-5, -halfH + 2);
+    ctx.lineTo(-6, -halfH - 8);
+    ctx.moveTo(5, -halfH + 2);
+    ctx.lineTo(6, -halfH - 8);
     ctx.stroke();
 
-    ctx.fillStyle = '#92400E';
+    ctx.fillStyle = '#78350F';
     ctx.beginPath();
-    ctx.arc(-6, -halfH - 9, 3.5, 0, Math.PI * 2);
-    ctx.arc(6, -halfH - 9, 3.5, 0, Math.PI * 2);
+    ctx.arc(-6, -halfH - 8, 3, 0, Math.PI * 2);
+    ctx.arc(6, -halfH - 8, 3, 0, Math.PI * 2);
     ctx.fill();
 
-    // Tall body gradient
+    // 2. Mane along back of neck
+    ctx.fillStyle = '#92400E';
+    for (let my = -halfH + 18; my < halfH - 14; my += 7) {
+      ctx.beginPath();
+      ctx.moveTo(-halfW + 4, my);
+      ctx.lineTo(-halfW - 2, my + 3);
+      ctx.lineTo(-halfW + 4, my + 6);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // 3. Giraffe Body & Neck Contour
     const grad = ctx.createLinearGradient(0, -halfH, 0, halfH);
     grad.addColorStop(0, '#FEF08A');
     grad.addColorStop(0.5, '#FBBF24');
@@ -946,19 +1047,43 @@ export class AnimalStackGame extends BaseGame {
 
     ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.roundRect(-halfW, -halfH, def.width, def.height, 10);
+    // Head top
+    ctx.moveTo(-halfW + 3, -halfH + 8);
+    ctx.quadraticCurveTo(0, -halfH + 4, halfW - 3, -halfH + 8);
+    // Muzzle / nose
+    ctx.quadraticCurveTo(halfW + 2, -halfH + 15, halfW - 3, -halfH + 20);
+    // Neck down front
+    ctx.quadraticCurveTo(halfW - 2, 0, halfW - 2, halfH - 8);
+    // Front legs/hooves
+    ctx.lineTo(halfW - 2, halfH);
+    ctx.lineTo(halfW - 10, halfH);
+    ctx.lineTo(halfW - 10, halfH - 8);
+    // Belly gap
+    ctx.lineTo(-halfW + 10, halfH - 8);
+    // Rear legs/hooves
+    ctx.lineTo(-halfW + 10, halfH);
+    ctx.lineTo(-halfW + 2, halfH);
+    ctx.lineTo(-halfW + 2, halfH - 8);
+    // Neck back line up
+    ctx.quadraticCurveTo(-halfW + 2, 0, -halfW + 3, -halfH + 8);
+    ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = 'rgba(15, 23, 42, 0.25)';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#B45309';
+    ctx.lineWidth = 1.4;
     ctx.stroke();
 
-    // Giraffe spots down neck
+    // 4. Dark Hooves
+    ctx.fillStyle = '#451A03';
+    ctx.fillRect(halfW - 10, halfH - 4, 8, 4);
+    ctx.fillRect(-halfW + 2, halfH - 4, 8, 4);
+
+    // 5. Irregular Polygon Giraffe Spots
     ctx.fillStyle = '#B45309';
     const spots = [
-      { sx: -4, sy: -halfH + 24, r: 4 },
-      { sx: 5, sy: -halfH + 36, r: 4.5 },
-      { sx: -5, sy: -halfH + 50, r: 4 },
-      { sx: 4, sy: -halfH + 62, r: 3.5 }
+      { sx: 0, sy: -halfH + 26, r: 4 },
+      { sx: 3, sy: -halfH + 37, r: 4.5 },
+      { sx: -3, sy: -halfH + 48, r: 4.2 },
+      { sx: 2, sy: -halfH + 59, r: 4 }
     ];
     for (const sp of spots) {
       ctx.beginPath();
@@ -966,20 +1091,27 @@ export class AnimalStackGame extends BaseGame {
       ctx.fill();
     }
 
-    // Eyes near head
+    // 6. Giraffe Eyes & Muzzle
     this.drawChibiEyes(ctx, 0, -halfH + 11, 4.5);
-
-    // Muzzle & nostrils
     ctx.fillStyle = '#FEF9C3';
     ctx.beginPath();
-    ctx.ellipse(0, -halfH + 18, 6.5, 4, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, -halfH + 17, 5.5, 3.5, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Player Collar & Bell
-    this.drawCollar(ctx, 0, halfH - 6, halfW * 1.4, pColor);
+    // 7. Small tail tuft
+    ctx.strokeStyle = '#92400E';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-halfW + 2, halfH - 12);
+    ctx.lineTo(-halfW - 4, halfH - 6);
+    ctx.stroke();
+
+    // Collar
+    this.drawCollar(ctx, 0, halfH - 14, halfW * 1.3, pColor);
+    ctx.restore();
   }
 
-  // 3. ELEPHANT: Cornerstone block (56x44)
+  // 3. ELEPHANT: Authentic pachyderm shape with domed back, trunk, tusks, flapping ear, and pillar legs
   private renderElephant(
     ctx: CanvasRenderingContext2D,
     def: AnimalDef,
@@ -987,20 +1119,9 @@ export class AnimalStackGame extends BaseGame {
     halfH: number,
     pColor: string
   ) {
-    // Big floppy ears with pink inner pads
-    ctx.fillStyle = '#64748B';
-    ctx.beginPath();
-    ctx.ellipse(-halfW - 2, -4, 9, 14, -0.25, 0, Math.PI * 2);
-    ctx.ellipse(halfW + 2, -4, 9, 14, 0.25, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.save();
 
-    ctx.fillStyle = '#FBCFE8';
-    ctx.beginPath();
-    ctx.ellipse(-halfW - 2, -4, 5.5, 9.5, -0.25, 0, Math.PI * 2);
-    ctx.ellipse(halfW + 2, -4, 5.5, 9.5, 0.25, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Body gradient
+    // 1. Elephant Body Contour with domed back and pillar legs
     const grad = ctx.createLinearGradient(0, -halfH, 0, halfH);
     grad.addColorStop(0, '#94A3B8');
     grad.addColorStop(0.5, '#64748B');
@@ -1008,45 +1129,90 @@ export class AnimalStackGame extends BaseGame {
 
     ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.roundRect(-halfW, -halfH, def.width, def.height, 12);
+    // Start at head top
+    ctx.moveTo(halfW - 14, -halfH + 4);
+    // Trunk arch down
+    ctx.quadraticCurveTo(halfW + 6, -6, halfW + 4, 8);
+    // Trunk curled tip
+    ctx.quadraticCurveTo(halfW + 10, 15, halfW + 1, 14);
+    ctx.quadraticCurveTo(halfW - 4, 12, halfW - 2, 4);
+    // Front pillar leg
+    ctx.lineTo(halfW - 4, halfH);
+    ctx.lineTo(halfW - 18, halfH);
+    ctx.lineTo(halfW - 18, halfH - 10);
+    // Underbelly arch
+    ctx.quadraticCurveTo(0, halfH - 12, -halfW + 18, halfH - 10);
+    // Back pillar leg
+    ctx.lineTo(-halfW + 18, halfH);
+    ctx.lineTo(-halfW + 4, halfH);
+    ctx.lineTo(-halfW + 4, halfH - 8);
+    // Rump and domed back
+    ctx.quadraticCurveTo(-halfW - 2, 0, -halfW + 6, -halfH + 8);
+    ctx.quadraticCurveTo(-6, -halfH - 4, halfW - 14, -halfH + 4);
+    ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = 'rgba(15, 23, 42, 0.25)';
+    ctx.strokeStyle = '#334155';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Eyes
-    this.drawChibiEyes(ctx, 0, -8, 8);
-
-    // Elephant Trunk
-    ctx.fillStyle = '#64748B';
+    // 2. White toenails on pillar feet
+    ctx.fillStyle = '#FFFFFF';
+    // Front foot nails
     ctx.beginPath();
-    ctx.roundRect(-4, -4, 8, 15, [4, 4, 6, 6]);
+    ctx.arc(halfW - 15, halfH - 1, 1.8, 0, Math.PI * 2);
+    ctx.arc(halfW - 11, halfH - 1, 1.8, 0, Math.PI * 2);
+    ctx.arc(halfW - 7, halfH - 1, 1.8, 0, Math.PI * 2);
     ctx.fill();
+    // Back foot nails
     ctx.beginPath();
-    ctx.arc(2, 11, 3.5, 0, Math.PI * 2);
+    ctx.arc(-halfW + 7, halfH - 1, 1.8, 0, Math.PI * 2);
+    ctx.arc(-halfW + 11, halfH - 1, 1.8, 0, Math.PI * 2);
+    ctx.arc(-halfW + 15, halfH - 1, 1.8, 0, Math.PI * 2);
     ctx.fill();
 
-    // Shiny tusks
+    // 3. Ivory Tusks
     ctx.fillStyle = '#FFFFFF';
     ctx.beginPath();
-    ctx.moveTo(-5, 4);
-    ctx.lineTo(-9, 9);
-    ctx.lineTo(-5, 8);
+    ctx.moveTo(halfW - 4, 4);
+    ctx.quadraticCurveTo(halfW + 4, 8, halfW + 6, 3);
+    ctx.lineTo(halfW - 2, 2);
     ctx.closePath();
     ctx.fill();
+    ctx.strokeStyle = '#CBD5E1';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
 
+    // 4. Large Flapping Ear with inner pink shading
+    ctx.fillStyle = '#64748B';
     ctx.beginPath();
-    ctx.moveTo(5, 4);
-    ctx.lineTo(9, 9);
-    ctx.lineTo(5, 8);
-    ctx.closePath();
+    ctx.ellipse(halfW - 18, -4, 11, 15, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#FBCFE8';
+    ctx.beginPath();
+    ctx.ellipse(halfW - 18, -4, 7, 10, 0.2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Player Collar & Bell
-    this.drawCollar(ctx, 0, halfH - 6, halfW * 1.3, pColor);
+    // 5. Eye
+    this.drawChibiEyes(ctx, halfW - 6, -10, 3.5);
+
+    // 6. Tail with hair tuft
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-halfW + 4, 2);
+    ctx.lineTo(-halfW - 4, 10);
+    ctx.stroke();
+
+    // Collar
+    this.drawCollar(ctx, -2, halfH - 14, halfW * 1.1, pColor);
+    ctx.restore();
   }
 
-  // 4. TURTLE: Curved dome shell (48x26)
+  // 4. TURTLE: Authentic turtle shape with domed carapace, rim, hexagonal scutes, head, and swimming flippers
   private renderTurtle(
     ctx: CanvasRenderingContext2D,
     def: AnimalDef,
@@ -1054,55 +1220,93 @@ export class AnimalStackGame extends BaseGame {
     halfH: number,
     pColor: string
   ) {
-    // Domed shell
-    const grad = ctx.createLinearGradient(0, -halfH, 0, halfH);
-    grad.addColorStop(0, '#34D399');
-    grad.addColorStop(0.5, '#10B981');
-    grad.addColorStop(1, '#059669');
+    ctx.save();
 
-    ctx.fillStyle = grad;
+    // 1. Protruding Head with snout and beak
+    ctx.fillStyle = '#6EE7B7';
     ctx.beginPath();
-    ctx.roundRect(-halfW, -halfH, def.width, def.height, [14, 14, 8, 8]);
+    ctx.ellipse(halfW + 4, -1, 8, 6.5, 0.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#065F46';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // Eye
+    ctx.fillStyle = '#0F172A';
+    ctx.beginPath();
+    ctx.arc(halfW + 7, -3, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(halfW + 6.5, -3.5, 0.7, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2. Front & Back Swimming Flippers
+    ctx.fillStyle = '#059669';
+    // Front paddle
+    ctx.beginPath();
+    ctx.ellipse(halfW - 10, halfH + 1, 9, 4.5, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+    // Back paddle
+    ctx.beginPath();
+    ctx.ellipse(-halfW + 8, halfH + 1, 8, 4, 0.35, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 3. Tiny pointed tail
+    ctx.beginPath();
+    ctx.moveTo(-halfW + 2, 2);
+    ctx.lineTo(-halfW - 6, 3);
+    ctx.lineTo(-halfW + 2, 6);
+    ctx.closePath();
+    ctx.fill();
+
+    // 4. Domed Carapace Shell Silhouette
+    const shellGrad = ctx.createLinearGradient(0, -halfH, 0, halfH);
+    shellGrad.addColorStop(0, '#34D399');
+    shellGrad.addColorStop(0.5, '#10B981');
+    shellGrad.addColorStop(1, '#059669');
+
+    ctx.fillStyle = shellGrad;
+    ctx.beginPath();
+    // High arched dome
+    ctx.moveTo(-halfW + 4, halfH - 2);
+    ctx.quadraticCurveTo(-halfW + 2, -halfH - 2, 0, -halfH - 2);
+    ctx.quadraticCurveTo(halfW - 2, -halfH - 2, halfW - 4, halfH - 2);
+    // Flat plastron bottom
+    ctx.lineTo(-halfW + 4, halfH - 2);
+    ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = '#064E3B';
     ctx.lineWidth = 1.8;
     ctx.stroke();
 
-    // Shell scute patterns
+    // 5. Hexagonal Scute Plates on Shell
     ctx.strokeStyle = '#047857';
+    ctx.lineWidth = 1.4;
+    // Center scute
+    ctx.beginPath();
+    ctx.arc(0, -3, 7.5, 0, Math.PI * 2);
+    ctx.stroke();
+    // Left & right scutes
+    ctx.beginPath();
+    ctx.arc(-14, -2, 6.5, 0, Math.PI * 2);
+    ctx.arc(14, -2, 6.5, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Shell Rim Trim
+    ctx.strokeStyle = '#064E3B';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(0, -2, 7, 0, Math.PI * 2);
+    ctx.moveTo(-halfW + 4, halfH - 3);
+    ctx.lineTo(halfW - 4, halfH - 3);
     ctx.stroke();
 
-    ctx.beginPath();
-    ctx.arc(-12, -2, 6, 0, Math.PI * 2);
-    ctx.arc(12, -2, 6, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Turtle head sticking out with eyes and smile
-    ctx.fillStyle = '#6EE7B7';
-    ctx.beginPath();
-    ctx.ellipse(halfW + 4, 0, 7, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#0F172A';
-    ctx.beginPath();
-    ctx.arc(halfW + 6, -2, 1.8, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Flippers
-    ctx.fillStyle = '#059669';
-    ctx.beginPath();
-    ctx.ellipse(-halfW + 6, halfH + 2, 4, 2.5, 0.4, 0, Math.PI * 2);
-    ctx.ellipse(halfW - 6, halfH + 2, 4, 2.5, -0.4, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Player Collar & Bell
-    this.drawCollar(ctx, -2, halfH - 5, halfW * 1.1, pColor);
+    // Collar
+    this.drawCollar(ctx, 0, halfH - 6, halfW * 0.9, pColor);
+    ctx.restore();
   }
 
-  // 5. PIG: Chubby rounded box (42x32)
+  // 5. PIG: Chubby barrel body, snout disk with nostrils, triangular floppy ears, trotters, and corkscrew tail
   private renderPig(
     ctx: CanvasRenderingContext2D,
     def: AnimalDef,
@@ -1110,23 +1314,33 @@ export class AnimalStackGame extends BaseGame {
     halfH: number,
     pColor: string
   ) {
-    // Folded triangular ears
+    ctx.save();
+
+    // 1. Curly Corkscrew Tail
+    ctx.strokeStyle = '#DB2777';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(-halfW - 3, -1, 4, 0, Math.PI * 1.8);
+    ctx.stroke();
+
+    // 2. Folded Triangular Ears
     ctx.fillStyle = '#DB2777';
     ctx.beginPath();
-    ctx.moveTo(-halfW + 2, -halfH + 2);
-    ctx.lineTo(-halfW - 4, -halfH - 7);
-    ctx.lineTo(-halfW + 11, -halfH - 1);
+    ctx.moveTo(-halfW + 8, -halfH + 4);
+    ctx.lineTo(-halfW + 2, -halfH - 7);
+    ctx.lineTo(-halfW + 16, -halfH);
     ctx.closePath();
     ctx.fill();
 
     ctx.beginPath();
-    ctx.moveTo(halfW - 2, -halfH + 2);
-    ctx.lineTo(halfW + 4, -halfH - 7);
-    ctx.lineTo(halfW - 11, -halfH - 1);
+    ctx.moveTo(halfW - 8, -halfH + 4);
+    ctx.lineTo(halfW - 2, -halfH - 7);
+    ctx.lineTo(halfW - 16, -halfH);
     ctx.closePath();
     ctx.fill();
 
-    // Body
+    // 3. Round Barrel Body
     const grad = ctx.createLinearGradient(0, -halfH, 0, halfH);
     grad.addColorStop(0, '#FBCFE8');
     grad.addColorStop(0.5, '#F472B6');
@@ -1134,36 +1348,52 @@ export class AnimalStackGame extends BaseGame {
 
     ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.roundRect(-halfW, -halfH, def.width, def.height, 12);
+    ctx.ellipse(0, 0, halfW, halfH - 2, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(15, 23, 42, 0.25)';
+    ctx.strokeStyle = '#BE185D';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Eyes
-    this.drawChibiEyes(ctx, 0, -6, 7.5);
+    // 4. Sturdy Trotter Legs with Cloven Hooves
+    ctx.fillStyle = '#F472B6';
+    ctx.beginPath();
+    ctx.roundRect(-halfW + 8, halfH - 5, 8, 7, [2, 2, 3, 3]);
+    ctx.roundRect(halfW - 16, halfH - 5, 8, 7, [2, 2, 3, 3]);
+    ctx.fill();
+    ctx.fillStyle = '#9D174D';
+    ctx.fillRect(-halfW + 8, halfH, 8, 2);
+    ctx.fillRect(halfW - 16, halfH, 8, 2);
 
-    // Chubby 3D Pig Snout
+    // 5. Expressive Eyes with Rosy Blushing Cheeks
+    this.drawChibiEyes(ctx, 0, -6, 7.5);
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.45)';
+    ctx.beginPath();
+    ctx.arc(-11, 2, 4, 0, Math.PI * 2);
+    ctx.arc(11, 2, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 6. Chubby 3D Oval Pig Snout Disk
     ctx.fillStyle = '#EC4899';
     ctx.beginPath();
-    ctx.ellipse(0, 2, 8, 5, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 3, 9, 6, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = '#BE185D';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.2;
     ctx.stroke();
 
     // Nostrils
     ctx.fillStyle = '#831843';
     ctx.beginPath();
-    ctx.arc(-3, 2, 1.4, 0, Math.PI * 2);
-    ctx.arc(3, 2, 1.4, 0, Math.PI * 2);
+    ctx.ellipse(-3.5, 3, 1.6, 2.2, 0, 0, Math.PI * 2);
+    ctx.ellipse(3.5, 3, 1.6, 2.2, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Player Collar & Bell
-    this.drawCollar(ctx, 0, halfH - 5, halfW * 1.2, pColor);
+    // Collar
+    this.drawCollar(ctx, 0, halfH - 6, halfW * 1.1, pColor);
+    ctx.restore();
   }
 
-  // 6. DUCK: Compact wedge (32x30)
+  // 6. DUCK: Curved waterbird breast, upturned perky tail, orange flat bill, and folded wings
   private renderDuck(
     ctx: CanvasRenderingContext2D,
     def: AnimalDef,
@@ -1171,13 +1401,18 @@ export class AnimalStackGame extends BaseGame {
     halfH: number,
     pColor: string
   ) {
-    // Feather tuft
+    ctx.save();
+
+    // 1. Upturned Pointed Tail Feathers
     ctx.fillStyle = '#F59E0B';
     ctx.beginPath();
-    ctx.ellipse(0, -halfH - 4, 3, 5, 0.2, 0, Math.PI * 2);
+    ctx.moveTo(-halfW + 4, 2);
+    ctx.lineTo(-halfW - 6, -halfH + 6);
+    ctx.lineTo(-halfW + 8, -halfH + 12);
+    ctx.closePath();
     ctx.fill();
 
-    // Body
+    // 2. Duck Waterbird Body Silhouette
     const grad = ctx.createLinearGradient(0, -halfH, 0, halfH);
     grad.addColorStop(0, '#FEF08A');
     grad.addColorStop(0.5, '#FCD34D');
@@ -1185,32 +1420,57 @@ export class AnimalStackGame extends BaseGame {
 
     ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.roundRect(-halfW, -halfH, def.width, def.height, 10);
+    // Rounded breast on right
+    ctx.moveTo(halfW - 4, -halfH + 8);
+    ctx.quadraticCurveTo(halfW + 3, 0, halfW - 2, halfH - 4);
+    // Rounded belly
+    ctx.quadraticCurveTo(0, halfH + 2, -halfW + 6, halfH - 4);
+    // Upturned back to tail
+    ctx.lineTo(-halfW + 4, 0);
+    // Back line to head
+    ctx.quadraticCurveTo(-6, -halfH + 4, halfW - 4, -halfH + 8);
+    ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = 'rgba(15, 23, 42, 0.25)';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#D97706';
+    ctx.lineWidth = 1.4;
     ctx.stroke();
 
-    // Eyes
-    this.drawChibiEyes(ctx, 0, -5, 6);
+    // 3. Folded Wing Silhouette
+    ctx.fillStyle = '#FBBF24';
+    ctx.beginPath();
+    ctx.ellipse(-2, 1, 10, 6, -0.15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#D97706';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
 
-    // Orange Duck Bill
-    const billGrad = ctx.createLinearGradient(0, 1, 0, 8);
+    // 4. Wide Flat Orange Duck Bill
+    const billGrad = ctx.createLinearGradient(0, 0, 0, 8);
     billGrad.addColorStop(0, '#FB923C');
     billGrad.addColorStop(1, '#EA580C');
     ctx.fillStyle = billGrad;
     ctx.beginPath();
-    ctx.roundRect(-7, 0, 14, 7, [5, 5, 4, 4]);
+    ctx.roundRect(halfW - 6, -2, 12, 6, [3, 6, 6, 3]);
     ctx.fill();
     ctx.strokeStyle = '#C2410C';
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Player Collar & Bell
-    this.drawCollar(ctx, 0, halfH - 5, halfW * 1.3, pColor);
+    // 5. Cute Dark Eye
+    this.drawChibiEyes(ctx, halfW - 10, -halfH + 9, 3);
+
+    // 6. Orange Webbed Feet tucked underneath
+    ctx.fillStyle = '#EA580C';
+    ctx.beginPath();
+    ctx.roundRect(-2, halfH - 2, 9, 3.5, 2);
+    ctx.fill();
+
+    // Collar
+    this.drawCollar(ctx, -2, halfH - 6, halfW * 1.1, pColor);
+    ctx.restore();
   }
 
-  // 7. FROG: Tiny agile pebble (26x20)
+  // 7. FROG: Authentic crouching frog shape with bulging top eyes, folded leaping hind legs, and smiling mouth
   private renderFrog(
     ctx: CanvasRenderingContext2D,
     def: AnimalDef,
@@ -1218,17 +1478,30 @@ export class AnimalStackGame extends BaseGame {
     halfH: number,
     pColor: string
   ) {
-    // Eye domes on top
+    ctx.save();
+
+    // 1. Folded Muscular Hind Leaping Legs on Flanks
+    ctx.fillStyle = '#16A34A';
+    // Left hind leg
+    ctx.beginPath();
+    ctx.ellipse(-halfW + 4, 3, 6.5, 9, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+    // Right hind leg
+    ctx.beginPath();
+    ctx.ellipse(halfW - 4, 3, 6.5, 9, 0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2. Large Bulging Spherical Eye Domes on Top of Head
     ctx.fillStyle = '#22C55E';
     ctx.beginPath();
-    ctx.arc(-7, -halfH + 2, 6, 0, Math.PI * 2);
-    ctx.arc(7, -halfH + 2, 6, 0, Math.PI * 2);
+    ctx.arc(-7, -halfH + 2, 6.5, 0, Math.PI * 2);
+    ctx.arc(7, -halfH + 2, 6.5, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = '#15803D';
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 1.3;
     ctx.stroke();
 
-    // Body
+    // 3. Wide Squat Amphibian Body
     const grad = ctx.createLinearGradient(0, -halfH, 0, halfH);
     grad.addColorStop(0, '#86EFAC');
     grad.addColorStop(0.5, '#4ADE80');
@@ -1236,30 +1509,55 @@ export class AnimalStackGame extends BaseGame {
 
     ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.roundRect(-halfW, -halfH, def.width, def.height, 8);
+    ctx.ellipse(0, 1, halfW - 2, halfH - 1, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(15, 23, 42, 0.25)';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#15803D';
+    ctx.lineWidth = 1.4;
     ctx.stroke();
 
-    // Pale belly
+    // 4. Creamy Underbelly
     ctx.fillStyle = '#FEF9C3';
     ctx.beginPath();
-    ctx.ellipse(0, 3, halfW * 0.55, halfH * 0.45, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 3, halfW * 0.5, halfH * 0.45, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Eyes
-    this.drawChibiEyes(ctx, 0, -halfH + 2, 7);
+    // 5. Golden Eyes with Horizontal Slit Pupil
+    ctx.fillStyle = '#FEF08A';
+    ctx.beginPath();
+    ctx.arc(-7, -halfH + 2, 4.5, 0, Math.PI * 2);
+    ctx.arc(7, -halfH + 2, 4.5, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Wide frog smile
+    ctx.fillStyle = '#0F172A';
+    ctx.beginPath();
+    ctx.ellipse(-7, -halfH + 2, 2.8, 1.4, 0, 0, Math.PI * 2);
+    ctx.ellipse(7, -halfH + 2, 2.8, 1.4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Catchlights
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(-8, -halfH + 1, 1, 0, Math.PI * 2);
+    ctx.arc(6, -halfH + 1, 1, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 6. Wide Happy Frog Smile
     ctx.strokeStyle = '#14532D';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(0, 3, 5, 0.2, Math.PI - 0.2);
+    ctx.arc(0, 3, 6, 0.2, Math.PI - 0.2);
     ctx.stroke();
 
-    // Player Collar & Bell
-    this.drawCollar(ctx, 0, halfH - 4, halfW * 1.2, pColor);
+    // 7. Small dappled freckles
+    ctx.fillStyle = '#15803D';
+    ctx.beginPath();
+    ctx.arc(-4, -1, 1.2, 0, Math.PI * 2);
+    ctx.arc(4, -1, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Collar
+    this.drawCollar(ctx, 0, halfH - 4, halfW * 1.1, pColor);
+    ctx.restore();
   }
 
   private drawChibiEyes(ctx: CanvasRenderingContext2D, cx: number, cy: number, spacing: number) {
