@@ -5741,16 +5741,29 @@ export class GameManager {
       this.ctx.textAlign = 'center';
       this.ctx.fillText(game.icon, cardX + cardW - 33, cardY + 24.5);
 
-      // Game Title (Clean, centered, spacious)
+      // Game Title (Clean, centered, auto-fit font to card width)
       this.ctx.fillStyle = '#0F172A';
-      this.ctx.font = '900 13.5px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
+      let titleFontSize = 13.5;
+      this.ctx.font = `900 ${titleFontSize}px Montserrat, sans-serif`;
+      const maxTextW = cardW - 18;
+      while (this.ctx.measureText(game.title).width > maxTextW && titleFontSize > 9.5) {
+        titleFontSize -= 0.5;
+        this.ctx.font = `900 ${titleFontSize}px Montserrat, sans-serif`;
+      }
       this.ctx.fillText(game.title, cardX + cardW / 2, cardY + artH + 26);
 
-      // Game Tagline
+      // Game Tagline (Auto-fit with ellipsis if necessary)
       this.ctx.fillStyle = '#64748B';
       this.ctx.font = '600 10px sans-serif';
-      this.ctx.fillText(game.tagline, cardX + cardW / 2, cardY + artH + 42);
+      let tagline = game.tagline;
+      if (this.ctx.measureText(tagline).width > maxTextW) {
+        while (tagline.length > 4 && this.ctx.measureText(tagline + '…').width > maxTextW) {
+          tagline = tagline.slice(0, -1);
+        }
+        tagline += '…';
+      }
+      this.ctx.fillText(tagline, cardX + cardW / 2, cardY + artH + 42);
 
       // Tactile "HOW TO PLAY ▶" 3D Button Banner
       const btnY = cardY + cardH - 28;
