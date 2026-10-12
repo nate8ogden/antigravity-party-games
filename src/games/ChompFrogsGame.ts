@@ -936,8 +936,8 @@ export class ChompFrogsGame extends BaseGame {
       }
     }
 
-    // 8. Center HUD Pod
-    this.renderCenterHudPod(ctx, width);
+    // 8. Theme Indicator Pill (bottom-left, no overlap)
+    this.renderThemePill(ctx, height);
   }
 
   private renderPondWaters(ctx: CanvasRenderingContext2D, width: number, height: number): void {
@@ -1228,6 +1228,10 @@ export class ChompFrogsGame extends BaseGame {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
     ctx.fill();
 
+    // Player Mascot Skin Face / Rider
+    const mood = ps.stunTimer > 0 ? 'shocked' : ps.chewTimer > 0 || ps.frenzyTimer > 0 ? 'triumph' : 'focused';
+    this.drawPlayerMascot(ctx, ps.id, -2, 0, 9.5, mood, performance.now() * 0.001);
+
     // Bulging Frog Eyes
     ctx.fillStyle = '#FFFFFF';
     ctx.beginPath();
@@ -1294,33 +1298,25 @@ export class ChompFrogsGame extends BaseGame {
     ctx.fillText(`${ps.score} pts`, ps.x, ps.y - ps.hopZ - 28);
   }
 
-  private renderCenterHudPod(ctx: CanvasRenderingContext2D, width: number): void {
-    const podW = 380;
-    const podH = 28;
-    const podX = width / 2 - podW / 2;
-    const podY = 56;
+  private renderThemePill(ctx: CanvasRenderingContext2D, height: number): void {
+    const pillW = 165;
+    const pillH = 26;
+    const pillX = 20;
+    const pillY = height - 44;
 
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
     ctx.beginPath();
-    ctx.roundRect(podX, podY, podW, podH, 14);
+    ctx.roundRect(pillX, pillY, pillW, pillH, 13);
     ctx.fill();
 
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.2;
     ctx.stroke();
 
-    // Map Theme Badge
     ctx.font = '700 11px Inter, system-ui, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillStyle = this.pondTheme === 'emerald' ? '#34D399' : this.pondTheme === 'bayou' ? '#A855F7' : '#38BDF8';
-    ctx.fillText(`POND: ${this.pondTheme.toUpperCase()} [1-3]`, podX + 16, podY + 18);
-
-    // Timer display
-    ctx.font = '700 12px Inter, system-ui, sans-serif';
-    ctx.textAlign = 'right';
-    const timerColor = this.roundTimer < 10 ? '#EF4444' : '#F1F5F9';
-    ctx.fillStyle = timerColor;
-    ctx.fillText(`TIME: ${this.roundTimer.toFixed(1)}s`, podX + podW - 16, podY + 18);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = this.pondTheme === 'emerald' ? '#34D399' : this.pondTheme === 'bayou' ? '#C084FC' : '#38BDF8';
+    ctx.fillText(`POND: ${this.pondTheme.toUpperCase()} [1-3]`, pillX + pillW / 2, pillY + 17);
   }
 
   public getRoundResult(): RoundResult {
