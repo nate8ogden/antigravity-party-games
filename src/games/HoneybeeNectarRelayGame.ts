@@ -847,16 +847,16 @@ export class HoneybeeNectarRelayGame extends BaseGame {
       ctx.restore();
     }
 
-    // 5. Bottom Controls & Instructions Banner
+    // 5. Top Controls & Instructions Banner (cleanly positioned under timer, avoiding bottom buttons)
     ctx.save();
-    const bannerW = Math.min(520, width - 40);
-    const bannerH = 26;
+    const bannerW = Math.min(540, width - 40);
+    const bannerH = 22;
     const bannerX = width / 2 - bannerW / 2;
-    const bannerY = height - 28;
+    const bannerY = 46;
 
     ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(bannerX, bannerY, bannerW, bannerH, 13);
+    if (ctx.roundRect) ctx.roundRect(bannerX, bannerY, bannerW, bannerH, 11);
     else ctx.rect(bannerX, bannerY, bannerW, bannerH);
     ctx.fill();
     ctx.strokeStyle = '#F59E0B';
@@ -864,9 +864,9 @@ export class HoneybeeNectarRelayGame extends BaseGame {
     ctx.stroke();
 
     ctx.fillStyle = '#FEF08A';
-    ctx.font = 'bold 10px Montserrat, sans-serif';
+    ctx.font = 'bold 9.5px Montserrat, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('🌸 Hover near flowers to sip nectar (Hold [ACTION] for 2x Turbo Sip!) • Deliver to your Hive 🍯', width / 2, bannerY + 16.5);
+    ctx.fillText('🌸 Hover near flowers to sip nectar (Hold ACTION for 2x Turbo Sip!) • Deliver to your Hive 🍯', width / 2, bannerY + 15);
     ctx.restore();
 
     // 6. Header Match Timer
