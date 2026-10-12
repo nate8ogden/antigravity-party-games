@@ -23,6 +23,7 @@ interface SumoClimber {
   aimAngle: number;
   aimOscillation: number;
   stunTimer: number;
+  wallBounceCooldown: number;
   highestY: number;
   score: number;
   alive: boolean;
@@ -224,6 +225,7 @@ export class SkylineSumoGame extends BaseGame {
         aimAngle: -Math.PI / 2,
         aimOscillation: 0,
         stunTimer: 0,
+        wallBounceCooldown: 0,
         highestY: groundY,
         score: 0,
         alive: true,
@@ -306,6 +308,9 @@ export class SkylineSumoGame extends BaseGame {
       if (climber.stunTimer > 0) {
         climber.stunTimer -= dt;
       }
+      if (climber.wallBounceCooldown > 0) {
+        climber.wallBounceCooldown = Math.max(0, climber.wallBounceCooldown - dt);
+      }
 
       // Check free fall duration for loop detection
       if (!climber.isGrounded && climber.vy > 100) {
@@ -338,6 +343,7 @@ export class SkylineSumoGame extends BaseGame {
       const steer = this.input.getSteer(climber.id);
       const action = this.input.isActionPressed(climber.id);
       const throttle = this.input.getThrottle(climber.id);
+      const isBot = this.players.find((p) => p.id === climber.id)?.type.startsWith('bot_') ?? false;
 
       // Jump charge trigger: active when action key is held, single-touch pressed, W / Up held, or bot input active
       const isJumpTriggerDown = action || isPressed || throttle > 0.3;
@@ -346,9 +352,23 @@ export class SkylineSumoGame extends BaseGame {
       if (climber.isGrounded && climber.stunTimer <= 0) {
         if (steer !== 0) {
           climber.aimAngle = -Math.PI / 2 + steer * 0.65;
+        } else if (isBot) {
+          // Bots aim straight upward when aligned with target, never oscillating into walls accidentally
+          climber.aimAngle = -Math.PI / 2;
         } else if (isJumpTriggerDown) {
+          // Human single-button oscillation aim
           climber.aimOscillation += dt * 4.5;
           climber.aimAngle = -Math.PI / 2 + Math.sin(climber.aimOscillation) * 0.75;
+        } else {
+          climber.aimAngle = -Math.PI / 2;
+        }
+
+        // Safety clamp: strictly prevent aiming directly outward into adjacent walls
+        const wallSafetyMargin = 75;
+        if (climber.x < wallSafetyMargin && climber.aimAngle < -Math.PI / 2) {
+          climber.aimAngle = -Math.PI / 2; // clamp straight up or inward
+        } else if (climber.x > width - wallSafetyMargin && climber.aimAngle > -Math.PI / 2) {
+          climber.aimAngle = -Math.PI / 2; // clamp straight up or inward
         }
 
         if (isJumpTriggerDown) {
@@ -362,6 +382,7 @@ export class SkylineSumoGame extends BaseGame {
           climber.vx = Math.cos(climber.aimAngle) * jumpSpeed * 0.8;
           climber.vy = Math.sin(climber.aimAngle) * jumpSpeed;
           climber.chargePower = 0;
+          climber.wallBounceCooldown = 0.2;
           this.audio.playBoost();
           this.particles.spawnSparks(climber.x, climber.y + 16, '#FBBF24', 8);
         }
@@ -369,22 +390,43 @@ export class SkylineSumoGame extends BaseGame {
 
       // Air physics with mid-air steering
       if (!climber.isGrounded) {
-        if (steer !== 0) {
+        if (steer !== 0 && climber.wallBounceCooldown <= 0) {
           climber.vx += steer * 320 * dt;
         }
         climber.vy += gravity * dt;
         climber.x += climber.vx * dt;
         climber.y += climber.vy * dt;
 
-        // Wall bouncing
-        if (climber.x < 24) {
-          climber.x = 24;
-          climber.vx = Math.abs(climber.vx) * 0.8;
-          this.audio.playBounce();
-        } else if (climber.x > width - 24) {
-          climber.x = width - 24;
-          climber.vx = -Math.abs(climber.vx) * 0.8;
-          this.audio.playBounce();
+        // Cushioned Wall Bouncing: absorbs kinetic energy and prevents violent ricochet pinballing
+        const wallLeft = 24;
+        const wallRight = width - 24;
+
+        if (climber.x < wallLeft) {
+          climber.x = wallLeft;
+          if (climber.wallBounceCooldown <= 0) {
+            // Soft cushioned bounce (0.30 restitution, capped rebound speed)
+            const bounceSpeed = Math.min(130, Math.abs(climber.vx) * 0.30);
+            climber.vx = bounceSpeed;
+            climber.vy *= 0.82; // wall friction absorption
+            climber.wallBounceCooldown = 0.28; // prevent rapid double ricochet
+            this.audio.playTap();
+            this.particles.spawnDust(climber.x, climber.y, 6);
+          } else {
+            climber.vx = Math.max(0, climber.vx * 0.5);
+          }
+        } else if (climber.x > wallRight) {
+          climber.x = wallRight;
+          if (climber.wallBounceCooldown <= 0) {
+            // Soft cushioned bounce (0.30 restitution, capped rebound speed)
+            const bounceSpeed = Math.min(130, Math.abs(climber.vx) * 0.30);
+            climber.vx = -bounceSpeed;
+            climber.vy *= 0.82; // wall friction absorption
+            climber.wallBounceCooldown = 0.28; // prevent rapid double ricochet
+            this.audio.playTap();
+            this.particles.spawnDust(climber.x, climber.y, 6);
+          } else {
+            climber.vx = Math.min(0, climber.vx * 0.5);
+          }
         }
 
         // Platform landing detection (only when falling downwards)
@@ -619,6 +661,14 @@ export class SkylineSumoGame extends BaseGame {
       let steer = Math.max(-1, Math.min(1, dx / 70));
       if (Math.abs(dx) < 14) steer = 0;
 
+      // Intelligent Wall Avoidance: Never steer outward toward adjacent walls
+      const wallMargin = 85;
+      if (c.x < wallMargin && steer < 0) {
+        steer = Math.max(0, steer);
+      } else if (c.x > width - wallMargin && steer > 0) {
+        steer = Math.min(0, steer);
+      }
+
       // Physics-derived launch power needed to reach platform elevation (exact gravity = 650)
       const targetLaunchVy = Math.sqrt(2 * 650 * (dy + 30));
       const aimFactor = Math.abs(Math.sin(-Math.PI / 2 + steer * 0.65));
@@ -648,7 +698,10 @@ export class SkylineSumoGame extends BaseGame {
       // Airborne flight control & landing correction
       let steer = 0;
 
-      if (c.vy > 0) {
+      // If recently cushioned off a wall, neutralize horizontal steering to prevent bouncing back into the wall
+      if (c.wallBounceCooldown > 0) {
+        steer = 0;
+      } else if (c.vy > 0) {
         // Descending: steer towards landing platform underneath
         const platformsBelow = this.platforms.filter((p) => p.y >= c.y && p.y <= c.y + 260);
         if (platformsBelow.length > 0) {
