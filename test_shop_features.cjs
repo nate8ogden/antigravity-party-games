@@ -35,7 +35,7 @@ async function testShopFeatures() {
   await page.evaluate(() => {
     const gm = window.__GAME_MANAGER__;
     if (gm) {
-      const curItem = gm.getUnifiedShopItems().find(i => i.id === 'pack_standard');
+      const curItem = gm.getUnifiedShopItems().find(i => i.id === 'pack_bronze');
       if (curItem) {
         const res = gm.economy.openPack(curItem.id);
         if (res) gm.startPackOpeningAnimation(curItem, res);
@@ -66,7 +66,7 @@ async function testShopFeatures() {
       gm.economy.equipBooster(0, 'booster_shield');
       gm.economy.equipBooster(1, 'booster_turbo');
       gm.economy.equipArena('arena_neon_synth');
-      gm.startGame(0);
+      gm.startGame('tanks');
     }
   });
 
