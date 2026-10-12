@@ -1,4 +1,5 @@
 import { PlayerId, InputState } from './Types';
+import { EconomyManager } from './EconomyManager';
 
 interface Ripple {
   x: number;
@@ -633,7 +634,12 @@ export class InputRouter {
   }
 
   public getInputState(pid: PlayerId): DetailedInputState {
-    return { ...this.states[pid] };
+    const s = { ...this.states[pid] };
+    if (EconomyManager.getInstance().getEquippedBooster(pid) === 'booster_turbo') {
+      s.steer = Math.max(-1.15, Math.min(1.15, s.steer * 1.15));
+      s.throttle = Math.max(-1.15, Math.min(1.15, s.throttle * 1.15));
+    }
+    return s;
   }
 
   public isPressed(pid: PlayerId): boolean {
