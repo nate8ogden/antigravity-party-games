@@ -877,42 +877,39 @@ export class CyberGridRunnerGame extends BaseGame {
 
   private renderHUD(ctx: CanvasRenderingContext2D, width: number, _height: number): void {
     ctx.save();
-    // Header Bar
-    ctx.fillStyle = 'rgba(5, 5, 18, 0.88)';
+    // Clean HUD Banner (Positioned cleanly below top countdown timer pill)
+    const bannerW = Math.min(580, width - 60);
+    const bannerH = 46;
+    const bannerX = (width - bannerW) / 2;
+    const bannerY = 56;
+
+    ctx.fillStyle = 'rgba(5, 5, 18, 0.90)';
     ctx.beginPath();
-    ctx.roundRect(width * 0.5 - 75, 10, 150, 36, 10);
+    if (ctx.roundRect) ctx.roundRect(bannerX, bannerY, bannerW, bannerH, 10);
+    else ctx.rect(bannerX, bannerY, bannerW, bannerH);
     ctx.fill();
+
     ctx.strokeStyle = '#06B6D4';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 17px "Chakra Petch", monospace';
+    ctx.font = '800 12px Montserrat, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`CYBER • ${Math.ceil(this.roundTimer)}s`, width * 0.5, 28);
+    ctx.fillText('⚡ CYBER GRID RUNNER: HARVEST DATA CORES • SPACE / TAP: NITRO BOOST', bannerX + bannerW / 2, bannerY + 15);
 
-    // Score sub-bar
+    // Live score pills in banner
     const active = this.getActivePlayers();
-    const itemW = 105;
-    const subBarW = active.length * itemW;
-    const subBarX = width * 0.5 - subBarW * 0.5;
-
-    ctx.fillStyle = 'rgba(5, 5, 18, 0.88)';
-    ctx.beginPath();
-    ctx.roundRect(subBarX, 52, subBarW, 26, 6);
-    ctx.fill();
-
-    active.forEach((p, idx) => {
+    const scoreStr = active.map(p => {
       const ps = this.playersState.get(p.id);
-      const px = subBarX + idx * itemW + itemW / 2;
-      ctx.fillStyle = p.color;
-      ctx.font = 'bold 11px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const ocIcon = ps && ps.overclockTimer > 0 ? '⚡' : '💾';
-      ctx.fillText(`P${p.id + 1}: ${ocIcon}${ps?.score || 0}`, px, 65);
-    });
+      const icon = ps && ps.overclockTimer > 0 ? '⚡' : '💾';
+      return `${this.players[p.id].name}: ${icon} ${ps?.score || 0} pts`;
+    }).join('   |   ');
+
+    ctx.font = '700 11px Montserrat, sans-serif';
+    ctx.fillStyle = '#38BDF8';
+    ctx.fillText(scoreStr, bannerX + bannerW / 2, bannerY + 31);
 
     ctx.restore();
   }
