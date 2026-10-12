@@ -211,6 +211,94 @@ export function getSkinMascotTheme(skinId: string, playerId: PlayerId): MascotTh
       visorGlow: '#A78BFA',
       accent: '#F43F5E'
     };
+  } else if (skinId === 'alien_invader') {
+    return {
+      primary: '#059669',
+      light: '#A7F3D0',
+      dark: '#064E3B',
+      visorGlow: '#34D399',
+      accent: '#10B981'
+    };
+  } else if (skinId === 'cactus_gunslinger') {
+    return {
+      primary: '#D97706',
+      light: '#FDE68A',
+      dark: '#78350F',
+      visorGlow: '#FBBF24',
+      accent: '#B45309'
+    };
+  } else if (skinId === 'chef_supreme') {
+    return {
+      primary: '#E2E8F0',
+      light: '#FFFFFF',
+      dark: '#475569',
+      visorGlow: '#F8FAFC',
+      accent: '#F59E0B'
+    };
+  } else if (skinId === 'disco_king') {
+    return {
+      primary: '#EC4899',
+      light: '#FCE7F3',
+      dark: '#831843',
+      visorGlow: '#F43F5E',
+      accent: '#FBBF24'
+    };
+  } else if (skinId === 'knight_templar') {
+    return {
+      primary: '#64748B',
+      light: '#CBD5E1',
+      dark: '#1E293B',
+      visorGlow: '#F59E0B',
+      accent: '#EF4444'
+    };
+  } else if (skinId === 'hero_avenger') {
+    return {
+      primary: '#2563EB',
+      light: '#BFDBFE',
+      dark: '#1E3A8A',
+      visorGlow: '#60A5FA',
+      accent: '#EF4444'
+    };
+  } else if (skinId === 'wizard_archmage') {
+    return {
+      primary: '#7C3AED',
+      light: '#DDD6FE',
+      dark: '#2E1065',
+      visorGlow: '#C084FC',
+      accent: '#FDE68A'
+    };
+  } else if (skinId === 'pirate_captain') {
+    return {
+      primary: '#1E293B',
+      light: '#475569',
+      dark: '#0F172A',
+      visorGlow: '#F59E0B',
+      accent: '#EF4444'
+    };
+  } else if (skinId === 'viking_berserker') {
+    return {
+      primary: '#92400E',
+      light: '#FED7AA',
+      dark: '#451A03',
+      visorGlow: '#38BDF8',
+      accent: '#F59E0B'
+    };
+  } else if (skinId === 'kitsune_fox') {
+    return {
+      primary: '#EA580C',
+      light: '#FFEDD5',
+      dark: '#7C2D12',
+      visorGlow: '#38BDF8',
+      accent: '#EF4444'
+    };
+  } else if (skinId === 'astro_bubble') {
+    return {
+      primary: '#0284C7',
+      light: '#E0F2FE',
+      dark: '#0369A1',
+      visorGlow: '#FBBF24',
+      accent: '#38BDF8'
+    };
   }
   return MASCOT_THEMES[playerId] || MASCOT_THEMES[0];
 }
