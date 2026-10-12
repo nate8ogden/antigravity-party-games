@@ -83,6 +83,7 @@ export class SnowballFightGame extends BaseGame {
   private ambientFlakes: AmbientFlake[] = [];
   private currentMapName: string = 'Twin Snow Forts';
   private ballCounter: number = 0;
+  private totalSnowballsThrown: number = 0;
   private destructionOrder: PlayerId[] = [];
   private gravity: number = 550;
 
