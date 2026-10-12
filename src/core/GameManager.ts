@@ -2719,6 +2719,17 @@ export class GameManager {
   public shopCoinBadgeHitbox: { x: number; y: number; w: number; h: number } | null = null;
   public shopLobbyBannerHitbox: { x: number; y: number; w: number; h: number } | null = null;
   public packOpeningResult: PackResult | null = null;
+  public packOpeningAnim: {
+    packId: string;
+    packName: string;
+    packColor: string;
+    packRarity: string;
+    startTime: number;
+    result: PackResult;
+    particles: { x: number; y: number; vx: number; vy: number; color: string; size: number; alpha: number }[];
+  } | null = null;
+  public playerShieldActive: Record<PlayerId, boolean> = { 0: false, 1: false, 2: false, 3: false };
+  public static instance: GameManager | null = null;
   public chronoClutchTriggered: boolean = false;
 
   // Trophy & Achievements State
@@ -2737,6 +2748,7 @@ export class GameManager {
   private dotPattern: CanvasPattern | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
+    GameManager.instance = this;
     this.canvas = canvas;
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Could not get 2D canvas context');
@@ -2824,6 +2836,42 @@ export class GameManager {
       { playerId: 2, points: 0 },
       { playerId: 3, points: 0 }
     ];
+  }
+
+  public static getInstance(): GameManager | null {
+    return GameManager.instance;
+  }
+
+  public initRoundBoosters(): void {
+    for (const p of this.players) {
+      if (p.type !== 'disabled') {
+        const b = EconomyManager.getInstance().getEquippedBooster(p.id);
+        this.playerShieldActive[p.id] = (b === 'booster_shield');
+      } else {
+        this.playerShieldActive[p.id] = false;
+      }
+    }
+  }
+
+  public hasShield(pid: PlayerId): boolean {
+    return !!this.playerShieldActive[pid];
+  }
+
+  public tryAbsorbShield(pid: PlayerId, x?: number, y?: number): boolean {
+    if (this.playerShieldActive[pid]) {
+      this.playerShieldActive[pid] = false;
+      const posX = x ?? this.logicalWidth / 2;
+      const posY = y ?? this.logicalHeight / 2;
+      this.audio.playCountdown(false);
+      this.particles.spawnGoBlast(posX, posY);
+      this.particles.showFloatingText('🛡️ AEGIS FORCEFIELD BROKEN!', posX, posY - 25, '#06B6D4', 24);
+      return true;
+    }
+    return false;
+  }
+
+  public getPlayerSpeedMultiplier(pid: PlayerId): number {
+    return EconomyManager.getInstance().getEquippedBooster(pid) === 'booster_turbo' ? 1.15 : 1.0;
   }
 
   public isAutonomous: boolean = false;
@@ -4700,6 +4748,7 @@ export class GameManager {
       this.state = 'COUNTDOWN';
       this.countdownTimer = 3.2;
       this.chronoClutchTriggered = false;
+      this.initRoundBoosters();
       this.matchElapsedSeconds = 0;
       this.audio.playCountdown(false);
     }
