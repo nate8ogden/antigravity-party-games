@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Antigravity 1-4 Player Games</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas"></canvas>
+
+      <!-- 4 Corner Touch Overlays for Mobile/Tablet -->
+      <div id="zone-p1" class="touch-zone">P1 [WASD + Space]</div>
+      <div id="zone-p2" class="touch-zone">P2 [Arrows + Enter]</div>
+      <div id="zone-p3" class="touch-zone">P3 [IJKL + U/O]</div>
+      <div id="zone-p4" class="touch-zone">P4 [Numpad / TFGH]</div>
+
+      <!-- Quick Utility Bar: Pause, Settings, Mute, Fullscreen, Shop, Trophy -->
+      <div class="utility-bar">
+        <button id="shop-btn" class="util-btn shop-btn" title="Mascot Skins & Wardrobe (B)">
+          <svg class="coin-svg" viewBox="0 0 24 24" width="16" height="16">
+            <circle cx="12" cy="12" r="10" fill="#F59E0B" stroke="#FDE68A" stroke-width="2"/>
+            <circle cx="12" cy="12" r="6.5" fill="none" stroke="#FEF3C7" stroke-width="1.2"/>
+            <polygon points="12,7 14,12 12,17 10,12" fill="#FEF3C7"/>
+          </svg>
+          <span id="shop-coin-count" class="coin-count">0</span>
+        </button>
+        <button id="trophy-btn" class="util-btn trophy-btn" title="Trophy Room & Achievements (T)">
+          <svg class="trophy-svg" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M5 4h14v4a7 7 0 0 1-7 7 7 7 0 0 1-7-7V4z" fill="#F59E0B" stroke="#D97706" stroke-width="1.5"/>
+            <path d="M5 6H2a1 1 0 0 0-1 1v1a4 4 0 0 0 4 4h0" fill="none" stroke="#D97706" stroke-width="1.5"/>
+            <path d="M19 6h3a1 1 0 0 1 1 1v1a4 4 0 0 1-4 4h0" fill="none" stroke="#D97706" stroke-width="1.5"/>
+            <path d="M12 15v4m-4 0h8" fill="none" stroke="#D97706" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <span id="trophy-unlocked-count" class="trophy-count">0/12</span>
+        </button>
+        <button id="center-pause-btn" class="util-btn pause-btn" title="Pause Game (Esc / P)">
+          <span class="pause-icon">⏸</span>
+        </button>
+        <button id="settings-btn" class="util-btn" title="Settings (O / S)">⚙️</button>
+        <button id="mute-btn" class="util-btn" title="Toggle Sound">🔊</button>
+        <button id="fullscreen-btn" class="util-btn" title="Toggle Fullscreen">⛶</button>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

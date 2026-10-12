@@ -1,0 +1,342 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Montserrat:wght@400;600;700;800;900&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #F8FAFC;
+  color: #0F172A;
+  font-family: 'Fredoka', 'Montserrat', sans-serif;
+}
+
+#app {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F8FAFC;
+}
+
+#game-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Touch Control Pads for 4 Corners */
+.touch-zone {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.6);
+  transition: opacity 0.2s, background-color 0.1s;
+}
+
+.touch-zone.active {
+  opacity: 0.18;
+}
+
+#zone-p1 {
+  top: 0;
+  left: 0;
+  width: 32vw;
+  height: 32vh;
+  background-color: #EF4444;
+}
+
+#zone-p2 {
+  top: 0;
+  right: 0;
+  width: 32vw;
+  height: 32vh;
+  background-color: #3B82F6;
+}
+
+#zone-p3 {
+  bottom: 0;
+  left: 0;
+  width: 32vw;
+  height: 32vh;
+  background-color: #10B981;
+}
+
+#zone-p4 {
+  bottom: 0;
+  right: 0;
+  width: 32vw;
+  height: 32vh;
+  background-color: #F59E0B;
+}
+
+/* On-Screen Mobile Corner Control Buttons */
+.corner-controls {
+  position: absolute;
+  z-index: 15;
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.p1-controls {
+  top: 86px;
+  left: 18px;
+}
+
+.p2-controls {
+  top: 86px;
+  right: 18px;
+}
+
+.p3-controls {
+  bottom: 82px;
+  left: 18px;
+}
+
+.p4-controls {
+  bottom: 82px;
+  right: 18px;
+}
+
+.pad-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+  font-size: 17px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.pad-btn:active, .pad-btn.pressed {
+  transform: scale(0.92) translateY(2px);
+  background: rgba(59, 130, 246, 0.95);
+  border-color: #93C5FD;
+}
+
+.p1-controls .pad-btn.pressed { background: #EF4444; border-color: #FCA5A5; }
+.p2-controls .pad-btn.pressed { background: #3B82F6; border-color: #93C5FD; }
+.p3-controls .pad-btn.pressed { background: #10B981; border-color: #6EE7B7; }
+.p4-controls .pad-btn.pressed { background: #F59E0B; border-color: #FDE68A; }
+
+/* Floating Utility Controls (Audio, Pause, Fullscreen) - Docked at bottom so top timers are never blocked */
+.utility-bar {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 20;
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 14px;
+  border: 1.5px solid #E2E8F0;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+}
+
+body.in-game .utility-bar {
+  background: rgba(15, 23, 42, 0.88);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+body.in-game .shop-btn,
+body.in-game .trophy-btn {
+  display: none !important;
+}
+
+body.in-game .util-btn {
+  background: rgba(30, 41, 59, 0.9);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+}
+
+.util-btn {
+  background: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
+  color: #0F172A;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #94A3B8, 0 4px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.08s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.08s ease, color 0.15s ease;
+}
+
+.util-btn:hover {
+  background: #F8FAFC;
+  border-color: #3B82F6;
+  color: #2563EB;
+  transform: translateY(-1px);
+}
+
+.util-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #94A3B8, 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Shop / Mascot Locker Button */
+.shop-btn {
+  width: auto;
+  min-width: 68px;
+  padding: 0 10px;
+  gap: 6px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: #B45309;
+  background: #FFFBEB;
+  border-color: #FDE68A;
+  box-shadow: 0 3px 0 #D97706, 0 4px 8px rgba(245, 158, 11, 0.15);
+}
+
+.shop-btn:hover {
+  background: #FEF3C7;
+  border-color: #F59E0B;
+  color: #92400E;
+}
+
+.shop-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #D97706, 0 2px 4px rgba(245, 158, 11, 0.15);
+}
+
+.coin-svg {
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.coin-count {
+  line-height: 1;
+}
+
+/* Trophy Room / Achievements Button */
+.trophy-btn {
+  width: auto;
+  min-width: 62px;
+  padding: 0 9px;
+  gap: 6px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: #854D0E;
+  background: #FEF9C3;
+  border-color: #FEF08A;
+  box-shadow: 0 3px 0 #CA8A04, 0 4px 8px rgba(202, 138, 4, 0.15);
+}
+
+.trophy-btn:hover {
+  background: #FEF08A;
+  border-color: #EAB308;
+  color: #713F12;
+}
+
+.trophy-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #CA8A04, 0 2px 4px rgba(202, 138, 4, 0.15);
+}
+
+.trophy-svg {
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.trophy-count {
+  line-height: 1;
+}
+
+/* Pause Button in Utility Bar */
+#center-pause-btn {
+  position: static;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 10px;
+  background: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
+  color: #0F172A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #94A3B8, 0 4px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.08s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.08s ease, color 0.15s ease;
+}
+
+#center-pause-btn:hover {
+  background: #F8FAFC;
+  border-color: #3B82F6;
+  color: #2563EB;
+  transform: translateY(-1px);
+}
+
+#center-pause-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #94A3B8, 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#center-pause-btn.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+  cursor: not-allowed;
+  box-shadow: 0 1px 0 #94A3B8;
+  transform: none !important;
+}
+
+.pause-icon {
+  font-size: 13px;
+  font-weight: 900;
+}
+
+@media (max-width: 640px) {
+  .utility-bar {
+    top: auto;
+    bottom: 10px;
+    padding: 3px 6px;
+    gap: 6px;
+  }
+  .util-btn, #center-pause-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+}

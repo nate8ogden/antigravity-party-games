@@ -1,0 +1,190 @@
+Antigravity Project Guide: 1-4 Player Party Games Replica
+Technical Architecture, Gameplay Specifications, and Dual-Agent Automation Protocol
+1. Executive Summary & Architecture Overview
+This specification provides a complete blueprint for developing a high-performance, local same-device 1-to-4 player party game suite using Google Antigravity. Inspired by hit titles like 1 2 3 4 Player Games, this project upgrades the genre with modern visuals, punchy physics, expanded minigame mechanics, responsive touch/keyboard controls, and a dual-agent continuous development and playtesting pipeline.
+Recommended Technology Stack
+Runtime & Framework: TypeScript with Vite for instant hot-module replacement and rapid bundling.
+Rendering Engine: HTML5 Canvas with PixiJS or lightweight 2D WebGL/Canvas rendering to guarantee rock-solid 60 FPS across mobile, tablet, and desktop browsers.
+Physics Engine: Matter.js (2D rigid body physics) or lightweight custom arcade physics tailored for hyper-responsive tactile feedback.
+Audio: Web Audio API (procedural synthesis / chip-tune sound effects for zero-latency instant feedback without asset load blockers).
+Testing & Automation: Playwright with multi-touch pointer emulation, Chrome DevTools Protocol (CDP), and headless/headed browser actuation.
+2. Core UI & UX Architecture
+2.1 Ergonomic Screen Layout (Shared Tablet / Phone)
+The interface is designed for landscape mode (16:9 / 19.5:9 aspect ratios) placed flat on a table between players or held collaboratively:
+Player 1 (Red): Top-Left quadrant / corner.
+Player 2 (Blue): Top-Right quadrant / corner.
+Player 3 (Green): Bottom-Left quadrant / corner.
+Player 4 (Yellow): Bottom-Right quadrant / corner.
+Input Action Zones
+In 1-button games, the entire outer corner area functions as the player's large tap/hold button.
+In joystick/steer games, a dynamic floating virtual thumbstick or 2-segment directional rocker appears under the player's finger within their designated corner quadrant.
+Desktop Fallback Controls
+Player
+Primary Key
+Secondary Key / Alternatives
+Player 1 (Red)
+W
+Q / E
+Player 2 (Blue)
+O
+I / P
+Player 3 (Green)
+C
+X / V
+Player 4 (Yellow)
+M
+N / ,
+2.2 Menu System & Flow
+Lobby & Player Count Selection:
+Prominent toggle buttons: 1 Player (Solo vs CPU), 2 Players, 3 Players, 4 Players.
+Active player badges in each corner. Tapping an inactive player badge toggles between Human, Bot (Easy/Normal/Hard), and Disabled.
+Game Selector Carousel:
+Horizontal swipeable cards featuring high-contrast animated previews, game title, and control iconography (e.g., "1-Tap Tap", "Steer & Boost", "Hold & Release").
+Filter tags: All, Action, Racing, Sports, Puzzle/Reflex.
+Cup / Tournament Mode:
+Configurable tourney length: First to 3 Points, Best of 5, or Custom Game List.
+Live podium leaderboard shown between rounds with animated point bars and player celebrations.
+In-Game HUD:
+Corner indicator lights displaying player score/lives.
+Central countdown timer and Sudden Death flash banners.
+Safe Pause: Centrally located button requiring a 1.5-second hold (preventing accidental player touches during chaotic gameplay).
+Round End & Rematch Screen:
+Displays victory fanfare, MVP highlights, and corner-accessible "Rematch" and "Next Game" buttons so any participant can restart without rotating the screen.
+3. Enhanced Minigame Catalog ("More Better Games")
+Game 1: Cyber Tanks 2.0 (Ricochet Arena)
+Concept: Upgraded tank duel featuring bouncing laser projectiles, destructible energy crates, and dynamic arena hazards.
+Controls: Single button per player. Hold to rotate tank; release to drive forward. Double-tap to fire bouncing projectile.
+Upgrades: Power-up crates drop periodically (Shield, Triple-Shot, Bouncing Landmines, Railgun Laser that pierces walls). Explosive barrel chain-reactions.
+Win Condition: Last tank standing or most eliminations in 60 seconds.
+Game 2: Bumper Hovercrafts (Shrinking Glacier)
+Concept: Physics-heavy arena brawler where players ram each other off an icy, crumbling platform into the abyss.
+Controls: Tap to burst forward with rocket thrust; turning is automated via centrifugal pendulum or gyro momentum.
+Upgrades: The arena breaks apart in concentric rings as the timer runs down. Spawning anvils and speed boosts add unpredictability to momentum collisions.
+Win Condition: Last survivor on the remaining iceberg.
+Game 3: Laser Grid Reflex (Tile Overcharge)
+Concept: 4x4 or 6x6 floor grid where tiles flash telegraphing incoming laser strikes.
+Controls: Tap to dash 1 tile in a continuous clockwise/counter-clockwise cycle; hold to reverse direction.
+Upgrades: Overcharged golden tiles offer bonus points, forcing risky positioning. Moving laser sweeps and shrinking safe zones as speed increases.
+Win Condition: Outlast opponents or gather 10 charge batteries first.
+Game 4: Orbital Slingshot (Meteor Miner)
+Concept: Space-themed physics game where small spacecraft orbit celestial bodies and slingshot to collect crystals or ram rivals.
+Controls: Hold button to tether to nearest gravity well; release to release momentum into a slingshot arc.
+Upgrades: Wandering black holes create gravitational distortion. Space debris and EMP power-ups disrupt opponent gravity tethers.
+Win Condition: First player to collect 25 space crystals or survive 90 seconds.
+Game 5: Micro Turbo GP (Single-Button Drift)
+Concept: Top-down micro racer on neon circuit tracks.
+Controls: Car drives forward automatically. Hold button to execute a tight power drift; release to straighten and trigger a mini turbo boost.
+Upgrades: Slipstreaming mechanic (driving behind a leader grants drafting speed boosts). Track hazards include oil slicks, jump ramps, and moving track barriers.
+Win Condition: First across the finish line after 3 laps.
+Game 6: Ghost Flashlight (Darkness Tag)
+Concept: Top-down dark mansion where players are invisible except when using flashlights or stepping on noisy floorboards.
+Controls: Hold to rotate character; release to run. Tap second action (or tap rhythm) to flash light for 0.5s.
+Upgrades: One player starts as the "Cursed Ghost" who moves faster in shadows. Tagging another player transfers the curse with an explosive spectral blast.
+Win Condition: Human who spent the least time as the Ghost when the 60-second timer expires.
+Game 7: Kitchen Chaos (Food Fling)
+Concept: Cooperative or competitive culinary frenzy where food items fly across the screen.
+Controls: Tap to scoop ingredients from conveyor belts; time release to launch ingredients onto central target plates.
+Upgrades: Rotten ingredients cause point penalties and stun opponents if intercepted. Fever mode doubles all points during the final 15 seconds.
+Win Condition: Highest recipe score achieved.
+Game 8: Skyline Sumo (Springboard Bouncer)
+Concept: Vertical platform climbing where players jump across springy scaffolding while knocking each other down.
+Controls: Hold to charge jump height and launch angle indicator; release to leap.
+Upgrades: Screen scrolls upward continuously—falling off bottom causes instant respawn penalty. Bouncing directly on an opponent's head stuns them and launches you higher.
+Win Condition: First player to reach the rooftop trophy or highest climber when time runs out.
+4. Dual-Agent Continuous Build & Test Loop in Antigravity
+To enable hands-off, automated engineering where one agent builds while another tests and breaks features, configure two coordinated sub-agents communicating through explicit file contracts.
+4.1 Orchestration Protocol & Shared Workspace State
+Both agents work within the same repository directory and maintain synchronization using three markdown status logs:
+ROADMAP.md: Master checklist of features, mini-games, and bug fixes with statuses (TODO, IN_PROGRESS, READY_FOR_TEST, VERIFIED).
+BUILD_LOG.md: Updated by Agent 1 (Builder) after every commit or feature build, detailing what was implemented, how to run it, and specific test vectors.
+QA_LOG.md: Updated by Agent 2 (Playtester) after executing automated browser tests, logging bug reproductions, console errors, frame drops, and screenshot artifacts.
+4.2 Workflow Loop
+[Agent 1: Builder]
+Picks next TODO from ROADMAP.md
+Writes TypeScript/Canvas game logic
+Verifies build & TypeScript types pass (npm run build)
+Updates BUILD_LOG.md and marks item READY_FOR_TEST
+[Agent 2: Playtester]
+Detects READY_FOR_TEST in ROADMAP.md
+Boots dev server (npm run dev) and opens headless/headed browser via Playwright
+Dispatches simulated 4-player simultaneous multi-touch/keyboard inputs
+Inspects console logs, frame rate (FPS), and win condition states
+If failures occur: Appends reproduction steps to QA_LOG.md and marks item FAILED
+If verified: Marks item VERIFIED in ROADMAP.md
+(Loop repeats until all roadmap items are verified)
+5. Sub-Agent Prompts (Copy & Paste Ready)
+Prompt for Sub-Agent 1: The Builder / Core Engineer
+You are SUB-AGENT 1 (THE BUILDER) in a dual-agent Google Antigravity workspace.
+Your mission is to architect and build a high-performance replica of the "1 2 3 4 Player Games" app with expanded, polished minigames using Vite, TypeScript, and HTML5 Canvas.
+YOUR RESPONSIBILITIES:
+1. Initialize and maintain the project structure:
+   - Framework: Vite + TypeScript + HTML5 Canvas (PixiJS or lightweight canvas renderer).
+   - Core Modules: Input Router (multi-touch 4-corner dispatch + keyboard shortcuts), State Manager (Lobby, Tournament, Active Game, Podium), Audio Engine (Web Audio API chip-tune synth).
+2. Implement games strictly from ROADMAP.md:
+   - Cyber Tanks 2.0, Bumper Hovercrafts, Laser Grid Reflex, Orbital Slingshot, Micro Turbo GP, Ghost Flashlight, Kitchen Chaos, Skyline Sumo.
+   - For every minigame, implement bot AI heuristics so solo players can play against 1-3 bots.
+3. Verification before passing off:
+   - Ensure 'npm run build' compiles with 0 TypeScript or lint errors.
+   - Ensure 'npm run dev' serves the app cleanly on localhost.
+4. Coordination Protocol:
+   - Read ROADMAP.md to choose the highest-priority pending feature.
+   - Set status to 'IN_PROGRESS' in ROADMAP.md.
+   - Implement the code and write accompanying unit/smoke tests.
+   - Update BUILD_LOG.md with:
+     * Feature implemented
+     * Instructions on how to trigger/test the game via URL params (e.g., http://localhost:5173/?game=tanks&players=4)
+     * Expected behavior and victory conditions
+   - Change status to 'READY_FOR_TEST' in ROADMAP.md.
+   - Check QA_LOG.md for bug reports filed by Sub-Agent 2, prioritize fixing any bugs marked 'CRITICAL' or 'BLOCKER' before starting new games.
+Prompt for Sub-Agent 2: The Playtester / QA & Chaos Runner
+You are SUB-AGENT 2 (THE PLAYTESTER) in a dual-agent Google Antigravity workspace.
+Your mission is to continuously test, stress-test, and validate the "1 2 3 4 Player Games" replica built by Sub-Agent 1. You operate the browser, simulate real players, and uncover bugs, race conditions, memory leaks, and gameplay balance issues.
+YOUR RESPONSIBILITIES:
+1. Test Automation Setup:
+   - Create and run Playwright test suites located in '/e2e/'.
+   - Build a Multi-Touch & Input Simulator:
+     * Emulate simultaneous touch events across all 4 screen corners (Top-Left, Top-Right, Bottom-Left, Bottom-Right).
+     * Emulate desktop keyboard keys (W, O, C, M).
+     * Test edge cases: 4 players tapping rapidly at the same millisecond; holding buttons continuously; tapping during transitions.
+2. Continuous Monitoring:
+   - Poll ROADMAP.md for items marked 'READY_FOR_TEST'.
+   - Launch dev server and run targeted browser validation using the URL parameters provided in BUILD_LOG.md.
+   - Monitor browser console for runtime exceptions, uncaught promises, or asset 404s.
+   - Profile performance: Ensure frame rate stays above 55 FPS and memory does not spike during round resets.
+   - Verify Win Conditions: Let AI bots battle each other to completion, asserting that victory podiums trigger and points tally accurately.
+3. Reporting Protocol:
+   - When a bug or gameplay failure is identified:
+     * Record reproduction steps, console errors, and stack traces into QA_LOG.md.
+     * Set status in ROADMAP.md to 'FAILED'.
+   - When a game passes all multi-player input stress tests and round completion flows:
+     * Log successful test summary in QA_LOG.md.
+     * Set status in ROADMAP.md to 'VERIFIED'.
+6. Implementation Roadmap & Execution Checklist
+Phase 1: Engine Foundation & Multi-Touch Input Router
+Initialize Vite + TypeScript project with Canvas/PixiJS setup.
+Build 4-corner multi-touch input router with visual touch ripple indicators.
+Map desktop keyboard keys (W, O, C, M) and Gamepad API listeners.
+Create Web Audio API procedural sound synthesizer (tap, hit, victory, countdown).
+Phase 2: Shell UI & Lobby System
+Implement Main Menu with 1P / 2P / 3P / 4P selection.
+Add corner player badges with Human / Bot / Off toggle controls.
+Build horizontal Game Carousel with interactive preview cards.
+Implement Tournament / Cup manager with point tracker and victory ceremony screen.
+Phase 3: Minigames Suite 1 (Physics & Combat)
+Implement Cyber Tanks 2.0 with ricochet projectiles and power-up crates.
+Implement Bumper Hovercrafts with shrinking ice arena physics.
+Implement bot heuristics for Tanks and Bumper Hovercrafts.
+Sub-Agent 2 validation: 4-player simultaneous tap test & round restart test.
+Phase 4: Minigames Suite 2 (Reaction & Racing)
+Implement Laser Grid Reflex with dynamic floor tile telegraphing.
+Implement Micro Turbo GP with single-button drift physics and track checkpoints.
+Sub-Agent 2 validation: Collision boundary checks and bot steering balance.
+Phase 5: Minigames Suite 3 (Space & Stealth)
+Implement Orbital Slingshot with gravity well physics.
+Implement Ghost Flashlight with darkness tag mechanics and visibility pulses.
+Sub-Agent 2 validation: Memory leak tests after 20 consecutive round rematches.
+Phase 6: Final Polish & Release Packaging
+Implement Kitchen Chaos and Skyline Sumo.
+Add screen shake, particle bursts, and dynamic haptics (navigator.vibrate).
+PWA manifest and service worker configuration for 100% offline playability.
+Run full 50-round automated cup tournament without human intervention.

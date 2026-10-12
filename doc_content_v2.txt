@@ -1,0 +1,493 @@
+Antigravity Project Guide: 1-4 Player Party Games Replica
+Technical Architecture, Gameplay Specifications, and Dual-Agent Automation Protocol
+1. Executive Summary & Architecture Overview
+This specification provides a complete blueprint for developing a high-performance, local same-device 1-to-4 player party game suite using Google Antigravity. Inspired by hit titles like 1 2 3 4 Player Games, this project upgrades the genre with modern visuals, punchy physics, expanded minigame mechanics, responsive touch/keyboard controls, and a dual-agent continuous development and playtesting pipeline.
+Recommended Technology Stack
+Runtime & Framework: TypeScript with Vite for instant hot-module replacement and rapid bundling.
+Rendering Engine: HTML5 Canvas with PixiJS or lightweight 2D WebGL/Canvas rendering to guarantee rock-solid 60 FPS across mobile, tablet, and desktop browsers.
+Physics Engine: Matter.js (2D rigid body physics) or lightweight custom arcade physics tailored for hyper-responsive tactile feedback.
+Audio: Web Audio API (procedural synthesis / chip-tune sound effects for zero-latency instant feedback without asset load blockers).
+Testing & Automation: Playwright with multi-touch pointer emulation, Chrome DevTools Protocol (CDP), and headless/headed browser actuation.
+2. Core UI & UX Architecture
+2.1 Ergonomic Screen Layout (Shared Tablet / Phone)
+The interface is designed for landscape mode (16:9 / 19.5:9 aspect ratios) placed flat on a table between players or held collaboratively:
+Player 1 (Red): Top-Left quadrant / corner.
+Player 2 (Blue): Top-Right quadrant / corner.
+Player 3 (Green): Bottom-Left quadrant / corner.
+Player 4 (Yellow): Bottom-Right quadrant / corner.
+Input Action Zones
+In 1-button games, the entire outer corner area functions as the player's large tap/hold button.
+In joystick/steer games, a dynamic floating virtual thumbstick or 2-segment directional rocker appears under the player's finger within their designated corner quadrant.
+Desktop Fallback Controls
+Player
+Primary Key
+Secondary Key / Alternatives
+Player 1 (Red)
+W
+Q / E
+Player 2 (Blue)
+O
+I / P
+Player 3 (Green)
+C
+X / V
+Player 4 (Yellow)
+M
+N / ,
+2.2 Menu System & Flow
+Lobby & Player Count Selection:
+Prominent toggle buttons: 1 Player (Solo vs CPU), 2 Players, 3 Players, 4 Players.
+Active player badges in each corner. Tapping an inactive player badge toggles between Human, Bot (Easy/Normal/Hard), and Disabled.
+Game Selector Carousel:
+Horizontal swipeable cards featuring high-contrast animated previews, game title, and control iconography (e.g., "1-Tap Tap", "Steer & Boost", "Hold & Release").
+Filter tags: All, Action, Racing, Sports, Puzzle/Reflex.
+Cup / Tournament Mode:
+Configurable tourney length: First to 3 Points, Best of 5, or Custom Game List.
+Live podium leaderboard shown between rounds with animated point bars and player celebrations.
+In-Game HUD:
+Corner indicator lights displaying player score/lives.
+Central countdown timer and Sudden Death flash banners.
+Safe Pause: Centrally located button requiring a 1.5-second hold (preventing accidental player touches during chaotic gameplay).
+Round End & Rematch Screen:
+Displays victory fanfare, MVP highlights, and corner-accessible "Rematch" and "Next Game" buttons so any participant can restart without rotating the screen.
+3. Enhanced Minigame Catalog ("More Better Games")
+Game 1: Cyber Tanks 2.0 (Ricochet Arena)
+Concept: Upgraded tank duel featuring bouncing laser projectiles, destructible energy crates, and dynamic arena hazards.
+Controls: Single button per player. Hold to rotate tank; release to drive forward. Double-tap to fire bouncing projectile.
+Upgrades: Power-up crates drop periodically (Shield, Triple-Shot, Bouncing Landmines, Railgun Laser that pierces walls). Explosive barrel chain-reactions.
+Win Condition: Last tank standing or most eliminations in 60 seconds.
+Game 2: Bumper Hovercrafts (Shrinking Glacier)
+Concept: Physics-heavy arena brawler where players ram each other off an icy, crumbling platform into the abyss.
+Controls: Tap to burst forward with rocket thrust; turning is automated via centrifugal pendulum or gyro momentum.
+Upgrades: The arena breaks apart in concentric rings as the timer runs down. Spawning anvils and speed boosts add unpredictability to momentum collisions.
+Win Condition: Last survivor on the remaining iceberg.
+Game 3: Laser Grid Reflex (Tile Overcharge)
+Concept: 4x4 or 6x6 floor grid where tiles flash telegraphing incoming laser strikes.
+Controls: Tap to dash 1 tile in a continuous clockwise/counter-clockwise cycle; hold to reverse direction.
+Upgrades: Overcharged golden tiles offer bonus points, forcing risky positioning. Moving laser sweeps and shrinking safe zones as speed increases.
+Win Condition: Outlast opponents or gather 10 charge batteries first.
+Game 4: Orbital Slingshot (Meteor Miner)
+Concept: Space-themed physics game where small spacecraft orbit celestial bodies and slingshot to collect crystals or ram rivals.
+Controls: Hold button to tether to nearest gravity well; release to release momentum into a slingshot arc.
+Upgrades: Wandering black holes create gravitational distortion. Space debris and EMP power-ups disrupt opponent gravity tethers.
+Win Condition: First player to collect 25 space crystals or survive 90 seconds.
+Game 5: Micro Turbo GP (Single-Button Drift)
+Concept: Top-down micro racer on neon circuit tracks.
+Controls: Car drives forward automatically. Hold button to execute a tight power drift; release to straighten and trigger a mini turbo boost.
+Upgrades: Slipstreaming mechanic (driving behind a leader grants drafting speed boosts). Track hazards include oil slicks, jump ramps, and moving track barriers.
+Win Condition: First across the finish line after 3 laps.
+Game 6: Ghost Flashlight (Darkness Tag)
+Concept: Top-down dark mansion where players are invisible except when using flashlights or stepping on noisy floorboards.
+Controls: Hold to rotate character; release to run. Tap second action (or tap rhythm) to flash light for 0.5s.
+Upgrades: One player starts as the "Cursed Ghost" who moves faster in shadows. Tagging another player transfers the curse with an explosive spectral blast.
+Win Condition: Human who spent the least time as the Ghost when the 60-second timer expires.
+Game 7: Kitchen Chaos (Food Fling)
+Concept: Cooperative or competitive culinary frenzy where food items fly across the screen.
+Controls: Tap to scoop ingredients from conveyor belts; time release to launch ingredients onto central target plates.
+Upgrades: Rotten ingredients cause point penalties and stun opponents if intercepted. Fever mode doubles all points during the final 15 seconds.
+Win Condition: Highest recipe score achieved.
+Game 8: Skyline Sumo (Springboard Bouncer)
+Concept: Vertical platform climbing where players jump across springy scaffolding while knocking each other down.
+Controls: Hold to charge jump height and launch angle indicator; release to leap.
+Upgrades: Screen scrolls upward continuously—falling off bottom causes instant respawn penalty. Bouncing directly on an opponent's head stuns them and launches you higher.
+Win Condition: First player to reach the rooftop trophy or highest climber when time runs out.
+4. Dual-Agent Continuous Build & Test Loop in Antigravity
+To enable hands-off, automated engineering where one agent builds while another tests and breaks features, configure two coordinated sub-agents communicating through explicit file contracts.
+4.1 Orchestration Protocol & Shared Workspace State
+Both agents work within the same repository directory and maintain synchronization using three markdown status logs:
+ROADMAP.md: Master checklist of features, mini-games, and bug fixes with statuses (TODO, IN_PROGRESS, READY_FOR_TEST, VERIFIED).
+BUILD_LOG.md: Updated by Agent 1 (Builder) after every commit or feature build, detailing what was implemented, how to run it, and specific test vectors.
+QA_LOG.md: Updated by Agent 2 (Playtester) after executing automated browser tests, logging bug reproductions, console errors, frame drops, and screenshot artifacts.
+4.2 Workflow Loop
+[Agent 1: Builder]
+Picks next TODO from ROADMAP.md
+Writes TypeScript/Canvas game logic
+Verifies build & TypeScript types pass (npm run build)
+Updates BUILD_LOG.md and marks item READY_FOR_TEST
+[Agent 2: Playtester]
+Detects READY_FOR_TEST in ROADMAP.md
+Boots dev server (npm run dev) and opens headless/headed browser via Playwright
+Dispatches simulated 4-player simultaneous multi-touch/keyboard inputs
+Inspects console logs, frame rate (FPS), and win condition states
+If failures occur: Appends reproduction steps to QA_LOG.md and marks item FAILED
+If verified: Marks item VERIFIED in ROADMAP.md
+(Loop repeats until all roadmap items are verified)
+5. Sub-Agent Prompts (Copy & Paste Ready)
+Prompt for Sub-Agent 1: The Builder / Core Engineer
+You are SUB-AGENT 1 (THE BUILDER) in a dual-agent Google Antigravity workspace.
+Your mission is to architect and build a high-performance replica of the "1 2 3 4 Player Games" app with expanded, polished minigames using Vite, TypeScript, and HTML5 Canvas.
+YOUR RESPONSIBILITIES:
+1. Initialize and maintain the project structure:
+   - Framework: Vite + TypeScript + HTML5 Canvas (PixiJS or lightweight canvas renderer).
+   - Core Modules: Input Router (multi-touch 4-corner dispatch + keyboard shortcuts), State Manager (Lobby, Tournament, Active Game, Podium), Audio Engine (Web Audio API chip-tune synth).
+2. Implement games strictly from ROADMAP.md:
+   - Cyber Tanks 2.0, Bumper Hovercrafts, Laser Grid Reflex, Orbital Slingshot, Micro Turbo GP, Ghost Flashlight, Kitchen Chaos, Skyline Sumo.
+   - For every minigame, implement bot AI heuristics so solo players can play against 1-3 bots.
+3. Verification before passing off:
+   - Ensure 'npm run build' compiles with 0 TypeScript or lint errors.
+   - Ensure 'npm run dev' serves the app cleanly on localhost.
+4. Coordination Protocol:
+   - Read ROADMAP.md to choose the highest-priority pending feature.
+   - Set status to 'IN_PROGRESS' in ROADMAP.md.
+   - Implement the code and write accompanying unit/smoke tests.
+   - Update BUILD_LOG.md with:
+     * Feature implemented
+     * Instructions on how to trigger/test the game via URL params (e.g., http://localhost:5173/?game=tanks&players=4)
+     * Expected behavior and victory conditions
+   - Change status to 'READY_FOR_TEST' in ROADMAP.md.
+   - Check QA_LOG.md for bug reports filed by Sub-Agent 2, prioritize fixing any bugs marked 'CRITICAL' or 'BLOCKER' before starting new games.
+Prompt for Sub-Agent 2: The Playtester / QA & Chaos Runner
+You are SUB-AGENT 2 (THE PLAYTESTER) in a dual-agent Google Antigravity workspace.
+Your mission is to continuously test, stress-test, and validate the "1 2 3 4 Player Games" replica built by Sub-Agent 1. You operate the browser, simulate real players, and uncover bugs, race conditions, memory leaks, and gameplay balance issues.
+YOUR RESPONSIBILITIES:
+1. Test Automation Setup:
+   - Create and run Playwright test suites located in '/e2e/'.
+   - Build a Multi-Touch & Input Simulator:
+     * Emulate simultaneous touch events across all 4 screen corners (Top-Left, Top-Right, Bottom-Left, Bottom-Right).
+     * Emulate desktop keyboard keys (W, O, C, M).
+     * Test edge cases: 4 players tapping rapidly at the same millisecond; holding buttons continuously; tapping during transitions.
+2. Continuous Monitoring:
+   - Poll ROADMAP.md for items marked 'READY_FOR_TEST'.
+   - Launch dev server and run targeted browser validation using the URL parameters provided in BUILD_LOG.md.
+   - Monitor browser console for runtime exceptions, uncaught promises, or asset 404s.
+   - Profile performance: Ensure frame rate stays above 55 FPS and memory does not spike during round resets.
+   - Verify Win Conditions: Let AI bots battle each other to completion, asserting that victory podiums trigger and points tally accurately.
+3. Reporting Protocol:
+   - When a bug or gameplay failure is identified:
+     * Record reproduction steps, console errors, and stack traces into QA_LOG.md.
+     * Set status in ROADMAP.md to 'FAILED'.
+   - When a game passes all multi-player input stress tests and round completion flows:
+     * Log successful test summary in QA_LOG.md.
+     * Set status in ROADMAP.md to 'VERIFIED'.
+6. Implementation Roadmap & Execution Checklist
+Phase 1: Engine Foundation & Multi-Touch Input Router
+Initialize Vite + TypeScript project with Canvas/PixiJS setup.
+Build 4-corner multi-touch input router with visual touch ripple indicators.
+Map desktop keyboard keys (W, O, C, M) and Gamepad API listeners.
+Create Web Audio API procedural sound synthesizer (tap, hit, victory, countdown).
+Phase 2: Shell UI & Lobby System
+Implement Main Menu with 1P / 2P / 3P / 4P selection.
+Add corner player badges with Human / Bot / Off toggle controls.
+Build horizontal Game Carousel with interactive preview cards.
+Implement Tournament / Cup manager with point tracker and victory ceremony screen.
+Phase 3: Minigames Suite 1 (Physics & Combat)
+Implement Cyber Tanks 2.0 with ricochet projectiles and power-up crates.
+Implement Bumper Hovercrafts with shrinking ice arena physics.
+Implement bot heuristics for Tanks and Bumper Hovercrafts.
+Sub-Agent 2 validation: 4-player simultaneous tap test & round restart test.
+Phase 4: Minigames Suite 2 (Reaction & Racing)
+Implement Laser Grid Reflex with dynamic floor tile telegraphing.
+Implement Micro Turbo GP with single-button drift physics and track checkpoints.
+Sub-Agent 2 validation: Collision boundary checks and bot steering balance.
+Phase 5: Minigames Suite 3 (Space & Stealth)
+Implement Orbital Slingshot with gravity well physics.
+Implement Ghost Flashlight with darkness tag mechanics and visibility pulses.
+Sub-Agent 2 validation: Memory leak tests after 20 consecutive round rematches.
+Phase 6: Final Polish & Release Packaging
+Implement Kitchen Chaos and Skyline Sumo.
+Add screen shake, particle bursts, and dynamic haptics (navigator.vibrate).
+PWA manifest and service worker configuration for 100% offline playability.
+Run full 50-round automated cup tournament without human intervention.
+7. Local Playtesting & Verification Protocol (http://localhost:5173/)
+This section outlines the exact protocol, automated test script, and verification checklist for playtesting the application running on the local development server at http://localhost:5173/.
+7.1 Automated Playtesting Harness (e2e/playtest.spec.ts)
+Sub-Agent 2 (or a local developer) can execute this Playwright script against http://localhost:5173/ to validate canvas initialization, simulate simultaneous 4-player inputs, detect console errors, and confirm round completion:
+import { test, expect } from '@playwright/test';
+test.describe('1-4 Player Game Engine Verification', () => {
+  const LOCAL_URL = 'http://localhost:5173/';
+  test('Lobby loads with 60 FPS and 0 console errors', async ({ page }) => {
+    const consoleErrors: string[] = [];
+    page.on('console', msg => {
+      if (msg.type() === 'error') consoleErrors.push(msg.text());
+    });
+    await page.goto(LOCAL_URL);
+    await expect(page.locator('canvas')).toBeVisible();
+    // Verify touch-action is disabled to prevent pinch-to-zoom interference
+    const touchAction = await page.locator('canvas').evaluate(el => 
+      window.getComputedStyle(el).touchAction
+    );
+    expect(touchAction).toBe('none');
+    // Assert zero uncaught console exceptions
+    expect(consoleErrors).toEqual([]);
+  });
+  test('Simulate 4-player simultaneous inputs and verify round transition', async ({ page }) => {
+    await page.goto(`${LOCAL_URL}?game=tanks&players=4&autostart=true`);
+    const canvas = page.locator('canvas');
+    await expect(canvas).toBeVisible();
+    const box = await canvas.boundingBox();
+    if (!box) throw new Error('Canvas bounding box not found');
+    // Dispatches simultaneous touch events across all 4 quadrants
+    await page.touchscreen.tap(box.x + 40, box.y + 40);                         // P1: Top-Left
+    await page.touchscreen.tap(box.x + box.width - 40, box.y + 40);             // P2: Top-Right
+    await page.touchscreen.tap(box.x + 40, box.y + box.height - 40);            // P3: Bottom-Left
+    await page.touchscreen.tap(box.x + box.width - 40, box.y + box.height - 40); // P4: Bottom-Right
+    // Simultaneous keyboard inputs (W, O, C, M)
+    await page.keyboard.down('KeyW');
+    await page.keyboard.down('KeyO');
+    await page.keyboard.down('KeyC');
+    await page.keyboard.down('KeyM');
+    await page.waitForTimeout(500);
+    await page.keyboard.up('KeyW');
+    await page.keyboard.up('KeyO');
+    await page.keyboard.up('KeyC');
+    await page.keyboard.up('KeyM');
+    // Wait for victory state or sudden death countdown
+    await page.waitForTimeout(3000);
+    const isRunning = await page.evaluate(() => (window as any).__GAME_STATE__?.active !== false);
+    expect(isRunning).toBeTruthy();
+  });
+});
+7.2 Direct URL Test Parameters
+Developers and Sub-Agent 2 can bypass menus and launch directly into isolated testing scenarios using URL query parameters:
+Tanks Stress Test (4 Players, 3 Bots): http://localhost:5173/?game=tanks&players=4&bots=3
+Hovercraft Glacier (2 Human Players): http://localhost:5173/?game=hovercraft&players=2
+Laser Grid High-Speed: http://localhost:5173/?game=lasergrid&speed=fast&players=4
+Orbital Slingshot Physics Debug: http://localhost:5173/?game=slingshot&debug=true
+Autonomous Cup Tournament (5 Rounds): http://localhost:5173/?tourney=cup&rounds=5&auto=true
+7.3 Manual Playtesting Quality Checklist
+When evaluating gameplay manually at http://localhost:5173/, verify the following criteria:
+Touch Isolation (touch-action: none): Ensure fast, repeated tapping in corners does not trigger native browser double-tap zoom or viewport dragging.
+Audio Context Initialization: Audio must cleanly unlock on the first user interaction without blocking UI rendering or triggering AudioContext was not allowed to start warnings.
+Corner Ergonomics: Player buttons must remain at least 48x48 CSS pixels from screen edges with tactile visual feedback (ripples/flashes) on press.
+Memory & Garbage Collection: Performing 10 consecutive round restarts must not cause memory accumulation or frame drop spikes (verify steady 60 FPS in Chrome DevTools Performance monitor).
+AI Bot Balance: In 1-player mode against 3 bots, bots must demonstrate varied reaction times (Easy: 450ms, Normal: 250ms, Hard: 100ms) rather than infallible superhuman reflexes.
+7.4 Sub-Agent 2 Execution Command
+To trigger continuous headless testing in the Antigravity terminal:
+npx playwright test e2e/playtest.spec.ts --project=chromium --headed
+Results, frame rates, and failure traces are automatically parsed by Sub-Agent 2 and logged into QA_LOG.md.
+8. UI & Visual Style Overhaul: Authentic Classic Arcade (Non-AI Aesthetic)
+To eliminate generic "AI-generated" tropes (such as purple/cyan neon glows, glassmorphism, floating blur gradients, and excessive emojis), the entire visual interface must adhere to the clean, tactile, functional design language of classic physical party games and original local multiplayer titles like JindoBlu's 2 Player games: the Challenge.
+8.1 Anti-AI Design Rules
+Zero Unicode Emojis: Do not use emojis (no gamepads, trophies, fire, or robots) in buttons, titles, cards, or notifications. All iconography must be sharp, single-color flat vector SVGs (e.g., minimalist silhouettes of a tank, steering wheel, cup, or crosshair).
+Palette & Surfaces:
+Background: Muted solid slate gray (#1E2229) or matte charcoal (#14171A), eliminating heavy gradients and noisy textures.
+Player Identity Colors: Unambiguous, high-contrast flat primary tones:
+Player 1 (Red): #E53935 (Accent Dark: #B71C1C)
+Player 2 (Blue): #1E88E5 (Accent Dark: #0D47A1)
+Player 3 (Green): #43A047 (Accent Dark: #1B5E20)
+Player 4 (Amber/Yellow): #FB8C00 (Accent Dark: #E65100)
+Chunky Tactile 2.5D Buttons:
+Buttons must have a solid 4px bottom bevel (box-shadow: 0 4px 0 rgba(0,0,0,0.3) or solid border offset).
+On press (:active), translate the button down 3px with shadow reduced to 1px for instant tactile feedback.
+Button corners should feature a tight 8px border-radius, not full pill capsules.
+Typography:
+Clean, heavy, condensed sans-serif fonts (e.g., Inter, Trebuchet MS, or Montserrat ExtraBold).
+High-contrast white (#FFFFFF) or off-white (#F5F5F7) uppercase lettering with concise labels: 1 PLAYER, 2 PLAYERS, 3 PLAYERS, 4 PLAYERS, CUP, REMATCH, MENU.
+Instant Screen Transitions:
+Round resets and menu navigation must complete within 100ms. Eliminate slow fade-ins, sliding banners, or text typing animations.
+9. Expanded Minigame Catalog: 50 New Game Specifications (Hitting 58 Total, Roadmap to 100)
+To build toward the 100-game milestone, games are organized into 5 staggered production batches of 10 games each. Every game utilizes 1-button corner inputs or simple directional drags.
+Batch 1: Physics, Stacking & Arena Brawlers (Games 9–18)
+Game 9: Animal Stack:
+Mechanic: Players take turns dropping wobbling animals (elephant, giraffe, pig, duck, frog) onto a floating wooden raft.
+Controls: Tap to release the swinging crane clamp.
+Win Condition: Last player to successfully place an animal without toppling the stack into the water.
+Game 10: Sumo Iceberg:
+Mechanic: Physics-driven circular arena that tilts dynamically based on where players stand.
+Controls: Tap to dash; releasing allows momentum drift.
+Win Condition: Shove opponents off the slippery edges; last player standing wins.
+Game 11: Bumper Cars 99:
+Mechanic: Top-down bumper arena with electric spark perimeter rails.
+Controls: Hold to turn in place; release to accelerate forward.
+Win Condition: First to 3 spin-out tags on opponents.
+Game 12: Micro Hockey:
+Mechanic: 4-way circular air hockey table with one central puck and four goal slots.
+Controls: Slide paddle along corner goal perimeter arc to block and deflect.
+Win Condition: Lowest goals conceded after 60 seconds.
+Game 13: Cannon Barrage:
+Mechanic: Cannons oscillate back and forth automatically across defensive brick walls.
+Controls: Tap to fire iron cannonball.
+Win Condition: Destroy all three opposing fortress towers.
+Game 14: Anvil Rain:
+Mechanic: Heavy black anvils drop from above, casting expanding circular ground shadows.
+Controls: Tap to dash 1 grid step away from danger.
+Win Condition: Survival endurance—last squashed player wins.
+Game 15: Meteor Magnet:
+Mechanic: A giant magnetic core orbits the center; players activate polarity to sling it.
+Controls: Hold to attract the boulder; release to repel toward opponents.
+Win Condition: Direct boulder impact eliminates player.
+Game 16: Quad Pinball:
+Mechanic: Four corner flippers guarding personal goal trenches with rapid multiball spawns.
+Controls: Tap corner button to snap flipper.
+Win Condition: Keep pinballs out of your gutter; last active player wins.
+Game 17: Quick RPS Clash:
+Mechanic: Fast-twitch Rock-Paper-Scissors card duel.
+Controls: Three mini buttons in player corner (Rock, Paper, Scissors) selected before the 2-second gong.
+Win Condition: First to 3 winning clashes.
+Game 18: Bomb Relay:
+Mechanic: A round cartoon bomb with a burning fuse is passed by bumping into rivals.
+Controls: Tap to steer toward opponents; bounce off perimeter bumpers.
+Win Condition: Player holding the bomb when the timer hits zero explodes and loses.
+Batch 2: Reflex, Timing & Quick Draw (Games 19–28)
+Game 19: Quick Draw Western:
+Mechanic: Standoff duel with unpredictable delay followed by a visual "DRAW!" signal.
+Controls: Tap as fast as possible upon signal; early tap results in disqualification misfire.
+Win Condition: Fastest reaction time wins the duel round.
+Game 20: Balloon Burst:
+Mechanic: Pump air into balloons with visual warning strain lines.
+Controls: Hold corner button to inflate; release to seal.
+Win Condition: Largest balloon without popping wins.
+Game 21: Swat the Fly:
+Mechanic: Flies buzz and land erratically on a wooden table.
+Controls: Tap flyswatter when insect is on your half; avoid hitting stinging bees.
+Win Condition: First to 5 successful swats.
+Game 22: Blade Parry:
+Mechanic: Two wooden practice swords swing toward a clash point.
+Controls: Tap at the exact millisecond swords cross to execute a counter-strike.
+Win Condition: 3 successful parries.
+Game 23: Safe Dial Lock:
+Mechanic: A safe dial needle spins rapidly past a marked green target sector.
+Controls: Tap when the needle enters the green zone to unlock a tumbler.
+Win Condition: First to crack 3 tumblers.
+Game 24: Stop at Zero:
+Mechanic: Digital stopwatch counts down from 5.000s; numbers vanish at 3.000s.
+Controls: Tap to freeze the blind clock.
+Win Condition: Closest player to exactly 0.000s wins.
+Game 25: Turf Whack:
+Mechanic: High-speed mole targets pop up across a compact 4x4 lawn.
+Controls: Tap corner when mole enters your quarter grid.
+Win Condition: Most points in 45 seconds.
+Game 26: Coin Apex:
+Mechanic: Gold coins are tossed upward in physics arcs.
+Controls: Tap precisely when the coin reaches its highest zero-velocity point.
+Win Condition: Highest coin tally.
+Game 27: Red Light Sentry:
+Mechanic: Mechanical watchtower rotates eye; red light punishes any movement.
+Controls: Hold to run forward; release to freeze instantly.
+Win Condition: First to reach the center trophy line.
+Game 28: Spark Relay:
+Mechanic: Electric charge builds along copper conduits.
+Controls: Hold button to siphon power; let go before lightning flash overcharges capacitors.
+Win Condition: Highest absorbed energy without blowing fuse.
+Batch 3: Racing, Traps & Obstacles (Games 29–38)
+Game 29: Neon Lightcycles:
+Mechanic: High-speed trails left behind vehicles forming solid walls.
+Controls: Single tap turns vehicle 90 degrees clockwise.
+Win Condition: Trap opponents into hitting trails or borders.
+Game 30: Highway Cross:
+Mechanic: Multi-lane road with speeding trucks and log-filled rivers.
+Controls: Tap to hop forward one tile; hold to hop back.
+Win Condition: First to reach the opposite sidewalk safe zone.
+Game 31: Slalom Boats:
+Mechanic: Motorboats navigate water rapids with red/green checkpoint buoys.
+Controls: Tap to alternate rudder steering left vs right.
+Win Condition: First to navigate 5 gate pairs.
+Game 32: Treadmill Sprint:
+Mechanic: Conveyor belts switch speeds and directions dynamically while crates drop.
+Controls: Tap rapidly to sprint forward; dodge crates by sliding lanes.
+Win Condition: Last player remaining on conveyor surface.
+Game 33: Switch Track:
+Mechanic: Minecarts racing down interconnected rails.
+Controls: Tap to flip nearest track switch, routing rivals into dead ends or loop traps.
+Win Condition: First cart to depot station.
+Game 34: Rocket Burn:
+Mechanic: Staged rocket ascent balancing thrust vs temperature gauge.
+Controls: Pulse button to keep engine indicator inside the green throttle bracket.
+Win Condition: Highest altitude reached before flameout.
+Game 35: Gravity Hall:
+Mechanic: Side-scrolling runner with ceiling and floor spikes.
+Controls: Tap to flip gravity between ceiling and floor.
+Win Condition: Longest distance traveled.
+Game 36: Boulder Descent:
+Mechanic: Downhill scramble dodging pine trees while escaping a massive rolling stone.
+Controls: Hold to steer; weave through obstacle gates.
+Win Condition: Last runner uncrushed.
+Game 37: Rooftop Bound:
+Mechanic: Jumping across flat rooftops with moving gap widths.
+Controls: Hold to charge jump leap trajectory; release to launch.
+Win Condition: First to cross 10 buildings.
+Game 38: Depth Charge:
+Mechanic: Submarine duel in murky waters with sonar pings and floating naval mines.
+Controls: Tap to vent ballast and dive; release to surface.
+Win Condition: Dodge naval torpedoes and outlast rivals.
+Batch 4: Sports & Tabletop Arcade (Games 39–48)
+Game 39: Micro Soccer 4P:
+Mechanic: Fast 2v2 or 4-way free-for-all soccer with bouncy physical soccer ball.
+Controls: Corner button drives player toward ball; release kicks upon contact.
+Win Condition: First to 3 goals.
+Game 40: Slime Volleyball:
+Mechanic: Two-sided court with bouncy net; gelatinous players jump and spike.
+Controls: Hold to move toward net; release to spring jump.
+Win Condition: First to 5 points.
+Game 41: Crosswind Archery:
+Mechanic: Wind indicator arrow shifts randomly; targets sway on pendulums.
+Controls: Hold to draw bowstring; release to loose arrow.
+Win Condition: Highest cumulative score from 3 arrows.
+Game 42: Alley Bowling:
+Mechanic: Moving aim marker sweeps across 10-pin setup.
+Controls: Tap to launch ball; tap again to apply spin hook.
+Win Condition: Most knocked pins over 3 frames.
+Game 43: Mud Tug:
+Mechanic: Classic tug-of-war across a central mud pit.
+Controls: Rapid cadence button tapping matching rhythm pulse indicator.
+Win Condition: Pull marker flag across your victory line.
+Game 44: Trampoline Dunk:
+Mechanic: Basketball bounce approach to moving hoop rim.
+Controls: Tap on trampoline sweet spot for max height; tap in rim box to slam dunk.
+Win Condition: Highest judged dunk score.
+Game 45: Ice Curling:
+Mechanic: Slide heavy stone toward central red concentric target circle (house).
+Controls: Charge throw power; tap swept ice buttons to extend glide distance.
+Win Condition: Closest stone to center pin.
+Game 46: Windmill Putt:
+Mechanic: Miniature golf hole with spinning windmill blades and bank ramps.
+Controls: Aim arrow sweeps automatically; tap to stroke ball.
+Win Condition: Lowest strokes to sink ball.
+Game 47: Skeet Trap:
+Mechanic: Clay disks launch in cross-screen arcs.
+Controls: Tap reticle button when crosshairs align with flying clay.
+Win Condition: First to break 8 clays.
+Game 48: Court Dodgeball:
+Mechanic: Enclosed indoor court where rubber balls ricochet aggressively.
+Controls: Tap to dive/dodge; touching a stationary ball scoops it to throw.
+Win Condition: Last uneliminated player.
+Batch 5: Spatial, Strategy & Chaos (Games 49–58)
+Game 49: Color Flood:
+Mechanic: Turn-based or real-time hexagonal tile capture.
+Controls: Tap colored corner switch to claim adjacent matching tiles.
+Win Condition: Control greater than 50% of the arena grid.
+Game 50: Memory Matrix:
+Mechanic: Sequences of flashing tiles sound tones and must be repeated.
+Controls: Tap corner button when rotating pointer highlights target tile.
+Win Condition: Longest error-free sequence.
+Game 51: Snake Arena:
+Mechanic: Classic snake growth mechanics with four simultaneous snakes.
+Controls: Tap to turn 90 degrees; eating pellets increases length and speed.
+Win Condition: Force opponents into head-on collisions with your body.
+Game 52: Mirror Laser:
+Mechanic: Central laser core shoots periodic pulses; players position corner mirrors.
+Controls: Tap to rotate diagonal mirror reflector 45 degrees.
+Win Condition: Direct reflected laser beam into rival base core.
+Game 53: Domino Cascade:
+Mechanic: Race to place domino tiles before a descending barrier drops.
+Controls: Tap in rhythm to lay tiles; tap finish to trigger topple.
+Win Condition: Longest continuous falling chain.
+Game 54: Water Balloon Barrage:
+Mechanic: Catapults launch water balloons over an obstructing fence.
+Controls: Hold to set catapult angle and distance; release to splash.
+Win Condition: Soak opponent 3 times.
+Game 55: Sheep Dog Corrals:
+Mechanic: Flocks of sheep scatter away from player barking dogs into corner pens.
+Controls: Hold to run; release to trigger bark acoustic wave.
+Win Condition: Most sheep corralled in your pen within 60 seconds.
+Game 56: Chest Snatch:
+Mechanic: Central treasure chest snaps open and shut with sharp teeth.
+Controls: Tap to reach in and grab ruby; release before teeth clamp shut.
+Win Condition: Most rubies gathered without losing lives.
+Game 57: Rapid Drop 4:
+Mechanic: Vertical grid dropping tokens without turn limits.
+Controls: Slide selector over column and tap drop.
+Win Condition: First player to form a 4-in-a-row alignment.
+Game 58: Floor Painter:
+Mechanic: Roller skates paint the floor in player color; power rollers paint wider tracks.
+Controls: Hold to steer; bump rivals to steal their paint trail.
+Win Condition: Most square footage covered in 45 seconds.
+10. Staggered Production Roadmap (Batches 1–5 toward 100 Games)
+Antigravity sub-agents should execute this staged roadmap sequentially, ensuring each batch passes Playwright automated input stress tests and maintains steady 60 FPS before proceeding to the next batch:
+Milestone A (Games 1–8): Core framework + Initial 8 Games (Completed).
+Milestone B (Games 9–18): Batch 1 (Animal Stack, Sumo Iceberg, Bumper Cars, etc.) + Non-AI UI redesign.
+Milestone C (Games 19–28): Batch 2 (Timing & Quick Draw games).
+Milestone D (Games 29–38): Batch 3 (Racing & Obstacle courses).
+Milestone E (Games 39–48): Batch 4 (Tabletop Sports & Arcade).
+Milestone F (Games 49–58): Batch 5 (Spatial Strategy & Chaos).
+Milestone G (Games 59–100): Final expansion sprint to the 100-game milestone.
