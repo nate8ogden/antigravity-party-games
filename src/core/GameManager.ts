@@ -6694,6 +6694,35 @@ export class GameManager {
     });
   }
 
+  public startPackOpeningAnimation(curItem: any, res: PackResult) {
+    this.packOpeningResult = res;
+    const parts: { x: number; y: number; vx: number; vy: number; color: string; size: number; alpha: number }[] = [];
+    const colors = [res.previewColor, '#F59E0B', '#38BDF8', '#EC4899', '#10B981', '#FFFFFF'];
+    for (let i = 0; i < 48; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 120 + Math.random() * 260;
+      parts.push({
+        x: this.logicalWidth / 2,
+        y: this.logicalHeight / 2,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        size: 3 + Math.random() * 5,
+        alpha: 1.0
+      });
+    }
+    this.packOpeningAnim = {
+      packId: curItem.id,
+      packName: curItem.name,
+      packColor: curItem.previewColor,
+      packRarity: curItem.rarity,
+      startTime: performance.now(),
+      result: res,
+      particles: parts
+    };
+    this.audio.playCountdown(false);
+  }
+
   private renderShopModal(w: number, h: number) {
     this.shopHitBoxes = [];
 
@@ -8112,6 +8141,49 @@ export class GameManager {
       const textX = hp.align === 'left' ? pillX + 34 : pillX + pillW - 34;
       this.ctx.fillText(pillText, textX, pillY + 19);
       this.ctx.restore();
+
+      // Render equipped active booster badge if player has one
+      const equippedBoosterId = EconomyManager.getInstance().getEquippedBooster(hp.p.id);
+      if (equippedBoosterId) {
+        let bLabel = '⚡ BOOST';
+        let bBg = 'rgba(59, 130, 246, 0.9)';
+        let bBorder = '#60A5FA';
+        if (equippedBoosterId === 'booster_shield') {
+          const hasShield = this.hasShield(hp.p.id);
+          bLabel = hasShield ? '🛡️ AEGIS' : '🛡️ BROKEN';
+          bBg = hasShield ? 'rgba(6, 182, 212, 0.9)' : 'rgba(100, 116, 139, 0.7)';
+          bBorder = hasShield ? '#22D3EE' : '#94A3B8';
+        } else if (equippedBoosterId === 'booster_turbo') {
+          bLabel = '⚡ TURBO';
+          bBg = 'rgba(2, 132, 199, 0.9)';
+          bBorder = '#38BDF8';
+        } else if (equippedBoosterId === 'booster_time') {
+          bLabel = '⏱️ CHRONO';
+          bBg = 'rgba(245, 158, 11, 0.9)';
+          bBorder = '#FBBF24';
+        } else if (equippedBoosterId === 'booster_double_coins') {
+          bLabel = '💰 2x COINS';
+          bBg = 'rgba(217, 119, 6, 0.9)';
+          bBorder = '#FDE68A';
+        } else if (equippedBoosterId === 'booster_siphon') {
+          bLabel = '🧲 SIPHON';
+          bBg = 'rgba(147, 51, 234, 0.9)';
+          bBorder = '#C084FC';
+        }
+
+        const bW = 72;
+        const bH = 17;
+        const bX = hp.align === 'left' ? pillX : pillX + pillW - bW;
+        const bY = hp.y < h / 2 ? pillY + pillH + 4 : pillY - bH - 4;
+
+        this.ctx.save();
+        this.drawRoundedRect(bX, bY, bW, bH, 5, bBg, bBorder, 1);
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.font = '900 8.5px Montserrat, sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(bLabel, bX + bW / 2, bY + 12);
+        this.ctx.restore();
+      }
 
       this.ctx.restore();
     }
