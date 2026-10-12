@@ -336,8 +336,8 @@ export const GAME_CATALOG: MinigameMetadata[] = [
     tagline: 'Darkness Tag & Stealth',
     category: 'Action',
     icon: '[G-06]',
-    instructions: 'Lurk in darkness! Hold to rotate, release to run. Tap to pulse flashlight cone. Cursed ghost moves fast—tag to transfer the curse!',
-    controlPrompt: 'Hold: Rotate | Release: Run | Tap: Flashlight Pulse'
+    instructions: 'Survive the haunted mansion! Aim your flashlight at the Ghost to reveal and slow them down. Hold Action / Space for the Ultra-Beam! If tagged, you become the Ghost—hunt survivors to pass the curse!',
+    controlPrompt: 'Move: Direct / WASD / Stick | Hold Action: Ultra-Beam | Least Ghost Time Wins'
   },
   {
     id: 'kitchen_chaos',
