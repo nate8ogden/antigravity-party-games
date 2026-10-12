@@ -8406,21 +8406,82 @@ function drawBassDropArt(ctx: CanvasRenderingContext2D, x: number, y: number, w:
 
 // 141. Vocal Pitch
 function drawVocalPitchArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Digital audio workstation / studio screen
   ctx.fillStyle = '#030712';
   ctx.fillRect(x, y, w, h);
-  // Pitch wave
-  ctx.strokeStyle = '#10B981';
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // DAW Note Pitch Grid Lines (C4, D4, E4, F4)
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.15)';
+  ctx.lineWidth = 1;
+  const gridYs = [y + 10, y + 20, y + 30, y + 40];
+  for (const gy of gridYs) {
+    ctx.beginPath();
+    ctx.moveTo(x + 16, gy);
+    ctx.lineTo(x + w - 6, gy);
+    ctx.stroke();
+  }
+
+  // Pitch note names on left
+  ctx.fillStyle = '#64748b';
+  ctx.font = 'bold 6px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('F4', x + 4, y + 12);
+  ctx.fillText('E4', x + 4, y + 22);
+  ctx.fillText('D4', x + 4, y + 32);
+  ctx.fillText('C4', x + 4, y + 42);
+
+  // Target Pitch Guidance Bar (Neon Cyan Glow)
+  ctx.fillStyle = 'rgba(6, 182, 212, 0.35)';
+  ctx.strokeStyle = '#06b6d4';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x + 22, y + 17, w - 38, 7, 3);
+  else ctx.rect(x + 22, y + 17, w - 38, 7);
+  ctx.fill();
+  ctx.stroke();
+
+  // Singing Voice Pitch Waveform (Vibrant Emerald -> Lime)
+  ctx.strokeStyle = '#10b981';
+  ctx.shadowColor = '#4ade80';
+  ctx.shadowBlur = 6;
   ctx.lineWidth = 2.5;
   ctx.beginPath();
-  for (let px = 0; px < w; px += 2) {
-    const py = y + h * 0.5 + Math.sin(px * 0.12) * 12;
-    if (px === 0) ctx.moveTo(x + px, py);
-    else ctx.lineTo(x + px, py);
+  for (let px = 18; px < w - 8; px += 2) {
+    // Wave approaching and snapping onto target bar
+    const waveY = cy - 2 + Math.sin(px * 0.22) * 5 * (px < cx ? 1.4 : 0.2);
+    if (px === 18) ctx.moveTo(x + px, waveY);
+    else ctx.lineTo(x + px, waveY);
   }
   ctx.stroke();
-  // Target pitch bar
-  ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
-  ctx.fillRect(x + w * 0.25, y + h * 0.45, w * 0.5, 6);
+  ctx.shadowBlur = 0;
+
+  // Active Voice Pitch Head / Diamond hitting the note
+  const hitX = cx + 8;
+  const hitY = y + 20.5;
+  ctx.fillStyle = '#fef08a';
+  ctx.shadowColor = '#facc15';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.arc(hitX, hitY, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Studio microphone icon in corner
+  const micX = x + w - 14;
+  const micY = y + h - 12;
+  ctx.fillStyle = '#94a3b8';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(micX - 2.5, micY - 5, 5, 8, 2.5);
+  else ctx.rect(micX - 2.5, micY - 5, 5, 8);
+  ctx.fill();
+  ctx.strokeStyle = '#64748b';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(micX, micY - 1, 4.5, 0, Math.PI);
+  ctx.moveTo(micX, micY + 3.5); ctx.lineTo(micX, micY + 7);
+  ctx.stroke();
 }
 
 // 142. Breakdance Battle
@@ -8941,84 +9002,346 @@ function drawFerrisWheelArt(ctx: CanvasRenderingContext2D, x: number, y: number,
 
 // 152. Funhouse Mirrors
 function drawFunhouseMirrorsArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#18181B';
+  // Carnival tent interior
+  ctx.fillStyle = '#1c101e';
   ctx.fillRect(x, y, w, h);
-  // Vertical mirrors
-  ctx.fillStyle = 'rgba(56, 189, 248, 0.3)';
-  ctx.fillRect(x + w * 0.3, y + 10, 4, h - 20);
-  ctx.fillRect(x + w * 0.7, y + 10, 4, h - 20);
-  // True player
-  ctx.fillStyle = '#EF4444';
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Ornate Brass Gilded Funhouse Mirror Frame
+  ctx.fillStyle = '#b45309';
   ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.5, 9, 0, Math.PI * 2);
+  if (ctx.roundRect) ctx.roundRect(cx - 24, cy - 20, 48, 40, 6);
+  else ctx.rect(cx - 24, cy - 20, 48, 40);
   ctx.fill();
-  // Distorted mirror reflection
-  ctx.fillStyle = 'rgba(239, 68, 68, 0.35)';
+
+  // Marquee Vanity Bulbs along frame
+  const bulbCoords = [
+    [cx - 22, cy - 18], [cx, cy - 18], [cx + 22, cy - 18],
+    [cx - 22, cy + 18], [cx, cy + 18], [cx + 22, cy + 18],
+    [cx - 22, cy], [cx + 22, cy]
+  ];
+  for (const [bx, by] of bulbCoords) {
+    ctx.fillStyle = '#fef08a';
+    ctx.shadowColor = '#facc15';
+    ctx.shadowBlur = 4;
+    ctx.beginPath();
+    ctx.arc(bx, by, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+
+  // Wavy Distorted Mirror Glass (Cyan / Blue Gradient)
+  const mirGrad = ctx.createLinearGradient(cx, cy - 16, cx, cy + 16);
+  mirGrad.addColorStop(0, '#0284c7');
+  mirGrad.addColorStop(0.5, '#38bdf8');
+  mirGrad.addColorStop(1, '#0369a1');
+  ctx.fillStyle = mirGrad;
   ctx.beginPath();
-  ctx.ellipse(x + w * 0.85, y + h * 0.5, 6, 14, 0, 0, Math.PI * 2);
+  if (ctx.roundRect) ctx.roundRect(cx - 19, cy - 15, 38, 30, 4);
+  else ctx.rect(cx - 19, cy - 15, 38, 30);
   ctx.fill();
+
+  // Mirror glass warp distortion lines
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(cx - 16, cy - 10);
+  ctx.bezierCurveTo(cx - 6, cy - 4, cx - 12, cy + 4, cx - 16, cy + 10);
+  ctx.moveTo(cx + 16, cy - 10);
+  ctx.bezierCurveTo(cx + 6, cy - 4, cx + 12, cy + 4, cx + 16, cy + 10);
+  ctx.stroke();
+
+  // Comical Stretched Elastic Figure in center
+  const pX = cx;
+  const pY = cy;
+
+  // Stretched rubbery torso
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.moveTo(pX - 4, pY - 8);
+  ctx.bezierCurveTo(pX - 10, pY, pX - 2, pY + 8, pX - 5, pY + 12);
+  ctx.lineTo(pX + 5, pY + 12);
+  ctx.bezierCurveTo(pX + 2, pY + 8, pX + 10, pY, pX + 4, pY - 8);
+  ctx.closePath();
+  ctx.fill();
+
+  // Goofy Oversized Head & Giant Grin
+  ctx.fillStyle = '#f8fafc';
+  ctx.beginPath();
+  ctx.arc(pX, pY - 9, 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Cartoon Googly Eyes
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.arc(pX - 2, pY - 10, 1.5, 0, Math.PI * 2);
+  ctx.arc(pX + 2.5, pY - 10, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Giant stretched toothy smile
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(pX, pY - 8, 3.5, 0.2, Math.PI - 0.2);
+  ctx.stroke();
 }
 
 // 153. Cotton Candy
 function drawCottonCandyArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#1E1B4B';
+  // Carnival night booth
+  ctx.fillStyle = '#1e1026';
   ctx.fillRect(x, y, w, h);
-  // Paper stick
-  ctx.strokeStyle = '#F8FAFC';
-  ctx.lineWidth = 3;
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Background candy sparkles / sprinkles
+  const sprinkles = [
+    [x + 12, y + 12, '#38bdf8'],
+    [x + w - 14, y + 14, '#fde047'],
+    [x + 16, y + h - 14, '#a855f7'],
+    [x + w - 16, y + h - 12, '#34d399']
+  ];
+  for (const [sx, sy, col] of sprinkles) {
+    ctx.fillStyle = col as string;
+    ctx.beginPath();
+    ctx.arc(sx as number, sy as number, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Paper Cone Stick (White with Red Barber-pole Spiral Stripes)
+  const stickX = cx;
+  const stickTop = cy - 2;
+  const stickBot = y + h - 8;
+
+  // White base cone
+  ctx.fillStyle = '#f8fafc';
   ctx.beginPath();
-  ctx.moveTo(x + w * 0.5, y + h * 0.4);
-  ctx.lineTo(x + w * 0.5, y + h * 0.85);
+  ctx.moveTo(stickX - 3.5, stickTop);
+  ctx.lineTo(stickX + 3.5, stickTop);
+  ctx.lineTo(stickX + 1, stickBot);
+  ctx.lineTo(stickX - 1, stickBot);
+  ctx.closePath();
+  ctx.fill();
+
+  // Red spiral stripes on cone
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(stickX - 3, stickTop + 4); ctx.lineTo(stickX + 2.5, stickTop + 8);
+  ctx.moveTo(stickX - 2, stickTop + 12); ctx.lineTo(stickX + 2, stickTop + 16);
   ctx.stroke();
-  // Fluffy Pink Puff
-  ctx.fillStyle = '#EC4899';
+
+  // Enormous Fluffy Two-Tone Cotton Candy Cloud
+  const puffY = cy - 8;
+
+  // Base Electric Pink Puff
+  ctx.fillStyle = '#f472b6';
+  ctx.shadowColor = '#ec4899';
+  ctx.shadowBlur = 8;
   ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.4, 20, 0, Math.PI * 2);
-  ctx.arc(x + w * 0.42, y + h * 0.35, 14, 0, Math.PI * 2);
-  ctx.arc(x + w * 0.58, y + h * 0.35, 14, 0, Math.PI * 2);
+  ctx.arc(cx - 6, puffY + 2, 13, 0, Math.PI * 2);
+  ctx.arc(cx + 6, puffY + 2, 13, 0, Math.PI * 2);
+  ctx.arc(cx, puffY - 6, 14, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Frost Cyan Swirled Puff layer
+  ctx.fillStyle = '#38bdf8';
+  ctx.shadowColor = '#0284c7';
+  ctx.beginPath();
+  ctx.arc(cx + 4, puffY - 4, 11, 0, Math.PI * 2);
+  ctx.arc(cx - 3, puffY + 4, 9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Delicate Gossamer Spun Sugar Strands
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx - 2, puffY - 6, 11, 0.4, 2.8);
+  ctx.arc(cx + 3, puffY + 1, 10, 2.5, 4.8);
+  ctx.stroke();
+
+  // Golden sugar crystal sparkle on top
+  ctx.fillStyle = '#fef08a';
+  ctx.beginPath();
+  ctx.arc(cx - 2, puffY - 14, 2, 0, Math.PI * 2);
   ctx.fill();
 }
 
 // 154. Test Your Strength
 function drawTestStrengthArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0F172A';
+  // Carnival high-striker arcade
+  ctx.fillStyle = '#0f172a';
   ctx.fillRect(x, y, w, h);
-  // High-striker tower
-  ctx.fillStyle = '#334155';
-  ctx.fillRect(x + w * 0.45, y + 15, 10, h - 30);
-  // Golden Bell at top
-  ctx.fillStyle = '#F59E0B';
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Striker Tower Backboard (Wood Grain)
+  const towX = cx - 8;
+  ctx.fillStyle = '#78350f';
+  ctx.fillRect(towX - 6, y + 10, 12, h - 22);
+
+  // Power Gauge Rail (Green -> Amber -> Red Gradient)
+  const pGrad = ctx.createLinearGradient(towX, y + h - 14, towX, y + 14);
+  pGrad.addColorStop(0, '#22c55e');
+  pGrad.addColorStop(0.5, '#f59e0b');
+  pGrad.addColorStop(1, '#ef4444');
+  ctx.fillStyle = pGrad;
+  ctx.fillRect(towX - 3, y + 14, 6, h - 30);
+
+  // Graduation tick marks
+  ctx.fillStyle = '#ffffff';
+  for (let gy = y + 18; gy < y + h - 18; gy += 6) {
+    ctx.fillRect(towX + 4, gy, 3, 1);
+  }
+
+  // Golden Brass Bell at summit
+  const bellX = towX;
+  const bellY = y + 13;
+  ctx.fillStyle = '#facc15';
+  ctx.shadowColor = '#eab308';
+  ctx.shadowBlur = 8;
   ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + 18, 10, Math.PI, 0);
+  ctx.arc(bellX, bellY, 8, Math.PI, 0);
+  ctx.lineTo(bellX + 9, bellY + 3);
+  ctx.lineTo(bellX - 9, bellY + 3);
+  ctx.closePath();
   ctx.fill();
-  // Rising puck
-  ctx.fillStyle = '#38BDF8';
-  ctx.fillRect(x + w * 0.43, y + h * 0.45, 14, 6);
-  // Sledgehammer
-  ctx.fillStyle = '#EF4444';
-  ctx.fillRect(x + w * 0.65, y + h * 0.65, 14, 8);
-  ctx.fillStyle = '#78350F';
-  ctx.fillRect(x + w * 0.7, y + h * 0.72, 4, 16);
+  ctx.shadowBlur = 0;
+
+  // Ringing Impact Soundwave Shockwaves
+  ctx.strokeStyle = '#fef08a';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(bellX, bellY, 13, -Math.PI * 0.8, -Math.PI * 0.2);
+  ctx.stroke();
+
+  // Speeding Metal Puck flying upward
+  const puckY = cy - 2;
+  ctx.fillStyle = '#38bdf8';
+  ctx.shadowColor = '#00e5ff';
+  ctx.shadowBlur = 6;
+  ctx.fillRect(towX - 5, puckY, 10, 4);
+  ctx.shadowBlur = 0;
+
+  // Motion speed streaks under puck
+  ctx.strokeStyle = '#fde047';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(towX - 2, puckY + 5); ctx.lineTo(towX - 2, puckY + 15);
+  ctx.moveTo(towX + 2, puckY + 5); ctx.lineTo(towX + 2, puckY + 15);
+  ctx.stroke();
+
+  // Sledgehammer striking the anvil pad at bottom right
+  const hamX = cx + 14;
+  const hamY = cy + 12;
+  ctx.save();
+  ctx.translate(hamX, hamY);
+  ctx.rotate(-0.4);
+
+  // Wooden shaft
+  ctx.fillStyle = '#92400e';
+  ctx.fillRect(-2, -18, 4, 24);
+
+  // Heavy steel sledgehammer head
+  ctx.fillStyle = '#475569';
+  ctx.fillRect(-9, -22, 18, 8);
+  ctx.fillStyle = '#ef4444';
+  ctx.fillRect(-7, -20, 14, 4);
+  ctx.restore();
+
+  // Rubber anvil pad at bottom
+  ctx.fillStyle = '#020617';
+  ctx.fillRect(towX - 8, y + h - 14, 16, 6);
+  ctx.fillStyle = '#dc2626';
+  ctx.fillRect(towX - 6, y + h - 16, 12, 3);
 }
 
 // 155. Haunted Mansion
 function drawHauntedMansionArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#05070E';
+  // Midnight stormy sky
+  ctx.fillStyle = '#090514';
   ctx.fillRect(x, y, w, h);
-  // Ghost silhouette
-  ctx.fillStyle = '#A855F7';
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Giant Full Moon behind mansion
+  const mGrad = ctx.createRadialGradient(cx + 12, y + 14, 2, cx + 12, y + 14, 20);
+  mGrad.addColorStop(0, '#fef08a');
+  mGrad.addColorStop(0.5, '#fde68a');
+  mGrad.addColorStop(1, 'rgba(254, 230, 138, 0)');
+  ctx.fillStyle = mGrad;
   ctx.beginPath();
-  ctx.arc(x + w * 0.5, y + h * 0.4, 14, Math.PI, 0);
-  ctx.lineTo(x + w * 0.5 + 14, y + h * 0.6);
-  ctx.lineTo(x + w * 0.5, y + h * 0.55);
-  ctx.lineTo(x + w * 0.5 - 14, y + h * 0.6);
+  ctx.arc(cx + 12, y + 14, 20, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fef9c3';
+  ctx.beginPath();
+  ctx.arc(cx + 12, y + 14, 11, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Flying Bats silhouettes across moon
+  ctx.fillStyle = '#090514';
+  ctx.beginPath();
+  ctx.moveTo(cx + 16, y + 8);
+  ctx.lineTo(cx + 12, y + 5);
+  ctx.lineTo(cx + 15, y + 9);
+  ctx.lineTo(cx + 19, y + 6);
   ctx.closePath();
   ctx.fill();
-  // Ghost eyes
-  ctx.fillStyle = '#05070E';
+
+  // Crooked Victorian Haunted Mansion Silhouette
+  const hX = cx - 6;
+  const hY = cy + 4;
+  ctx.fillStyle = '#1e1b4b';
+
+  // Main house tower & pitched roofs
   ctx.beginPath();
-  ctx.arc(x + w * 0.46, y + h * 0.38, 2.5, 0, Math.PI * 2);
-  ctx.arc(x + w * 0.54, y + h * 0.38, 2.5, 0, Math.PI * 2);
+  ctx.moveTo(hX - 16, y + h);
+  ctx.lineTo(hX - 16, hY + 2);
+  ctx.lineTo(hX - 8, hY - 14); // Steep roof peak
+  ctx.lineTo(hX, hY - 4);
+  ctx.lineTo(hX + 16, hY - 18); // Tower spire
+  ctx.lineTo(hX + 22, hY + 4);
+  ctx.lineTo(hX + 22, y + h);
+  ctx.closePath();
+  ctx.fill();
+
+  // Crooked Chimney
+  ctx.fillRect(hX - 14, hY - 16, 4, 8);
+
+  // Eerie Glowing Yellow Attic Windows
+  ctx.fillStyle = '#fde047';
+  ctx.shadowColor = '#eab308';
+  ctx.shadowBlur = 6;
+  ctx.fillRect(hX + 4, hY - 8, 4, 5);
+  ctx.fillRect(hX - 6, hY + 2, 4, 4);
+  ctx.shadowBlur = 0;
+
+  // Glowing Ectoplasmic Ghost hovering over roof
+  const gX = cx - 12;
+  const gY = cy - 8;
+  ctx.fillStyle = 'rgba(168, 85, 247, 0.85)';
+  ctx.shadowColor = '#c084fc';
+  ctx.shadowBlur = 8;
+  // Ghost head
+  ctx.beginPath();
+  ctx.arc(gX, gY, 6, 0, Math.PI * 2);
+  ctx.fill();
+  // Wispy tail
+  ctx.beginPath();
+  ctx.moveTo(gX - 5, gY + 3);
+  ctx.quadraticCurveTo(gX - 10, gY + 12, gX - 2, gY + 14);
+  ctx.quadraticCurveTo(gX + 4, gY + 10, gX + 5, gY + 3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Ghost glowing cyan eyes
+  ctx.fillStyle = '#00ffff';
+  ctx.beginPath();
+  ctx.arc(gX - 2, gY - 1, 1.2, 0, Math.PI * 2);
+  ctx.arc(gX + 2, gY - 1, 1.2, 0, Math.PI * 2);
   ctx.fill();
 }
 
