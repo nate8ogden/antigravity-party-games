@@ -65,7 +65,7 @@ test.describe('Asteroid Miner - Time-based & Stealing Mechanics', () => {
     await page.waitForSelector('canvas', { timeout: 10000 });
     await skipCountdown(page);
 
-    const stealResult = await page.evaluate(async () => {
+    await page.evaluate(() => {
       const dbg = (window as any).__ASTEROID_MINER_DEBUG__;
       const s0 = dbg.getShip(0);
       const s1 = dbg.getShip(1);
@@ -78,10 +78,13 @@ test.describe('Asteroid Miner - Time-based & Stealing Mechanics', () => {
       // Position s0 and s1 touching with s0 ramming into s1
       dbg.setShipPos(1, 410, 300, 0, 0);
       dbg.setShipPos(0, 380, 300, 200, 0); // s0 moving right towards s1
+    });
 
-      // Wait 150ms for collision resolution in loop
-      await new Promise((r) => setTimeout(r, 150));
+    // Wait 150ms for collision resolution in game loop
+    await page.waitForTimeout(150);
 
+    const stealResult = await page.evaluate(() => {
+      const dbg = (window as any).__ASTEROID_MINER_DEBUG__;
       return {
         p0Cargo: dbg.getShip(0).cargo,
         p1Cargo: dbg.getShip(1).cargo
@@ -98,7 +101,7 @@ test.describe('Asteroid Miner - Time-based & Stealing Mechanics', () => {
     await page.waitForSelector('canvas', { timeout: 10000 });
     await skipCountdown(page);
 
-    const raidResult = await page.evaluate(async () => {
+    await page.evaluate(() => {
       const dbg = (window as any).__ASTEROID_MINER_DEBUG__;
       const rivalDepot = dbg.getDepots().find((d: any) => d.playerId === 1);
       const s0 = dbg.getShip(0);
@@ -109,10 +112,13 @@ test.describe('Asteroid Miner - Time-based & Stealing Mechanics', () => {
 
       // Place raider right on top of rival depot
       dbg.setShipPos(0, rivalDepot.x, rivalDepot.y, 0, 0);
+    });
 
-      // Wait 150ms for depot raid trigger
-      await new Promise((r) => setTimeout(r, 150));
+    // Wait 150ms for depot raid trigger in game loop
+    await page.waitForTimeout(150);
 
+    const raidResult = await page.evaluate(() => {
+      const dbg = (window as any).__ASTEROID_MINER_DEBUG__;
       return {
         raiderCargo: dbg.getShip(0).cargo,
         rivalBanked: dbg.getShip(1).bankedScore
