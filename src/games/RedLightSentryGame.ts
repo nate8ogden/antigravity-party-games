@@ -254,19 +254,20 @@ export class RedLightSentryGame extends BaseGame {
       if (isHolding) {
         if (this.sentryPhase === 'red') {
           // CAUGHT MOVING DURING RED LIGHT! SENTRY LASER STRIKE!
-          r.stunTimer = 1.1;
+          r.stunTimer = 1.3;
           r.isRunning = false;
-          // Knockback toward start
-          r.x -= r.dir * 95;
+          // Substantial knockback toward start (pushed back 160px!)
+          const knockbackDist = 160;
+          r.x -= r.dir * knockbackDist;
           if (r.dir === 1) r.x = Math.max(r.startX, r.x);
           else r.x = Math.min(r.startX, r.x);
 
-          this.zappedLaserBeam = { x: r.x, y: r.y, timer: 0.25 };
+          this.zappedLaserBeam = { x: r.x, y: r.y, timer: 0.35 };
           this.audio.playExplosion();
           this.audio.playLaser();
-          this.particles.showFloatingText('ZAPPED! -95m! ⚡', r.x, r.y - 30, '#EF4444', 22);
-          this.particles.spawnSparks(r.x, r.y, '#EF4444', 24);
-          this.particles.addTrauma(0.35);
+          this.particles.showFloatingText('ZAPPED! BLASTED BACK! ⚡', r.x, r.y - 30, '#EF4444', 24);
+          this.particles.spawnSparks(r.x, r.y, '#EF4444', 32);
+          this.particles.addTrauma(0.45);
         } else {
           // Safe to run!
           r.x += r.dir * r.speed * dt;
@@ -309,36 +310,48 @@ export class RedLightSentryGame extends BaseGame {
       return;
     }
 
+    let state = this.botStates.get(botId);
+    if (!state) {
+      state = { greenReactionTimer: 0, willMistimeYellow: false, mistimeReleaseDelay: 0 };
+      this.botStates.set(botId, state);
+    }
+
     if (this.sentryPhase === 'green') {
-      // All bots sprint during green light
-      this.input.setBotInput(botId, true);
-    } else if (this.sentryPhase === 'yellow') {
-      if (difficulty === 'bot_hard') {
-        // Hard bot pushes sprint until last 0.12s of yellow, then safely stops
-        if (this.phaseTimer > 0.12) {
-          this.input.setBotInput(botId, true);
-        } else {
-          this.input.setBotInput(botId, false);
-        }
-      } else if (difficulty === 'bot_normal') {
-        // Normal bot stops roughly halfway through yellow
-        if (this.phaseTimer > this.currentYellowDuration * 0.45) {
-          this.input.setBotInput(botId, true);
-        } else {
-          this.input.setBotInput(botId, false);
-        }
+      if (state.greenReactionTimer > 0) {
+        state.greenReactionTimer -= dt;
+        this.input.setBotInput(botId, false);
       } else {
-        // Easy bot gets greedy and frequently overstays into red light
-        if (this.phaseTimer > this.currentYellowDuration * 0.2 || Math.random() < 0.25) {
+        // Sprinting forward during green light
+        this.input.setBotInput(botId, true);
+      }
+    } else if (this.sentryPhase === 'yellow') {
+      if (state.willMistimeYellow) {
+        // Greedy bot pushes too hard and overstays into red light!
+        this.input.setBotInput(botId, true);
+      } else {
+        const brakeThreshold = difficulty === 'bot_hard' ? 0.08 : difficulty === 'bot_normal' ? 0.16 : 0.14;
+        if (this.phaseTimer > brakeThreshold) {
           this.input.setBotInput(botId, true);
         } else {
           this.input.setBotInput(botId, false);
         }
       }
     } else {
-      // Red phase
-      if (difficulty === 'bot_easy' && Math.random() < 0.03) {
-        // Easy bot occasionally twitches and gets zapped
+      // Red light phase
+      if (state.willMistimeYellow) {
+        if (state.mistimeReleaseDelay > 0) {
+          state.mistimeReleaseDelay -= dt;
+          this.input.setBotInput(botId, true); // Caught running into red!
+          return;
+        } else {
+          state.willMistimeYellow = false;
+        }
+      }
+
+      // Impatient twitch during red light
+      if (difficulty === 'bot_easy' && Math.random() < 0.08 * dt) {
+        this.input.setBotInput(botId, true);
+      } else if (difficulty === 'bot_normal' && Math.random() < 0.03 * dt) {
         this.input.setBotInput(botId, true);
       } else {
         this.input.setBotInput(botId, false);
@@ -491,31 +504,52 @@ export class RedLightSentryGame extends BaseGame {
     ctx.fillStyle = eyeColor;
     ctx.font = '900 22px Montserrat, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(phaseText, sentryX, 150);
+    ctx.fillText(phaseText, sentryX, 146);
 
-    // Dynamic Sentry Phase Progress Indicator Bar
-    const barW = 160;
-    const barH = 6;
-    const barX = sentryX - barW / 2;
-    const barY = 162;
-    const progress = Math.max(0, Math.min(1, this.phaseTimer / this.currentPhaseDuration));
+    if (this.sentryPhase === 'yellow') {
+      // ONLY show countdown timer and progress bar during YELLOW LIGHT!
+      const yellowRemaining = Math.max(0, this.phaseTimer).toFixed(1);
+      ctx.fillStyle = '#F59E0B';
+      ctx.font = '800 15px Montserrat, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`BRAKE WARNING: ${yellowRemaining}s REMAINING`, sentryX, 168);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-    ctx.beginPath();
-    ctx.roundRect(barX, barY, barW, barH, 3);
-    ctx.fill();
+      const barW = 180;
+      const barH = 7;
+      const barX = sentryX - barW / 2;
+      const barY = 176;
+      const progress = Math.max(0, Math.min(1, this.phaseTimer / this.currentYellowDuration));
 
-    ctx.fillStyle = eyeColor;
-    ctx.shadowColor = eyeColor;
-    ctx.shadowBlur = 8;
-    ctx.beginPath();
-    ctx.roundRect(barX, barY, barW * progress, barH, 3);
-    ctx.fill();
-    ctx.shadowBlur = 0;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, barW, barH, 4);
+      ctx.fill();
+
+      ctx.fillStyle = '#F59E0B';
+      ctx.shadowColor = '#F59E0B';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, barW * progress, barH, 4);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    } else if (this.sentryPhase === 'green') {
+      // Hidden duration for suspense: no timer or progress bar!
+      ctx.fillStyle = '#6EE7B7';
+      ctx.font = '600 13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Sprint to the trophy! Sentry turns yellow unpredictably...', sentryX, 172);
+    } else {
+      // Hidden duration for suspense: no timer or progress bar!
+      ctx.fillStyle = '#FCA5A5';
+      ctx.font = '600 13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('FREEZE! Scanning lasers active — movement will trigger zap!', sentryX, 172);
+    }
 
     ctx.fillStyle = '#94A3B8';
-    ctx.font = '600 13px sans-serif';
-    ctx.fillText('Hold corner button to run • Release to freeze before Red Light scans!', sentryX, 186);
+    ctx.font = '600 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Hold corner button to run • Release to freeze before Red Light scans!', sentryX, 196);
 
     // Active Sweeping Scanning Lasers during Red Light
     if (this.sentryPhase === 'red') {
