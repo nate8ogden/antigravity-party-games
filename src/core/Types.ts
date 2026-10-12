@@ -286,7 +286,8 @@ export type MinigameId =
   | 'matrix_code_rain'
   | 'sharks_and_minnows'
   | 'power_path_clash'
-  | 'landscape_artillery';
+  | 'landscape_artillery'
+  | 'spam_click_showdown';
 
 export interface MinigameMetadata {
   id: MinigameId;

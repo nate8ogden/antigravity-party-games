@@ -832,6 +832,9 @@ function drawThumbnailDirect(
     case 'landscape_artillery':
       drawLandscapeArtilleryArt(ctx, x, y, w, h);
       break;
+    case 'spam_click_showdown':
+      drawSpamClickShowdownArt(ctx, x, y, w, h);
+      break;
     default:
       drawDefaultArt(ctx, x, y, w, h);
       break;
@@ -9548,6 +9551,86 @@ function drawLandscapeArtilleryArt(ctx: CanvasRenderingContext2D, x: number, y: 
   ctx.fillStyle = '#EF4444';
   ctx.textAlign = 'center';
   ctx.fillText('🎯', p2X, p2Y - 20);
+}
+
+function drawSpamClickShowdownArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Vibrant stage night background
+  const bgGrad = ctx.createLinearGradient(x, y, x, y + h);
+  bgGrad.addColorStop(0, '#090D16');
+  bgGrad.addColorStop(1, '#1E1B4B');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(x, y, w, h);
+
+  // Stage light cone
+  ctx.save();
+  ctx.fillStyle = 'rgba(245, 158, 11, 0.15)';
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.5, y);
+  ctx.lineTo(x + w * 0.85, y + h);
+  ctx.lineTo(x + w * 0.15, y + h);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // Bottle Body blasting upward
+  const bX = x + w * 0.42;
+  const bY = y + h * 0.38;
+  ctx.save();
+  ctx.translate(bX, bY);
+  ctx.rotate(-0.18);
+
+  // Fizz exhaust trail
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+  ctx.beginPath();
+  ctx.moveTo(-10, 30);
+  ctx.lineTo(10, 30);
+  ctx.lineTo(16, 55);
+  ctx.lineTo(-16, 55);
+  ctx.closePath();
+  ctx.fill();
+
+  // Sparks
+  ctx.fillStyle = '#F59E0B';
+  ctx.beginPath();
+  ctx.arc(-8, 48, 3, 0, Math.PI * 2);
+  ctx.arc(6, 52, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Pressurized Bottle
+  ctx.fillStyle = '#EF4444';
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(-14, -28, 28, 56, 8);
+  ctx.fill();
+  ctx.stroke();
+
+  // Bottle Neck
+  ctx.fillStyle = '#EF4444';
+  ctx.beginPath();
+  ctx.rect(-6, -42, 12, 14);
+  ctx.fill();
+  ctx.stroke();
+
+  // Foam Eruption
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath();
+  ctx.arc(0, -46, 10, 0, Math.PI * 2);
+  ctx.arc(-8, -42, 6, 0, Math.PI * 2);
+  ctx.arc(8, -42, 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+
+  // Dynamic Tapping Hand / Cursor
+  ctx.font = '28px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('👆', x + w * 0.72, y + h * 0.72);
+
+  // Lightning Clicks
+  ctx.font = 'bold 16px sans-serif';
+  ctx.fillStyle = '#FBBF24';
+  ctx.fillText('⚡ 1000 PSI!', x + w * 0.5, y + h * 0.92);
 }
 
 // Fallback Default

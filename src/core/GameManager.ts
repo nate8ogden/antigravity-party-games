@@ -271,6 +271,7 @@ import { MatrixCodeRainGame } from '../games/MatrixCodeRainGame';
 import { SharksAndMinnowsGame } from '../games/SharksAndMinnowsGame';
 import { PowerPathClashGame } from '../games/PowerPathClashGame';
 import { LandscapeArtilleryGame } from '../games/LandscapeArtilleryGame';
+import { SpamClickShowdownGame } from '../games/SpamClickShowdownGame';
 import { renderGameThumbnailArt } from './GameThumbnails';
 import { drawCharacter } from './CharacterRenderer';
 import {
@@ -2614,6 +2615,15 @@ export const GAME_CATALOG: MinigameMetadata[] = [
     icon: '[G-259]',
     instructions: 'Turn-based artillery showdown on destructible terrain! Camera zooms into your turn. Aim left or right, pull back to set angle and power. Master gravity, wind, and body shots: direct headshots deliver 2.5x critical damage!',
     controlPrompt: 'Left/Right: Aim • Down/Up: Pull Back Power • Space/Enter: Launch'
+  },
+  {
+    id: 'spam_click_showdown',
+    title: 'Spam Click Showdown',
+    tagline: 'Furious Button-Mashing Soda Blastoff',
+    category: 'Party',
+    icon: '[G-260]',
+    instructions: 'Spam click as fast as humanly possible! Every click pumps pressurized fizzy soda into your rocket bottle. Hit over 8 CPS to activate burning Overdrive and reach 1000 PSI first to blast off into the stratosphere!',
+    controlPrompt: 'SPAM CLICK MOUSE / TAP / SPACE / ENTER / BUTTONS AS FAST AS YOU CAN!'
   }
 ];
 
@@ -2921,6 +2931,7 @@ export class GameManager {
       if (gameParam === 'sharks_and_minnows' || gameParam === 'shark_and_minnows' || gameParam === 'sharks' || gameParam === 'minnows' || gameParam === 'shark') gameParam = 'sharks_and_minnows';
       if (gameParam === 'power_path_clash' || gameParam === 'power_path' || gameParam === 'path_clash' || gameParam === 'hero_path' || gameParam === 'damage_path') gameParam = 'power_path_clash';
       if (gameParam === 'landscape_artillery' || gameParam === 'artillery' || gameParam === 'landscape' || gameParam === 'artillery_duel' || gameParam === 'worms') gameParam = 'landscape_artillery';
+      if (gameParam === 'spam_click_showdown' || gameParam === 'spam_click' || gameParam === 'spam' || gameParam === 'click' || gameParam === 'clicker') gameParam = 'spam_click_showdown';
 
       const idx = GAME_CATALOG.findIndex((g) => g.id === gameParam);
       if (idx !== -1) {
@@ -4526,9 +4537,13 @@ export class GameManager {
       case 'landscape_artillery':
         this.activeGame = new LandscapeArtilleryGame(this.players, this.input, this.audio, this.particles);
         break;
+      case 'spam_click_showdown':
+        this.activeGame = new SpamClickShowdownGame(this.players, this.input, this.audio, this.particles);
+        break;
     }
 
     const SINGLE_BUTTON_GAMES = new Set<string>([
+      'spam_click_showdown',
       'neon_lightcycles',
       'micro_gp',
       'kitchen_chaos',
