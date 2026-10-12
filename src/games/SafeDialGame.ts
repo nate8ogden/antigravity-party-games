@@ -59,12 +59,31 @@ export class SafeDialGame extends BaseGame {
         doorOpenAnim: 0,
         isUnlocked: false,
         targets: [
-          { startAngle: t1Start, spanAngle: 0.65, speed: 2.4, direction: 1 },
-          { startAngle: t2Start, spanAngle: 0.48, speed: 3.2, direction: -1 },
-          { startAngle: t3Start, spanAngle: 0.35, speed: 4.2, direction: 1 }
+          { startAngle: t1Start, spanAngle: 0.75, speed: 2.0, direction: 1 },
+          { startAngle: t2Start, spanAngle: 0.58, speed: 2.6, direction: -1 },
+          { startAngle: t3Start, spanAngle: 0.46, speed: 3.2, direction: 1 }
         ]
       });
     });
+
+    // Expose debug hook for verification and tests
+    (window as any).__SAFE_DIAL_DEBUG__ = {
+      getLocks: () => Array.from(this.locks.values()).map(l => ({
+        id: l.id,
+        crackedTumblers: l.crackedTumblers,
+        currentAngle: l.currentAngle,
+        jamTimer: l.jamTimer,
+        isUnlocked: l.isUnlocked,
+        curTarget: l.targets[l.crackedTumblers] ? { ...l.targets[l.crackedTumblers] } : null
+      })),
+      setAngle: (pid: PlayerId, angle: number) => {
+        const lock = this.locks.get(pid);
+        if (lock) lock.currentAngle = angle;
+      },
+      tap: (pid: PlayerId) => {
+        this.input.setBotInput(pid, true);
+      }
+    };
   }
 
   public update(dt: number, width: number, height: number): void {
@@ -91,8 +110,8 @@ export class SafeDialGame extends BaseGame {
         lock.currentAngle = ((lock.currentAngle % twoPi) + twoPi) % twoPi;
       }
 
-      // Check player inputs
-      const pressed = this.input.justPressed(lock.id) && lock.jamTimer <= 0;
+      // Check player inputs (both single-button justPressed and action)
+      const pressed = (this.input.justPressed(lock.id) || this.input.justAction(lock.id)) && lock.jamTimer <= 0;
 
       if (pressed && curTarget) {
         // Test if needle is within green target sector
@@ -100,17 +119,21 @@ export class SafeDialGame extends BaseGame {
         const targetStart = curTarget.startAngle;
         const targetSpan = curTarget.spanAngle;
 
-        // Calculate angular distance
-        let diff = (needle - targetStart) % (Math.PI * 2);
-        if (diff < 0) diff += Math.PI * 2;
+        const twoPi = Math.PI * 2;
+        let diff = (needle - targetStart) % twoPi;
+        if (diff < 0) diff += twoPi;
 
-        if (diff <= targetSpan) {
+        // Generous grace buffer (0.08 rad ~ 4.6 deg) so edges register reliably
+        const grace = 0.08;
+        const isHit = diff <= (targetSpan + grace) || diff >= (twoPi - grace);
+
+        if (isHit) {
           // SUCCESSFUL TUMBLER CRACK!
           lock.crackedTumblers++;
           this.audio.playLaser();
           const dialPos = this.getDialPosition(lock.id, width, height);
           this.particles.showFloatingText(`TUMBLER ${lock.crackedTumblers} / 3! 🔓`, dialPos.x, dialPos.y - 70, '#10B981', 22);
-          this.particles.spawnSparks(dialPos.x, dialPos.y, '#34D399', 20);
+          this.particles.spawnSparks(dialPos.x, dialPos.y, '#34D399', 24);
 
           if (lock.crackedTumblers >= this.maxTumblers) {
             lock.isUnlocked = true;
@@ -122,7 +145,7 @@ export class SafeDialGame extends BaseGame {
           }
         } else {
           // JAMMED / MISSED!
-          lock.jamTimer = 0.75;
+          lock.jamTimer = 0.65;
           this.audio.playExplosion();
           const dialPos = this.getDialPosition(lock.id, width, height);
           this.particles.showFloatingText('LOCK JAMMED! ⚠️', dialPos.x, dialPos.y - 70, '#EF4444', 20);
@@ -350,17 +373,26 @@ export class SafeDialGame extends BaseGame {
       ctx.restore();
     }
 
-    // Central Spinning Dial Needle
+    // Central Spinning Dial Needle (pointing along positive X to align with angle 0)
     ctx.save();
     ctx.rotate(lock.currentAngle);
 
     // Heavy Chrome Needle
     ctx.fillStyle = lock.jamTimer > 0 ? '#EF4444' : '#F8FAFC';
     ctx.beginPath();
-    ctx.moveTo(-5, 0);
-    ctx.lineTo(0, -dialRadius + 14);
-    ctx.lineTo(5, 0);
-    ctx.lineTo(0, 15);
+    ctx.moveTo(0, -6);
+    ctx.lineTo(dialRadius - 12, 0);
+    ctx.lineTo(0, 6);
+    ctx.lineTo(-18, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // Vibrant needle indicator tip pointing directly at target arc
+    ctx.fillStyle = lock.jamTimer > 0 ? '#F87171' : '#34D399';
+    ctx.beginPath();
+    ctx.moveTo(dialRadius - 32, -4);
+    ctx.lineTo(dialRadius - 10, 0);
+    ctx.lineTo(dialRadius - 32, 4);
     ctx.closePath();
     ctx.fill();
 

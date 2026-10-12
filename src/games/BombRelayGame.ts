@@ -214,28 +214,56 @@ export class BombRelayGame extends BaseGame {
         const minDist = p1.radius + p2.radius;
 
         if (d < minDist && d > 0) {
-          // Push apart
           const nx = dx / d;
           const ny = dy / d;
-          const overlap = minDist - d;
-          p1.x -= nx * overlap * 0.5;
-          p1.y -= ny * overlap * 0.5;
-          p2.x += nx * overlap * 0.5;
-          p2.y += ny * overlap * 0.5;
 
-          // Swap velocities with bounce
-          const tempVx = p1.vx;
-          const tempVy = p1.vy;
-          p1.vx = p2.vx * 0.8;
-          p1.vy = p2.vy * 0.8;
-          p2.vx = tempVx * 0.8;
-          p2.vy = tempVy * 0.8;
+          // Check if Bomb Transfer occurs
+          const p1IsCarrier = p1.id === this.bombHolderId && p1.invulnTimer <= 0;
+          const p2IsCarrier = p2.id === this.bombHolderId && p2.invulnTimer <= 0;
 
-          // Check Bomb Transfer
-          if (p1.id === this.bombHolderId && p1.invulnTimer <= 0) {
-            this.transferBomb(p2.id);
-          } else if (p2.id === this.bombHolderId && p2.invulnTimer <= 0) {
-            this.transferBomb(p1.id);
+          if (p1IsCarrier || p2IsCarrier) {
+            const tagger = p1IsCarrier ? p1 : p2;
+            const taggee = p1IsCarrier ? p2 : p1;
+            const dirX = taggee.x - tagger.x;
+            const dirY = taggee.y - tagger.y;
+            const dirDist = Math.hypot(dirX, dirY) || 1;
+            const sepNx = dirX / dirDist;
+            const sepNy = dirY / dirDist;
+
+            // Explosive Separation Blast: Push apart by extra clearance distance
+            const pushDist = (minDist - d) + 40;
+            tagger.x -= sepNx * (pushDist * 0.5);
+            tagger.y -= sepNy * (pushDist * 0.5);
+            taggee.x += sepNx * (pushDist * 0.5);
+            taggee.y += sepNy * (pushDist * 0.5);
+
+            // High-energy knockback velocity impulse away from each other
+            const blastSpeed = 380;
+            tagger.vx = -sepNx * blastSpeed;
+            tagger.vy = -sepNy * blastSpeed;
+            taggee.vx = sepNx * blastSpeed;
+            taggee.vy = sepNy * blastSpeed;
+
+            // Generous invulnerability timers on both players to prevent sticking or instant re-tagging
+            tagger.invulnTimer = 1.3;
+            taggee.invulnTimer = 1.3;
+
+            // Transfer the bomb with audiovisual fireworks
+            this.transferBomb(taggee.id, tagger.id);
+          } else {
+            // Normal elastic bounce between non-tagging runners to prevent sticking
+            const pushDist = (minDist - d) + 8;
+            p1.x -= nx * (pushDist * 0.5);
+            p1.y -= ny * (pushDist * 0.5);
+            p2.x += nx * (pushDist * 0.5);
+            p2.y += ny * (pushDist * 0.5);
+
+            const bounceSpeed = 190;
+            p1.vx = -nx * bounceSpeed;
+            p1.vy = -ny * bounceSpeed;
+            p2.vx = nx * bounceSpeed;
+            p2.vy = ny * bounceSpeed;
+            this.audio.playBounce();
           }
         }
       }
@@ -248,14 +276,22 @@ export class BombRelayGame extends BaseGame {
     }
   }
 
-  private transferBomb(newHolderId: PlayerId) {
+  private transferBomb(newHolderId: PlayerId, oldHolderId?: PlayerId) {
     this.bombHolderId = newHolderId;
-    const holder = this.runners.get(newHolderId);
-    if (holder) {
-      holder.invulnTimer = 0.8; // Prevent immediate ping-pong bounce back
+    const newHolder = this.runners.get(newHolderId);
+    const oldHolder = oldHolderId !== undefined ? this.runners.get(oldHolderId) : null;
+
+    if (newHolder) {
+      newHolder.invulnTimer = 1.3;
       this.audio.playBoost();
-      this.particles.showFloatingText('PASSED BOMB!', holder.x, holder.y - 25, '#EF4444', 20);
-      this.particles.spawnSparks(holder.x, holder.y, '#EF4444', 15);
+      this.particles.shake(7);
+      this.particles.showFloatingText('💥 TAGGED! BOMB PASSED!', newHolder.x, newHolder.y - 25, '#EF4444', 22);
+      this.particles.spawnSparks(newHolder.x, newHolder.y, '#EF4444', 20);
+    }
+    if (oldHolder) {
+      oldHolder.invulnTimer = 1.3;
+      this.particles.showFloatingText('💨 ESCAPED!', oldHolder.x, oldHolder.y - 25, '#22C55E', 20);
+      this.particles.spawnSparks(oldHolder.x, oldHolder.y, '#22C55E', 15);
     }
   }
 

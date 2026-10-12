@@ -9308,22 +9308,52 @@ function drawCrtScanlineSniperArt(ctx: CanvasRenderingContext2D, x: number, y: n
 }
 
 function drawCyberGridRunnerArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#05050f';
+  ctx.fillStyle = '#050512';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Neon Light Trail
-  ctx.strokeStyle = '#06b6d4';
-  ctx.lineWidth = 2.5;
+
+  // Perspective Cyber Grid Lines
+  ctx.strokeStyle = 'rgba(6, 182, 212, 0.35)';
+  ctx.lineWidth = 1;
+  for (let gx = -16; gx <= 16; gx += 8) {
+    ctx.beginPath();
+    ctx.moveTo(cx + gx, cy - 14);
+    ctx.lineTo(cx + gx * 1.8, cy + 18);
+    ctx.stroke();
+  }
+
+  // Floating Cyber Data Core (Octahedron/Diamond)
+  ctx.fillStyle = '#38bdf8';
   ctx.beginPath();
-  ctx.moveTo(cx - 18, cy + 12);
-  ctx.lineTo(cx - 4, cy + 12);
-  ctx.lineTo(cx - 4, cy - 10);
-  ctx.lineTo(cx + 12, cy - 10);
-  ctx.stroke();
-  // Lightcycle
+  ctx.moveTo(cx + 12, cy - 8);
+  ctx.lineTo(cx + 16, cy - 3);
+  ctx.lineTo(cx + 12, cy + 2);
+  ctx.lineTo(cx + 8, cy - 3);
+  ctx.closePath();
+  ctx.fill();
+
+  // Cyber Hoverboard with Neon Thruster Plume
   ctx.fillStyle = '#f43f5e';
-  ctx.fillRect(cx + 10, cy - 13, 8, 6);
+  ctx.save();
+  ctx.translate(cx - 6, cy + 2);
+  ctx.rotate(-0.2);
+  // Hover deck
+  ctx.fillRect(-10, -3, 20, 6);
+  // Rider visor
+  ctx.fillStyle = '#38bdf8';
+  ctx.beginPath();
+  ctx.arc(0, -6, 4, 0, Math.PI * 2);
+  ctx.fill();
+  // Cyan Nitro Thruster exhaust
+  ctx.fillStyle = 'rgba(6, 182, 212, 0.7)';
+  ctx.beginPath();
+  ctx.moveTo(-10, 0);
+  ctx.lineTo(-18, -2);
+  ctx.lineTo(-18, 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 }
 
 function drawSynthDrumPadArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {

@@ -2561,11 +2561,11 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   {
     id: 'cyber_grid_runner',
     title: 'Cyber Grid Runner',
-    tagline: 'Neon Lightcycle Jet Trails',
+    tagline: 'Hoverboard Data Core Chaser',
     category: 'Action',
     icon: '[G-254]',
-    instructions: 'Race high-speed cyber lightcycles across an electric grid while leaving solid lethal light trails! Trap opponents into crashing and grab data nodes.',
-    controlPrompt: 'Steer: Turn 90 Degrees | Evade Light Trails'
+    instructions: 'Pilot agile cyber hoverboards across an electrified synthwave grid! Snatch floating data cores, trigger nitro speed boosts, and unleash EMP shockwaves to steal rival data packets.',
+    controlPrompt: 'WASD / Arrows: 360° Hover | Space / Enter: Nitro Boost & EMP Shock'
   },
   {
     id: 'synth_drum_pad',
@@ -4487,6 +4487,7 @@ export class GameManager {
     }
 
     const SINGLE_BUTTON_GAMES = new Set<string>([
+      'neon_lightcycles',
       'micro_gp',
       'kitchen_chaos',
       'skyline_sumo',

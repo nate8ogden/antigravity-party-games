@@ -42,6 +42,9 @@ export class NeonLightcyclesGame extends BaseGame {
   public currentMapName: string = 'Quad Pillars';
 
   public init(width: number, height: number): void {
+    if (this.input) {
+      this.input.setControlMode('single_button');
+    }
     this.reset(width, height);
   }
 
@@ -93,11 +96,32 @@ export class NeonLightcyclesGame extends BaseGame {
         dirIndex: startDir,
         speed: 175,
         alive: true,
-        trail: [{ x: startX, y: startY }],
+        trail: [
+          { x: startX, y: startY },
+          { x: startX, y: startY }
+        ],
         boostTimer: 0,
         turnCooldown: 0
       });
     });
+
+    // Debug hook for automated testing and inspection
+    (window as any).__LIGHTCYCLES_DEBUG__ = {
+      getCycles: () => Array.from(this.cycles.values()).map(c => ({
+        id: c.id,
+        x: c.x,
+        y: c.y,
+        dirIndex: c.dirIndex,
+        alive: c.alive,
+        trailLength: c.trail.length,
+        trail: c.trail.map(pt => ({ x: Math.round(pt.x), y: Math.round(pt.y) }))
+      })),
+      getArena: () => ({ ...this.arenaBounds }),
+      killCycle: (id: PlayerId) => {
+        const c = this.cycles.get(id);
+        if (c) this.eliminateCycle(c);
+      }
+    };
 
     // Spawn 1 initial boost pickup
     this.pickups.push({
@@ -197,6 +221,7 @@ export class NeonLightcyclesGame extends BaseGame {
       if (turnPressed && c.turnCooldown <= 0) {
         c.dirIndex = (c.dirIndex + 1) % 4; // Turn 90 deg clockwise
         c.turnCooldown = 0.12; // debounce
+        c.trail[c.trail.length - 1] = { x: c.x, y: c.y };
         c.trail.push({ x: c.x, y: c.y });
         this.audio.playTap();
       }
@@ -213,8 +238,6 @@ export class NeonLightcyclesGame extends BaseGame {
       const speedRamp = 1.0 + Math.min(0.6, (60 - this.roundTimer) * 0.01);
       const currentSpeed = (c.boostTimer > 0 ? c.speed * 1.55 : c.speed) * speedRamp;
       const dir = DIRS[c.dirIndex];
-      const prevX = c.x;
-      const prevY = c.y;
 
       c.x += dir.dx * currentSpeed * dt;
       c.y += dir.dy * currentSpeed * dt;
@@ -226,9 +249,13 @@ export class NeonLightcyclesGame extends BaseGame {
         lastPoint.y = c.y;
       }
 
+      // Front nose position for responsive collision detection
+      const noseX = c.x + dir.dx * 12;
+      const noseY = c.y + dir.dy * 12;
+
       // Boundary collision check
       const b = this.arenaBounds;
-      if (c.x < b.x || c.x > b.x + b.w || c.y < b.y || c.y > b.y + b.h) {
+      if (noseX < b.x || noseX > b.x + b.w || noseY < b.y || noseY > b.y + b.h) {
         this.eliminateCycle(c);
         continue;
       }
@@ -236,7 +263,7 @@ export class NeonLightcyclesGame extends BaseGame {
       // Internal Cyber Barrier collision check
       let hitBarrier = false;
       for (const bar of this.barriers) {
-        if (c.x >= bar.x && c.x <= bar.x + bar.w && c.y >= bar.y && c.y <= bar.y + bar.h) {
+        if (noseX >= bar.x && noseX <= bar.x + bar.w && noseY >= bar.y && noseY <= bar.y + bar.h) {
           hitBarrier = true;
           break;
         }
@@ -282,9 +309,13 @@ export class NeonLightcyclesGame extends BaseGame {
 
   private eraseTrailsNear(cx: number, cy: number, radius: number): void {
     for (const c of this.cycles.values()) {
-      c.trail = c.trail.filter((pt) => Math.hypot(pt.x - cx, pt.y - cy) > radius);
-      if (c.trail.length === 0) {
-        c.trail.push({ x: c.x, y: c.y });
+      const head = { x: c.x, y: c.y };
+      const kept = c.trail.filter((pt) => Math.hypot(pt.x - cx, pt.y - cy) > radius);
+      if (kept.length < 2) {
+        c.trail = [{ x: c.x, y: c.y }, { x: c.x, y: c.y }];
+      } else {
+        kept[kept.length - 1] = head;
+        c.trail = kept;
       }
     }
   }
@@ -298,22 +329,41 @@ export class NeonLightcyclesGame extends BaseGame {
   }
 
   private checkTrailCollision(cycle: Lightcycle): boolean {
-    const headX = cycle.x;
-    const headY = cycle.y;
+    const dir = DIRS[cycle.dirIndex];
+    const noseX = cycle.x + dir.dx * 12;
+    const noseY = cycle.y + dir.dy * 12;
     const collisionThreshold = 6;
+
+    // Check chassis-to-chassis collision with other cycles
+    for (const other of this.cycles.values()) {
+      if (other.id !== cycle.id && other.alive) {
+        if (Math.hypot(noseX - other.x, noseY - other.y) < 14) {
+          return true;
+        }
+      }
+    }
 
     for (const other of this.cycles.values()) {
       const trail = other.trail;
+      const isSelf = other.id === cycle.id;
       // If checking against self, skip the most recent segment
-      const maxIndex = other.id === cycle.id ? trail.length - 2 : trail.length - 1;
+      const maxIndex = isSelf ? trail.length - 2 : trail.length - 1;
 
       for (let i = 0; i < maxIndex; i++) {
         const p1 = trail[i];
         const p2 = trail[i + 1];
         if (!p1 || !p2) continue;
 
-        // Distance from point to line segment
-        const dist = this.distToSegment(headX, headY, p1.x, p1.y, p2.x, p2.y);
+        // When turning, cycle is briefly close to the corner vertex p2. Skip until 20px clearance reached.
+        if (isSelf && i === trail.length - 3) {
+          const distFromCorner = Math.hypot(cycle.x - p2.x, cycle.y - p2.y);
+          if (distFromCorner < 20) {
+            continue;
+          }
+        }
+
+        // Distance from nose to line segment
+        const dist = this.distToSegment(noseX, noseY, p1.x, p1.y, p2.x, p2.y);
         if (dist < collisionThreshold) {
           return true;
         }
@@ -401,11 +451,18 @@ export class NeonLightcyclesGame extends BaseGame {
 
       for (const other of this.cycles.values()) {
         const trail = other.trail;
-        const maxIdx = other.id === selfId ? trail.length - 2 : trail.length - 1;
+        const isSelf = other.id === selfId;
+        const maxIdx = isSelf ? trail.length - 2 : trail.length - 1;
         for (let i = 0; i < maxIdx; i++) {
           const tp1 = trail[i];
           const tp2 = trail[i + 1];
           if (!tp1 || !tp2) continue;
+          if (isSelf && i === trail.length - 3) {
+            const selfCycle = this.cycles.get(selfId);
+            if (selfCycle && Math.hypot(selfCycle.x - tp2.x, selfCycle.y - tp2.y) < 20) {
+              continue;
+            }
+          }
           if (this.distToSegment(px, py, tp1.x, tp1.y, tp2.x, tp2.y) < 8) {
             return true;
           }
