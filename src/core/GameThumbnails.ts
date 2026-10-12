@@ -9533,47 +9533,172 @@ function drawMinotaurLabyrinthArt(ctx: CanvasRenderingContext2D, x: number, y: n
 }
 
 function drawOlympusLightningArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#2d1b4e';
+  // Mount Olympus stormy sky
+  const sky = ctx.createLinearGradient(x, y, x, y + h);
+  sky.addColorStop(0, '#1e1035');
+  sky.addColorStop(0.5, '#3b0764');
+  sky.addColorStop(1, '#090514');
+  ctx.fillStyle = sky;
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
-  // Zeus Lightning Bolt
-  ctx.strokeStyle = '#00e5ff';
-  ctx.lineWidth = 3.5;
+  const cy = y + h * 0.5;
+
+  // Swirling Thunderstorm Clouds at summit
+  ctx.fillStyle = '#2e1065';
   ctx.beginPath();
-  ctx.moveTo(cx - 6, y + h * 0.15);
-  ctx.lineTo(cx + 4, y + h * 0.42);
-  ctx.lineTo(cx - 4, y + h * 0.52);
-  ctx.lineTo(cx + 6, y + h * 0.85);
-  ctx.stroke();
-  // Golden Rod Conduit
-  ctx.strokeStyle = '#f1c40f';
-  ctx.lineWidth = 3;
+  ctx.arc(cx - 16, y + 10, 14, 0, Math.PI * 2);
+  ctx.arc(cx + 12, y + 8, 16, 0, Math.PI * 2);
+  ctx.arc(cx, y + 14, 12, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Greek Corinthian Marble Column Summit at bottom
+  ctx.fillStyle = '#f8fafc';
+  // Capital cornice
   ctx.beginPath();
-  ctx.moveTo(cx + 6, y + h * 0.75);
-  ctx.lineTo(cx + 6, y + h * 0.9);
+  if (ctx.roundRect) ctx.roundRect(cx - 16, y + h - 16, 32, 6, 2);
+  else ctx.rect(cx - 16, y + h - 16, 32, 6);
+  ctx.fill();
+  // Fluted column shaft
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillRect(cx - 12, y + h - 10, 24, 10);
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx - 6, y + h - 10); ctx.lineTo(cx - 6, y + h);
+  ctx.moveTo(cx, y + h - 10); ctx.lineTo(cx, y + h);
+  ctx.moveTo(cx + 6, y + h - 10); ctx.lineTo(cx + 6, y + h);
   ctx.stroke();
+
+  // Zeus's Divine Thunderbolt (Cracking bifurcated lightning bolt)
+  ctx.strokeStyle = '#38bdf8';
+  ctx.shadowColor = '#00e5ff';
+  ctx.shadowBlur = 10;
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'miter';
+  ctx.beginPath();
+  ctx.moveTo(cx - 8, y + 10);
+  ctx.lineTo(cx + 4, cy - 8);
+  ctx.lineTo(cx - 4, cy);
+  ctx.lineTo(cx + 6, y + h - 16);
+  ctx.stroke();
+
+  // Blazing White-Hot Core of Lightning
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Secondary Golden Electric Branch Tendril
+  ctx.strokeStyle = '#facc15';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx + 4, cy - 8);
+  ctx.lineTo(cx + 18, cy - 2);
+  ctx.lineTo(cx + 14, cy + 8);
+  ctx.stroke();
+
+  // Impact Sparks on Marble Pillar
+  const spX = cx + 6;
+  const spY = y + h - 16;
+  ctx.fillStyle = '#fef08a';
+  ctx.beginPath();
+  ctx.arc(spX, spY, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(spX - 6, spY - 3, 1.5, 0, Math.PI * 2);
+  ctx.arc(spX + 6, spY - 4, 1.5, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawAnubisScalesArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#231828';
+  // Ancient Egyptian temple chamber of judgment
+  ctx.fillStyle = '#1c100c';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
-  const cy = y + h * 0.45;
-  // Center beam
-  ctx.fillStyle = '#d4af37';
-  ctx.fillRect(cx - 2, cy - 10, 4, 30);
-  ctx.fillRect(cx - 20, cy - 10, 40, 4);
-  // Pans
-  ctx.fillStyle = '#b7950b';
+  const cy = y + h * 0.5;
+
+  // Ornate Golden Balance Post with Jackal Head Finial
+  ctx.fillStyle = '#b45309';
+  ctx.fillRect(cx - 2, cy - 18, 4, 36);
+
+  // Base stand
+  ctx.fillStyle = '#78350f';
   ctx.beginPath();
-  ctx.ellipse(cx - 16, cy + 12, 8, 3, 0, 0, Math.PI * 2);
-  ctx.ellipse(cx + 16, cy + 12, 8, 3, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, cy + 18, 14, 5, 0, 0, Math.PI * 2);
   ctx.fill();
-  // Feather on left pan
-  ctx.fillStyle = '#5dade2';
+
+  // Anubis Jackal Head Emblem atop balance
+  ctx.fillStyle = '#facc15';
   ctx.beginPath();
-  ctx.ellipse(cx - 16, cy + 8, 2, 6, 0.2, 0, Math.PI * 2);
+  ctx.arc(cx, cy - 18, 4.5, 0, Math.PI * 2);
   ctx.fill();
+  // Jackal tall ears
+  ctx.beginPath();
+  ctx.moveTo(cx - 3, cy - 20); ctx.lineTo(cx - 5, cy - 26); ctx.lineTo(cx - 1, cy - 21);
+  ctx.moveTo(cx + 3, cy - 20); ctx.lineTo(cx + 5, cy - 26); ctx.lineTo(cx + 1, cy - 21);
+  ctx.fill();
+
+  // Golden Balance Crossbeam
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillRect(cx - 22, cy - 14, 44, 3.5);
+  ctx.fillStyle = '#fef08a';
+  ctx.fillRect(cx - 22, cy - 14, 44, 1);
+
+  // Left Pan Suspension Chains
+  ctx.strokeStyle = '#d97706';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx - 18, cy - 11); ctx.lineTo(cx - 23, cy + 6);
+  ctx.moveTo(cx - 18, cy - 11); ctx.lineTo(cx - 13, cy + 6);
+  ctx.stroke();
+
+  // Left Golden Pan (Holding Feather of Ma'at)
+  ctx.fillStyle = '#facc15';
+  ctx.beginPath();
+  ctx.ellipse(cx - 18, cy + 6, 8, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Luminous Sky-Blue Feather of Truth (Ma'at)
+  ctx.fillStyle = '#38bdf8';
+  ctx.shadowColor = '#00e5ff';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.ellipse(cx - 18, cy + 2, 3, 6, 0.25, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  // Feather quill
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(cx - 19, cy + 6); ctx.lineTo(cx - 17, cy - 2);
+  ctx.stroke();
+
+  // Right Pan Suspension Chains
+  ctx.strokeStyle = '#d97706';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx + 18, cy - 11); ctx.lineTo(cx + 13, cy + 6);
+  ctx.moveTo(cx + 18, cy - 11); ctx.lineTo(cx + 23, cy + 6);
+  ctx.stroke();
+
+  // Right Golden Pan (Holding Sacred Heart)
+  ctx.fillStyle = '#facc15';
+  ctx.beginPath();
+  ctx.ellipse(cx + 18, cy + 6, 8, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Sacred Ruby Heart of the Pharaoh
+  ctx.fillStyle = '#ef4444';
+  ctx.shadowColor = '#f87171';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.arc(cx + 16.5, cy + 1, 2.5, Math.PI, 0);
+  ctx.arc(cx + 19.5, cy + 1, 2.5, Math.PI, 0);
+  ctx.lineTo(cx + 18, cy + 5.5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
 }
 
 function drawGorgonGazeArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
@@ -10231,24 +10356,87 @@ function drawOrbitalDropPodArt(ctx: CanvasRenderingContext2D, x: number, y: numb
 }
 
 function drawDysonSphereCollectorArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0b0c16';
+  // Deep space cosmos with nebula haze
+  ctx.fillStyle = '#060612';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Center Sun
-  ctx.fillStyle = '#f1c40f';
+
+  // Background Nebula Haze
+  const neb = ctx.createRadialGradient(cx, cy, 5, cx, cy, 34);
+  neb.addColorStop(0, 'rgba(245, 158, 11, 0.35)');
+  neb.addColorStop(0.5, 'rgba(168, 85, 247, 0.2)');
+  neb.addColorStop(1, 'rgba(6, 6, 18, 0)');
+  ctx.fillStyle = neb;
   ctx.beginPath();
-  ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 34, 0, Math.PI * 2);
   ctx.fill();
-  // Swarm ring
-  ctx.strokeStyle = 'rgba(236, 240, 241, 0.2)';
-  ctx.lineWidth = 2;
+
+  // Blazing Central Star (Solar Corona)
+  const sunGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 14);
+  sunGrad.addColorStop(0, '#ffffff');
+  sunGrad.addColorStop(0.3, '#fef08a');
+  sunGrad.addColorStop(0.7, '#f59e0b');
+  sunGrad.addColorStop(1, '#ea580c');
+  ctx.fillStyle = sunGrad;
+  ctx.shadowColor = '#fbbf24';
+  ctx.shadowBlur = 10;
   ctx.beginPath();
-  ctx.arc(cx, cy, 24, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 13, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Solar flare prominences
+  ctx.strokeStyle = '#f97316';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(cx - 8, cy - 8, 8, -0.2, 1.2);
+  ctx.arc(cx + 8, cy + 6, 8, 2.8, 4.2);
   ctx.stroke();
-  // Collector Drone
-  ctx.fillStyle = '#00e5ff';
-  ctx.fillRect(cx + 18, cy - 3, 6, 6);
+
+  // Dyson Megastructure Orbital Lattice Rings
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 24, 9, 0.45, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(250, 204, 21, 0.6)';
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 24, 9, -0.45, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Photovoltaic Harvester Collector Panels orbiting along rings
+  const panels = [
+    [cx - 18, cy - 8],
+    [cx + 18, cy + 8],
+    [cx - 16, cy + 9],
+    [cx + 16, cy - 9]
+  ];
+  for (const [px, py] of panels) {
+    ctx.fillStyle = '#0284c7';
+    ctx.fillRect(px - 2.5, py - 2.5, 5, 5);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 0.8;
+    ctx.strokeRect(px - 2.5, py - 2.5, 5, 5);
+  }
+
+  // Foreground Solar Harvester Drone on right capturing plasma
+  const drX = cx + 18;
+  const drY = cy;
+  ctx.fillStyle = '#00ffff';
+  ctx.shadowColor = '#00ffff';
+  ctx.shadowBlur = 6;
+  ctx.fillRect(drX - 3, drY - 3, 6, 6);
+  ctx.shadowBlur = 0;
+
+  // Plasma capture beam from sun to drone
+  ctx.strokeStyle = '#fef08a';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(cx + 10, cy);
+  ctx.lineTo(drX, drY);
+  ctx.stroke();
 }
 
 function drawPenguinSlideArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
@@ -10646,46 +10834,155 @@ function drawTeslaCoilArcArt(ctx: CanvasRenderingContext2D, x: number, y: number
 }
 
 function drawAutomatorAssemblyArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#231812';
+  // Victorian clockwork workshop
+  ctx.fillStyle = '#1e120c';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Conveyor Belt
-  ctx.fillStyle = '#100c09';
-  ctx.fillRect(x, cy + 8, w, 10);
-  // Brass Toy Automaton
-  ctx.fillStyle = '#ffd700';
-  ctx.fillRect(cx - 8, cy - 8, 16, 16);
-  // Windup key
-  ctx.strokeStyle = '#ffd700';
+
+  // Background interlocking brass gears
+  ctx.strokeStyle = 'rgba(217, 119, 6, 0.3)';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.arc(cx, cy - 14, 4, 0, Math.PI * 2);
+  ctx.arc(cx - 16, cy - 12, 10, 0, Math.PI * 2);
   ctx.stroke();
-  // Hydraulic Press Head
-  ctx.fillStyle = '#cd7f32';
-  ctx.fillRect(cx - 12, cy - 26, 24, 8);
+
+  // Conveyor Belt at bottom
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(x, cy + 12, w, 8);
+  // Conveyor rollers
+  ctx.fillStyle = '#475569';
+  for (let rx = x + 8; rx < x + w; rx += 14) {
+    ctx.beginPath();
+    ctx.arc(rx, cy + 16, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Intricate Brass Clockwork Automaton Toy in center
+  const botX = cx;
+  const botY = cy + 2;
+
+  // Cubic Brass Torso
+  ctx.fillStyle = '#d97706';
+  ctx.fillRect(botX - 8, botY - 6, 16, 14);
+  ctx.strokeStyle = '#fef08a';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(botX - 8, botY - 6, 16, 14);
+
+  // Glowing Cyan Chest Heart Gauge
+  ctx.fillStyle = '#06b6d4';
+  ctx.shadowColor = '#38bdf8';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.arc(botX, botY + 1, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Automaton Head
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillRect(botX - 6, botY - 14, 12, 7);
+  // Yellow optical sensor eyes
+  ctx.fillStyle = '#fef08a';
+  ctx.beginPath();
+  ctx.arc(botX - 3, botY - 10, 1.5, 0, Math.PI * 2);
+  ctx.arc(botX + 3, botY - 10, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Golden Winding Key in back
+  ctx.strokeStyle = '#facc15';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(botX - 8, botY);
+  ctx.lineTo(botX - 14, botY);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(botX - 14, botY - 2.5, 2.5, 0, Math.PI * 2);
+  ctx.arc(botX - 14, botY + 2.5, 2.5, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Hydraulic Assembly Gripper Arm from ceiling placing a gear
+  const armX = cx + 8;
+  const armY = cy - 14;
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(cx + 8, y);
+  ctx.lineTo(armX, armY);
+  ctx.stroke();
+
+  // Golden Gear held in claw
+  ctx.fillStyle = '#facc15';
+  ctx.beginPath();
+  ctx.arc(armX, armY + 5, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#1e120c';
+  ctx.beginPath();
+  ctx.arc(armX, armY + 5, 1.5, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawPneumaticTubeRushArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#12161b';
+  // Steampunk dispatch station
+  ctx.fillStyle = '#0f172a';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Brass Tube
-  ctx.fillStyle = 'rgba(212, 175, 55, 0.2)';
-  ctx.fillRect(x, cy - 8, w, 16);
-  ctx.strokeStyle = '#cd7f32';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(x, cy - 8, w, 16);
-  // Gold Capsule
-  ctx.fillStyle = '#ffd700';
+
+  // Transparent Glass Pneumatic Tube spanning canvas
+  ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
+  ctx.fillRect(x, cy - 10, w, 20);
+
+  // Brass Tube Collar Flanges
+  ctx.fillStyle = '#b45309';
+  ctx.fillRect(x + 10, cy - 12, 6, 24);
+  ctx.fillRect(x + w - 16, cy - 12, 6, 24);
+  ctx.fillStyle = '#facc15';
+  ctx.fillRect(x + 12, cy - 12, 2, 24);
+  ctx.fillRect(x + w - 14, cy - 12, 2, 24);
+
+  // Glass Specular Sheen lines on tube
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.roundRect(cx - 12, cy - 5, 24, 10, 4);
+  ctx.moveTo(x, cy - 7); ctx.lineTo(x + w, cy - 7);
+  ctx.moveTo(x, cy + 8); ctx.lineTo(x + w, cy + 8);
+  ctx.stroke();
+
+  // Aerodynamic Polished Brass Dispatch Capsule hurtling through
+  const capX = cx + 2;
+  const capY = cy;
+  ctx.save();
+  ctx.translate(capX, capY);
+
+  // Capsule Brass Body
+  ctx.fillStyle = '#f59e0b';
+  ctx.shadowColor = '#fbbf24';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(-16, -6, 32, 12, 6);
+  else ctx.rect(-16, -6, 32, 12);
   ctx.fill();
-  ctx.fillStyle = '#111111';
-  ctx.fillRect(cx - 10, cy - 5, 2, 10);
-  ctx.fillRect(cx + 8, cy - 5, 2, 10);
+  ctx.shadowBlur = 0;
+
+  // Chrome Endcaps
+  ctx.fillStyle = '#cbd5e1';
+  ctx.fillRect(-16, -6, 5, 12);
+  ctx.fillRect(11, -6, 5, 12);
+
+  // Red Urgent Dispatch Label
+  ctx.fillStyle = '#ef4444';
+  ctx.fillRect(-6, -4, 12, 8);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(-4, -2, 8, 4);
+  ctx.restore();
+
+  // High-Speed Air Compression Waves / Vapor rings behind capsule
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.ellipse(capX - 22, cy, 4, 8, 0, 0, Math.PI * 2);
+  ctx.ellipse(capX - 30, cy, 3, 6, 0, 0, Math.PI * 2);
+  ctx.stroke();
 }
 
 function drawOrnithopterFlockArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
