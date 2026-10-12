@@ -18,6 +18,8 @@ interface VolleyPlayer {
   score: number;
   touches: number;
   spikeCooldown: number;
+  diveTimer: number;
+  isDiving: boolean;
   botReactionTimer: number;
   patrolDir: 1 | -1;
 }
@@ -31,6 +33,7 @@ interface VolleyBall {
   isSpiked: boolean;
   lastTouchTeam: 'LEFT' | 'RIGHT' | null;
   lastTouchPlayer: PlayerId | null;
+  previousTouchPlayer: PlayerId | null;
   teamTouches: number;
 }
 
@@ -45,6 +48,7 @@ export class VolleySpikeGame extends BaseGame {
     isSpiked: false,
     lastTouchTeam: null,
     lastTouchPlayer: null,
+    previousTouchPlayer: null,
     teamTouches: 0
   };
   private currentMapName: string = 'Neon Beach Sunset';
@@ -84,8 +88,10 @@ export class VolleySpikeGame extends BaseGame {
     this.netTopY = this.floorY - this.netHeight;
 
     this.generateProceduralMap();
+    this.input.setControlMode('directional');
     this.initPlayers(width);
     this.serveBall('LEFT');
+    this.syncDebug();
   }
 
   private generateProceduralMap(): void {
@@ -131,6 +137,8 @@ export class VolleySpikeGame extends BaseGame {
         score: 0,
         touches: 0,
         spikeCooldown: 0,
+        diveTimer: 0,
+        isDiving: false,
         botReactionTimer: 0.15 + idx * 0.1,
         patrolDir: 1
       });
@@ -146,6 +154,7 @@ export class VolleySpikeGame extends BaseGame {
     this.ball.isSpiked = false;
     this.ball.lastTouchTeam = null;
     this.ball.lastTouchPlayer = null;
+    this.ball.previousTouchPlayer = null;
     this.ball.teamTouches = 0;
   }
 
@@ -163,34 +172,56 @@ export class VolleySpikeGame extends BaseGame {
       if (!ps) continue;
 
       if (ps.spikeCooldown > 0) ps.spikeCooldown = Math.max(0, ps.spikeCooldown - dt);
+      if (ps.diveTimer > 0) {
+        ps.diveTimer = Math.max(0, ps.diveTimer - dt);
+        if (ps.diveTimer <= 0) ps.isDiving = false;
+      }
 
       // Read Input
       const steer = this.input.getSteer(p.id);
-      const jump = this.input.justAction(p.id) || this.input.justUp(p.id) || this.input.getThrottle(p.id) > 0.5 || (this.input.justPressed(p.id) && steer === 0);
+      const rawSteer = this.input.getRawSteer(p.id);
+      const effectiveSteer = Math.abs(steer) > 0.1 ? steer : rawSteer;
 
-      // Horizontal movement: manual steering or single-touch auto-court patrol
-      const moveSpeed = 240;
-      if (steer !== 0) {
-        ps.vx = steer * moveSpeed;
+      const justAction = this.input.justAction(p.id) || this.input.justPressed(p.id);
+      const justUp = this.input.justUp(p.id);
+      const justDown = this.input.justDown(p.id);
+      const throttle = this.input.getThrottle(p.id);
+
+      // Clean, responsive jump & dive inputs
+      const isJump = justUp || (justAction && throttle >= -0.2) || throttle > 0.4;
+      const isDive = justDown || throttle < -0.5 || (justAction && throttle < -0.3);
+
+      // Dive / Slide Save
+      if (isDive && ps.isGrounded && !ps.isDiving) {
+        ps.isDiving = true;
+        ps.diveTimer = 0.38;
+        const diveDir = effectiveSteer !== 0 ? Math.sign(effectiveSteer) : (ps.team === 'LEFT' ? 1 : -1);
+        ps.vx = diveDir * 380;
+        this.audio.playWhoosh();
+        this.particles.spawnDust(ps.x, ps.y + ps.radius, 8);
+        this.particles.showFloatingText('DIVE!', ps.x, ps.y - 20, '#38BDF8', 18);
+      }
+
+      // Horizontal movement: 100% direct player control!
+      const moveSpeed = ps.isDiving ? 380 : ps.isGrounded ? 280 : 250;
+      if (effectiveSteer !== 0) {
+        ps.vx = effectiveSteer * moveSpeed;
+      } else if (ps.isDiving) {
+        ps.vx *= Math.pow(0.92, dt * 60);
       } else {
-        ps.vx = ps.patrolDir * (moveSpeed * 0.65);
+        ps.vx = 0; // Clean stop when no direction is pressed! Zero unwanted auto-patrol!
       }
       ps.x += ps.vx * dt;
 
-      // Restrict player to their team's half and bounce patrol direction
+      // Restrict player to their team's half
       const minX = ps.team === 'LEFT' ? ps.radius + 15 : this.netX + this.netWidth / 2 + ps.radius;
       const maxX = ps.team === 'LEFT' ? this.netX - this.netWidth / 2 - ps.radius : width - ps.radius - 15;
-      if (ps.x <= minX) {
-        ps.x = minX;
-        ps.patrolDir = 1;
-      } else if (ps.x >= maxX) {
-        ps.x = maxX;
-        ps.patrolDir = -1;
-      }
+      if (ps.x < minX) ps.x = minX;
+      if (ps.x > maxX) ps.x = maxX;
 
       // Jump & Gravity
-      if (jump && ps.isGrounded) {
-        ps.vy = -460;
+      if (isJump && ps.isGrounded && !ps.isDiving) {
+        ps.vy = -510;
         ps.isGrounded = false;
         this.audio.playBounce();
         this.particles.spawnDust(ps.x, ps.y + ps.radius, 6);
@@ -268,51 +299,69 @@ export class VolleySpikeGame extends BaseGame {
       const dy = this.ball.y - ps.y;
       const dist = Math.hypot(dx, dy);
 
-      if (dist < this.ball.radius + ps.radius) {
+      const touchRadius = this.ball.radius + ps.radius + (ps.isDiving ? 8 : 0);
+      if (dist < touchRadius) {
         // Ball touch!
         const normalX = dx / (dist || 1);
         const normalY = dy / (dist || 1);
 
-        // Check if spike: Player is high in air above net level
-        const isSpikeAttempt = !ps.isGrounded && ps.y < this.netTopY + 30 && ps.spikeCooldown <= 0;
+        // Check if spike: Player is airborne near top of net level
+        const isSpikeAttempt = (!ps.isGrounded && ps.y < this.netTopY + 36 && ps.spikeCooldown <= 0) ||
+                               (!ps.isGrounded && (this.input.justDown(p.id) || this.input.getThrottle(p.id) < -0.3));
 
         if (isSpikeAttempt) {
           // POWER SPIKE!
           this.ball.isSpiked = true;
-          ps.spikeCooldown = 0.5;
+          ps.spikeCooldown = 0.45;
           const spikeDir = ps.team === 'LEFT' ? 1 : -1;
-          this.ball.vx = spikeDir * (380 + Math.random() * 80);
-          this.ball.vy = 260 + Math.random() * 80;
+          this.ball.vx = spikeDir * (390 + Math.random() * 60);
+          this.ball.vy = 280 + Math.random() * 60;
 
           this.audio.playSpike();
-          this.particles.shake(0.3);
+          this.particles.shake(0.35);
           this.particles.showFloatingText('POWER SPIKE!!', ps.x, ps.y - 30, '#F59E0B', 24);
-          this.particles.spawnConfetti(this.ball.x, this.ball.y, 20);
+          this.particles.spawnConfetti(this.ball.x, this.ball.y, 25);
         } else {
-          // Normal Volley Pop
+          // Normal Volley Pop / Set
           this.ball.isSpiked = false;
-          const popDir = ps.team === 'LEFT' ? 1 : -1;
-          const angleInfluence = normalX * 180;
-          this.ball.vx = popDir * 150 + angleInfluence + ps.vx * 0.4;
-          this.ball.vy = -380 - Math.abs(ps.vy) * 0.25;
+
+          // Check if setting to teammate for 2v2 combo!
+          const active = this.getActivePlayers();
+          const teammate = active.find((tp) => tp.id !== ps.id && this.playersState.get(tp.id)?.team === ps.team);
+          const tmState = teammate ? this.playersState.get(teammate.id) : null;
+
+          if (this.ball.lastTouchTeam !== ps.team && tmState) {
+            // First touch: smart set toward teammate for an epic spike setup!
+            const toTmX = tmState.x - ps.x;
+            this.ball.vx = Math.max(-170, Math.min(170, toTmX * 1.5));
+            this.ball.vy = -470; // High looping set arc!
+            this.particles.showFloatingText('NICE SET!', ps.x, ps.y - 25, '#38BDF8', 18);
+          } else {
+            // Return pop over net
+            const popDir = ps.team === 'LEFT' ? 1 : -1;
+            const angleInfluence = normalX * 180;
+            this.ball.vx = popDir * 165 + angleInfluence + ps.vx * 0.35;
+            this.ball.vy = -410 - Math.abs(ps.vy) * 0.2;
+          }
 
           this.audio.playBounce();
           this.particles.spawnSparks(this.ball.x, this.ball.y, p.color, 8);
         }
 
-        // Track touches
+        // Track touches & assists
         if (this.ball.lastTouchTeam === ps.team) {
           this.ball.teamTouches += 1;
         } else {
           this.ball.lastTouchTeam = ps.team;
           this.ball.teamTouches = 1;
         }
+        this.ball.previousTouchPlayer = this.ball.lastTouchPlayer;
         this.ball.lastTouchPlayer = ps.id;
         ps.touches += 1;
 
         // Reposition ball outside player collision radius
-        this.ball.x = ps.x + normalX * (this.ball.radius + ps.radius + 1);
-        this.ball.y = ps.y + normalY * (this.ball.radius + ps.radius + 1);
+        this.ball.x = ps.x + normalX * (touchRadius + 2);
+        this.ball.y = ps.y + normalY * (touchRadius + 2);
 
         // Fault: 4 touches fault check
         if (this.ball.teamTouches > 3) {
@@ -333,6 +382,8 @@ export class VolleySpikeGame extends BaseGame {
       }
     }
 
+    this.syncDebug();
+
     // Round over condition
     if (
       this.teamLeftScore >= this.targetScore ||
@@ -343,6 +394,20 @@ export class VolleySpikeGame extends BaseGame {
     }
   }
 
+  public syncDebug(): void {
+    if (typeof window !== 'undefined') {
+      (window as any).__VOLLEY_SPIKE_DEBUG__ = {
+        players: Array.from(this.playersState.values()),
+        ball: this.ball,
+        teamLeftScore: this.teamLeftScore,
+        teamRightScore: this.teamRightScore,
+        isFinished: this.isFinished,
+        roundTimer: this.roundTimer,
+        handlePointScored: (team: 'LEFT' | 'RIGHT', reason: string) => this.handlePointScored(team, reason)
+      };
+    }
+  }
+
   private handlePointScored(scoringTeam: 'LEFT' | 'RIGHT', reason: string): void {
     if (scoringTeam === 'LEFT') {
       this.teamLeftScore += 1;
@@ -350,19 +415,47 @@ export class VolleySpikeGame extends BaseGame {
       this.teamRightScore += 1;
     }
 
-    // Award points to team players
+    // Check for 2v2 Teammate Assist Combo
+    let isTeamCombo = false;
+    let assisterId: PlayerId | null = null;
+    let scorerId: PlayerId | null = null;
+
+    if (this.ball.lastTouchTeam === scoringTeam && this.ball.lastTouchPlayer !== null) {
+      scorerId = this.ball.lastTouchPlayer;
+      if (this.ball.previousTouchPlayer !== null && this.ball.previousTouchPlayer !== scorerId) {
+        const prevPlayer = this.playersState.get(this.ball.previousTouchPlayer);
+        if (prevPlayer && prevPlayer.team === scoringTeam) {
+          isTeamCombo = true;
+          assisterId = prevPlayer.id;
+        }
+      }
+    }
+
+    // Award points to BOTH teammates on scoring team
     for (const p of this.getActivePlayers()) {
       const ps = this.playersState.get(p.id);
       if (ps && ps.team === scoringTeam) {
         ps.score += 100;
+        if (isTeamCombo && p.id === assisterId) {
+          ps.score += 30; // Assist Bonus
+        }
+        if (isTeamCombo && p.id === scorerId) {
+          ps.score += 30; // Spike Kill Bonus
+        }
       }
     }
 
     const color = scoringTeam === 'LEFT' ? '#3B82F6' : '#EF4444';
     this.audio.playScore();
-    this.particles.shake(0.3);
-    this.particles.showFloatingText(reason, this.ball.x, this.floorY - 45, color, 26);
-    this.particles.spawnConfetti(this.ball.x, this.floorY - 15, 25);
+    this.particles.shake(0.35);
+
+    if (isTeamCombo) {
+      this.particles.showFloatingText('DUO COMBO! +130 PTS!', this.ball.x, this.floorY - 65, '#F59E0B', 28);
+      this.particles.spawnConfetti(this.ball.x, this.floorY - 20, 35);
+    } else {
+      this.particles.showFloatingText(reason, this.ball.x, this.floorY - 45, color, 26);
+      this.particles.spawnConfetti(this.ball.x, this.floorY - 15, 25);
+    }
 
     // Next serve goes to the team that conceded
     const nextServeTeam = scoringTeam === 'LEFT' ? 'RIGHT' : 'LEFT';
@@ -591,6 +684,37 @@ export class VolleySpikeGame extends BaseGame {
   }
 
   private renderBall(ctx: CanvasRenderingContext2D): void {
+    // Ball Shadow on Floor (scales dynamically with height)
+    const shadowDist = Math.max(0, this.floorY - this.ball.y);
+    const shadowScale = Math.max(0.25, 1 - shadowDist / 420);
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(this.ball.x, this.floorY - 2, this.ball.radius * shadowScale * 1.3, 4 * shadowScale, 0, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(0, 0, 0, ${0.45 * shadowScale})`;
+    ctx.fill();
+
+    // Projected Landing Reticle (visual guide so players can position for sets and spikes)
+    if (this.ball.vy > 0 && shadowDist > 40) {
+      const a = 0.5 * this.gravity;
+      const b = this.ball.vy;
+      const c = this.ball.y - this.floorY;
+      const disc = b * b - 4 * a * c;
+      if (disc >= 0) {
+        const t = (-b + Math.sqrt(disc)) / (2 * a);
+        if (t > 0 && t < 1.4) {
+          const landX = this.ball.x + this.ball.vx * t;
+          ctx.beginPath();
+          ctx.ellipse(landX, this.floorY - 2, 16, 5, 0, 0, Math.PI * 2);
+          ctx.strokeStyle = this.ball.isSpiked ? '#EF4444' : 'rgba(255, 255, 255, 0.45)';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([4, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      }
+    }
+    ctx.restore();
+
     ctx.save();
     ctx.translate(this.ball.x, this.ball.y);
 
@@ -667,27 +791,32 @@ export class VolleySpikeGame extends BaseGame {
 
   public getRoundResult(): RoundResult {
     const active = this.getActivePlayers();
+    const winningTeam = this.teamLeftScore >= this.teamRightScore ? 'LEFT' : 'RIGHT';
+
+    // In 2v2, both players on the winning team share 1st place!
     const rankings = active
       .map((p) => {
         const ps = this.playersState.get(p.id);
         const score = ps ? ps.score : 0;
-        return { playerId: p.id, score, place: 1 };
+        const isWinningTeam = ps && ps.team === winningTeam;
+        return {
+          playerId: p.id,
+          score,
+          place: isWinningTeam ? 1 : 2
+        };
       })
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) => {
+        if (a.place !== b.place) return a.place - b.place;
+        return b.score - a.score;
+      });
 
-    rankings.forEach((r, idx) => {
-      r.place = idx + 1;
-    });
-
-    const winnerId =
-      rankings.length > 0 && (rankings.length === 1 || rankings[0].score > rankings[1].score)
-        ? rankings[0].playerId
-        : null;
+    const winningPlayers = rankings.filter((r) => r.place === 1);
+    const winnerId = winningPlayers.length > 0 ? winningPlayers[0].playerId : null;
 
     let mvpHighlight = 'Beach Volley Champions!';
     if (this.teamLeftScore !== this.teamRightScore) {
-      const winningTeam = this.teamLeftScore > this.teamRightScore ? 'Blue Team' : 'Red Team';
-      mvpHighlight = `${winningTeam} spiked their way to victory!`;
+      const winningTeamName = this.teamLeftScore > this.teamRightScore ? 'Blue Duo' : 'Red Duo';
+      mvpHighlight = `${winningTeamName} spiked to victory with unstoppable team coordination!`;
     } else if (winnerId !== null) {
       mvpHighlight = `Player ${Number(winnerId) + 1} dominated the volleyball net!`;
     }
