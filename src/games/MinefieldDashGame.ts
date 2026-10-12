@@ -106,6 +106,15 @@ export class MinefieldDashGame extends BaseGame {
         },
         isBarricaded: (c: number, r: number) => {
           return !!this.grid[c]?.[r]?.exploded;
+        },
+        setPlayerPos: (id: PlayerId, x: number, y: number) => {
+          const ps = this.playersState.get(id);
+          if (ps) {
+            ps.x = x;
+            ps.y = y;
+            ps.vx = 0;
+            ps.vy = 0;
+          }
         }
       };
     }
@@ -466,10 +475,10 @@ export class MinefieldDashGame extends BaseGame {
         const dy = p2.y - p1.y;
         const dist = Math.hypot(dx, dy);
         const minDist = 24;
-        if (dist < minDist && dist > 0.001) {
-          const overlap = (minDist - dist) / 2;
-          const nx = dx / dist;
-          const ny = dy / dist;
+        if (dist < minDist) {
+          const overlap = (minDist - (dist || 0.01)) * 0.5;
+          const nx = dist > 0.001 ? dx / dist : 1;
+          const ny = dist > 0.001 ? dy / dist : 0;
           p1.x -= nx * overlap;
           p1.y -= ny * overlap;
           p2.x += nx * overlap;
