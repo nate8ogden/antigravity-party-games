@@ -8119,74 +8119,274 @@ function drawNeonMetronomeArt(ctx: CanvasRenderingContext2D, x: number, y: numbe
 
 // 144. Equalizer Bounce
 function drawEqualizerBounceArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#09090B';
+  ctx.fillStyle = '#090814';
   ctx.fillRect(x, y, w, h);
-  // EQ bars
-  const heights = [0.4, 0.7, 0.9, 0.5, 0.8, 0.6];
-  const colors = ['#22C55E', '#10B981', '#38BDF8', '#8B5CF6', '#EC4899', '#F43F5E'];
-  const barW = (w - 30) / heights.length;
-  heights.forEach((ht, i) => {
-    const bx = x + 15 + i * barW;
-    const barH = h * 0.6 * ht;
-    const by = y + h * 0.8 - barH;
-    ctx.fillStyle = colors[i];
-    ctx.fillRect(bx + 2, by, barW - 4, barH);
-  });
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Sound Studio Studio Monitor Acoustic Grid
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + 8, y + 8, w - 16, h - 16);
+
+  // Equalizer Multi-Segment Bars (Green -> Yellow -> Red LEDs)
+  const barHeights = [0.42, 0.78, 0.95, 0.62, 0.88, 0.52, 0.72];
+  const barW = (w - 28) / barHeights.length;
+  const baseFloorY = y + h * 0.82;
+
+  for (let i = 0; i < barHeights.length; i++) {
+    const bx = x + 14 + i * barW;
+    const totalSegs = 10;
+    const activeSegs = Math.round(barHeights[i] * totalSegs);
+    for (let s = 0; s < totalSegs; s++) {
+      const sy = baseFloorY - (s + 1) * 6;
+      if (s < activeSegs) {
+        ctx.fillStyle = s >= 8 ? '#EF4444' : s >= 5 ? '#FACC15' : '#10B981';
+        ctx.shadowColor = ctx.fillStyle;
+        ctx.shadowBlur = s >= 7 ? 6 : 0;
+        ctx.fillRect(bx + 2, sy, barW - 4, 4.5);
+        ctx.shadowBlur = 0;
+      }
+    }
+  }
+
+  // Glowing Bouncing Beat Orb Surfing on Highest Peak
+  const peakBarIdx = 2; // highest bar
+  const peakX = x + 14 + peakBarIdx * barW + barW / 2;
+  const peakY = baseFloorY - Math.round(barHeights[peakBarIdx] * 10) * 6 - 8;
+
+  ctx.fillStyle = '#38BDF8';
+  ctx.shadowColor = '#38BDF8';
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.arc(peakX, peakY, 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath();
+  ctx.arc(peakX - 2, peakY - 2, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Radiating Audio Beat Ripple Waves
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(peakX, peakY, 14, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(peakX, peakY, 22, 0, Math.PI * 2);
+  ctx.stroke();
 }
 
 // 145. Retro Chiptune
 function drawRetroChiptuneArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#18181B';
+  ctx.fillStyle = '#060B18';
   ctx.fillRect(x, y, w, h);
-  // 8-bit Music Note
-  ctx.fillStyle = '#A855F7';
-  // Note stem & flags (pixelated blocks)
-  ctx.fillRect(x + w * 0.35, y + h * 0.55, 10, 8);
-  ctx.fillRect(x + w * 0.55, y + h * 0.45, 10, 8);
-  ctx.fillRect(x + w * 0.43, y + h * 0.25, 4, 25);
-  ctx.fillRect(x + w * 0.63, y + h * 0.2, 4, 25);
-  ctx.fillRect(x + w * 0.43, y + h * 0.2, 24, 6);
-  // Golden Sparkle
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Handheld 8-Bit Console Bezel
+  ctx.fillStyle = '#E2E8F0';
+  ctx.beginPath();
+  ctx.roundRect(cx - 32, cy - 26, 64, 52, 6);
+  ctx.fill();
+  ctx.strokeStyle = '#94A3B8';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Green LCD Dot Matrix Screen
+  ctx.fillStyle = '#84CC16';
+  ctx.fillRect(cx - 24, cy - 20, 48, 30);
+  ctx.strokeStyle = '#3F6212';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(cx - 24, cy - 20, 48, 30);
+
+  // Pixelated 8-Bit Double Music Note on Screen
+  ctx.fillStyle = '#1A2E05';
+  // Left note head
+  ctx.fillRect(cx - 16, cy - 2, 8, 6);
+  // Right note head
+  ctx.fillRect(cx + 4, cy - 6, 8, 6);
+  // Stems
+  ctx.fillRect(cx - 10, cy - 14, 3, 13);
+  ctx.fillRect(cx + 10, cy - 18, 3, 13);
+  // Connecting beam bar
+  ctx.fillRect(cx - 10, cy - 18, 23, 4);
+
+  // Console D-Pad & Action Buttons
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(cx - 20, cy + 14, 10, 4);
+  ctx.fillRect(cx - 17, cy + 11, 4, 10);
+  // Red B & A Buttons
+  ctx.fillStyle = '#DC2626';
+  ctx.beginPath();
+  ctx.arc(cx + 12, cy + 16, 3, 0, Math.PI * 2);
+  ctx.arc(cx + 20, cy + 14, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Floating Golden Sparkles Around Console
   ctx.fillStyle = '#FACC15';
-  ctx.fillRect(x + w * 0.25, y + h * 0.3, 4, 4);
-  ctx.fillRect(x + w * 0.75, y + h * 0.6, 4, 4);
+  ctx.beginPath();
+  ctx.arc(cx - 36, cy - 14, 2, 0, Math.PI * 2);
+  ctx.arc(cx + 36, cy + 18, 2.5, 0, Math.PI * 2);
+  ctx.arc(cx + 34, cy - 22, 2, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 // 146. Disco Tile
 function drawDiscoTileArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0F172A';
+  ctx.fillStyle = '#090818';
   ctx.fillRect(x, y, w, h);
-  // 3x3 dance floor grid
-  const cols = ['#EC4899', '#06B6D4', '#F59E0B', '#10B981'];
-  const sz = 16;
-  const sx = x + w * 0.5 - sz * 1.5;
-  const sy = y + h * 0.5 - sz * 1.5;
-  for (let r = 0; r < 3; r++) {
-    for (let c = 0; c < 3; c++) {
-      ctx.fillStyle = cols[(r * 3 + c) % cols.length];
-      ctx.fillRect(sx + c * sz + 1, sy + r * sz + 1, sz - 2, sz - 2);
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Hanging Mirror Disco Ball
+  ctx.strokeStyle = '#94A3B8';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx, y);
+  ctx.lineTo(cx, y + 16);
+  ctx.stroke();
+
+  // Silver Disco Ball with Facet Shimmer
+  ctx.fillStyle = '#E2E8F0';
+  ctx.shadowColor = '#FFFFFF';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.arc(cx, y + 26, 12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = '#64748B';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx, y + 26, 12, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Facet Grid Lines
+  ctx.strokeStyle = '#94A3B8';
+  ctx.beginPath();
+  ctx.moveTo(cx - 12, y + 26);
+  ctx.lineTo(cx + 12, y + 26);
+  ctx.moveTo(cx, y + 14);
+  ctx.lineTo(cx, y + 38);
+  ctx.stroke();
+
+  // 3D Perspective Glowing Disco Floor Tiles
+  const tileColors = ['#EC4899', '#06B6D4', '#EAB308', '#8B5CF6', '#10B981', '#F43F5E'];
+  const floorTopY = y + h * 0.55;
+  const floorBotY = y + h - 8;
+
+  const rows = 3;
+  const cols = 5;
+  for (let r = 0; r < rows; r++) {
+    const y0 = floorTopY + (r / rows) * (floorBotY - floorTopY);
+    const y1 = floorTopY + ((r + 1) / rows) * (floorBotY - floorTopY);
+    const w0 = 36 + r * 30;
+    const w1 = 36 + (r + 1) * 30;
+
+    for (let c = 0; c < cols; c++) {
+      const x00 = cx - w0 / 2 + (c / cols) * w0;
+      const x01 = cx - w0 / 2 + ((c + 1) / cols) * w0;
+      const x10 = cx - w1 / 2 + (c / cols) * w1;
+      const x11 = cx - w1 / 2 + ((c + 1) / cols) * w1;
+
+      ctx.fillStyle = tileColors[(r * cols + c) % tileColors.length];
+      ctx.beginPath();
+      ctx.moveTo(x00 + 1, y0);
+      ctx.lineTo(x01 - 1, y0);
+      ctx.lineTo(x11 - 1, y1 - 1);
+      ctx.lineTo(x10 + 1, y1 - 1);
+      ctx.closePath();
+      ctx.fill();
     }
   }
+
+  // Radiating Disco Light Beams
+  ctx.fillStyle = 'rgba(236, 72, 153, 0.18)';
+  ctx.beginPath();
+  ctx.moveTo(cx, y + 26);
+  ctx.lineTo(x + 10, y + h);
+  ctx.lineTo(cx - 20, y + h);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(6, 182, 212, 0.18)';
+  ctx.beginPath();
+  ctx.moveTo(cx, y + 26);
+  ctx.lineTo(x + w - 10, y + h);
+  ctx.lineTo(cx + 20, y + h);
+  ctx.closePath();
+  ctx.fill();
 }
 
 // 147. Ring Toss
 function drawRingTossArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#7F1D1D';
+  ctx.fillStyle = '#450A0A';
   ctx.fillRect(x, y, w, h);
-  // Glass bottle
-  ctx.fillStyle = '#047857';
-  ctx.beginPath();
-  ctx.roundRect(x + w * 0.44, y + h * 0.45, 12, 24, 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.roundRect(x + w * 0.47, y + h * 0.3, 6, 15, 1);
-  ctx.fill();
-  // Golden ring hooked around neck
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.52;
+
+  // Carnival Red & White Striped Awning Top
+  for (let s = 0; s < 6; s++) {
+    ctx.fillStyle = s % 2 === 0 ? '#DC2626' : '#FFFFFF';
+    ctx.fillRect(x + 8 + s * ((w - 16) / 6), y + 8, (w - 16) / 6, 14);
+  }
+
+  // Rustic Wooden Crate Shelf Table
+  ctx.fillStyle = '#78350F';
+  ctx.fillRect(x + 8, cy + 8, w - 16, h * 0.4);
+  ctx.strokeStyle = '#92400E';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x + 8, cy + 8, w - 16, h * 0.4);
+
+  // 3 Glass Soda Bottles with Colorful Liquids
+  const bottles = [
+    { x: cx - 22, color: '#38BDF8' },
+    { x: cx, color: '#FACC15' },
+    { x: cx + 22, color: '#EF4444' }
+  ];
+
+  for (const b of bottles) {
+    // Glass Body
+    ctx.fillStyle = b.color;
+    ctx.beginPath();
+    ctx.roundRect(b.x - 6, cy - 8, 12, 24, 3);
+    ctx.fill();
+    ctx.strokeStyle = '#E2E8F0';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // Bottle Neck & Cap
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(b.x - 3, cy - 16, 6, 8);
+    ctx.fillStyle = '#94A3B8';
+    ctx.fillRect(b.x - 4, cy - 18, 8, 2.5);
+  }
+
+  // Flying Golden Plastic Ring Mid-Toss (Landing on Center Bottle)
+  ctx.save();
+  ctx.translate(cx, cy - 12);
+  ctx.rotate(-0.25);
   ctx.strokeStyle = '#F59E0B';
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 3.5;
   ctx.beginPath();
-  ctx.ellipse(x + w * 0.5, y + h * 0.42, 14, 5, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, 16, 7, 0, 0, Math.PI * 2);
   ctx.stroke();
+  ctx.strokeStyle = '#FEF08A';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.restore();
+
+  // Floating Ring Stars
+  ctx.fillStyle = '#FEF08A';
+  ctx.beginPath();
+  ctx.arc(cx - 28, cy - 12, 2, 0, Math.PI * 2);
+  ctx.arc(cx + 28, cy - 18, 2.5, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 // 148. Rollercoaster Thrill
@@ -10657,125 +10857,540 @@ function drawSynthwaveNeonRacerArt(ctx: CanvasRenderingContext2D, x: number, y: 
 }
 
 function drawPixelSpaceInvaderArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#05050a';
+  // Deep CRT space background
+  ctx.fillStyle = '#06060f';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Green pixel invader
+
+  // Background pixel stars
+  const stars = [
+    [x + 12, y + 10, '#38bdf8', 1.5],
+    [x + w - 16, y + 14, '#f43f5e', 1.5],
+    [x + 24, y + h - 16, '#a855f7', 1.2],
+    [x + w - 26, y + h - 22, '#34d399', 1.2],
+    [x + w * 0.45, y + 8, '#ffffff', 1]
+  ];
+  for (const [sx, sy, col, r] of stars) {
+    ctx.fillStyle = col as string;
+    ctx.beginPath();
+    ctx.arc(sx as number, sy as number, r as number, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Top Invader: Magenta Crab
+  const crabX = cx - 18;
+  const crabY = cy - 20;
+  ctx.fillStyle = '#f43f5e';
+  // Crab body & horns
+  ctx.fillRect(crabX + 4, crabY, 14, 3);
+  ctx.fillRect(crabX + 2, crabY + 3, 18, 5);
+  ctx.fillRect(crabX + 4, crabY + 8, 14, 4);
+  // Crab eyes
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(crabX + 5, crabY + 4, 3, 3);
+  ctx.fillRect(crabX + 14, crabY + 4, 3, 3);
+  // Crab claws
+  ctx.fillStyle = '#fb7185';
+  ctx.fillRect(crabX, crabY + 5, 2, 7);
+  ctx.fillRect(crabX + 20, crabY + 5, 2, 7);
+  ctx.fillRect(crabX + 2, crabY + 11, 4, 2);
+  ctx.fillRect(crabX + 16, crabY + 11, 4, 2);
+
+  // Middle Invader: Emerald Squid
+  const squidX = cx + 8;
+  const squidY = cy - 14;
   ctx.fillStyle = '#22c55e';
-  ctx.fillRect(cx - 10, cy - 10, 20, 14);
-  ctx.fillStyle = '#05050a';
-  ctx.fillRect(cx - 6, cy - 6, 4, 4);
-  ctx.fillRect(cx + 2, cy - 6, 4, 4);
-  // Laser cannon at bottom
+  ctx.fillRect(squidX + 5, squidY, 8, 3);
+  ctx.fillRect(squidX + 2, squidY + 3, 14, 6);
+  ctx.fillRect(squidX + 4, squidY + 9, 10, 4);
+  // Squid tentacles
+  ctx.fillRect(squidX + 2, squidY + 12, 3, 3);
+  ctx.fillRect(squidX + 8, squidY + 12, 2, 3);
+  ctx.fillRect(squidX + 13, squidY + 12, 3, 3);
+  // Squid eyes
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(squidX + 4, squidY + 4, 3, 3);
+  ctx.fillRect(squidX + 11, squidY + 4, 3, 3);
+
+  // Exploding Invader Bits on left
+  ctx.fillStyle = '#fde047';
+  ctx.fillRect(cx - 28, cy - 8, 3, 3);
+  ctx.fillRect(cx - 33, cy - 13, 2, 2);
+  ctx.fillRect(cx - 24, cy - 14, 2, 2);
+
+  // Pixel Defense Bunker Arch
+  ctx.fillStyle = '#10b981';
+  ctx.fillRect(cx - 26, cy + 12, 16, 9);
+  ctx.fillStyle = '#06060f';
+  ctx.fillRect(cx - 21, cy + 16, 6, 6); // Bunker arch cutout
+  // Bunker blast damage
+  ctx.fillRect(cx - 25, cy + 12, 3, 3);
+
+  // Player Defender Cannon
+  const pX = cx + 8;
+  const pY = cy + 14;
+  ctx.fillStyle = '#0284c7';
+  ctx.fillRect(pX - 9, pY + 4, 18, 5);
   ctx.fillStyle = '#38bdf8';
-  ctx.fillRect(cx - 8, cy + 12, 16, 6);
-  ctx.fillRect(cx - 2, cy + 8, 4, 4);
+  ctx.fillRect(pX - 6, pY + 1, 12, 3);
+  ctx.fillRect(pX - 2, pY - 4, 4, 6);
+
+  // Rising Player Dual Lasers
+  ctx.fillStyle = '#fde047';
+  ctx.fillRect(pX - 4, pY - 14, 2, 7);
+  ctx.fillRect(pX + 2, pY - 14, 2, 7);
+  // Laser glow
+  ctx.fillStyle = 'rgba(253, 224, 71, 0.4)';
+  ctx.fillRect(pX - 6, pY - 16, 6, 11);
+  ctx.fillRect(pX, pY - 16, 6, 11);
 }
 
 function drawVectorTankBattleArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Classic Atari Vector Glow backdrop
   ctx.fillStyle = '#020b05';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Green wireframe tank
-  ctx.strokeStyle = '#4ade80';
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(cx - 12, cy - 8, 24, 16);
-  ctx.strokeRect(cx - 15, cy - 12, 30, 4);
-  ctx.strokeRect(cx - 15, cy + 8, 30, 4);
+
+  // Vector Wireframe Mountain Horizon
+  ctx.strokeStyle = '#15803d';
+  ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.moveTo(cx, cy);
-  ctx.lineTo(cx + 18, cy);
+  ctx.moveTo(x, cy - 2);
+  ctx.lineTo(x + 18, cy - 14);
+  ctx.lineTo(x + 36, cy - 6);
+  ctx.lineTo(x + 58, cy - 20);
+  ctx.lineTo(x + 80, cy - 4);
+  ctx.lineTo(x + w, cy - 10);
   ctx.stroke();
+
+  // Vanishing Ground Grid
+  ctx.strokeStyle = 'rgba(74, 222, 128, 0.28)';
+  ctx.lineWidth = 1;
+  const horizonY = cy;
+  for (let gx = -35; gx <= 35; gx += 14) {
+    ctx.beginPath();
+    ctx.moveTo(cx + gx * 0.3, horizonY);
+    ctx.lineTo(cx + gx * 1.5, y + h);
+    ctx.stroke();
+  }
+  for (let gy = 0; gy < 3; gy++) {
+    const py = horizonY + 7 + gy * gy * 3.5;
+    ctx.beginPath();
+    ctx.moveTo(x + 4, py);
+    ctx.lineTo(x + w - 4, py);
+    ctx.stroke();
+  }
+
+  // Enemy Red Vector Tank in distance
+  const eX = cx + 22;
+  const eY = cy - 4;
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 1.4;
+  ctx.strokeRect(eX - 8, eY - 4, 16, 7);
+  ctx.strokeRect(eX - 4, eY - 8, 8, 4);
+  ctx.beginPath();
+  ctx.moveTo(eX - 2, eY - 6);
+  ctx.lineTo(eX - 12, eY - 3);
+  ctx.stroke();
+
+  // Green Targeting Reticle on Enemy
+  ctx.strokeStyle = '#4ade80';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(eX, eY - 3, 9, 0, Math.PI * 2);
+  ctx.moveTo(eX - 13, eY - 3); ctx.lineTo(eX - 9, eY - 3);
+  ctx.moveTo(eX + 9, eY - 3); ctx.lineTo(eX + 13, eY - 3);
+  ctx.moveTo(eX, eY - 12); ctx.lineTo(eX, eY - 8);
+  ctx.moveTo(eX, eY + 2); ctx.lineTo(eX, eY + 6);
+  ctx.stroke();
+
+  // Player Vector Tank in foreground (3D wireframe)
+  const pX = cx - 14;
+  const pY = cy + 12;
+  ctx.strokeStyle = '#86efac';
+  ctx.lineWidth = 1.8;
+  // Left Tread
+  ctx.strokeRect(pX - 16, pY - 5, 10, 18);
+  // Right Tread
+  ctx.strokeRect(pX + 8, pY - 5, 10, 18);
+  // Tank Hull
+  ctx.strokeRect(pX - 8, pY - 2, 18, 14);
+  // Turret & long cannon
+  ctx.strokeRect(pX - 4, pY + 1, 10, 8);
+  ctx.beginPath();
+  ctx.moveTo(pX + 1, pY + 1);
+  ctx.lineTo(pX + 15, pY - 11);
+  ctx.stroke();
+
+  // Vector laser blast tracer
+  ctx.strokeStyle = '#fde047';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(pX + 16, pY - 12);
+  ctx.lineTo(cx + 8, cy + 2);
+  ctx.stroke();
+  // Vector muzzle spark
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(pX + 16, pY - 12, 2.5, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawPacMazeChompArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Deep arcade maze blue-black
   ctx.fillStyle = '#030712';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Blue maze line
+
+  // Luminous blue double-rail maze walls
   ctx.strokeStyle = '#2563eb';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(cx - 20, cy - 16, 40, 32);
-  // Yellow Chomp Disc
-  ctx.fillStyle = '#fde047';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // Upper boundary wall
   ctx.beginPath();
-  ctx.arc(cx - 6, cy, 10, 0.4, Math.PI * 2 - 0.4);
-  ctx.lineTo(cx - 6, cy);
+  ctx.moveTo(x + 10, y + 14);
+  ctx.lineTo(cx - 6, y + 14);
+  ctx.lineTo(cx - 6, y + 26);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(cx + 6, y + 14);
+  ctx.lineTo(x + w - 10, y + 14);
+  ctx.lineTo(x + w - 10, y + 26);
+  ctx.stroke();
+
+  // Lower boundary wall
+  ctx.beginPath();
+  ctx.moveTo(x + 10, y + h - 14);
+  ctx.lineTo(cx + 8, y + h - 14);
+  ctx.lineTo(cx + 8, y + h - 26);
+  ctx.stroke();
+
+  // Maze inner highlight line
+  ctx.strokeStyle = '#93c5fd';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Food Pellets path
+  const pelletDots = [
+    [x + 18, cy + 2],
+    [x + 28, cy + 2],
+    [cx + 12, cy + 2],
+    [cx + 24, cy + 2]
+  ];
+  ctx.fillStyle = '#fed7aa';
+  for (const [px, py] of pelletDots) {
+    ctx.beginPath();
+    ctx.arc(px, py, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Energizer Power Pellet (Glowing Gold)
+  ctx.fillStyle = '#fef08a';
+  ctx.shadowColor = '#facc15';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.arc(x + w - 16, cy + 2, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Pac Chomp Character (Yellow)
+  const pacX = cx - 6;
+  const pacY = cy + 2;
+  const mouthAngle = 0.38;
+  ctx.fillStyle = '#facc15';
+  ctx.beginPath();
+  ctx.arc(pacX, pacY, 11, mouthAngle, Math.PI * 2 - mouthAngle);
+  ctx.lineTo(pacX, pacY);
   ctx.closePath();
   ctx.fill();
-  // Pellet
-  ctx.fillStyle = '#fef08a';
-  ctx.fillRect(cx + 8, cy - 2, 4, 4);
+  // Chomp eye specular
+  ctx.fillStyle = '#1e293b';
+  ctx.beginPath();
+  ctx.arc(pacX + 1, pacY - 6, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Chasing Ghost: Blinky (Red)
+  const ghostX = cx - 26;
+  const ghostY = cy + 2;
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.arc(ghostX, ghostY - 2, 8, Math.PI, 0, false);
+  ctx.lineTo(ghostX + 8, ghostY + 8);
+  // Scalloped bottom tentacles
+  ctx.lineTo(ghostX + 4, ghostY + 5);
+  ctx.lineTo(ghostX, ghostY + 8);
+  ctx.lineTo(ghostX - 4, ghostY + 5);
+  ctx.lineTo(ghostX - 8, ghostY + 8);
+  ctx.closePath();
+  ctx.fill();
+
+  // Ghost eyes looking right toward player
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(ghostX - 1.5, ghostY - 2, 2.5, 0, Math.PI * 2);
+  ctx.arc(ghostX + 4.5, ghostY - 2, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#1d4ed8';
+  ctx.beginPath();
+  ctx.arc(ghostX, ghostY - 2, 1.3, 0, Math.PI * 2);
+  ctx.arc(ghostX + 6, ghostY - 2, 1.3, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawBreakoutBrickBlasterArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Arcade CRT cabinet backdrop
   ctx.fillStyle = '#020617';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Colored bricks
-  const colors = ['#ef4444', '#f97316', '#22c55e', '#06b6d4'];
-  for (let i = 0; i < 4; i++) {
-    ctx.fillStyle = colors[i];
-    ctx.fillRect(cx - 18 + i * 10, cy - 14, 8, 6);
+
+  // Vivid 4-row Brick Wall with beveled 3D depth
+  const rows = [
+    { yOffset: -24, color: '#ef4444', highlight: '#fca5a5' },
+    { yOffset: -17, color: '#f97316', highlight: '#fdba74' },
+    { yOffset: -10, color: '#eab308', highlight: '#fef08a' },
+    { yOffset: -3, color: '#22c55e', highlight: '#86efac' }
+  ];
+  const bW = (w - 24) / 5;
+  const bH = 5.5;
+
+  for (const r of rows) {
+    for (let c = 0; c < 5; c++) {
+      // Omit broken brick on col 2, row 3
+      if (r.yOffset === -3 && c === 2) continue;
+      const bx = x + 12 + c * bW;
+      const by = cy + r.yOffset;
+
+      // Base brick body
+      ctx.fillStyle = r.color;
+      ctx.fillRect(bx + 1, by + 1, bW - 2, bH - 2);
+
+      // Top specular bevel
+      ctx.fillStyle = r.highlight;
+      ctx.fillRect(bx + 1, by + 1, bW - 2, 1.2);
+    }
   }
-  // Ball
-  ctx.fillStyle = '#ffffff';
+
+  // Shattering Brick Shards at impact site
+  const shatterX = x + 12 + 2 * bW + bW * 0.5;
+  const shatterY = cy - 1;
+  ctx.fillStyle = '#22c55e';
+  ctx.fillRect(shatterX - 4, shatterY - 3, 3, 3);
+  ctx.fillRect(shatterX + 3, shatterY - 4, 3.5, 2.5);
+  ctx.fillRect(shatterX - 2, shatterY + 4, 2.5, 2.5);
+  ctx.fillRect(shatterX + 4, shatterY + 3, 2, 3);
+
+  // Speeding Arcade Ball with light trail
+  const ballX = shatterX + 4;
+  const ballY = cy + 8;
+  // Motion blur trail
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
   ctx.beginPath();
-  ctx.arc(cx + 2, cy - 2, 3, 0, Math.PI * 2);
+  ctx.arc(ballX - 3, ballY - 5, 2.5, 0, Math.PI * 2);
   ctx.fill();
-  // Paddle
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.beginPath();
+  ctx.arc(ballX - 1.5, ballY - 2.5, 3, 0, Math.PI * 2);
+  ctx.fill();
+  // Glowing White Ball
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = '#38bdf8';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.arc(ballX, ballY, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Glossy Metallic Player Paddle at bottom
+  const padX = cx;
+  const padY = cy + 20;
+  const padW = 28;
+  const padH = 6;
+  // Paddle base
+  ctx.fillStyle = '#0284c7';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(padX - padW / 2, padY, padW, padH, 3);
+  else ctx.rect(padX - padW / 2, padY, padW, padH);
+  ctx.fill();
+
+  // Paddle high-tech neon stripe
   ctx.fillStyle = '#38bdf8';
-  ctx.fillRect(cx - 12, cy + 12, 24, 5);
+  ctx.fillRect(padX - padW / 2 + 3, padY + 1.5, padW - 6, 2);
+
+  // Endcap bumpers
+  ctx.fillStyle = '#f43f5e';
+  ctx.fillRect(padX - padW / 2, padY + 1, 3, padH - 2);
+  ctx.fillRect(padX + padW / 2 - 3, padY + 1, 3, padH - 2);
 }
 
 function drawLaserDiscDanceArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Laser disco dark floor
   ctx.fillStyle = '#090514';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Shiny disc
-  ctx.fillStyle = '#38bdf8';
+
+  // Diagonal laser spotlights
+  ctx.strokeStyle = 'rgba(236, 72, 153, 0.25)';
+  ctx.lineWidth = 14;
   ctx.beginPath();
-  ctx.arc(cx, cy, 16, 0, Math.PI * 2);
+  ctx.moveTo(x, y);
+  ctx.lineTo(cx, cy);
+  ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(6, 182, 212, 0.25)';
+  ctx.beginPath();
+  ctx.moveTo(x + w, y);
+  ctx.lineTo(cx, cy);
+  ctx.stroke();
+
+  // Iridescent Holographic Laser CD Disc
+  const discR = 21;
+  const discGrad = ctx.createLinearGradient(cx - discR, cy - discR, cx + discR, cy + discR);
+  discGrad.addColorStop(0, '#38bdf8');
+  discGrad.addColorStop(0.25, '#c084fc');
+  discGrad.addColorStop(0.5, '#f472b6');
+  discGrad.addColorStop(0.75, '#fbbf24');
+  discGrad.addColorStop(1, '#34d399');
+
+  ctx.fillStyle = discGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, discR, 0, Math.PI * 2);
   ctx.fill();
+
+  // Disc reflection grooves
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, discR - 5, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Inner hub cutout
   ctx.fillStyle = '#090514';
   ctx.beginPath();
-  ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 7, 0, Math.PI * 2);
   ctx.fill();
-  // Arrow flash
-  ctx.fillStyle = '#fde047';
-  ctx.beginPath();
-  ctx.moveTo(cx, cy - 22);
-  ctx.lineTo(cx + 5, cy - 16);
-  ctx.lineTo(cx - 5, cy - 16);
-  ctx.closePath();
-  ctx.fill();
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Glowing DDR Neon Step Arrows around perimeter
+  const arrows = [
+    { angle: -Math.PI / 2, color: '#38bdf8' }, // UP (Cyan)
+    { angle: 0, color: '#34d399' },            // RIGHT (Green)
+    { angle: Math.PI / 2, color: '#f43f5e' },  // DOWN (Pink)
+    { angle: Math.PI, color: '#fbbf24' }       // LEFT (Gold)
+  ];
+
+  for (const arr of arrows) {
+    const ax = cx + Math.cos(arr.angle) * 23;
+    const ay = cy + Math.sin(arr.angle) * 23;
+
+    ctx.save();
+    ctx.translate(ax, ay);
+    ctx.rotate(arr.angle + Math.PI / 2);
+    ctx.fillStyle = arr.color;
+    ctx.shadowColor = arr.color;
+    ctx.shadowBlur = 4;
+    ctx.beginPath();
+    ctx.moveTo(0, -5);
+    ctx.lineTo(4, 2);
+    ctx.lineTo(1.5, 2);
+    ctx.lineTo(1.5, 5);
+    ctx.lineTo(-1.5, 5);
+    ctx.lineTo(-1.5, 2);
+    ctx.lineTo(-4, 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
 }
 
 function drawCrtScanlineSniperArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#06130b';
+  // Dark CRT phosphor monitor
+  ctx.fillStyle = '#031008';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Crosshair
-  ctx.strokeStyle = '#4ade80';
-  ctx.lineWidth = 1.5;
+
+  // Scanlines overlay
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.lineWidth = 1;
+  for (let gy = y; gy < y + h; gy += 3) {
+    ctx.beginPath();
+    ctx.moveTo(x, gy);
+    ctx.lineTo(x + w, gy);
+    ctx.stroke();
+  }
+
+  // Thermal Duck/Drone Target in center sights
+  const tX = cx + 3;
+  const tY = cy - 2;
+  // Thermal heatmap glow
+  ctx.fillStyle = '#ef4444';
   ctx.beginPath();
-  ctx.arc(cx, cy, 14, 0, Math.PI * 2);
-  ctx.moveTo(cx - 18, cy);
-  ctx.lineTo(cx + 18, cy);
-  ctx.moveTo(cx, cy - 18);
-  ctx.lineTo(cx, cy + 18);
-  ctx.stroke();
-  // Duck target in sights
+  ctx.arc(tX, tY, 8, 0, Math.PI * 2);
+  ctx.fill();
+  // Duck head & beak
+  ctx.fillStyle = '#f59e0b';
+  ctx.beginPath();
+  ctx.arc(tX + 5, tY - 3, 4.5, 0, Math.PI * 2);
+  ctx.fill();
   ctx.fillStyle = '#fbbf24';
   ctx.beginPath();
-  ctx.arc(cx + 2, cy - 2, 5, 0, Math.PI * 2);
+  ctx.moveTo(tX + 8, tY - 4);
+  ctx.lineTo(tX + 14, tY - 2);
+  ctx.lineTo(tX + 8, tY);
+  ctx.closePath();
   ctx.fill();
+  // Target wing silhouette
+  ctx.fillStyle = '#dc2626';
+  ctx.beginPath();
+  ctx.ellipse(tX - 2, tY, 5, 3, -0.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Illuminated Tactical Sniper Crosshair Rings
+  ctx.strokeStyle = '#4ade80';
+  ctx.lineWidth = 1.5;
+  ctx.shadowColor = '#22c55e';
+  ctx.shadowBlur = 5;
+
+  // Outer mil-dot ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Inner precision ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Crosshairs with mil-hash marks
+  ctx.beginPath();
+  ctx.moveTo(cx - 24, cy); ctx.lineTo(cx + 24, cy);
+  ctx.moveTo(cx, cy - 24); ctx.lineTo(cx, cy + 24);
+  ctx.stroke();
+
+  // Center lock-on dot
+  ctx.fillStyle = '#f87171';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // HUD Diagnostics text
+  ctx.fillStyle = '#86efac';
+  ctx.font = 'bold 6.5px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('RNG 120m', x + 8, y + 11);
+  ctx.textAlign = 'right';
+  ctx.fillText('LOCK', x + w - 8, y + 11);
 }
 
 function drawCyberGridRunnerArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
@@ -10828,38 +11443,141 @@ function drawCyberGridRunnerArt(ctx: CanvasRenderingContext2D, x: number, y: num
 }
 
 function drawSynthDrumPadArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#1e1e24';
+  // Brushed metal sampler housing
+  ctx.fillStyle = '#18181b';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // 4 pads
-  ctx.fillStyle = '#ef4444';
-  ctx.fillRect(cx - 14, cy - 14, 12, 12);
+
+  // Mini OLED Display at top
+  ctx.fillStyle = '#09090b';
+  ctx.fillRect(cx - 22, cy - 22, 44, 10);
+  ctx.strokeStyle = '#27272a';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(cx - 22, cy - 22, 44, 10);
+
+  // Equalizer spectrum bars on OLED
+  const eqCols = ['#22c55e', '#38bdf8', '#a855f7', '#f43f5e', '#fbbf24'];
+  const barHeights = [4, 7, 5, 8, 6];
+  for (let i = 0; i < 5; i++) {
+    ctx.fillStyle = eqCols[i];
+    ctx.fillRect(cx - 18 + i * 5, cy - 14 - barHeights[i], 3, barHeights[i]);
+  }
+  // BPM Text
   ctx.fillStyle = '#38bdf8';
-  ctx.fillRect(cx + 2, cy - 14, 12, 12);
-  ctx.fillStyle = '#fbbf24';
-  ctx.fillRect(cx - 14, cy + 2, 12, 12);
-  ctx.fillStyle = '#a855f7';
-  ctx.fillRect(cx + 2, cy + 2, 12, 12);
+  ctx.font = 'bold 6.5px monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('128 BPM', cx + 20, cy - 15);
+
+  // 4 Velocity-Sensitive Silicone Pads (2x2 Grid)
+  const padSize = 13;
+  const gap = 4;
+  const pData = [
+    { ox: -padSize - gap / 2, oy: -padSize / 2 + 1, col: '#ef4444', glow: '#f87171', active: true },
+    { ox: gap / 2, oy: -padSize / 2 + 1, col: '#06b6d4', glow: '#38bdf8', active: false },
+    { ox: -padSize - gap / 2, oy: padSize / 2 + 1 + gap, col: '#f59e0b', glow: '#fbbf24', active: false },
+    { ox: gap / 2, oy: padSize / 2 + 1 + gap, col: '#a855f7', glow: '#c084fc', active: false }
+  ];
+
+  for (const pad of pData) {
+    const px = cx + pad.ox;
+    const py = cy + pad.oy;
+
+    // Pad bevel base
+    ctx.fillStyle = '#27272a';
+    ctx.fillRect(px - 1, py - 1, padSize + 2, padSize + 2);
+
+    if (pad.active) {
+      // Lit / triggered pad shockwave aura
+      ctx.fillStyle = pad.glow;
+      ctx.shadowColor = pad.col;
+      ctx.shadowBlur = 8;
+      ctx.fillRect(px, py, padSize, padSize);
+      ctx.shadowBlur = 0;
+
+      // Finger strike impact ripples
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(px + padSize / 2, py + padSize / 2, padSize * 0.7, 0, Math.PI * 2);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = pad.col;
+      ctx.fillRect(px, py, padSize, padSize);
+      // Soft inner glow edge
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fillRect(px + 1, py + 1, padSize - 2, 2);
+    }
+  }
 }
 
 function drawMatrixCodeRainArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Deep cyber-noir digital void
   ctx.fillStyle = '#020b05';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Green digital rain glyphs
-  ctx.fillStyle = '#22c55e';
-  ctx.font = 'bold 9px monospace';
+
+  // Matrix Digital Streams
+  const streams = [
+    { sx: x + 10, glyphs: ['0', '1', 'X', '9'], headY: y + 26 },
+    { sx: x + 24, glyphs: ['F', 'A', '3', '0', '7'], headY: y + h - 8 },
+    { sx: cx - 4, glyphs: ['Z', '8', 'E', '1'], headY: y + 36 },
+    { sx: cx + 14, glyphs: ['4', 'B', 'C', '0', 'F', '2'], headY: y + h - 14 },
+    { sx: x + w - 12, glyphs: ['1', '0', '9', 'X'], headY: y + 28 }
+  ];
+
+  ctx.font = 'bold 7px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('1 0 X', cx, cy - 10);
-  ctx.fillText('0 F 7', cx, cy);
-  ctx.fillText('A 1 C', cx, cy + 10);
-  // Gold key in stream
-  ctx.fillStyle = '#fbbf24';
+
+  for (const str of streams) {
+    const total = str.glyphs.length;
+    for (let i = 0; i < total; i++) {
+      const gy = str.headY - (total - 1 - i) * 8;
+      if (gy < y || gy > y + h) continue;
+
+      if (i === total - 1) {
+        // Leading white-hot glyph with bright phosphor bloom
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#4ade80';
+        ctx.shadowBlur = 6;
+        ctx.fillText(str.glyphs[i], str.sx, gy);
+        ctx.shadowBlur = 0;
+      } else if (i === total - 2) {
+        ctx.fillStyle = '#86efac';
+        ctx.fillText(str.glyphs[i], str.sx, gy);
+      } else {
+        ctx.fillStyle = 'rgba(34, 197, 94, 0.45)';
+        ctx.fillText(str.glyphs[i], str.sx, gy);
+      }
+    }
+  }
+
+  // Central Golden Cryptographic Key floating in stream
+  ctx.fillStyle = '#f59e0b';
+  ctx.shadowColor = '#fbbf24';
+  ctx.shadowBlur = 7;
+  // Key loop
   ctx.beginPath();
-  ctx.arc(cx + 12, cy, 3, 0, Math.PI * 2);
+  ctx.arc(cx - 5, cy, 6, 0, Math.PI * 2);
   ctx.fill();
+  ctx.fillStyle = '#020b05';
+  ctx.beginPath();
+  ctx.arc(cx - 5, cy, 3, 0, Math.PI * 2);
+  ctx.fill();
+  // Key stem & teeth
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillRect(cx + 1, cy - 2, 14, 4);
+  ctx.fillRect(cx + 8, cy + 2, 3, 3);
+  ctx.fillRect(cx + 13, cy + 2, 3, 4);
+  ctx.shadowBlur = 0;
+
+  // Cyan Cipher Data Ring around key
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx + 2, cy, 14, -0.6, Math.PI * 1.5);
+  ctx.stroke();
 }
 
 function drawSharksAndMinnowsArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
