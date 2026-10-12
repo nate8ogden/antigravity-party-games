@@ -69,6 +69,13 @@ function adjustColorRgb(rgb: [number, number, number], factor: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
+function adjustColorRgba(rgb: [number, number, number], factor: number, alpha: number): string {
+  const r = Math.min(255, Math.max(0, Math.round(rgb[0] * factor)));
+  const g = Math.min(255, Math.max(0, Math.round(rgb[1] * factor)));
+  const b = Math.min(255, Math.max(0, Math.round(rgb[2] * factor)));
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 function drawEnhancedAtmosphericBackground(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -96,8 +103,8 @@ function drawEnhancedAtmosphericBackground(
   const cy = y + h * 0.46;
   const glowRad = Math.max(w, h) * 0.72;
   const spotGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, glowRad);
-  spotGrad.addColorStop(0, adjustColorRgb(rgb, 1.85) + '55');
-  spotGrad.addColorStop(0.45, adjustColorRgb(rgb, 1.3) + '22');
+  spotGrad.addColorStop(0, adjustColorRgba(rgb, 1.85, 0.35));
+  spotGrad.addColorStop(0.45, adjustColorRgba(rgb, 1.3, 0.15));
   spotGrad.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = spotGrad;
   ctx.beginPath();
