@@ -301,7 +301,7 @@ export const GAME_CATALOG: MinigameMetadata[] = [
     category: 'Action',
     icon: '[G-02]',
     instructions: 'Smash into rival bumper cars! Slam opponents into electric perimeter rails and center pinball bumpers to deplete their shields. Grab battery sparks to recharge!',
-    controlPrompt: 'Tap: Turbo Thrust | Hold: Power Drive'
+    controlPrompt: 'WASD / Arrows: Steer & Drive | Space / Tap: Turbo Boost | Grippy Tires'
   },
   {
     id: 'laser_grid',

@@ -329,14 +329,14 @@ export class BumperHovercraftGame extends BaseGame {
           car.y = b.y + ny * minDist;
 
           // Propel outward with high bounce velocity
-          const bounceSpeed = Math.max(340, Math.hypot(car.vx, car.vy) * 1.5);
+          const bounceSpeed = Math.max(540, Math.hypot(car.vx, car.vy) * 1.55);
           car.vx = nx * bounceSpeed;
           car.vy = ny * bounceSpeed;
 
           b.pulseTimer = 1.0;
           this.audio.playBounce();
-          this.particles.spawnSparks(b.x + nx * b.radius, b.y + ny * b.radius, b.color, 14);
-          this.particles.addTrauma(0.2);
+          this.particles.spawnSparks(b.x + nx * b.radius, b.y + ny * b.radius, b.color, 16);
+          this.particles.addTrauma(0.25);
           car.score += 50;
         }
       }
@@ -526,10 +526,12 @@ export class BumperHovercraftGame extends BaseGame {
 
     // Steer towards target angle: turn left (-1) or right (+1)
     const steer = Math.abs(angleDiff) > 0.08 ? (angleDiff > 0 ? 1 : -1) : 0;
-    const alignTolerance = difficulty === 'bot_hard' ? 0.35 : difficulty === 'bot_normal' ? 0.55 : 0.85;
+    const alignTolerance = difficulty === 'bot_hard' ? 0.40 : difficulty === 'bot_normal' ? 0.60 : 0.85;
     const shouldThrust = Math.abs(angleDiff) < alignTolerance;
+    const shouldReverse = Math.abs(angleDiff) > 2.4 && Math.hypot(car.vx, car.vy) < 40;
+    const throttle = shouldThrust ? 1 : (shouldReverse ? -0.8 : 0);
 
-    this.input.setBotInput(botId, shouldThrust, steer, 0, false);
+    this.input.setBotInput(botId, shouldThrust, steer, throttle, false);
   }
 
   public isRoundOver(): boolean {
