@@ -52,48 +52,43 @@ test.describe('Highway Hop - Straight Forward Hopping & AI Intelligence', () => 
     await page.goto(`${LOCAL_URL}?game=highway_hop&players=2&difficulty=bot_easy`);
     await expect(page.locator('canvas')).toBeVisible();
     await skipCountdown(page);
-    await page.waitForTimeout(150);
+    await page.waitForTimeout(200);
 
-    // Position player safely on a custom test position to simulate log hopping
     const testResult = await page.evaluate(() => {
       const debug = (window as any).__HIGHWAY_HOP_DEBUG__;
-      const gm = (window as any).__GAME_MANAGER__;
-      const game = gm?.currentGame;
-      if (!game) return null;
+      if (!debug || !debug.attemptHop || !debug.players[0]) return null;
 
-      // Find a safe spot or set custom coordinates
-      const p = game.playersState.get(0);
-      if (!p) return null;
+      const p0 = debug.players[0];
+      const initialLane = p0.laneIndex;
+      // Simulate player standing at an off-center position (e.g. 156.78px after drifting on a log)
+      p0.x = 156.78;
+      p0.targetX = 156.78;
+      p0.isHopping = false;
 
-      // Set player to an off-center position (e.g. x = 123.45)
-      p.x = 123.45;
-      p.targetX = 123.45;
-      p.isHopping = false;
-      const initialLane = p.laneIndex;
+      // Hop straight forward (dCol = 0, dLane = 1)
+      debug.attemptHop(0, 0, 1, 900);
 
-      // Execute forward hop
-      game.attemptHop(p, 0, 1, 900);
       return {
-        initialX: 123.45,
-        targetX: p.targetX,
-        newLane: p.laneIndex,
+        initialX: 156.78,
+        targetX: p0.targetX,
+        newLane: p0.laneIndex,
         initialLane
       };
     });
 
     expect(testResult).toBeTruthy();
     expect(testResult?.newLane).toBe(testResult!.initialLane + 1);
-    // targetX must match initialX with 0 sideways distortion
+    // targetX must match initialX exactly (0 sideways snap)
     expect(Math.abs(testResult!.targetX - testResult!.initialX)).toBeLessThan(0.01);
   });
 
   test('AI bot evaluates safe continuous collision windows and avoids oncoming vehicles', async ({ page }) => {
-    await page.goto(`${LOCAL_URL}?game=highway_hop&players=2&difficulty=bot_hard`);
+    await page.goto(`${LOCAL_URL}?game=highway_hop&players=2&bots=1&difficulty=normal`);
     await expect(page.locator('canvas')).toBeVisible();
     await skipCountdown(page);
 
-    // Let the game run for 4 seconds to observe bot navigation
-    await page.waitForTimeout(4000);
+    // Let the game run for 4.5 seconds to observe bot navigation
+    await page.waitForTimeout(4500);
 
     const debug = await page.evaluate(() => (window as any).__HIGHWAY_HOP_DEBUG__);
     expect(debug).toBeTruthy();
@@ -102,7 +97,6 @@ test.describe('Highway Hop - Straight Forward Hopping & AI Intelligence', () => 
     // Bot should have made decisions and advanced through lanes
     expect(bot.score).toBeGreaterThan(0);
     expect(bot.maxLaneReached).toBeGreaterThan(0);
-    // Bot should still be alive or have lives remaining
     expect(bot.lives).toBeGreaterThan(0);
   });
 });
