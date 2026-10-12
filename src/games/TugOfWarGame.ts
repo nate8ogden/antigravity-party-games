@@ -151,9 +151,11 @@ export class TugOfWarGame extends BaseGame {
       if (ps.needle >= 1.0) {
         ps.needle = 1.0;
         ps.needleDir = -1;
+        if (ps.botCooldown <= 0.1) ps.botHesitating = false;
       } else if (ps.needle <= 0.0) {
         ps.needle = 0.0;
         ps.needleDir = 1;
+        if (ps.botCooldown <= 0.1) ps.botHesitating = false;
       }
 
       // Recover animations
@@ -180,6 +182,8 @@ export class TugOfWarGame extends BaseGame {
         this.executePull(ps, p.color);
       }
     }
+
+    this.syncDebug();
 
     // Check Win Condition
     if (this.ropeOffset <= -this.winThreshold) {
@@ -211,12 +215,17 @@ export class TugOfWarGame extends BaseGame {
     const teamMembers = active.filter((p) => this.playersState.get(p.id)?.team === ps.team);
     const teamFactor = teamMembers.length === 1 ? 1.45 : 1.0;
 
-    if (centerDist <= 0.08) {
+    // Comeback adrenaline boost if team is in danger of being dragged into pit
+    const isLosing = (ps.team === 'LEFT' && this.ropeOffset > 0.35) || (ps.team === 'RIGHT' && this.ropeOffset < -0.35);
+    const comebackFactor = isLosing ? 1.25 : 1.0;
+
+    // Widen sweet spot windows for a more satisfying and responsive pull
+    if (centerDist <= 0.10) {
       // PERFECT PULL!
       ps.perfectCount += 1;
       ps.pullCount += 1;
       ps.pullAnim = 1.0;
-      const pullForce = 0.09 * teamFactor;
+      const pullForce = 0.085 * teamFactor * comebackFactor;
       this.ropeOffset += ps.team === 'LEFT' ? -pullForce : pullForce;
 
       this.audio.playBoost();
@@ -224,11 +233,11 @@ export class TugOfWarGame extends BaseGame {
       this.particles.shake(0.2);
       this.particles.showFloatingText('PERFECT PULL!!', ps.x, ps.y - 34, '#10B981', 24);
       this.particles.spawnConfetti(ps.x, ps.y, 14);
-    } else if (centerDist <= 0.22) {
+    } else if (centerDist <= 0.26) {
       // GOOD PULL!
       ps.pullCount += 1;
       ps.pullAnim = 0.6;
-      const pullForce = 0.045 * teamFactor;
+      const pullForce = 0.048 * teamFactor * comebackFactor;
       this.ropeOffset += ps.team === 'LEFT' ? -pullForce : pullForce;
 
       this.audio.playBounce();
@@ -237,8 +246,8 @@ export class TugOfWarGame extends BaseGame {
       // SLIP / MISTIME!
       ps.slipCount += 1;
       ps.slipAnim = 1.0;
-      const slipPenalty = 0.045 * teamFactor;
-      // Stumble gives opponent ground!
+      // Stumble penalty reduced from 0.045 to 0.028 so a mistime doesn't ruin the round
+      const slipPenalty = 0.028 * teamFactor;
       this.ropeOffset += ps.team === 'LEFT' ? slipPenalty : -slipPenalty;
 
       this.audio.playStun();
@@ -251,6 +260,23 @@ export class TugOfWarGame extends BaseGame {
     return this.isFinished;
   }
 
+  public syncDebug(): void {
+    if (typeof window !== 'undefined') {
+      (window as any).__TUG_OF_WAR_DEBUG__ = {
+        players: Array.from(this.playersState.values()),
+        ropeOffset: this.ropeOffset,
+        winningTeam: this.winningTeam,
+        isFinished: this.isFinished,
+        roundTimer: this.roundTimer,
+        executePull: (pid: PlayerId) => {
+          const ps = this.playersState.get(pid);
+          const p = this.getPlayer(pid);
+          if (ps && p) this.executePull(ps, p.color);
+        }
+      };
+    }
+  }
+
   protected updateBotAI(
     dt: number,
     botId: PlayerId,
@@ -259,39 +285,75 @@ export class TugOfWarGame extends BaseGame {
     height: number
   ): void {
     const ps = this.playersState.get(botId);
-    if (!ps || ps.inPit) {
+    if (!ps || ps.inPit || this.isFinished) {
       this.input.setBotInput(botId, false, 0, 0, false);
       return;
     }
 
-    ps.botReactionTimer -= dt;
-    if (ps.botReactionTimer > 0) return;
-
-    const target = 0.5;
-    const diff = Math.abs(ps.needle - target);
-
-    let willPull = false;
-    if (difficulty === 'bot_hard') {
-      ps.botReactionTimer = 0.05;
-      if (diff <= 0.04) {
-        willPull = true;
-      }
-    } else if (difficulty === 'bot_normal') {
-      ps.botReactionTimer = 0.08;
-      if (diff <= 0.12 && Math.random() < 0.85) {
-        willPull = true;
-      }
-    } else {
-      ps.botReactionTimer = 0.15;
-      if (diff <= 0.22 && Math.random() < 0.65) {
-        willPull = true;
-      }
+    if (ps.botCooldown > 0) {
+      ps.botCooldown -= dt;
+      this.input.setBotInput(botId, false, 0, 0, false);
+      return;
     }
 
-    if (willPull) {
+    if (ps.botHesitating) {
+      this.input.setBotInput(botId, false, 0, 0, false);
+      return;
+    }
+
+    const target = 0.5 + ps.botTargetOffset;
+    const diff = Math.abs(ps.needle - target);
+
+    if (diff <= 0.048) {
+      // Trigger heave
       this.input.setBotInput(botId, true, 0, 0, true);
+      // Cooldown until next oscillation
+      ps.botCooldown = 0.45;
+      this.rollBotTarget(ps, difficulty);
     } else {
       this.input.setBotInput(botId, false, 0, 0, false);
+    }
+  }
+
+  private rollBotTarget(ps: TugPlayer, difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard'): void {
+    const roll = Math.random();
+    if (difficulty === 'bot_easy') {
+      ps.botHesitating = Math.random() < 0.35; // Hesitates / skips 35% of sweeps
+      if (roll < 0.30) {
+        // Slip! (30%)
+        ps.botTargetOffset = (Math.random() < 0.5 ? -1 : 1) * (0.28 + Math.random() * 0.12);
+      } else if (roll < 0.80) {
+        // Good pull (50%)
+        ps.botTargetOffset = (Math.random() - 0.5) * 0.28;
+      } else {
+        // Perfect pull (20%)
+        ps.botTargetOffset = (Math.random() - 0.5) * 0.08;
+      }
+    } else if (difficulty === 'bot_normal') {
+      ps.botHesitating = Math.random() < 0.15; // Hesitates / skips 15% of sweeps
+      if (roll < 0.14) {
+        // Slip! (14% of sweeps, giving human clear openings)
+        ps.botTargetOffset = (Math.random() < 0.5 ? -1 : 1) * (0.28 + Math.random() * 0.08);
+      } else if (roll < 0.68) {
+        // Good pull (54%)
+        ps.botTargetOffset = (Math.random() - 0.5) * 0.22;
+      } else {
+        // Perfect pull (32%)
+        ps.botTargetOffset = (Math.random() - 0.5) * 0.08;
+      }
+    } else {
+      // Hard: Fierce competitor with human-like slip possibility
+      ps.botHesitating = false;
+      if (roll < 0.05) {
+        // Rare slip (5%)
+        ps.botTargetOffset = (Math.random() < 0.5 ? -1 : 1) * (0.28 + Math.random() * 0.05);
+      } else if (roll < 0.48) {
+        // Good pull (43%)
+        ps.botTargetOffset = (Math.random() - 0.5) * 0.20;
+      } else {
+        // Perfect pull (52%)
+        ps.botTargetOffset = (Math.random() - 0.5) * 0.07;
+      }
     }
   }
 
@@ -517,11 +579,11 @@ export class TugOfWarGame extends BaseGame {
 
     // Yellow Good Zone
     ctx.fillStyle = '#FBBF24';
-    ctx.fillRect(barX + barW * 0.25, barY + 1, barW * 0.5, barH - 2);
+    ctx.fillRect(barX + barW * 0.24, barY + 1, barW * 0.52, barH - 2);
 
     // Green Sweet Spot Zone
     ctx.fillStyle = '#22C55E';
-    ctx.fillRect(barX + barW * 0.42, barY + 1, barW * 0.16, barH - 2);
+    ctx.fillRect(barX + barW * 0.40, barY + 1, barW * 0.20, barH - 2);
 
     // Needle Cursor
     const needleX = barX + ps.needle * barW;
