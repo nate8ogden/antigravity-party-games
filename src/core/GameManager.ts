@@ -648,11 +648,11 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   {
     id: 'chomp_frogs',
     title: 'Chomp Frogs',
-    tagline: 'Sticky-Tongue Pond Frenzy',
-    category: 'Reflex',
+    tagline: 'Lilypad Hop & Bug Chomp Arena',
+    category: 'Action',
     icon: '[G-43]',
-    instructions: 'Stationed on perimeter lily pads, launch your elastic sticky tongue into the pond center! Snatch fireflies, golden beetles, and prismatic butterflies. Avoid stinging wasps!',
-    controlPrompt: 'Tap/Space: Launch Tongue | Arrows: Aim Angle'
+    instructions: 'Leap dynamically across floating lily pads and rippling pond waters! Tap to snap your lightning-fast tongue, devouring gnats, fireflies, golden beetles, and giant royal butterflies. Bump rivals into the water and avoid stinging wasps! 1-3 to switch ponds.',
+    controlPrompt: 'Steer/WASD/Arrows: Aim & Hop | Space/Enter/Tap: Instant Chomp | 1-3: Switch Pond'
   },
   {
     id: 'tug_of_war',
