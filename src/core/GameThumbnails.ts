@@ -10155,433 +10155,1406 @@ function drawFortuneTellerTarotArt(ctx: CanvasRenderingContext2D, x: number, y: 
 }
 
 function drawVineSwingCanopyArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#064e3b';
+  // Deep jungle canopy background
+  ctx.fillStyle = '#032616';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Hanging Vine
-  ctx.strokeStyle = '#059669';
-  ctx.lineWidth = 3;
+
+  // Background jungle foliage leaves
+  ctx.fillStyle = '#064e3b';
   ctx.beginPath();
-  ctx.moveTo(cx - 16, y);
-  ctx.quadraticCurveTo(cx - 10, cy, cx + 12, cy + 10);
-  ctx.stroke();
-  // Golden Banana Cluster
-  ctx.fillStyle = '#fbbf24';
-  ctx.beginPath();
-  ctx.arc(cx + 12, cy + 10, 5, 0, Math.PI * 2);
+  ctx.arc(x + 12, y + 10, 16, 0, Math.PI * 2);
+  ctx.arc(x + w - 10, y + 12, 18, 0, Math.PI * 2);
   ctx.fill();
+
+  // Sunlight ray breaking through canopy
+  const sunGrad = ctx.createLinearGradient(x + 10, y, cx + 10, y + h);
+  sunGrad.addColorStop(0, 'rgba(254, 240, 138, 0.25)');
+  sunGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+  ctx.fillStyle = sunGrad;
+  ctx.beginPath();
+  ctx.moveTo(x + 5, y);
+  ctx.lineTo(x + 35, y);
+  ctx.lineTo(cx + 25, y + h);
+  ctx.lineTo(cx - 5, y + h);
+  ctx.closePath();
+  ctx.fill();
+
+  // Thick braided jungle vine
+  ctx.strokeStyle = '#047857';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(cx - 24, y);
+  ctx.quadraticCurveTo(cx - 16, cy + 18, cx + 18, cy + 2);
+  ctx.stroke();
+
+  // Vine texture highlights
+  ctx.strokeStyle = '#10b981';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx - 23, y);
+  ctx.quadraticCurveTo(cx - 15, cy + 17, cx + 17, cy + 1);
+  ctx.stroke();
+
+  // Swinging Explorer Silhouette holding vine
+  const pX = cx - 4;
+  const pY = cy + 10;
+  ctx.fillStyle = '#f8fafc';
+  // Head
+  ctx.beginPath();
+  ctx.arc(pX, pY - 10, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+  // Body & reaching arms
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = '#f8fafc';
+  ctx.beginPath();
+  ctx.moveTo(pX, pY - 7);
+  ctx.lineTo(pX - 2, pY + 2); // Torso
+  ctx.moveTo(pX - 1, pY - 5);
+  ctx.lineTo(pX - 8, pY - 8); // Arm gripping vine
+  ctx.moveTo(pX - 2, pY + 2);
+  ctx.lineTo(pX + 5, pY + 8); // Legs in motion
+  ctx.stroke();
+
+  // Golden ripe banana cluster target on right
+  const banX = cx + 20;
+  const banY = cy - 6;
+  ctx.fillStyle = '#facc15';
+  ctx.shadowColor = '#fbbf24';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.arc(banX, banY, 4, 0, Math.PI * 2);
+  ctx.arc(banX - 3, banY + 3, 3.5, 0, Math.PI * 2);
+  ctx.arc(banX + 3, banY + 3, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  // Green stem
+  ctx.fillStyle = '#15803d';
+  ctx.fillRect(banX - 1.5, banY - 6, 3, 3);
 }
 
 function drawTrexEggScrambleArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#1e1b4b';
+  // Primeval volcanic mist background
+  ctx.fillStyle = '#140c1d';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Nest Straw
-  ctx.fillStyle = '#78350f';
+
+  // Distant glowing amber volcanic haze
+  const haze = ctx.createRadialGradient(cx, cy + 15, 2, cx, cy + 15, 30);
+  haze.addColorStop(0, 'rgba(249, 115, 22, 0.25)');
+  haze.addColorStop(1, 'rgba(249, 115, 22, 0)');
+  ctx.fillStyle = haze;
   ctx.beginPath();
-  ctx.ellipse(cx, cy + 10, 18, 9, 0, 0, Math.PI * 2);
+  ctx.arc(cx, cy + 15, 30, 0, Math.PI * 2);
   ctx.fill();
-  // Golden Dino Egg
+
+  // Menacing T-Rex predatory head looming in shadows above
+  ctx.fillStyle = '#2e1065';
+  ctx.beginPath();
+  ctx.moveTo(cx - 24, y + 2);
+  ctx.lineTo(cx + 22, y + 2);
+  ctx.lineTo(cx + 26, y + 16);
+  ctx.lineTo(cx + 8, y + 20);
+  ctx.lineTo(cx - 2, y + 16);
+  ctx.lineTo(cx - 24, y + 12);
+  ctx.closePath();
+  ctx.fill();
+
+  // Sharp prehistoric teeth
   ctx.fillStyle = '#fef08a';
-  ctx.beginPath();
-  ctx.ellipse(cx, cy + 5, 6, 9, 0.1, 0, Math.PI * 2);
-  ctx.fill();
-  // Slit T-Rex Eye at top
+  for (let t = 0; t < 5; t++) {
+    ctx.beginPath();
+    ctx.moveTo(cx + 2 + t * 4, y + 18);
+    ctx.lineTo(cx + 4 + t * 4, y + 23);
+    ctx.lineTo(cx + 6 + t * 4, y + 18);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Glowing amber predatory slit eye
   ctx.fillStyle = '#f59e0b';
   ctx.beginPath();
-  ctx.ellipse(cx, cy - 14, 10, 6, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx + 14, y + 10, 4.5, 3, 0.2, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = '#000000';
-  ctx.fillRect(cx - 1.5, cy - 18, 3, 8);
+  ctx.fillRect(cx + 13.5, y + 8, 1.5, 4);
+
+  // Twig Nest
+  ctx.fillStyle = '#78350f';
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + 14, 22, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Nest criss-cross twigs
+  ctx.strokeStyle = '#451a03';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx - 20, cy + 12); ctx.lineTo(cx + 18, cy + 16);
+  ctx.moveTo(cx - 16, cy + 18); ctx.lineTo(cx + 15, cy + 11);
+  ctx.stroke();
+
+  // Giant Golden Dino Egg in center (speckled)
+  ctx.fillStyle = '#fef08a';
+  ctx.shadowColor = '#facc15';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + 8, 8, 12, 0.05, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Egg speckles
+  ctx.fillStyle = '#d97706';
+  ctx.beginPath();
+  ctx.arc(cx - 3, cy + 5, 1.2, 0, Math.PI * 2);
+  ctx.arc(cx + 2, cy + 9, 1.5, 0, Math.PI * 2);
+  ctx.arc(cx - 1, cy + 12, 1, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Left cracked egg hatching with blue baby raptor eye
+  ctx.fillStyle = '#e2e8f0';
+  ctx.beginPath();
+  ctx.ellipse(cx - 12, cy + 11, 6, 8, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+  // Crack fissure
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(cx - 14, cy + 7);
+  ctx.lineTo(cx - 11, cy + 10);
+  ctx.lineTo(cx - 13, cy + 13);
+  ctx.stroke();
+  // Peeking cyan eye
+  ctx.fillStyle = '#38bdf8';
+  ctx.beginPath();
+  ctx.arc(cx - 11, cy + 10, 1.5, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawPiranhaRiverHopArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0284c7';
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  // Drifting Log
-  ctx.fillStyle = '#78350f';
-  ctx.beginPath();
-  ctx.roundRect(cx - 16, cy + 6, 32, 10, 5);
-  ctx.fill();
-  // Leaping Red Piranha
-  ctx.fillStyle = '#ef4444';
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - 8, 9, 6, -0.3, 0, Math.PI * 2);
-  ctx.fill();
-  // White sharp teeth
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.moveTo(cx + 6, cy - 10);
-  ctx.lineTo(cx + 10, cy - 8);
-  ctx.lineTo(cx + 6, cy - 6);
-  ctx.closePath();
-  ctx.fill();
-}
-
-function drawPterodactylGlideArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#7c2d12';
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  // Golden Air Ring
-  ctx.strokeStyle = '#f59e0b';
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  ctx.ellipse(cx + 12, cy - 4, 6, 12, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  // Pterosaur Wings Silhouette
-  ctx.fillStyle = '#f8fafc';
-  ctx.beginPath();
-  ctx.moveTo(cx - 16, cy + 4);
-  ctx.lineTo(cx - 4, cy - 10);
-  ctx.lineTo(cx + 4, cy + 2);
-  ctx.lineTo(cx + 8, cy - 6);
-  ctx.lineTo(cx - 4, cy);
-  ctx.closePath();
-  ctx.fill();
-}
-
-function drawQuicksandEscapeArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#451a03';
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  // Quicksand Mud Line
-  ctx.fillStyle = '#78350f';
-  ctx.fillRect(x, cy + 2, w, h * 0.5);
-  // Overhead Yellow Rope
-  ctx.strokeStyle = '#f59e0b';
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  ctx.moveTo(cx, y);
-  ctx.lineTo(cx, cy - 2);
-  ctx.stroke();
-  // Rescue loop
-  ctx.beginPath();
-  ctx.arc(cx, cy - 2, 5, 0, Math.PI * 2);
-  ctx.stroke();
-}
-
-function drawBlowpipeTargetArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#064e3b';
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  // Aztec Sun Target
-  ctx.fillStyle = '#f59e0b';
-  ctx.beginPath();
-  ctx.arc(cx, cy - 6, 12, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#ef4444';
-  ctx.beginPath();
-  ctx.arc(cx, cy - 6, 6, 0, Math.PI * 2);
-  ctx.fill();
-  // Bamboo Blowpipe angled
-  ctx.strokeStyle = '#d97706';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(cx - 16, cy + 16);
-  ctx.lineTo(cx + 4, cy + 4);
-  ctx.stroke();
-}
-
-function drawAmberFossilExcavateArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#1c1917';
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  // Chiseled Rock Block
-  ctx.fillStyle = '#44403c';
-  ctx.fillRect(cx - 14, cy - 14, 28, 28);
-  // Glowing Golden Amber Gem
-  ctx.fillStyle = '#f59e0b';
-  ctx.shadowColor = '#fbbf24';
-  ctx.shadowBlur = 8;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, 8, 10, 0.2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-}
-
-function drawRaptorPounceDodgeArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#022c22';
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  // Red Attack Trajectory Line
-  ctx.strokeStyle = '#ef4444';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([4, 4]);
-  ctx.beginPath();
-  ctx.moveTo(x + 4, y + 4);
-  ctx.lineTo(x + w - 4, y + h - 4);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  // Sickle Claw
-  ctx.strokeStyle = '#fef08a';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(cx - 6, cy);
-  ctx.quadraticCurveTo(cx + 4, cy + 8, cx + 8, cy - 2);
-  ctx.stroke();
-}
-
-function drawBambooPoleVaultArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#064e3b';
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  // Chasm Gap
-  ctx.fillStyle = '#020617';
-  ctx.fillRect(cx - 10, cy + 6, 20, 20);
-  // Arched Green Bamboo Pole
-  ctx.strokeStyle = '#84cc16';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(cx - 12, cy + 8);
-  ctx.quadraticCurveTo(cx - 6, cy - 16, cx + 10, cy - 8);
-  ctx.stroke();
-}
-
-function drawVolcanoLavaLeapArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#dc2626';
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  // Basalt Pillar
-  ctx.fillStyle = '#1c1917';
-  ctx.beginPath();
-  ctx.arc(cx, cy, 14, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#f59e0b';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  // Fire Ruby
-  ctx.fillStyle = '#f43f5e';
-  ctx.beginPath();
-  ctx.arc(cx, cy, 4.5, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawCaterpillarInchwormArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#064e3b';
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  // Wooden Twig
-  ctx.fillStyle = '#78350f';
-  ctx.fillRect(x, cy + 6, w, 6);
-  // Arched green inchworm
-  ctx.strokeStyle = '#22c55e';
-  ctx.lineWidth = 5;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(cx - 14, cy + 6);
-  ctx.quadraticCurveTo(cx, cy - 12, cx + 14, cy + 6);
-  ctx.stroke();
-  // Cyan dewdrop
-  ctx.fillStyle = '#38bdf8';
-  ctx.beginPath();
-  ctx.arc(cx + 20, cy + 2, 3.5, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawHoneybeeNectarRelayArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#1e1b4b';
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  // Flower Petals
-  ctx.fillStyle = '#a855f7';
-  ctx.beginPath();
-  ctx.arc(cx - 10, cy, 10, 0, Math.PI * 2);
-  ctx.arc(cx + 10, cy, 10, 0, Math.PI * 2);
-  ctx.fill();
-  // Honeybee
-  ctx.fillStyle = '#f59e0b';
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - 6, 8, 5, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Translucent Wings
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-  ctx.beginPath();
-  ctx.ellipse(cx - 2, cy - 12, 6, 3, -0.3, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawSpiderWebTangleArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0f172a';
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  // Web Strands
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(cx - 20, cy - 20);
-  ctx.lineTo(cx + 20, cy + 20);
-  ctx.moveTo(cx + 20, cy - 20);
-  ctx.lineTo(cx - 20, cy + 20);
-  ctx.stroke();
-  ctx.strokeRect(cx - 12, cy - 12, 24, 24);
-  // Red Spider
-  ctx.fillStyle = '#ef4444';
-  ctx.beginPath();
-  ctx.arc(cx, cy, 5, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawAntColonyHaulArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#451a03';
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  // Underground tunnel curve
-  ctx.fillStyle = '#78350f';
-  ctx.fillRect(x, cy - 4, w, 16);
-  // Ant
-  ctx.fillStyle = '#0f172a';
-  ctx.beginPath();
-  ctx.ellipse(cx - 4, cy + 4, 6, 4, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // White Sugar Cube
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(cx + 4, cy - 2, 8, 8);
-  ctx.strokeStyle = '#94a3b8';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(cx + 4, cy - 2, 8, 8);
-}
-
-function drawFireflyNightBeaconArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#020617';
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  // Glowing Yellow Halo
-  const glowGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 18);
-  glowGrad.addColorStop(0, '#ffffff');
-  glowGrad.addColorStop(0.3, '#fef08a');
-  glowGrad.addColorStop(0.7, '#f59e0b');
-  glowGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
-  ctx.fillStyle = glowGrad;
-  ctx.beginPath();
-  ctx.arc(cx, cy, 18, 0, Math.PI * 2);
-  ctx.fill();
-  // Firefly core
-  ctx.fillStyle = '#1e293b';
-  ctx.beginPath();
-  ctx.arc(cx, cy - 2, 4, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawDungBeetleRollArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#78350f';
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  // Large Textured Soil Ball
-  ctx.fillStyle = '#451a03';
-  ctx.beginPath();
-  ctx.arc(cx - 4, cy, 14, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#292524';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  // Scarab Beetle
-  ctx.fillStyle = '#0f172a';
-  ctx.beginPath();
-  ctx.ellipse(cx + 12, cy, 7, 5, 0, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawLadybugAphidHuntArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#15803d';
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  // Red Ladybug with black dots
-  ctx.fillStyle = '#ef4444';
-  ctx.beginPath();
-  ctx.arc(cx - 4, cy, 9, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#0f172a';
-  ctx.beginPath();
-  ctx.arc(cx - 4, cy - 3, 2, 0, Math.PI * 2);
-  ctx.arc(cx - 4, cy + 3, 2, 0, Math.PI * 2);
-  ctx.fill();
-  // Tiny Lime Aphid
-  ctx.fillStyle = '#a3e635';
-  ctx.beginPath();
-  ctx.arc(cx + 12, cy, 4, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawGrasshopperHighJumpArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#064e3b';
-  ctx.fillRect(x, y, w, h);
-  const cx = x + w * 0.5;
-  const cy = y + h * 0.5;
-  // Green Clover Pad
-  ctx.fillStyle = '#10b981';
-  ctx.beginPath();
-  ctx.arc(cx + 10, cy + 10, 8, 0, Math.PI * 2);
-  ctx.fill();
-  // Jumping Grasshopper
-  ctx.fillStyle = '#84cc16';
-  ctx.beginPath();
-  ctx.ellipse(cx - 6, cy - 4, 10, 4, -0.4, 0, Math.PI * 2);
-  ctx.fill();
-  // Long Hind Legs
-  ctx.strokeStyle = '#65a30d';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(cx - 10, cy);
-  ctx.lineTo(cx - 18, cy + 8);
-  ctx.stroke();
-}
-
-function drawDragonflyDogfightArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Rushing turquoise jungle river
   ctx.fillStyle = '#0369a1';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Needle Abdomen
-  ctx.strokeStyle = '#38bdf8';
-  ctx.lineWidth = 3;
+
+  // River foam currents
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(cx, cy - 8);
-  ctx.lineTo(cx, cy + 14);
+  ctx.moveTo(x, cy - 14); ctx.quadraticCurveTo(cx - 10, cy - 18, cx + 15, cy - 12);
+  ctx.moveTo(x + 10, cy + 18); ctx.quadraticCurveTo(cx, cy + 14, x + w, cy + 20);
   ctx.stroke();
-  // Translucent Wings
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+
+  // Floating Wooden Stepping Log
+  ctx.fillStyle = '#78350f';
   ctx.beginPath();
-  ctx.ellipse(cx - 10, cy - 4, 10, 3, -0.2, 0, Math.PI * 2);
-  ctx.ellipse(cx + 10, cy - 4, 10, 3, 0.2, 0, Math.PI * 2);
+  if (ctx.roundRect) ctx.roundRect(cx - 20, cy + 3, 40, 12, 5);
+  else ctx.rect(cx - 20, cy + 3, 40, 12);
+  ctx.fill();
+
+  // Log bark texture & moss
+  ctx.fillStyle = '#451a03';
+  ctx.fillRect(cx - 18, cy + 7, 36, 2);
+  ctx.fillStyle = '#16a34a';
+  ctx.fillRect(cx - 12, cy + 3, 10, 2);
+
+  // Leaping Red Piranha 1 (Left)
+  const p1X = cx - 12;
+  const p1Y = cy - 10;
+  ctx.save();
+  ctx.translate(p1X, p1Y);
+  ctx.rotate(-0.35);
+  // Piranha body
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 10, 7, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Tail fin
+  ctx.fillStyle = '#b91c1c';
+  ctx.beginPath();
+  ctx.moveTo(-9, 0);
+  ctx.lineTo(-16, -6);
+  ctx.lineTo(-16, 6);
+  ctx.closePath();
+  ctx.fill();
+  // Jaw with razor teeth
+  ctx.fillStyle = '#7f1d1d';
+  ctx.beginPath();
+  ctx.arc(6, 1, 4, -0.4, 0.8);
+  ctx.lineTo(6, 1);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(7, -1, 2, 2);
+  ctx.fillRect(7, 2, 2, 2);
+  // Yellow eye
+  ctx.fillStyle = '#fef08a';
+  ctx.beginPath();
+  ctx.arc(3, -3, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.arc(3.5, -3, 1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Water splash droplets around piranha
+  ctx.fillStyle = '#bae6fd';
+  ctx.beginPath();
+  ctx.arc(p1X - 8, p1Y + 9, 2, 0, Math.PI * 2);
+  ctx.arc(p1X + 8, p1Y + 8, 1.8, 0, Math.PI * 2);
+  ctx.arc(p1X + 14, p1Y - 4, 1.5, 0, Math.PI * 2);
   ctx.fill();
 }
 
+function drawPterodactylGlideArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Prehistoric canyon sunset sky
+  const sky = ctx.createLinearGradient(x, y, x, y + h);
+  sky.addColorStop(0, '#581c87');
+  sky.addColorStop(0.5, '#b45309');
+  sky.addColorStop(1, '#f59e0b');
+  ctx.fillStyle = sky;
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Volcano silhouette in distance
+  ctx.fillStyle = '#311042';
+  ctx.beginPath();
+  ctx.moveTo(x + 5, y + h);
+  ctx.lineTo(cx - 15, cy + 4);
+  ctx.lineTo(cx - 5, cy + 4);
+  ctx.lineTo(cx + 25, y + h);
+  ctx.closePath();
+  ctx.fill();
+  // Smoke plume
+  ctx.fillStyle = 'rgba(74, 4, 78, 0.4)';
+  ctx.beginPath();
+  ctx.arc(cx - 10, cy - 2, 6, 0, Math.PI * 2);
+  ctx.arc(cx - 6, cy - 10, 8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Glowing Golden Updraft Thermal Ring
+  ctx.strokeStyle = '#fef08a';
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = '#facc15';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.ellipse(cx + 14, cy - 6, 8, 14, 0.15, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Soaring Pterodactyl in foreground
+  const ptX = cx - 10;
+  const ptY = cy + 2;
+  ctx.save();
+  ctx.translate(ptX, ptY);
+  ctx.rotate(-0.18);
+
+  // Leathery wings
+  ctx.fillStyle = '#1c1917';
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(-20, -14); // Left wingtip
+  ctx.quadraticCurveTo(-10, -6, -4, 2);
+  ctx.lineTo(0, 5);     // Body
+  ctx.lineTo(12, 1);
+  ctx.quadraticCurveTo(16, -8, 22, -12); // Right wingtip
+  ctx.lineTo(4, -2);
+  ctx.closePath();
+  ctx.fill();
+
+  // Beak & Head Crest
+  ctx.fillStyle = '#ea580c';
+  ctx.beginPath();
+  ctx.moveTo(0, -2);
+  ctx.lineTo(10, -8);  // Long sharp beak
+  ctx.lineTo(0, -4);
+  ctx.lineTo(-6, -11); // Head crest
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawQuicksandEscapeArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Quicksand mud pit background
+  ctx.fillStyle = '#29180c';
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Swirling mud vortex
+  const mudGrad = ctx.createRadialGradient(cx, cy + 10, 2, cx, cy + 10, 28);
+  mudGrad.addColorStop(0, '#592c10');
+  mudGrad.addColorStop(0.6, '#78350f');
+  mudGrad.addColorStop(1, '#29180c');
+  ctx.fillStyle = mudGrad;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + 10, 28, 14, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Mud suction spiral rings
+  ctx.strokeStyle = '#9a3412';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + 10, 18, 8, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, cy + 10, 9, 4, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Bubbling mud craters
+  ctx.fillStyle = '#b45309';
+  ctx.beginPath();
+  ctx.arc(cx - 16, cy + 12, 3, 0, Math.PI * 2);
+  ctx.arc(cx + 18, cy + 8, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Overhead Braided Hemp Rescue Rope with Carabiner
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(cx + 10, y);
+  ctx.lineTo(cx - 2, cy - 4);
+  ctx.stroke();
+
+  // Rope knot & metallic rescue loop
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(cx - 2, cy - 2, 6, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Reaching Sinking Player Hands
+  ctx.fillStyle = '#f87171';
+  ctx.beginPath();
+  // Left arm reaching up
+  ctx.moveTo(cx - 8, cy + 8);
+  ctx.lineTo(cx - 5, cy + 1);
+  ctx.lineTo(cx - 3, cy + 3);
+  ctx.lineTo(cx - 6, cy + 9);
+  ctx.fill();
+  // Right hand grabbing near the loop
+  ctx.moveTo(cx + 2, cy + 7);
+  ctx.lineTo(cx - 1, cy);
+  ctx.lineTo(cx + 2, cy + 1);
+  ctx.lineTo(cx + 4, cy + 8);
+  ctx.fill();
+}
+
+function drawBlowpipeTargetArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Ancient Aztec mossy temple stone
+  ctx.fillStyle = '#064e3b';
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Carved concentric sun target on stone
+  const targetRings = [
+    { r: 20, col: '#0f766e' },
+    { r: 15, col: '#f59e0b' },
+    { r: 10, col: '#dc2626' },
+    { r: 5, col: '#fef08a' }
+  ];
+  for (const ring of targetRings) {
+    ctx.fillStyle = ring.col;
+    ctx.beginPath();
+    ctx.arc(cx + 4, cy - 6, ring.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Aztec sun ray triangles around target
+  ctx.fillStyle = '#d97706';
+  for (let a = 0; a < 8; a++) {
+    const angle = (a * Math.PI) / 4;
+    const sx = cx + 4 + Math.cos(angle) * 21;
+    const sy = cy - 6 + Math.sin(angle) * 21;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Bamboo Blowpipe angled from bottom-left
+  ctx.strokeStyle = '#92400e';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(x + 4, y + h - 6);
+  ctx.lineTo(cx - 12, cy + 4);
+  ctx.stroke();
+
+  // Bamboo segments/nodes
+  ctx.strokeStyle = '#d97706';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x + 12, y + h - 14); ctx.lineTo(x + 16, y + h - 10);
+  ctx.moveTo(cx - 18, cy + 9); ctx.lineTo(cx - 15, cy + 13);
+  ctx.stroke();
+
+  // Venomous Dart in flight towards bullseye
+  const dX = cx - 4;
+  const dY = cy - 2;
+  // Dart shaft
+  ctx.strokeStyle = '#f8fafc';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(dX - 8, dY + 4);
+  ctx.lineTo(dX + 2, dY - 2);
+  ctx.stroke();
+  // Toxic emerald poison tip
+  ctx.fillStyle = '#22c55e';
+  ctx.beginPath();
+  ctx.arc(dX + 3, dY - 2.5, 2, 0, Math.PI * 2);
+  ctx.fill();
+  // Red feather fletching
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.moveTo(dX - 8, dY + 4);
+  ctx.lineTo(dX - 12, dY + 3);
+  ctx.lineTo(dX - 9, dY + 7);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawAmberFossilExcavateArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Ancient sandstone excavation strata
+  ctx.fillStyle = '#1c1917';
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Chiseled stone excavation pit
+  ctx.fillStyle = '#44403c';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(cx - 22, cy - 20, 44, 40, 6);
+  else ctx.rect(cx - 22, cy - 20, 44, 40);
+  ctx.fill();
+
+  // Pickaxe chisel marks in rock
+  ctx.strokeStyle = '#292524';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx - 18, cy - 14); ctx.lineTo(cx - 10, cy - 10);
+  ctx.moveTo(cx + 12, cy + 10); ctx.lineTo(cx + 18, cy + 15);
+  ctx.stroke();
+
+  // Large Translucent Amber Gemstone
+  const ambR = 14;
+  const ambGrad = ctx.createRadialGradient(cx - 3, cy - 3, 2, cx, cy, ambR);
+  ambGrad.addColorStop(0, '#fef08a');
+  ambGrad.addColorStop(0.4, '#f59e0b');
+  ambGrad.addColorStop(0.85, '#d97706');
+  ambGrad.addColorStop(1, '#92400e');
+
+  ctx.fillStyle = ambGrad;
+  ctx.shadowColor = '#fbbf24';
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, ambR, ambR * 1.25, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Specular facet highlights
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.ellipse(cx - 4, cy - 5, 6, 8, 0.2, -0.8, 1);
+  ctx.stroke();
+
+  // Fossilized Prehistoric Mosquito preserved inside amber
+  ctx.fillStyle = '#451a03';
+  // Mosquito thorax & abdomen
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 3, 1.5, 0.5, 0, Math.PI * 2);
+  ctx.ellipse(cx + 2.5, cy + 2, 4, 1.2, 0.7, 0, Math.PI * 2);
+  ctx.fill();
+  // Delicate wings
+  ctx.strokeStyle = 'rgba(254, 240, 138, 0.7)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.ellipse(cx - 2, cy - 3, 4, 1.5, -0.6, 0, Math.PI * 2);
+  ctx.ellipse(cx + 2, cy - 2, 4, 1.5, -0.3, 0, Math.PI * 2);
+  ctx.stroke();
+  // Long needle proboscis
+  ctx.strokeStyle = '#451a03';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(cx - 2, cy - 1);
+  ctx.lineTo(cx - 6, cy - 3);
+  ctx.stroke();
+}
+
+function drawRaptorPounceDodgeArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Dark Jurassic jungle night
+  ctx.fillStyle = '#022c22';
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Red Danger Strike Trajectory Arc
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  ctx.moveTo(x + 8, y + 10);
+  ctx.quadraticCurveTo(cx, cy - 10, x + w - 10, cy + 12);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Menacing Velociraptor mid-pounce (Left to Center)
+  ctx.save();
+  ctx.translate(cx - 10, cy - 6);
+  ctx.rotate(0.25);
+
+  // Raptor body & snout
+  ctx.fillStyle = '#065f46';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 16, 7, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Snout & razor fangs
+  ctx.beginPath();
+  ctx.moveTo(8, -4);
+  ctx.lineTo(18, -1);
+  ctx.lineTo(9, 3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#fef08a';
+  ctx.fillRect(12, 0, 2, 2);
+
+  // Fierce predatory yellow eye
+  ctx.fillStyle = '#facc15';
+  ctx.beginPath();
+  ctx.arc(8, -3, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(8, -4, 1, 2);
+
+  // Deadly sickle claw foot extended
+  ctx.strokeStyle = '#fef08a';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(4, 5);
+  ctx.quadraticCurveTo(8, 14, 14, 8);
+  ctx.stroke();
+  ctx.restore();
+
+  // Evasive player dodge roll silhouette (Right)
+  const dX = cx + 18;
+  const dY = cy + 10;
+  ctx.fillStyle = '#38bdf8';
+  ctx.beginPath();
+  ctx.arc(dX, dY, 6, 0, Math.PI * 2);
+  ctx.fill();
+  // Motion blur swoosh
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(dX - 2, dY, 9, 1.2, 3.2);
+  ctx.stroke();
+}
+
+function drawBambooPoleVaultArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Prehistoric canyon chasm background
+  ctx.fillStyle = '#064e3b';
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Deep canyon chasm in center
+  ctx.fillStyle = '#020617';
+  ctx.beginPath();
+  ctx.moveTo(cx - 16, y + h);
+  ctx.lineTo(cx - 6, cy + 6);
+  ctx.lineTo(cx + 8, cy + 6);
+  ctx.lineTo(cx + 18, y + h);
+  ctx.closePath();
+  ctx.fill();
+
+  // Canyon mist
+  ctx.fillStyle = 'rgba(148, 163, 184, 0.2)';
+  ctx.fillRect(cx - 14, cy + 12, 28, 8);
+
+  // High-tension curved green bamboo pole
+  ctx.strokeStyle = '#84cc16';
+  ctx.lineWidth = 3.5;
+  ctx.beginPath();
+  ctx.moveTo(cx - 14, cy + 14); // Ground plant
+  ctx.quadraticCurveTo(cx - 10, cy - 20, cx + 14, cy - 8);
+  ctx.stroke();
+
+  // Bamboo node segments
+  ctx.strokeStyle = '#4d7c0f';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx - 11, cy + 6); ctx.lineTo(cx - 8, cy + 5);
+  ctx.moveTo(cx - 6, cy - 10); ctx.lineTo(cx - 3, cy - 11);
+  ctx.stroke();
+
+  // Inverted acrobat vaulter at peak of arc
+  const vX = cx + 8;
+  const vY = cy - 12;
+  ctx.fillStyle = '#f8fafc';
+  // Head
+  ctx.beginPath();
+  ctx.arc(vX + 6, vY + 2, 3, 0, Math.PI * 2);
+  ctx.fill();
+  // Body in air
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = '#f8fafc';
+  ctx.beginPath();
+  ctx.moveTo(vX + 4, vY);
+  ctx.lineTo(vX - 4, vY - 4);
+  ctx.lineTo(vX - 9, vY - 1);
+  ctx.stroke();
+
+  // Target cliff ledge on right with goal flag
+  ctx.fillStyle = '#78350f';
+  ctx.fillRect(cx + 16, cy + 4, 14, 18);
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.moveTo(cx + 20, cy);
+  ctx.lineTo(cx + 28, cy - 4);
+  ctx.lineTo(cx + 20, cy - 8);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawVolcanoLavaLeapArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Blazing volcanic magma chamber
+  ctx.fillStyle = '#7f1d1d';
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Molten bubbling lava lake
+  const lava = ctx.createLinearGradient(x, cy, x, y + h);
+  lava.addColorStop(0, '#ea580c');
+  lava.addColorStop(0.5, '#f59e0b');
+  lava.addColorStop(1, '#dc2626');
+  ctx.fillStyle = lava;
+  ctx.fillRect(x, cy + 4, w, h * 0.5);
+
+  // Floating Basalt Stepping Pillars
+  const pillars = [
+    { px: cx - 20, py: cy + 6, r: 9 },
+    { px: cx, py: cy + 4, r: 12 },
+    { px: cx + 22, py: cy + 8, r: 8 }
+  ];
+
+  for (const pil of pillars) {
+    // Column base
+    ctx.fillStyle = '#1c1917';
+    ctx.beginPath();
+    ctx.ellipse(pil.px, pil.py, pil.r, pil.r * 0.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Glowing lava crust rim
+    ctx.strokeStyle = '#f97316';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // Fiery Dragon Ruby atop center pillar
+  ctx.fillStyle = '#f43f5e';
+  ctx.shadowColor = '#fb7185';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - 5);
+  ctx.lineTo(cx + 5, cy + 1);
+  ctx.lineTo(cx, cy + 7);
+  ctx.lineTo(cx - 5, cy + 1);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Rising lava sparks / embers
+  const sparks = [
+    [cx - 12, cy - 10, '#fef08a'],
+    [cx + 10, cy - 14, '#f97316'],
+    [cx - 4, cy - 18, '#ef4444'],
+    [cx + 18, cy - 6, '#fde047']
+  ];
+  for (const [sx, sy, col] of sparks) {
+    ctx.fillStyle = col as string;
+    ctx.beginPath();
+    ctx.arc(sx as number, sy as number, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawCaterpillarInchwormArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Vibrant garden greenery
+  ctx.fillStyle = '#064e3b';
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Textured wooden plant branch
+  ctx.fillStyle = '#78350f';
+  ctx.beginPath();
+  ctx.moveTo(x, cy + 8);
+  ctx.lineTo(x + w, cy + 4);
+  ctx.lineTo(x + w, cy + 14);
+  ctx.lineTo(x, cy + 18);
+  ctx.closePath();
+  ctx.fill();
+
+  // Green garden leaf attached to branch
+  ctx.fillStyle = '#16a34a';
+  ctx.beginPath();
+  ctx.ellipse(cx + 20, cy + 4, 10, 5, 0.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Arched Green Inchworm in mid-loop
+  const wormX = cx - 4;
+  const wormY = cy + 4;
+
+  ctx.strokeStyle = '#22c55e';
+  ctx.lineWidth = 7;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(wormX - 16, wormY);
+  ctx.quadraticCurveTo(wormX, wormY - 20, wormX + 14, wormY - 2);
+  ctx.stroke();
+
+  // Body segment bands
+  ctx.strokeStyle = '#15803d';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.arc(wormX - 7, wormY - 11, 4, -0.6, 0.6);
+  ctx.arc(wormX + 4, wormY - 12, 4, 2.5, 3.8);
+  ctx.stroke();
+
+  // Inchworm Head & cute eyes
+  ctx.fillStyle = '#86efac';
+  ctx.beginPath();
+  ctx.arc(wormX + 16, wormY - 5, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eyes & rosy cheek
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.arc(wormX + 18, wormY - 6, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#f43f5e';
+  ctx.beginPath();
+  ctx.arc(wormX + 16, wormY - 3, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Shimmering morning dewdrop on leaf tip
+  ctx.fillStyle = '#38bdf8';
+  ctx.shadowColor = '#7dd3fc';
+  ctx.shadowBlur = 4;
+  ctx.beginPath();
+  ctx.arc(cx + 28, cy + 2, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+function drawHoneybeeNectarRelayArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Twilight garden meadow
+  ctx.fillStyle = '#1e1b4b';
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Blooming Velvet Orchid Flower on left
+  const fX = cx - 14;
+  const fY = cy + 4;
+  ctx.fillStyle = '#9333ea';
+  for (let p = 0; p < 5; p++) {
+    const angle = (p * Math.PI * 2) / 5;
+    ctx.beginPath();
+    ctx.ellipse(fX + Math.cos(angle) * 11, fY + Math.sin(angle) * 11, 7, 5, angle, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Glowing Golden Nectar Center
+  ctx.fillStyle = '#facc15';
+  ctx.shadowColor = '#fde047';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.arc(fX, fY, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Hovering Bumblebee / Honeybee in center
+  const bX = cx + 8;
+  const bY = cy - 4;
+
+  // Gossamer Translucent Wings
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+  ctx.beginPath();
+  ctx.ellipse(bX - 2, bY - 10, 7, 3.5, -0.4, 0, Math.PI * 2);
+  ctx.ellipse(bX + 5, bY - 10, 6, 3, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Striped Fuzzy Body
+  ctx.fillStyle = '#f59e0b';
+  ctx.beginPath();
+  ctx.ellipse(bX, bY, 10, 6.5, 0.1, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Black stripes
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(bX - 4, bY - 6, 2.5, 12);
+  ctx.fillRect(bX + 2, bY - 6, 2.5, 12);
+
+  // Head & shiny eye
+  ctx.fillStyle = '#1e293b';
+  ctx.beginPath();
+  ctx.arc(bX - 8, bY, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(bX - 9, bY - 1, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Dripping Golden Nectar Droplet
+  ctx.fillStyle = '#facc15';
+  ctx.beginPath();
+  ctx.moveTo(bX - 2, bY + 6);
+  ctx.quadraticCurveTo(bX, bY + 12, bX, bY + 14);
+  ctx.quadraticCurveTo(bX - 4, bY + 12, bX - 2, bY + 6);
+  ctx.fill();
+}
+
+function drawSpiderWebTangleArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Midnight web background
+  ctx.fillStyle = '#090d16';
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Dew-speckled Spider Orb Web
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+  ctx.lineWidth = 1;
+
+  // Radial web spokes
+  for (let s = 0; s < 8; s++) {
+    const angle = (s * Math.PI) / 4;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(angle) * 32, cy + Math.sin(angle) * 32);
+    ctx.stroke();
+  }
+
+  // Concentric spiral rings
+  for (let r = 8; r <= 26; r += 7) {
+    ctx.beginPath();
+    for (let s = 0; s <= 8; s++) {
+      const angle = (s * Math.PI) / 4;
+      const wx = cx + Math.cos(angle) * r;
+      const wy = cy + Math.sin(angle) * r;
+      if (s === 0) ctx.moveTo(wx, wy);
+      else ctx.lineTo(wx, wy);
+    }
+    ctx.stroke();
+  }
+
+  // Trapped Golden Moth on left
+  const mX = cx - 14;
+  const mY = cy - 8;
+  ctx.fillStyle = '#fde047';
+  ctx.shadowColor = '#eab308';
+  ctx.shadowBlur = 4;
+  ctx.beginPath();
+  ctx.ellipse(mX, mY, 4, 2.5, -0.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Velvet Black Widow Spider in center
+  ctx.fillStyle = '#020617';
+  // Abdomen
+  ctx.beginPath();
+  ctx.ellipse(cx + 2, cy + 2, 7, 5, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  // Cephalothorax
+  ctx.beginPath();
+  ctx.arc(cx - 5, cy, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Iconic Crimson Hourglass on abdomen
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + 4, cy);
+  ctx.lineTo(cx + 1, cy + 3);
+  ctx.lineTo(cx + 4, cy + 5);
+  ctx.lineTo(cx, cy + 5);
+  ctx.closePath();
+  ctx.fill();
+
+  // Articulated legs
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1.4;
+  const legDirs = [-0.8, -0.4, 0.4, 0.8];
+  for (const ld of legDirs) {
+    // Left legs
+    ctx.beginPath();
+    ctx.moveTo(cx - 3, cy);
+    ctx.lineTo(cx - 10, cy + ld * 10);
+    ctx.lineTo(cx - 15, cy + ld * 16);
+    ctx.stroke();
+    // Right legs
+    ctx.beginPath();
+    ctx.moveTo(cx + 3, cy);
+    ctx.lineTo(cx + 10, cy + ld * 10);
+    ctx.lineTo(cx + 16, cy + ld * 16);
+    ctx.stroke();
+  }
+}
+
+function drawAntColonyHaulArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Earthy subterranean cavern cross-section
+  ctx.fillStyle = '#3f1f0d';
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Carved underground ant tunnel
+  ctx.fillStyle = '#1c1007';
+  ctx.beginPath();
+  ctx.moveTo(x, cy + 4);
+  ctx.quadraticCurveTo(cx - 10, cy - 8, cx + 10, cy - 4);
+  ctx.quadraticCurveTo(cx + 25, cy, x + w, cy - 2);
+  ctx.lineTo(x + w, cy + 18);
+  ctx.lineTo(x, cy + 20);
+  ctx.closePath();
+  ctx.fill();
+
+  // Gleaming Faceted Crystal Sugar Cube hoisted by ants
+  const sX = cx + 2;
+  const sY = cy - 6;
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = '#e0f2fe';
+  ctx.shadowBlur = 6;
+  ctx.fillRect(sX - 6, sY - 6, 12, 12);
+  ctx.shadowBlur = 0;
+  // Sugar facet lines
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(sX - 6, sY - 6, 12, 12);
+  ctx.strokeRect(sX - 4, sY - 4, 8, 8);
+
+  // Red Soldier Ant on left lifting
+  const a1X = cx - 12;
+  const a1Y = cy + 2;
+  ctx.fillStyle = '#dc2626';
+  // Head, thorax, abdomen
+  ctx.beginPath();
+  ctx.arc(a1X - 6, a1Y - 2, 3, 0, Math.PI * 2);
+  ctx.ellipse(a1X - 2, a1Y, 3, 2, 0, 0, Math.PI * 2);
+  ctx.ellipse(a1X + 3, a1Y + 1, 4, 2.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Black Worker Ant on right pushing
+  const a2X = cx + 14;
+  const a2Y = cy + 3;
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.arc(a2X + 6, a2Y - 1, 2.5, 0, Math.PI * 2);
+  ctx.ellipse(a2X + 2, a2Y, 2.5, 1.8, 0, 0, Math.PI * 2);
+  ctx.ellipse(a2X - 2, a2Y + 1, 3.5, 2.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Little haul effort sweat drop
+  ctx.fillStyle = '#38bdf8';
+  ctx.beginPath();
+  ctx.arc(a1X - 4, a1Y - 8, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawFireflyNightBeaconArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Midnight forest sky with starlight
+  ctx.fillStyle = '#050814';
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Distant glowing firefly bokeh motes
+  const motes = [
+    [x + 14, y + 12, 2.5, 'rgba(250, 204, 21, 0.4)'],
+    [x + w - 16, y + 16, 3, 'rgba(163, 230, 53, 0.35)'],
+    [x + 20, y + h - 14, 2, 'rgba(250, 204, 21, 0.45)'],
+    [x + w - 24, y + h - 18, 2.5, 'rgba(163, 230, 53, 0.4)']
+  ];
+  for (const [mx, my, mr, col] of motes) {
+    ctx.fillStyle = col as string;
+    ctx.beginPath();
+    ctx.arc(mx as number, my as number, mr as number, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Brilliant Phosphorescent Golden-Emerald Lantern Bloom
+  const glowGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 26);
+  glowGrad.addColorStop(0, '#ffffff');
+  glowGrad.addColorStop(0.2, '#fef08a');
+  glowGrad.addColorStop(0.5, '#a3e635');
+  glowGrad.addColorStop(0.8, 'rgba(74, 222, 128, 0.3)');
+  glowGrad.addColorStop(1, 'rgba(74, 222, 128, 0)');
+
+  ctx.fillStyle = glowGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 26, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Firefly Insect Body
+  ctx.fillStyle = '#1e293b';
+  // Head
+  ctx.beginPath();
+  ctx.arc(cx - 5, cy - 3, 3, 0, Math.PI * 2);
+  ctx.fill();
+  // Thorax
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - 3, 4, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Translucent wings
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+  ctx.beginPath();
+  ctx.ellipse(cx - 2, cy - 9, 7, 3, -0.4, 0, Math.PI * 2);
+  ctx.ellipse(cx + 4, cy - 8, 6, 2.5, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Bioluminescent Lantern Abdomen Core
+  ctx.fillStyle = '#fef08a';
+  ctx.beginPath();
+  ctx.ellipse(cx + 5, cy + 1, 6, 4, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawDungBeetleRollArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Golden savanna sand path
+  ctx.fillStyle = '#78350f';
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Savanna sunset hill slope
+  ctx.fillStyle = '#92400e';
+  ctx.beginPath();
+  ctx.moveTo(x, y + h);
+  ctx.lineTo(x, cy + 10);
+  ctx.lineTo(x + w, cy - 2);
+  ctx.lineTo(x + w, y + h);
+  ctx.closePath();
+  ctx.fill();
+
+  // Massive Textured Spherical Soil Ball
+  const ballX = cx - 4;
+  const ballY = cy + 2;
+  const ballR = 16;
+  const ballGrad = ctx.createRadialGradient(ballX - 4, ballY - 4, 2, ballX, ballY, ballR);
+  ballGrad.addColorStop(0, '#78350f');
+  ballGrad.addColorStop(0.7, '#451a03');
+  ballGrad.addColorStop(1, '#29180c');
+
+  ctx.fillStyle = ballGrad;
+  ctx.beginPath();
+  ctx.arc(ballX, ballY, ballR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Golden nuggets embedded in soil
+  ctx.fillStyle = '#facc15';
+  ctx.beginPath();
+  ctx.arc(ballX - 6, ballY - 5, 2, 0, Math.PI * 2);
+  ctx.arc(ballX + 4, ballY + 6, 2.2, 0, Math.PI * 2);
+  ctx.arc(ballX - 2, ballY + 7, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rolling motion lines behind the ball
+  ctx.strokeStyle = '#d97706';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(ballX - 18, ballY + 4, 4, 1.5, 3.5);
+  ctx.arc(ballX - 16, ballY + 9, 3, 2, 4);
+  ctx.stroke();
+
+  // Horned Obsidian Scarab Beetle pushing uphill
+  const bX = cx + 18;
+  const bY = cy - 1;
+  ctx.fillStyle = '#0f172a';
+  // Carapace
+  ctx.beginPath();
+  ctx.ellipse(bX, bY, 7, 5, 0.4, 0, Math.PI * 2);
+  ctx.fill();
+  // Iridescent shell sheen
+  ctx.fillStyle = '#38bdf8';
+  ctx.beginPath();
+  ctx.ellipse(bX - 1, bY - 1, 4, 2, 0.4, 0, Math.PI * 2);
+  ctx.fill();
+  // Strong pushing legs against ball
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(bX - 4, bY);
+  ctx.lineTo(ballX + ballR, ballY);
+  ctx.moveTo(bX - 2, bY + 3);
+  ctx.lineTo(ballX + ballR - 2, ballY + 5);
+  ctx.stroke();
+}
+
+function drawLadybugAphidHuntArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Vibrant emerald leaf surface
+  ctx.fillStyle = '#15803d';
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Translucent leaf veins
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x, cy + 18);
+  ctx.quadraticCurveTo(cx, cy, x + w, cy - 18);
+  ctx.stroke();
+
+  // Glossy Scarlet Red Ladybug
+  const lbX = cx - 6;
+  const lbY = cy + 2;
+  const lbR = 12;
+
+  // Red dome shell
+  ctx.fillStyle = '#ef4444';
+  ctx.shadowColor = '#dc2626';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.arc(lbX, lbY, lbR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Center shell split line
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(lbX - lbR, lbY);
+  ctx.lineTo(lbX + lbR, lbY);
+  ctx.stroke();
+
+  // Jet-black spots
+  ctx.fillStyle = '#0f172a';
+  const spots = [
+    [lbX - 4, lbY - 5, 2.2],
+    [lbX + 4, lbY - 5, 2.2],
+    [lbX - 5, lbY + 5, 2],
+    [lbX + 5, lbY + 5, 2],
+    [lbX, lbY - 8, 1.8]
+  ];
+  for (const [sx, sy, sr] of spots) {
+    ctx.beginPath();
+    ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Specular glossy reflection
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+  ctx.beginPath();
+  ctx.ellipse(lbX - 4, lbY - 4, 3, 2, -0.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Scurrying Lime Aphid Target on right
+  const apX = cx + 18;
+  const apY = cy - 6;
+  ctx.fillStyle = '#a3e635';
+  ctx.beginPath();
+  ctx.ellipse(apX, apY, 5, 3.5, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  // Aphid panic movement lines
+  ctx.strokeStyle = '#bef264';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(apX + 6, apY - 3); ctx.lineTo(apX + 11, apY - 5);
+  ctx.moveTo(apX + 6, apY + 2); ctx.lineTo(apX + 11, apY + 4);
+  ctx.stroke();
+}
+
+function drawGrasshopperHighJumpArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Sunny meadow sky
+  ctx.fillStyle = '#064e3b';
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Clover pad at bottom
+  ctx.fillStyle = '#10b981';
+  ctx.beginPath();
+  ctx.ellipse(cx - 14, cy + 18, 12, 6, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx + 8, cy + 19, 10, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Upward launch velocity streaks
+  ctx.strokeStyle = 'rgba(163, 230, 53, 0.4)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - 10, cy + 16); ctx.lineTo(cx - 2, cy - 2);
+  ctx.moveTo(cx - 4, cy + 18); ctx.lineTo(cx + 4, cy);
+  ctx.stroke();
+
+  // High-Jumping Grasshopper mid-leap
+  const ghX = cx + 2;
+  const ghY = cy - 6;
+  ctx.save();
+  ctx.translate(ghX, ghY);
+  ctx.rotate(-0.4);
+
+  // Body
+  ctx.fillStyle = '#84cc16';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 13, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Wing case
+  ctx.fillStyle = '#65a30d';
+  ctx.beginPath();
+  ctx.ellipse(-2, -1, 10, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Powerful springing hind legs
+  ctx.strokeStyle = '#4d7c0f';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(-6, 2);
+  ctx.lineTo(-14, 10);
+  ctx.lineTo(-6, 16);
+  ctx.stroke();
+
+  // Eye & long antenna
+  ctx.fillStyle = '#fef08a';
+  ctx.beginPath();
+  ctx.arc(8, -2, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#a3e635';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(9, -3);
+  ctx.quadraticCurveTo(16, -14, 22, -12);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawDragonflyDogfightArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Sunlit water pond surface
+  ctx.fillStyle = '#0369a1';
+  ctx.fillRect(x, y, w, h);
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Water ripple concentric rings
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + 12, 24, 7, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, cy + 12, 14, 4, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Dragonfly 1: Electric Blue (Top Left)
+  const d1X = cx - 10;
+  const d1Y = cy - 8;
+  ctx.save();
+  ctx.translate(d1X, d1Y);
+  ctx.rotate(0.35);
+  // Needle body
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillRect(-2, -12, 4, 24);
+  // Head
+  ctx.fillStyle = '#0284c7';
+  ctx.beginPath();
+  ctx.arc(0, -12, 3, 0, Math.PI * 2);
+  ctx.fill();
+  // Gossamer wings
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+  ctx.beginPath();
+  ctx.ellipse(-10, -6, 9, 3, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(10, -6, 9, 3, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Dragonfly 2: Blaze Orange (Bottom Right)
+  const d2X = cx + 12;
+  const d2Y = cy + 4;
+  ctx.save();
+  ctx.translate(d2X, d2Y);
+  ctx.rotate(-2.4);
+  // Needle body
+  ctx.fillStyle = '#f97316';
+  ctx.fillRect(-2, -12, 4, 24);
+  // Head
+  ctx.fillStyle = '#c2410c';
+  ctx.beginPath();
+  ctx.arc(0, -12, 3, 0, Math.PI * 2);
+  ctx.fill();
+  // Gossamer wings
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+  ctx.beginPath();
+  ctx.ellipse(-10, -6, 9, 3, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(10, -6, 9, 3, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawCentipedeSlalomArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Rich forest loam soil
   ctx.fillStyle = '#292524';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Red Slalom Gate Posts
-  ctx.fillStyle = '#ef4444';
+
+  // Slalom Checkpoint Posts (Red & Yellow)
+  const gates = [
+    { gx: cx - 18, gy: cy - 6, col: '#ef4444' },
+    { gx: cx, gy: cy + 10, col: '#facc15' },
+    { gx: cx + 18, gy: cy - 8, col: '#ef4444' }
+  ];
+  for (const g of gates) {
+    ctx.fillStyle = g.col;
+    ctx.beginPath();
+    ctx.arc(g.gx, g.gy, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Fluid S-Curved Centipede Body Segments weaving between poles
+  const segs = [
+    { sx: cx - 24, sy: cy + 8 },
+    { sx: cx - 16, sy: cy + 3 },
+    { sx: cx - 9, sy: cy - 4 },
+    { sx: cx - 1, sy: cy - 2 },
+    { sx: cx + 7, sy: cy + 4 },
+    { sx: cx + 15, sy: cy + 2 },
+    { sx: cx + 22, sy: cy - 6 }
+  ];
+
+  // Draw synchronized legs along segments
+  ctx.strokeStyle = '#fed7aa';
+  ctx.lineWidth = 1.2;
+  for (const s of segs) {
+    ctx.beginPath();
+    ctx.moveTo(s.sx - 3, s.sy);
+    ctx.lineTo(s.sx - 6, s.sy - 3);
+    ctx.moveTo(s.sx + 3, s.sy);
+    ctx.lineTo(s.sx + 6, s.sy + 3);
+    ctx.stroke();
+  }
+
+  // Segment circles with fiery gradient colors
+  for (let i = 0; i < segs.length; i++) {
+    const s = segs[i];
+    ctx.fillStyle = i === segs.length - 1 ? '#ef4444' : '#f59e0b';
+    ctx.beginPath();
+    ctx.arc(s.sx, s.sy, i === segs.length - 1 ? 4.5 : 3.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Head antennae on leading segment
+  const head = segs[segs.length - 1];
+  ctx.strokeStyle = '#fca5a5';
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.arc(cx - 14, cy, 4, 0, Math.PI * 2);
-  ctx.arc(cx + 14, cy, 4, 0, Math.PI * 2);
-  ctx.fill();
-  // S-curved Segmented Centipede
-  ctx.strokeStyle = '#f59e0b';
-  ctx.lineWidth = 4;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(cx, cy - 14);
-  ctx.bezierCurveTo(cx - 8, cy - 6, cx + 8, cy + 6, cx, cy + 14);
+  ctx.moveTo(head.sx, head.sy);
+  ctx.lineTo(head.sx + 6, head.sy - 7);
+  ctx.moveTo(head.sx, head.sy);
+  ctx.lineTo(head.sx + 8, head.sy - 4);
   ctx.stroke();
 }
 
