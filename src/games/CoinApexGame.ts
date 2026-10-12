@@ -15,6 +15,11 @@ interface TossCoin {
   apexGlintAnim: number;
 }
 
+interface BotTossPlan {
+  targetVy: number;
+  tapped: boolean;
+}
+
 export class CoinApexGame extends BaseGame {
   private scores: Map<PlayerId, number> = new Map();
   private coin: TossCoin | null = null;
@@ -22,7 +27,7 @@ export class CoinApexGame extends BaseGame {
   private currentToss: number = 0;
   private maxTosses: number = 7;
   private gravity: number = 380; // px/s^2
-  private botReactionTimers: Map<PlayerId, number> = new Map();
+  private botPlans: Map<PlayerId, BotTossPlan> = new Map();
   private catapultAnim: number = 0;
 
   constructor(
@@ -42,6 +47,7 @@ export class CoinApexGame extends BaseGame {
     this.roundTimer = 55;
     this.isFinished = false;
     this.scores.clear();
+    this.botPlans.clear();
 
     const active = this.getActivePlayers();
     active.forEach((p) => {
@@ -51,6 +57,25 @@ export class CoinApexGame extends BaseGame {
     this.currentToss = 0;
     this.tossTimer = 1.2;
     this.coin = null;
+
+    // Debug hook for tests and telemetry
+    (window as any).__COIN_APEX_DEBUG__ = {
+      getCoin: () => this.coin ? {
+        x: this.coin.x,
+        y: this.coin.y,
+        vy: this.coin.vy,
+        isApexGlinting: this.coin.isApexGlinting
+      } : null,
+      getScores: () => Array.from(this.scores.entries()).map(([id, score]) => ({ id, score })),
+      launchWithVy: (vy: number) => {
+        this.launchCoin(width, height);
+        if (this.coin) this.coin.vy = vy;
+      },
+      tap: (pid: PlayerId) => {
+        this.input.setBotInput(pid, true);
+      },
+      getCurrentToss: () => this.currentToss
+    };
   }
 
   private launchCoin(width: number, height: number): void {
@@ -60,8 +85,8 @@ export class CoinApexGame extends BaseGame {
       hasCaught.set(p.id, false);
     }
 
-    // Varied toss height / initial velocity so each toss has a slightly different arc
-    const initialVy = -320 - Math.random() * 80;
+    // Varied toss height / initial velocity so each toss has a substantially different arc (quick low pops to sky-high arcs)
+    const initialVy = -240 - Math.random() * 240;
 
     this.coin = {
       x: width / 2,
@@ -73,6 +98,51 @@ export class CoinApexGame extends BaseGame {
       isApexGlinting: false,
       apexGlintAnim: 0
     };
+
+    // Calibrate human-like, beatable bot timing plans for this specific toss
+    this.botPlans.clear();
+    for (const p of this.getActivePlayers()) {
+      if (this.players[p.id]?.type.startsWith('bot_')) {
+        const diff = this.players[p.id].type as 'bot_easy' | 'bot_normal' | 'bot_hard';
+        let targetVy = 0;
+        const roll = Math.random();
+
+        if (diff === 'bot_easy') {
+          if (roll < 0.45) {
+            // Mistimed whiff: early jump or late panic
+            targetVy = Math.random() < 0.5 ? -110 : 95;
+          } else if (roll < 0.85) {
+            // Good catch on descent (+1)
+            targetVy = 35 + Math.random() * 35;
+          } else {
+            // Lucky perfect catch (+3)
+            targetVy = (Math.random() - 0.5) * 22;
+          }
+        } else if (diff === 'bot_normal') {
+          if (roll < 0.28) {
+            // Human mistake / whiff
+            targetVy = Math.random() < 0.5 ? -95 : 90;
+          } else if (roll < 0.75) {
+            // Good catch (+1)
+            targetVy = 32 + Math.random() * 30;
+          } else {
+            // Perfect catch (+3)
+            targetVy = (Math.random() - 0.5) * 20;
+          }
+        } else {
+          // Hard bot
+          if (roll < 0.12) {
+            targetVy = -90;
+          } else if (roll < 0.45) {
+            targetVy = 35 + Math.random() * 20;
+          } else {
+            targetVy = (Math.random() - 0.5) * 16;
+          }
+        }
+
+        this.botPlans.set(p.id, { targetVy, tapped: false });
+      }
+    }
 
     this.catapultAnim = 1.0;
     this.audio.playTap();
