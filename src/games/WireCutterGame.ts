@@ -122,6 +122,14 @@ export class WireCutterGame extends BaseGame {
         this.wirePlayers.forEach((wp) => {
           wp.sequenceStep = 0;
           wp.cutWiresThisModule.clear();
+          const p = this.getPlayer(wp.id);
+          if (p && p.type.startsWith('bot_')) {
+            let delay = 0.35;
+            if (p.type === 'bot_easy') delay = 0.55 + Math.random() * 0.25;
+            else if (p.type === 'bot_normal') delay = 0.28 + Math.random() * 0.16;
+            else if (p.type === 'bot_hard') delay = 0.14 + Math.random() * 0.08;
+            this.botReactionTimers.set(wp.id, delay);
+          }
         });
       }
     };
