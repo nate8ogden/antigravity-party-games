@@ -178,7 +178,7 @@ export class CoinApexGame extends BaseGame {
 
       // Check player inputs
       for (const p of this.getActivePlayers()) {
-        const pressed = this.input.justPressed(p.id) && !this.coin.hasCaught.get(p.id);
+        const pressed = (this.input.justPressed(p.id) || this.input.justAction(p.id)) && !this.coin.hasCaught.get(p.id);
 
         if (pressed) {
           this.coin.hasCaught.set(p.id, true);
@@ -188,7 +188,7 @@ export class CoinApexGame extends BaseGame {
           const px = isFirst ? width * 0.28 : width * 0.72;
           const py = height * 0.5;
 
-          if (absVy < 28) {
+          if (absVy < 30) {
             // PERFECT ZERO-VELOCITY APEX!
             const cur = this.scores.get(p.id) || 0;
             this.scores.set(p.id, cur + 3);
@@ -196,7 +196,7 @@ export class CoinApexGame extends BaseGame {
             this.particles.showFloatingText('PERFECT APEX! +3 PTS! 🌟', px, py - 40, '#F59E0B', 24);
             this.particles.spawnSparks(this.coin.x, this.coin.y, '#FBBF24', 28);
             this.particles.addTrauma(0.3);
-          } else if (absVy < 75) {
+          } else if (absVy < 85) {
             // GOOD TIMING
             const cur = this.scores.get(p.id) || 0;
             this.scores.set(p.id, cur + 1);
@@ -248,29 +248,19 @@ export class CoinApexGame extends BaseGame {
       return;
     }
 
-    const vy = this.coin.vy;
+    const plan = this.botPlans.get(botId);
+    if (!plan || plan.tapped) {
+      this.input.setBotInput(botId, false);
+      return;
+    }
 
-    if (difficulty === 'bot_hard') {
-      // Surgical apex timing: catches when vy is between -15 and +15
-      if (Math.abs(vy) < 18) {
-        this.input.setBotInput(botId, true);
-      } else {
-        this.input.setBotInput(botId, false);
-      }
-    } else if (difficulty === 'bot_normal') {
-      // Human rhythm latency: catches when vy is between -35 and +45
-      if (vy >= -35 && vy <= 45) {
-        this.input.setBotInput(botId, true);
-      } else {
-        this.input.setBotInput(botId, false);
-      }
+    const vy = this.coin.vy;
+    // Check if coin velocity has reached the bot's planned targetVy
+    if (vy >= plan.targetVy) {
+      this.input.setBotInput(botId, true);
+      plan.tapped = true;
     } else {
-      // Easy bot: slower reaction, catches late on descent or sometimes misses
-      if (vy > 40 && vy < 120 && Math.random() < 0.25) {
-        this.input.setBotInput(botId, true);
-      } else {
-        this.input.setBotInput(botId, false);
-      }
+      this.input.setBotInput(botId, false);
     }
   }
 
@@ -302,23 +292,6 @@ export class CoinApexGame extends BaseGame {
     ctx.fillStyle = '#FBBF24';
     ctx.font = '600 14px sans-serif';
     ctx.fillText('Tap at the peak of the toss when vertical speed hits zero! (+3 Perfect / +1 Good)', width / 2, 98);
-    ctx.restore();
-
-    // Apex Guide Horizontal Line
-    const apexEstY = height * 0.32;
-    ctx.save();
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.25)';
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([8, 8]);
-    ctx.beginPath();
-    ctx.moveTo(width * 0.2, apexEstY);
-    ctx.lineTo(width * 0.8, apexEstY);
-    ctx.stroke();
-
-    ctx.fillStyle = 'rgba(245, 158, 11, 0.4)';
-    ctx.font = '700 12px Montserrat, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('— APEX PEAK ZONE —', width / 2, apexEstY - 8);
     ctx.restore();
 
     // Spring Catapult Pedestal
