@@ -135,7 +135,7 @@ export class ColorClashGame extends BaseGame {
       active: true,
       respawnTimer: 0
     });
-    const b2Pos = this.getRandomBombPosition(0);
+    const b2Pos = this.getRandomBombPosition();
     this.paintBombs.push({
       x: b2Pos.x,
       y: b2Pos.y,
@@ -166,6 +166,11 @@ export class ColorClashGame extends BaseGame {
         if (b && r) {
           r.x = b.x;
           r.y = b.y;
+        }
+      },
+      setBombRespawnTimer: (bombIndex: number, timer: number) => {
+        if (this.paintBombs[bombIndex]) {
+          this.paintBombs[bombIndex].respawnTimer = timer;
         }
       },
       getRandomBombPosition: (excludeIndex?: number) => this.getRandomBombPosition(excludeIndex)

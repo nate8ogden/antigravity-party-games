@@ -96,7 +96,7 @@ test.describe('Color Clash Game - Random Paint Bomb Spawning & Pickups', () => {
       const hasNextCoord = pickedBomb.nextX !== undefined && pickedBomb.nextY !== undefined;
 
       // Fast-forward respawn timer to trigger landing
-      pickedBomb.respawnTimer = 0.01;
+      dbg.setBombRespawnTimer(0, 0.01);
       game.update(0.02, 800, 600);
 
       const respawnedBombs = dbg.getBombs();
