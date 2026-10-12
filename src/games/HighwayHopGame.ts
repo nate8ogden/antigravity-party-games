@@ -51,6 +51,9 @@ interface HopperPlayer {
   hasFinished: boolean;
   onLogSpeed: number;
   botDecisionTimer: number;
+  lastRawThrottle: number;
+  lastRawSteer: number;
+  inputRepeatTimer: number;
 }
 
 export class HighwayHopGame extends BaseGame {
@@ -127,7 +130,10 @@ export class HighwayHopGame extends BaseGame {
         alive: true,
         hasFinished: false,
         onLogSpeed: 0,
-        botDecisionTimer: 0.2 + idx * 0.1
+        botDecisionTimer: 0.2 + idx * 0.1,
+        lastRawThrottle: 0,
+        lastRawSteer: 0,
+        inputRepeatTimer: 0
       });
     });
   }
@@ -335,6 +341,9 @@ export class HighwayHopGame extends BaseGame {
       if (ps.invulnTimer > 0) {
         ps.invulnTimer = Math.max(0, ps.invulnTimer - dt);
       }
+      if (ps.inputRepeatTimer > 0) {
+        ps.inputRepeatTimer = Math.max(0, ps.inputRepeatTimer - dt);
+      }
 
       // Smooth recovery from squish
       ps.squishScaleX += (1 - ps.squishScaleX) * 10 * dt;
@@ -421,27 +430,45 @@ export class HighwayHopGame extends BaseGame {
     const rawSteer = this.input.getRawSteer(pid);
     const rawThrottle = this.input.getRawThrottle(pid);
 
+    // Discrete action or directional button presses take highest priority and hop immediately
     if (justAction || justUp) {
       dLane = 1;
       this.input.consumeAction(pid);
+      ps.inputRepeatTimer = 0.32;
     } else if (justDown) {
       dLane = -1;
       this.input.consumeAction(pid);
+      ps.inputRepeatTimer = 0.32;
     } else if (justLeft) {
       dCol = -1;
       this.input.consumeAction(pid);
+      ps.inputRepeatTimer = 0.32;
     } else if (justRight) {
       dCol = 1;
       this.input.consumeAction(pid);
-    } else if (rawThrottle === 1) {
-      dLane = 1;
-    } else if (rawThrottle === -1) {
-      dLane = -1;
-    } else if (rawSteer === -1) {
-      dCol = -1;
-    } else if (rawSteer === 1) {
-      dCol = 1;
+      ps.inputRepeatTimer = 0.32;
+    } else {
+      // Analog stick / sustained held direction: edge-detect initial push or repeat after delay
+      const throttleChanged = rawThrottle !== 0 && rawThrottle !== ps.lastRawThrottle;
+      const steerChanged = rawSteer !== 0 && rawSteer !== ps.lastRawSteer;
+
+      if (throttleChanged || steerChanged) {
+        if (rawThrottle !== 0) dLane = rawThrottle;
+        else if (rawSteer !== 0) dCol = rawSteer;
+        ps.inputRepeatTimer = 0.32;
+      } else if (ps.inputRepeatTimer <= 0) {
+        if (rawThrottle !== 0) {
+          dLane = rawThrottle;
+          ps.inputRepeatTimer = 0.22;
+        } else if (rawSteer !== 0) {
+          dCol = rawSteer;
+          ps.inputRepeatTimer = 0.22;
+        }
+      }
     }
+
+    ps.lastRawThrottle = rawThrottle;
+    ps.lastRawSteer = rawSteer;
 
     if (dLane !== 0 || dCol !== 0) {
       this.attemptHop(ps, dCol, dLane, width);
