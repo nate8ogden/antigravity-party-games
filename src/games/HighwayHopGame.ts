@@ -89,6 +89,7 @@ export class HighwayHopGame extends BaseGame {
 
     this.generateProceduralMap(width, height);
     this.initPlayers(width);
+    this.syncDebug();
   }
 
   private initPlayers(width: number): void {
@@ -379,11 +380,25 @@ export class HighwayHopGame extends BaseGame {
       this.checkPlayerCollisions(ps, p.color, width);
     }
 
+    this.syncDebug();
+
     // Check Round Over condition
     const aliveCount = Array.from(this.playersState.values()).filter((p) => p.alive && !p.hasFinished).length;
     const finishedCount = this.finishOrder.length;
     if (this.roundTimer <= 0 || aliveCount === 0 || finishedCount >= this.getActivePlayers().length) {
       this.isFinished = true;
+    }
+  }
+
+  public syncDebug(): void {
+    if (typeof window !== 'undefined') {
+      (window as any).__HIGHWAY_HOP_DEBUG__ = {
+        players: Array.from(this.playersState.values()),
+        lanes: this.lanes,
+        roundTimer: this.roundTimer,
+        isFinished: this.isFinished,
+        finishOrder: this.finishOrder
+      };
     }
   }
 
@@ -397,19 +412,34 @@ export class HighwayHopGame extends BaseGame {
     let dCol = 0;
     let dLane = 0;
 
-    const justAction = this.input.justAction(pid) || (this.input.justPressed(pid) && this.input.getSteer(pid) === 0);
-    const steer = this.input.getSteer(pid);
-    const throttle = this.input.getThrottle(pid);
+    const justUp = this.input.justUp(pid);
+    const justDown = this.input.justDown(pid);
+    const justLeft = this.input.justLeft(pid);
+    const justRight = this.input.justRight(pid);
+    const justAction = this.input.justAction(pid) || this.input.justPressed(pid);
 
-    if (justAction) {
+    const rawSteer = this.input.getRawSteer(pid);
+    const rawThrottle = this.input.getRawThrottle(pid);
+
+    if (justAction || justUp) {
       dLane = 1;
-    } else if (throttle > 0.5) {
-      dLane = 1;
-    } else if (throttle < -0.5) {
+      this.input.consumeAction(pid);
+    } else if (justDown) {
       dLane = -1;
-    } else if (steer < -0.5) {
+      this.input.consumeAction(pid);
+    } else if (justLeft) {
       dCol = -1;
-    } else if (steer > 0.5) {
+      this.input.consumeAction(pid);
+    } else if (justRight) {
+      dCol = 1;
+      this.input.consumeAction(pid);
+    } else if (rawThrottle === 1) {
+      dLane = 1;
+    } else if (rawThrottle === -1) {
+      dLane = -1;
+    } else if (rawSteer === -1) {
+      dCol = -1;
+    } else if (rawSteer === 1) {
       dCol = 1;
     }
 
@@ -421,18 +451,34 @@ export class HighwayHopGame extends BaseGame {
   private attemptHop(ps: HopperPlayer, dCol: number, dLane: number, width: number): void {
     if (ps.isHopping) return;
     const targetLaneIdx = Math.max(0, Math.min(this.totalLanes - 1, ps.laneIndex + dLane));
-    const targetColIdx = Math.max(0, Math.min(this.columnCount - 1, ps.colIndex + dCol));
-
     const targetLane = this.lanes[targetLaneIdx];
     if (!targetLane) return;
+
+    // TARGET X CALCULATION:
+    // If dCol === 0 (forward or backward hop):
+    // MUST go forward 1 block at current X position without recentering to map center!
+    // If dCol !== 0 (left or right hop):
+    // Move exactly 1 block (this.colWidth) left or right
+    let targetX = ps.x;
+    if (dCol !== 0) {
+      targetX = Math.max(
+        this.colWidth * 0.5,
+        Math.min(width - this.colWidth * 0.5, ps.x + dCol * this.colWidth)
+      );
+    } else {
+      targetX = Math.max(
+        this.colWidth * 0.5,
+        Math.min(width - this.colWidth * 0.5, ps.x)
+      );
+    }
 
     ps.isHopping = true;
     ps.hopProgress = 0;
     ps.hopStartX = ps.x;
     ps.hopStartY = ps.y;
     ps.laneIndex = targetLaneIdx;
-    ps.colIndex = targetColIdx;
-    ps.targetX = (targetColIdx + 0.5) * this.colWidth;
+    ps.targetX = targetX;
+    ps.colIndex = Math.max(0, Math.min(this.columnCount - 1, Math.floor(targetX / this.colWidth)));
     ps.targetY = targetLane.y + targetLane.height / 2;
 
     this.audio.playBounce();
