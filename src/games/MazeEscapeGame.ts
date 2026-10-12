@@ -439,8 +439,19 @@ export class MazeEscapeGame extends BaseGame {
       const rawSteer = this.input.getRawSteer(p.id);
       const rawThrottle = this.input.getRawThrottle(p.id);
 
-      const effectiveSteer = Math.abs(steer) > 0.05 ? steer : rawSteer;
-      const effectiveThrottle = Math.abs(throttle) > 0.05 ? throttle : rawThrottle;
+      let effectiveSteer = 0;
+      if (rawSteer !== 0) {
+        effectiveSteer = rawSteer;
+      } else if (Math.abs(steer) > 0.35) {
+        effectiveSteer = steer;
+      }
+
+      let effectiveThrottle = 0;
+      if (rawThrottle !== 0) {
+        effectiveThrottle = rawThrottle;
+      } else if (Math.abs(throttle) > 0.35) {
+        effectiveThrottle = throttle;
+      }
 
       const justAction = this.input.justAction(p.id) || this.input.justPressed(p.id);
 
