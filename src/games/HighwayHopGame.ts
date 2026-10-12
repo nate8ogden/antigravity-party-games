@@ -406,7 +406,11 @@ export class HighwayHopGame extends BaseGame {
         lanes: this.lanes,
         roundTimer: this.roundTimer,
         isFinished: this.isFinished,
-        finishOrder: this.finishOrder
+        finishOrder: this.finishOrder,
+        attemptHop: (pid: PlayerId, dCol: number, dLane: number, width: number) => {
+          const ps = this.playersState.get(pid);
+          if (ps) this.attemptHop(ps, dCol, dLane, width);
+        }
       };
     }
   }
@@ -643,17 +647,19 @@ export class HighwayHopGame extends BaseGame {
     }
 
     if (lane.type === 'ROAD') {
-      const playerMargin = 16;
+      const playerMargin = 14;
       for (const ent of lane.entities) {
-        const steps = 4;
+        const span = width + 2 * ent.width;
+        const steps = 3;
         for (let s = 0; s <= steps; s++) {
           const t = timeWindowStart + (s / steps) * (timeWindowEnd - timeWindowStart);
-          let entX = ent.x + ent.speed * t;
-          const wrapWidth = width + ent.width * 2;
-          entX = ((entX % wrapWidth) + wrapWidth) % wrapWidth - ent.width;
+          let projX = ent.x + ent.speed * t;
+          let rel = (projX - (-ent.width)) % span;
+          if (rel < 0) rel += span;
+          projX = -ent.width + rel;
 
-          const entLeft = entX;
-          const entRight = entX + ent.width;
+          const entLeft = projX;
+          const entRight = projX + ent.width;
 
           if (testX + playerMargin > entLeft && testX - playerMargin < entRight) {
             return false;
@@ -666,11 +672,13 @@ export class HighwayHopGame extends BaseGame {
     if (lane.type === 'RIVER') {
       const landingTime = timeWindowStart;
       for (const ent of lane.entities) {
-        let logX = ent.x + ent.speed * landingTime;
-        const wrapWidth = width + ent.width * 2;
-        logX = ((logX % wrapWidth) + wrapWidth) % wrapWidth - ent.width;
+        const span = width + 2 * ent.width;
+        let projX = ent.x + ent.speed * landingTime;
+        let rel = (projX - (-ent.width)) % span;
+        if (rel < 0) rel += span;
+        projX = -ent.width + rel;
 
-        if (testX >= logX - 2 && testX <= logX + ent.width + 2) {
+        if (testX >= projX + 4 && testX <= projX + ent.width - 4) {
           return true;
         }
       }
@@ -721,9 +729,9 @@ export class HighwayHopGame extends BaseGame {
       if (curLane.speed > 0 && ps.x > width * 0.82) riverDriftThreat = true;
     }
 
-    // Time window for hopping: hop takes 0.15s, evaluate safety up to ~0.5s
-    const windowStart = 0.15;
-    const windowEnd = difficulty === 'bot_hard' ? 0.6 : difficulty === 'bot_normal' ? 0.45 : 0.32;
+    // Time window for hopping: hop takes 0.15s, evaluate safety in the critical landing window
+    const windowStart = 0.12;
+    const windowEnd = difficulty === 'bot_hard' ? 0.34 : difficulty === 'bot_normal' ? 0.26 : 0.20;
 
     const isForwardSafe =
       nextLaneIdx < this.totalLanes && this.isSafeAt(nextLaneIdx, ps.x, windowStart, windowEnd, width);
@@ -821,6 +829,9 @@ export class HighwayHopGame extends BaseGame {
           return;
         } else if (rightAheadSafe && !leftAheadSafe) {
           this.attemptHop(ps, 1, 0, width);
+          return;
+        } else if (leftAheadSafe && rightAheadSafe) {
+          this.attemptHop(ps, Math.random() < 0.5 ? -1 : 1, 0, width);
           return;
         }
       }
