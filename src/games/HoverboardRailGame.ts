@@ -358,7 +358,7 @@ export class HoverboardRailGame extends BaseGame {
     const bannerW = Math.min(620, width - 60);
     const bannerH = 46;
     const bannerX = (width - bannerW) / 2;
-    const bannerY = 16;
+    const bannerY = 56;
 
     ctx.save();
     ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
