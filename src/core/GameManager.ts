@@ -270,6 +270,7 @@ import { SynthDrumPadGame } from '../games/SynthDrumPadGame';
 import { MatrixCodeRainGame } from '../games/MatrixCodeRainGame';
 import { SharksAndMinnowsGame } from '../games/SharksAndMinnowsGame';
 import { PowerPathClashGame } from '../games/PowerPathClashGame';
+import { LandscapeArtilleryGame } from '../games/LandscapeArtilleryGame';
 import { renderGameThumbnailArt } from './GameThumbnails';
 import { drawCharacter } from './CharacterRenderer';
 import {
@@ -2604,6 +2605,15 @@ export const GAME_CATALOG: MinigameMetadata[] = [
     icon: '[G-258]',
     instructions: 'Calculate the ultimate progression! Fight weaker enemies to absorb their damage, grab multiplier runes, and build unstoppable power. Climax with an epic anime-style showdown where the highest damage warrior wins!',
     controlPrompt: 'WASD / Arrows: Select Door • Space / Enter: Advance'
+  },
+  {
+    id: 'landscape_artillery',
+    title: 'Landscape Artillery',
+    tagline: 'Turn-Based Hillside Slingshot Duel',
+    category: 'Physics',
+    icon: '[G-259]',
+    instructions: 'Turn-based artillery showdown on destructible terrain! Camera zooms into your turn. Aim left or right, pull back to set angle and power. Master gravity, wind, and body shots: direct headshots deliver 2.5x critical damage!',
+    controlPrompt: 'Left/Right: Aim • Down/Up: Pull Back Power • Space/Enter: Launch'
   }
 ];
 
@@ -2910,6 +2920,7 @@ export class GameManager {
       if (gameParam === 'mole_panic' || gameParam === 'mole' || gameParam === 'moles' || gameParam === 'whack' || gameParam === 'whackamole') gameParam = 'mole_panic';
       if (gameParam === 'sharks_and_minnows' || gameParam === 'shark_and_minnows' || gameParam === 'sharks' || gameParam === 'minnows' || gameParam === 'shark') gameParam = 'sharks_and_minnows';
       if (gameParam === 'power_path_clash' || gameParam === 'power_path' || gameParam === 'path_clash' || gameParam === 'hero_path' || gameParam === 'damage_path') gameParam = 'power_path_clash';
+      if (gameParam === 'landscape_artillery' || gameParam === 'artillery' || gameParam === 'landscape' || gameParam === 'artillery_duel' || gameParam === 'worms') gameParam = 'landscape_artillery';
 
       const idx = GAME_CATALOG.findIndex((g) => g.id === gameParam);
       if (idx !== -1) {
@@ -4511,6 +4522,9 @@ export class GameManager {
         break;
       case 'power_path_clash':
         this.activeGame = new PowerPathClashGame(this.players, this.input, this.audio, this.particles);
+        break;
+      case 'landscape_artillery':
+        this.activeGame = new LandscapeArtilleryGame(this.players, this.input, this.audio, this.particles);
         break;
     }
 
