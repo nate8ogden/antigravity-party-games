@@ -11559,245 +11559,704 @@ function drawCentipedeSlalomArt(ctx: CanvasRenderingContext2D, x: number, y: num
 }
 
 function drawPoltergeistPossessionArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#1e1b4b';
+  // Haunted parlor night ambiance
+  ctx.fillStyle = '#0f0a1c';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Glowing floating chair / possessed item
+
+  // Swirling Ectoplasmic Psychic Aura
+  const auraGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 28);
+  auraGrad.addColorStop(0, 'rgba(192, 132, 252, 0.45)');
+  auraGrad.addColorStop(0.5, 'rgba(147, 51, 234, 0.25)');
+  auraGrad.addColorStop(1, 'rgba(15, 10, 28, 0)');
+  ctx.fillStyle = auraGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 28, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Psychic Telekinesis Rings
   ctx.strokeStyle = '#c084fc';
-  ctx.lineWidth = 2.5;
-  ctx.strokeRect(cx - 10, cy - 6, 20, 16);
+  ctx.lineWidth = 1.2;
+  ctx.setLineDash([4, 4]);
   ctx.beginPath();
-  ctx.moveTo(cx - 10, cy - 6);
-  ctx.lineTo(cx - 10, cy - 16);
+  ctx.ellipse(cx, cy - 2, 22, 12, 0.2, 0, Math.PI * 2);
   ctx.stroke();
-  // Aura rings
-  ctx.strokeStyle = 'rgba(192, 132, 252, 0.4)';
+  ctx.setLineDash([]);
+
+  // Floating Possessed Victorian Antique Chair
+  const chX = cx;
+  const chY = cy - 2;
+  ctx.save();
+  ctx.translate(chX, chY);
+  ctx.rotate(-0.15);
+
+  // Mahogany Chair Back & Slats
+  ctx.fillStyle = '#78350f';
+  ctx.fillRect(-10, -18, 20, 4);
+  ctx.fillRect(-8, -14, 3, 14);
+  ctx.fillRect(5, -14, 3, 14);
+  ctx.fillRect(-1, -14, 3, 14);
+
+  // Velvet Seat Cushion (Glowing Violet)
+  ctx.fillStyle = '#a855f7';
+  ctx.shadowColor = '#c084fc';
+  ctx.shadowBlur = 6;
+  ctx.fillRect(-12, 0, 24, 6);
+  ctx.shadowBlur = 0;
+
+  // Carved Wooden Chair Legs
+  ctx.strokeStyle = '#451a03';
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+  ctx.moveTo(-10, 6); ctx.lineTo(-11, 16);
+  ctx.moveTo(10, 6); ctx.lineTo(11, 16);
+  ctx.moveTo(-5, 6); ctx.lineTo(-4, 14);
+  ctx.moveTo(5, 6); ctx.lineTo(6, 14);
   ctx.stroke();
+  ctx.restore();
+
+  // Floating teacup swirling in vortex
+  ctx.fillStyle = '#f8fafc';
+  ctx.beginPath();
+  ctx.arc(cx - 20, cy - 10, 3.5, 0, Math.PI);
+  ctx.fill();
+  ctx.fillStyle = '#c084fc';
+  ctx.beginPath();
+  ctx.arc(cx + 20, cy + 10, 2.5, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawGraveyardZombieBashArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0f172a';
+  // Midnight cemetery fog background
+  ctx.fillStyle = '#060c14';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Tombstone
-  ctx.fillStyle = '#64748b';
+
+  // Full Silvery Moon casting volumetric fog beams
+  const moonGrad = ctx.createRadialGradient(cx + 18, y + 10, 2, cx + 18, y + 10, 22);
+  moonGrad.addColorStop(0, '#f8fafc');
+  moonGrad.addColorStop(0.3, '#cbd5e1');
+  moonGrad.addColorStop(0.7, 'rgba(203, 213, 225, 0.2)');
+  moonGrad.addColorStop(1, 'rgba(6, 12, 20, 0)');
+  ctx.fillStyle = moonGrad;
   ctx.beginPath();
-  ctx.arc(cx - 8, cy + 4, 10, Math.PI, 0);
-  ctx.lineTo(cx + 2, cy + 16);
-  ctx.lineTo(cx - 18, cy + 16);
+  ctx.arc(cx + 18, y + 10, 22, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Solid Moon Disk
+  ctx.fillStyle = '#f1f5f9';
+  ctx.beginPath();
+  ctx.arc(cx + 18, y + 10, 8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Weathered Celtic Stone Cross Tombstone (Left)
+  const tbX = cx - 14;
+  const tbY = cy + 4;
+  ctx.fillStyle = '#64748b';
+  // Headstone Arch
+  ctx.beginPath();
+  ctx.arc(tbX, tbY - 8, 10, Math.PI, 0);
+  ctx.lineTo(tbX + 10, tbY + 14);
+  ctx.lineTo(tbX - 10, tbY + 14);
   ctx.closePath();
   ctx.fill();
-  // Green Zombie hand rising
-  ctx.strokeStyle = '#22c55e';
-  ctx.lineWidth = 3;
+
+  // Engraved "RIP" & Fissure Cracks
+  ctx.fillStyle = '#1e293b';
+  ctx.font = 'bold 6.5px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('RIP', tbX, tbY);
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(cx + 10, cy + 16);
-  ctx.lineTo(cx + 10, cy);
-  ctx.lineTo(cx + 6, cy - 8);
-  ctx.moveTo(cx + 10, cy);
-  ctx.lineTo(cx + 14, cy - 8);
+  ctx.moveTo(tbX + 2, tbY - 14);
+  ctx.lineTo(tbX - 2, tbY - 6);
   ctx.stroke();
+
+  // Overturned Graveyard Dirt Mound
+  ctx.fillStyle = '#3f1f0d';
+  ctx.beginPath();
+  ctx.ellipse(cx + 8, cy + 18, 18, 7, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Decaying Green Zombie Arm bursting from ground
+  const zX = cx + 8;
+  const zY = cy + 16;
+  ctx.strokeStyle = '#22c55e';
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(zX, zY);
+  ctx.lineTo(zX + 2, cy - 2);
+  ctx.stroke();
+
+  // Zombie Wrist & Clawed Grasping Fingers
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(zX + 2, cy - 2); ctx.lineTo(zX - 5, cy - 10); // Thumb
+  ctx.moveTo(zX + 2, cy - 2); ctx.lineTo(zX, cy - 12);     // Index
+  ctx.moveTo(zX + 2, cy - 2); ctx.lineTo(zX + 5, cy - 11); // Middle
+  ctx.moveTo(zX + 2, cy - 2); ctx.lineTo(zX + 9, cy - 7);  // Ring
+  ctx.stroke();
+
+  // Purple rotting fingernails
+  ctx.fillStyle = '#a855f7';
+  ctx.beginPath();
+  ctx.arc(zX - 5, cy - 10, 1.2, 0, Math.PI * 2);
+  ctx.arc(zX, cy - 12, 1.2, 0, Math.PI * 2);
+  ctx.arc(zX + 5, cy - 11, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Flying clods of earth
+  ctx.fillStyle = '#78350f';
+  ctx.beginPath();
+  ctx.arc(zX - 6, cy + 4, 2, 0, Math.PI * 2);
+  ctx.arc(zX + 12, cy + 2, 1.8, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawPhantomMirrorGazeArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#172554';
+  // Dark gothic chamber wall
+  ctx.fillStyle = '#0a0a14';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Ornate Mirror Frame
-  ctx.strokeStyle = '#eab308';
-  ctx.lineWidth = 3;
-  ctx.strokeRect(cx - 14, cy - 18, 28, 36);
-  // Translucent Phantom reflection inside
-  ctx.fillStyle = 'rgba(147, 197, 253, 0.6)';
+
+  // Ornate Baroque Gilded Gold Mirror Frame
+  ctx.fillStyle = '#b45309';
   ctx.beginPath();
-  ctx.arc(cx, cy - 4, 8, 0, Math.PI * 2);
+  if (ctx.roundRect) ctx.roundRect(cx - 20, cy - 22, 40, 44, 12);
+  else ctx.rect(cx - 20, cy - 22, 40, 44);
   ctx.fill();
-  // Glowing eyes
+
+  // Inner Gold Filigree Bevel
+  ctx.strokeStyle = '#facc15';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(cx - 18, cy - 20, 36, 40, 10);
+  else ctx.rect(cx - 18, cy - 20, 36, 40);
+  ctx.stroke();
+
+  // Dark Reflective Mirror Glass with Spectral Blue Fog
+  const mirGrad = ctx.createLinearGradient(cx, cy - 18, cx, cy + 18);
+  mirGrad.addColorStop(0, '#0f172a');
+  mirGrad.addColorStop(0.5, '#1e293b');
+  mirGrad.addColorStop(1, '#090d16');
+  ctx.fillStyle = mirGrad;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(cx - 15, cy - 17, 30, 34, 8);
+  else ctx.rect(cx - 15, cy - 17, 30, 34);
+  ctx.fill();
+
+  // Ethereal Translucent Phantom Banshee emerging from mirror
+  ctx.fillStyle = 'rgba(147, 197, 253, 0.75)';
+  ctx.shadowColor = '#60a5fa';
+  ctx.shadowBlur = 8;
+  // Ghost head
+  ctx.beginPath();
+  ctx.arc(cx, cy - 4, 9, 0, Math.PI * 2);
+  ctx.fill();
+  // Wispy spectral shoulders & cowl
+  ctx.beginPath();
+  ctx.moveTo(cx - 12, cy + 12);
+  ctx.quadraticCurveTo(cx - 8, cy - 2, cx, cy);
+  ctx.quadraticCurveTo(cx + 8, cy - 2, cx + 12, cy + 12);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Piercing Glowing Crimson Eyes
   ctx.fillStyle = '#ef4444';
-  ctx.fillRect(cx - 3, cy - 5, 2, 2);
-  ctx.fillRect(cx + 1, cy - 5, 2, 2);
+  ctx.shadowColor = '#dc2626';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.ellipse(cx - 3.5, cy - 5, 2, 2.5, 0.1, 0, Math.PI * 2);
+  ctx.ellipse(cx + 3.5, cy - 5, 2, 2.5, -0.1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Screaming hollow mouth
+  ctx.fillStyle = '#090d16';
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + 1, 2.5, 4.5, 0, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawCauldronWitchBrewArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#052e16';
+  // Dark stone dungeon alcove
+  ctx.fillStyle = '#051b11';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Black Cauldron Pot
+
+  // Mystical Violet Hearth Fire under cauldron
+  ctx.fillStyle = '#a855f7';
+  ctx.beginPath();
+  ctx.moveTo(cx - 14, cy + 20);
+  ctx.lineTo(cx - 8, cy + 10);
+  ctx.lineTo(cx, cy + 20);
+  ctx.lineTo(cx + 8, cy + 10);
+  ctx.lineTo(cx + 14, cy + 20);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#f43f5e';
+  ctx.beginPath();
+  ctx.moveTo(cx - 6, cy + 20);
+  ctx.lineTo(cx, cy + 12);
+  ctx.lineTo(cx + 6, cy + 20);
+  ctx.closePath();
+  ctx.fill();
+
+  // Heavy Cast-Iron Cauldron
   ctx.fillStyle = '#1e293b';
   ctx.beginPath();
-  ctx.arc(cx, cy + 6, 14, 0, Math.PI);
+  ctx.arc(cx, cy + 4, 18, 0, Math.PI);
   ctx.fill();
-  ctx.fillRect(cx - 16, cy + 4, 32, 4);
-  // Bubbling lime brew
-  ctx.fillStyle = '#22c55e';
+  // Cauldron rim
+  ctx.fillStyle = '#334155';
   ctx.beginPath();
-  ctx.arc(cx, cy + 4, 12, Math.PI, 0);
+  ctx.ellipse(cx, cy + 4, 20, 6, 0, 0, Math.PI * 2);
   ctx.fill();
-  // Bubbles
-  ctx.fillStyle = '#86efac';
+
+  // Cauldron cast iron feet
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(cx - 15, cy + 17, 5, 5);
+  ctx.fillRect(cx + 10, cy + 17, 5, 5);
+
+  // Toxic Glowing Neon-Green Brew Surface
+  const brewGrad = ctx.createRadialGradient(cx, cy + 4, 1, cx, cy + 4, 17);
+  brewGrad.addColorStop(0, '#86efac');
+  brewGrad.addColorStop(0.5, '#22c55e');
+  brewGrad.addColorStop(1, '#15803d');
+  ctx.fillStyle = brewGrad;
+  ctx.shadowColor = '#4ade80';
+  ctx.shadowBlur = 8;
   ctx.beginPath();
-  ctx.arc(cx - 4, cy - 6, 3, 0, Math.PI * 2);
-  ctx.arc(cx + 6, cy - 10, 4, 0, Math.PI * 2);
+  ctx.ellipse(cx, cy + 4, 18, 4.5, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Bubbles rising from brew
+  ctx.fillStyle = '#bbf7d0';
+  ctx.beginPath();
+  ctx.arc(cx - 6, cy - 2, 4, 0, Math.PI * 2);
+  ctx.arc(cx + 8, cy - 6, 3, 0, Math.PI * 2);
+  ctx.arc(cx - 2, cy - 12, 2.5, 0, Math.PI * 2);
+  ctx.arc(cx + 4, cy - 16, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Swirling mystical potion vapor smoke
+  ctx.strokeStyle = 'rgba(74, 222, 128, 0.4)';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - 4);
+  ctx.bezierCurveTo(cx - 12, cy - 14, cx + 12, cy - 18, cx, cy - 24);
+  ctx.stroke();
 }
 
 function drawGargoyleStoneStareArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#18181b';
+  // Midnight cathedral parapet storm
+  ctx.fillStyle = '#09090b';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Stone gargoyle perched silhouette
+
+  // Distant Lightning Flash silhouette
+  ctx.strokeStyle = 'rgba(192, 132, 252, 0.45)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x + w - 10, y);
+  ctx.lineTo(cx + 12, cy - 8);
+  ctx.lineTo(cx + 18, cy - 4);
+  ctx.lineTo(cx + 8, cy + 6);
+  ctx.stroke();
+
+  // Cathedral Stone Cornice Ledge
+  ctx.fillStyle = '#3f3f46';
+  ctx.beginPath();
+  ctx.moveTo(x, cy + 14);
+  ctx.lineTo(cx + 16, cy + 14);
+  ctx.lineTo(cx + 10, y + h);
+  ctx.lineTo(x, y + h);
+  ctx.closePath();
+  ctx.fill();
+
+  // Perched Gothic Gargoyle Silhouette
+  const gX = cx - 4;
+  const gY = cy + 2;
+
+  // Leathery folded bat wings
+  ctx.fillStyle = '#52525b';
+  ctx.beginPath();
+  ctx.moveTo(gX, gY - 4);
+  ctx.lineTo(gX - 18, gY - 18);
+  ctx.lineTo(gX - 12, gY - 2);
+  ctx.lineTo(gX + 16, gY - 18);
+  ctx.lineTo(gX + 6, gY - 2);
+  ctx.closePath();
+  ctx.fill();
+
+  // Horned Gargoyle Head & Torso
   ctx.fillStyle = '#71717a';
   ctx.beginPath();
-  ctx.arc(cx, cy - 4, 10, 0, Math.PI * 2);
+  ctx.arc(gX, gY - 4, 9, 0, Math.PI * 2);
   ctx.fill();
-  // Horns
+
+  // Curved stone horns
   ctx.beginPath();
-  ctx.moveTo(cx - 8, cy - 8);
-  ctx.lineTo(cx - 12, cy - 16);
-  ctx.lineTo(cx - 4, cy - 10);
-  ctx.moveTo(cx + 8, cy - 8);
-  ctx.lineTo(cx + 12, cy - 16);
-  ctx.lineTo(cx + 4, cy - 10);
+  ctx.moveTo(gX - 6, gY - 10); ctx.lineTo(gX - 10, gY - 18); ctx.lineTo(gX - 2, gY - 11);
+  ctx.moveTo(gX + 6, gY - 10); ctx.lineTo(gX + 10, gY - 18); ctx.lineTo(gX + 2, gY - 11);
   ctx.fill();
-  // Glowing red eyes
+
+  // Piercing Glowing Crimson Demonic Eyes
   ctx.fillStyle = '#ef4444';
-  ctx.fillRect(cx - 4, cy - 4, 3, 2);
-  ctx.fillRect(cx + 1, cy - 4, 3, 2);
+  ctx.shadowColor = '#dc2626';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.arc(gX - 3.5, gY - 4, 2, 0, Math.PI * 2);
+  ctx.arc(gX + 3.5, gY - 4, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Stone talons clutching ledge
+  ctx.fillStyle = '#a1a1aa';
+  ctx.fillRect(gX - 6, gY + 12, 4, 4);
+  ctx.fillRect(gX + 2, gY + 12, 4, 4);
 }
 
 function drawGhostVacuumBusterArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#0f172a';
+  // Haunted mansion interior
+  ctx.fillStyle = '#0b0f19';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Ghost being sucked
-  ctx.fillStyle = 'rgba(110, 231, 183, 0.7)';
+
+  // Vacuum Suction Funnel Stream (Cyan Plasma Beam)
+  const stream = ctx.createLinearGradient(cx - 16, cy + 12, cx + 16, cy - 8);
+  stream.addColorStop(0, '#38bdf8');
+  stream.addColorStop(0.5, 'rgba(56, 189, 248, 0.4)');
+  stream.addColorStop(1, 'rgba(110, 231, 183, 0.2)');
+
+  ctx.fillStyle = stream;
   ctx.beginPath();
-  ctx.arc(cx + 10, cy - 8, 8, 0, Math.PI * 2);
+  ctx.moveTo(cx - 12, cy + 14);
+  ctx.lineTo(cx + 8, cy - 18);
+  ctx.lineTo(cx + 24, cy - 2);
+  ctx.lineTo(cx - 6, cy + 18);
+  ctx.closePath();
   ctx.fill();
-  // Vacuum Suction Cone
-  ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
-  ctx.lineWidth = 2;
+
+  // Screaming Cartoonish Translucent Ghost being captured
+  const gX = cx + 14;
+  const gY = cy - 8;
+  ctx.fillStyle = 'rgba(110, 231, 183, 0.85)';
+  ctx.shadowColor = '#34d399';
+  ctx.shadowBlur = 8;
+  // Ghost head & stretched body
   ctx.beginPath();
-  ctx.moveTo(cx - 12, cy + 10);
-  ctx.lineTo(cx + 14, cy - 6);
-  ctx.moveTo(cx - 12, cy + 10);
-  ctx.lineTo(cx + 18, cy + 2);
-  ctx.stroke();
-  // Vacuum Nozzle
-  ctx.fillStyle = '#38bdf8';
-  ctx.fillRect(cx - 16, cy + 6, 8, 8);
+  ctx.arc(gX, gY, 9, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Stretched suction tail
+  ctx.beginPath();
+  ctx.moveTo(gX - 6, gY + 6);
+  ctx.quadraticCurveTo(cx, cy + 6, cx - 10, cy + 14);
+  ctx.quadraticCurveTo(cx + 2, cy + 2, gX + 6, gY + 6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Ghost panicked eyes & screaming mouth
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.arc(gX - 3, gY - 2, 2, 0, Math.PI * 2);
+  ctx.arc(gX + 4, gY - 2, 2, 0, Math.PI * 2);
+  ctx.ellipse(gX, gY + 3, 3, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // High-Tech Proton Buster Vacuum Nozzle (Bottom Left)
+  ctx.fillStyle = '#0284c7';
+  ctx.save();
+  ctx.translate(cx - 14, cy + 14);
+  ctx.rotate(-0.6);
+  ctx.fillRect(-6, -4, 14, 8);
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillRect(8, -5, 4, 10); // Brass intake collar
+  ctx.restore();
 }
 
 function drawTombstoneCryptSliderArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#1c1917';
+  // Ancient stone crypt chamber
+  ctx.fillStyle = '#140e0a';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Sarcophagus base
-  ctx.fillStyle = '#0c0a09';
-  ctx.fillRect(cx - 18, cy - 12, 36, 24);
-  // Gold scarab inside
-  ctx.fillStyle = '#fbbf24';
+
+  // Carved Granite Sarcophagus Box Base
+  ctx.fillStyle = '#1c1917';
   ctx.beginPath();
-  ctx.arc(cx - 6, cy, 6, 0, Math.PI * 2);
+  if (ctx.roundRect) ctx.roundRect(cx - 24, cy - 14, 48, 28, 4);
+  else ctx.rect(cx - 24, cy - 14, 48, 28);
   ctx.fill();
-  // Sliding stone lid (half-open)
+
+  // Deep Tomb Interior Void (Exposed)
+  ctx.fillStyle = '#020617';
+  ctx.fillRect(cx - 20, cy - 10, 20, 20);
+
+  // Gleaming Golden Scarab / Pharaoh Artifact inside
+  ctx.fillStyle = '#facc15';
+  ctx.shadowColor = '#f59e0b';
+  ctx.shadowBlur = 8;
+  // Golden scarab body & wings
+  ctx.beginPath();
+  ctx.ellipse(cx - 10, cy, 6, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#38bdf8'; // Cyan jewel in scarab
+  ctx.beginPath();
+  ctx.arc(cx - 10, cy - 1, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Heavy Sliding Sarcophagus Stone Lid (Slid open to the right)
+  const lidX = cx - 2;
+  const lidY = cy - 16;
   ctx.fillStyle = '#57534e';
-  ctx.fillRect(cx + 2, cy - 12, 20, 24);
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(lidX, lidY, 26, 32, 4);
+  else ctx.rect(lidX, lidY, 26, 32);
+  ctx.fill();
+
+  // Carved hieroglyphics / relief bands on stone lid
   ctx.strokeStyle = '#78716c';
   ctx.lineWidth = 1.5;
-  ctx.strokeRect(cx + 2, cy - 12, 20, 24);
+  ctx.strokeRect(lidX + 3, lidY + 4, 20, 24);
+  ctx.beginPath();
+  ctx.moveTo(lidX + 6, lidY + 12); ctx.lineTo(lidX + 20, lidY + 12);
+  ctx.moveTo(lidX + 6, lidY + 20); ctx.lineTo(lidX + 20, lidY + 20);
+  ctx.stroke();
+
+  // Stone grind dust sparks at friction boundary
+  ctx.fillStyle = '#fbbf24';
+  ctx.beginPath();
+  ctx.arc(lidX - 1, cy - 8, 1.5, 0, Math.PI * 2);
+  ctx.arc(lidX - 2, cy + 6, 1.5, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawCreepyDollCrawlArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#271c19';
+  // Spooky nursery shadows
+  ctx.fillStyle = '#1c1015';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Winding brass key
+
+  // Antique Winding Brass Key in Doll's back
   ctx.strokeStyle = '#d97706';
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.moveTo(cx - 16, cy);
-  ctx.lineTo(cx - 8, cy);
-  ctx.arc(cx - 16, cy - 4, 4, 0, Math.PI * 2);
+  ctx.moveTo(cx - 16, cy + 2);
+  ctx.lineTo(cx - 6, cy + 2);
   ctx.stroke();
-  // Doll Porcelain Head
+  // Key wings
+  ctx.beginPath();
+  ctx.arc(cx - 16, cy - 3, 4, 0, Math.PI * 2);
+  ctx.arc(cx - 16, cy + 7, 4, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Porcelain Doll Body in Victorian Frilled Dress
+  ctx.fillStyle = '#4c0519';
+  ctx.beginPath();
+  ctx.ellipse(cx - 2, cy + 6, 12, 7, 0.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Lace frill collar
   ctx.fillStyle = '#f8fafc';
   ctx.beginPath();
-  ctx.arc(cx + 6, cy, 10, 0, Math.PI * 2);
+  ctx.ellipse(cx + 4, cy + 2, 5, 8, 0.2, 0, Math.PI * 2);
   ctx.fill();
-  // Button eye
-  ctx.fillStyle = '#0f172a';
+
+  // Pale Porcelain Doll Head
+  ctx.fillStyle = '#fdf4ff';
+  ctx.shadowColor = '#f5d0fe';
+  ctx.shadowBlur = 4;
   ctx.beginPath();
-  ctx.arc(cx + 4, cy - 2, 2, 0, Math.PI * 2);
-  ctx.arc(cx + 8, cy - 2, 2, 0, Math.PI * 2);
+  ctx.arc(cx + 10, cy - 4, 11, 0, Math.PI * 2);
   ctx.fill();
-  // Rosy cheek
+  ctx.shadowBlur = 0;
+
+  // Ceramic hairline fracture / crack
+  ctx.strokeStyle = '#1e1b4b';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx + 10, cy - 14);
+  ctx.lineTo(cx + 12, cy - 8);
+  ctx.lineTo(cx + 8, cy - 4);
+  ctx.stroke();
+
+  // Glassy Jet-Black Button Eyes with Glint
+  ctx.fillStyle = '#09090b';
+  ctx.beginPath();
+  ctx.arc(cx + 7, cy - 4, 2.5, 0, Math.PI * 2);
+  ctx.arc(cx + 15, cy - 4, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Red specular eye glint
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.arc(cx + 7.5, cy - 4.5, 1, 0, Math.PI * 2);
+  ctx.arc(cx + 15.5, cy - 4.5, 1, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rosy round cheeks & doll lips
   ctx.fillStyle = '#f43f5e';
-  ctx.fillRect(cx + 6, cy + 3, 3, 2);
+  ctx.beginPath();
+  ctx.arc(cx + 6, cy + 1, 2, 0, Math.PI * 2);
+  ctx.arc(cx + 16, cy + 1, 2, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawOuijaSpiritBoardArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#26160c';
+  // Séance candlelit table
+  ctx.fillStyle = '#1c1007';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Board border
+
+  // Antique Carved Wooden Spirit Board
+  ctx.fillStyle = '#451a03';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(cx - 24, cy - 18, 48, 36, 4);
+  else ctx.rect(cx - 24, cy - 18, 48, 36);
+  ctx.fill();
+
+  // Pyrography Burned Gold Border
   ctx.strokeStyle = '#b45309';
   ctx.lineWidth = 1.5;
-  ctx.strokeRect(cx - 20, cy - 15, 40, 30);
-  // Curved alphabet arc
+  ctx.strokeRect(cx - 22, cy - 16, 44, 32);
+
+  // Arched Alphabet Guide Arc (A - Z)
   ctx.strokeStyle = '#fde68a';
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.arc(cx, cy + 6, 16, Math.PI * 1.1, Math.PI * 1.9);
+  ctx.arc(cx, cy + 8, 18, Math.PI * 1.15, Math.PI * 1.85);
   ctx.stroke();
-  // Glowing Planchette
-  ctx.fillStyle = '#78350f';
+
+  // Sun & Moon Corner Emblems
+  ctx.fillStyle = '#fde68a';
   ctx.beginPath();
-  ctx.moveTo(cx, cy - 12);
-  ctx.lineTo(cx + 8, cy);
-  ctx.lineTo(cx - 8, cy);
+  ctx.arc(cx - 16, cy - 10, 3, 0, Math.PI * 2); // Sun
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx + 16, cy - 10, 3, 0, Math.PI * 2); // Moon
+  ctx.fill();
+  ctx.fillStyle = '#451a03';
+  ctx.beginPath();
+  ctx.arc(cx + 15, cy - 11, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Glowing Heart-Shaped Planchette moving across letters
+  const plX = cx + 2;
+  const plY = cy - 2;
+  ctx.fillStyle = '#78350f';
+  ctx.shadowColor = '#4ade80';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.moveTo(plX, plY - 10);
+  ctx.lineTo(plX + 9, plY + 5);
+  ctx.quadraticCurveTo(plX, plY + 2, plX - 9, plY + 5);
   ctx.closePath();
   ctx.fill();
-  // Lens
-  ctx.fillStyle = '#bae6fd';
+  ctx.shadowBlur = 0;
+
+  // Planchette Glass Viewing Lens (Glowing Cyan)
+  ctx.fillStyle = '#38bdf8';
   ctx.beginPath();
-  ctx.arc(cx, cy - 4, 3, 0, Math.PI * 2);
+  ctx.arc(plX, plY - 2, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(plX - 1, plY - 3, 1.2, 0, Math.PI * 2);
   ctx.fill();
 }
 
 function drawCursedClocktowerPendulumArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#18181b';
+  // Midnight clocktower storm
+  ctx.fillStyle = '#09090b';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Pendulum shaft
-  ctx.strokeStyle = '#a1a1aa';
-  ctx.lineWidth = 2.5;
+
+  // Giant Clock Dial Face in background (Illuminated by lightning)
+  ctx.strokeStyle = 'rgba(250, 204, 21, 0.25)';
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(cx - 10, cy - 20);
-  ctx.lineTo(cx + 8, cy + 12);
+  ctx.arc(cx, cy - 6, 22, 0, Math.PI * 2);
   ctx.stroke();
-  // Crescent scythe blade
-  ctx.fillStyle = '#e4e4e7';
-  ctx.beginPath();
-  ctx.arc(cx + 8, cy + 12, 8, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#ef4444';
+
+  // Roman Numeral hour marks
+  for (let i = 0; i < 12; i++) {
+    const angle = (i * Math.PI) / 6;
+    const nx = cx + Math.cos(angle) * 19;
+    const ny = cy - 6 + Math.sin(angle) * 19;
+    ctx.fillStyle = 'rgba(250, 204, 21, 0.35)';
+    ctx.beginPath();
+    ctx.arc(nx, ny, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Interlocking Brass Gears
+  ctx.strokeStyle = 'rgba(180, 83, 9, 0.4)';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.arc(cx + 8, cy + 12, 14, 0, Math.PI * 0.8);
+  ctx.arc(cx - 16, cy + 12, 10, 0, Math.PI * 2);
   ctx.stroke();
+
+  // Swinging Cursed Pendulum Shaft
+  const pendAngle = 0.38;
+  const pLen = 34;
+  const pivotX = cx - 4;
+  const pivotY = cy - 22;
+  const endX = pivotX + Math.sin(pendAngle) * pLen;
+  const endY = pivotY + Math.cos(pendAngle) * pLen;
+
+  ctx.strokeStyle = '#a1a1aa';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(pivotX, pivotY);
+  ctx.lineTo(endX, endY);
+  ctx.stroke();
+
+  // Razor-Sharp Curved Crescent Scythe Blade
+  ctx.save();
+  ctx.translate(endX, endY);
+  ctx.rotate(-pendAngle);
+
+  // Scythe blade crescent
+  ctx.fillStyle = '#f1f5f9';
+  ctx.shadowColor = '#ef4444';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.arc(0, 0, 14, 0.2, Math.PI - 0.2);
+  ctx.quadraticCurveTo(0, 4, -14 * Math.cos(0.2), 14 * Math.sin(0.2));
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Razor cutting edge glint
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(0, 0, 14, 0.2, Math.PI - 0.2);
+  ctx.stroke();
+
+  // Center pendulum weight disk
+  ctx.fillStyle = '#b45309';
+  ctx.beginPath();
+  ctx.arc(0, 0, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 function drawSynthwaveNeonRacerArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
