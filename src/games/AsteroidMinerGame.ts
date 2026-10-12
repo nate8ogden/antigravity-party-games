@@ -547,16 +547,19 @@ export class AsteroidMinerGame extends BaseGame {
       }
     }
 
-    // Check game over
+    // Update Floating Texts
+    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+      const ft = this.floatingTexts[i];
+      ft.life -= dt;
+      ft.y -= 25 * dt;
+      if (ft.life <= 0) {
+        this.floatingTexts.splice(i, 1);
+      }
+    }
+
+    // Check game over (Purely time-based: round runs until timer expires)
     if (this.roundTimer <= 0) {
       this.isFinished = true;
-    } else {
-      for (const s of this.ships.values()) {
-        if (s.bankedScore >= 10) {
-          this.isFinished = true;
-          break;
-        }
-      }
     }
   }
 
@@ -616,9 +619,50 @@ export class AsteroidMinerGame extends BaseGame {
     // Decision logic: if cargo is high (or >= 3 on normal/hard), head back to deposit!
     const shouldBank = (ship.cargo >= 4) || (ship.cargo >= 3 && !isEasy) || (this.roundTimer < 8 && ship.cargo > 0);
 
+    // Active Stealing: Check opponents carrying gems to ram and steal
+    let stealTargetShip: MinerShip | null = null;
+    let bestStealDist = isHard ? 450 : (isNormal ? 300 : 160);
+
+    if (ship.cargo < 5) {
+      for (const [otherId, otherShip] of this.ships.entries()) {
+        if (otherId !== ship.id && otherShip.alive && otherShip.cargo > 0) {
+          const d = Math.hypot(otherShip.x - ship.x, otherShip.y - ship.y);
+          if (d < bestStealDist) {
+            bestStealDist = d;
+            stealTargetShip = otherShip;
+          }
+        }
+      }
+    }
+
+    // Active Stealing: Check rival depots with secured gems to raid!
+    let raidDepotTarget: SalvageDepot | null = null;
+    if (ship.cargo < 4 && !isEasy && !stealTargetShip) {
+      for (const d of this.depots) {
+        if (d.playerId !== botId) {
+          const rival = this.ships.get(d.playerId);
+          if (rival && rival.bankedScore > 0) {
+            const distToD = Math.hypot(d.x - ship.x, d.y - ship.y);
+            if (distToD < (isHard ? 380 : 240)) {
+              raidDepotTarget = d;
+              break;
+            }
+          }
+        }
+      }
+    }
+
     if (shouldBank && depot) {
       targetX = depot.x;
       targetY = depot.y;
+    } else if (stealTargetShip) {
+      // Ram opponent to steal their cargo!
+      targetX = stealTargetShip.x;
+      targetY = stealTargetShip.y;
+    } else if (raidDepotTarget) {
+      // Raid rival depot!
+      targetX = raidDepotTarget.x;
+      targetY = raidDepotTarget.y;
     } else if (this.gems.length > 0 && ship.cargo < 5) {
       // Go for closest gem
       let bestDist = Infinity;
@@ -640,20 +684,6 @@ export class AsteroidMinerGame extends BaseGame {
           // Aim drill at asteroid
           targetX = ast.x;
           targetY = ast.y;
-        }
-      }
-    }
-
-    // Hard AI: Ram opponents who have high cargo if we are empty and close
-    if (isHard && ship.cargo <= 1) {
-      for (const [otherId, otherShip] of this.ships.entries()) {
-        if (otherId !== ship.id && otherShip.alive && otherShip.cargo >= 3) {
-          const d = Math.hypot(otherShip.x - ship.x, otherShip.y - ship.y);
-          if (d < 180) {
-            targetX = otherShip.x;
-            targetY = otherShip.y;
-            break;
-          }
         }
       }
     }
@@ -730,7 +760,7 @@ export class AsteroidMinerGame extends BaseGame {
       const ship = this.ships.get(depot.playerId);
       ctx.font = '800 10px Montserrat, sans-serif';
       ctx.fillStyle = depot.color;
-      ctx.fillText(`${ship?.bankedScore || 0}/10 💎`, depot.x, depot.y + 12);
+      ctx.fillText(`💎 ${ship?.bankedScore || 0} SECURED`, depot.x, depot.y + 12);
       ctx.restore();
     }
 
@@ -938,14 +968,28 @@ export class AsteroidMinerGame extends BaseGame {
       ctx.fillText(pCfg?.name || `P${ship.id + 1}`, ship.x, ship.y - ship.radius - 14);
     }
 
+    // Render Floating Notification Texts
+    for (const ft of this.floatingTexts) {
+      const alpha = Math.max(0, Math.min(1, ft.life / 0.3));
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.font = '900 13px Montserrat, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#0F172A';
+      ctx.fillText(ft.text, ft.x + 1, ft.y + 1);
+      ctx.fillStyle = ft.color;
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.restore();
+    }
+
     // Top Center HUD Pod (Centered at width / 2, y = 56, exactly conforming to center-corridor rule)
     this.renderCenterHUD(ctx, width);
   }
 
   private renderCenterHUD(ctx: CanvasRenderingContext2D, width: number): void {
     const active = this.getActivePlayers();
-    const hudW = 320;
-    const hudH = 26;
+    const hudW = 380;
+    const hudH = 28;
     const hudX = width / 2 - hudW / 2;
     const hudY = 56;
 
@@ -954,10 +998,10 @@ export class AsteroidMinerGame extends BaseGame {
     ctx.shadowBlur = 10;
     ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(hudX, hudY, hudW, hudH, 13);
+    if (ctx.roundRect) ctx.roundRect(hudX, hudY, hudW, hudH, 14);
     else ctx.rect(hudX, hudY, hudW, hudH);
     ctx.fill();
-    ctx.strokeStyle = '#F59E0B';
+    ctx.strokeStyle = this.roundTimer <= 10 ? '#EF4444' : '#F59E0B';
     ctx.lineWidth = 1.5;
     ctx.stroke();
     ctx.restore();
@@ -965,24 +1009,21 @@ export class AsteroidMinerGame extends BaseGame {
     ctx.font = '900 11px Montserrat, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    const timerSec = Math.ceil(this.roundTimer);
     const summary = active
       .map((p) => {
         const ship = this.ships.get(p.id);
         const score = ship?.bankedScore || 0;
         const cargo = ship?.cargo || 0;
-        return `${p.name}: 💎${score}/10 (${cargo})`;
+        return `${p.name}: 💎${score} [${cargo}/5]`;
       })
       .join('   •   ');
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(summary, width / 2, hudY + 13);
+    ctx.fillText(`⏱️ ${timerSec}s   |   ${summary}`, width / 2, hudY + 14);
   }
 
   public isRoundOver(): boolean {
-    if (this.isFinished) return true;
-    for (const ship of this.ships.values()) {
-      if (ship.bankedScore >= 10) return true;
-    }
-    return false;
+    return this.isFinished || this.roundTimer <= 0;
   }
 
   public getRoundResult(): RoundResult {
@@ -1005,6 +1046,15 @@ export class AsteroidMinerGame extends BaseGame {
       return scB - scA;
     });
 
+    // Check tie at top
+    if (sorted.length > 1) {
+      const top1 = this.ships.get(sorted[0].id)?.bankedScore || 0;
+      const top2 = this.ships.get(sorted[1].id)?.bankedScore || 0;
+      if (top1 === top2) {
+        winnerId = null;
+      }
+    }
+
     const rankings = sorted.map((p, idx) => ({
       playerId: p.id,
       place: idx + 1,
@@ -1016,8 +1066,8 @@ export class AsteroidMinerGame extends BaseGame {
       rankings,
       mvpHighlight:
         winnerId !== null
-          ? `${this.players[winnerId].name} mined & secured 10 celestial gems!`
-          : 'Zero-G asteroid salvage shift ended in a cosmic tie!'
+          ? `${this.players[winnerId].name} secured the salvage victory with ${highestScore} celestial gems!`
+          : `Salvage shift concluded in a cosmic tie at ${highestScore >= 0 ? highestScore : 0} gems!`
     };
   }
 

@@ -604,8 +604,8 @@ export const GAME_CATALOG: MinigameMetadata[] = [
     tagline: 'Zero-G Kinetic Salvage',
     category: 'Physics',
     icon: '[G-38]',
-    instructions: 'Pilot zero-g mining tugboats equipped with rotary diamond drills! Ram drifting crystalline asteroids to shatter them into glittering gems, vacuum up cargo, and deposit loot into your salvage depot. Bump rivals to spill their cargo!',
-    controlPrompt: 'Hold: Fire Bow Thrusters | Steer / Release: Drift & Turn'
+    instructions: 'Pilot zero-g mining tugboats equipped with rotary diamond drills! Shatter crystalline asteroids into glittering gems, vacuum up cargo, and deposit loot into your salvage depot. Steal cargo by ramming rivals or raiding their depot! Highest banked score when the 50s shift expires wins.',
+    controlPrompt: 'A/D or Left/Right: Steer • Space/Enter or W/Up: Fire Thrusters'
   },
   {
     id: 'dont_look_down',
