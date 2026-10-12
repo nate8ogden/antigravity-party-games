@@ -18,11 +18,19 @@ interface PodJumper {
   botReactionTimer: number;
 }
 
+interface BotLeapState {
+  plannedLeadTime: number;
+  lastApproachDir: number;
+  surpriseTimer: number;
+  hasPlannedCurrentSweep: boolean;
+}
+
 export class LaserLeapGame extends BaseGame {
   private jumpers: Map<PlayerId, PodJumper> = new Map();
   private arenaCenterX: number = 400;
   private arenaCenterY: number = 300;
   private arenaRadius: number = 210;
+  private botStates: Map<PlayerId, BotLeapState> = new Map();
 
   // Rotating Laser Beam properties
   private laserAngle: number = 0;
@@ -50,6 +58,7 @@ export class LaserLeapGame extends BaseGame {
     this.roundTimer = 45;
     this.isFinished = false;
     this.jumpers.clear();
+    this.botStates.clear();
     this.eliminationOrder = [];
     this.totalJumps.clear();
 
@@ -87,7 +96,41 @@ export class LaserLeapGame extends BaseGame {
         botReactionTimer: 0
       });
       this.totalJumps.set(p.id, 0);
+      this.botStates.set(p.id, {
+        plannedLeadTime: 0.20,
+        lastApproachDir: 1,
+        surpriseTimer: 0,
+        hasPlannedCurrentSweep: false
+      });
     });
+
+    // Expose debug hook for testing
+    (window as any).__LASER_LEAP_DEBUG__ = {
+      getJumpers: () => Array.from(this.jumpers.values()).map(j => ({
+        id: j.id,
+        angle: j.angle,
+        x: j.x,
+        y: j.y,
+        alive: j.alive,
+        isJumping: j.isJumping,
+        jumpHeight: j.jumpHeight,
+        score: j.score
+      })),
+      getLaser: () => ({
+        angle: this.laserAngle,
+        speed: this.laserSpeed,
+        dir: this.laserDir,
+        reversalTimer: this.reversalTimer
+      }),
+      setLaser: (angle: number, speed: number, dir: number) => {
+        this.laserAngle = angle;
+        this.laserSpeed = speed;
+        this.laserDir = dir;
+      },
+      jump: (pid: PlayerId) => {
+        this.input.setBotInput(pid, true);
+      }
+    };
   }
 
   public update(dt: number, width: number, height: number): void {
