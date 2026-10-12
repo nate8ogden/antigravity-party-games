@@ -610,11 +610,11 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   {
     id: 'dont_look_down',
     title: "Don't Look Down",
-    tagline: '5-Minute Vertical Tower Climb',
+    tagline: '90-Second Vertical Tower Rush',
     category: 'Physics',
     icon: '[G-39]',
-    instructions: 'Ascend a perilous vertical tower with zero checkpoints! 5-minute time limit. Switch maps between Cyber Spire, Sky Ruins, and Magma Caldera. Fall, and you lose all height!',
-    controlPrompt: 'A/D or Steer: Run | Hold Space/Tap: Charge Leap | 1-3: Switch Map'
+    instructions: 'Ascend a perilous vertical tower! Auto-bounce across floating circles, crystals, hexagons, clouds, and moving beams. Reach the summit first or climb the highest before the 90s timer runs out! Press 1-3 to switch map themes.',
+    controlPrompt: 'A/D or Left/Right: Steer • Hold Space/Enter or W/Up: Spring Leap Boost • 1-3: Switch Map'
   },
   {
     id: 'snowball_fight',
