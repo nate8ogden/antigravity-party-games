@@ -11772,24 +11772,120 @@ function drawDunkClownTankArt(ctx: CanvasRenderingContext2D, x: number, y: numbe
 }
 
 function drawFortuneTellerTarotArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  ctx.fillStyle = '#1e082b';
+  // Deep mystical velvet fortune-teller booth
+  ctx.fillStyle = '#140522';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
-  // Glowing Purple Crystal Ball
-  const ballGrad = ctx.createRadialGradient(cx - 3, cy - 5, 2, cx, cy, 14);
-  ballGrad.addColorStop(0, '#ffffff');
-  ballGrad.addColorStop(0.4, '#a855f7');
-  ballGrad.addColorStop(1, '#3b0764');
-  ctx.fillStyle = ballGrad;
+
+  // Velvet cloth drape folds with gold starlight flecks
+  ctx.strokeStyle = 'rgba(250, 204, 21, 0.25)';
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+  ctx.moveTo(x + 4, y); ctx.quadraticCurveTo(cx - 10, y + 14, x + 4, y + h);
+  ctx.moveTo(x + w - 4, y); ctx.quadraticCurveTo(cx + 10, y + 14, x + w - 4, y + h);
+  ctx.stroke();
+
+  // Two Laid-Out Tarot Cards on Table
+  const cardW = 14;
+  const cardH = 22;
+
+  // Tarot Card 1 (Left - The Sun)
+  const c1X = cx - 18;
+  const c1Y = cy + 2;
+  ctx.save();
+  ctx.translate(c1X, c1Y);
+  ctx.rotate(-0.18);
+
+  ctx.fillStyle = '#0f172a';
+  if (ctx.roundRect) ctx.roundRect(-cardW / 2, -cardH / 2, cardW, cardH, 2);
+  else ctx.rect(-cardW / 2, -cardH / 2, cardW, cardH);
   ctx.fill();
-  // Star Rune
-  ctx.fillStyle = '#fde047';
-  ctx.font = 'bold 11px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('★', cx, cy + 4);
+
+  // Gold filigree border
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 1;
+  if (ctx.roundRect) ctx.roundRect(-cardW / 2 + 1, -cardH / 2 + 1, cardW - 2, cardH - 2, 1.5);
+  else ctx.rect(-cardW / 2 + 1, -cardH / 2 + 1, cardW - 2, cardH - 2);
+  ctx.stroke();
+
+  // The Sun face
+  ctx.fillStyle = '#facc15';
+  ctx.beginPath();
+  ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Tarot Card 2 (Right - The Star)
+  const c2X = cx + 18;
+  const c2Y = cy + 2;
+  ctx.save();
+  ctx.translate(c2X, c2Y);
+  ctx.rotate(0.18);
+
+  ctx.fillStyle = '#0f172a';
+  if (ctx.roundRect) ctx.roundRect(-cardW / 2, -cardH / 2, cardW, cardH, 2);
+  else ctx.rect(-cardW / 2, -cardH / 2, cardW, cardH);
+  ctx.fill();
+
+  // Gold filigree border
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 1;
+  if (ctx.roundRect) ctx.roundRect(-cardW / 2 + 1, -cardH / 2 + 1, cardW - 2, cardH - 2, 1.5);
+  else ctx.rect(-cardW / 2 + 1, -cardH / 2 + 1, cardW - 2, cardH - 2);
+  ctx.stroke();
+
+  // The Star (Cyan 8-point star)
+  ctx.fillStyle = '#38bdf8';
+  ctx.beginPath();
+  ctx.arc(0, 0, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Ornate Brass Tripod Claw Stand under crystal ball
+  ctx.fillStyle = '#b45309';
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + 12, 11, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#facc15';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(cx - 7, cy + 12); ctx.lineTo(cx - 4, cy + 4);
+  ctx.moveTo(cx + 7, cy + 12); ctx.lineTo(cx + 4, cy + 4);
+  ctx.stroke();
+
+  // Glowing Mystical Crystal Ball in center
+  const ballR = 14;
+  const ballGrad = ctx.createRadialGradient(cx - 4, cy - 5, 2, cx, cy, ballR);
+  ballGrad.addColorStop(0, '#ffffff');
+  ballGrad.addColorStop(0.25, '#f0abfc');
+  ballGrad.addColorStop(0.65, '#9333ea');
+  ballGrad.addColorStop(1, '#3b0764');
+
+  ctx.fillStyle = ballGrad;
+  ctx.shadowColor = '#c084fc';
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.arc(cx, cy - 1, ballR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Swirling Ethereal Arcane Nebula inside crystal ball
+  ctx.strokeStyle = 'rgba(254, 240, 138, 0.7)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(cx, cy - 1, 7, -0.6, 2.2);
+  ctx.stroke();
+
+  // Arcane Star Sparkle in center
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(cx - 1, cy - 2, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fef08a';
+  ctx.beginPath();
+  ctx.arc(cx + 4, cy + 2, 1.5, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawVineSwingCanopyArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
