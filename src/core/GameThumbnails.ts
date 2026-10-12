@@ -826,6 +826,9 @@ function drawThumbnailDirect(
     case 'sharks_and_minnows':
       drawSharksAndMinnowsArt(ctx, x, y, w, h);
       break;
+    case 'power_path_clash':
+      drawPowerPathClashArt(ctx, x, y, w, h);
+      break;
     default:
       drawDefaultArt(ctx, x, y, w, h);
       break;
@@ -9443,6 +9446,35 @@ function drawSharksAndMinnowsArt(ctx: CanvasRenderingContext2D, x: number, y: nu
   ctx.lineTo(cx + 13, cy - 3);
   ctx.closePath();
   ctx.fill();
+}
+
+function drawPowerPathClashArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Tower dungeon background
+  ctx.fillStyle = '#0F172A';
+  ctx.fillRect(x, y, w, h);
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Branching doors
+  ctx.fillStyle = '#1E293B';
+  ctx.strokeStyle = '#38BDF8';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(cx - 30, cy - 24, 25, 34);
+  ctx.strokeRect(cx + 5, cy - 24, 25, 34);
+
+  // Door Labels
+  ctx.fillStyle = '#10B981';
+  ctx.font = 'bold 8.5px Montserrat, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('+15', cx - 18, cy - 5);
+
+  ctx.fillStyle = '#F59E0B';
+  ctx.fillText('x2', cx + 18, cy - 5);
+
+  // Clash Sword in center
+  ctx.font = '22px sans-serif';
+  ctx.fillText('⚔️', cx, cy + 24);
 }
 
 // Fallback Default

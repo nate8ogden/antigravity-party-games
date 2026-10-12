@@ -269,6 +269,7 @@ import { CyberGridRunnerGame } from '../games/CyberGridRunnerGame';
 import { SynthDrumPadGame } from '../games/SynthDrumPadGame';
 import { MatrixCodeRainGame } from '../games/MatrixCodeRainGame';
 import { SharksAndMinnowsGame } from '../games/SharksAndMinnowsGame';
+import { PowerPathClashGame } from '../games/PowerPathClashGame';
 import { renderGameThumbnailArt } from './GameThumbnails';
 import { drawCharacter } from './CharacterRenderer';
 import {
@@ -2594,6 +2595,15 @@ export const GAME_CATALOG: MinigameMetadata[] = [
     icon: '[G-257]',
     instructions: 'The classic pool duel! Minnows must sprint across the deep ocean channel from shore to shore. The Shark patrols the deep water with sudden chomp lunges. Score points for safe crossings and catching minnows!',
     controlPrompt: 'WASD / Arrows: Swim • Space / Enter: Dash / Lunge'
+  },
+  {
+    id: 'power_path_clash',
+    title: 'Power Path Clash',
+    tagline: 'Math Tower Combat Showdown',
+    category: 'Action',
+    icon: '[G-258]',
+    instructions: 'Calculate the ultimate progression! Fight weaker enemies to absorb their damage, grab multiplier runes, and build unstoppable power. Climax with an epic anime-style showdown where the highest damage warrior wins!',
+    controlPrompt: 'WASD / Arrows: Select Door • Space / Enter: Advance'
   }
 ];
 
@@ -2899,6 +2909,7 @@ export class GameManager {
       if (gameParam === 'pinball_battle' || gameParam === 'pinball' || gameParam === 'flipper' || gameParam === 'flipper_battle') gameParam = 'pinball_battle';
       if (gameParam === 'mole_panic' || gameParam === 'mole' || gameParam === 'moles' || gameParam === 'whack' || gameParam === 'whackamole') gameParam = 'mole_panic';
       if (gameParam === 'sharks_and_minnows' || gameParam === 'shark_and_minnows' || gameParam === 'sharks' || gameParam === 'minnows' || gameParam === 'shark') gameParam = 'sharks_and_minnows';
+      if (gameParam === 'power_path_clash' || gameParam === 'power_path' || gameParam === 'path_clash' || gameParam === 'hero_path' || gameParam === 'damage_path') gameParam = 'power_path_clash';
 
       const idx = GAME_CATALOG.findIndex((g) => g.id === gameParam);
       if (idx !== -1) {
@@ -4497,6 +4508,9 @@ export class GameManager {
         break;
       case 'sharks_and_minnows':
         this.activeGame = new SharksAndMinnowsGame(this.players, this.input, this.audio, this.particles);
+        break;
+      case 'power_path_clash':
+        this.activeGame = new PowerPathClashGame(this.players, this.input, this.audio, this.particles);
         break;
     }
 
