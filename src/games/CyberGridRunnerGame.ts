@@ -290,14 +290,30 @@ export class CyberGridRunnerGame extends BaseGame {
 
       const steer = this.input.getSteer(p.id);
       const throttle = this.input.getThrottle(p.id);
-      const isAction = this.input.justAction(p.id) || this.input.isActionPressed(p.id) || this.input.justPressed(p.id);
+      const isPressed = this.input.isPressed(p.id);
+      const isAction = this.input.justAction(p.id);
 
       if (isAction && !ps.isBoosting) {
         this.triggerPlayerBoost(ps);
       }
 
+      // Check if trailing behind leader (Catch-up slipstream for humans!)
+      const isBot = p.type.startsWith('bot_');
+      let isTrailing = false;
+      if (!isBot) {
+        for (const other of this.playersState.values()) {
+          if (other.score > ps.score + 5) {
+            isTrailing = true;
+            break;
+          }
+        }
+      }
+
       const isSupercharged = ps.overclockTimer > 0;
-      const currentSpeedLimit = ps.isBoosting ? 440 : isSupercharged ? 320 : 230;
+      let baseSpeed = isBot ? 175 : 230; // Calibrated bot speed: humans move faster than bots!
+      if (!isBot && isTrailing) baseSpeed *= 1.18; // +18% catch-up slipstream
+
+      const currentSpeedLimit = ps.isBoosting ? 440 : isSupercharged ? 320 : baseSpeed;
       const accelRate = ps.isBoosting ? 26 : 14;
 
       if (steer !== 0 || throttle !== 0) {
@@ -312,7 +328,17 @@ export class CyberGridRunnerGame extends BaseGame {
         const targetVy = Math.sin(targetAngle) * currentSpeedLimit;
         ps.vx += (targetVx - ps.vx) * Math.min(1, dt * accelRate);
         ps.vy += (targetVy - ps.vy) * Math.min(1, dt * accelRate);
+      } else if (isPressed) {
+        // Single Button Arcade: HOLD drives forward in current heading!
+        const targetVx = Math.cos(ps.angle) * currentSpeedLimit;
+        const targetVy = Math.sin(ps.angle) * currentSpeedLimit;
+        ps.vx += (targetVx - ps.vx) * Math.min(1, dt * accelRate);
+        ps.vy += (targetVy - ps.vy) * Math.min(1, dt * accelRate);
       } else {
+        // Single Button Arcade: RELEASE smoothly steers in a scan arc
+        if (!isBot) {
+          ps.angle += dt * 2.8;
+        }
         // Hover drift friction
         ps.vx *= Math.pow(0.92, dt * 60);
         ps.vy *= Math.pow(0.92, dt * 60);
@@ -545,16 +571,16 @@ export class CyberGridRunnerGame extends BaseGame {
       return;
     }
 
-    // Reaction update intervals: Easy (0.42s), Normal (0.28s), Hard (0.15s)
-    const interval = difficulty === 'bot_hard' ? 0.15 : difficulty === 'bot_normal' ? 0.28 : 0.42;
+    // Reaction update intervals: Easy (0.55s), Normal (0.38s), Hard (0.18s)
+    const interval = difficulty === 'bot_hard' ? 0.18 : difficulty === 'bot_normal' ? 0.38 : 0.55;
     this.botReactionTimers.set(botId, interval);
 
     // Target Selection:
-    // Easy: only perceives nodes within 240px, 30% chance to drift
-    // Normal: perceives nodes within 380px, balanced distance-to-points ratio
-    // Hard: perceives nodes up to 550px
-    const maxVisionDist = difficulty === 'bot_hard' ? 550 : difficulty === 'bot_normal' ? 380 : 240;
-    const wanderChance = difficulty === 'bot_easy' ? 0.30 : difficulty === 'bot_normal' ? 0.08 : 0;
+    // Easy: only perceives nodes within 200px, 35% chance to wander
+    // Normal: perceives nodes within 300px, 18% chance to drift, fair human-like competition
+    // Hard: perceives nodes up to 520px
+    const maxVisionDist = difficulty === 'bot_hard' ? 520 : difficulty === 'bot_normal' ? 300 : 200;
+    const wanderChance = difficulty === 'bot_easy' ? 0.35 : difficulty === 'bot_normal' ? 0.18 : 0;
 
     let bestNode: DataNode | null = null;
     let bestScore = -Infinity;
@@ -564,8 +590,8 @@ export class CyberGridRunnerGame extends BaseGame {
         const dist = Math.hypot(node.x - bot.x, node.y - bot.y);
         if (dist > maxVisionDist) continue;
 
-        // Weight points fairly: Normal bot seeks nearby nodes rather than instantly cross-mapping high-value nodes
-        const pointWeight = difficulty === 'bot_hard' ? 35 : difficulty === 'bot_normal' ? 16 : 6;
+        // Weight points fairly: Normal bot seeks nearby nodes rather than cross-mapping high-value nodes
+        const pointWeight = difficulty === 'bot_hard' ? 28 : difficulty === 'bot_normal' ? 10 : 4;
         const score = (node.points * pointWeight) - dist;
         if (score > bestScore) {
           bestScore = score;
@@ -590,9 +616,9 @@ export class CyberGridRunnerGame extends BaseGame {
 
     // Add human-like steering imperfection
     if (difficulty === 'bot_easy') {
-      targetAngle += (Math.random() - 0.5) * 0.45;
+      targetAngle += (Math.random() - 0.5) * 0.65;
     } else if (difficulty === 'bot_normal') {
-      targetAngle += (Math.random() - 0.5) * 0.16;
+      targetAngle += (Math.random() - 0.5) * 0.32;
     }
 
     // Hazard Avoidance: Active laser gates
@@ -600,8 +626,13 @@ export class CyberGridRunnerGame extends BaseGame {
       if (gate.isActive && gate.hackedBy !== bot.id && !bot.isBoosting) {
         const d = this.distToSegment(bot.x, bot.y, gate.x1, gate.y1, gate.x2, gate.y2);
         if (d < 50) {
-          const gateAngle = Math.atan2((gate.y1 + gate.y2) / 2 - bot.y, (gate.x1 + gate.x2) / 2 - bot.x);
-          targetAngle = gateAngle + Math.PI * 0.8;
+          // On Normal/Easy, bot occasionally misjudges gate timing
+          if (difficulty !== 'bot_hard' && Math.random() < 0.18) {
+            // Slight delay / misjudgment
+          } else {
+            const gateAngle = Math.atan2((gate.y1 + gate.y2) / 2 - bot.y, (gate.x1 + gate.x2) / 2 - bot.x);
+            targetAngle = gateAngle + Math.PI * 0.8;
+          }
         }
       }
     }
@@ -618,14 +649,15 @@ export class CyberGridRunnerGame extends BaseGame {
 
     // Tactical Nitro Boost: Gated by energy and cooldown
     let wantsBoost = false;
-    if (boostCd <= 0 && !bot.isBoosting && bot.nitroEnergy >= (difficulty === 'bot_hard' ? 45 : 65)) {
+    if (boostCd <= 0 && !bot.isBoosting && bot.nitroEnergy >= (difficulty === 'bot_hard' ? 50 : 75)) {
       if (difficulty === 'bot_hard') {
         const dist = bestNode ? Math.hypot(bestNode.x - bot.x, bestNode.y - bot.y) : 0;
-        if (dist > 180 && Math.random() < 0.40) wantsBoost = true;
+        if (dist > 180 && Math.random() < 0.35) wantsBoost = true;
       } else if (difficulty === 'bot_normal') {
-        if (bestNode && bestNode.points >= 2) {
+        // Normal bot only boosts if trailing or for rare high-value cores
+        if (bestNode && bestNode.points >= 3) {
           const dist = Math.hypot(bestNode.x - bot.x, bestNode.y - bot.y);
-          if (dist > 160 && dist < 320 && Math.random() < 0.25) {
+          if (dist > 160 && dist < 280 && Math.random() < 0.20) {
             wantsBoost = true;
           }
         }
@@ -633,7 +665,7 @@ export class CyberGridRunnerGame extends BaseGame {
     }
 
     if (wantsBoost) {
-      this.botBoostCooldowns.set(botId, 3.2); // 3.2s cooldown on boost
+      this.botBoostCooldowns.set(botId, 3.8); // 3.8s cooldown on boost
     }
 
     // Supply input through the router so bot uses identical hovercraft physics as human
