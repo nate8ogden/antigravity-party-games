@@ -3,6 +3,57 @@ import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
+import { drawCharacter, CharacterMood } from '../core/CharacterRenderer';
+
+export type HighwayTheme = 'cyber' | 'farm' | 'metro';
+
+export interface HighwayThemeConfig {
+  id: HighwayTheme;
+  name: string;
+  bgColor: string;
+  safeColor: string;
+  roadColor: string;
+  railColor: string;
+  riverColor: string;
+  pillColor: string;
+  dividerColor: string;
+}
+
+export const THEME_CONFIGS: HighwayThemeConfig[] = [
+  {
+    id: 'cyber',
+    name: 'Neon Cyberway ⚡',
+    bgColor: '#050814',
+    safeColor: '#0F172A',
+    roadColor: '#090D1A',
+    railColor: '#1E1B4B',
+    riverColor: '#064E3B',
+    pillColor: '#06B6D4',
+    dividerColor: '#38BDF8'
+  },
+  {
+    id: 'farm',
+    name: 'Country Farmland 🌾',
+    bgColor: '#064E3B',
+    safeColor: '#166534',
+    roadColor: '#334155',
+    railColor: '#292524',
+    riverColor: '#0284C7',
+    pillColor: '#10B981',
+    dividerColor: '#FBBF24'
+  },
+  {
+    id: 'metro',
+    name: 'Midnight Metro 🚇',
+    bgColor: '#0B0F19',
+    safeColor: '#1E293B',
+    roadColor: '#18181B',
+    railColor: '#3F3F46',
+    riverColor: '#0E7490',
+    pillColor: '#8B5CF6',
+    dividerColor: '#A855F7'
+  }
+];
 
 type LaneType = 'SAFE' | 'ROAD' | 'RAIL' | 'RIVER';
 
@@ -11,11 +62,10 @@ interface Lane {
   y: number;
   height: number;
   type: LaneType;
-  speed: number; // positive = moves right, negative = moves left
+  speed: number;
   color: string;
-  // Specific lane entity data
   entities: LaneEntity[];
-  railWarning?: number; // countdown until train rushes past
+  railWarning?: number;
   trainActive?: boolean;
 }
 
@@ -26,6 +76,13 @@ interface LaneEntity {
   speed: number;
   color: string;
   type: 'car' | 'truck' | 'train' | 'log' | 'lilypad';
+}
+
+interface GoldenBonusItem {
+  laneIndex: number;
+  x: number;
+  y: number;
+  collected: boolean;
 }
 
 interface HopperPlayer {
@@ -54,6 +111,11 @@ interface HopperPlayer {
   lastRawThrottle: number;
   lastRawSteer: number;
   inputRepeatTimer: number;
+  hopStreak: number;
+  streakTimer: number;
+  isUnderdog: boolean;
+  hasShield: boolean;
+  shoveCooldown: number;
 }
 
 export class HighwayHopGame extends BaseGame {
@@ -64,8 +126,18 @@ export class HighwayHopGame extends BaseGame {
   private totalLanes: number = 14;
   private columnCount: number = 18;
   private colWidth: number = 44;
-  private arenaOffsetY: number = 90;
+  private arenaOffsetY: number = 88;
   private finishOrder: PlayerId[] = [];
+  private goldenItems: GoldenBonusItem[] = [];
+
+  // Theme & Layout Controls
+  public mapTheme: HighwayTheme = 'cyber';
+  private lastWidth: number = 960;
+  private lastHeight: number = 540;
+  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
+  private boundPointerDown: ((e: PointerEvent) => void) | null = null;
+  private suddenDeathAnnounced: boolean = false;
+  private animTimer: number = 0;
 
   constructor(
     players: PlayerConfig[],
@@ -77,6 +149,10 @@ export class HighwayHopGame extends BaseGame {
   }
 
   public init(width: number, height: number): void {
+    this.lastWidth = width;
+    this.lastHeight = height;
+    this.bindKeyboardShortcuts();
+    this.bindCanvasPointer();
     this.reset(width, height);
   }
 
@@ -84,10 +160,12 @@ export class HighwayHopGame extends BaseGame {
     this.isFinished = false;
     this.roundTimer = 45;
     this.finishOrder = [];
+    this.goldenItems = [];
+    this.suddenDeathAnnounced = false;
+    this.animTimer = 0;
 
-    // Calculate dimensions
-    this.arenaOffsetY = 88;
-    this.laneHeight = Math.max(34, Math.floor((height - this.arenaOffsetY - 20) / this.totalLanes));
+    this.arenaOffsetY = 84;
+    this.laneHeight = Math.max(34, Math.floor((height - this.arenaOffsetY - 48) / this.totalLanes));
     this.colWidth = width / this.columnCount;
 
     this.generateProceduralMap(width, height);
@@ -95,12 +173,129 @@ export class HighwayHopGame extends BaseGame {
     this.syncDebug();
   }
 
+  public syncDebug(): void {
+    if (typeof window !== 'undefined') {
+      (window as any).__HIGHWAY_HOP_DEBUG__ = {
+        players: Array.from(this.playersState.values()),
+        lanes: this.lanes,
+        roundTimer: this.roundTimer,
+        isFinished: this.isFinished,
+        finishOrder: this.finishOrder,
+        theme: this.mapTheme,
+        setTheme: (theme: HighwayTheme) => this.setMapTheme(theme),
+        cycleTheme: () => this.cycleTheme(),
+        attemptHop: (pid: PlayerId, dCol: number, dLane: number, width: number) => {
+          const ps = this.playersState.get(pid);
+          if (ps) this.attemptHop(ps, dCol, dLane, width);
+        }
+      };
+    }
+  }
+
+  private bindCanvasPointer(): void {
+    if (typeof window === 'undefined') return;
+    const canvas = this.input.getCanvas();
+    if (!canvas) return;
+
+    this.boundPointerDown = (e: PointerEvent) => {
+      this.handlePointerDown(e);
+    };
+    canvas.addEventListener('pointerdown', this.boundPointerDown);
+  }
+
+  private handlePointerDown(e: PointerEvent): void {
+    const canvas = this.input.getCanvas();
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const clickX = ((e.clientX - rect.left) / rect.width) * this.lastWidth;
+    const clickY = ((e.clientY - rect.top) / rect.height) * this.lastHeight;
+
+    // Check Theme Pill click at (20, height - 44, 170, 32)
+    if (
+      clickX >= 20 &&
+      clickX <= 190 &&
+      clickY >= this.lastHeight - 44 &&
+      clickY <= this.lastHeight - 12
+    ) {
+      this.cycleTheme();
+    }
+  }
+
+  public cycleTheme(): void {
+    const curIdx = THEME_CONFIGS.findIndex((t) => t.id === this.mapTheme);
+    const nextIdx = (curIdx + 1) % THEME_CONFIGS.length;
+    this.setMapTheme(THEME_CONFIGS[nextIdx].id);
+  }
+
+  public setMapTheme(theme: HighwayTheme): void {
+    if (this.mapTheme === theme) return;
+    this.mapTheme = theme;
+    this.audio.playTap();
+    this.particles.spawnExplosion(100, this.lastHeight - 28, '#38BDF8', 12);
+    // Refresh lane colors for new theme
+    this.applyThemeToLanes();
+    this.syncDebug();
+  }
+
+  private applyThemeToLanes(): void {
+    const curTheme = THEME_CONFIGS.find((t) => t.id === this.mapTheme) || THEME_CONFIGS[0];
+    for (const lane of this.lanes) {
+      if (lane.type === 'SAFE') {
+        lane.color = lane.index === this.totalLanes - 1 ? '#059669' : curTheme.safeColor;
+      } else if (lane.type === 'ROAD') {
+        lane.color = curTheme.roadColor;
+      } else if (lane.type === 'RAIL') {
+        lane.color = curTheme.railColor;
+      } else if (lane.type === 'RIVER') {
+        lane.color = curTheme.riverColor;
+      }
+    }
+  }
+
+  private bindKeyboardShortcuts(): void {
+    if (typeof window === 'undefined') return;
+    this.unbindKeyboardShortcuts();
+
+    this.keydownListener = (e: KeyboardEvent) => {
+      if (e.key === 't' || e.key === 'T') {
+        this.cycleTheme();
+      } else if (e.key === '1') {
+        this.setMapTheme('cyber');
+      } else if (e.key === '2') {
+        this.setMapTheme('farm');
+      } else if (e.key === '3') {
+        this.setMapTheme('metro');
+      }
+    };
+    window.addEventListener('keydown', this.keydownListener);
+  }
+
+  private unbindKeyboardShortcuts(): void {
+    if (typeof window !== 'undefined' && this.keydownListener) {
+      window.removeEventListener('keydown', this.keydownListener);
+      this.keydownListener = null;
+    }
+  }
+
+  public override destroy(): void {
+    this.unbindKeyboardShortcuts();
+    if (this.boundPointerDown) {
+      const canvas = this.input.getCanvas();
+      if (canvas) {
+        canvas.removeEventListener('pointerdown', this.boundPointerDown);
+      }
+      this.boundPointerDown = null;
+    }
+    if (typeof window !== 'undefined' && (window as any).__HIGHWAY_HOP_DEBUG__) {
+      delete (window as any).__HIGHWAY_HOP_DEBUG__;
+    }
+  }
+
   private initPlayers(width: number): void {
     this.playersState.clear();
     const active = this.getActivePlayers();
     const count = active.length;
 
-    // Distribute players along bottom safe lane (lane 0)
     const lane0Y = this.arenaOffsetY + (this.totalLanes - 1) * this.laneHeight + this.laneHeight / 2;
 
     active.forEach((p, idx) => {
@@ -133,12 +328,18 @@ export class HighwayHopGame extends BaseGame {
         botDecisionTimer: 0.2 + idx * 0.1,
         lastRawThrottle: 0,
         lastRawSteer: 0,
-        inputRepeatTimer: 0
+        inputRepeatTimer: 0,
+        hopStreak: 0,
+        streakTimer: 0,
+        isUnderdog: false,
+        hasShield: false,
+        shoveCooldown: 0
       });
     });
   }
 
   private generateProceduralMap(width: number, height: number): void {
+    const curTheme = THEME_CONFIGS.find((t) => t.id === this.mapTheme) || THEME_CONFIGS[0];
     const maps = [
       'Neon City Freeway',
       'Country Farmland',
@@ -148,70 +349,66 @@ export class HighwayHopGame extends BaseGame {
     this.currentMapName = maps[Math.floor(Math.random() * maps.length)];
     this.lanes = [];
 
-    // Total lanes: 0 is start (bottom), totalLanes - 1 is goal (top)
-    // Map pattern from bottom (index 0) to top (index totalLanes - 1):
     for (let i = 0; i < this.totalLanes; i++) {
       const laneY = this.arenaOffsetY + (this.totalLanes - 1 - i) * this.laneHeight;
       let type: LaneType = 'SAFE';
       let speed = 0;
-      let color = '#1E293B';
+      let color = curTheme.safeColor;
 
       if (i === 0 || i === this.totalLanes - 1 || i === 4 || i === 8) {
-        // Safe rest berms
         type = 'SAFE';
-        color = i === this.totalLanes - 1 ? '#10B981' : '#1E293B';
+        color = i === this.totalLanes - 1 ? '#059669' : curTheme.safeColor;
       } else if (this.currentMapName === 'Neon City Freeway') {
         if (i <= 3) {
           type = 'ROAD';
           speed = (i % 2 === 0 ? 1 : -1) * (110 + i * 25);
-          color = '#0F172A';
+          color = curTheme.roadColor;
         } else if (i === 5 || i === 6) {
           type = 'RAIL';
           speed = (i % 2 === 0 ? 1 : -1) * 380;
-          color = '#1E1B4B';
+          color = curTheme.railColor;
         } else {
           type = 'RIVER';
           speed = (i % 2 === 0 ? 1 : -1) * (70 + (i - 8) * 15);
-          color = '#0284C7';
+          color = curTheme.riverColor;
         }
       } else if (this.currentMapName === 'Subway Rail Yard') {
         if (i === 1 || i === 2 || i === 5 || i === 6 || i === 7) {
           type = 'RAIL';
           speed = (i % 2 === 0 ? 1 : -1) * 360;
-          color = '#334155';
+          color = curTheme.railColor;
         } else if (i === 3) {
           type = 'ROAD';
           speed = 95;
-          color = '#1E293B';
+          color = curTheme.roadColor;
         } else {
           type = 'RIVER';
           speed = (i % 2 === 0 ? 1 : -1) * 85;
-          color = '#0369A1';
+          color = curTheme.riverColor;
         }
       } else if (this.currentMapName === 'Amazon River Rapids') {
         if (i === 1 || i === 2) {
           type = 'ROAD';
           speed = (i % 2 === 0 ? 1 : -1) * 100;
-          color = '#3F2E18';
+          color = curTheme.roadColor;
         } else {
           type = 'RIVER';
           speed = (i % 2 === 0 ? 1 : -1) * (100 + i * 18);
-          color = '#0284C7';
+          color = curTheme.riverColor;
         }
       } else {
-        // Country Farmland
         if (i <= 3) {
           type = 'ROAD';
           speed = (i % 2 === 0 ? 1 : -1) * (90 + i * 20);
-          color = '#334155';
+          color = curTheme.roadColor;
         } else if (i === 5) {
           type = 'RAIL';
           speed = -340;
-          color = '#1E293B';
+          color = curTheme.railColor;
         } else {
           type = 'RIVER';
           speed = (i % 2 === 0 ? 1 : -1) * 80;
-          color = '#0284C7';
+          color = curTheme.riverColor;
         }
       }
 
@@ -227,7 +424,6 @@ export class HighwayHopGame extends BaseGame {
         trainActive: false
       };
 
-      // Populate lane entities
       this.populateLaneEntities(lane, width);
       this.lanes.push(lane);
     }
@@ -276,16 +472,85 @@ export class HighwayHopGame extends BaseGame {
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
 
+    this.lastWidth = width;
+    this.lastHeight = height;
+    this.animTimer += dt;
     this.roundTimer = Math.max(0, this.roundTimer - dt);
+
+    const isSuddenDeath = this.roundTimer <= 15;
+
+    // Sudden Death warning trigger
+    if (isSuddenDeath && !this.suddenDeathAnnounced) {
+      this.suddenDeathAnnounced = true;
+      this.audio.playBoost();
+      this.particles.shake(0.5);
+      this.particles.showFloatingText('⚡ FREEWAY RUSH HOUR! ⚡', width / 2, height / 2 - 30, '#FACC15', 30);
+
+      // Spawn Golden Turbo Carrots on safe berms (lane 4 and 8)
+      const lane4 = this.lanes[4];
+      const lane8 = this.lanes[8];
+      if (lane4) {
+        this.goldenItems.push({
+          laneIndex: 4,
+          x: width * 0.35,
+          y: lane4.y + lane4.height / 2,
+          collected: false
+        });
+      }
+      if (lane8) {
+        this.goldenItems.push({
+          laneIndex: 8,
+          x: width * 0.65,
+          y: lane8.y + lane8.height / 2,
+          collected: false
+        });
+      }
+    }
+
+    // Determine Underdog Hopper
+    const activeAlive = this.getActivePlayers().filter((p) => this.playersState.get(p.id)?.alive);
+    if (activeAlive.length > 1) {
+      let minLane = 999;
+      let minScore = 999999;
+      let maxLane = -1;
+
+      for (const p of activeAlive) {
+        const ps = this.playersState.get(p.id)!;
+        if (ps.maxLaneReached < minLane) {
+          minLane = ps.maxLaneReached;
+          minScore = ps.score;
+        } else if (ps.maxLaneReached === minLane && ps.score < minScore) {
+          minScore = ps.score;
+        }
+        if (ps.maxLaneReached > maxLane) {
+          maxLane = ps.maxLaneReached;
+        }
+      }
+
+      for (const p of this.getActivePlayers()) {
+        const ps = this.playersState.get(p.id);
+        if (!ps) continue;
+        ps.isUnderdog = ps.alive && (maxLane - ps.maxLaneReached >= 3);
+        if (ps.isUnderdog && !ps.hasShield) {
+          ps.hasShield = true;
+        }
+      }
+    } else {
+      for (const ps of this.playersState.values()) {
+        ps.isUnderdog = false;
+      }
+    }
 
     // Update bot inputs via BaseGame
     this.updateBots(dt, width, height);
 
-    // Update Lanes (cars, trains, river logs)
+    // Speed multiplier during rush hour
+    const rushHourSpeedMult = isSuddenDeath ? 1.25 : 1.0;
+
+    // Update Lanes
     for (const lane of this.lanes) {
-      // Update moving entities
       for (const ent of lane.entities) {
-        ent.x += ent.speed * dt;
+        ent.x += ent.speed * rushHourSpeedMult * dt;
         if (ent.speed > 0 && ent.x > width + ent.width) {
           ent.x = -ent.width;
         } else if (ent.speed < 0 && ent.x < -ent.width) {
@@ -293,14 +558,12 @@ export class HighwayHopGame extends BaseGame {
         }
       }
 
-      // Railway warning & train triggers
       if (lane.type === 'RAIL') {
         if (lane.railWarning !== undefined) {
-          lane.railWarning -= dt;
+          lane.railWarning -= dt * (isSuddenDeath ? 1.4 : 1.0);
           if (lane.railWarning <= 0) {
-            // Spawn high-speed train!
             lane.trainActive = true;
-            lane.railWarning = 5.0 + Math.random() * 4.0;
+            lane.railWarning = (isSuddenDeath ? 3.0 : 5.0) + Math.random() * 3.0;
             const trainW = 380;
             const startX = lane.speed > 0 ? -trainW : width + 20;
 
@@ -309,7 +572,7 @@ export class HighwayHopGame extends BaseGame {
                 x: startX,
                 width: trainW,
                 height: this.laneHeight * 0.85,
-                speed: lane.speed,
+                speed: lane.speed * (isSuddenDeath ? 1.2 : 1.0),
                 color: '#DC2626',
                 type: 'train'
               }
@@ -319,7 +582,6 @@ export class HighwayHopGame extends BaseGame {
           }
         }
 
-        // Clean up train once past
         if (lane.trainActive && lane.entities.length > 0) {
           const t = lane.entities[0];
           if (
@@ -344,14 +606,24 @@ export class HighwayHopGame extends BaseGame {
       if (ps.inputRepeatTimer > 0) {
         ps.inputRepeatTimer = Math.max(0, ps.inputRepeatTimer - dt);
       }
+      if (ps.shoveCooldown > 0) {
+        ps.shoveCooldown = Math.max(0, ps.shoveCooldown - dt);
+      }
+      if (ps.streakTimer > 0) {
+        ps.streakTimer = Math.max(0, ps.streakTimer - dt);
+        if (ps.streakTimer <= 0) {
+          ps.hopStreak = 0;
+        }
+      }
 
-      // Smooth recovery from squish
       ps.squishScaleX += (1 - ps.squishScaleX) * 10 * dt;
       ps.squishScaleY += (1 - ps.squishScaleY) * 10 * dt;
 
       // Handle hopping interpolation
+      // Underdog Rocket Sneakers hop ~40% faster
+      const hopSpeed = ps.isUnderdog ? 10.5 : 6.8;
       if (ps.isHopping) {
-        ps.hopProgress += dt * 6.5; // ~0.15s per hop
+        ps.hopProgress += dt * hopSpeed;
         if (ps.hopProgress >= 1) {
           ps.hopProgress = 1;
           ps.isHopping = false;
@@ -361,7 +633,6 @@ export class HighwayHopGame extends BaseGame {
           const ease = Math.sin(ps.hopProgress * Math.PI);
           ps.x = ps.hopStartX + (ps.targetX - ps.hopStartX) * ps.hopProgress;
           ps.y = ps.hopStartY + (ps.targetY - ps.hopStartY) * ps.hopProgress;
-          // Vertical arc pop
           ps.squishScaleY = 1 + ease * 0.35;
           ps.squishScaleX = 1 - ease * 0.2;
         }
@@ -373,7 +644,6 @@ export class HighwayHopGame extends BaseGame {
         ps.x += ps.onLogSpeed * dt;
         ps.targetX = ps.x;
 
-        // Drown check if carried offscreen
         if (ps.x < 10 || ps.x > width - 10) {
           this.handlePlayerDeath(ps, p.color, 'DRIFTED OFF!');
           continue;
@@ -385,9 +655,26 @@ export class HighwayHopGame extends BaseGame {
         this.handlePlayerInput(p.id, ps, width);
       }
 
+      // Check Golden Turbo Carrot collection
+      for (const item of this.goldenItems) {
+        if (!item.collected && ps.laneIndex === item.laneIndex) {
+          const d = Math.hypot(ps.x - item.x, ps.y - item.y);
+          if (d < 24) {
+            item.collected = true;
+            ps.score += 150;
+            this.audio.playScore();
+            this.particles.spawnExplosion(item.x, item.y, '#FACC15', 20);
+            this.particles.showFloatingText('⭐ +150 BONUS!', item.x, item.y - 25, '#FACC15', 22);
+          }
+        }
+      }
+
       // Hazard & Collision Checks
       this.checkPlayerCollisions(ps, p.color, width);
     }
+
+    // Player-to-Player Bumping & Shoving
+    this.checkPlayerShoving();
 
     this.syncDebug();
 
@@ -399,24 +686,32 @@ export class HighwayHopGame extends BaseGame {
     }
   }
 
-  public syncDebug(): void {
-    if (typeof window !== 'undefined') {
-      (window as any).__HIGHWAY_HOP_DEBUG__ = {
-        players: Array.from(this.playersState.values()),
-        lanes: this.lanes,
-        roundTimer: this.roundTimer,
-        isFinished: this.isFinished,
-        finishOrder: this.finishOrder,
-        attemptHop: (pid: PlayerId, dCol: number, dLane: number, width: number) => {
-          const ps = this.playersState.get(pid);
-          if (ps) this.attemptHop(ps, dCol, dLane, width);
-        }
-      };
-    }
-  }
+  private checkPlayerShoving(): void {
+    const players = Array.from(this.playersState.values()).filter((p) => p.alive && !p.hasFinished);
+    for (let i = 0; i < players.length; i++) {
+      for (let j = i + 1; j < players.length; j++) {
+        const p1 = players[i];
+        const p2 = players[j];
 
-  public isRoundOver(): boolean {
-    return this.isFinished;
+        if (p1.laneIndex === p2.laneIndex && !p1.isHopping && !p2.isHopping) {
+          const dist = Math.abs(p1.x - p2.x);
+          if (dist < 24 && p1.shoveCooldown <= 0 && p2.shoveCooldown <= 0) {
+            const shoveDir = p1.x < p2.x ? -1 : 1;
+            p1.x += shoveDir * 14;
+            p2.x -= shoveDir * 14;
+            p1.targetX = p1.x;
+            p2.targetX = p2.x;
+
+            p1.shoveCooldown = 0.4;
+            p2.shoveCooldown = 0.4;
+
+            this.audio.playBounce();
+            this.particles.spawnDust((p1.x + p2.x) / 2, p1.y, 8);
+            this.particles.showFloatingText('BUMP!', (p1.x + p2.x) / 2, p1.y - 20, '#F59E0B', 16);
+          }
+        }
+      }
+    }
   }
 
   private handlePlayerInput(pid: PlayerId, ps: HopperPlayer, width: number): void {
@@ -434,7 +729,6 @@ export class HighwayHopGame extends BaseGame {
     const rawSteer = this.input.getRawSteer(pid);
     const rawThrottle = this.input.getRawThrottle(pid);
 
-    // Discrete action or directional button presses take highest priority and hop immediately
     if (justAction || justUp) {
       dLane = 1;
       this.input.consumeAction(pid);
@@ -452,7 +746,6 @@ export class HighwayHopGame extends BaseGame {
       this.input.consumeAction(pid);
       ps.inputRepeatTimer = 0.32;
     } else {
-      // Analog stick / sustained held direction: edge-detect initial push or repeat after delay
       const throttleChanged = rawThrottle !== 0 && rawThrottle !== ps.lastRawThrottle;
       const steerChanged = rawSteer !== 0 && rawSteer !== ps.lastRawSteer;
 
@@ -485,11 +778,6 @@ export class HighwayHopGame extends BaseGame {
     const targetLane = this.lanes[targetLaneIdx];
     if (!targetLane) return;
 
-    // TARGET X CALCULATION:
-    // If dCol === 0 (forward or backward hop):
-    // MUST go forward 1 block at current X position without recentering to map center!
-    // If dCol !== 0 (left or right hop):
-    // Move exactly 1 block (this.colWidth) left or right
     let targetX = ps.x;
     if (dCol !== 0) {
       targetX = Math.max(
@@ -515,21 +803,35 @@ export class HighwayHopGame extends BaseGame {
     this.audio.playBounce();
     this.particles.spawnDust(ps.x, ps.y + 12, 6);
 
+    // Streak Multiplier Logic
+    ps.hopStreak = Math.min(3, ps.hopStreak + 1);
+    ps.streakTimer = 1.4;
+
     // Scoring progression
     if (targetLaneIdx > ps.maxLaneReached) {
       ps.maxLaneReached = targetLaneIdx;
-      ps.score += 25;
+      const basePts = 25;
+      const awarded = basePts * ps.hopStreak;
+      ps.score += awarded;
 
-      // Finish line reach!
+      if (ps.hopStreak > 1) {
+        this.particles.showFloatingText(
+          `🔥 ${ps.hopStreak}X! +${awarded}`,
+          ps.x,
+          ps.y - 28,
+          '#FACC15',
+          18
+        );
+      }
+
       if (targetLaneIdx === this.totalLanes - 1 && !ps.hasFinished) {
         ps.hasFinished = true;
         ps.score += 500;
         this.finishOrder.push(ps.id);
         this.audio.playFanfare();
-        this.particles.showFloatingText('GOAL! +500', ps.x, ps.y - 30, '#10B981', 28);
+        this.particles.showFloatingText('GOAL! +500 👑', ps.x, ps.y - 30, '#10B981', 28);
         this.particles.spawnConfetti(ps.x, ps.y, 40);
 
-        // First finisher ends round after brief celebration
         if (this.finishOrder.length === 1) {
           this.roundTimer = Math.min(this.roundTimer, 3.5);
         }
@@ -543,7 +845,6 @@ export class HighwayHopGame extends BaseGame {
     const lane = this.lanes[ps.laneIndex];
     if (!lane) return;
 
-    // Road & Rail collisions
     if (lane.type === 'ROAD' || lane.type === 'RAIL') {
       for (const ent of lane.entities) {
         const entLeft = ent.x;
@@ -551,21 +852,32 @@ export class HighwayHopGame extends BaseGame {
         const entTop = lane.y + (lane.height - ent.height) / 2;
         const entBottom = entTop + ent.height;
 
-        // Bounding box overlap with player circle radius ~12
         if (
           ps.x + 10 > entLeft &&
           ps.x - 10 < entRight &&
           ps.y + 10 > entTop &&
           ps.y - 10 < entBottom
         ) {
-          // Squished!
+          // Check Underdog Hazard Shield
+          if (ps.hasShield) {
+            ps.hasShield = false;
+            ps.invulnTimer = 1.4;
+            this.audio.playBoost();
+            this.particles.spawnExplosion(ps.x, ps.y, '#F59E0B', 25);
+            this.particles.showFloatingText('SHIELD DEFLECT!', ps.x, ps.y - 25, '#F59E0B', 22);
+            // Bump to safety
+            ps.y += this.laneHeight;
+            ps.laneIndex = Math.max(0, ps.laneIndex - 1);
+            ps.targetY = ps.y;
+            return;
+          }
+
           this.handlePlayerDeath(ps, color, ent.type === 'train' ? 'TRAIN WRECK!' : 'SQUISHED!');
           return;
         }
       }
     }
 
-    // River log support check
     if (lane.type === 'RIVER' && !ps.isHopping) {
       let onLog = false;
       let logSpeed = 0;
@@ -581,7 +893,17 @@ export class HighwayHopGame extends BaseGame {
       if (onLog) {
         ps.onLogSpeed = logSpeed;
       } else {
-        // Splashed in river water!
+        if (ps.hasShield) {
+          ps.hasShield = false;
+          ps.invulnTimer = 1.4;
+          this.audio.playBoost();
+          this.particles.showFloatingText('WATER SAVED!', ps.x, ps.y - 25, '#38BDF8', 22);
+          ps.y += this.laneHeight;
+          ps.laneIndex = Math.max(0, ps.laneIndex - 1);
+          ps.targetY = ps.y;
+          return;
+        }
+
         this.handlePlayerDeath(ps, color, 'SPLASH!');
         return;
       }
@@ -595,6 +917,7 @@ export class HighwayHopGame extends BaseGame {
     ps.invulnTimer = 1.3;
     ps.squishScaleX = 1.8;
     ps.squishScaleY = 0.3;
+    ps.hopStreak = 0;
 
     this.audio.playExplosion();
     this.particles.shake(0.35);
@@ -605,7 +928,6 @@ export class HighwayHopGame extends BaseGame {
       ps.alive = false;
       this.particles.showFloatingText('ELIMINATED!', ps.x, ps.y - 35, '#EF4444', 26);
     } else {
-      // Respawn at nearest safe lane behind player
       let respawnLaneIdx = 0;
       for (let l = ps.laneIndex; l >= 0; l--) {
         if (this.lanes[l].type === 'SAFE') {
@@ -634,9 +956,7 @@ export class HighwayHopGame extends BaseGame {
     const lane = this.lanes[laneIndex];
     if (!lane) return false;
 
-    if (lane.type === 'SAFE') {
-      return true;
-    }
+    if (lane.type === 'SAFE') return true;
 
     if (lane.type === 'RAIL') {
       if (lane.trainActive) return false;
@@ -703,7 +1023,6 @@ export class HighwayHopGame extends BaseGame {
     ps.botDecisionTimer -= dt;
     if (ps.botDecisionTimer > 0) return;
 
-    // Decision cadence by difficulty
     const cadence =
       difficulty === 'bot_hard'
         ? 0.11 + Math.random() * 0.04
@@ -716,35 +1035,29 @@ export class HighwayHopGame extends BaseGame {
     const nextLaneIdx = ps.laneIndex + 1;
     const prevLaneIdx = ps.laneIndex - 1;
 
-    // 1. Current Lane Emergency: Is a car/train about to hit the bot on its current lane?
     let currentLaneThreat = false;
     if (curLane && (curLane.type === 'ROAD' || curLane.type === 'RAIL')) {
       currentLaneThreat = !this.isSafeAt(ps.laneIndex, ps.x, 0.0, 0.55, width);
     }
 
-    // 2. River Drift Emergency: Is the bot about to drift off-screen on a log?
     let riverDriftThreat = false;
     if (curLane && curLane.type === 'RIVER') {
       if (curLane.speed < 0 && ps.x < width * 0.18) riverDriftThreat = true;
       if (curLane.speed > 0 && ps.x > width * 0.82) riverDriftThreat = true;
     }
 
-    // Time window for hopping: hop takes 0.15s, evaluate safety in the critical landing window
     const windowStart = 0.12;
     const windowEnd = difficulty === 'bot_hard' ? 0.34 : difficulty === 'bot_normal' ? 0.26 : 0.20;
 
     const isForwardSafe =
       nextLaneIdx < this.totalLanes && this.isSafeAt(nextLaneIdx, ps.x, windowStart, windowEnd, width);
 
-    // If in danger on current lane or drifting off:
     if (currentLaneThreat || riverDriftThreat) {
-      // Option A: Jump forward if safe
       if (isForwardSafe) {
         this.attemptHop(ps, 0, 1, width);
         return;
       }
 
-      // Option B: Dodge sideways on current lane
       if (riverDriftThreat) {
         const dodgeDir = curLane.speed < 0 ? 1 : -1;
         this.attemptHop(ps, dodgeDir, 0, width);
@@ -767,28 +1080,24 @@ export class HighwayHopGame extends BaseGame {
         return;
       }
 
-      // Option C: Retreat backward to safe lane behind
       if (prevLaneIdx >= 0 && this.isSafeAt(prevLaneIdx, ps.x, windowStart, windowEnd, width)) {
         this.attemptHop(ps, 0, -1, width);
         return;
       }
     }
 
-    // 3. Normal Forward Progression
     if (isForwardSafe) {
       if (difficulty === 'bot_easy' && Math.random() < 0.15) {
-        return; // slight hesitation on easy
+        return;
       }
       this.attemptHop(ps, 0, 1, width);
       return;
     }
 
-    // 4. Forward is blocked: check if moving left or right finds an opening or approaching river log
     if (nextLaneIdx < this.totalLanes) {
       const nextLane = this.lanes[nextLaneIdx];
 
       if (nextLane.type === 'RIVER') {
-        // Find nearest river log on next lane and step toward it
         let bestLogDist = Infinity;
         let bestLogDir = 0;
 
@@ -810,7 +1119,6 @@ export class HighwayHopGame extends BaseGame {
           }
         }
       } else {
-        // On road / rail: check if shifting left or right has a clear gap ahead
         const leftX = ps.x - this.colWidth;
         const rightX = ps.x + this.colWidth;
 
@@ -839,57 +1147,81 @@ export class HighwayHopGame extends BaseGame {
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Render Background
-    ctx.fillStyle = '#0B0F19';
+    const curTheme = THEME_CONFIGS.find((t) => t.id === this.mapTheme) || THEME_CONFIGS[0];
+
+    // Background
+    ctx.fillStyle = curTheme.bgColor;
     ctx.fillRect(0, 0, width, height);
 
-    // 2. Render Lanes
+    // Lanes
     for (const lane of this.lanes) {
-      this.renderLane(ctx, lane, width);
+      this.renderLane(ctx, lane, width, curTheme);
     }
 
-    // 3. Render Players
+    // Golden Turbo Carrots
+    for (const item of this.goldenItems) {
+      if (!item.collected) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(item.x, item.y, 10, 0, Math.PI * 2);
+        ctx.fillStyle = '#F59E0B';
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 11px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🥕', item.x, item.y);
+        ctx.restore();
+      }
+    }
+
+    // Players
     for (const p of this.getActivePlayers()) {
       const ps = this.playersState.get(p.id);
       if (!ps) continue;
-      this.renderHopperPlayer(ctx, ps, p.color);
+      this.renderHopperPlayer(ctx, ps, p);
     }
 
-    // 4. Render Center HUD Pod
+    // Minigame HUD Pod at y = 56
     this.renderCenterHudPod(ctx, width);
+
+    // Interactive Theme Pill (x: 20, y: height - 44, w: 170, h: 32)
+    this.renderThemePill(ctx, height, curTheme);
+
+    // Control Hints (Right-aligned)
+    this.renderControlHints(ctx, width, height);
   }
 
-  private renderLane(ctx: CanvasRenderingContext2D, lane: Lane, width: number): void {
+  private renderLane(ctx: CanvasRenderingContext2D, lane: Lane, width: number, theme: HighwayThemeConfig): void {
     ctx.fillStyle = lane.color;
     ctx.fillRect(0, lane.y, width, lane.height);
 
-    // Lane border line
     ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.fillRect(0, lane.y + lane.height - 1, width, 1);
 
     if (lane.type === 'SAFE') {
-      // Flower / Grass blades texture
-      ctx.fillStyle = lane.index === this.totalLanes - 1 ? '#059669' : '#334155';
+      ctx.fillStyle = lane.index === this.totalLanes - 1 ? '#059669' : 'rgba(255, 255, 255, 0.06)';
       for (let x = 12; x < width; x += 28) {
         ctx.fillRect(x, lane.y + 4, 3, 6);
         ctx.fillRect(x + 10, lane.y + lane.height - 10, 4, 5);
       }
 
       if (lane.index === this.totalLanes - 1) {
-        // Goal Finish Pasture Banner
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-        ctx.font = '900 13px Inter, system-ui, sans-serif';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.font = '900 13px system-ui, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('★ GOLDEN PASTURE FINISH LINE ★', width / 2, lane.y + lane.height * 0.65);
       }
     } else if (lane.type === 'ROAD') {
-      // Dashed lane divider
-      ctx.fillStyle = '#FBBF24';
+      ctx.fillStyle = theme.dividerColor;
       for (let x = 10; x < width; x += 36) {
         ctx.fillRect(x, lane.y + lane.height / 2 - 1.5, 18, 3);
       }
     } else if (lane.type === 'RAIL') {
-      // Wooden railroad ties and twin steel rails
       ctx.fillStyle = '#78350F';
       for (let x = 6; x < width; x += 16) {
         ctx.fillRect(x, lane.y + 2, 7, lane.height - 4);
@@ -898,7 +1230,6 @@ export class HighwayHopGame extends BaseGame {
       ctx.fillRect(0, lane.y + 8, width, 3);
       ctx.fillRect(0, lane.y + lane.height - 11, width, 3);
 
-      // Warning lights if train is coming
       if (lane.railWarning !== undefined && lane.railWarning < 1.6) {
         const flash = Math.floor(performance.now() / 150) % 2 === 0;
         ctx.fillStyle = flash ? '#EF4444' : '#7F1D1D';
@@ -908,7 +1239,6 @@ export class HighwayHopGame extends BaseGame {
         ctx.fill();
       }
     } else if (lane.type === 'RIVER') {
-      // Water ripple highlights
       ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
       const waveOffset = (performance.now() * 0.04) % 40;
       for (let x = -20 + waveOffset; x < width; x += 40) {
@@ -917,16 +1247,14 @@ export class HighwayHopGame extends BaseGame {
       }
     }
 
-    // Render Lane Entities (Cars, Trucks, Logs, Trains)
+    // Entities
     for (const ent of lane.entities) {
       const ey = lane.y + (lane.height - ent.height) / 2;
 
       if (ent.type === 'car' || ent.type === 'truck') {
-        // Vehicle Shadow
         ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
         ctx.fillRect(ent.x + 2, ey + ent.height, ent.width, 3);
 
-        // Vehicle Chassis
         ctx.fillStyle = ent.color;
         ctx.beginPath();
         ctx.roundRect(ent.x, ey, ent.width, ent.height, 4);
@@ -935,18 +1263,15 @@ export class HighwayHopGame extends BaseGame {
         ctx.strokeStyle = '#0F172A';
         ctx.stroke();
 
-        // Windshield
         ctx.fillStyle = '#93C5FD';
         const windX = ent.speed > 0 ? ent.x + ent.width - 14 : ent.x + 4;
         ctx.fillRect(windX, ey + 3, 10, ent.height - 6);
 
-        // Headlights
         ctx.fillStyle = '#FEF08A';
         const hX = ent.speed > 0 ? ent.x + ent.width - 2 : ent.x;
         ctx.fillRect(hX, ey + 2, 2, 4);
         ctx.fillRect(hX, ey + ent.height - 6, 2, 4);
       } else if (ent.type === 'train') {
-        // Massive High-Speed Train
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.fillRect(ent.x, ey + ent.height, ent.width, 4);
 
@@ -958,14 +1283,11 @@ export class HighwayHopGame extends BaseGame {
         ctx.strokeStyle = '#FFFFFF';
         ctx.stroke();
 
-        // Train Windows
         ctx.fillStyle = '#FEF08A';
         for (let wx = ent.x + 16; wx < ent.x + ent.width - 20; wx += 26) {
           ctx.fillRect(wx, ey + 4, 16, ent.height - 8);
         }
       } else if (ent.type === 'log') {
-        // River Log
-        ctx.fillStyle = '#5B21B6'; // log bark outline
         ctx.fillStyle = ent.color;
         ctx.beginPath();
         ctx.roundRect(ent.x, ey, ent.width, ent.height, ent.height / 2);
@@ -974,12 +1296,10 @@ export class HighwayHopGame extends BaseGame {
         ctx.strokeStyle = '#451A03';
         ctx.stroke();
 
-        // Tree bark wood rings
         ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
         ctx.fillRect(ent.x + 14, ey + 4, 4, ent.height - 8);
         ctx.fillRect(ent.x + ent.width - 18, ey + 4, 4, ent.height - 8);
       } else if (ent.type === 'lilypad') {
-        // Circular Lilypad
         ctx.fillStyle = ent.color;
         ctx.beginPath();
         ctx.arc(ent.x + ent.width / 2, ey + ent.height / 2, ent.width / 2, 0.2, Math.PI * 1.8);
@@ -995,11 +1315,10 @@ export class HighwayHopGame extends BaseGame {
   private renderHopperPlayer(
     ctx: CanvasRenderingContext2D,
     ps: HopperPlayer,
-    color: string
+    p: PlayerConfig
   ): void {
     if (!ps.alive) return;
 
-    // Invulnerability Flashing
     if (ps.invulnTimer > 0 && Math.floor(performance.now() / 80) % 2 === 0) {
       return;
     }
@@ -1008,45 +1327,70 @@ export class HighwayHopGame extends BaseGame {
     ctx.translate(ps.x, ps.y);
     ctx.scale(ps.squishScaleX, ps.squishScaleY);
 
-    // Player Shadow
+    // Underdog Rocket Sneakers Golden Aura
+    if (ps.isUnderdog) {
+      ctx.save();
+      ctx.strokeStyle = '#F59E0B';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(0, 0, 18, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#F59E0B';
+      ctx.font = '900 8px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('ROCKET ⚡', 0, 22);
+      ctx.restore();
+    }
+
+    // Hazard Shield Bubble
+    if (ps.hasShield) {
+      ctx.save();
+      ctx.strokeStyle = '#38BDF8';
+      ctx.lineWidth = 2;
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.18)';
+      ctx.beginPath();
+      ctx.arc(0, 0, 17, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Shadow
     ctx.beginPath();
     ctx.ellipse(0, 8, 12, 6, 0, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
     ctx.fill();
 
-    // Body (Round Hopper Chicken / Capsule)
-    ctx.beginPath();
-    ctx.arc(0, 0, 13, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#0F172A';
-    ctx.stroke();
+    // Context-aware Character Mood
+    let mood: CharacterMood = 'idle';
+    if (ps.isHopping) {
+      mood = 'happy';
+    } else if (ps.hasFinished) {
+      mood = 'triumph';
+    } else if (ps.hopStreak >= 2) {
+      mood = 'focused';
+    }
 
-    // Eyes facing forward (upward)
-    ctx.fillStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.arc(-4, -5, 3.5, 0, Math.PI * 2);
-    ctx.arc(4, -5, 3.5, 0, Math.PI * 2);
-    ctx.fill();
+    const lane = this.lanes[ps.laneIndex];
+    if (lane && (lane.type === 'ROAD' || lane.type === 'RAIL')) {
+      for (const ent of lane.entities) {
+        if (Math.abs(ent.x - ps.x) < 55) {
+          mood = 'shocked';
+          break;
+        }
+      }
+    }
 
-    ctx.fillStyle = '#0F172A';
-    ctx.beginPath();
-    ctx.arc(-4, -6.5, 1.8, 0, Math.PI * 2);
-    ctx.arc(4, -6.5, 1.8, 0, Math.PI * 2);
-    ctx.fill();
+    const isBot = p.type.startsWith('bot_');
 
-    // Tiny golden beak
-    ctx.fillStyle = '#F59E0B';
-    ctx.beginPath();
-    ctx.moveTo(0, -11);
-    ctx.lineTo(-3, -7);
-    ctx.lineTo(3, -7);
-    ctx.closePath();
-    ctx.fill();
+    // Mascot Avatar via CharacterRenderer
+    drawCharacter(ctx, 0, 0, 14, p.id, isBot, mood, this.animTimer * 4);
 
-    // Lives counter / small hearts above player
     ctx.restore();
+
+    // Hearts above player
     this.renderPlayerHearts(ctx, ps.x, ps.y - 18, ps.lives, ps.maxLives);
   }
 
@@ -1087,17 +1431,85 @@ export class HighwayHopGame extends BaseGame {
     ctx.stroke();
 
     // Map Name Badge
-    ctx.font = '700 11px Inter, system-ui, sans-serif';
+    ctx.font = '700 11px system-ui, sans-serif';
     ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
     ctx.fillStyle = '#38BDF8';
-    ctx.fillText(`MAP: ${this.currentMapName}`, podX + 16, podY + 17);
+    ctx.fillText(`MAP: ${this.currentMapName}`, podX + 16, podY + podH / 2);
 
-    // Timer display
-    ctx.font = '700 12px Inter, system-ui, sans-serif';
+    // Sub-title or rush hour in center
+    ctx.font = '800 11px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    if (this.roundTimer <= 15) {
+      ctx.fillStyle = '#FACC15';
+      ctx.fillText('⚡ RUSH HOUR TRAFFIC', width / 2, podY + podH / 2);
+    } else {
+      ctx.fillStyle = '#94A3B8';
+      ctx.fillText('PROCEDURAL CROSSY FREEWAY', width / 2, podY + podH / 2);
+    }
+
+    // Player Status Mini-Dots on Right
     ctx.textAlign = 'right';
-    const timerColor = this.roundTimer < 10 ? '#EF4444' : '#F1F5F9';
-    ctx.fillStyle = timerColor;
-    ctx.fillText(`TIME: ${this.roundTimer.toFixed(1)}s`, podX + podW - 16, podY + 17);
+    let dotX = podX + podW - 16;
+    const active = this.getActivePlayers();
+    for (let i = active.length - 1; i >= 0; i--) {
+      const p = active[i];
+      const ps = this.playersState.get(p.id);
+      const isAlive = ps ? ps.alive : false;
+
+      ctx.beginPath();
+      ctx.arc(dotX, podY + podH / 2, 5, 0, Math.PI * 2);
+      ctx.fillStyle = isAlive ? p.color : '#64748B';
+      ctx.fill();
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      dotX -= 14;
+    }
+  }
+
+  private renderThemePill(ctx: CanvasRenderingContext2D, height: number, theme: HighwayThemeConfig): void {
+    const pillX = 20;
+    const pillY = height - 44;
+    const pillW = 170;
+    const pillH = 32;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, 16);
+    ctx.fill();
+
+    ctx.strokeStyle = theme.pillColor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '700 11px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(theme.name, pillX + 14, pillY + pillH / 2);
+
+    ctx.fillStyle = '#94A3B8';
+    ctx.font = '600 10px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('[T]', pillX + pillW - 12, pillY + pillH / 2);
+    ctx.restore();
+  }
+
+  private renderControlHints(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    ctx.save();
+    ctx.font = '600 11px system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.fillText('Tap/Space: Hop Forward | Arrows/WASD: Steer & Jump', width - 24, height - 28);
+    ctx.restore();
+  }
+
+  public isRoundOver(): boolean {
+    return this.isFinished;
   }
 
   public getRoundResult(): RoundResult {
