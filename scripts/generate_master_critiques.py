@@ -154,7 +154,7 @@ def generate_custom_resolution_text(g, cls, meta):
     juice_res = f"Add 45ms hit-stop freeze-frames upon critical collisions or scores, directional screenshake ($intensity = \\min(18, impulse \\times 0.25)$), vibrant color-coded particle debris reflecting player palettes, and heavy bass-boosted FM sound effects for all collisions."
 
     # 5. AI Tuning
-    bot_res = f"Equip the bot AI with a 240ms sensory-motor perception delay, an intentional $12\\%$ blunder/misjudgment rate on Easy/Normal, and Gaussian angular dispersion ($\pm 0.14\\text{ rad}$) on targeting trajectories to make solo matches feel convincingly human."
+    bot_res = f"Equip the bot AI with a 240ms sensory-motor perception delay, an intentional $12\\%$ blunder/misjudgment rate on Easy/Normal, and Gaussian angular dispersion ($\pm 0.14\ radians$) on targeting trajectories to make solo matches feel convincingly human."
 
     return {
         'core': core_res,
