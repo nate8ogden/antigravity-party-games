@@ -139,7 +139,8 @@ export class ChompFrogsGame extends BaseGame {
     }
   }
 
-  public destroy(): void {
+  public override destroy(): void {
+    super.destroy();
     if (typeof window !== 'undefined' && this.keydownListener) {
       window.removeEventListener('keydown', this.keydownListener);
       this.keydownListener = null;

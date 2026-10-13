@@ -113,6 +113,11 @@ export class LandscapeArtilleryGame extends BaseGame {
   private botAimTargetPower: number = 0.6;
   private botAimHoldTimer: number = 0;
 
+  // Pointer listener references
+  private boundPointerDown: ((e: PointerEvent) => void) | null = null;
+  private boundPointerMove: ((e: PointerEvent) => void) | null = null;
+  private boundPointerUp: (() => void) | null = null;
+
   constructor(
     players: PlayerConfig[],
     input: InputRouter,
@@ -128,7 +133,7 @@ export class LandscapeArtilleryGame extends BaseGame {
     const canvas = this.input.getCanvas();
     if (!canvas) return;
 
-    canvas.addEventListener('pointerdown', (e: PointerEvent) => {
+    this.boundPointerDown = (e: PointerEvent) => {
       if (this.isFinished || this.turnState !== 'AIMING') return;
       const activeP = this.getActivePlayer();
       if (!activeP || !activeP.alive) return;
@@ -148,19 +153,20 @@ export class LandscapeArtilleryGame extends BaseGame {
       this.pointerCurrentX = worldX;
       this.pointerCurrentY = worldY;
       activeP.isPullingBack = true;
-    });
+    };
+    canvas.addEventListener('pointerdown', this.boundPointerDown);
 
-    window.addEventListener('pointermove', (e: PointerEvent) => {
+    this.boundPointerMove = (e: PointerEvent) => {
       if (!this.isPointerDragging) return;
-      const canvas = this.input.getCanvas();
-      if (!canvas) return;
+      const c = this.input.getCanvas();
+      if (!c) return;
 
-      const rect = canvas.getBoundingClientRect();
-      const screenX = (e.clientX - rect.left) * (canvas.width / rect.width);
-      const screenY = (e.clientY - rect.top) * (canvas.height / rect.height);
+      const rect = c.getBoundingClientRect();
+      const screenX = (e.clientX - rect.left) * (c.width / rect.width);
+      const screenY = (e.clientY - rect.top) * (c.height / rect.height);
 
-      const worldX = (screenX - canvas.width / 2) / this.camera.zoom + this.camera.x;
-      const worldY = (screenY - canvas.height / 2) / this.camera.zoom + this.camera.y;
+      const worldX = (screenX - c.width / 2) / this.camera.zoom + this.camera.x;
+      const worldY = (screenY - c.height / 2) / this.camera.zoom + this.camera.y;
 
       this.pointerCurrentX = worldX;
       this.pointerCurrentY = worldY;
@@ -185,9 +191,10 @@ export class LandscapeArtilleryGame extends BaseGame {
           activeP.power = Math.max(0.15, Math.min(1.0, dist / 140));
         }
       }
-    });
+    };
+    window.addEventListener('pointermove', this.boundPointerMove);
 
-    window.addEventListener('pointerup', () => {
+    this.boundPointerUp = () => {
       if (!this.isPointerDragging) return;
       this.isPointerDragging = false;
       const activeP = this.getActivePlayer();
@@ -195,7 +202,27 @@ export class LandscapeArtilleryGame extends BaseGame {
         activeP.isPullingBack = false;
         this.fireShot(activeP);
       }
-    });
+    };
+    window.addEventListener('pointerup', this.boundPointerUp);
+  }
+
+  public override destroy(): void {
+    super.destroy();
+    if (typeof window !== 'undefined') {
+      const canvas = this.input.getCanvas();
+      if (canvas && this.boundPointerDown) {
+        canvas.removeEventListener('pointerdown', this.boundPointerDown);
+        this.boundPointerDown = null;
+      }
+      if (this.boundPointerMove) {
+        window.removeEventListener('pointermove', this.boundPointerMove);
+        this.boundPointerMove = null;
+      }
+      if (this.boundPointerUp) {
+        window.removeEventListener('pointerup', this.boundPointerUp);
+        this.boundPointerUp = null;
+      }
+    }
   }
 
   public init(width: number, height: number): void {

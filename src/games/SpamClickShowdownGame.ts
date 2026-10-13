@@ -747,7 +747,8 @@ export class SpamClickShowdownGame extends BaseGame {
     ctx.restore();
   }
 
-  public destroy(): void {
+  public override destroy(): void {
+    super.destroy();
     if (this.clickListener && typeof window !== 'undefined') {
       window.removeEventListener('mousedown', this.clickListener);
       this.clickListener = null;
