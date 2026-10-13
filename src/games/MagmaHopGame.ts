@@ -3,6 +3,79 @@ import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
+import { drawCharacter, CharacterMood } from '../core/CharacterRenderer';
+
+export interface MagmaTheme {
+  name: string;
+  lavaGradStart: string;
+  lavaGradMid: string;
+  lavaGradEnd: string;
+  waveColor: string;
+  pillarSide: string;
+  pillarTopSolidStart: string;
+  pillarTopSolidMid: string;
+  pillarTopSolidEnd: string;
+  pillarTopCrackStart: string;
+  pillarRimSolid: string;
+  pillarRimCrack: string;
+  crystalColor: string;
+  crystalHighlight: string;
+  themePillColor: string;
+}
+
+export const MAGMA_THEMES: MagmaTheme[] = [
+  {
+    name: 'Volcanic Inferno 🔥',
+    lavaGradStart: '#5E0D00',
+    lavaGradMid: '#991B00',
+    lavaGradEnd: '#4A0800',
+    waveColor: 'rgba(255, 90, 0, 0.22)',
+    pillarSide: '#1A141A',
+    pillarTopSolidStart: '#4A4A58',
+    pillarTopSolidMid: '#2C2B36',
+    pillarTopSolidEnd: '#1A1922',
+    pillarTopCrackStart: '#552211',
+    pillarRimSolid: '#68667A',
+    pillarRimCrack: '#FF5500',
+    crystalColor: '#F59E0B',
+    crystalHighlight: '#FEF08A',
+    themePillColor: '#F97316'
+  },
+  {
+    name: 'Toxic Acid Bog 🧪',
+    lavaGradStart: '#052E16',
+    lavaGradMid: '#14532D',
+    lavaGradEnd: '#022C22',
+    waveColor: 'rgba(74, 222, 128, 0.20)',
+    pillarSide: '#142118',
+    pillarTopSolidStart: '#334155',
+    pillarTopSolidMid: '#1E293B',
+    pillarTopSolidEnd: '#0F172A',
+    pillarTopCrackStart: '#166534',
+    pillarRimSolid: '#4ADE80',
+    pillarRimCrack: '#A3E635',
+    crystalColor: '#22C55E',
+    crystalHighlight: '#BBF7D0',
+    themePillColor: '#22C55E'
+  },
+  {
+    name: 'Glacial Iceberg Rift ❄️',
+    lavaGradStart: '#082F49',
+    lavaGradMid: '#0369A1',
+    lavaGradEnd: '#0C4A6E',
+    waveColor: 'rgba(56, 189, 248, 0.22)',
+    pillarSide: '#0B192C',
+    pillarTopSolidStart: '#BAE6FD',
+    pillarTopSolidMid: '#7DD3FC',
+    pillarTopSolidEnd: '#38BDF8',
+    pillarTopCrackStart: '#0284C7',
+    pillarRimSolid: '#E0F2FE',
+    pillarRimCrack: '#38BDF8',
+    crystalColor: '#38BDF8',
+    crystalHighlight: '#FFFFFF',
+    themePillColor: '#38BDF8'
+  }
+];
 
 export interface BasaltPillar {
   id: number;
@@ -34,10 +107,9 @@ export interface MagmaPlayer {
   currentPillarId: number | null;
   squashAnim: number;
 
-  // Discrete hop state
   isHopping: boolean;
-  hopProgress: number;     // 0.0 to 1.0
-  hopDuration: number;     // seconds
+  hopProgress: number;
+  hopDuration: number;
   hopStartX: number;
   hopStartY: number;
   hopTargetX: number;
@@ -45,10 +117,13 @@ export interface MagmaPlayer {
   hopTargetPillarId: number | null;
   hopCooldown: number;
 
-  // Input debouncing & repeat
   prevSteer: number;
   prevThrottle: number;
   moveHoldTimer: number;
+
+  hopStreak: number;
+  isUnderdog: boolean;
+  hitStunTimer: number;
 }
 
 export class MagmaHopGame extends BaseGame {
@@ -60,8 +135,13 @@ export class MagmaHopGame extends BaseGame {
   private crystalSpawnTimer: number = 2.0;
   private geyserCycleTimer: number = 4.0;
   private botReactionTimers: Map<PlayerId, number> = new Map();
-  private arenaW: number = 800;
-  private arenaH: number = 600;
+
+  // Polish & Theme Properties
+  private currentThemeIndex: number = 0;
+  private animTimer: number = 0;
+  private suddenDeathAnnounced: boolean = false;
+  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
+  private pointerdownListener: ((e: PointerEvent) => void) | null = null;
 
   constructor(
     players: PlayerConfig[],
@@ -74,34 +154,82 @@ export class MagmaHopGame extends BaseGame {
   }
 
   public init(width: number, height: number): void {
-    this.arenaW = width;
-    this.arenaH = height;
+    this.setupListeners();
     this.reset(width, height);
   }
 
+  public destroy(): void {
+    this.removeListeners();
+    super.destroy();
+    if (typeof window !== 'undefined' && (window as unknown as { __MAGMA_HOP_DEBUG__?: unknown }).__MAGMA_HOP_DEBUG__) {
+      delete (window as unknown as { __MAGMA_HOP_DEBUG__?: unknown }).__MAGMA_HOP_DEBUG__;
+    }
+  }
+
+  private setupListeners(): void {
+    if (typeof window === 'undefined') return;
+    this.removeListeners();
+
+    this.keydownListener = (e: KeyboardEvent) => {
+      if (this.isFinished) return;
+      if (e.code === 'KeyT') {
+        this.currentThemeIndex = (this.currentThemeIndex + 1) % MAGMA_THEMES.length;
+        this.audio.playTap();
+      }
+    };
+    window.addEventListener('keydown', this.keydownListener);
+
+    this.pointerdownListener = (e: PointerEvent) => {
+      if (this.isFinished) return;
+      const canvas = document.querySelector('canvas');
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const clickY = (e.clientY - rect.top) * scaleY;
+
+      // Theme pill at x: 20, y: canvas.height - 44, w: 170, h: 32
+      if (clickX >= 20 && clickX <= 190 && clickY >= canvas.height - 44 && clickY <= canvas.height - 12) {
+        this.currentThemeIndex = (this.currentThemeIndex + 1) % MAGMA_THEMES.length;
+        this.audio.playTap();
+      }
+    };
+    window.addEventListener('pointerdown', this.pointerdownListener);
+  }
+
+  private removeListeners(): void {
+    if (typeof window === 'undefined') return;
+    if (this.keydownListener) {
+      window.removeEventListener('keydown', this.keydownListener);
+      this.keydownListener = null;
+    }
+    if (this.pointerdownListener) {
+      window.removeEventListener('pointerdown', this.pointerdownListener);
+      this.pointerdownListener = null;
+    }
+  }
+
   public reset(width: number = 800, height: number = 600): void {
-    this.arenaW = width;
-    this.arenaH = height;
     this.roundTimer = 35.0;
     this.isFinished = false;
+    this.suddenDeathAnnounced = false;
     this.pillars = [];
     this.magmaPlayers.clear();
     this.botReactionTimers.clear();
     this.lavaOffset = 0;
     this.crystalSpawnTimer = 1.5;
     this.geyserCycleTimer = 4.0;
+    this.animTimer = 0;
 
-    // Generate volcanic basalt stepping stone maps
     const spawnPillars = this.generateRandomMap(width, height);
 
-    // Place initial fire crystals on inner safe stones
     const innerPillars = this.pillars.filter((p) => p.col >= 1 && p.col <= 4);
     for (let i = 0; i < Math.min(5, innerPillars.length); i++) {
       const idx = Math.floor(Math.random() * innerPillars.length);
       if (innerPillars[idx]) innerPillars[idx].hasCrystal = true;
     }
 
-    // Spawn active players centered on designated spawn stones
     const active = this.getActivePlayers();
     active.forEach((p, index) => {
       const pil = spawnPillars[index % spawnPillars.length] || this.pillars[0];
@@ -130,10 +258,45 @@ export class MagmaHopGame extends BaseGame {
         hopCooldown: 0,
         prevSteer: 0,
         prevThrottle: 0,
-        moveHoldTimer: 0
+        moveHoldTimer: 0,
+        hopStreak: 0,
+        isUnderdog: false,
+        hitStunTimer: 0
       });
       this.botReactionTimers.set(p.id, 0.35 + Math.random() * 0.25);
     });
+
+    // Expose debug hook for testing
+    (window as any).__MAGMA_HOP_DEBUG__ = {
+      getPlayers: () => Array.from(this.magmaPlayers.values()).map(p => ({
+        id: p.id,
+        x: p.x,
+        y: p.y,
+        lives: p.lives,
+        score: p.score,
+        currentPillarId: p.currentPillarId,
+        isUnderdog: p.isUnderdog,
+        hopStreak: p.hopStreak
+      })),
+      getPillars: () => this.pillars.map(pil => ({
+        id: pil.id,
+        x: pil.x,
+        y: pil.y,
+        state: pil.state,
+        hasCrystal: pil.hasCrystal
+      })),
+      hop: (pid: PlayerId, targetPillarId: number) => {
+        const p = this.magmaPlayers.get(pid);
+        const pil = this.pillars.find(x => x.id === targetPillarId);
+        if (p && pil) {
+          this.startHop(p, pil.id, pil.x, pil.y);
+        }
+      },
+      getTheme: () => MAGMA_THEMES[this.currentThemeIndex].name,
+      setTheme: (idx: number) => {
+        this.currentThemeIndex = Math.max(0, Math.min(idx, MAGMA_THEMES.length - 1));
+      }
+    };
   }
 
   private generateRandomMap(width: number, height: number): BasaltPillar[] {
@@ -146,156 +309,78 @@ export class MagmaHopGame extends BaseGame {
     const startX = width * 0.16;
     const spacingX = (width * 0.68) / (cols - 1);
     const startY = height * 0.28;
-    const spacingY = (height * 0.58) / (rows - 1);
+    const spacingY = (height * 0.52) / (rows - 1);
 
     let idCounter = 0;
     const spawns: BasaltPillar[] = [];
 
-    switch (this.currentMapName) {
-      case 'Twin Islands':
-        for (let r = 0; r < rows; r++) {
-          for (let c = 0; c < cols; c++) {
-            const isNarrowBridge = (c === 2 || c === 3) && (r === 0 || r === 3);
-            const px = startX + c * spacingX;
-            const py = startY + r * spacingY;
-            const pil: BasaltPillar = {
-              id: idCounter++,
-              x: px,
-              y: py,
-              col: c,
-              row: r,
-              radius: isNarrowBridge ? 30 : 38,
-              state: 'solid',
-              stateTimer: 0,
-              crackLevel: 0,
-              hasCrystal: false,
-              geyserWarningTimer: 0,
-              geyserActiveTimer: 0,
-              shakeOffset: 0
-            };
-            this.pillars.push(pil);
-            if ((c === 1 && r === 1) || (c === 4 && r === 1) || (c === 1 && r === 2) || (c === 4 && r === 2)) {
-              spawns.push(pil);
-            }
-          }
-        }
-        break;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const px = startX + c * spacingX + (r % 2 === 1 ? spacingX * 0.4 : 0);
+        const py = startY + r * spacingY;
 
-      case 'Crater Ring':
-        const cx = width / 2;
-        const cy = height * 0.55;
-        const centerPil: BasaltPillar = {
+        const pil: BasaltPillar = {
           id: idCounter++,
-          x: cx,
-          y: cy,
-          col: 3,
-          row: 2,
-          radius: 46,
+          x: px,
+          y: py,
+          col: c,
+          row: r,
+          radius: 28,
           state: 'solid',
           stateTimer: 0,
           crackLevel: 0,
-          hasCrystal: true,
+          hasCrystal: false,
           geyserWarningTimer: 0,
           geyserActiveTimer: 0,
           shakeOffset: 0
         };
-        this.pillars.push(centerPil);
+        this.pillars.push(pil);
 
-        // Inner ring of 7
-        for (let i = 0; i < 7; i++) {
-          const ang = (i / 7) * Math.PI * 2;
-          const pil: BasaltPillar = {
-            id: idCounter++,
-            x: cx + Math.cos(ang) * 98,
-            y: cy + Math.sin(ang) * 82,
-            col: (i % 5) + 1,
-            row: 1,
-            radius: 36,
-            state: 'solid',
-            stateTimer: 0,
-            crackLevel: 0,
-            hasCrystal: false,
-            geyserWarningTimer: 0,
-            geyserActiveTimer: 0,
-            shakeOffset: 0
-          };
-          this.pillars.push(pil);
+        // Corner spawns
+        if ((r === 0 || r === rows - 1) && (c === 0 || c === cols - 1)) {
+          spawns.push(pil);
         }
-
-        // Outer ring of 16
-        for (let i = 0; i < 16; i++) {
-          const ang = (i / 16) * Math.PI * 2;
-          const pil: BasaltPillar = {
-            id: idCounter++,
-            x: cx + Math.cos(ang) * 195,
-            y: cy + Math.sin(ang) * 155,
-            col: i % 6,
-            row: Math.floor(i / 4),
-            radius: 36,
-            state: 'solid',
-            stateTimer: 0,
-            crackLevel: 0,
-            hasCrystal: false,
-            geyserWarningTimer: 0,
-            geyserActiveTimer: 0,
-            shakeOffset: 0
-          };
-          this.pillars.push(pil);
-          if (i === 2 || i === 6 || i === 10 || i === 14) {
-            spawns.push(pil);
-          }
-        }
-        break;
-
-      case 'Volcanic Archipelago':
-      case 'Hexagonal Atoll':
-      default:
-        for (let r = 0; r < rows; r++) {
-          for (let c = 0; c < cols; c++) {
-            const stagger = (r % 2 === 1) ? spacingX * 0.5 : 0;
-            const px = startX + c * spacingX + stagger;
-            const py = startY + r * spacingY;
-            const pil: BasaltPillar = {
-              id: idCounter++,
-              x: px,
-              y: py,
-              col: c,
-              row: r,
-              radius: 36 + (c + r) % 5,
-              state: 'solid',
-              stateTimer: 0,
-              crackLevel: 0,
-              hasCrystal: false,
-              geyserWarningTimer: 0,
-              geyserActiveTimer: 0,
-              shakeOffset: 0
-            };
-            this.pillars.push(pil);
-            if ((c === 1 && r === 1) || (c === 4 && r === 1) || (c === 1 && r === 2) || (c === 4 && r === 2)) {
-              spawns.push(pil);
-            }
-          }
-        }
-        break;
+      }
     }
 
-    if (spawns.length < 4) {
-      return this.pillars.slice(0, 4);
-    }
-    return spawns;
+    return spawns.length >= 4 ? spawns : this.pillars.slice(0, 4);
   }
 
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
 
     this.roundTimer = Math.max(0, this.roundTimer - dt);
-    this.lavaOffset += dt * 1.6;
+    this.animTimer += dt;
+    this.lavaOffset += dt * 1.5;
+    const isSuddenDeath = this.roundTimer <= 15;
 
-    // Update AI bots
-    this.updateBots(dt, width, height);
+    if (isSuddenDeath && !this.suddenDeathAnnounced) {
+      this.suddenDeathAnnounced = true;
+      this.audio.playExplosion();
+      this.particles.addTrauma(0.4);
+      this.particles.showFloatingText('🌋 SUDDEN DEATH: MAGMA SURGE! 🌋', width / 2, height / 2 - 40, '#FACC15', 28);
+    }
+
+    // Determine Underdog status
+    let maxLives = 0;
+    let minLives = 4;
+    let maxScore = -Infinity;
+    let minScore = Infinity;
+    for (const p of this.magmaPlayers.values()) {
+      if (!p.isAlive) continue;
+      if (p.lives > maxLives) maxLives = p.lives;
+      if (p.lives < minLives) minLives = p.lives;
+      if (p.score > maxScore) maxScore = p.score;
+      if (p.score < minScore) minScore = p.score;
+    }
+
+    for (const p of this.magmaPlayers.values()) {
+      p.isUnderdog = p.isAlive && ((maxLives - p.lives >= 1) || (maxScore - p.score >= 150 && maxScore > 0));
+    }
 
     // Update pillars & geysers
-    this.updatePillars(dt);
+    this.updatePillars(dt, isSuddenDeath);
+    this.updateBots(dt, width, height);
 
     // Crystal spawning
     this.crystalSpawnTimer -= dt;
@@ -307,14 +392,13 @@ export class MagmaHopGame extends BaseGame {
     // Geyser eruptions
     this.geyserCycleTimer -= dt;
     if (this.geyserCycleTimer <= 0) {
-      this.geyserCycleTimer = 4.2 + Math.random() * 2.2;
+      this.geyserCycleTimer = isSuddenDeath ? 2.2 : 4.0 + Math.random() * 2.0;
       this.triggerRandomGeysers();
     }
 
     // Update player movement and hopping
     this.updatePlayers(dt);
 
-    // Check round over condition (time runs out or <= 1 alive in multi-player)
     const active = this.getActivePlayers();
     const alivePlayers = Array.from(this.magmaPlayers.values()).filter((p) => p.isAlive);
 
@@ -323,9 +407,8 @@ export class MagmaHopGame extends BaseGame {
     }
   }
 
-  private updatePillars(dt: number): void {
+  private updatePillars(dt: number, isSuddenDeath: boolean): void {
     for (const pil of this.pillars) {
-      // Geyser timers
       if (pil.geyserWarningTimer > 0) {
         pil.geyserWarningTimer -= dt;
         if (pil.geyserWarningTimer <= 0) {
@@ -341,7 +424,14 @@ export class MagmaHopGame extends BaseGame {
         }
       }
 
-      // Pillar state transitions
+      // In Sudden Death, outer pillars sink permanently
+      if (isSuddenDeath && (pil.col === 0 || pil.col === 5 || pil.row === 0 || pil.row === 3)) {
+        if (pil.state === 'solid') {
+          pil.state = 'cracking';
+          pil.stateTimer = 1.2;
+        }
+      }
+
       switch (pil.state) {
         case 'solid':
           pil.shakeOffset = 0;
@@ -354,7 +444,7 @@ export class MagmaHopGame extends BaseGame {
           pil.shakeOffset = (Math.random() - 0.5) * 4 * pil.crackLevel;
           if (pil.stateTimer <= 0) {
             pil.state = 'submerged';
-            pil.stateTimer = 2.6; // stays underwater for 2.6s
+            pil.stateTimer = isSuddenDeath ? 999 : 2.6; // stays down permanently in sudden death
             pil.hasCrystal = false;
             this.particles.spawnSparks(pil.x, pil.y, '#FF3300', 16);
             this.audio.playBounce();
@@ -362,11 +452,13 @@ export class MagmaHopGame extends BaseGame {
           break;
 
         case 'submerged':
-          pil.stateTimer -= dt;
-          pil.shakeOffset = 0;
-          if (pil.stateTimer <= 0) {
-            pil.state = 'rising';
-            pil.stateTimer = 0.8;
+          if (!isSuddenDeath) {
+            pil.stateTimer -= dt;
+            pil.shakeOffset = 0;
+            if (pil.stateTimer <= 0) {
+              pil.state = 'rising';
+              pil.stateTimer = 0.8;
+            }
           }
           break;
 
@@ -397,13 +489,12 @@ export class MagmaHopGame extends BaseGame {
     );
     if (candidatePillars.length === 0) return;
 
-    // Pick 1 to 2 random pillars
     const count = Math.min(candidatePillars.length, Math.random() < 0.6 ? 2 : 1);
     for (let i = 0; i < count; i++) {
       const pickIdx = Math.floor(Math.random() * candidatePillars.length);
       const chosen = candidatePillars.splice(pickIdx, 1)[0];
       if (chosen) {
-        chosen.geyserWarningTimer = 1.2; // 1.2s clear telegraph
+        chosen.geyserWarningTimer = 1.2;
       }
     }
   }
@@ -414,9 +505,9 @@ export class MagmaHopGame extends BaseGame {
 
       if (p.invulnerableTimer > 0) p.invulnerableTimer -= dt;
       if (p.hopCooldown > 0) p.hopCooldown -= dt;
+      if (p.hitStunTimer > 0) p.hitStunTimer -= dt;
       if (p.squashAnim > 0) p.squashAnim = Math.max(0, p.squashAnim - dt * 5.0);
 
-      // Read Input
       const steer = this.input.getSteer(p.id);
       const throttle = this.input.getThrottle(p.id);
       const justAction = this.input.justAction(p.id) || this.input.justPressed(p.id);
@@ -425,17 +516,15 @@ export class MagmaHopGame extends BaseGame {
       const justLeft = this.input.justLeft(p.id);
       const justRight = this.input.justRight(p.id);
 
-      // Handle Hopping Arc Trajectory
       if (p.isHopping) {
         p.hopProgress += dt / p.hopDuration;
         const t = Math.min(1.0, p.hopProgress);
 
-        // Smooth horizontal movement along arc
         p.x = p.hopStartX + (p.hopTargetX - p.hopStartX) * t;
         p.y = p.hopStartY + (p.hopTargetY - p.hopStartY) * t;
 
-        // Crisp parabolic vertical jump height
-        p.z = Math.sin(t * Math.PI) * 44;
+        const peakZ = p.isUnderdog ? 54 : 44;
+        p.z = Math.sin(t * Math.PI) * peakZ;
 
         if (p.hopProgress >= 1.0) {
           p.isHopping = false;
@@ -445,15 +534,12 @@ export class MagmaHopGame extends BaseGame {
           this.onPlayerLanded(p);
         }
       } else {
-        // Player is grounded on a pillar
         this.checkStandingPillar(p, dt);
 
-        // Facing update
         if (steer !== 0 || throttle !== 0) {
           p.angle = Math.atan2(-throttle, steer);
         }
 
-        // Direction key changes or hold repeat
         const justSteerChange = (steer !== 0 && steer !== p.prevSteer) || justLeft || justRight;
         const justThrottleChange = (throttle !== 0 && throttle !== p.prevThrottle) || justUp || justDown;
         const freshDirection = justSteerChange || justThrottleChange;
@@ -482,75 +568,21 @@ export class MagmaHopGame extends BaseGame {
 
             hopDx = dirX;
             hopDy = dirY;
-          } else if (justAction) {
-            // Space / action tap with neutral directional stick: leap in facing direction or toward nearest safe stone
+            this.handleDirectionalHop(p, hopDx, hopDy, true);
+          } else {
             hopDx = Math.cos(p.angle);
             hopDy = Math.sin(p.angle);
-          }
-
-          if (hopDx !== 0 || hopDy !== 0) {
-            const isExplicitDirection = (steer !== 0 || throttle !== 0 || justLeft || justRight || justUp || justDown);
-            this.initiatePlayerHop(p, hopDx, hopDy, isExplicitDirection);
-            if (holdRepeat) {
-              p.moveHoldTimer = 0.05; // Quick repeat rhythm when holding
-            }
+            this.handleDirectionalHop(p, hopDx, hopDy, false);
           }
         }
-      }
 
-      // Store previous frame steer/throttle for clean edge-triggered hopping
-      p.prevSteer = steer;
-      p.prevThrottle = throttle;
-
-      // Geyser burn check while near ground
-      if (p.z < 20 && p.invulnerableTimer <= 0) {
-        for (const pil of this.pillars) {
-          if (pil.geyserActiveTimer > 0) {
-            const dist = Math.hypot(p.x - pil.x, p.y - pil.y);
-            if (dist < pil.radius + 6) {
-              this.damagePlayer(p, 'Scorched by Magma Geyser!');
-              break;
-            }
-          }
-        }
-      }
-
-      // Arena boundary clamp
-      p.x = Math.max(30, Math.min(this.arenaW - 30, p.x));
-      p.y = Math.max(30, Math.min(this.arenaH - 30, p.y));
-    }
-
-    // Player vs Player bump collision
-    const pList = Array.from(this.magmaPlayers.values()).filter((p) => p.isAlive);
-    for (let i = 0; i < pList.length; i++) {
-      for (let j = i + 1; j < pList.length; j++) {
-        const p1 = pList[i];
-        const p2 = pList[j];
-        const dx = p2.x - p1.x;
-        const dy = p2.y - p1.y;
-        const dist = Math.hypot(dx, dy);
-        const minDist = 26;
-
-        if (dist < minDist && Math.abs(p1.z - p2.z) < 22) {
-          const nx = (dx / (dist || 1));
-          const ny = (dy / (dist || 1));
-          p1.x -= nx * 8;
-          p1.y -= ny * 8;
-          p2.x += nx * 8;
-          p2.y += ny * 8;
-          this.audio.playBounce();
-          this.particles.spawnSparks((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, '#FFFFFF', 8);
-        }
+        p.prevSteer = steer;
+        p.prevThrottle = throttle;
       }
     }
   }
 
-  private initiatePlayerHop(
-    p: MagmaPlayer,
-    dirX: number,
-    dirY: number,
-    isExplicitDirection: boolean
-  ): void {
+  private handleDirectionalHop(p: MagmaPlayer, dirX: number, dirY: number, isExplicitDirection: boolean): void {
     const mag = Math.hypot(dirX, dirY);
     if (mag > 0) {
       dirX /= mag;
@@ -559,11 +591,10 @@ export class MagmaHopGame extends BaseGame {
     const targetAngle = Math.atan2(dirY, dirX);
     p.angle = targetAngle;
 
-    // Search neighbor pillars within reachable stepping distance [35px, 190px]
     const neighbors = this.pillars.filter((pil) => {
       if (pil.id === p.currentPillarId) return false;
       const d = Math.hypot(pil.x - p.x, pil.y - p.y);
-      return d >= 35 && d <= 190;
+      return d >= 35 && d <= (p.isUnderdog ? 220 : 190);
     });
 
     let bestNeighbor: BasaltPillar | null = null;
@@ -575,9 +606,8 @@ export class MagmaHopGame extends BaseGame {
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
 
-      // Check if within ~81 degrees of the player's chosen direction
       if (Math.abs(diff) < (Math.PI * 0.45)) {
-        const align = Math.cos(diff); // 1 = directly on vector
+        const align = Math.cos(diff);
         const dist = Math.hypot(nb.x - p.x, nb.y - p.y);
         const score = align * 100 - (dist / 190) * 20;
         if (score > bestScore) {
@@ -587,8 +617,6 @@ export class MagmaHopGame extends BaseGame {
       }
     }
 
-    // If single action button was pressed with no explicit direction and no forward neighbor found,
-    // pick the nearest safe solid or crystal-bearing neighbor stone
     if (!bestNeighbor && !isExplicitDirection && neighbors.length > 0) {
       const safeNeighbors = neighbors.filter((n) => n.state === 'solid' && n.geyserActiveTimer <= 0);
       const candidates = safeNeighbors.length > 0 ? safeNeighbors : neighbors;
@@ -600,10 +628,8 @@ export class MagmaHopGame extends BaseGame {
     }
 
     if (bestNeighbor) {
-      // Leap cleanly to candidate neighbor pillar!
       this.startHop(p, bestNeighbor.id, bestNeighbor.x, bestNeighbor.y);
     } else if (isExplicitDirection) {
-      // Explicitly directed hop with no stone in that direction: leap off the edge into lava!
       const lavaLandingX = p.x + dirX * 125;
       const lavaLandingY = p.y + dirY * 125;
       this.startHop(p, null, lavaLandingX, lavaLandingY);
@@ -613,7 +639,7 @@ export class MagmaHopGame extends BaseGame {
   private startHop(p: MagmaPlayer, targetPillarId: number | null, tx: number, ty: number): void {
     p.isHopping = true;
     p.hopProgress = 0;
-    p.hopDuration = 0.34;
+    p.hopDuration = p.isUnderdog ? 0.28 : 0.34;
     p.hopStartX = p.x;
     p.hopStartY = p.y;
     p.hopTargetX = tx;
@@ -640,33 +666,75 @@ export class MagmaHopGame extends BaseGame {
     }
 
     if (!landingPillar || landingPillar.state === 'submerged') {
-      // Splashed into lava!
       this.damagePlayer(p, 'Fell into Molten Lava!');
     } else if (landingPillar.geyserActiveTimer > 0) {
-      // Landed in active geyser
       this.damagePlayer(p, 'Scorched by Magma Geyser!');
     } else {
-      // Landed safely on pillar!
       p.currentPillarId = landingPillar.id;
-      p.x = landingPillar.x; // Snaps to stone center
+      p.x = landingPillar.x;
       p.y = landingPillar.y;
+      p.hopStreak++;
+
+      // Streak points
+      const streakPoints = Math.min(50, 10 + p.hopStreak * 5);
+      p.score += streakPoints;
+
       this.audio.playTap();
       this.particles.spawnSparks(landingPillar.x, landingPillar.y, '#FFA500', 8);
 
-      // Collect crystal if present
+      // Check if another player was already standing on this pillar: SHOVE THEM!
+      for (const other of this.magmaPlayers.values()) {
+        if (other.id !== p.id && other.isAlive && other.currentPillarId === landingPillar.id && !other.isHopping) {
+          this.shovePlayer(p, other, landingPillar);
+        }
+      }
+
       if (landingPillar.hasCrystal) {
         landingPillar.hasCrystal = false;
         p.score += 100;
         p.crystalsCollected += 1;
         this.audio.playScore();
         this.particles.spawnSparks(landingPillar.x, landingPillar.y, '#F59E0B', 18);
+        this.particles.showFloatingText('CRYSTAL! +100 💎', landingPillar.x, landingPillar.y - 28, '#F59E0B', 18);
       }
 
-      // Trigger cracking if it was solid
       if (landingPillar.state === 'solid') {
         landingPillar.state = 'cracking';
-        landingPillar.stateTimer = 1.8; // 1.8s survival window before sinking
+        landingPillar.stateTimer = p.isUnderdog ? 2.8 : 1.8;
       }
+    }
+  }
+
+  private shovePlayer(shover: MagmaPlayer, victim: MagmaPlayer, pillar: BasaltPillar): void {
+    victim.hitStunTimer = 0.35;
+    this.audio.playBounce();
+    this.particles.addTrauma(0.2);
+    this.particles.spawnSparks(victim.x, victim.y, '#FFFFFF', 10);
+    this.particles.showFloatingText('SHOVE! 💥', victim.x, victim.y - 30, '#EF4444', 18);
+
+    // Find candidate neighbor for victim to flee to, or shove off stone
+    const shoveAngle = Math.atan2(victim.y - shover.y, victim.x - shover.x) || (Math.random() * Math.PI * 2);
+    const neighbors = this.pillars.filter(
+      (pil) => pil.id !== pillar.id && Math.hypot(pil.x - victim.x, pil.y - victim.y) <= 180
+    );
+
+    let bestNb: BasaltPillar | null = null;
+    let bestAlign = -Infinity;
+    for (const nb of neighbors) {
+      const a = Math.atan2(nb.y - victim.y, nb.x - victim.x);
+      const align = Math.cos(a - shoveAngle);
+      if (align > bestAlign) {
+        bestAlign = align;
+        bestNb = nb;
+      }
+    }
+
+    if (bestNb && bestAlign > 0.3) {
+      this.startHop(victim, bestNb.id, bestNb.x, bestNb.y);
+    } else {
+      // Displaced to outer lip of pillar
+      victim.x = pillar.x + Math.cos(shoveAngle) * (pillar.radius * 0.85);
+      victim.y = pillar.y + Math.sin(shoveAngle) * (pillar.radius * 0.85);
     }
   }
 
@@ -678,7 +746,6 @@ export class MagmaHopGame extends BaseGame {
     if (pil.state === 'submerged') {
       this.damagePlayer(p, 'Pillar Submerged!');
     } else if (pil.state === 'cracking') {
-      // Passive survival score while bravely holding ground
       p.score += dt * 15;
     }
   }
@@ -687,6 +754,7 @@ export class MagmaHopGame extends BaseGame {
     if (p.invulnerableTimer > 0 || !p.isAlive) return;
 
     p.lives -= 1;
+    p.hopStreak = 0;
     this.audio.playExplosion();
     this.particles.shake(8);
     this.particles.spawnExplosion(p.x, p.y, '#FF4500', 22);
@@ -695,33 +763,33 @@ export class MagmaHopGame extends BaseGame {
       p.isAlive = false;
       p.z = 0;
       p.isHopping = false;
+      this.particles.showFloatingText('OUT! 💀', p.x, p.y - 20, '#EF4444', 24);
     } else {
       p.invulnerableTimer = 1.6;
       p.isHopping = false;
-      p.hopCooldown = 0.2;
+      p.z = 0;
 
-      // Respawn drop-in on nearest solid safe pillar
-      const safePillars = this.pillars.filter(
-        (pil) => pil.state === 'solid' && pil.geyserActiveTimer <= 0 && pil.geyserWarningTimer <= 0
-      );
-      const respawnTarget = safePillars.length > 0
-        ? safePillars[Math.floor(Math.random() * safePillars.length)]
+      const solidPillars = this.pillars.filter((pil) => pil.state === 'solid' && pil.geyserActiveTimer <= 0);
+      const respawnPil = solidPillars.length > 0
+        ? solidPillars[Math.floor(Math.random() * solidPillars.length)]
         : this.pillars[0];
 
-      p.x = respawnTarget.x;
-      p.y = respawnTarget.y;
-      p.z = 40; // drop-in from above
-      p.currentPillarId = respawnTarget.id;
+      if (respawnPil) {
+        p.currentPillarId = respawnPil.id;
+        p.x = respawnPil.x;
+        p.y = respawnPil.y;
+      }
+      this.particles.showFloatingText(`-1 LIFE (${p.lives} ❤️ LEFT)`, p.x, p.y - 30, '#F87171', 18);
     }
   }
 
   private findNearestPillar(x: number, y: number): BasaltPillar | null {
     let nearest: BasaltPillar | null = null;
-    let minDist = Infinity;
+    let minD = Infinity;
     for (const pil of this.pillars) {
-      const d = Math.hypot(x - pil.x, y - pil.y);
-      if (d < minDist) {
-        minDist = d;
+      const d = Math.hypot(pil.x - x, pil.y - y);
+      if (d < minD) {
+        minD = d;
         nearest = pil;
       }
     }
@@ -729,7 +797,7 @@ export class MagmaHopGame extends BaseGame {
   }
 
   protected updateBotAI(
-    dt: number,
+    _dt: number,
     botId: PlayerId,
     difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
     _width: number,
@@ -738,68 +806,31 @@ export class MagmaHopGame extends BaseGame {
     const bot = this.magmaPlayers.get(botId);
     if (!bot || !bot.isAlive || bot.isHopping) return;
 
-    let timer = this.botReactionTimers.get(botId) || 0;
-    timer -= dt;
+    const currentPil = this.pillars.find((x) => x.id === bot.currentPillarId);
+    const mustFlee = currentPil && (currentPil.state === 'cracking' || currentPil.geyserWarningTimer > 0);
 
-    if (timer > 0) {
-      this.botReactionTimers.set(botId, timer);
-      return;
-    }
-
-    // Reaction interval calibrated by difficulty
-    const nextInterval =
-      difficulty === 'bot_easy'
-        ? 0.45 + Math.random() * 0.30
-        : difficulty === 'bot_normal'
-        ? 0.24 + Math.random() * 0.16
-        : 0.12 + Math.random() * 0.08;
-    this.botReactionTimers.set(botId, nextInterval);
-
-    // Current pillar status
-    const curPillar = this.pillars.find((p) => p.id === bot.currentPillarId);
-    const mustFlee =
-      !curPillar ||
-      curPillar.state === 'cracking' ||
-      curPillar.state === 'submerged' ||
-      curPillar.geyserWarningTimer > 0 ||
-      curPillar.geyserActiveTimer > 0;
-
-    // Search reachable neighbor pillars [35px, 190px]
-    const candidates = this.pillars.filter((p) => {
-      if (p.id === bot.currentPillarId) return false;
-      const dist = Math.hypot(p.x - bot.x, p.y - bot.y);
-      return dist >= 35 && dist <= 190;
+    const candidates = this.pillars.filter((pil) => {
+      if (pil.id === bot.currentPillarId) return false;
+      if (pil.state === 'submerged') return false;
+      const d = Math.hypot(pil.x - bot.x, pil.y - bot.y);
+      return d >= 35 && d <= 190;
     });
 
     if (candidates.length === 0) return;
 
-    // Score candidates
     let bestPillar: BasaltPillar | null = null;
-    let bestScore = -9999;
+    let bestScore = -Infinity;
 
     for (const cand of candidates) {
-      let score = 0;
-      if (cand.state === 'solid') score += 100;
-      else if (cand.state === 'rising') score += 40;
-      else if (cand.state === 'cracking') score -= (difficulty === 'bot_hard' ? 80 : 30);
-      else if (cand.state === 'submerged') score -= 800;
+      let score = 100;
+      if (cand.state === 'solid') score += 80;
+      if (cand.state === 'rising') score += 40;
+      if (cand.hasCrystal) score += 60;
+      if (cand.geyserWarningTimer > 0 || cand.geyserActiveTimer > 0) score -= 200;
 
-      // Geyser danger
-      if (cand.geyserActiveTimer > 0) score -= 900;
-      if (cand.geyserWarningTimer > 0) {
-        score -= (difficulty === 'bot_easy' ? 60 : 700);
-      }
-
-      // Fire crystal incentive
-      if (cand.hasCrystal) {
-        score += (difficulty === 'bot_hard' ? 240 : 160);
-      }
-
-      // Distance penalty to favor close hops
       const dist = Math.hypot(cand.x - bot.x, cand.y - bot.y);
       score -= (dist / 175) * 15;
 
-      // Easy bots make occasional random choices
       if (difficulty === 'bot_easy') {
         score += (Math.random() - 0.5) * 60;
       }
@@ -810,7 +841,6 @@ export class MagmaHopGame extends BaseGame {
       }
     }
 
-    // Decide if bot hops now
     if (bestPillar && (mustFlee || bestScore > 110 || Math.random() < 0.45)) {
       this.startHop(bot, bestPillar.id, bestPillar.x, bestPillar.y);
     }
@@ -843,9 +873,10 @@ export class MagmaHopGame extends BaseGame {
     }));
 
     const topCrystals = scores[0]?.crystals || 0;
+    const winnerName = winnerId !== null ? (this.getPlayer(winnerId)?.name || 'Player') : '';
     const mvpHighlight = winnerId !== null
-      ? `Player ${winnerId + 1} mastered the basalt pillars with ${topCrystals} crystals!`
-      : 'All jumpers consumed by molten fury!';
+      ? `${winnerName} MASTERED THE BASALT PILLARS WITH ${topCrystals} CRYSTALS!`
+      : 'ALL JUMPERS CONSUMED BY MOLTEN FURY!';
 
     return {
       winnerId,
@@ -855,17 +886,20 @@ export class MagmaHopGame extends BaseGame {
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Draw glowing magma sea background with heat waves
+    ctx.save();
+    const theme = MAGMA_THEMES[this.currentThemeIndex];
+    const isSuddenDeath = this.roundTimer <= 15;
+
+    // 1. Magma / Swamp / Ice Sea
     const lavaGrad = ctx.createLinearGradient(0, 0, width, height);
-    lavaGrad.addColorStop(0, '#5E0D00');
-    lavaGrad.addColorStop(0.5, '#991B00');
-    lavaGrad.addColorStop(1, '#4A0800');
+    lavaGrad.addColorStop(0, theme.lavaGradStart);
+    lavaGrad.addColorStop(0.5, theme.lavaGradMid);
+    lavaGrad.addColorStop(1, theme.lavaGradEnd);
     ctx.fillStyle = lavaGrad;
     ctx.fillRect(0, 0, width, height);
 
-    // Molten magma surface ripples
     ctx.save();
-    ctx.fillStyle = 'rgba(255, 90, 0, 0.22)';
+    ctx.fillStyle = theme.waveColor;
     for (let i = 0; i < 6; i++) {
       ctx.beginPath();
       const waveY = (height / 6) * i + Math.sin(this.lavaOffset + i) * 16;
@@ -874,28 +908,81 @@ export class MagmaHopGame extends BaseGame {
     }
     ctx.restore();
 
-    // 2. Draw Basalt Pillars
+    // 2. Pillars
     for (const pil of this.pillars) {
-      this.renderPillar(ctx, pil);
+      this.renderPillar(ctx, pil, theme);
     }
 
-    // 3. Draw Players
+    // 3. Mascot Players
     for (const p of this.magmaPlayers.values()) {
       if (!p.isAlive) continue;
       this.renderPlayer(ctx, p);
     }
 
-    // 4. Draw HUD / Lives & Crystals
-    this.renderHUD(ctx, width, height);
+    // 4. Header Instruction Badge (y: 56)
+    ctx.save();
+    const pillW = 440;
+    const pillH = 26;
+    const pillX = width / 2 - pillW / 2;
+    const pillY = 56;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeStyle = isSuddenDeath ? '#EF4444' : theme.themePillColor;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(pillX, pillY, pillW, pillH, 13);
+    else ctx.rect(pillX, pillY, pillW, pillH);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = isSuddenDeath ? '#F87171' : '#FFFFFF';
+    ctx.font = '700 11px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(
+      isSuddenDeath
+        ? '🌋 MAGMA SURGE! PERIMETER PILLARS COLLAPSING! 🌋'
+        : 'HOP TO STONES • COLLECT CRYSTALS • SHOVE RIVALS OFF!',
+      width / 2,
+      pillY + pillH / 2
+    );
+    ctx.restore();
+
+    // 5. Interactive Bottom-Left Theme Pill (x: 20, y: height - 44, w: 170, h: 32)
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(20, height - 44, 170, 32, 16);
+    else ctx.rect(20, height - 44, 170, 32);
+    ctx.fill();
+    ctx.strokeStyle = theme.themePillColor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = theme.themePillColor;
+    ctx.font = '700 11px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${theme.name} [T]`, 20 + 85, height - 44 + 16);
+    ctx.restore();
+
+    // 6. On-screen Controls Pill (Offset to right, never overlapping theme pill)
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.70)';
+    ctx.font = '600 11px Montserrat, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('WASD / Arrows: Aim & Hop | Tap: Jump', width - 24, height - 28);
+    ctx.restore();
+
+    ctx.restore();
   }
 
-  private renderPillar(ctx: CanvasRenderingContext2D, pil: BasaltPillar): void {
+  private renderPillar(ctx: CanvasRenderingContext2D, pil: BasaltPillar, theme: MagmaTheme): void {
     ctx.save();
     const px = pil.x + pil.shakeOffset;
     const py = pil.y;
 
     if (pil.state === 'submerged') {
-      // Molten bubbling patch where pillar sank
       ctx.fillStyle = '#FF3B00';
       ctx.beginPath();
       ctx.arc(px, py, pil.radius * 0.7, 0, Math.PI * 2);
@@ -909,26 +996,23 @@ export class MagmaHopGame extends BaseGame {
       return;
     }
 
-    // Basalt 3D cylinder shadow
     const sinkDepth = pil.state === 'cracking' ? pil.crackLevel * 8 : (pil.state === 'rising' ? 8 : 0);
     const renderY = py + sinkDepth;
 
-    // Pillar side (depth)
-    ctx.fillStyle = '#1A141A';
+    ctx.fillStyle = theme.pillarSide;
     ctx.beginPath();
     ctx.ellipse(px, renderY + 12, pil.radius, pil.radius * 0.75, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Pillar stone top surface
     const topGrad = ctx.createRadialGradient(px, renderY - 4, 4, px, renderY, pil.radius);
     if (pil.state === 'cracking') {
-      topGrad.addColorStop(0, '#552211');
+      topGrad.addColorStop(0, theme.pillarTopCrackStart);
       topGrad.addColorStop(0.7, '#2D1B18');
       topGrad.addColorStop(1, '#180E0C');
     } else {
-      topGrad.addColorStop(0, '#4A4A58');
-      topGrad.addColorStop(0.7, '#2C2B36');
-      topGrad.addColorStop(1, '#1A1922');
+      topGrad.addColorStop(0, theme.pillarTopSolidStart);
+      topGrad.addColorStop(0.7, theme.pillarTopSolidMid);
+      topGrad.addColorStop(1, theme.pillarTopSolidEnd);
     }
 
     ctx.fillStyle = topGrad;
@@ -936,12 +1020,10 @@ export class MagmaHopGame extends BaseGame {
     ctx.ellipse(px, renderY, pil.radius, pil.radius * 0.75, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Hexagonal / Chiseled border rim
-    ctx.strokeStyle = pil.state === 'cracking' ? '#FF5500' : '#68667A';
+    ctx.strokeStyle = pil.state === 'cracking' ? theme.pillarRimCrack : theme.pillarRimSolid;
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    // Cracks if cracking
     if (pil.crackLevel > 0) {
       ctx.strokeStyle = '#FFAA00';
       ctx.lineWidth = 2;
@@ -954,24 +1036,19 @@ export class MagmaHopGame extends BaseGame {
       ctx.stroke();
     }
 
-    // Geyser telegraph / eruption
     if (pil.geyserWarningTimer > 0) {
       ctx.fillStyle = 'rgba(255, 69, 0, 0.55)';
       ctx.beginPath();
       ctx.ellipse(px, renderY, pil.radius * 0.8, pil.radius * 0.6, 0, 0, Math.PI * 2);
       ctx.fill();
-
-      // Pulsing warning ring
       ctx.strokeStyle = '#FFD700';
       ctx.lineWidth = 3;
       ctx.stroke();
     } else if (pil.geyserActiveTimer > 0) {
-      // Fire plume blasting up
-      const plumeGrad = ctx.createLinearGradient(px, renderY, px, renderY - 90);
+      const plumeGrad = ctx.createLinearGradient(px, renderY, px, renderY - 95);
       plumeGrad.addColorStop(0, 'rgba(255, 200, 0, 0.9)');
       plumeGrad.addColorStop(0.5, 'rgba(255, 60, 0, 0.85)');
       plumeGrad.addColorStop(1, 'rgba(200, 0, 0, 0)');
-
       ctx.fillStyle = plumeGrad;
       ctx.beginPath();
       ctx.moveTo(px - pil.radius * 0.6, renderY);
@@ -982,19 +1059,16 @@ export class MagmaHopGame extends BaseGame {
       ctx.fill();
     }
 
-    // Fire Crystal on top
     if (pil.hasCrystal) {
       const crystalBob = Math.sin(this.lavaOffset * 3 + pil.id) * 4;
       const cy = renderY - 14 + crystalBob;
 
-      // Glow halo
       ctx.fillStyle = 'rgba(245, 158, 11, 0.35)';
       ctx.beginPath();
       ctx.arc(px, cy, 14, 0, Math.PI * 2);
       ctx.fill();
 
-      // Crystal Diamond
-      ctx.fillStyle = '#F59E0B';
+      ctx.fillStyle = theme.crystalColor;
       ctx.beginPath();
       ctx.moveTo(px, cy - 10);
       ctx.lineTo(px + 7, cy);
@@ -1003,8 +1077,7 @@ export class MagmaHopGame extends BaseGame {
       ctx.closePath();
       ctx.fill();
 
-      // Highlight facet
-      ctx.fillStyle = '#FEF08A';
+      ctx.fillStyle = theme.crystalHighlight;
       ctx.beginPath();
       ctx.moveTo(px, cy - 10);
       ctx.lineTo(px + 4, cy);
@@ -1017,119 +1090,57 @@ export class MagmaHopGame extends BaseGame {
   }
 
   private renderPlayer(ctx: CanvasRenderingContext2D, p: MagmaPlayer): void {
-    const cfg = this.players.find((x) => x.id === p.id);
-    const color = cfg ? cfg.color : '#FFFFFF';
-    const colorDark = cfg ? cfg.colorDark : '#333333';
+    const isBot = this.players[p.id]?.type.startsWith('bot_') ?? false;
 
     ctx.save();
-
-    // Drop shadow (grows smaller when jumping high)
     const shadowScale = Math.max(0.3, 1 - p.z / 90);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
     ctx.beginPath();
     ctx.ellipse(p.x, p.y + 4, 14 * shadowScale, 8 * shadowScale, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Invulnerability flashing
     if (p.invulnerableTimer > 0 && Math.floor(p.invulnerableTimer * 12) % 2 === 0) {
       ctx.restore();
       return;
     }
 
-    // Player position elevated by jump Z
     const renderY = p.y - p.z;
 
-    // Body squash/stretch based on jump
-    const stretchY = 1 + (p.isHopping ? 0.25 : (p.squashAnim > 0 ? -0.25 : 0));
-    const stretchX = 1 / stretchY;
+    // Underdog golden aura
+    if (p.isUnderdog) {
+      ctx.save();
+      ctx.strokeStyle = '#F59E0B';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.arc(p.x, renderY, 22, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
 
-    ctx.translate(p.x, renderY);
-    ctx.scale(stretchX, stretchY);
+    let mood: CharacterMood = 'focused';
+    if (p.hitStunTimer > 0) {
+      mood = 'shocked';
+    } else if (p.isHopping || p.crystalsCollected > 0) {
+      mood = 'happy';
+    } else if (this.isFinished) {
+      mood = 'triumph';
+    }
 
-    // Outer glow aura
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 10;
+    drawCharacter(ctx, p.x, renderY - 8, 14, p.id, isBot, mood, this.animTimer);
 
-    // Character body (armored hopping droid)
-    ctx.fillStyle = colorDark;
-    ctx.beginPath();
-    ctx.arc(0, 0, 16, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(0, -2, 14, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    // Specular highlight on dome
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-    ctx.beginPath();
-    ctx.arc(-4, -6, 5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Eye / Visor facing movement direction
-    const eyeOffsetX = Math.cos(p.angle) * 5;
-    const eyeOffsetY = Math.sin(p.angle) * 5 - 2;
-
-    ctx.fillStyle = '#0F172A';
-    ctx.beginPath();
-    ctx.ellipse(eyeOffsetX, eyeOffsetY, 6, 5, p.angle, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#38BDF8';
-    ctx.beginPath();
-    ctx.arc(eyeOffsetX + 1, eyeOffsetY, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Player ID Pill above head
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 10px Montserrat, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`P${p.id + 1}`, 0, -20);
-
-    ctx.restore();
-  }
-
-  private renderHUD(ctx: CanvasRenderingContext2D, width: number, _height: number): void {
+    // Hearts & Score Badge Above Player
     ctx.save();
-    // Round timer badge
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-    ctx.beginPath();
-    ctx.roundRect(width * 0.5 - 55, 12, 110, 36, 10);
-    ctx.fill();
-    ctx.strokeStyle = '#F97316';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    ctx.textAlign = 'center';
+    let heartsStr = '';
+    for (let h = 0; h < p.lives; h++) heartsStr += '❤️';
+    ctx.font = '10px sans-serif';
+    ctx.fillText(heartsStr, p.x, renderY - 26);
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 18px "Chakra Petch", monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(`${Math.ceil(this.roundTimer)}s`, width * 0.5, 30);
-
-    // Center sub-bar displaying player crystal counts & hearts/lives
-    const active = this.getActivePlayers();
-    const itemW = 120;
-    const subBarW = active.length * itemW;
-    const subBarX = width * 0.5 - subBarW * 0.5;
-
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-    ctx.beginPath();
-    ctx.roundRect(subBarX, 54, subBarW, 26, 6);
-    ctx.fill();
-
-    active.forEach((p, idx) => {
-      const mp = this.magmaPlayers.get(p.id);
-      const px = subBarX + idx * itemW + itemW / 2;
-      ctx.fillStyle = p.color;
-      ctx.font = 'bold 11px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
-      const hearts = mp ? '❤️'.repeat(Math.max(0, mp.lives)) : '';
-      ctx.fillText(`P${p.id + 1} 💎${mp?.crystalsCollected || 0} ${hearts}`, px, 67);
-    });
+    ctx.font = '700 10px Montserrat, sans-serif';
+    ctx.fillText(`${p.score} PTS`, p.x, renderY - 37);
+    ctx.restore();
 
     ctx.restore();
   }
