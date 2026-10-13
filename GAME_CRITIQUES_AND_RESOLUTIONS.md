@@ -290,11 +290,13 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Anvil Rain'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *'Anvil Rain'* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Eliminate passive auto-rotation. Implement an active directional snap system: tap to pivot 45° instantly, double-tap for an immediate 180° turnaround, and hold to charge an explosive forward dash with a visible expanding aura and rising audio whine.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Core Gameplay & Objective Overhaul:** Implemented dynamic Sudden Death at $\le 15$s with double anvil drop rate (`spawnInterval = 0.38s`) and a 40% Golden Anvil Shower (`✨ GOLDEN ANVIL`) bursting with jackpot coins and safety hard hats.
+2. **Controls & Tactility Overhaul:** Active directional steering with snappy responsive braking, instant dash body-check on button/tap (`380 px/s`), dash cooldown indicator, and heavy hit-stop screenshake on impact.
+3. **Multiplayer Chaos & Comeback Mechanic:** Implemented snappy elastic player-to-player body bumping ($m_1 v_1 + m_2 v_2$) allowing rivals to shove each other under falling shadows without even dashing! Trailing players with score deficit $\ge 35$ or missing helmets activate **Underdog Surge**: +15% run speed, magnetic coin suction pulling items within 135px at 165 px/s, and visible golden surge aura.
+4. **Visual & Audio Juice Polish:** 3 Procedural Visual Themes (*Blacksmith Forge 🔨*, *Neon Cyberpunk ⚡*, *Volcano Foundry 🌋*) with custom tile palettes and dynamic border glows. Interactive bottom-left Theme Pill (`x: 20, y: height - 44, w: 160, h: 32`, keyboard shortcut `[T]`). Screen-shake and metallic clang SFX upon crushing landings.
+5. **Humanized AI Tuning:** Bot AI uses 16-ray directional safety evaluation taking into account anvil shadows, warning urgency, arena boundary margins, shockwaves, and collectible prioritization with calibrated difficulty jitter.
+
+#### ✅ STATUS: FULLY RESOLVED & VERIFIED (0 TypeScript/Vite Errors, Built in Antigravity_Games.html)
 
 ### #13. Bomb Relay (ID: `bomb_relay`) — [Action]
 - **Class Implementation:** `src/games/BombRelayGame.ts` (644 lines)
