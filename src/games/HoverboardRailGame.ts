@@ -140,34 +140,30 @@ export class HoverboardRailGame extends BaseGame {
       const isUpEdge = this.input.justUp(p.id) || (throttle > 0.4 && boarder.lastThrottle <= 0.4);
       const isDownEdge = this.input.justDown(p.id) || (throttle < -0.4 && boarder.lastThrottle >= -0.4);
 
-      if (isUpEdge) {
-        if (boarder.railIdx > 0) {
+      if (boarder.switchCooldown <= 0) {
+        if (isUpEdge && boarder.railIdx > 0) {
           boarder.railIdx--;
           boarder.targetY = this.railYPositions[boarder.railIdx];
           boarder.switchCooldown = 0.20;
           this.audio.playTone(480 + (3 - boarder.railIdx) * 65, 0.06, 'triangle');
           this.particles.spawnSparks(playerX, boarder.y, '#00E5FF', 6);
-        }
-      } else if (isDownEdge) {
-        if (boarder.railIdx < this.railYPositions.length - 1) {
+        } else if (isDownEdge && boarder.railIdx < this.railYPositions.length - 1) {
           boarder.railIdx++;
           boarder.targetY = this.railYPositions[boarder.railIdx];
           boarder.switchCooldown = 0.20;
           this.audio.playTone(480 + (3 - boarder.railIdx) * 65, 0.06, 'triangle');
           this.particles.spawnSparks(playerX, boarder.y, '#00E5FF', 6);
-        }
-      } else if (boarder.switchCooldown <= 0) {
-        // Continuous hold with comfortable repeat delay
-        if (throttle > 0.6 && boarder.railIdx > 0) {
+        } else if (throttle > 0.6 && boarder.railIdx > 0) {
+          // Continuous hold with comfortable repeat delay
           boarder.railIdx--;
           boarder.targetY = this.railYPositions[boarder.railIdx];
-          boarder.switchCooldown = 0.22;
+          boarder.switchCooldown = 0.24;
           this.audio.playTone(480 + (3 - boarder.railIdx) * 65, 0.06, 'triangle');
           this.particles.spawnSparks(playerX, boarder.y, '#00E5FF', 6);
         } else if (throttle < -0.6 && boarder.railIdx < this.railYPositions.length - 1) {
           boarder.railIdx++;
           boarder.targetY = this.railYPositions[boarder.railIdx];
-          boarder.switchCooldown = 0.22;
+          boarder.switchCooldown = 0.24;
           this.audio.playTone(480 + (3 - boarder.railIdx) * 65, 0.06, 'triangle');
           this.particles.spawnSparks(playerX, boarder.y, '#00E5FF', 6);
         }
