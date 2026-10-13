@@ -3,6 +3,67 @@ import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
+import { drawCharacter, CharacterMood } from '../core/CharacterRenderer';
+
+export interface VortexTheme {
+  name: string;
+  bgGradInner: string;
+  bgGradMid: string;
+  bgGradOuter: string;
+  starColor: string;
+  armColor1: string;
+  armColor2: string;
+  armColor3: string;
+  holeBorder: string;
+  photonRing: string;
+  singularityCore: string;
+  themePillColor: string;
+}
+
+export const VORTEX_THEMES: VortexTheme[] = [
+  {
+    name: 'Deep Singularity 🌌',
+    bgGradInner: '#020617',
+    bgGradMid: '#0B0F19',
+    bgGradOuter: '#020617',
+    starColor: 'rgba(255, 255, 255, 0.28)',
+    armColor1: 'rgba(168, 85, 247, 0.55)',
+    armColor2: 'rgba(56, 189, 248, 0.35)',
+    armColor3: 'rgba(236, 72, 153, 0.15)',
+    holeBorder: '#818CF8',
+    photonRing: '#F472B6',
+    singularityCore: '#C084FC',
+    themePillColor: '#A855F7'
+  },
+  {
+    name: 'Solar Flare Vortex ☀️',
+    bgGradInner: '#1A0700',
+    bgGradMid: '#2D0F04',
+    bgGradOuter: '#0F0300',
+    starColor: 'rgba(254, 240, 138, 0.32)',
+    armColor1: 'rgba(249, 115, 22, 0.60)',
+    armColor2: 'rgba(234, 179, 8, 0.40)',
+    armColor3: 'rgba(239, 68, 68, 0.20)',
+    holeBorder: '#FB923C',
+    photonRing: '#FACC15',
+    singularityCore: '#F97316',
+    themePillColor: '#F97316'
+  },
+  {
+    name: 'Quantum Rift ⚡',
+    bgGradInner: '#021814',
+    bgGradMid: '#062B28',
+    bgGradOuter: '#010E0C',
+    starColor: 'rgba(167, 243, 208, 0.32)',
+    armColor1: 'rgba(16, 185, 129, 0.55)',
+    armColor2: 'rgba(6, 182, 212, 0.40)',
+    armColor3: 'rgba(52, 211, 153, 0.18)',
+    holeBorder: '#10B981',
+    photonRing: '#34D399',
+    singularityCore: '#06B6D4',
+    themePillColor: '#10B981'
+  }
+];
 
 interface VortexPlayer {
   x: number;
@@ -15,6 +76,9 @@ interface VortexPlayer {
   respawnTimer: number;
   pulseCooldown: number;
   pulseActiveTimer: number;
+  lastDamagedBy: PlayerId | null;
+  lastDamagedTimer: number;
+  isUnderdog: boolean;
 }
 
 interface AntimatterOrb {
@@ -24,6 +88,8 @@ interface AntimatterOrb {
   vy: number;
   radius: number;
   hue: number;
+  isGolden: boolean;
+  value: number;
 }
 
 export class CosmicVortexGame extends BaseGame {
@@ -31,10 +97,20 @@ export class CosmicVortexGame extends BaseGame {
   private orbs: AntimatterOrb[] = [];
   private vortexAngle: number = 0;
   private vortexPulse: number = 0;
-  private nextOrbSpawnTimer: number = 1.5;
+  private nextOrbSpawnTimer: number = 1.0;
 
   private lastWidth: number = 800;
   private lastHeight: number = 600;
+
+  // Themes
+  private currentThemeIndex: number = 0;
+
+  // Sudden Death State
+  private isSuddenDeath: boolean = false;
+  private suddenDeathFlashTimer: number = 0;
+
+  private boundPointerDown: ((e: PointerEvent) => void) | null = null;
+  private boundKeyDown: ((e: KeyboardEvent) => void) | null = null;
 
   constructor(
     players: PlayerConfig[],
@@ -43,6 +119,7 @@ export class CosmicVortexGame extends BaseGame {
     particles: ParticleSystem
   ) {
     super(players, input, audio, particles);
+    this.currentThemeIndex = Math.floor(Math.random() * VORTEX_THEMES.length);
   }
 
   public init(width: number, height: number): void {
@@ -50,6 +127,8 @@ export class CosmicVortexGame extends BaseGame {
     this.lastHeight = height;
     this.roundTimer = 45;
     this.isFinished = false;
+    this.isSuddenDeath = false;
+    this.suddenDeathFlashTimer = 0;
     this.playersState.clear();
     this.orbs = [];
     this.vortexAngle = 0;
@@ -80,7 +159,10 @@ export class CosmicVortexGame extends BaseGame {
         alive: true,
         respawnTimer: 0,
         pulseCooldown: 0,
-        pulseActiveTimer: 0
+        pulseActiveTimer: 0,
+        lastDamagedBy: null,
+        lastDamagedTimer: 0,
+        isUnderdog: false
       });
     });
 
@@ -89,9 +171,20 @@ export class CosmicVortexGame extends BaseGame {
       this.spawnOrb(width, height);
     }
 
+    // Bind listeners
+    const canvas = this.input.getCanvas();
+    if (canvas && !this.boundPointerDown) {
+      this.boundPointerDown = this.handlePointerDown.bind(this);
+      canvas.addEventListener('pointerdown', this.boundPointerDown);
+    }
+    if (!this.boundKeyDown) {
+      this.boundKeyDown = this.handleKeyDown.bind(this);
+      window.addEventListener('keydown', this.boundKeyDown);
+    }
+
     // Expose debug hook for testing
     (window as any).__COSMIC_VORTEX_DEBUG__ = {
-      getOrbs: () => this.orbs.map((o) => ({ x: o.x, y: o.y, vx: o.vx, vy: o.vy, radius: o.radius, hue: o.hue })),
+      getOrbs: () => this.orbs.map((o) => ({ x: o.x, y: o.y, vx: o.vx, vy: o.vy, radius: o.radius, hue: o.hue, isGolden: o.isGolden, value: o.value })),
       getOrbCount: () => this.orbs.length,
       getPlayerState: (pid: PlayerId) => {
         const ps = this.playersState.get(pid);
@@ -107,31 +200,81 @@ export class CosmicVortexGame extends BaseGame {
           ps.angle = angle;
         }
       },
-      spawnOrb: () => this.spawnOrb(this.lastWidth, this.lastHeight)
+      spawnOrb: () => this.spawnOrb(this.lastWidth, this.lastHeight),
+      getThemeIndex: () => this.currentThemeIndex,
+      setThemeIndex: (idx: number) => {
+        this.currentThemeIndex = idx % VORTEX_THEMES.length;
+      }
     };
   }
 
-  private spawnOrb(width: number, height: number) {
+  private handleKeyDown(e: KeyboardEvent): void {
+    if (e.key === 't' || e.key === 'T') {
+      this.toggleTheme();
+    }
+  }
+
+  private toggleTheme(): void {
+    this.currentThemeIndex = (this.currentThemeIndex + 1) % VORTEX_THEMES.length;
+    this.audio.playTap();
+  }
+
+  private handlePointerDown(e: PointerEvent): void {
+    const canvas = this.input.getCanvas();
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const clickX = ((e.clientX - rect.left) / rect.width) * this.lastWidth;
+    const clickY = ((e.clientY - rect.top) / rect.height) * this.lastHeight;
+
+    // Check Theme Pill click: [T] Theme Pill at (20, height - 44, 170, 32)
+    if (
+      clickX >= 20 &&
+      clickX <= 190 &&
+      clickY >= this.lastHeight - 44 &&
+      clickY <= this.lastHeight - 12
+    ) {
+      this.toggleTheme();
+    }
+  }
+
+  public override destroy(): void {
+    if (this.boundPointerDown) {
+      const canvas = this.input.getCanvas();
+      if (canvas) {
+        canvas.removeEventListener('pointerdown', this.boundPointerDown);
+      }
+      this.boundPointerDown = null;
+    }
+    if (this.boundKeyDown) {
+      window.removeEventListener('keydown', this.boundKeyDown);
+      this.boundKeyDown = null;
+    }
+  }
+
+  private spawnOrb(width: number, height: number, forceGolden: boolean = false) {
     const cx = width / 2;
     const cy = height / 2;
-    const minR = 90;
+    const minR = 95;
     const maxR = Math.min(width, height) * 0.40;
     const r = minR + Math.random() * (maxR - minR);
     const angle = Math.random() * Math.PI * 2;
     const speed = 65 + Math.random() * 45;
     const radialDrift = (Math.random() - 0.5) * 20;
 
-    // Iridescent cosmic bubble hues: Cyan (180), Magenta (310), Amber (45), Emerald (140), Purple (270)
+    const isGolden = forceGolden || (this.isSuddenDeath && Math.random() < 0.45);
     const hues = [180, 310, 45, 140, 270];
-    const hue = hues[Math.floor(Math.random() * hues.length)];
+    const hue = isGolden ? 45 : hues[Math.floor(Math.random() * hues.length)];
 
     this.orbs.push({
       x: cx + Math.cos(angle) * r,
       y: cy + Math.sin(angle) * r,
       vx: -Math.sin(angle) * speed + Math.cos(angle) * radialDrift,
       vy: Math.cos(angle) * speed + Math.sin(angle) * radialDrift,
-      radius: 9,
-      hue
+      radius: isGolden ? 12 : 9,
+      hue,
+      isGolden,
+      value: isGolden ? 2 : 1
     });
   }
 
@@ -148,20 +291,42 @@ export class CosmicVortexGame extends BaseGame {
       return;
     }
 
-    this.vortexAngle += dt * 1.8;
+    // Sudden death threshold (<= 15 seconds remaining)
+    if (this.roundTimer <= 15.0 && !this.isSuddenDeath) {
+      this.isSuddenDeath = true;
+      this.audio.playBoost();
+      this.particles.shake(6);
+      // Spawn golden orbs immediately
+      this.spawnOrb(width, height, true);
+      this.spawnOrb(width, height, true);
+    }
+
+    if (this.isSuddenDeath) {
+      this.suddenDeathFlashTimer += dt;
+    }
+
+    this.vortexAngle += dt * (this.isSuddenDeath ? 2.5 : 1.8);
     this.vortexPulse = Math.sin(this.vortexAngle * 2.5) * 0.5 + 0.5;
 
     const cx = width / 2;
     const cy = height / 2;
-    const eventHorizonR = 48;
+    const eventHorizonR = this.isSuddenDeath ? 58 : 48;
 
-    // Continuous bubble spawning (maintain 6 to 9 active bubbles at all times)
-    const MAX_ORBS = 9;
-    const MIN_ORBS = 6;
+    // Underdog calculation
+    let maxScore = -1;
+    for (const ps of this.playersState.values()) {
+      if (ps.score > maxScore) maxScore = ps.score;
+    }
+    for (const ps of this.playersState.values()) {
+      ps.isUnderdog = maxScore >= 2 && ps.score <= maxScore - 2;
+    }
+
+    // Continuous bubble replenishment
+    const MAX_ORBS = this.isSuddenDeath ? 11 : 9;
+    const MIN_ORBS = this.isSuddenDeath ? 7 : 6;
     this.nextOrbSpawnTimer -= dt;
 
     if (this.orbs.length < MIN_ORBS) {
-      // Rapid catch-up replenishment if bubbles were collected or consumed
       this.spawnOrb(width, height);
       this.nextOrbSpawnTimer = 0.4;
     } else if (this.nextOrbSpawnTimer <= 0 && this.orbs.length < MAX_ORBS) {
@@ -178,7 +343,7 @@ export class CosmicVortexGame extends BaseGame {
 
       // Event horizon consumption with sparkling implosion
       if (dist < eventHorizonR + 5) {
-        this.particles.spawnSparks(orb.x, orb.y, orb.hue === 180 ? '#38BDF8' : '#F472B6', 8);
+        this.particles.spawnSparks(orb.x, orb.y, orb.isGolden ? '#FBBF24' : (orb.hue === 180 ? '#38BDF8' : '#F472B6'), 8);
         this.orbs.splice(i, 1);
         continue;
       }
@@ -189,20 +354,19 @@ export class CosmicVortexGame extends BaseGame {
         continue;
       }
 
-      // Gravitational acceleration (with baseline inward cosmic drift so bubbles don't linger in outer darkness)
+      // Gravitational acceleration
       const safeDist = Math.max(1, dist);
-      const gravity = 45000 / (safeDist * safeDist + 2000) + 15;
+      const gravity = (this.isSuddenDeath ? 65000 : 45000) / (safeDist * safeDist + 2000) + 15;
       orb.vx += (dx / safeDist) * gravity * dt;
       orb.vy += (dy / safeDist) * gravity * dt;
 
-      // Subtle drag to stabilize orbital flight
       orb.vx *= Math.pow(0.99, dt * 60);
       orb.vy *= Math.pow(0.99, dt * 60);
 
       orb.x += orb.vx * dt;
       orb.y += orb.vy * dt;
 
-      // Arena boundary bounce for bubbles (keeps bubbles inside play area!)
+      // Arena boundary bounce for bubbles
       const orbMargin = 22;
       if (orb.x < orbMargin) {
         orb.x = orbMargin;
@@ -229,6 +393,11 @@ export class CosmicVortexGame extends BaseGame {
       const ps = this.playersState.get(p.id);
       if (!ps) continue;
 
+      if (ps.lastDamagedTimer > 0) {
+        ps.lastDamagedTimer -= dt;
+        if (ps.lastDamagedTimer <= 0) ps.lastDamagedBy = null;
+      }
+
       if (!ps.alive) {
         ps.respawnTimer -= dt;
         if (ps.respawnTimer <= 0) {
@@ -253,37 +422,35 @@ export class CosmicVortexGame extends BaseGame {
       const thrust = this.input.isPressed(p.id);
 
       if (steer !== 0) {
-        ps.angle += steer * 4.0 * dt;
+        ps.angle += steer * 4.2 * dt;
       } else {
-        // Continuous rotation in single-button mode: holding thrust creates an arc
-        // and players NEVER get stuck pointing in one direction!
         const rotSpeed = thrust ? 2.6 : 3.6;
         ps.angle += rotSpeed * dt;
       }
 
       if (thrust) {
-        const thrustPower = 340;
+        const thrustPower = ps.isUnderdog ? 425 : 340; // Underdog +25% thrust power
         ps.vx += Math.cos(ps.angle) * thrustPower * dt;
         ps.vy += Math.sin(ps.angle) * thrustPower * dt;
 
-        // Ion thruster trail particles
         if (Math.random() < 0.4) {
           const flameX = ps.x - Math.cos(ps.angle) * 14;
           const flameY = ps.y - Math.sin(ps.angle) * 14;
-          this.particles.spawnSparks(flameX, flameY, p.colorLight, 1);
+          this.particles.spawnSparks(flameX, flameY, ps.isUnderdog ? '#F59E0B' : p.colorLight, 1);
         }
       }
 
-      // Check Pulse Blast Trigger (Triggered when tapping or double-tapping)
+      // Check Pulse Blast Trigger (Triggered when tapping)
       const justTapped = this.input.justPressed(p.id);
       if (justTapped && ps.pulseCooldown <= 0) {
-        ps.pulseCooldown = 2.2;
+        // Underdog pulse cooldown is halved (1.1s vs 2.2s)
+        ps.pulseCooldown = ps.isUnderdog ? 1.1 : 2.2;
         ps.pulseActiveTimer = 0.25;
         this.audio.playLaser();
         this.particles.shake(0.35);
 
         // Repulse all opponents within blast range
-        const blastRange = 135;
+        const blastRange = ps.isUnderdog ? 155 : 135;
         for (const other of active) {
           if (other.id === p.id) continue;
           const os = this.playersState.get(other.id);
@@ -293,21 +460,26 @@ export class CosmicVortexGame extends BaseGame {
           const ody = os.y - ps.y;
           const odist = Math.hypot(odx, ody);
           if (odist < blastRange && odist > 0.1) {
-            const push = (1 - odist / blastRange) * 420;
+            const push = (1 - odist / blastRange) * 480;
             os.vx += (odx / odist) * push;
             os.vy += (ody / odist) * push;
+            os.lastDamagedBy = p.id;
+            os.lastDamagedTimer = 2.5; // Record credit for singularity slam
             this.audio.playBounce();
+            this.particles.spawnSparks(os.x, os.y, '#FFFFFF', 6);
           }
         }
       }
 
-      // Gravitational pull toward event horizon (with baseline cosmic vortex inward current)
+      // Gravitational pull toward event horizon
       const dx = cx - ps.x;
       const dy = cy - ps.y;
       const dist = Math.hypot(dx, dy);
 
       const safeDist = Math.max(1, dist);
-      const gravity = 62000 / (safeDist * safeDist + 1800) + 25; // Inward drift everywhere in arena!
+      // Underdog receives 40% reduced gravitational pull
+      const gravityMult = (ps.isUnderdog ? 0.60 : 1.0) * (this.isSuddenDeath ? 1.35 : 1.0);
+      const gravity = (62000 / (safeDist * safeDist + 1800) + 25) * gravityMult;
       ps.vx += (dx / safeDist) * gravity * dt;
       ps.vy += (dy / safeDist) * gravity * dt;
 
@@ -334,12 +506,25 @@ export class CosmicVortexGame extends BaseGame {
         this.audio.playExplosion();
         this.particles.shake(0.55);
 
+        // Singularity Slam bounty check: If a rival shoved them within 2.5s, reward that rival!
+        if (ps.lastDamagedBy !== null) {
+          const killerState = this.playersState.get(ps.lastDamagedBy);
+          if (killerState) {
+            killerState.score += 2;
+            this.audio.playScore();
+            this.particles.spawnSparks(cx, cy, '#F59E0B', 20);
+            if (killerState.score >= 5) {
+              this.isFinished = true;
+            }
+          }
+        }
+
         // Implosion ring particles
         this.particles.spawnExplosion(cx, cy, p.color, 28);
         continue;
       }
 
-      // Arena boundary collision with firm inward deflection (prevents sticking against walls)
+      // Arena boundary collision with firm inward deflection
       const margin = 32;
       let hitWall = false;
       if (ps.x < margin) {
@@ -365,7 +550,7 @@ export class CosmicVortexGame extends BaseGame {
         this.particles.spawnSparks(ps.x, ps.y, p.colorLight, 2);
       }
 
-      // Corner Anti-Trap Cushion: If in any corner pocket, apply diagonal push and steer toward center
+      // Corner Anti-Trap Cushion
       const cornerPocket = 85;
       const inCornerX = ps.x < cornerPocket || ps.x > width - cornerPocket;
       const inCornerY = ps.y < cornerPocket || ps.y > height - cornerPocket;
@@ -373,11 +558,10 @@ export class CosmicVortexGame extends BaseGame {
         const cornerDist = Math.hypot(cx - ps.x, cy - ps.y) || 1;
         const toCenterX = (cx - ps.x) / cornerDist;
         const toCenterY = (cy - ps.y) / cornerDist;
-        const cornerPush = 280; // Strong spring force pushing out of corner
+        const cornerPush = 280;
         ps.vx += toCenterX * cornerPush * dt;
         ps.vy += toCenterY * cornerPush * dt;
 
-        // Smoothly steer ship angle toward center if facing into corner
         const centerAngle = Math.atan2(cy - ps.y, cx - ps.x);
         let angleDiff = centerAngle - ps.angle;
         while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
@@ -389,13 +573,13 @@ export class CosmicVortexGame extends BaseGame {
       for (let i = this.orbs.length - 1; i >= 0; i--) {
         const orb = this.orbs[i];
         if (Math.hypot(ps.x - orb.x, ps.y - orb.y) < 22) {
+          const val = orb.value;
           this.orbs.splice(i, 1);
-          ps.score += 1;
+          ps.score += val;
           this.audio.playTone(740, 0.08, 'sine');
           setTimeout(() => this.audio.playTone(1100, 0.12, 'triangle'), 60);
 
-          // Sparkle burst
-          this.particles.spawnSparks(orb.x, orb.y, '#38BDF8', 14);
+          this.particles.spawnSparks(orb.x, orb.y, orb.isGolden ? '#FBBF24' : '#38BDF8', 14);
 
           if (ps.score >= 5) {
             this.isFinished = true;
@@ -404,7 +588,7 @@ export class CosmicVortexGame extends BaseGame {
       }
     }
 
-    // Player-to-Player Elastic Collision (prevents pinning/wedging each other in corners)
+    // Player-to-Player Elastic Collision
     const activeList = active
       .map((p) => ({ cfg: p, state: this.playersState.get(p.id)! }))
       .filter((item) => item.state && item.state.alive);
@@ -416,20 +600,18 @@ export class CosmicVortexGame extends BaseGame {
         const pdx = p2.x - p1.x;
         const pdy = p2.y - p1.y;
         const pdist = Math.hypot(pdx, pdy);
-        const minDist = 30; // Ship collision diameter
+        const minDist = 30;
 
         if (pdist < minDist && pdist > 0.01) {
           const overlap = minDist - pdist;
           const nx = pdx / pdist;
           const ny = pdy / pdist;
 
-          // Push positions apart
           p1.x -= nx * (overlap * 0.5);
           p1.y -= ny * (overlap * 0.5);
           p2.x += nx * (overlap * 0.5);
           p2.y += ny * (overlap * 0.5);
 
-          // Relative velocity bounce
           const rvx = p2.vx - p1.vx;
           const rvy = p2.vy - p1.vy;
           const velAlongNormal = rvx * nx + rvy * ny;
@@ -450,7 +632,7 @@ export class CosmicVortexGame extends BaseGame {
   }
 
   protected updateBotAI(
-    dt: number,
+    _dt: number,
     botId: PlayerId,
     difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
     width: number,
@@ -465,7 +647,7 @@ export class CosmicVortexGame extends BaseGame {
     const dy = cy - ps.y;
     const dist = Math.hypot(dx, dy);
 
-    // Corner & Wall Avoidance: if near boundary or corner, prioritize escaping to center
+    // Corner & Wall Avoidance
     const wallMargin = 80;
     const cornerMargin = 110;
     const nearLeft = ps.x < wallMargin;
@@ -475,7 +657,6 @@ export class CosmicVortexGame extends BaseGame {
     const inCorner = (nearLeft || nearRight) && (nearTop || nearBottom) || (ps.x < cornerMargin && ps.y < cornerMargin);
 
     if (inCorner || nearLeft || nearRight || nearTop || nearBottom) {
-      // Steer firmly towards the central playfield and thrust out
       ps.angle = Math.atan2(cy - ps.y, cx - ps.x);
       this.input.setBotPressed(botId, true);
       return;
@@ -487,18 +668,18 @@ export class CosmicVortexGame extends BaseGame {
     for (const orb of this.orbs) {
       const d = Math.hypot(orb.x - ps.x, orb.y - ps.y);
       const orbDistFromCenter = Math.hypot(cx - orb.x, cy - orb.y);
-      // Skip orbs that are dangerously close to the black hole event horizon
-      if (orbDistFromCenter < 68) continue;
-      if (d < bestDist) {
-        bestDist = d;
+      if (orbDistFromCenter < 72) continue;
+      // Prioritize golden orbs!
+      const effectiveDist = orb.isGolden ? d * 0.6 : d;
+      if (effectiveDist < bestDist) {
+        bestDist = effectiveDist;
         bestOrb = orb;
       }
     }
 
     if (difficulty === 'bot_easy') {
-      // Wanders, avoids singularity, and occasionally chases orbs
+      // Slower reactions (350-450ms)
       if (dist < 130) {
-        // Thrust outwards away from center
         ps.angle = Math.atan2(-dy, -dx);
         this.input.setBotPressed(botId, true);
       } else if (bestOrb && bestDist < 180 && Math.random() < 0.6) {
@@ -510,20 +691,18 @@ export class CosmicVortexGame extends BaseGame {
         this.input.setBotPressed(botId, Math.random() < 0.4);
       }
     } else if (difficulty === 'bot_normal') {
+      // 200-250ms human reactions
       if (dist < 150) {
-        // Strongly counter gravity outward
         ps.angle = Math.atan2(-dy, -dx);
         this.input.setBotPressed(botId, true);
       } else if (bestOrb) {
         ps.angle = Math.atan2(bestOrb.y - ps.y, bestOrb.x - ps.x);
         this.input.setBotPressed(botId, true);
       } else {
-        // Orbit tangentially
         ps.angle = Math.atan2(dy, dx) + Math.PI / 2;
         this.input.setBotPressed(botId, true);
       }
 
-      // Pulse if any rival is nearby
       if (ps.pulseCooldown <= 0) {
         for (const [id, opp] of this.playersState.entries()) {
           if (id === botId || !opp.alive) continue;
@@ -534,17 +713,14 @@ export class CosmicVortexGame extends BaseGame {
         }
       }
     } else {
-      // Hard: Intelligent gravity-assist vectoring & offensive pulse
+      // Hard: tactical slingshot vectoring & aggressive pulse slams
       if (dist < 165) {
-        // Emergency radial escape
         ps.angle = Math.atan2(-dy, -dx) + 0.2;
         this.input.setBotPressed(botId, true);
-      } else if (bestOrb && bestDist < 250) {
-        // Intercept orb
+      } else if (bestOrb && bestDist < 260) {
         ps.angle = Math.atan2(bestOrb.y - ps.y, bestOrb.x - ps.x);
         this.input.setBotPressed(botId, true);
       } else {
-        // Position strategically between rival and event horizon
         let targetOpp: VortexPlayer | null = null;
         let oppDist = Infinity;
         for (const [id, opp] of this.playersState.entries()) {
@@ -557,10 +733,8 @@ export class CosmicVortexGame extends BaseGame {
         }
 
         if (targetOpp && oppDist < 125 && ps.pulseCooldown <= 0) {
-          // Fire pulse to blast rival toward the black hole
           this.input.setBotPressed(botId, true);
         } else {
-          // Maintain high-speed orbital flight
           ps.angle = Math.atan2(dy, dx) + Math.PI / 2;
           this.input.setBotPressed(botId, true);
         }
@@ -571,17 +745,18 @@ export class CosmicVortexGame extends BaseGame {
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
     const cx = width / 2;
     const cy = height / 2;
+    const theme = VORTEX_THEMES[this.currentThemeIndex];
 
     // Deep space gradient backdrop
     const bgGrad = ctx.createRadialGradient(cx, cy, 20, cx, cy, Math.max(width, height) * 0.7);
-    bgGrad.addColorStop(0, '#020617');
-    bgGrad.addColorStop(0.5, '#0B0F19');
-    bgGrad.addColorStop(1, '#020617');
+    bgGrad.addColorStop(0, theme.bgGradInner);
+    bgGrad.addColorStop(0.5, theme.bgGradMid);
+    bgGrad.addColorStop(1, theme.bgGradOuter);
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
     // Distant star grid
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.fillStyle = theme.starColor;
     for (let i = 0; i < 40; i++) {
       const sx = ((i * 73) % width);
       const sy = ((i * 97) % height);
@@ -596,9 +771,9 @@ export class CosmicVortexGame extends BaseGame {
     for (let i = 0; i < 12; i++) {
       const armAngle = (i / 12) * Math.PI * 2;
       const diskGrad = ctx.createLinearGradient(0, 0, Math.cos(armAngle) * 240, Math.sin(armAngle) * 240);
-      diskGrad.addColorStop(0, 'rgba(168, 85, 247, 0.55)');
-      diskGrad.addColorStop(0.4, 'rgba(56, 189, 248, 0.35)');
-      diskGrad.addColorStop(0.8, 'rgba(236, 72, 153, 0.15)');
+      diskGrad.addColorStop(0, theme.armColor1);
+      diskGrad.addColorStop(0.4, theme.armColor2);
+      diskGrad.addColorStop(0.8, theme.armColor3);
       diskGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
       ctx.fillStyle = diskGrad;
@@ -611,24 +786,24 @@ export class CosmicVortexGame extends BaseGame {
     ctx.restore();
 
     // Central Event Horizon Black Hole
-    const eventR = 46 + this.vortexPulse * 4;
+    const eventR = (this.isSuddenDeath ? 58 : 46) + this.vortexPulse * 4;
     ctx.save();
-    ctx.shadowColor = '#38BDF8';
-    ctx.shadowBlur = 24;
+    ctx.shadowColor = this.isSuddenDeath ? '#EF4444' : theme.holeBorder;
+    ctx.shadowBlur = this.isSuddenDeath ? 32 : 24;
     ctx.fillStyle = '#000000';
     ctx.beginPath();
     ctx.arc(cx, cy, eventR, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = '#818CF8';
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = this.isSuddenDeath ? '#EF4444' : theme.holeBorder;
+    ctx.lineWidth = 3.5;
     ctx.stroke();
     ctx.restore();
 
     // Singularity Photon Ring
     ctx.save();
-    ctx.strokeStyle = '#F472B6';
+    ctx.strokeStyle = this.isSuddenDeath ? '#FBBF24' : theme.photonRing;
     ctx.lineWidth = 2.5;
-    ctx.shadowColor = '#F472B6';
+    ctx.shadowColor = this.isSuddenDeath ? '#FBBF24' : theme.photonRing;
     ctx.shadowBlur = 15;
     ctx.beginPath();
     ctx.arc(cx, cy, eventR - 4, 0, Math.PI * 2);
@@ -636,7 +811,7 @@ export class CosmicVortexGame extends BaseGame {
     ctx.restore();
 
     // Center singularity warning core
-    ctx.fillStyle = '#C084FC';
+    ctx.fillStyle = theme.singularityCore;
     ctx.beginPath();
     ctx.arc(cx, cy, 14, 0, Math.PI * 2);
     ctx.fill();
@@ -662,9 +837,10 @@ export class CosmicVortexGame extends BaseGame {
     // Render Antimatter Orbs
     for (const orb of this.orbs) {
       ctx.save();
-      ctx.shadowColor = orb.hue === 180 ? '#38BDF8' : '#F472B6';
-      ctx.shadowBlur = 14;
-      ctx.fillStyle = orb.hue === 180 ? '#38BDF8' : '#F472B6';
+      const orbColor = orb.isGolden ? '#FBBF24' : (orb.hue === 180 ? '#38BDF8' : '#F472B6');
+      ctx.shadowColor = orbColor;
+      ctx.shadowBlur = orb.isGolden ? 20 : 14;
+      ctx.fillStyle = orbColor;
       ctx.beginPath();
       ctx.arc(orb.x, orb.y, orb.radius, 0, Math.PI * 2);
       ctx.fill();
@@ -672,8 +848,18 @@ export class CosmicVortexGame extends BaseGame {
       // Specular shine
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
-      ctx.arc(orb.x - 2.5, orb.y - 2.5, 3, 0, Math.PI * 2);
+      ctx.arc(orb.x - 2.5, orb.y - 2.5, orb.radius * 0.35, 0, Math.PI * 2);
       ctx.fill();
+
+      // Golden orb aura ring
+      if (orb.isGolden) {
+        ctx.strokeStyle = '#FDE047';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.arc(orb.x, orb.y, orb.radius + 4, 0, Math.PI * 2);
+        ctx.stroke();
+      }
       ctx.restore();
     }
 
@@ -682,6 +868,7 @@ export class CosmicVortexGame extends BaseGame {
     for (const p of active) {
       const ps = this.playersState.get(p.id);
       if (!ps) continue;
+      const isBot = p.type.startsWith('bot_');
 
       if (!ps.alive) {
         // Respawning Ghost Marker
@@ -697,7 +884,18 @@ export class CosmicVortexGame extends BaseGame {
 
       ctx.save();
       ctx.translate(ps.x, ps.y);
-      ctx.rotate(ps.angle);
+
+      // Underdog Graviton Shield Aura
+      if (ps.isUnderdog) {
+        ctx.save();
+        ctx.strokeStyle = '#F59E0B';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.arc(0, 0, 26, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
 
       // Pulse Blast Shockwave Ring
       if (ps.pulseActiveTimer > 0) {
@@ -705,7 +903,7 @@ export class CosmicVortexGame extends BaseGame {
         ctx.strokeStyle = p.colorLight;
         ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.arc(0, 0, (1 - ps.pulseActiveTimer / 0.25) * 130, 0, Math.PI * 2);
+        ctx.arc(0, 0, (1 - ps.pulseActiveTimer / 0.25) * 135, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
       }
@@ -713,39 +911,41 @@ export class CosmicVortexGame extends BaseGame {
       // Repulsor Cooldown Ring around Ship
       ctx.save();
       if (ps.pulseCooldown > 0) {
-        const readyRatio = 1 - ps.pulseCooldown / 2.2;
+        const totalCd = ps.isUnderdog ? 1.1 : 2.2;
+        const readyRatio = 1 - ps.pulseCooldown / totalCd;
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(0, 0, 18, 0, Math.PI * 2);
+        ctx.arc(0, 0, 19, 0, Math.PI * 2);
         ctx.stroke();
 
         ctx.strokeStyle = p.colorLight;
         ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.arc(0, 0, 18, -Math.PI / 2, -Math.PI / 2 + readyRatio * Math.PI * 2);
+        ctx.arc(0, 0, 19, -Math.PI / 2, -Math.PI / 2 + readyRatio * Math.PI * 2);
         ctx.stroke();
       } else {
-        // Ready Glow Ring
         ctx.strokeStyle = '#38BDF8';
         ctx.shadowColor = '#38BDF8';
         ctx.shadowBlur = 8;
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(0, 0, 18, 0, Math.PI * 2);
+        ctx.arc(0, 0, 19, 0, Math.PI * 2);
         ctx.stroke();
       }
       ctx.restore();
+
+      ctx.rotate(ps.angle);
 
       // Ship 2.5D Hull
       ctx.shadowColor = p.colorDark;
       ctx.shadowBlur = 10;
       ctx.fillStyle = p.color;
       ctx.beginPath();
-      ctx.moveTo(16, 0);
-      ctx.lineTo(-12, -10);
-      ctx.lineTo(-7, 0);
-      ctx.lineTo(-12, 10);
+      ctx.moveTo(17, 0);
+      ctx.lineTo(-13, -11);
+      ctx.lineTo(-8, 0);
+      ctx.lineTo(-13, 11);
       ctx.closePath();
       ctx.fill();
 
@@ -753,11 +953,18 @@ export class CosmicVortexGame extends BaseGame {
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Cockpit Dome
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(0, 0, 4, 0, Math.PI * 2);
-      ctx.fill();
+      // Mascot Pilot in Cockpit
+      const distFromCenter = Math.hypot(cx - ps.x, cy - ps.y);
+      let mood: CharacterMood = 'focused';
+      if (distFromCenter < 115 || ps.lastDamagedTimer > 0) {
+        mood = 'shocked';
+      } else if (ps.score >= 4 || this.isFinished) {
+        mood = 'triumph';
+      } else if (ps.pulseActiveTimer > 0) {
+        mood = 'happy';
+      }
+
+      drawCharacter(ctx, 0, 0, 8, p.id, isBot, mood, this.vortexAngle * 2);
 
       ctx.restore();
 
@@ -765,11 +972,11 @@ export class CosmicVortexGame extends BaseGame {
       ctx.fillStyle = '#FFFFFF';
       ctx.font = '900 11px Montserrat, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(p.name, ps.x, ps.y - 22);
+      ctx.fillText(p.name, ps.x, ps.y - 24);
     }
 
-    // Top Center Antimatter HUD
-    const hudW = 280;
+    // Minigame Subheader at safe position y: 56
+    const hudW = Math.min(width - 60, 480);
     const hudH = 26;
     const hudX = width / 2 - hudW / 2;
     const hudY = 56;
@@ -779,22 +986,57 @@ export class CosmicVortexGame extends BaseGame {
     ctx.shadowBlur = 10;
     ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(hudX, hudY, hudW, hudH, 13);
-    else ctx.rect(hudX, hudY, hudW, hudH);
+    ctx.roundRect(hudX, hudY, hudW, hudH, 13);
     ctx.fill();
-    ctx.strokeStyle = '#38BDF8';
+    ctx.strokeStyle = this.isSuddenDeath ? '#EF4444' : theme.themePillColor;
     ctx.lineWidth = 1.5;
     ctx.stroke();
-    ctx.restore();
 
     ctx.font = '900 11px Montserrat, sans-serif';
     ctx.textAlign = 'center';
-    let summary = active.map((p) => {
-      const ps = this.playersState.get(p.id);
-      return `${p.name}: 🌌 ${ps?.score || 0}/5`;
-    }).join('   •   ');
+    ctx.textBaseline = 'middle';
+    if (this.isSuddenDeath) {
+      const flash = Math.sin(this.suddenDeathFlashTimer * 10) > 0;
+      ctx.fillStyle = flash ? '#FDE047' : '#EF4444';
+      ctx.fillText('⚡ SUDDEN DEATH: EVENT HORIZON SURGE! GOLDEN ORBS (2X) ⚡', width / 2, hudY + 13);
+    } else {
+      const summary = active.map((p) => {
+        const ps = this.playersState.get(p.id);
+        return `${p.name}: 🌌 ${ps?.score || 0}/5`;
+      }).join('   •   ');
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText(summary, width / 2, hudY + 13);
+    }
+    ctx.restore();
+
+    // Theme Pill at bottom-left: x: 20, y: height - 44, w: 170, h: 32
+    ctx.save();
+    const pillX = 20;
+    const pillY = height - 44;
+    const pillW = 170;
+    const pillH = 32;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, 16);
+    ctx.fill();
+    ctx.strokeStyle = theme.themePillColor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(summary, width / 2, hudY + 17);
+    ctx.font = 'bold 11px "Outfit", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${theme.name} [T]`, pillX + pillW * 0.5, pillY + pillH * 0.5);
+
+    // Control Hints at bottom-right safe zone
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.font = '11px "Outfit", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Hold: Thrust | Tap: Pulse Repulsor', width - 24, height - 28);
+    ctx.restore();
   }
 
   public isRoundOver(): boolean {
@@ -834,7 +1076,7 @@ export class CosmicVortexGame extends BaseGame {
     return {
       winnerId,
       rankings,
-      mvpHighlight: winnerId !== null ? `${this.players[winnerId].name} harnessed the Cosmic Vortex!` : 'The Singularity consumed all pilots in a draw!'
+      mvpHighlight: winnerId !== null ? `${this.players[winnerId].name} harnessed the Cosmic Vortex with ${highestScore} antimatter orbs!` : 'The Singularity consumed all pilots in a draw!'
     };
   }
 
