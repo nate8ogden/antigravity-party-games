@@ -3,6 +3,55 @@ import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
+import { drawCharacter, CharacterMood } from '../core/CharacterRenderer';
+
+export interface WireCutterTheme {
+  name: string;
+  bgGradStart: string;
+  bgGradEnd: string;
+  bombChassis: string;
+  bombBorder: string;
+  screenBg: string;
+  screenBorder: string;
+  screenText: string;
+  themePillColor: string;
+}
+
+export const WIRE_CUTTER_THEMES: WireCutterTheme[] = [
+  {
+    name: 'Cyber Terminal ⚡',
+    bgGradStart: '#090D16',
+    bgGradEnd: '#020617',
+    bombChassis: '#1E293B',
+    bombBorder: '#475569',
+    screenBg: '#020617',
+    screenBorder: '#0284C7',
+    screenText: '#38BDF8',
+    themePillColor: '#38BDF8'
+  },
+  {
+    name: 'Cold War C4 💣',
+    bgGradStart: '#1C1917',
+    bgGradEnd: '#0C0A09',
+    bombChassis: '#292524',
+    bombBorder: '#78716C',
+    screenBg: '#1C1917',
+    screenBorder: '#F59E0B',
+    screenText: '#FDE047',
+    themePillColor: '#F59E0B'
+  },
+  {
+    name: 'Spaceship Core 🚀',
+    bgGradStart: '#0F172A',
+    bgGradEnd: '#030712',
+    bombChassis: '#334155',
+    bombBorder: '#94A3B8',
+    screenBg: '#0F172A',
+    screenBorder: '#10B981',
+    screenText: '#6EE7B7',
+    themePillColor: '#10B981'
+  }
+];
 
 interface WireModule {
   instructionText: string;
@@ -10,7 +59,7 @@ interface WireModule {
   type: 'single' | 'sequence' | 'all_except_then';
   sequence?: number[];
   exceptWireIndex?: number;
-  correctWireIndex: number; // 0: Up (Red), 1: Right (Blue), 2: Down (Green), 3: Left (Yellow)
+  correctWireIndex: number;
   avoidWireIndex?: number;
   wires: { color: string; label: string; keyHint: string }[];
   timer: number;
@@ -32,6 +81,8 @@ interface WirePlayer {
   lastDirection: number | null;
   activeKeysDown: Set<string>;
   pointerQueue: number[];
+  isUnderdog: boolean;
+  streak: number;
 }
 
 export class WireCutterGame extends BaseGame {
@@ -49,7 +100,13 @@ export class WireCutterGame extends BaseGame {
   private selectedWireIndex: number = 0;
   private botReactionTimers: Map<PlayerId, number> = new Map();
   private moduleRound: number = 0;
-  private boundPointerDown: ((e: PointerEvent) => void) | null = null;
+
+  // Polish & Theme Properties
+  private currentThemeIndex: number = 0;
+  private animTimer: number = 0;
+  private suddenDeathAnnounced: boolean = false;
+  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
+  private pointerdownListener: ((e: PointerEvent) => void) | null = null;
 
   constructor(players: PlayerConfig[], input: InputRouter, audio: AudioEngine, particles: ParticleSystem) {
     super(players, input, audio, particles);
@@ -57,15 +114,98 @@ export class WireCutterGame extends BaseGame {
   }
 
   public init(width: number, height: number): void {
+    this.setupListeners();
     this.reset(width, height);
+  }
+
+  public destroy(): void {
+    this.removeListeners();
+    super.destroy();
+    if (typeof window !== 'undefined' && (window as unknown as { __WIRE_CUTTER_DEBUG__?: unknown }).__WIRE_CUTTER_DEBUG__) {
+      delete (window as unknown as { __WIRE_CUTTER_DEBUG__?: unknown }).__WIRE_CUTTER_DEBUG__;
+    }
+  }
+
+  private setupListeners(): void {
+    if (typeof window === 'undefined') return;
+    this.removeListeners();
+
+    this.keydownListener = (e: KeyboardEvent) => {
+      if (this.isFinished) return;
+      if (e.code === 'KeyT') {
+        this.currentThemeIndex = (this.currentThemeIndex + 1) % WIRE_CUTTER_THEMES.length;
+        this.audio.playTap();
+      }
+    };
+    window.addEventListener('keydown', this.keydownListener);
+
+    this.pointerdownListener = (e: PointerEvent) => {
+      if (this.isFinished) return;
+      const canvas = document.querySelector('canvas');
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const clickY = (e.clientY - rect.top) * scaleY;
+
+      // Theme pill at x: 20, y: canvas.height - 44, w: 170, h: 32
+      if (clickX >= 20 && clickX <= 190 && clickY >= canvas.height - 44 && clickY <= canvas.height - 12) {
+        this.currentThemeIndex = (this.currentThemeIndex + 1) % WIRE_CUTTER_THEMES.length;
+        this.audio.playTap();
+        return;
+      }
+
+      // Direct wire clicking
+      const cx = canvas.width / 2;
+      const bombH = Math.min(350, canvas.height * 0.65);
+      const bombY = canvas.height / 2 - bombH / 2 - 10;
+      const screenH = 65;
+      const cy = bombY + 16 + screenH + (bombH - screenH - 32) / 2;
+      const wireLength = 95;
+      const wirePositions = [
+        { idx: 0, x: cx, y: cy - wireLength },
+        { idx: 1, x: cx + wireLength, y: cy },
+        { idx: 2, x: cx, y: cy + wireLength },
+        { idx: 3, x: cx - wireLength, y: cy }
+      ];
+
+      for (const w of wirePositions) {
+        if (Math.hypot(clickX - w.x, clickY - w.y) <= 32) {
+          const human = this.wirePlayers.find((wp) => {
+            const pl = this.getPlayer(wp.id);
+            return pl && !pl.type.startsWith('bot_');
+          });
+          if (human && human.stunTimer <= 0) {
+            human.pointerQueue.push(w.idx);
+          }
+          break;
+        }
+      }
+    };
+    window.addEventListener('pointerdown', this.pointerdownListener);
+  }
+
+  private removeListeners(): void {
+    if (typeof window === 'undefined') return;
+    if (this.keydownListener) {
+      window.removeEventListener('keydown', this.keydownListener);
+      this.keydownListener = null;
+    }
+    if (this.pointerdownListener) {
+      window.removeEventListener('pointerdown', this.pointerdownListener);
+      this.pointerdownListener = null;
+    }
   }
 
   public reset(_width: number = 800, _height: number = 600): void {
     this.roundTimer = 32.0;
     this.isFinished = false;
+    this.suddenDeathAnnounced = false;
     this.wirePlayers = [];
     this.botReactionTimers.clear();
     this.moduleRound = 0;
+    this.animTimer = 0;
 
     const active = this.getActivePlayers();
     active.forEach((p) => {
@@ -82,16 +222,11 @@ export class WireCutterGame extends BaseGame {
         cutWiresThisModule: new Set(),
         lastDirection: null,
         activeKeysDown: new Set(),
-        pointerQueue: []
+        pointerQueue: [],
+        isUnderdog: false,
+        streak: 0
       });
     });
-
-    // Ensure pointerdown listener is bound to canvas for direct wire clicking
-    const canvas = this.input.getCanvas();
-    if (canvas && !this.boundPointerDown) {
-      this.boundPointerDown = this.handlePointerDown.bind(this);
-      canvas.addEventListener('pointerdown', this.boundPointerDown);
-    }
 
     // Expose debug hook for testing
     (window as any).__WIRE_CUTTER_DEBUG__ = {
@@ -114,7 +249,8 @@ export class WireCutterGame extends BaseGame {
           score: wp.score,
           stunTimer: wp.stunTimer,
           sequenceStep: wp.sequenceStep,
-          cutWiresThisModule: Array.from(wp.cutWiresThisModule)
+          cutWiresThisModule: Array.from(wp.cutWiresThisModule),
+          isUnderdog: wp.isUnderdog
         } : null;
       },
       setModule: (moduleConfig: Partial<WireModule>) => {
@@ -131,57 +267,14 @@ export class WireCutterGame extends BaseGame {
             this.botReactionTimers.set(wp.id, delay);
           }
         });
+      },
+      getTheme: () => WIRE_CUTTER_THEMES[this.currentThemeIndex].name,
+      setTheme: (idx: number) => {
+        this.currentThemeIndex = Math.max(0, Math.min(idx, WIRE_CUTTER_THEMES.length - 1));
       }
     };
 
     this.generateNewModule();
-  }
-
-  private handlePointerDown(e: PointerEvent): void {
-    const canvas = this.input.getCanvas();
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const clickX = (e.clientX - rect.left) * scaleX;
-    const clickY = (e.clientY - rect.top) * scaleY;
-
-    const cx = canvas.width / 2;
-    const bombH = Math.min(380, canvas.height * 0.72);
-    const bombY = canvas.height / 2 - bombH / 2 + 10;
-    const screenH = 65;
-    const cy = bombY + 16 + screenH + (bombH - screenH - 32) / 2;
-    const wireLength = 95;
-    const wirePositions = [
-      { idx: 0, x: cx, y: cy - wireLength },
-      { idx: 1, x: cx + wireLength, y: cy },
-      { idx: 2, x: cx, y: cy + wireLength },
-      { idx: 3, x: cx - wireLength, y: cy }
-    ];
-
-    for (const w of wirePositions) {
-      if (Math.hypot(clickX - w.x, clickY - w.y) <= 32) {
-        const human = this.wirePlayers.find((wp) => {
-          const pl = this.getPlayer(wp.id);
-          return pl && !pl.type.startsWith('bot_');
-        });
-        if (human && human.stunTimer <= 0) {
-          human.pointerQueue.push(w.idx);
-        }
-        break;
-      }
-    }
-  }
-
-  public override destroy(): void {
-    if (this.boundPointerDown) {
-      const canvas = this.input.getCanvas();
-      if (canvas) {
-        canvas.removeEventListener('pointerdown', this.boundPointerDown);
-      }
-      this.boundPointerDown = null;
-    }
   }
 
   private generateNewModule() {
@@ -194,11 +287,8 @@ export class WireCutterGame extends BaseGame {
     ];
     const dirs = ['UP', 'RIGHT', 'DOWN', 'LEFT'];
 
-    // Roll instruction pattern:
-    // 35% sequence (directions or colors)
-    // 25% all_except_then ("cut all but red, then red")
-    // 40% single / avoid
     const roll = Math.random();
+    const isSuddenDeath = this.roundTimer <= 15;
 
     let moduleType: 'single' | 'sequence' | 'all_except_then' = 'single';
     let prompt = '';
@@ -207,7 +297,7 @@ export class WireCutterGame extends BaseGame {
     let exceptIdx: number | undefined = undefined;
     let targetIdx = 0;
     let avoidIdx: number | undefined = undefined;
-    let timer = 3.5;
+    let timer = isSuddenDeath ? 2.6 : 3.6;
     let totalSteps = 1;
 
     if (roll < 0.35) {
@@ -219,7 +309,7 @@ export class WireCutterGame extends BaseGame {
       }
       sequence = [step1, step2];
       totalSteps = 2;
-      timer = 4.8;
+      timer = isSudmonDeath(isSuddenDeath) ? 3.4 : 4.8;
 
       const isDirection = Math.random() < 0.5;
       if (isDirection) {
@@ -235,7 +325,7 @@ export class WireCutterGame extends BaseGame {
       exceptIdx = Math.floor(Math.random() * 4);
       targetIdx = exceptIdx;
       totalSteps = 4;
-      timer = 6.0;
+      timer = isSuddenDeath ? 4.2 : 5.8;
 
       prompt = `⚠️ CUT ALL BUT ${wireColors[exceptIdx].label}, THEN ${wireColors[exceptIdx].label}!`;
       subPrompt = `Cut the other 3 wires first, then snip ${wireColors[exceptIdx].label}!`;
@@ -245,7 +335,7 @@ export class WireCutterGame extends BaseGame {
       const st = types[Math.floor(Math.random() * types.length)];
       targetIdx = Math.floor(Math.random() * 4);
       totalSteps = 1;
-      timer = 3.5;
+      timer = isSuddenDeath ? 2.4 : 3.4;
 
       if (st === 'direct') {
         prompt = `⚡ SNIP THE ${wireColors[targetIdx].label} WIRE!`;
@@ -276,7 +366,6 @@ export class WireCutterGame extends BaseGame {
       totalSteps
     };
 
-    // Reset bot reaction timers with calibrated human-like competitive latency (harder AI)
     this.wirePlayers.forEach((wp) => {
       wp.sequenceStep = 0;
       wp.cutWiresThisModule.clear();
@@ -301,18 +390,38 @@ export class WireCutterGame extends BaseGame {
     if (this.isFinished) return;
 
     this.roundTimer = Math.max(0, this.roundTimer - dt);
+    this.animTimer += dt;
+    const isSuddenDeath = this.roundTimer <= 15;
+
+    if (isSuddenDeath && !this.suddenDeathAnnounced) {
+      this.suddenDeathAnnounced = true;
+      this.audio.playExplosion();
+      this.particles.addTrauma(0.4);
+      this.particles.showFloatingText('⚡ OVERCLOCK SUDDEN DEATH: 2X POINTS! ⚡', width / 2, height / 2 - 120, '#FACC15', 28);
+    }
+
     this.selectedWireIndex = Math.floor(performance.now() * 0.0022) % 4;
 
     this.currentModule.timer -= dt;
     if (this.currentModule.timer <= 0) {
-      // Module timed out
       this.audio.playExplosion();
       this.particles.spawnExplosion(width / 2, height / 2, '#EF4444', 24);
       this.generateNewModule();
       return;
     }
 
-    // Update bots
+    // Determine Leader and Underdog
+    let maxScore = -Infinity;
+    let minScore = Infinity;
+    for (const wp of this.wirePlayers) {
+      if (wp.score > maxScore) maxScore = wp.score;
+      if (wp.score < minScore) minScore = wp.score;
+    }
+
+    for (const wp of this.wirePlayers) {
+      wp.isUnderdog = (maxScore - wp.score >= 2 && maxScore >= 2);
+    }
+
     this.updateBots(dt, width, height);
 
     this.wirePlayers.forEach((wp) => {
@@ -320,26 +429,20 @@ export class WireCutterGame extends BaseGame {
       if (wp.feedbackTimer > 0) wp.feedbackTimer -= dt;
       if (wp.inputDebounceTimer > 0) wp.inputDebounceTimer -= dt;
 
-      // Handle Human Player Inputs (Debounced & Edge-Triggered)
+      // Handle Human Player Inputs
       const p = this.getPlayer(wp.id);
       if (p && p.type === 'human' && wp.stunTimer <= 0 && wp.inputDebounceTimer <= 0) {
         let chosen: number | null = null;
 
-        // 1. Direct touch/click on wire terminal nodes
         if (wp.pointerQueue.length > 0) {
           chosen = wp.pointerQueue.shift()!;
         }
 
-        // 2. Direct raw keyboard keypress with instant 0ms edge detection
         if (chosen === null) {
           const keyMappings: { pad: number; codes: string[] }[] = [
-            // Up (0): Red
             { pad: 0, codes: wp.id === 0 ? ['KeyW'] : wp.id === 1 ? ['ArrowUp'] : wp.id === 2 ? ['KeyI'] : ['Numpad8', 'KeyT'] },
-            // Right (1): Blue
             { pad: 1, codes: wp.id === 0 ? ['KeyD'] : wp.id === 1 ? ['ArrowRight'] : wp.id === 2 ? ['KeyL'] : ['Numpad6', 'KeyH'] },
-            // Down (2): Green
             { pad: 2, codes: wp.id === 0 ? ['KeyS'] : wp.id === 1 ? ['ArrowDown'] : wp.id === 2 ? ['KeyK'] : ['Numpad2', 'Numpad5', 'KeyG'] },
-            // Left (3): Yellow
             { pad: 3, codes: wp.id === 0 ? ['KeyA'] : wp.id === 1 ? ['ArrowLeft'] : wp.id === 2 ? ['KeyJ'] : ['Numpad4', 'KeyF'] }
           ];
 
@@ -359,7 +462,6 @@ export class WireCutterGame extends BaseGame {
           }
         }
 
-        // 3. Directional stick / virtual thumbstick with release debouncing
         const steer = this.input.getSteer(wp.id);
         const throttle = this.input.getThrottle(wp.id);
         const isNeutral = Math.abs(steer) < 0.25 && Math.abs(throttle) < 0.25;
@@ -368,31 +470,29 @@ export class WireCutterGame extends BaseGame {
           wp.lastDirection = null;
         } else if (wp.lastDirection === null && chosen === null) {
           if (Math.abs(throttle) >= Math.abs(steer)) {
-            if (throttle > 0.35) chosen = 0;      // Up
-            else if (throttle < -0.35) chosen = 2; // Down
+            if (throttle > 0.35) chosen = 0;
+            else if (throttle < -0.35) chosen = 2;
           } else {
-            if (steer > 0.35) chosen = 1;       // Right
-            else if (steer < -0.35) chosen = 3;  // Left
+            if (steer > 0.35) chosen = 1;
+            else if (steer < -0.35) chosen = 3;
           }
           if (chosen !== null) {
             wp.lastDirection = chosen;
           }
         }
 
-        // 4. Action button (1-button mode)
         const action = this.input.justAction(wp.id) || this.input.justPressed(wp.id);
         if (chosen === null && action) {
           chosen = this.selectedWireIndex;
         }
 
         if (chosen !== null) {
-          wp.inputDebounceTimer = 0.20; // 200ms debounce
+          wp.inputDebounceTimer = 0.20;
           this.executeWireCut(wp, chosen, width, height);
         }
       }
     });
 
-    // Check game over (first to 5 defusals or time out)
     const leader = this.wirePlayers.find((wp) => wp.score >= 5);
     if (leader || this.roundTimer <= 0) {
       this.isFinished = true;
@@ -425,7 +525,6 @@ export class WireCutterGame extends BaseGame {
     this.botReactionTimers.set(botId, timer);
 
     if (timer <= 0) {
-      // Significantly harder AI calibration (alert and competitive)
       const errorRate = difficulty === 'bot_easy' ? 0.18 : difficulty === 'bot_normal' ? 0.05 : 0.01;
       const m = this.currentModule;
 
@@ -448,14 +547,12 @@ export class WireCutterGame extends BaseGame {
         targetWire = m.correctWireIndex;
       }
 
-      // Chance of error
       if (Math.random() < errorRate) {
         targetWire = (targetWire + 1 + Math.floor(Math.random() * 3)) % 4;
       }
 
       this.executeWireCut(wp, targetWire, width, height);
 
-      // If module is not completed, schedule next step reaction
       if (!this.isFinished && wp.stunTimer <= 0) {
         let followUpDelay = 0.22;
         if (difficulty === 'bot_easy') followUpDelay = 0.42 + Math.random() * 0.20;
@@ -479,8 +576,8 @@ export class WireCutterGame extends BaseGame {
     const wire = m.wires[wireIndex];
 
     const cx = width / 2;
-    const bombH = Math.min(380, height * 0.72);
-    const bombY = height / 2 - bombH / 2 + 10;
+    const bombH = Math.min(350, height * 0.65);
+    const bombY = height / 2 - bombH / 2 - 10;
     const screenH = 65;
     const cy = bombY + 16 + screenH + (bombH - screenH - 32) / 2;
     const wireLength = 95;
@@ -562,26 +659,35 @@ export class WireCutterGame extends BaseGame {
   }
 
   private awardDefusal(wp: WirePlayer, width: number, height: number) {
-    wp.score += 1;
-    wp.feedbackText = 'DEFUSED! +1';
+    const isSuddenDeath = this.roundTimer <= 15;
+    const pointsEarned = isSuddenDeath ? 2 : 1;
+    wp.score += pointsEarned;
+    wp.streak++;
+
+    wp.feedbackText = pointsEarned > 1 ? 'DEFUSED! +2 ⚡' : 'DEFUSED! +1';
     wp.feedbackColor = '#22C55E';
     wp.feedbackTimer = 1.0;
     this.audio.playScore();
-    this.particles.spawnSparks(width / 2, height / 2, '#22C55E', 24);
-    this.particles.showFloatingText('+1 DEFUSED!', width / 2, height / 2 - 60, '#22C55E', 22);
+    this.particles.spawnSparks(width / 2, height / 2, '#22C55E', 26);
+    this.particles.showFloatingText(
+      pointsEarned > 1 ? 'OVERCLOCK DEFUSED! +2 ⚡' : '+1 DEFUSED!',
+      width / 2,
+      height / 2 - 60,
+      '#22C55E',
+      22
+    );
     this.generateNewModule();
   }
 
   private penalizeMistake(wp: WirePlayer, x: number, y: number) {
-    wp.stunTimer = 1.5;
+    wp.streak = 0;
+    wp.stunTimer = wp.isUnderdog ? 0.75 : 1.5;
     if (this.currentModule.type === 'sequence') {
       wp.sequenceStep = 0;
     } else if (this.currentModule.type === 'all_except_then') {
       wp.cutWiresThisModule.clear();
     }
-    if (!wp.feedbackText || wp.feedbackText === 'DEFUSED! +1') {
-      wp.feedbackText = 'WRONG WIRE! 💥';
-    }
+    wp.feedbackText = 'WRONG WIRE! 💥';
     wp.feedbackColor = '#EF4444';
     wp.feedbackTimer = 1.4;
     this.audio.playExplosion();
@@ -590,23 +696,30 @@ export class WireCutterGame extends BaseGame {
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Cyber Security Bomb Chamber
-    ctx.fillStyle = '#090D16';
+    ctx.save();
+    const theme = WIRE_CUTTER_THEMES[this.currentThemeIndex];
+    const isSuddenDeath = this.roundTimer <= 15;
+
+    // 1. Theme Chamber Background
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, theme.bgGradStart);
+    bgGrad.addColorStop(1, theme.bgGradEnd);
+    ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
     // Center Bomb Unit
     const bombW = Math.min(520, width * 0.85);
-    const bombH = Math.min(380, height * 0.72);
+    const bombH = Math.min(350, height * 0.65);
     const bombX = width / 2 - bombW / 2;
-    const bombY = height / 2 - bombH / 2 + 10;
+    const bombY = height / 2 - bombH / 2 - 10;
 
     // Metal Frame
     ctx.save();
     ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
     ctx.shadowBlur = 24;
     ctx.shadowOffsetY = 8;
-    ctx.fillStyle = '#1E293B';
-    ctx.strokeStyle = '#475569';
+    ctx.fillStyle = theme.bombChassis;
+    ctx.strokeStyle = isSuddenDeath ? '#EF4444' : theme.bombBorder;
     ctx.lineWidth = 3;
     ctx.beginPath();
     if (ctx.roundRect) ctx.roundRect(bombX, bombY, bombW, bombH, 16);
@@ -618,14 +731,14 @@ export class WireCutterGame extends BaseGame {
     // Digital Screen Header inside Bomb
     const hasSub = Boolean(this.currentModule.subPrompt);
     const screenH = hasSub ? 72 : 65;
-    ctx.fillStyle = '#020617';
+    ctx.fillStyle = theme.screenBg;
     ctx.fillRect(bombX + 16, bombY + 16, bombW - 32, screenH);
-    ctx.strokeStyle = '#0284C7';
+    ctx.strokeStyle = theme.screenBorder;
     ctx.lineWidth = 1.5;
     ctx.strokeRect(bombX + 16, bombY + 16, bombW - 32, screenH);
 
     // Holographic Instruction
-    ctx.fillStyle = '#38BDF8';
+    ctx.fillStyle = isSuddenDeath ? '#F87171' : theme.screenText;
     ctx.font = '900 18px Montserrat, sans-serif';
     ctx.textAlign = 'center';
     const textY = hasSub ? bombY + 38 : bombY + 44;
@@ -656,23 +769,34 @@ export class WireCutterGame extends BaseGame {
       { idx: 3, x: cx - wireLength, y: cy, label: 'LEFT [A / ←]' }
     ];
 
-    // Central Terminal Core
+    // Central Core
     ctx.fillStyle = '#0F172A';
     ctx.beginPath();
     ctx.arc(cx, cy, 26, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = '#38BDF8';
+    ctx.strokeStyle = theme.screenBorder;
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    ctx.fillStyle = '#38BDF8';
+    ctx.fillStyle = theme.screenText;
     ctx.font = '900 11px Montserrat, sans-serif';
     ctx.fillText('CORE', cx, cy + 4);
+
+    // Underdog target assistance wire hint
+    let underdogTargetWire: number | null = null;
+    const activeUnderdog = this.wirePlayers.find((wp) => wp.isUnderdog && wp.stunTimer <= 0);
+    if (activeUnderdog) {
+      if (this.currentModule.type === 'sequence' && this.currentModule.sequence) {
+        underdogTargetWire = this.currentModule.sequence[activeUnderdog.sequenceStep];
+      } else {
+        underdogTargetWire = this.currentModule.correctWireIndex;
+      }
+    }
 
     wireDirs.forEach((w) => {
       const wireData = this.currentModule.wires[w.idx];
 
-      // Glowing Neon Wire Cable
+      // Cable line
       ctx.save();
       ctx.strokeStyle = wireData.color;
       ctx.shadowColor = wireData.color;
@@ -684,7 +808,19 @@ export class WireCutterGame extends BaseGame {
       ctx.stroke();
       ctx.restore();
 
-      // Terminal Terminal Node
+      // Underdog pulse hint
+      if (underdogTargetWire === w.idx) {
+        ctx.save();
+        ctx.strokeStyle = '#F59E0B';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.arc(w.x, w.y, 22, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Terminal Node
       ctx.fillStyle = '#1E293B';
       ctx.beginPath();
       ctx.arc(w.x, w.y, 16, 0, Math.PI * 2);
@@ -698,80 +834,143 @@ export class WireCutterGame extends BaseGame {
         ctx.lineWidth = 2;
         ctx.setLineDash([4, 4]);
         ctx.beginPath();
-        ctx.arc(w.x, w.y, 22, 0, Math.PI * 2);
+        ctx.arc(w.x, w.y, 20, 0, Math.PI * 2);
         ctx.stroke();
         ctx.setLineDash([]);
       }
 
-      // Node Keycap Badge
       ctx.fillStyle = '#FFFFFF';
       ctx.font = '900 10px Montserrat, sans-serif';
       ctx.fillText(wireData.label, w.x, w.y + 3.5);
 
-      // Key hint text
       ctx.fillStyle = '#94A3B8';
       ctx.font = 'bold 9px monospace';
       const textOffY = w.idx === 0 ? -22 : w.idx === 2 ? 26 : 22;
       ctx.fillText(w.label, w.x, w.y + textOffY);
     });
 
-    // 3. Render Centered Player Defusal Consoles
+    // 3. Render Player Defusal Consoles with Mascot Avatars
     const active = this.getActivePlayers();
-    const cardW = Math.min(160, (width * 0.85) / active.length);
-    const totalW = active.length * cardW + (active.length - 1) * 12;
+    const cardW = Math.min(150, (width * 0.85) / active.length);
+    const totalW = active.length * cardW + (active.length - 1) * 10;
     const startX = width / 2 - totalW / 2;
-    const podY = Math.min(height - 46, bombY + bombH + 10);
+    const podY = height - 90; // Cleanly above bottom bar (height - 44)
 
     this.wirePlayers.forEach((wp, idx) => {
       const p = this.getPlayer(wp.id);
       if (!p) return;
-      const px = startX + idx * (cardW + 12);
+      const isBot = p.type.startsWith('bot_');
+      const px = startX + idx * (cardW + 10);
 
       ctx.save();
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
       ctx.beginPath();
-      if (ctx.roundRect) ctx.roundRect(px, podY, cardW, 36, 8);
-      else ctx.rect(px, podY, cardW, 36);
+      if (ctx.roundRect) ctx.roundRect(px, podY, cardW, 40, 8);
+      else ctx.rect(px, podY, cardW, 40);
       ctx.fill();
-      ctx.strokeStyle = wp.stunTimer > 0 ? '#EF4444' : p.color;
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = wp.stunTimer > 0 ? '#EF4444' : (wp.isUnderdog ? '#F59E0B' : p.color);
+      ctx.lineWidth = wp.isUnderdog ? 2 : 1.5;
       ctx.stroke();
+
+      // Mascot Face
+      let mood: CharacterMood = 'focused';
+      if (wp.stunTimer > 0) {
+        mood = 'shocked';
+      } else if (wp.feedbackText.includes('DEFUSED')) {
+        mood = 'happy';
+      } else if (this.isFinished) {
+        mood = 'triumph';
+      }
+
+      drawCharacter(ctx, px + 20, podY + 20, 13, wp.id, isBot, mood, this.animTimer);
 
       // Name & Score
       ctx.fillStyle = '#FFFFFF';
       ctx.font = 'bold 11px Montserrat, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(p.name, px + 8, podY + 16);
+      ctx.fillText(p.name, px + 38, podY + 16);
 
       ctx.fillStyle = p.color;
       ctx.font = '900 12px monospace';
       ctx.textAlign = 'right';
       ctx.fillText(`✂️ ${wp.score}/5`, px + cardW - 8, podY + 16);
 
-      // Stun or Feedback status text below
+      // Status text
       if (wp.stunTimer > 0) {
         ctx.fillStyle = '#EF4444';
         ctx.font = 'bold 9.5px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(`⚡ STUNNED (${wp.stunTimer.toFixed(1)}s)`, px + cardW / 2, podY + 30);
+        ctx.textAlign = 'left';
+        ctx.fillText(`⚡ STUN (${wp.stunTimer.toFixed(1)}s)`, px + 38, podY + 31);
       } else if (wp.feedbackTimer > 0) {
         ctx.fillStyle = wp.feedbackColor;
         ctx.font = 'bold 9.5px Montserrat, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(wp.feedbackText, px + cardW / 2, podY + 30);
-      } else if (this.currentModule.type === 'sequence') {
-        ctx.fillStyle = '#38BDF8';
-        ctx.font = 'bold 9.5px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(`STEP ${wp.sequenceStep}/${this.currentModule.totalSteps}`, px + cardW / 2, podY + 30);
-      } else if (this.currentModule.type === 'all_except_then') {
-        ctx.fillStyle = '#FACC15';
-        ctx.font = 'bold 9.5px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(`${wp.cutWiresThisModule.size}/3 CLEARED`, px + cardW / 2, podY + 30);
+        ctx.textAlign = 'left';
+        ctx.fillText(wp.feedbackText, px + 38, podY + 31);
+      } else {
+        ctx.fillStyle = '#94A3B8';
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('STANDBY', px + 38, podY + 31);
       }
       ctx.restore();
     });
+
+    // 4. Header Instruction Badge (y: 56)
+    ctx.save();
+    const pillW = 440;
+    const pillH = 26;
+    const pillX = width / 2 - pillW / 2;
+    const pillY = 56;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeStyle = isSuddenDeath ? '#EF4444' : theme.themePillColor;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(pillX, pillY, pillW, pillH, 13);
+    else ctx.rect(pillX, pillY, pillW, pillH);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = isSuddenDeath ? '#F87171' : '#FFFFFF';
+    ctx.font = '700 11px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(
+      isSuddenDeath
+        ? '⚡ OVERCLOCK SUDDEN DEATH! RAPID CUTS & 2X DEFUSAL PTS! ⚡'
+        : 'READ SCREEN PROMPT • CUT CORRECT WIRE • FIRST TO 5 WINS!',
+      width / 2,
+      pillY + pillH / 2
+    );
+    ctx.restore();
+
+    // 5. Interactive Bottom-Left Theme Pill (x: 20, y: height - 44, w: 170, h: 32)
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(20, height - 44, 170, 32, 16);
+    else ctx.rect(20, height - 44, 170, 32);
+    ctx.fill();
+    ctx.strokeStyle = theme.themePillColor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = theme.themePillColor;
+    ctx.font = '700 11px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${theme.name} [T]`, 20 + 85, height - 44 + 16);
+    ctx.restore();
+
+    // 6. On-screen Controls Pill (Offset to right, never overlapping theme pill)
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.70)';
+    ctx.font = '600 11px Montserrat, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('WASD / Arrows / Direct Wire Click', width - 24, height - 28);
+    ctx.restore();
+
+    ctx.restore();
   }
 
   public getRoundResult(): RoundResult {
@@ -783,8 +982,12 @@ export class WireCutterGame extends BaseGame {
       winnerId,
       rankings: sorted.map((wp, idx) => ({ playerId: wp.id, place: (idx + 1) as 1 | 2 | 3 | 4, score: wp.score })),
       mvpHighlight: winnerId !== null
-        ? `${winnerName} defused ${sorted[0].score} Cyber Bombs!`
-        : 'Bomb defusal duel tied!'
+        ? `${winnerName} DEFUSED ${sorted[0].score} CYBER BOMBS!`
+        : 'BOMB DEFUSAL DUEL TIED!'
     };
   }
+}
+
+function isSudmonDeath(isSuddenDeath: boolean): boolean {
+  return isSuddenDeath;
 }
