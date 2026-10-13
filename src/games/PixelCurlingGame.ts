@@ -926,17 +926,19 @@ export class PixelCurlingGame extends BaseGame {
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Olympic Ice Coliseum Sheet
+    const theme = THEMES[this.currentTheme];
+
+    // 1. Ice Coliseum Sheet
     const iceGrad = ctx.createLinearGradient(0, 0, width, height);
-    iceGrad.addColorStop(0, '#F0F9FF');
-    iceGrad.addColorStop(0.3, '#E0F2FE');
-    iceGrad.addColorStop(0.7, '#BAE6FD');
-    iceGrad.addColorStop(1, '#93C5FD');
+    iceGrad.addColorStop(0, theme.iceGrad0);
+    iceGrad.addColorStop(0.3, theme.iceGrad1);
+    iceGrad.addColorStop(0.7, theme.iceGrad2);
+    iceGrad.addColorStop(1, theme.iceGrad3);
     ctx.fillStyle = iceGrad;
     ctx.fillRect(0, 0, width, height);
 
     // Ice pebble texture
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.fillStyle = theme.pebbleColor;
     for (let x = 30; x < width - 30; x += 40) {
       for (let y = 50; y < height - 50; y += 40) {
         ctx.fillRect(x + (y % 8), y, 2, 2);
@@ -944,10 +946,10 @@ export class PixelCurlingGame extends BaseGame {
     }
 
     // Side wooden bumpers
-    ctx.fillStyle = '#78350F';
+    ctx.fillStyle = theme.woodRail;
     ctx.fillRect(0, 0, width, 40);
     ctx.fillRect(0, height - 40, width, 40);
-    ctx.fillStyle = '#92400E';
+    ctx.fillStyle = theme.woodHighlight;
     ctx.fillRect(0, 36, width, 4);
     ctx.fillRect(0, height - 40, width, 4);
 
@@ -966,16 +968,16 @@ export class PixelCurlingGame extends BaseGame {
     ctx.fillRect(width * 0.08 - 6, height * 0.5 - 20, 4, 18);
     ctx.fillRect(width * 0.08 - 6, height * 0.5 + 2, 4, 18);
 
-    // The Hog Line (Solid Royal Blue)
+    // The Hog Line
     const hogX = width * 0.58;
-    ctx.strokeStyle = '#2563EB';
+    ctx.strokeStyle = theme.hogLineColor;
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.moveTo(hogX, 40);
     ctx.lineTo(hogX, height - 40);
     ctx.stroke();
 
-    ctx.fillStyle = '#1E40AF';
+    ctx.fillStyle = theme.hogLineColor;
     ctx.font = '900 10px Montserrat, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('HOG LINE', hogX, 32);
@@ -983,7 +985,7 @@ export class PixelCurlingGame extends BaseGame {
     // Tee Line (Crossing through House)
     const hX = this.houseX;
     const hY = this.houseY;
-    ctx.strokeStyle = '#DC2626';
+    ctx.strokeStyle = theme.teeLineColor;
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(hX, 40);
@@ -1000,31 +1002,31 @@ export class PixelCurlingGame extends BaseGame {
     ctx.stroke();
 
     // 2. The House (Olympic Rings Target)
-    // 12-foot ring (Royal Blue)
-    ctx.fillStyle = '#1D4ED8';
+    // 12-foot ring
+    ctx.fillStyle = theme.houseOuterRing;
     ctx.beginPath();
     ctx.arc(hX, hY, this.houseRadius, 0, Math.PI * 2);
     ctx.fill();
 
-    // 8-foot ring (Pure White)
-    ctx.fillStyle = '#FFFFFF';
+    // 8-foot ring
+    ctx.fillStyle = theme.houseMidRing;
     ctx.beginPath();
     ctx.arc(hX, hY, this.houseRadius * 0.74, 0, Math.PI * 2);
     ctx.fill();
 
-    // 4-foot ring (Crimson Red)
-    ctx.fillStyle = '#DC2626';
+    // 4-foot ring
+    ctx.fillStyle = theme.houseInnerRing;
     ctx.beginPath();
     ctx.arc(hX, hY, this.houseRadius * 0.46, 0, Math.PI * 2);
     ctx.fill();
 
-    // Center Button (White with Gold Pin)
+    // Center Button
     ctx.fillStyle = '#FFFFFF';
     ctx.beginPath();
     ctx.arc(hX, hY, this.houseRadius * 0.22, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#F59E0B';
+    ctx.fillStyle = theme.buttonPinColor;
     ctx.beginPath();
     ctx.arc(hX, hY, 5, 0, Math.PI * 2);
     ctx.fill();
@@ -1033,20 +1035,17 @@ export class PixelCurlingGame extends BaseGame {
     const movingStone = this.stones.find((s) => s.isMoving && !s.isOut);
     if (movingStone && this.isSweepActive) {
       const cfg = this.players.find((x) => x.id === movingStone.playerId);
-      const color = cfg ? cfg.color : '#3B82F6';
+      const isBot = cfg?.type !== 'human';
 
-      // Draw two sweeping crew members with brooms ahead of the stone
+      // Draw two sweeping crew members with brooms ahead of stone
       const sx = movingStone.x + 32;
       const sy1 = movingStone.y - 18;
       const sy2 = movingStone.y + 18;
       const sweepOffset = Math.sin(this.sweepParticlesTimer * 28) * 8;
 
       ctx.save();
-      // Sweeper 1
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(sx, sy1, 8, 0, Math.PI * 2);
-      ctx.fill();
+      // Sweeper 1 Mascot
+      drawCharacter(ctx, sx, sy1, 10, movingStone.playerId, isBot, 'focused', performance.now() * 0.001);
 
       ctx.strokeStyle = '#94A3B8';
       ctx.lineWidth = 3;
@@ -1055,10 +1054,8 @@ export class PixelCurlingGame extends BaseGame {
       ctx.lineTo(sx - 14 + sweepOffset, sy1 + 10);
       ctx.stroke();
 
-      // Sweeper 2
-      ctx.beginPath();
-      ctx.arc(sx, sy2, 8, 0, Math.PI * 2);
-      ctx.fill();
+      // Sweeper 2 Mascot
+      drawCharacter(ctx, sx, sy2, 10, movingStone.playerId, isBot, 'focused', performance.now() * 0.001);
 
       ctx.beginPath();
       ctx.moveTo(sx, sy2);
@@ -1251,48 +1248,129 @@ export class PixelCurlingGame extends BaseGame {
     ctx.restore();
   }
 
-  private renderHUD(ctx: CanvasRenderingContext2D, width: number, _height: number): void {
+  private renderHUD(ctx: CanvasRenderingContext2D, width: number, height: number): void {
     ctx.save();
-    // End & Timer badge
+    const theme = THEMES[this.currentTheme];
+
+    // Minigame Header at y: 56, h: 26 (NEVER overlaps global timer at y: 12-44)
+    const headerW = 320;
+    const headerH = 26;
+    const headerX = width * 0.5 - headerW * 0.5;
+    const headerY = 56;
+
     ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
     ctx.beginPath();
-    ctx.roundRect(width * 0.5 - 75, 12, 150, 36, 10);
+    if (ctx.roundRect) ctx.roundRect(headerX, headerY, headerW, headerH, 6);
+    else ctx.rect(headerX, headerY, headerW, headerH);
     ctx.fill();
-    ctx.strokeStyle = '#38BDF8';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = theme.accentColor;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 16px "Chakra Petch", monospace';
+    ctx.font = '900 11px Montserrat, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`END ${this.currentEnd}/${this.maxEnds} • ${Math.ceil(this.roundTimer)}s`, width * 0.5, 30);
+    ctx.fillText(
+      `${theme.icon} END ${this.currentEnd}/${this.maxEnds} • ${theme.name.toUpperCase()} • ${Math.ceil(this.roundTimer)}s`,
+      width * 0.5,
+      headerY + headerH * 0.5
+    );
 
-    // Score sub-bar
-    const active = this.getActivePlayers();
-    const itemW = 110;
-    const subBarW = active.length * itemW;
-    const subBarX = width * 0.5 - subBarW * 0.5;
+    // Interactive Theme Pill at bottom-left: x: 20, y: height - 44, w: 170, h: 32
+    const pillX = 20;
+    const pillY = height - 44;
+    const pillW = 170;
+    const pillH = 32;
 
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
     ctx.beginPath();
-    ctx.roundRect(subBarX, 54, subBarW, 26, 6);
+    if (ctx.roundRect) ctx.roundRect(pillX, pillY, pillW, pillH, 8);
+    else ctx.rect(pillX, pillY, pillW, pillH);
     ctx.fill();
+    ctx.strokeStyle = theme.accentColor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
 
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 11px Montserrat, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${theme.icon} ${theme.name}`, pillX + 12, pillY + pillH * 0.5);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.font = '900 9px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('[T]', pillX + pillW - 10, pillY + pillH * 0.5);
+
+    // Bottom Right Controls Hint
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.font = '600 11px Montserrat, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Steer: Curl | Hold Space: Launch | Tap Space: Sweep', width - 20, height - 28);
+
+    // Corner Player Cards offset to y: height - 128 (avoids theme pill at y: height - 44)
+    const active = this.getActivePlayers();
+    const cardW = 120;
+    const cardH = 50;
     const currentPid = this.turnOrder[this.currentTurnIndex];
 
     active.forEach((p, idx) => {
       const ps = this.playersState.get(p.id);
-      const px = subBarX + idx * itemW + itemW / 2;
+      let cx = 20;
+      let cy = height - 128;
+
+      if (idx === 1) {
+        cx = width - cardW - 20;
+        cy = height - 128;
+      } else if (idx === 2) {
+        cx = 20;
+        cy = 94;
+      } else if (idx === 3) {
+        cx = width - cardW - 20;
+        cy = 94;
+      }
+
       const isTurn = p.id === currentPid && this.currentTurnIndex < this.turnOrder.length;
-      ctx.fillStyle = p.color;
-      ctx.font = isTurn ? '900 12px Montserrat, sans-serif' : 'bold 11px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const indicator = isTurn ? '▶ ' : '';
-      ctx.fillText(`${indicator}P${p.id + 1}: 🥌${ps?.score || 0} (⭐${ps?.endsWon || 0})`, px, 67);
+
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(cx, cy, cardW, cardH, 8);
+      else ctx.rect(cx, cy, cardW, cardH);
+      ctx.fill();
+      ctx.strokeStyle = isTurn ? theme.accentColor : p.color;
+      ctx.lineWidth = isTurn ? 3 : 2;
+      ctx.stroke();
+
+      // Mascot preview in card
+      const isBot = p.type !== 'human';
+      const mood: CharacterMood = isTurn ? 'focused' : (ps && ps.score > 0 ? 'happy' : 'idle');
+      drawCharacter(ctx, cx + 22, cy + 25, 14, p.id, isBot, mood, performance.now() * 0.001);
+
+      // Score / Status
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 11px Montserrat, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(`${isTurn ? '▶ ' : ''}${p.name}`, cx + 42, cy + 8);
+
+      ctx.fillStyle = theme.accentColor;
+      ctx.font = '900 12px "Chakra Petch", monospace';
+      ctx.fillText(`🥌 ${ps?.score || 0} (⭐${ps?.endsWon || 0})`, cx + 42, cy + 26);
     });
 
     ctx.restore();
+  }
+
+  public syncDebug(): void {
+    // Expose debug state
+    (window as any).__CURLING_DEBUG__ = {
+      roundTimer: this.roundTimer,
+      currentTheme: this.currentTheme,
+      currentEnd: this.currentEnd,
+      stones: this.stones,
+      players: Array.from(this.playersState.values())
+    };
   }
 }
