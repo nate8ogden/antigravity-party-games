@@ -2009,11 +2009,20 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Laser Speedway'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *'Laser Speedway'* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Core Gameplay & Objective Overhaul:** Rebuilt *'Laser Speedway'* from an isolated single-wire throttle timer into a cutthroat 4-lane shared laser slot-car speedway circuit! Laps award +100 pts (+200 pts in Sudden Death), picking up Cryo Vents (0% heat, +15 pts) and Volt Orbs (+15 pts) sustains momentum, while Golden Laser Cores (+50 pts) trigger high-stakes racing line battles.
+2. **Controls & Sweet-Spot Capacitor Discharge:** Players actively switch between 4 discrete laser guide rails (`Left/Right` or A/D) with smooth lateral transitions. Holding throttle builds capacitor heat (0-100%). Releasing at the 80-99% "Sweet Spot" unleashes a **⚡ LASER HYPER-SURGE** (+25 pts, blistering velocity boost). Redlining to 100% triggers a **💥 CAPACITOR BLOWOUT!** (-15 pts, 0.9s spin stun, sparks, and speed loss).
+3. **Drafting Slipstream & Rail Shunts:**
+   - **Laser Rail Shunts:** Swapping into an adjacent rival's lane initiates an aggressive **💥 RAIL SHUNT** (+35 pts sabotage), shoving the victim outward and spiking their capacitor by +25% heat with 45ms hit-stop.
+   - **Laser Slipstream:** Tucking behind a rival connects a dynamic laser beam wake that accelerates dissipation and sets up a high-speed slingshot pass (+25 pts).
+4. **3 Procedural Visual Themes with Theme Pill:**
+   - **Tron Neon Grid ⚡:** Deep midnight grid, glowing cyan and magenta laser rails, and digital finish banners.
+   - **Solar Superhighway 🌌:** Cosmic nebulae, gold and violet laser conduits, and solar plasma beacons.
+   - **Cyber Underground 🏙️:** Wet asphalt expressway, emerald neon rails, and yellow caution curbs.
+   - Swappable dynamically via the bottom-left Theme Pill (`x: 20, y: height - 44, w: 170, h: 32`) or pressing keyboard shortcut `[T]` / keys `[1-3]`.
+5. **Underdog Super-Capacitor & Sudden Death:** Trailing racers ($\ge 50$ points behind) activate **Underdog Super-Capacitor**: equips a golden photon shield, +35% max speed, double heat cooling rate, EMP disruptor immunity, and x2 shunt knockback. In Sudden Death ($\le 15$s remaining), lap points double and Golden Laser Cores flood the track.
+6. **Mascots & Safe UI Layout:** Racers rendered via `CharacterRenderer.drawCharacter` in slot cars with neon underglow, guide pins, heat venting steam, and reactive facial moods (`idle`, `focused`, `shocked` on blowout/shunts, `triumph` on hyper-surge/laps). Corner player cards safely offset to `y: height - 128` (130x52px). Preserved top-center global timer safe zone (`y: 12-44`) with minigame header badge at `y: 56`. Calibrated bot AI (Easy: 380-450ms lag, 22% blunder; Normal: 220-250ms, drafting; Hard: 90-130ms, sweet-spot releases and offensive rail shunts).
+7. **Verification:** Built with 0 TypeScript errors via `npm run build` and verified in single-file artifact `Antigravity_Games.html`.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #86. Gravity Pods (ID: `gravity_pods`) — [Action]
 - **Class Implementation:** `src/games/GravityPodsGame.ts` (336 lines)
