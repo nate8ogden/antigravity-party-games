@@ -3,6 +3,55 @@ import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
+import { drawCharacter, CharacterMood } from '../core/CharacterRenderer';
+
+export interface MinefieldTheme {
+  name: string;
+  bgGradStart: string;
+  bgGradEnd: string;
+  tileBgUnrevealed: string;
+  tileBorderUnrevealed: string;
+  tileBgRevealed: string;
+  tileBorderRevealed: string;
+  goalBeamColor: string;
+  themePillColor: string;
+}
+
+export const MINEFIELD_THEMES: MinefieldTheme[] = [
+  {
+    name: 'Cyberpunk Hex Matrix ⚡',
+    bgGradStart: '#0B0F19',
+    bgGradEnd: '#05070D',
+    tileBgUnrevealed: '#0F172A',
+    tileBorderUnrevealed: '#1E293B',
+    tileBgRevealed: '#1E293B',
+    tileBorderRevealed: '#334155',
+    goalBeamColor: '#38BDF8',
+    themePillColor: '#38BDF8'
+  },
+  {
+    name: 'Volcanic Geothermal Rift 🔥',
+    bgGradStart: '#1A0700',
+    bgGradEnd: '#0D0300',
+    tileBgUnrevealed: '#261208',
+    tileBorderUnrevealed: '#3D1D0E',
+    tileBgRevealed: '#3D1D0E',
+    tileBorderRevealed: '#662E14',
+    goalBeamColor: '#F97316',
+    themePillColor: '#F97316'
+  },
+  {
+    name: 'Military Bunker C4 💣',
+    bgGradStart: '#0F1712',
+    bgGradEnd: '#080C09',
+    tileBgUnrevealed: '#19261D',
+    tileBorderUnrevealed: '#283B2F',
+    tileBgRevealed: '#26382C',
+    tileBorderRevealed: '#3D5946',
+    goalBeamColor: '#10B981',
+    themePillColor: '#10B981'
+  }
+];
 
 interface MineTile {
   col: number;
@@ -23,6 +72,9 @@ interface DashPlayer {
   stunTimer: number;
   aimAngle: number;
   sweepDir: number;
+  isUnderdog: boolean;
+  shoveCooldown: number;
+  consecutiveSafeTiles: number;
 }
 
 export class MinefieldDashGame extends BaseGame {
@@ -36,6 +88,18 @@ export class MinefieldDashGame extends BaseGame {
   private gridStartY: number = 0;
   private coreTargetY: number = 0;
 
+  // Theme support
+  private currentThemeIndex: number = 0;
+
+  // Sudden Death State
+  private isSuddenDeath: boolean = false;
+  private suddenDeathFlashTimer: number = 0;
+
+  private boundPointerDown: ((e: PointerEvent) => void) | null = null;
+  private boundKeyDown: ((e: KeyboardEvent) => void) | null = null;
+  private lastWidth: number = 800;
+  private lastHeight: number = 600;
+
   constructor(
     players: PlayerConfig[],
     input: InputRouter,
@@ -43,11 +107,16 @@ export class MinefieldDashGame extends BaseGame {
     particles: ParticleSystem
   ) {
     super(players, input, audio, particles);
+    this.currentThemeIndex = Math.floor(Math.random() * MINEFIELD_THEMES.length);
   }
 
   public init(width: number, height: number): void {
+    this.lastWidth = width;
+    this.lastHeight = height;
     this.roundTimer = 45;
     this.isFinished = false;
+    this.isSuddenDeath = false;
+    this.suddenDeathFlashTimer = 0;
     this.playersState.clear();
 
     this.input.setControlMode('directional');
@@ -75,9 +144,23 @@ export class MinefieldDashGame extends BaseGame {
         score: 0,
         stunTimer: 0,
         aimAngle: -Math.PI / 2,
-        sweepDir: 1
+        sweepDir: 1,
+        isUnderdog: false,
+        shoveCooldown: 0,
+        consecutiveSafeTiles: 0
       });
     });
+
+    // Bind event listeners
+    const canvas = this.input.getCanvas();
+    if (canvas && !this.boundPointerDown) {
+      this.boundPointerDown = this.handlePointerDown.bind(this);
+      canvas.addEventListener('pointerdown', this.boundPointerDown);
+    }
+    if (!this.boundKeyDown) {
+      this.boundKeyDown = this.handleKeyDown.bind(this);
+      window.addEventListener('keydown', this.boundKeyDown);
+    }
 
     if (typeof window !== 'undefined') {
       (window as any).__MINEFIELD_DASH_DEBUG__ = {
@@ -115,19 +198,66 @@ export class MinefieldDashGame extends BaseGame {
             ps.vx = 0;
             ps.vy = 0;
           }
+        },
+        getThemeIndex: () => this.currentThemeIndex,
+        setThemeIndex: (idx: number) => {
+          this.currentThemeIndex = idx % MINEFIELD_THEMES.length;
         }
       };
     }
   }
 
+  private handleKeyDown(e: KeyboardEvent): void {
+    if (e.key === 't' || e.key === 'T') {
+      this.toggleTheme();
+    }
+  }
+
+  private toggleTheme(): void {
+    this.currentThemeIndex = (this.currentThemeIndex + 1) % MINEFIELD_THEMES.length;
+    this.audio.playTap();
+  }
+
+  private handlePointerDown(e: PointerEvent): void {
+    const canvas = this.input.getCanvas();
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const clickX = ((e.clientX - rect.left) / rect.width) * this.lastWidth;
+    const clickY = ((e.clientY - rect.top) / rect.height) * this.lastHeight;
+
+    // Check Theme Pill click: [T] Theme Pill at (20, height - 44, 170, 32)
+    if (
+      clickX >= 20 &&
+      clickX <= 190 &&
+      clickY >= this.lastHeight - 44 &&
+      clickY <= this.lastHeight - 12
+    ) {
+      this.toggleTheme();
+    }
+  }
+
+  public override destroy(): void {
+    if (this.boundPointerDown) {
+      const canvas = this.input.getCanvas();
+      if (canvas) {
+        canvas.removeEventListener('pointerdown', this.boundPointerDown);
+      }
+      this.boundPointerDown = null;
+    }
+    if (this.boundKeyDown) {
+      window.removeEventListener('keydown', this.boundKeyDown);
+      this.boundKeyDown = null;
+    }
+  }
+
   private generateMinefield() {
     this.grid = [];
-    const mineDensity = 0.20; // 20% of tiles are mines
+    const mineDensity = 0.20;
 
     for (let c = 0; c < this.cols; c++) {
       this.grid[c] = [];
       for (let r = 0; r < this.rows; r++) {
-        // Safe starting and ending buffer rows
         const isSafeRow = r === 0 || r === this.rows - 1;
         const hasMine = !isSafeRow && Math.random() < mineDensity;
         this.grid[c][r] = {
@@ -177,16 +307,10 @@ export class MinefieldDashGame extends BaseGame {
     }
   }
 
-  /**
-   * BFS graph search ensuring that at least one walkable (non-exploded) corridor
-   * connects the bottom row to the extraction goal at row 0.
-   * If barricades completely seal the lane, automatically breach the obstruction.
-   */
   private ensureFieldSolvable(): void {
     const visited: boolean[][] = Array.from({ length: this.cols }, () => Array(this.rows).fill(false));
     const queue: [number, number][] = [];
 
-    // All unexploded tiles in the bottom buffer row are candidate start points
     for (let c = 0; c < this.cols; c++) {
       if (!this.grid[c][this.rows - 1].exploded) {
         queue.push([c, this.rows - 1]);
@@ -216,7 +340,6 @@ export class MinefieldDashGame extends BaseGame {
       }
     }
 
-    // If completely blocked by exploded barricades, breach the blocking row
     if (!canReachGoal) {
       for (let r = this.rows - 2; r >= 1; r--) {
         for (let c = 0; c < this.cols; c++) {
@@ -237,9 +360,6 @@ export class MinefieldDashGame extends BaseGame {
     }
   }
 
-  /**
-   * Circle vs AABB collision response keeping players outside exploded barricade tiles.
-   */
   private resolveBarricadeCollisions(ps: DashPlayer): void {
     const radius = 13;
     for (let c = 0; c < this.cols; c++) {
@@ -251,7 +371,6 @@ export class MinefieldDashGame extends BaseGame {
         const tileTop = this.gridStartY + r * this.tileH;
         const tileBottom = tileTop + this.tileH;
 
-        // Broad-phase AABB test
         if (
           ps.x + radius < tileLeft ||
           ps.x - radius > tileRight ||
@@ -261,7 +380,6 @@ export class MinefieldDashGame extends BaseGame {
           continue;
         }
 
-        // Closest point on the barricade box
         const clampX = Math.max(tileLeft, Math.min(tileRight, ps.x));
         const clampY = Math.max(tileTop, Math.min(tileBottom, ps.y));
         const dx = ps.x - clampX;
@@ -277,14 +395,12 @@ export class MinefieldDashGame extends BaseGame {
             ps.x += nx * overlap;
             ps.y += ny * overlap;
 
-            // Zero velocity entering the solid barrier
             const velDot = ps.vx * nx + ps.vy * ny;
             if (velDot < 0) {
               ps.vx -= velDot * nx;
               ps.vy -= velDot * ny;
             }
           } else {
-            // Player center ended up inside the box: push to nearest face
             const dL = ps.x - tileLeft;
             const dR = tileRight - ps.x;
             const dT = ps.y - tileTop;
@@ -319,6 +435,26 @@ export class MinefieldDashGame extends BaseGame {
       return;
     }
 
+    // Sudden death threshold (<= 15 seconds remaining)
+    if (this.roundTimer <= 15.0 && !this.isSuddenDeath) {
+      this.isSuddenDeath = true;
+      this.audio.playBoost();
+      this.particles.shake(6);
+    }
+
+    if (this.isSuddenDeath) {
+      this.suddenDeathFlashTimer += dt;
+    }
+
+    // Underdog surge calculations: identify leader
+    let maxScore = -1;
+    for (const ps of this.playersState.values()) {
+      if (ps.score > maxScore) maxScore = ps.score;
+    }
+    for (const ps of this.playersState.values()) {
+      ps.isUnderdog = maxScore >= 2 && ps.score <= maxScore - 2;
+    }
+
     // Update active mines countdown & detonation
     for (let c = 0; c < this.cols; c++) {
       for (let r = 0; r < this.rows; r++) {
@@ -333,22 +469,22 @@ export class MinefieldDashGame extends BaseGame {
             const tx = this.gridStartX + c * this.tileW + this.tileW / 2;
             const ty = this.gridStartY + r * this.tileH + this.tileH / 2;
 
-            // Shrapnel blast
             this.particles.spawnExplosion(tx, ty, '#EF4444', 20);
 
             // Blast wave knocks back nearby players
             for (const ps of this.playersState.values()) {
               if (Math.hypot(ps.x - tx, ps.y - ty) < this.tileW * 0.95) {
-                ps.stunTimer = 1.0;
-                ps.y = this.gridStartY + this.rows * this.tileH + 25; // Knocked back to starting line!
+                // Underdog stun time is halved
+                ps.stunTimer = ps.isUnderdog ? 0.5 : 1.0;
+                ps.y = this.gridStartY + this.rows * this.tileH + 25; // Knocked back to starting line
                 ps.vx = 0;
                 ps.vy = 0;
+                ps.consecutiveSafeTiles = 0;
                 this.audio.playStun();
                 this.particles.showFloatingText('💥 KNOCKED BACK!', ps.x, ps.y - 12, '#EF4444', 16);
               }
             }
 
-            // Ensure route remains solvable
             this.ensureFieldSolvable();
           }
         }
@@ -367,7 +503,10 @@ export class MinefieldDashGame extends BaseGame {
         continue;
       }
 
-      // Responsive direct 8-way movement: WASD for P1, Arrow Keys for P2
+      if (ps.shoveCooldown > 0) {
+        ps.shoveCooldown -= dt;
+      }
+
       const rawSteer = this.input.getRawSteer(p.id);
       const rawThrottle = this.input.getRawThrottle(p.id);
       const smoothSteer = this.input.getSteer(p.id);
@@ -377,11 +516,11 @@ export class MinefieldDashGame extends BaseGame {
       const throttle = Math.abs(rawThrottle) > 0 ? rawThrottle : smoothThrottle;
       const isAction = this.input.isPressed(p.id) || this.input.isActionPressed(p.id);
 
-      const baseSpeed = 160;
-      const dashSpeed = 240;
+      // Underdog +25% sprint velocity
+      const baseSpeed = ps.isUnderdog ? 190 : 160;
+      const dashSpeed = ps.isUnderdog ? 285 : 240;
       const speed = isAction ? dashSpeed : baseSpeed;
 
-      // In Canvas space: +X is Right, -X is Left; -Y is Up (throttle > 0), +Y is Down (throttle < 0)
       const inputX = steer;
       const inputY = -throttle;
       const mag = Math.hypot(inputX, inputY);
@@ -394,14 +533,12 @@ export class MinefieldDashGame extends BaseGame {
         ps.aimAngle = Math.atan2(normY, normX);
 
         if (isAction && Math.random() < 0.25) {
-          this.particles.spawnSparks(ps.x, ps.y + 6, p.color, 4);
+          this.particles.spawnSparks(ps.x, ps.y + 6, ps.isUnderdog ? '#F59E0B' : p.color, 4);
         }
       } else if (isAction && this.input.controlMode === 'single_button') {
-        // Single-button mobile fallback: dash forward in aimed angle
         ps.vx = Math.cos(ps.aimAngle) * speed;
         ps.vy = Math.sin(ps.aimAngle) * speed;
       } else {
-        // Crisp stop so players can stop precisely on safe tiles
         ps.vx = 0;
         ps.vy = 0;
       }
@@ -409,14 +546,11 @@ export class MinefieldDashGame extends BaseGame {
       ps.x += ps.vx * dt;
       ps.y += ps.vy * dt;
 
-      // Resolve solid barricade collisions against exploded tiles
       this.resolveBarricadeCollisions(ps);
 
-      // Clamp to arena
       ps.x = Math.max(this.gridStartX + 12, Math.min(this.gridStartX + this.cols * this.tileW - 12, ps.x));
       ps.y = Math.max(this.gridStartY - 30, Math.min(this.gridStartY + this.rows * this.tileH + 45, ps.y));
 
-      // Resolve barricade collisions again after arena clamp
       this.resolveBarricadeCollisions(ps);
 
       // Check current grid tile for reveal or mine trip
@@ -430,26 +564,34 @@ export class MinefieldDashGame extends BaseGame {
           this.audio.playTap();
 
           if (tile.hasMine && tile.detonateTimer <= 0) {
-            tile.detonateTimer = 0.65; // 0.65s fuse!
+            // Underdog gets generous fuse grace (1.0s vs 0.65s or 0.40s in sudden death)
+            const baseFuse = this.isSuddenDeath ? 0.40 : 0.65;
+            tile.detonateTimer = ps.isUnderdog ? 1.0 : baseFuse;
             this.audio.playBuzzer();
+          } else if (!tile.hasMine) {
+            ps.consecutiveSafeTiles += 1;
+            if (tile.adjacentMines === 0) {
+              // Auto-cascade reveal surrounding safe tiles
+              this.cascadeReveal(col, row);
+            }
           }
         }
       }
 
-      // Reached the Golden Battery Core at the top!
+      // Reached the Energy Extraction Goal at the top
       if (ps.y <= this.gridStartY - 10) {
-        ps.score += 1;
+        // Sudden death Titan Core = 2 points!
+        const pointsAwarded = this.isSuddenDeath ? 2 : 1;
+        ps.score += pointsAwarded;
         this.audio.playTone(523.25, 0.08, 'triangle');
         setTimeout(() => this.audio.playTone(783.99, 0.12, 'sine'), 80);
 
-        // Celebration burst
         this.particles.spawnExplosion(ps.x, ps.y, '#FBBF24', 24);
-        this.particles.showFloatingText('+1 CORE EXTRACTED!', ps.x, ps.y - 14, '#FACC15', 18);
+        this.particles.showFloatingText(`+${pointsAwarded} ${this.isSuddenDeath ? 'TITAN CORE EXTRACTED!' : 'CORE EXTRACTED!'}`, ps.x, ps.y - 14, '#FACC15', 18);
 
         if (ps.score >= 3) {
           this.isFinished = true;
         } else {
-          // Reset players to start line and generate a new layout
           this.generateMinefield();
           active.forEach((pl, i) => {
             const st = this.playersState.get(pl.id);
@@ -459,13 +601,14 @@ export class MinefieldDashGame extends BaseGame {
               st.vx = 0;
               st.vy = 0;
               st.stunTimer = 0;
+              st.consecutiveSafeTiles = 0;
             }
           });
         }
       }
     }
 
-    // Player-to-player physical separation (prevent stacking on top of each other)
+    // Player-to-player elastic collision with shove impulse
     const playerList = Array.from(this.playersState.values());
     for (let i = 0; i < playerList.length; i++) {
       for (let j = i + 1; j < playerList.length; j++) {
@@ -474,26 +617,70 @@ export class MinefieldDashGame extends BaseGame {
         const dx = p2.x - p1.x;
         const dy = p2.y - p1.y;
         const dist = Math.hypot(dx, dy);
-        const minDist = 24;
-        if (dist < minDist) {
-          const overlap = (minDist - (dist || 0.01)) * 0.5;
-          const nx = dist > 0.001 ? dx / dist : 1;
-          const ny = dist > 0.001 ? dy / dist : 0;
+        const minDist = 26;
+
+        if (dist < minDist && dist > 0.001) {
+          const overlap = (minDist - dist) * 0.5;
+          const nx = dx / dist;
+          const ny = dy / dist;
           p1.x -= nx * overlap;
           p1.y -= ny * overlap;
           p2.x += nx * overlap;
           p2.y += ny * overlap;
+
+          // Shove knockback if one player is sprinting/dashing
+          const p1Dashing = Math.hypot(p1.vx, p1.vy) > 200;
+          const p2Dashing = Math.hypot(p2.vx, p2.vy) > 200;
+          if (p1Dashing && p1.shoveCooldown <= 0) {
+            p2.vx += nx * 220;
+            p2.vy += ny * 220;
+            p1.shoveCooldown = 0.5;
+            this.audio.playBounce();
+            this.particles.spawnSparks(p2.x, p2.y, '#F59E0B', 6);
+          } else if (p2Dashing && p2.shoveCooldown <= 0) {
+            p1.vx -= nx * 220;
+            p1.vy -= ny * 220;
+            p2.shoveCooldown = 0.5;
+            this.audio.playBounce();
+            this.particles.spawnSparks(p1.x, p1.y, '#F59E0B', 6);
+          }
+        }
+      }
+    }
+  }
+
+  private cascadeReveal(startCol: number, startRow: number): void {
+    const queue: [number, number][] = [[startCol, startRow]];
+    const visited: boolean[][] = Array.from({ length: this.cols }, () => Array(this.rows).fill(false));
+    visited[startCol][startRow] = true;
+
+    while (queue.length > 0) {
+      const [c, r] = queue.shift()!;
+      for (let dc = -1; dc <= 1; dc++) {
+        for (let dr = -1; dr <= 1; dr++) {
+          const nc = c + dc;
+          const nr = r + dr;
+          if (nc >= 0 && nc < this.cols && nr >= 0 && nr < this.rows && !visited[nc][nr]) {
+            visited[nc][nr] = true;
+            const tile = this.grid[nc][nr];
+            if (!tile.hasMine && !tile.exploded) {
+              tile.revealed = true;
+              if (tile.adjacentMines === 0) {
+                queue.push([nc, nr]);
+              }
+            }
+          }
         }
       }
     }
   }
 
   protected updateBotAI(
-    dt: number,
+    _dt: number,
     botId: PlayerId,
     difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
-    width: number,
-    height: number
+    _width: number,
+    _height: number
   ): void {
     const ps = this.playersState.get(botId);
     if (!ps || ps.stunTimer > 0) return;
@@ -502,12 +689,11 @@ export class MinefieldDashGame extends BaseGame {
     const curRow = Math.max(0, Math.min(this.rows - 1, Math.floor((ps.y - this.gridStartY) / this.tileH)));
     const targetRow = Math.max(0, curRow - 1);
 
-    // Default intent: move up towards extraction line
     let throttle = 1.0;
     let steer = 0;
     let action = false;
 
-    // Check if current tile is ticking - emergency lateral escape!
+    // Check if current tile is ticking - emergency lateral escape
     const curTile = this.grid[curCol]?.[curRow];
     if (curTile?.detonateTimer > 0) {
       const canLeft = curCol > 0 && !this.grid[curCol - 1][curRow].exploded && this.grid[curCol - 1][curRow].detonateTimer <= 0;
@@ -520,13 +706,12 @@ export class MinefieldDashGame extends BaseGame {
         steer = 1;
       }
       throttle = 0.4;
-      action = difficulty !== 'bot_easy'; // Sprint away from fuse
+      action = difficulty !== 'bot_easy';
       this.input.setBotInput(botId, true, steer, throttle, action);
       return;
     }
 
     if (difficulty === 'bot_easy') {
-      // Easy Bot: walks forward, turns away from barricades when bumping into them
       const frontTile = this.grid[curCol]?.[targetRow];
       if (frontTile?.exploded || frontTile?.detonateTimer > 0) {
         const canLeft = curCol > 0 && !this.grid[curCol - 1][curRow].exploded;
@@ -541,33 +726,29 @@ export class MinefieldDashGame extends BaseGame {
       return;
     }
 
-    // Normal and Hard: lookahead and evaluate pathing options
+    // Normal and Hard path evaluation
     let bestCol = curCol;
     let bestScore = -99999;
-
     const candidateCols = [curCol, curCol - 1, curCol + 1].filter(c => c >= 0 && c < this.cols);
 
     for (const c of candidateCols) {
       const tile = this.grid[c][targetRow];
-      if (tile.exploded) continue; // SOLID IMPASSABLE BARRICADE
+      if (tile.exploded) continue;
 
       let score = 100;
-
-      // Favor straight vertical progress
       score -= Math.abs(c - curCol) * 15;
 
       if (tile.detonateTimer > 0) {
-        score -= 500; // Ticking bomb
+        score -= 500;
       }
 
       if (tile.revealed) {
         if (tile.hasMine) {
           score -= 1000;
         } else {
-          score += 200; // Confirmed safe
+          score += 200;
         }
       } else {
-        // Unrevealed tile: in Hard mode, evaluate surrounding revealed numbers
         if (difficulty === 'bot_hard') {
           let knownSafe = false;
           let adjacentMineSum = 0;
@@ -588,7 +769,7 @@ export class MinefieldDashGame extends BaseGame {
           }
           if (knownSafe) {
             score += 150;
-            action = true; // Confident dash sprint
+            action = true;
           } else if (neighborRevealedCount > 0) {
             score -= (adjacentMineSum / neighborRevealedCount) * 40;
           }
@@ -601,7 +782,6 @@ export class MinefieldDashGame extends BaseGame {
       }
     }
 
-    // If all candidate forward tiles are barricaded, find lateral non-barricaded tile
     if (bestScore === -99999) {
       const lateralOptions = [curCol - 1, curCol + 1].filter(c => c >= 0 && c < this.cols && !this.grid[c][curRow].exploded);
       if (lateralOptions.length > 0) {
@@ -627,23 +807,32 @@ export class MinefieldDashGame extends BaseGame {
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // Cyber Command Grid Background
-    ctx.fillStyle = '#0B0F19';
+    const theme = MINEFIELD_THEMES[this.currentThemeIndex];
+
+    // Background Gradient
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, theme.bgGradStart);
+    bgGrad.addColorStop(1, theme.bgGradEnd);
+    ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
-    // Goal Battery Line at top
+    // Goal Extraction Line at top
     const goalY = this.gridStartY - 15;
     ctx.save();
-    ctx.shadowColor = '#FBBF24';
-    ctx.shadowBlur = 14;
-    ctx.fillStyle = '#F59E0B';
+    ctx.shadowColor = this.isSuddenDeath ? '#EF4444' : theme.goalBeamColor;
+    ctx.shadowBlur = this.isSuddenDeath ? 20 : 14;
+    ctx.fillStyle = this.isSuddenDeath ? '#EF4444' : theme.goalBeamColor;
     ctx.fillRect(this.gridStartX, goalY - 10, this.cols * this.tileW, 8);
     ctx.restore();
 
-    ctx.fillStyle = '#FDE68A';
+    ctx.fillStyle = this.isSuddenDeath ? '#FDE047' : '#FDE68A';
     ctx.font = '900 11px Montserrat, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('⚡ ENERGY EXTRACTION LINE ⚡', this.gridStartX + (this.cols * this.tileW) / 2, goalY - 16);
+    ctx.fillText(
+      this.isSuddenDeath ? '⚡ TITAN ENERGY CORE: +2 CORES! ⚡' : '⚡ ENERGY EXTRACTION LINE ⚡',
+      this.gridStartX + (this.cols * this.tileW) / 2,
+      goalY - 16
+    );
 
     // Render Grid Hex-Plates / Barricades
     for (let c = 0; c < this.cols; c++) {
@@ -655,18 +844,14 @@ export class MinefieldDashGame extends BaseGame {
         const h = this.tileH - 4;
 
         if (t.exploded) {
-          // Tactical Solid Impassable Barricade
           ctx.save();
           ctx.beginPath();
-          if (ctx.roundRect) ctx.roundRect(x, y, w, h, 4);
-          else ctx.rect(x, y, w, h);
+          ctx.roundRect(x, y, w, h, 4);
           ctx.clip();
 
-          // Dark charred concrete floor
           ctx.fillStyle = '#18181B';
           ctx.fillRect(x, y, w, h);
 
-          // Diagonal Hazard Caution Stripes (Yellow & Black)
           const stripeW = 9;
           ctx.fillStyle = '#EAB308';
           for (let sx = -h; sx < w + h; sx += stripeW * 2) {
@@ -679,12 +864,10 @@ export class MinefieldDashGame extends BaseGame {
             ctx.fill();
           }
 
-          // Heavy reinforced steel red border
           ctx.strokeStyle = '#DC2626';
           ctx.lineWidth = 2.5;
           ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
 
-          // Center Barricade Badge
           const badgeW = Math.min(w - 12, 42);
           const badgeH = 18;
           const badgeX = x + w / 2 - badgeW / 2;
@@ -693,8 +876,7 @@ export class MinefieldDashGame extends BaseGame {
           ctx.strokeStyle = '#F87171';
           ctx.lineWidth = 1;
           ctx.beginPath();
-          if (ctx.roundRect) ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 3);
-          else ctx.rect(badgeX, badgeY, badgeW, badgeH);
+          ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 3);
           ctx.fill();
           ctx.stroke();
 
@@ -705,7 +887,6 @@ export class MinefieldDashGame extends BaseGame {
 
           ctx.restore();
         } else if (t.detonateTimer > 0) {
-          // Warning blink
           const isBlink = Math.floor(t.detonateTimer * 10) % 2 === 0;
           ctx.fillStyle = isBlink ? '#EF4444' : '#7F1D1D';
           ctx.fillRect(x, y, w, h);
@@ -714,13 +895,12 @@ export class MinefieldDashGame extends BaseGame {
           ctx.textAlign = 'center';
           ctx.fillText('⚠️', x + w / 2, y + h / 2 + 5);
         } else if (t.revealed) {
-          ctx.fillStyle = '#1E293B';
+          ctx.fillStyle = theme.tileBgRevealed;
           ctx.fillRect(x, y, w, h);
-          ctx.strokeStyle = '#334155';
+          ctx.strokeStyle = theme.tileBorderRevealed;
           ctx.lineWidth = 1;
           ctx.strokeRect(x, y, w, h);
 
-          // Proximity number
           if (t.adjacentMines > 0) {
             const colors = ['#38BDF8', '#FBBF24', '#F97316', '#EF4444'];
             ctx.fillStyle = colors[Math.min(colors.length - 1, t.adjacentMines - 1)];
@@ -734,10 +914,9 @@ export class MinefieldDashGame extends BaseGame {
             ctx.fillText('·', x + w / 2, y + h / 2 + 3);
           }
         } else {
-          // Unrevealed cyber plate
-          ctx.fillStyle = '#0F172A';
+          ctx.fillStyle = theme.tileBgUnrevealed;
           ctx.fillRect(x, y, w, h);
-          ctx.strokeStyle = '#1E293B';
+          ctx.strokeStyle = theme.tileBorderUnrevealed;
           ctx.lineWidth = 1;
           ctx.strokeRect(x, y, w, h);
         }
@@ -761,15 +940,28 @@ export class MinefieldDashGame extends BaseGame {
     for (const p of active) {
       const ps = this.playersState.get(p.id);
       if (!ps) continue;
+      const isBot = p.type.startsWith('bot_');
 
       ctx.save();
+
+      // Underdog Golden Pulse Aura
+      if (ps.isUnderdog) {
+        ctx.save();
+        ctx.strokeStyle = '#F59E0B';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.arc(ps.x, ps.y, 24, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
 
       // Dynamic Sonar Scanner Radar Ring radiating from player
       const radarPhase = (now * 2.5 + p.id * 0.5) % 1.0;
       const radarR = 12 + radarPhase * 45;
       ctx.beginPath();
       ctx.arc(ps.x, ps.y, radarR, 0, Math.PI * 2);
-      ctx.strokeStyle = p.color;
+      ctx.strokeStyle = ps.isUnderdog ? '#F59E0B' : p.color;
       ctx.globalAlpha = (1 - radarPhase) * 0.5;
       ctx.lineWidth = 1.8;
       ctx.stroke();
@@ -785,8 +977,20 @@ export class MinefieldDashGame extends BaseGame {
       }
 
       // Draw Explorer Mascot
-      const mood = ps.stunTimer > 0 ? 'shocked' : 'focused';
-      this.drawPlayerMascot(ctx, p.id, ps.x, ps.y, 13, mood, now);
+      let mood: CharacterMood = 'focused';
+      const curCol = Math.floor((ps.x - this.gridStartX) / this.tileW);
+      const curRow = Math.floor((ps.y - this.gridStartY) / this.tileH);
+      const curTile = (curCol >= 0 && curCol < this.cols && curRow >= 0 && curRow < this.rows) ? this.grid[curCol][curRow] : null;
+
+      if (ps.stunTimer > 0 || curTile?.detonateTimer! > 0) {
+        mood = 'shocked';
+      } else if (ps.score >= 2 || this.isFinished) {
+        mood = 'triumph';
+      } else if (ps.consecutiveSafeTiles >= 2) {
+        mood = 'happy';
+      }
+
+      drawCharacter(ctx, ps.x, ps.y, 13, p.id, isBot, mood, now * 4);
 
       // Aim directional laser guide
       ctx.strokeStyle = '#FFFFFF';
@@ -805,8 +1009,8 @@ export class MinefieldDashGame extends BaseGame {
       ctx.fillText(p.name, ps.x, ps.y - 18);
     }
 
-    // Top Center HUD Score Pod
-    const hudW = 280;
+    // Minigame Subheader at safe position y: 56
+    const hudW = Math.min(width - 60, 480);
     const hudH = 26;
     const hudX = width / 2 - hudW / 2;
     const hudY = 56;
@@ -816,45 +1020,56 @@ export class MinefieldDashGame extends BaseGame {
     ctx.shadowBlur = 10;
     ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(hudX, hudY, hudW, hudH, 13);
-    else ctx.rect(hudX, hudY, hudW, hudH);
+    ctx.roundRect(hudX, hudY, hudW, hudH, 13);
     ctx.fill();
-    ctx.strokeStyle = '#38BDF8';
+    ctx.strokeStyle = this.isSuddenDeath ? '#EF4444' : theme.themePillColor;
     ctx.lineWidth = 1.5;
     ctx.stroke();
-    ctx.restore();
 
     ctx.font = '900 11px Montserrat, sans-serif';
     ctx.textAlign = 'center';
-    const summary = active.map((p) => {
-      const ps = this.playersState.get(p.id);
-      return `${p.name}: ${ps?.score || 0}/3 CORES`;
-    }).join('   •   ');
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(summary, width / 2, hudY + 17);
+    ctx.textBaseline = 'middle';
+    if (this.isSuddenDeath) {
+      const flash = Math.sin(this.suddenDeathFlashTimer * 10) > 0;
+      ctx.fillStyle = flash ? '#FDE047' : '#EF4444';
+      ctx.fillText('⚡ SUDDEN DEATH: FAST FUSES & 2X TITAN CORES! ⚡', width / 2, hudY + 13);
+    } else {
+      const summary = active.map((p) => {
+        const ps = this.playersState.get(p.id);
+        return `${p.name}: ${ps?.score || 0}/3 CORES`;
+      }).join('   •   ');
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText(summary, width / 2, hudY + 13);
+    }
+    ctx.restore();
 
-    // On-Screen Controls Hint Banner at bottom
-    const bannerW = Math.min(width - 32, 540);
-    const bannerH = 24;
-    const bannerX = width / 2 - bannerW / 2;
-    const bannerY = height - 32;
-
+    // Theme Pill at bottom-left: x: 20, y: height - 44, w: 170, h: 32
     ctx.save();
+    const pillX = 20;
+    const pillY = height - 44;
+    const pillW = 170;
+    const pillH = 32;
+
     ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-    ctx.strokeStyle = '#38BDF8';
-    ctx.lineWidth = 1;
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(bannerX, bannerY, bannerW, bannerH, 12);
-    else ctx.rect(bannerX, bannerY, bannerW, bannerH);
+    ctx.roundRect(pillX, pillY, pillW, pillH, 16);
     ctx.fill();
+    ctx.strokeStyle = theme.themePillColor;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    ctx.font = '700 10.5px Montserrat, sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 11px "Outfit", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#94A3B8';
-    const p1Text = 'P1: [W A S D] Move • [SPACE] Dash';
-    const p2Text = 'P2: [ARROWS] Move • [ENTER] Dash';
-    ctx.fillText(`${p1Text}   │   ${p2Text}`, width / 2, bannerY + 16);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${theme.name} [T]`, pillX + pillW * 0.5, pillY + pillH * 0.5);
+
+    // Right-aligned Control Hints
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.font = '11px "Outfit", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Move: WASD / Arrows • Sprint/Shove: Space / Enter', width - 24, height - 28);
     ctx.restore();
   }
 
