@@ -3,6 +3,59 @@ import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
+import { CharacterMood } from '../core/CharacterRenderer';
+
+export interface BladeTheme {
+  name: string;
+  bgGradTop: string;
+  bgGradBot: string;
+  spotlightP1: string;
+  spotlightP2: string;
+  matColor: string;
+  apronColor: string;
+  ropeColors: string[];
+  postColor: string;
+  themePillColor: string;
+}
+
+export const BLADE_THEMES: BladeTheme[] = [
+  {
+    name: 'Cyber Arena 80s ⚡',
+    bgGradTop: '#090D16',
+    bgGradBot: '#111827',
+    spotlightP1: 'rgba(56, 189, 248, 0.08)',
+    spotlightP2: 'rgba(244, 63, 94, 0.08)',
+    matColor: '#334155',
+    apronColor: '#1E293B',
+    ropeColors: ['#EF4444', '#F8FAFC', '#3B82F6'],
+    postColor: '#64748B',
+    themePillColor: '#38BDF8'
+  },
+  {
+    name: 'Retro Plastic Toys 🥊',
+    bgGradTop: '#1E1B4B',
+    bgGradBot: '#312E81',
+    spotlightP1: 'rgba(245, 158, 11, 0.10)',
+    spotlightP2: 'rgba(59, 130, 246, 0.10)',
+    matColor: '#F59E0B',
+    apronColor: '#B45309',
+    ropeColors: ['#EF4444', '#FEF08A', '#3B82F6'],
+    postColor: '#FBBF24',
+    themePillColor: '#F59E0B'
+  },
+  {
+    name: 'Mecha Foundry 🔥',
+    bgGradTop: '#1C0A04',
+    bgGradBot: '#290E05',
+    spotlightP1: 'rgba(239, 68, 68, 0.12)',
+    spotlightP2: 'rgba(249, 115, 22, 0.12)',
+    matColor: '#262626',
+    apronColor: '#171717',
+    ropeColors: ['#EA580C', '#F97316', '#DC2626'],
+    postColor: '#78350F',
+    themePillColor: '#F97316'
+  }
+];
 
 export interface RobotFighter {
   id: PlayerId;
@@ -21,7 +74,7 @@ export interface RobotFighter {
   isHeadPopped: boolean; // POPPED! Knockout state
 
   // Arm Piston Punch Animations
-  leftPunchAnim: number; // 0 (retracted) to 1.0 (fully extended)
+  leftPunchAnim: number; // 0 to 1.0
   rightPunchAnim: number;
   activePunch: 'none' | 'left' | 'right';
   punchCooldown: number;
@@ -32,9 +85,10 @@ export interface RobotFighter {
   parryCooldown: number;
   parrySparks: number;
 
-  // Stun / Hit Reaction
-  staggerTimer: number; // guard-broken or stunned
+  // Stun / Hit Reaction & Underdog
+  staggerTimer: number;
   invulnerableTimer: number;
+  isUnderdog: boolean;
 }
 
 export class BladeParryGame extends BaseGame {
@@ -48,19 +102,22 @@ export class BladeParryGame extends BaseGame {
   private ringRopeWobble: number = 0;
   private botReactionTimers: Map<PlayerId, number> = new Map();
 
+  // Themes and Event Listeners
+  private currentThemeIndex: number = 0;
+  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
+  private pointerdownHandler: ((e: PointerEvent) => void) | null = null;
+
   // On-screen Touch Button Rects
   private p1Btns = {
-    left: { x: 0, y: 0, w: 52, h: 44 },
-    parry: { x: 0, y: 0, w: 56, h: 44 },
-    right: { x: 0, y: 0, w: 52, h: 44 }
+    left: { x: 0, y: 0, w: 56, h: 42 },
+    parry: { x: 0, y: 0, w: 60, h: 42 },
+    right: { x: 0, y: 0, w: 56, h: 42 }
   };
   private p2Btns = {
-    left: { x: 0, y: 0, w: 52, h: 44 },
-    parry: { x: 0, y: 0, w: 56, h: 44 },
-    right: { x: 0, y: 0, w: 52, h: 44 }
+    left: { x: 0, y: 0, w: 56, h: 42 },
+    parry: { x: 0, y: 0, w: 60, h: 42 },
+    right: { x: 0, y: 0, w: 56, h: 42 }
   };
-
-  private pointerdownHandler: ((e: PointerEvent) => void) | null = null;
 
   constructor(
     players: PlayerConfig[],
@@ -78,6 +135,7 @@ export class BladeParryGame extends BaseGame {
 
   public destroy(): void {
     this.removeListeners();
+    super.destroy();
     if (typeof window !== 'undefined' && (window as unknown as { __BLADE_PARRY_DEBUG__?: unknown }).__BLADE_PARRY_DEBUG__) {
       delete (window as unknown as { __BLADE_PARRY_DEBUG__?: unknown }).__BLADE_PARRY_DEBUG__;
     }
@@ -87,15 +145,34 @@ export class BladeParryGame extends BaseGame {
     if (typeof window === 'undefined') return;
     this.removeListeners();
 
+    this.keydownListener = (e: KeyboardEvent) => {
+      if (this.isFinished) return;
+      if (e.code === 'KeyT') {
+        this.currentThemeIndex = (this.currentThemeIndex + 1) % BLADE_THEMES.length;
+        this.audio.playTap();
+      }
+    };
+    window.addEventListener('keydown', this.keydownListener);
+
     this.pointerdownHandler = (e: PointerEvent) => {
       const canvas = document.querySelector('canvas');
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const clickY = (e.clientY - rect.top) * scaleY;
 
-      const f1 = this.fighters.get(0);
-      const f2 = this.fighters.get(1);
+      // Theme pill is at x: 20, y: canvas.height - 44, w: 170, h: 32
+      if (clickX >= 20 && clickX <= 190 && clickY >= canvas.height - 44 && clickY <= canvas.height - 12) {
+        this.currentThemeIndex = (this.currentThemeIndex + 1) % BLADE_THEMES.length;
+        this.audio.playTap();
+        return;
+      }
+
+      const active = this.getActivePlayers();
+      const f1 = this.fighters.get(active[0]?.id ?? 0);
+      const f2 = this.fighters.get(active[1]?.id ?? 1);
 
       // P1 Touch Buttons
       if (f1 && f1.staggerTimer <= 0 && !f1.isHeadPopped) {
@@ -134,6 +211,10 @@ export class BladeParryGame extends BaseGame {
 
   private removeListeners(): void {
     if (typeof window === 'undefined') return;
+    if (this.keydownListener) {
+      window.removeEventListener('keydown', this.keydownListener);
+      this.keydownListener = null;
+    }
     if (this.pointerdownHandler) {
       window.removeEventListener('pointerdown', this.pointerdownHandler);
       this.pointerdownHandler = null;
@@ -188,7 +269,8 @@ export class BladeParryGame extends BaseGame {
       parryCooldown: 0,
       parrySparks: 0,
       staggerTimer: 0,
-      invulnerableTimer: 0
+      invulnerableTimer: 0,
+      isUnderdog: false
     });
 
     // Player 2 (Blue Bomber) on Right
@@ -214,7 +296,8 @@ export class BladeParryGame extends BaseGame {
       parryCooldown: 0,
       parrySparks: 0,
       staggerTimer: 0,
-      invulnerableTimer: 0
+      invulnerableTimer: 0,
+      isUnderdog: false
     });
 
     // Expose debug interface for tests
@@ -262,6 +345,10 @@ export class BladeParryGame extends BaseGame {
     const p1 = this.fighters.get(active[0]?.id ?? 0);
     const p2 = this.fighters.get(active[1]?.id ?? 1);
 
+    // Check underdog status: trailing by 1 round KO
+    const p1Score = p1?.score ?? 0;
+    const p2Score = p2?.score ?? 0;
+
     if (p1) {
       p1.x = this.ringBounds.left + ringW * 0.28;
       p1.chinNotches = 0;
@@ -277,6 +364,7 @@ export class BladeParryGame extends BaseGame {
       p1.guardTimer = 0;
       p1.staggerTimer = 0;
       p1.invulnerableTimer = 0.5;
+      p1.isUnderdog = p1Score < p2Score;
     }
 
     if (p2) {
@@ -294,11 +382,18 @@ export class BladeParryGame extends BaseGame {
       p2.guardTimer = 0;
       p2.staggerTimer = 0;
       p2.invulnerableTimer = 0.5;
+      p2.isUnderdog = p2Score < p1Score;
     }
 
     this.roundResetTimer = 0;
     this.audio.playCountdown(true);
-    this.particles.showFloatingText(`ROUND ${this.currentRound} — FIGHT!`, (this.ringBounds.left + this.ringBounds.right) / 2, this.ringBounds.floorY - 140, '#F59E0B', 28);
+    this.particles.showFloatingText(
+      `ROUND ${this.currentRound} — FIGHT!`,
+      (this.ringBounds.left + this.ringBounds.right) / 2,
+      this.ringBounds.floorY - 140,
+      '#F59E0B',
+      28
+    );
   }
 
   public triggerPunch(f: RobotFighter, type: 'left' | 'right'): void {
@@ -316,14 +411,15 @@ export class BladeParryGame extends BaseGame {
       f.punchCooldown = 0.30; // Heavy cross
     }
 
-    this.audio.playLaser(); // Piston arm whoosh
+    this.audio.playLaser();
   }
 
   public triggerParry(f: RobotFighter): void {
     if (f.parryCooldown > 0 || f.staggerTimer > 0 || f.isHeadPopped) return;
 
     f.isGuarding = true;
-    f.guardTimer = 0.32; // Active parry counter window
+    // Underdog receives an extended parry window (0.42s vs 0.32s)
+    f.guardTimer = f.isUnderdog ? 0.42 : 0.32;
     f.parryCooldown = 0.45;
     f.activePunch = 'none';
     f.leftPunchAnim = 0;
@@ -409,11 +505,11 @@ export class BladeParryGame extends BaseGame {
         const throttle = this.input.getThrottle(f.id);
         const justAction = this.input.justAction(f.id);
         const justPressed = this.input.justPressed(f.id);
-        const isPressed = this.input.isPressed(f.id);
 
-        // Movement shuffle
+        // Movement shuffle (+20% speed for Underdog)
+        const moveSpeed = 230 * (f.isUnderdog ? 1.20 : 1.0);
         if (steer !== 0) {
-          f.x += steer * 230 * dt;
+          f.x += steer * moveSpeed * dt;
         }
 
         // Left Punch (W or Up arrow or throttle > 0.4)
@@ -423,7 +519,7 @@ export class BladeParryGame extends BaseGame {
           // Right Punch (S or Down arrow or throttle < -0.4)
           this.triggerPunch(f, 'right');
         } else if (justAction || this.input.isActionPressed(f.id) || (justPressed && steer === 0)) {
-          // Action button (Space, Enter, action touch button): Blade Parry Guard
+          // Action button: Blade Parry Guard
           this.triggerParry(f);
         }
       }
@@ -440,7 +536,7 @@ export class BladeParryGame extends BaseGame {
       }
     }
 
-    // Enforce body collision between the two robots (they cannot walk through each other)
+    // Enforce body collision between the two robots
     if (f1 && f2) {
       const minDist = 52;
       const dx = f2.x - f1.x;
@@ -471,7 +567,6 @@ export class BladeParryGame extends BaseGame {
     if (attacker.activePunch === 'none' || defender.invulnerableTimer > 0 || defender.isHeadPopped) return;
 
     const punchAnim = attacker.activePunch === 'left' ? attacker.leftPunchAnim : attacker.rightPunchAnim;
-    // Punch strikes at apex of extension: [0.42, 0.68]
     if (punchAnim < 0.42 || punchAnim > 0.68) return;
 
     const reach = attacker.activePunch === 'left' ? 64 : 74;
@@ -482,7 +577,6 @@ export class BladeParryGame extends BaseGame {
       // 1. Check Simultaneous Mid-Air Blade Clash!
       const defPunchAnim = defender.activePunch === 'left' ? defender.leftPunchAnim : defender.rightPunchAnim;
       if (defender.activePunch !== 'none' && defPunchAnim >= 0.35 && defPunchAnim <= 0.75) {
-        // Both blade fists collide in mid-air!
         attacker.activePunch = 'none';
         attacker.leftPunchAnim = 0;
         attacker.rightPunchAnim = 0;
@@ -512,13 +606,20 @@ export class BladeParryGame extends BaseGame {
 
         defender.parrySparks = 0.25;
         this.audio.playTap();
-        this.audio.playHitStopThud();
         this.freezeFrames = 0.06;
 
         const parryX = (fistX + defender.x) / 2;
         const parryY = defender.y - 50;
         this.particles.spawnSparks(parryX, parryY, '#38BDF8', 20);
-        this.particles.showFloatingText('🛡️ PARRY! GUARD BROKEN!', parryX, parryY - 30, '#38BDF8', 22);
+
+        // Underdog counter-parry delivers a quick counter notch!
+        if (defender.isUnderdog) {
+          attacker.chinNotches = Math.min(attacker.maxNotches, attacker.chinNotches + 1.5);
+          attacker.headSpringVel = 120;
+          this.particles.showFloatingText('🛡️ UNDERDOG COUNTER! +1.5 NOTCH!', parryX, parryY - 30, '#FBBF24', 22);
+        } else {
+          this.particles.showFloatingText('🛡️ PARRY! GUARD BROKEN!', parryX, parryY - 30, '#38BDF8', 22);
+        }
         this.particles.addTrauma(0.3);
         return;
       }
@@ -529,7 +630,10 @@ export class BladeParryGame extends BaseGame {
       attacker.leftPunchAnim = 0;
       attacker.rightPunchAnim = 0;
 
-      const damage = punchType === 'right' ? 1.5 : 1.0;
+      const isSuddenDeath = this.roundTimer <= 15;
+      const baseDamage = punchType === 'right' ? 1.5 : 1.0;
+      const damage = baseDamage + (isSuddenDeath ? 1.0 : 0);
+
       defender.chinNotches = Math.min(defender.maxNotches, defender.chinNotches + damage);
       defender.headSpringVel = 140;
       defender.headTilt = -defender.facing * 0.35;
@@ -544,7 +648,7 @@ export class BladeParryGame extends BaseGame {
       const hitY = defender.y - 50;
       this.particles.spawnSparks(hitX, hitY, this.players[attacker.id].color, 16);
 
-      // Check for Knockout (Chin notch 5 reached: HEAD POPS UP!)
+      // Check for Knockout
       if (defender.chinNotches >= defender.maxNotches) {
         this.triggerKnockout(attacker, defender, width, height);
       } else {
@@ -610,10 +714,8 @@ export class BladeParryGame extends BaseGame {
     // Boxing Stance & Distance Management
     const idealDist = difficulty === 'bot_hard' ? 70 : 82;
     if (dist > idealDist + 12) {
-      // Step forward towards opponent
       steer = bot.facing * 1;
     } else if (dist < idealDist - 12) {
-      // Step back
       steer = -bot.facing * 1;
     }
 
@@ -632,11 +734,9 @@ export class BladeParryGame extends BaseGame {
       const punchCadence = difficulty === 'bot_hard' ? 0.18 : difficulty === 'bot_normal' ? 0.32 : 0.55;
       this.botReactionTimers.set(botId, punchCadence + Math.random() * 0.2);
 
-      // If opponent is staggered, throw heavy right cross!
       if (opponent.staggerTimer > 0) {
         this.triggerPunch(bot, 'right');
       } else {
-        // Alternate jab and cross
         const punchType = Math.random() < 0.6 ? 'left' : 'right';
         this.triggerPunch(bot, punchType);
       }
@@ -661,24 +761,28 @@ export class BladeParryGame extends BaseGame {
         score: f.score,
         place: idx + 1
       })),
-      mvpHighlight: winnerId !== null ? `${this.players[winnerId].name} POPPED THEIR RIVAL'S BLOCK OFF!` : 'INTENSE ROBOT BRAWL DRAW!'
+      mvpHighlight:
+        winnerId !== null
+          ? `${this.players[winnerId].name} POPPED THEIR RIVAL'S BLOCK OFF!`
+          : 'INTENSE ROBOT BRAWL DRAW!'
     };
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
     ctx.save();
+    const theme = BLADE_THEMES[this.currentThemeIndex];
+    const isSuddenDeath = this.roundTimer <= 15;
 
     // 1. Stadium Colosseum Backdrop
     const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#090D16');
-    bgGrad.addColorStop(0.5, '#111827');
-    bgGrad.addColorStop(1, '#0B0F19');
+    bgGrad.addColorStop(0, theme.bgGradTop);
+    bgGrad.addColorStop(1, theme.bgGradBot);
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
     // Overhead Stadium Spotlights
     ctx.save();
-    ctx.fillStyle = 'rgba(56, 189, 248, 0.08)';
+    ctx.fillStyle = theme.spotlightP1;
     ctx.beginPath();
     ctx.moveTo(width * 0.2, 0);
     ctx.lineTo(width * 0.4, this.ringBounds.floorY);
@@ -686,7 +790,7 @@ export class BladeParryGame extends BaseGame {
     ctx.closePath();
     ctx.fill();
 
-    ctx.fillStyle = 'rgba(244, 63, 94, 0.08)';
+    ctx.fillStyle = theme.spotlightP2;
     ctx.beginPath();
     ctx.moveTo(width * 0.8, 0);
     ctx.lineTo(width * 0.9, this.ringBounds.floorY);
@@ -699,74 +803,75 @@ export class BladeParryGame extends BaseGame {
     const rb = this.ringBounds;
     const matHeight = height - rb.floorY;
 
-    // Wooden ring apron
-    ctx.fillStyle = '#1E293B';
+    // Wooden / Steel ring apron
+    ctx.fillStyle = theme.apronColor;
     ctx.fillRect(rb.left - 24, rb.floorY, rb.right - rb.left + 48, matHeight);
     ctx.fillStyle = '#0F172A';
     ctx.fillRect(rb.left - 24, rb.floorY + 12, rb.right - rb.left + 48, matHeight - 12);
 
     // Boxing Ring Canvas Surface
-    ctx.fillStyle = '#334155';
+    ctx.fillStyle = theme.matColor;
     ctx.fillRect(rb.left, rb.floorY - 6, rb.right - rb.left, 18);
-    ctx.fillStyle = '#475569';
-    ctx.fillRect(rb.left + 4, rb.floorY - 4, rb.right - rb.left - 8, 8);
 
     // Center Ring Logo
     ctx.save();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.arc(width / 2, rb.floorY - 2, 60, Math.PI, 0);
     ctx.stroke();
     ctx.restore();
 
-    // 3. Elastic Ring Ropes (Red, White, Blue)
-    const ropeColors = ['#EF4444', '#F8FAFC', '#3B82F6'];
+    // 3. Elastic Ring Ropes
     for (let r = 0; r < this.ringRopesY.length; r++) {
       const ry = this.ringRopesY[r];
       const wobbleOffset = Math.sin(performance.now() * 0.02 + r) * (this.ringRopeWobble * 4);
 
-      ctx.strokeStyle = ropeColors[r];
-      ctx.lineWidth = 4;
+      ctx.strokeStyle = isSuddenDeath ? '#EF4444' : theme.ropeColors[r % theme.ropeColors.length];
+      ctx.lineWidth = isSuddenDeath ? 5 : 4;
       ctx.beginPath();
       ctx.moveTo(rb.left, ry);
       ctx.quadraticCurveTo(width / 2, ry + 3 + wobbleOffset, rb.right, ry);
       ctx.stroke();
     }
 
-    // 4. Corner Turnbuckles (Red on left, Blue on right)
-    this.renderTurnbuckle(ctx, rb.left, rb.floorY, '#EF4444');
-    this.renderTurnbuckle(ctx, rb.right, rb.floorY, '#3B82F6');
+    // 4. Corner Turnbuckles
+    this.renderTurnbuckle(ctx, rb.left, rb.floorY, '#EF4444', theme.postColor);
+    this.renderTurnbuckle(ctx, rb.right, rb.floorY, '#3B82F6', theme.postColor);
 
-    // 5. Render Combat Robots (Red Rocker & Blue Bomber)
+    // 5. Render Combat Robots
     for (const f of this.fighters.values()) {
       this.renderRobot(ctx, f);
     }
 
-    // 6. HUD: Round Score Gloves, Chin Ratchet Meters & Controls
-    this.renderHUD(ctx, width, height);
+    // 6. HUD: Round Score, Chin Ratchet Meters & Controls
+    this.renderHUD(ctx, width, height, theme);
 
     ctx.restore();
   }
 
-  private renderTurnbuckle(ctx: CanvasRenderingContext2D, x: number, floorY: number, color: string): void {
+  private renderTurnbuckle(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    floorY: number,
+    padColor: string,
+    postColor: string
+  ): void {
     ctx.save();
-    // Steel post
-    ctx.fillStyle = '#64748B';
+    ctx.fillStyle = postColor;
     ctx.fillRect(x - 6, floorY - 130, 12, 130);
 
-    // Padded corner turnbuckles
     for (const ry of this.ringRopesY) {
-      ctx.fillStyle = color;
+      ctx.fillStyle = padColor;
       ctx.beginPath();
-      ctx.roundRect(x - 9, ry - 7, 18, 14, 4);
+      if (ctx.roundRect) ctx.roundRect(x - 9, ry - 7, 18, 14, 4);
+      else ctx.rect(x - 9, ry - 7, 18, 14);
       ctx.fill();
       ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = 1;
       ctx.stroke();
     }
 
-    // Golden cap
     ctx.fillStyle = '#F59E0B';
     ctx.beginPath();
     ctx.arc(x, floorY - 130, 8, 0, Math.PI * 2);
@@ -778,12 +883,27 @@ export class BladeParryGame extends BaseGame {
     ctx.save();
     ctx.translate(f.x, f.y);
 
-    const p = this.players[f.id];
     const isP1 = f.facing === 1;
     const armorColor = isP1 ? '#EF4444' : '#3B82F6';
     const armorDark = isP1 ? '#991B1B' : '#1E40AF';
-    const armorLight = isP1 ? '#FCA5A5' : '#93C5FD';
     const visorColor = isP1 ? '#38BDF8' : '#FBBF24';
+
+    // Underdog Overcharge Fury Steam/Aura
+    if (f.isUnderdog) {
+      ctx.save();
+      ctx.strokeStyle = '#FBBF24';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.ellipse(0, -45, 36, 55, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.fillStyle = '#FBBF24';
+      ctx.font = '800 10px Montserrat, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('⚡ OVERCHARGE FURY!', 0, -118 - f.headSpringOffset);
+    }
 
     // Shadow on Ring Canvas
     ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
@@ -797,7 +917,6 @@ export class BladeParryGame extends BaseGame {
       bodyAngle = Math.sin(performance.now() * 0.03) * 0.12;
       ctx.rotate(bodyAngle);
 
-      // Stun stars above head
       ctx.font = '14px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('💫 STUNNED!', 0, -110 - f.headSpringOffset);
@@ -805,11 +924,9 @@ export class BladeParryGame extends BaseGame {
 
     // 1. Robot Chunky Legs & Steel Boots
     ctx.fillStyle = '#334155';
-    // Back leg
     ctx.fillRect(-12, -22, 10, 22);
     ctx.fillStyle = '#1E293B';
     ctx.fillRect(-14, -6, 14, 6);
-    // Front leg
     ctx.fillStyle = '#475569';
     ctx.fillRect(2, -22, 10, 22);
     ctx.fillStyle = '#1E293B';
@@ -819,7 +936,8 @@ export class BladeParryGame extends BaseGame {
     const torsoY = -62;
     ctx.fillStyle = armorDark;
     ctx.beginPath();
-    ctx.roundRect(-20, torsoY, 40, 42, 6);
+    if (ctx.roundRect) ctx.roundRect(-20, torsoY, 40, 42, 6);
+    else ctx.rect(-20, torsoY, 40, 42);
     ctx.fill();
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
     ctx.lineWidth = 1.5;
@@ -828,7 +946,8 @@ export class BladeParryGame extends BaseGame {
     // Chestplate
     ctx.fillStyle = armorColor;
     ctx.beginPath();
-    ctx.roundRect(-16, torsoY + 4, 32, 34, 4);
+    if (ctx.roundRect) ctx.roundRect(-16, torsoY + 4, 32, 34, 4);
+    else ctx.rect(-16, torsoY + 4, 32, 34);
     ctx.fill();
 
     // Cooling Exhaust Vent Grills
@@ -837,7 +956,7 @@ export class BladeParryGame extends BaseGame {
       ctx.fillRect(-10, gy, 20, 2.5);
     }
 
-    // 3. Iconic Coiled Steel Spring Neck (Rock 'Em Sock 'Em mechanism!)
+    // 3. Iconic Coiled Steel Spring Neck
     const neckBaseY = torsoY;
     const springH = Math.max(8, 12 + f.headSpringOffset);
 
@@ -847,76 +966,58 @@ export class BladeParryGame extends BaseGame {
     ctx.lineCap = 'round';
     ctx.beginPath();
 
-    // Draw realistic zig-zagging spring coils
-    const coils = f.isHeadPopped ? 7 : 4;
-    const coilStep = springH / coils;
+    const coils = 5;
+    const coilW = 10;
     ctx.moveTo(0, neckBaseY);
-    for (let c = 1; c <= coils; c++) {
-      const cx = (c % 2 === 1 ? -6 : 6);
-      const cy = neckBaseY - c * coilStep;
-      ctx.lineTo(cx, cy);
+    for (let c = 0; c < coils; c++) {
+      const cy = neckBaseY - (c + 0.5) * (springH / coils);
+      const sign = c % 2 === 0 ? 1 : -1;
+      ctx.lineTo(sign * coilW, cy);
     }
+    ctx.lineTo(0, neckBaseY - springH);
     ctx.stroke();
     ctx.restore();
 
-    // 4. Spring-Mounted Robot Head & Jaw
+    // 4. Heavy Robot Head Block
     const headY = neckBaseY - springH;
     ctx.save();
     ctx.translate(0, headY);
     ctx.rotate(f.headTilt);
 
-    // Jaw / Chin Plate
-    ctx.fillStyle = '#64748B';
+    // Head Base Jaw
+    ctx.fillStyle = armorDark;
     ctx.beginPath();
-    ctx.roundRect(-14, -8, 28, 14, [0, 0, 6, 6]);
+    if (ctx.roundRect) ctx.roundRect(-18, -32, 36, 32, 6);
+    else ctx.rect(-18, -32, 36, 32);
     ctx.fill();
 
-    // Robot Helmet Head
-    ctx.fillStyle = armorColor;
-    ctx.beginPath();
-    ctx.roundRect(-16, -30, 32, 24, [8, 8, 4, 4]);
-    ctx.fill();
-    ctx.strokeStyle = armorDark;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Helmet Crest / Fin
-    ctx.fillStyle = armorLight;
-    ctx.beginPath();
-    ctx.moveTo(-4, -30);
-    ctx.lineTo(0, -38);
-    ctx.lineTo(4, -30);
-    ctx.closePath();
-    ctx.fill();
-
-    // Glowing Robot Visor / Eyes
-    if (f.isHeadPopped) {
-      // X_X Dizzy Eyes when knocked out
-      ctx.strokeStyle = '#EF4444';
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      // Left eye X
-      ctx.moveTo(-10, -22); ctx.lineTo(-4, -16);
-      ctx.moveTo(-4, -22); ctx.lineTo(-10, -16);
-      // Right eye X
-      ctx.moveTo(4, -22); ctx.lineTo(10, -16);
-      ctx.moveTo(10, -22); ctx.lineTo(4, -16);
-      ctx.stroke();
-    } else {
-      // Glowing combat visor
-      ctx.fillStyle = visorColor;
-      ctx.shadowColor = visorColor;
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      ctx.roundRect(-12, -22, 24, 7, 3);
-      ctx.fill();
-      ctx.shadowBlur = 0;
+    // Chin Ratchet Notches
+    ctx.fillStyle = '#F59E0B';
+    const notchW = 4;
+    for (let n = 0; n < f.maxNotches; n++) {
+      const ny = -4 - n * 5;
+      ctx.fillRect(f.facing * 14, ny, f.facing * notchW, 3);
     }
 
-    ctx.restore(); // Head transform
+    // Glowing Combat Visor Eye
+    ctx.fillStyle = visorColor;
+    ctx.shadowColor = visorColor;
+    ctx.shadowBlur = 10;
+    ctx.fillRect(f.facing * 2, -22, f.facing * 14, 8);
+    ctx.shadowBlur = 0;
 
-    // 5. Piston Arms & Blade Gauntlets
-    this.renderRobotArms(ctx, f, armorColor, armorDark);
+    // Head Pop Steam Plume
+    if (f.isHeadPopped) {
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('💥 POP!', 0, -42);
+    }
+
+    ctx.restore();
+
+    // 5. Arms & Blade Piston Fist Mechanics
+    this.renderRobotArms(ctx, f, torsoY, armorColor, armorDark);
 
     ctx.restore();
   }
@@ -924,28 +1025,18 @@ export class BladeParryGame extends BaseGame {
   private renderRobotArms(
     ctx: CanvasRenderingContext2D,
     f: RobotFighter,
+    torsoY: number,
     armorColor: string,
     armorDark: string
   ): void {
     const sign = f.facing;
-    const shoulderY = -52;
+    const shoulderY = torsoY + 12;
 
+    // Blade Parry Guard Stance
     if (f.isGuarding) {
-      // Crossed Blade X-Guard Stance
       ctx.save();
-      ctx.fillStyle = '#64748B';
-      // Left Forearm crossing
-      ctx.beginPath();
-      ctx.roundRect(sign * 6, shoulderY - 6, 18, 10, 4);
-      ctx.fill();
-      // Right Forearm crossing
-      ctx.beginPath();
-      ctx.roundRect(sign * 10, shoulderY + 4, 18, 10, 4);
-      ctx.fill();
-
-      // Crossing Energized Blades
       ctx.strokeStyle = '#38BDF8';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.moveTo(sign * 10, shoulderY + 14);
       ctx.lineTo(sign * 28, shoulderY - 18);
@@ -953,7 +1044,6 @@ export class BladeParryGame extends BaseGame {
       ctx.lineTo(sign * 28, shoulderY + 14);
       ctx.stroke();
 
-      // Guard energy aura
       ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
       ctx.beginPath();
       ctx.arc(sign * 18, shoulderY, 22, 0, Math.PI * 2);
@@ -962,32 +1052,28 @@ export class BladeParryGame extends BaseGame {
       return;
     }
 
-    // --- Left Piston Arm (High Jab) ---
+    // Left Piston Arm (High Jab)
     const leftExt = f.leftPunchAnim > 0 ? Math.sin(f.leftPunchAnim * Math.PI) * 44 : 0;
     ctx.save();
-    // Shoulder rivet
     ctx.fillStyle = armorDark;
     ctx.beginPath();
     ctx.arc(-sign * 14, shoulderY - 2, 7, 0, Math.PI * 2);
     ctx.fill();
 
-    // Hydraulic cylinder
     ctx.fillStyle = '#475569';
     ctx.fillRect(-sign * 12, shoulderY - 6, sign * 14, 8);
 
-    // Chrome Piston Shaft
     ctx.fillStyle = '#E2E8F0';
     ctx.fillRect(0, shoulderY - 4, sign * (14 + leftExt), 5);
 
-    // Blade Fist Gauntlet
     const fistX = sign * (16 + leftExt);
     const fistY = shoulderY - 2;
     ctx.fillStyle = armorColor;
     ctx.beginPath();
-    ctx.roundRect(fistX - 7, fistY - 8, 14, 14, 4);
+    if (ctx.roundRect) ctx.roundRect(fistX - 7, fistY - 8, 14, 14, 4);
+    else ctx.rect(fistX - 7, fistY - 8, 14, 14);
     ctx.fill();
 
-    // Glowing Energized Blade
     ctx.fillStyle = '#F59E0B';
     ctx.beginPath();
     ctx.moveTo(fistX + sign * 6, fistY - 10);
@@ -997,28 +1083,25 @@ export class BladeParryGame extends BaseGame {
     ctx.fill();
     ctx.restore();
 
-    // --- Right Piston Arm (Body Cross) ---
+    // Right Piston Arm (Body Cross)
     const rightExt = f.rightPunchAnim > 0 ? Math.sin(f.rightPunchAnim * Math.PI) * 54 : 0;
     ctx.save();
-    // Shoulder rivet
     ctx.fillStyle = armorDark;
     ctx.beginPath();
     ctx.arc(sign * 12, shoulderY + 8, 8, 0, Math.PI * 2);
     ctx.fill();
 
-    // Chrome Piston Shaft
     ctx.fillStyle = '#E2E8F0';
     ctx.fillRect(sign * 12, shoulderY + 6, sign * (14 + rightExt), 6);
 
-    // Heavy Blade Gauntlet
     const rFistX = sign * (24 + rightExt);
     const rFistY = shoulderY + 8;
     ctx.fillStyle = armorColor;
     ctx.beginPath();
-    ctx.roundRect(rFistX - 8, rFistY - 9, 16, 16, 5);
+    if (ctx.roundRect) ctx.roundRect(rFistX - 8, rFistY - 9, 16, 16, 5);
+    else ctx.rect(rFistX - 8, rFistY - 9, 16, 16);
     ctx.fill();
 
-    // Heavy Curved Blade
     ctx.fillStyle = '#38BDF8';
     ctx.beginPath();
     ctx.moveTo(rFistX + sign * 8, rFistY - 12);
@@ -1029,7 +1112,12 @@ export class BladeParryGame extends BaseGame {
     ctx.restore();
   }
 
-  private renderHUD(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+  private renderHUD(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    theme: BladeTheme
+  ): void {
     const active = this.getActivePlayers();
     const f1 = active[0] ? this.fighters.get(active[0].id) : undefined;
     const f2 = active[1] ? this.fighters.get(active[1].id) : undefined;
@@ -1037,9 +1125,10 @@ export class BladeParryGame extends BaseGame {
     // 1. Top Center Round Bell & Fight Status
     const centerZoneY = 56;
     ctx.save();
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
     ctx.beginPath();
-    ctx.roundRect(width / 2 - 120, centerZoneY - 14, 240, 28, 14);
+    if (ctx.roundRect) ctx.roundRect(width / 2 - 130, centerZoneY - 14, 260, 28, 14);
+    else ctx.rect(width / 2 - 130, centerZoneY - 14, 260, 28);
     ctx.fill();
     ctx.strokeStyle = '#F59E0B';
     ctx.lineWidth = 1.8;
@@ -1051,17 +1140,35 @@ export class BladeParryGame extends BaseGame {
     ctx.fillText(`🥊 ROUND ${this.currentRound} — FIRST TO 2 KNOCKOUTS`, width / 2, centerZoneY + 4);
     ctx.restore();
 
-    // 2. Player 1 (Red Rocker) Chin Notch Meter & Round Wins
+    // 2. Player 1 Chin Notch Meter & Mascot
     if (f1) {
       this.renderFighterScoreboard(ctx, f1, 28, 48, 'left');
     }
 
-    // 3. Player 2 (Blue Bomber) Chin Notch Meter & Round Wins
+    // 3. Player 2 Chin Notch Meter & Mascot
     if (f2) {
       this.renderFighterScoreboard(ctx, f2, width - 28, 48, 'right');
     }
 
-    // 4. On-Screen Touch Controls (Mobile Friendly!)
+    // 4. Interactive Bottom-Left Theme Pill (x: 20, y: height - 44, w: 170, h: 32)
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(20, height - 44, 170, 32, 16);
+    else ctx.rect(20, height - 44, 170, 32);
+    ctx.fill();
+    ctx.strokeStyle = theme.themePillColor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = theme.themePillColor;
+    ctx.font = '700 11px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${theme.name} [T]`, 20 + 85, height - 44 + 16);
+    ctx.restore();
+
+    // 5. On-Screen Touch Controls
     this.renderTouchButtons(ctx, width, height);
   }
 
@@ -1074,37 +1181,45 @@ export class BladeParryGame extends BaseGame {
   ): void {
     const p = this.players[f.id];
     const isLeft = align === 'left';
-    const startX = isLeft ? x : x - 170;
+    const startX = isLeft ? x : x - 180;
 
     ctx.save();
-    // Container
     ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
     ctx.beginPath();
-    ctx.roundRect(startX, y, 170, 48, 12);
+    if (ctx.roundRect) ctx.roundRect(startX, y, 180, 52, 12);
+    else ctx.rect(startX, y, 180, 52);
     ctx.fill();
     ctx.strokeStyle = p.color;
     ctx.lineWidth = 2;
     ctx.stroke();
+
+    // Mascot Face
+    let mood: CharacterMood = 'focused';
+    if (f.isHeadPopped) mood = 'shocked';
+    else if (f.score >= this.targetScore) mood = 'triumph';
+    else if (f.isGuarding) mood = 'happy';
+    this.drawPlayerMascot(ctx, f.id, startX + 22, y + 26, 14, mood, performance.now() * 0.001);
 
     // Player Name & KOs
     ctx.font = '800 11.5px Montserrat, sans-serif';
     ctx.fillStyle = p.color;
     ctx.textAlign = 'left';
     const koGloves = '🥊'.repeat(f.score) + '⚪'.repeat(Math.max(0, this.targetScore - f.score));
-    ctx.fillText(`${p.name.toUpperCase()} ${koGloves}`, startX + 10, y + 17);
+    ctx.fillText(`${p.name.toUpperCase()} ${koGloves}`, startX + 44, y + 18);
 
-    // Chin Spring Notches (5 Pips)
+    // Chin Spring Notches
     ctx.font = '700 9.5px Montserrat, sans-serif';
     ctx.fillStyle = '#94A3B8';
-    ctx.fillText('CHIN SPRING:', startX + 10, y + 36);
+    ctx.fillText('SPRING:', startX + 44, y + 38);
 
-    const pipStartX = startX + 86;
+    const pipStartX = startX + 96;
     for (let i = 0; i < f.maxNotches; i++) {
       const isFilled = i < Math.floor(f.chinNotches);
       const isDanger = i >= 3;
       ctx.fillStyle = isFilled ? (isDanger ? '#EF4444' : '#F59E0B') : 'rgba(255, 255, 255, 0.15)';
       ctx.beginPath();
-      ctx.roundRect(pipStartX + i * 15, y + 27, 11, 12, 3);
+      if (ctx.roundRect) ctx.roundRect(pipStartX + i * 14, y + 29, 11, 12, 3);
+      else ctx.rect(pipStartX + i * 14, y + 29, 11, 12);
       ctx.fill();
     }
 
@@ -1115,18 +1230,18 @@ export class BladeParryGame extends BaseGame {
     const btnY = height - 56;
     const btnH = 42;
 
-    // Layout P1 buttons on bottom left
+    // Layout P1 buttons shifted to clear the theme pill (x: 200..380)
     this.p1Btns = {
-      left: { x: 20, y: btnY, w: 60, h: btnH },
-      parry: { x: 88, y: btnY, w: 64, h: btnH },
-      right: { x: 160, y: btnY, w: 60, h: btnH }
+      left: { x: 205, y: btnY, w: 56, h: btnH },
+      parry: { x: 268, y: btnY, w: 64, h: btnH },
+      right: { x: 338, y: btnY, w: 56, h: btnH }
     };
 
     // Layout P2 buttons on bottom right
     this.p2Btns = {
-      left: { x: width - 220, y: btnY, w: 60, h: btnH },
-      parry: { x: width - 152, y: btnY, w: 64, h: btnH },
-      right: { x: width - 80, y: btnY, w: 60, h: btnH }
+      left: { x: width - 210, y: btnY, w: 56, h: btnH },
+      parry: { x: width - 146, y: btnY, w: 64, h: btnH },
+      right: { x: width - 74, y: btnY, w: 56, h: btnH }
     };
 
     // Render P1 Buttons
@@ -1150,7 +1265,8 @@ export class BladeParryGame extends BaseGame {
     ctx.save();
     ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
     ctx.beginPath();
-    ctx.roundRect(r.x, r.y, r.w, r.h, 10);
+    if (ctx.roundRect) ctx.roundRect(r.x, r.y, r.w, r.h, 10);
+    else ctx.rect(r.x, r.y, r.w, r.h);
     ctx.fill();
     ctx.strokeStyle = color;
     ctx.lineWidth = 1.6;
