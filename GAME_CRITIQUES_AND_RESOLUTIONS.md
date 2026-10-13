@@ -5418,11 +5418,25 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Benchmark Contrast:** Compare this to the sacred masterclasses: it lacks the terrifying, laugh-out-loud edge balance of *Sumo Iceberg*, the soaring vertical leap tension and cloud rescues of *Skyline Sumo*, and the greedy, high-stakes claw steals of *Gold Miner*. It generates no trash talk and no memorable room-roaring moments.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Overhaul combat into a high-tempo cat-and-mouse duel. Give every player an omnidirectional dash with a 1.2s recharge cooldown, destructible environmental cover that shatters under projectile fire, and a sudden-death perimeter collapse when the match exceeds 20 seconds.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones. For hold mechanics, implement an exponential power curve with a distinct visual aura expanding around the avatar and an audible pitch-rising whine to communicate exact release potential.
-3. **Multiplayer Chaos & Comeback Mechanic:** Enforce mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% speed boost and massive knockback resistance), ensuring runaway leaders can always be dramatically dethroned.
-4. **Visual & Audio Juice Polish:** Add 45ms hit-stop freeze-frames upon critical collisions or scores, directional screenshake ($intensity = \min(18, impulse \times 0.25)$), vibrant color-coded particle debris reflecting player palettes, and heavy bass-boosted FM sound effects for all collisions.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional $12\%$ blunder/misjudgment rate on Easy/Normal, and Gaussian angular dispersion ($\pm 0.14\ radians$) on targeting trajectories to make solo matches feel convincingly human.
+**COMPLETED & FULLY RESOLVED:** Upgraded `SharksAndMinnowsGame.ts` with 4 distinct, replayable Game Modes accessible via the bottom-left mode pill or pressing `[M]`:
+1. **Mode 1: Last Fish Standing (`last_fish_standing`)**:
+   - Classic playground infection rules! Whenever a Minnow gets chomped in deep water, they are infected and instantly mutate into an Apex Shark with an explosive crimson splash!
+   - Waves continue in rapid succession until only 1 Minnow remains alive.
+   - The final survivor receives a +500 point "Survivor Champion" bonus and victory crown!
+2. **Mode 2: Shark Swarm Escalation (`shark_numbers_increase`)**:
+   - Escalating predator frenzy across 4 survival waves:
+     - Wave 1: 1 Shark (Tiger Shark)
+     - Wave 2: 2 Sharks (+Hammerhead AI hunter)
+     - Wave 3: 3 Sharks (+Great White AI hunter)
+     - Wave 4: 4 Sharks (+Colossal Megalodon AI with massive jaws!)
+   - Minnows earn escalating crossing bonuses (+100, +150, +250, +500) per wave survived.
+3. **Mode 3: Permanent Apex Hunters (`permanent_sharks`)**:
+   - Designated Shark player(s) stay as Sharks for the entire match.
+   - Minnows continuously swim back and forth, racking up crossing streaks and harvesting respawning golden sea stars (+35 pts).
+   - Shark scores +150 per chomp; high score at the buzzer wins.
+4. **Mode 4: Classic Reef Crossing (`classic_crossing`)**:
+   - The traditional 3-wave alternating role duel with sandy havens and sea stars.
+5. **Quality Charter Compliance**: Bottom-left mode pill (`x: 20, y: height - 44`), animated wave banners, directional and 1-button burst controls, and calibrated predator AI.
 
 ### #258. Power Path Clash (ID: `power_path_clash`) — [Action]
 - **Class Implementation:** `src/games/PowerPathClashGame.ts` (877 lines)
