@@ -21,6 +21,8 @@ interface MansionPlayer {
   immunityTimer: number;     // invulnerability buffer against instant re-tag
   creakCooldown: number;     // debounce creak sound
   alive: boolean;
+  scanDirection: number;     // 1 or -1 for single-button sweeping
+  repelCooldown: number;     // prevents sticking
 }
 
 interface SoundRipple {
@@ -32,25 +34,67 @@ interface SoundRipple {
   color: string;
 }
 
+interface CandleSanctuary {
+  x: number;
+  y: number;
+  radius: number;
+  flicker: number;
+}
+
 export class GhostFlashlightGame extends BaseGame {
   private mPlayers: Map<PlayerId, MansionPlayer> = new Map();
   private arenaBounds = { x: 50, y: 50, w: 800, h: 500 };
   private creakyFloorboards: { x: number; y: number; w: number; h: number }[] = [];
   private soundRipples: SoundRipple[] = [];
-  public currentMapName: string = 'Haunted Crypt';
+  private sanctuaries: CandleSanctuary[] = [];
+  public currentMapName: string = 'Haunted Victorian Manor';
+  private animTimer: number = 0;
+  private mansionThemeIndex: number = 0;
+
+  private themes = [
+    {
+      name: 'Haunted Victorian Manor',
+      floorColor: '#1a1024',
+      boardColor: '#2d1b3d',
+      wallColor: '#4a154b',
+      ambientColor: 'rgba(10, 5, 20, 0.88)',
+      fogColor: 'rgba(168, 85, 247, 0.08)'
+    },
+    {
+      name: 'Abandoned Asylum',
+      floorColor: '#0f172a',
+      boardColor: '#1e293b',
+      wallColor: '#0ea5e9',
+      ambientColor: 'rgba(5, 12, 28, 0.90)',
+      fogColor: 'rgba(56, 189, 248, 0.08)'
+    },
+    {
+      name: 'Ancient Catacombs',
+      floorColor: '#1c1917',
+      boardColor: '#292524',
+      wallColor: '#d97706',
+      ambientColor: 'rgba(12, 10, 9, 0.92)',
+      fogColor: 'rgba(245, 158, 11, 0.07)'
+    }
+  ];
 
   public init(width: number, height: number): void {
     this.reset(width, height);
   }
 
   public reset(width: number, height: number): void {
-    this.roundTimer = 45;
+    this.roundTimer = 45.0;
     this.isFinished = false;
     this.mPlayers.clear();
     this.soundRipples = [];
+    this.sanctuaries = [];
+    this.animTimer = 0;
+
+    this.mansionThemeIndex = Math.floor(Math.random() * this.themes.length);
+    this.currentMapName = this.themes[this.mansionThemeIndex].name;
 
     const marginX = Math.max(35, width * 0.08);
-    const marginY = Math.max(45, height * 0.09);
+    const marginY = Math.max(48, height * 0.10);
     this.arenaBounds = {
       x: marginX,
       y: marginY,
@@ -63,8 +107,15 @@ export class GhostFlashlightGame extends BaseGame {
 
     this.generateRandomMap(cx, cy, this.arenaBounds.w, this.arenaBounds.h);
 
+    // Candle Sanctuaries: warm glowing light pools where humans can catch breath
+    this.sanctuaries = [
+      { x: cx - this.arenaBounds.w * 0.28, y: cy - this.arenaBounds.h * 0.24, radius: 52, flicker: 0 },
+      { x: cx + this.arenaBounds.w * 0.28, y: cy + this.arenaBounds.h * 0.24, radius: 52, flicker: 2 },
+      { x: cx, y: cy, radius: 60, flicker: 4 }
+    ];
+
     const active = this.getActivePlayers();
-    // One player randomly starts as the Ghost
+    // One player randomly starts as the Cursed Ghost
     const initialGhostId = active[Math.floor(Math.random() * active.length)].id;
 
     active.forEach((p, idx) => {
@@ -82,70 +133,36 @@ export class GhostFlashlightGame extends BaseGame {
         vy: 0,
         angle: angle + Math.PI,
         speed: 0,
-        radius: 18,
+        radius: 19,
         isGhost,
         timeAsGhost: 0,
         survivorScore: 0,
         flashlightBattery: 100,
         isUltraBeam: false,
         flashlightAngle: angle + Math.PI,
-        revealedTimer: 2.5, // visible at round start
+        revealedTimer: 3.0, // Visible at round start
         slowedTimer: 0,
-        immunityTimer: isGhost ? 1.5 : 0, // Ghost starts with a brief grace window so players can scatter
+        immunityTimer: isGhost ? 2.0 : 0, // Ghost starts with grace window so survivors can scatter
         creakCooldown: 0,
-        alive: true
+        alive: true,
+        scanDirection: 1,
+        repelCooldown: 0
       });
     });
   }
 
   private generateRandomMap(cx: number, cy: number, aw: number, ah: number): void {
-    const archetypes = ['Haunted Crypt', 'Attic Crossroad', 'Narrow Parlor', 'Scattered Creaks'];
-    this.currentMapName = archetypes[Math.floor(Math.random() * archetypes.length)];
     this.creakyFloorboards = [];
-
-    switch (this.currentMapName) {
-      case 'Haunted Crypt':
-        this.creakyFloorboards = [
-          { x: cx - 140, y: cy - 80, w: 90, h: 65 },
-          { x: cx + 60, y: cy + 30, w: 90, h: 65 },
-          { x: cx - 70, y: cy + 90, w: 100, h: 55 },
-          { x: cx + 80, y: cy - 90, w: 85, h: 60 },
-          { x: cx - 130, y: cy + 35, w: 80, h: 60 }
-        ];
-        break;
-
-      case 'Attic Crossroad':
-        this.creakyFloorboards = [
-          { x: cx - 40, y: cy - ah * 0.35, w: 80, h: ah * 0.22 },
-          { x: cx - 40, y: cy + ah * 0.13, w: 80, h: ah * 0.22 },
-          { x: cx - aw * 0.35, y: cy - 30, w: aw * 0.22, h: 60 },
-          { x: cx + aw * 0.13, y: cy - 30, w: aw * 0.22, h: 60 }
-        ];
-        break;
-
-      case 'Narrow Parlor':
-        this.creakyFloorboards = [
-          { x: cx - aw * 0.32, y: cy - ah * 0.30, w: 110, h: 60 },
-          { x: cx + aw * 0.14, y: cy - ah * 0.30, w: 110, h: 60 },
-          { x: cx - aw * 0.32, y: cy + ah * 0.20, w: 110, h: 60 },
-          { x: cx + aw * 0.14, y: cy + ah * 0.20, w: 110, h: 60 },
-          { x: cx - 50, y: cy - 30, w: 100, h: 60 }
-        ];
-        break;
-
-      case 'Scattered Creaks':
-      default:
-        for (let i = 0; i < 6; i++) {
-          const ang = (i / 6) * Math.PI * 2 + 0.4;
-          const dist = (0.22 + (i % 3) * 0.08) * Math.min(aw, ah);
-          this.creakyFloorboards.push({
-            x: cx + Math.cos(ang) * dist - 45,
-            y: cy + Math.sin(ang) * dist - 30,
-            w: 80 + (i % 2) * 20,
-            h: 55 + (i % 3) * 10
-          });
-        }
-        break;
+    const count = 6;
+    for (let i = 0; i < count; i++) {
+      const ang = (i / count) * Math.PI * 2 + 0.35;
+      const dist = (0.24 + (i % 3) * 0.08) * Math.min(aw, ah);
+      this.creakyFloorboards.push({
+        x: cx + Math.cos(ang) * dist - 48,
+        y: cy + Math.sin(ang) * dist - 32,
+        w: 96,
+        h: 64
+      });
     }
   }
 
@@ -153,13 +170,19 @@ export class GhostFlashlightGame extends BaseGame {
     if (this.isFinished) return;
 
     this.roundTimer = Math.max(0, this.roundTimer - dt);
+    this.animTimer += dt;
     this.updateBots(dt, width, height);
+
+    // Candle flicker animations
+    for (const s of this.sanctuaries) {
+      s.flicker += dt * 5;
+    }
 
     // Update sound ripples
     for (let i = this.soundRipples.length - 1; i >= 0; i--) {
       const rip = this.soundRipples[i];
-      rip.radius += 110 * dt;
-      rip.alpha -= 1.6 * dt;
+      rip.radius += 120 * dt;
+      rip.alpha -= 1.8 * dt;
       if (rip.alpha <= 0 || rip.radius >= rip.maxRadius) {
         this.soundRipples.splice(i, 1);
       }
@@ -170,80 +193,98 @@ export class GhostFlashlightGame extends BaseGame {
       if (mp.isGhost) {
         mp.timeAsGhost += dt;
       } else {
-        mp.survivorScore += Math.floor(dt * 12);
+        mp.survivorScore += Math.floor(dt * 14);
       }
 
       if (mp.revealedTimer > 0) mp.revealedTimer -= dt;
       if (mp.slowedTimer > 0) mp.slowedTimer -= dt;
       if (mp.immunityTimer > 0) mp.immunityTimer -= dt;
       if (mp.creakCooldown > 0) mp.creakCooldown -= dt;
+      if (mp.repelCooldown > 0) mp.repelCooldown -= dt;
 
       const isPressed = this.input.isPressed(mp.id);
       const steer = this.input.getSteer(mp.id);
       const throttle = this.input.getThrottle(mp.id);
-      const action = this.input.isActionPressed(mp.id);
+      const action = this.input.isActionPressed(mp.id) || this.input.justAction(mp.id);
 
-      // Flashlight Ultra-Beam (Action / Space / Tap Boost)
+      // Flashlight Ultra-Beam (Space / Action)
       if (!mp.isGhost) {
-        const wantsBoost = action || (isPressed && steer === 0 && throttle === 0);
+        const wantsBoost = action || (isPressed && steer === 0 && throttle === 0 && mp.flashlightBattery > 15);
         if (wantsBoost && mp.flashlightBattery > 5) {
           mp.isUltraBeam = true;
-          mp.flashlightBattery = Math.max(0, mp.flashlightBattery - 32 * dt);
+          mp.flashlightBattery = Math.max(0, mp.flashlightBattery - 35 * dt);
         } else {
           mp.isUltraBeam = false;
-          mp.flashlightBattery = Math.min(100, mp.flashlightBattery + 26 * dt);
+          mp.flashlightBattery = Math.min(100, mp.flashlightBattery + 28 * dt);
         }
       } else {
         mp.isUltraBeam = false;
       }
 
-      // Movement Speed Calibration
-      let maxSpeed = 190;
-      if (mp.isGhost) {
-        if (mp.slowedTimer > 0) {
-          // Slowed while caught in flashlight cone!
-          maxSpeed = mp.isUltraBeam ? 65 : 120;
-        } else {
-          // Swift predator speed in darkness
-          maxSpeed = 250;
+      // Check if inside Candle Sanctuary (Ghost is slowed inside sanctuary; Humans recover flashlight faster)
+      let inSanctuary = false;
+      for (const s of this.sanctuaries) {
+        if (Math.hypot(mp.x - s.x, mp.y - s.y) < s.radius) {
+          inSanctuary = true;
+          break;
         }
       }
 
-      // Directional steering input
-      let moveDirX = steer;
-      let moveDirY = -throttle; // Up is negative Y
+      // Speed calibration
+      let maxSpeed = 195;
+      if (mp.isGhost) {
+        if (mp.slowedTimer > 0) {
+          maxSpeed = mp.isUltraBeam ? 70 : 115;
+        } else if (inSanctuary) {
+          maxSpeed = 140; // Holy light slows the ghost
+        } else {
+          maxSpeed = 245; // Fast predatory stalker
+        }
+      } else {
+        if (inSanctuary) {
+          mp.flashlightBattery = Math.min(100, mp.flashlightBattery + 18 * dt);
+        }
+      }
 
+      // Directional inputs vs Single Button Arcade Mode
       const pInfo = this.getPlayer(mp.id);
       const isBot = pInfo ? pInfo.type.startsWith('bot_') : false;
 
-      if (Math.hypot(moveDirX, moveDirY) > 0.1) {
-        const inputAngle = Math.atan2(moveDirY, moveDirX);
+      const inputMag = Math.hypot(steer, -throttle);
+      if (inputMag > 0.15) {
+        // Multi-directional WASD / Joystick
+        const inputAngle = Math.atan2(-throttle, steer);
         mp.angle = inputAngle;
         if (!isBot) {
           mp.flashlightAngle = inputAngle;
         }
 
-        // Accelerate smoothly
-        const accel = 650;
-        mp.vx += (moveDirX * maxSpeed - mp.vx) * Math.min(1, accel * dt * 0.05);
-        mp.vy += (moveDirY * maxSpeed - mp.vy) * Math.min(1, accel * dt * 0.05);
+        const accel = 680;
+        mp.vx += (steer * maxSpeed - mp.vx) * Math.min(1, accel * dt * 0.05);
+        mp.vy += (-throttle * maxSpeed - mp.vy) * Math.min(1, accel * dt * 0.05);
       } else if (isPressed) {
-        // Single button forward push
-        mp.vx += (Math.cos(mp.angle) * maxSpeed - mp.vx) * Math.min(1, 400 * dt * 0.05);
-        mp.vy += (Math.sin(mp.angle) * maxSpeed - mp.vy) * Math.min(1, 400 * dt * 0.05);
+        // Single Button Arcade: HOLD pushes forward in current aim angle!
+        const accel = 520;
+        mp.vx += (Math.cos(mp.flashlightAngle) * maxSpeed - mp.vx) * Math.min(1, accel * dt * 0.05);
+        mp.vy += (Math.sin(mp.flashlightAngle) * maxSpeed - mp.vy) * Math.min(1, accel * dt * 0.05);
+        mp.angle = mp.flashlightAngle;
       } else {
-        // Friction damping
-        mp.vx *= Math.pow(0.82, dt * 60);
-        mp.vy *= Math.pow(0.82, dt * 60);
+        // Friction damping when not pressing
+        mp.vx *= Math.pow(0.80, dt * 60);
+        mp.vy *= Math.pow(0.80, dt * 60);
+
+        // In 1-button mode, when released, smoothly scan/sweep flashlight to allow aiming!
+        if (!isBot && inputMag <= 0.15) {
+          mp.flashlightAngle += mp.scanDirection * dt * 2.8;
+          mp.angle = mp.flashlightAngle;
+        }
       }
 
       mp.speed = Math.hypot(mp.vx, mp.vy);
-
-      // Position update
       mp.x += mp.vx * dt;
       mp.y += mp.vy * dt;
 
-      // Arena wall boundaries with smooth bounce & sliding
+      // Arena boundaries with elastic repel to NEVER get stuck on walls
       const minX = this.arenaBounds.x + mp.radius;
       const maxX = this.arenaBounds.x + this.arenaBounds.w - mp.radius;
       const minY = this.arenaBounds.y + mp.radius;
@@ -251,18 +292,18 @@ export class GhostFlashlightGame extends BaseGame {
 
       if (mp.x < minX) {
         mp.x = minX;
-        mp.vx = Math.abs(mp.vx) * 0.3;
+        mp.vx = Math.abs(mp.vx) * 0.5 + 40;
       } else if (mp.x > maxX) {
         mp.x = maxX;
-        mp.vx = -Math.abs(mp.vx) * 0.3;
+        mp.vx = -Math.abs(mp.vx) * 0.5 - 40;
       }
 
       if (mp.y < minY) {
         mp.y = minY;
-        mp.vy = Math.abs(mp.vy) * 0.3;
+        mp.vy = Math.abs(mp.vy) * 0.5 + 40;
       } else if (mp.y > maxY) {
         mp.y = maxY;
-        mp.vy = -Math.abs(mp.vy) * 0.3;
+        mp.vy = -Math.abs(mp.vy) * 0.5 - 40;
       }
 
       // Step on Creaky Floorboards
@@ -270,17 +311,16 @@ export class GhostFlashlightGame extends BaseGame {
         for (const cf of this.creakyFloorboards) {
           if (mp.x >= cf.x && mp.x <= cf.x + cf.w && mp.y >= cf.y && mp.y <= cf.y + cf.h) {
             if (mp.creakCooldown <= 0) {
-              mp.creakCooldown = 0.35;
-              mp.revealedTimer = 1.0;
+              mp.creakCooldown = 0.40;
+              mp.revealedTimer = 1.2;
               this.audio.playTap();
-              this.particles.showFloatingText('CREAK!', mp.x, mp.y - 18, '#F59E0B', 15);
+              this.particles.showFloatingText('CREAK! 🔊', mp.x, mp.y - 18, '#F59E0B', 16);
 
-              // Spawn expanding sound ripple
               this.soundRipples.push({
                 x: mp.x,
                 y: mp.y,
                 radius: 12,
-                maxRadius: 75,
+                maxRadius: 85,
                 alpha: 0.9,
                 color: mp.isGhost ? '#C084FC' : '#F59E0B'
               });
@@ -290,12 +330,12 @@ export class GhostFlashlightGame extends BaseGame {
       }
     }
 
-    // 2. Volumetric Flashlight Beam & Ghost Revealing / Slowing Check
+    // 2. Volumetric Flashlight Beam & Ghost Revealing Check
     for (const human of this.mPlayers.values()) {
       if (human.isGhost) continue;
 
-      const beamRange = human.isUltraBeam ? 275 : 195;
-      const beamHalfAngle = human.isUltraBeam ? 0.62 : 0.44; // radians
+      const beamRange = human.isUltraBeam ? 290 : 205;
+      const beamHalfAngle = human.isUltraBeam ? 0.65 : 0.46;
 
       for (const ghost of this.mPlayers.values()) {
         if (!ghost.isGhost) continue;
@@ -311,16 +351,16 @@ export class GhostFlashlightGame extends BaseGame {
           while (diff < -Math.PI) diff += Math.PI * 2;
 
           if (Math.abs(diff) < beamHalfAngle) {
-            // Ghost is caught in the beam!
-            ghost.revealedTimer = 0.35;
-            ghost.slowedTimer = 0.35;
+            // Ghost caught in flashlight beam!
+            ghost.revealedTimer = 0.40;
+            ghost.slowedTimer = 0.40;
 
-            // Ultra-Beam pushes ghost backward gently
             if (human.isUltraBeam) {
-              ghost.vx += Math.cos(human.flashlightAngle) * 140 * dt;
-              ghost.vy += Math.sin(human.flashlightAngle) * 140 * dt;
-              if (Math.random() < 0.25) {
-                this.particles.spawnSparks(ghost.x, ghost.y, '#FACC15', 2);
+              // Ultra-Beam pushes ghost back with luminous shock
+              ghost.vx += Math.cos(human.flashlightAngle) * 160 * dt;
+              ghost.vy += Math.sin(human.flashlightAngle) * 160 * dt;
+              if (Math.random() < 0.3) {
+                this.particles.spawnSparks(ghost.x, ghost.y, '#FACC15', 3);
               }
             }
           }
@@ -329,6 +369,7 @@ export class GhostFlashlightGame extends BaseGame {
     }
 
     // 3. Elastic Inter-Player Collision & Curse Tag Transfer
+    // ZERO-STICKING GUARANTEE: Strong repulsive separation prevents players and bots from ever getting stuck!
     const playersArr = Array.from(this.mPlayers.values());
     for (let i = 0; i < playersArr.length; i++) {
       for (let j = i + 1; j < playersArr.length; j++) {
@@ -338,13 +379,12 @@ export class GhostFlashlightGame extends BaseGame {
         const dx = p2.x - p1.x;
         const dy = p2.y - p1.y;
         const dist = Math.hypot(dx, dy);
-        const minDist = p1.radius + p2.radius;
+        const minDist = p1.radius + p2.radius + 8; // Extra safety buffer
 
         if (dist < minDist && dist > 0.001) {
           const nx = dx / dist;
           const ny = dy / dist;
 
-          // Check if Tag / Curse Transfer triggers
           const p1CanTag = p1.isGhost && p1.immunityTimer <= 0 && !p2.isGhost && p2.immunityTimer <= 0;
           const p2CanTag = p2.isGhost && p2.immunityTimer <= 0 && !p1.isGhost && p1.immunityTimer <= 0;
 
@@ -354,16 +394,16 @@ export class GhostFlashlightGame extends BaseGame {
 
             // Transfer the Curse!
             oldGhost.isGhost = false;
-            oldGhost.immunityTimer = 2.0; // 2 seconds to safely escape!
+            oldGhost.immunityTimer = 2.2; // 2.2s safe escape
             oldGhost.revealedTimer = 1.0;
 
             newGhost.isGhost = true;
-            newGhost.immunityTimer = 2.5; // 2.5 seconds charge-up before new ghost can tag back!
+            newGhost.immunityTimer = 2.4; // 2.4s charge-up before new ghost can tag
             newGhost.revealedTimer = 2.5;
 
-            // Explosive Separation Blast: Push apart by extra clearance distance
-            const pushDist = (minDist - dist) + 55;
-            const blastSpeed = 420;
+            // Explosive Separation Blast
+            const pushDist = (minDist - dist) + 70;
+            const blastSpeed = 460;
             const sepX = (newGhost.x - oldGhost.x) / (dist || 1);
             const sepY = (newGhost.y - oldGhost.y) / (dist || 1);
 
@@ -372,7 +412,6 @@ export class GhostFlashlightGame extends BaseGame {
             newGhost.x += sepX * (pushDist * 0.5);
             newGhost.y += sepY * (pushDist * 0.5);
 
-            // High-energy knockback velocity impulse away from each other
             oldGhost.vx = -sepX * blastSpeed;
             oldGhost.vy = -sepY * blastSpeed;
             newGhost.vx = sepX * blastSpeed;
@@ -380,29 +419,25 @@ export class GhostFlashlightGame extends BaseGame {
 
             this.audio.playGhostTag();
             this.audio.playHitStopThud();
-            this.particles.addTrauma(0.5);
-            this.particles.spawnExplosion(newGhost.x, newGhost.y, '#C084FC', 45);
-            this.particles.showFloatingText('CURSED! 👻', newGhost.x, newGhost.y - 28, '#C084FC', 26);
-            this.particles.showFloatingText('ESCAPED! 🏃', oldGhost.x, oldGhost.y - 28, '#4ADE80', 20);
+            this.particles.shake(7);
+            this.particles.spawnExplosion(newGhost.x, newGhost.y, '#C084FC', 50);
+            this.particles.showFloatingText('👻 CURSED!', newGhost.x, newGhost.y - 28, '#C084FC', 26);
+            this.particles.showFloatingText('🏃 ESCAPED!', oldGhost.x, oldGhost.y - 28, '#4ADE80', 22);
           } else {
-            // Normal elastic bumper bounce between players so they NEVER stick together!
-            const pushDist = (minDist - dist) + 4;
-            p1.x -= nx * (pushDist * 0.5);
-            p1.y -= ny * (pushDist * 0.5);
-            p2.x += nx * (pushDist * 0.5);
-            p2.y += ny * (pushDist * 0.5);
+            // UNCONDITIONAL ELASTIC REPULSION: Guarantees players NEVER clip or stick together!
+            const overlap = (minDist - dist) + 12;
+            p1.x -= nx * (overlap * 0.5);
+            p1.y -= ny * (overlap * 0.5);
+            p2.x += nx * (overlap * 0.5);
+            p2.y += ny * (overlap * 0.5);
 
-            // Bumper velocity exchange
-            const relVelX = p1.vx - p2.vx;
-            const relVelY = p1.vy - p2.vy;
-            const velAlongNormal = relVelX * nx + relVelY * ny;
-            if (velAlongNormal > 0) {
-              const impulse = 1.35 * velAlongNormal;
-              p1.vx -= impulse * nx;
-              p1.vy -= impulse * ny;
-              p2.vx += impulse * nx;
-              p2.vy += impulse * ny;
-            }
+            // Firm velocity bounce apart
+            const bounceSpeed = 220;
+            p1.vx = -nx * bounceSpeed;
+            p1.vy = -ny * bounceSpeed;
+            p2.vx = nx * bounceSpeed;
+            p2.vy = ny * bounceSpeed;
+            this.audio.playBounce();
           }
         }
       }
@@ -429,7 +464,7 @@ export class GhostFlashlightGame extends BaseGame {
 
     if (me.isGhost) {
       // --- GHOST BOT ---
-      // If newly cursed and in immunity timer, maneuver or back up while charging
+      // If newly cursed with immunity active, back away slightly to charge
       if (me.immunityTimer > 0) {
         let awayX = me.x - cx;
         let awayY = me.y - cy;
@@ -438,7 +473,7 @@ export class GhostFlashlightGame extends BaseGame {
         return;
       }
 
-      // Find closest human target
+      // Find closest human survivor
       let target: MansionPlayer | null = null;
       let minD = Infinity;
 
@@ -460,16 +495,25 @@ export class GhostFlashlightGame extends BaseGame {
         if (me.slowedTimer > 0) {
           const perpX = -chaseY;
           const perpY = chaseX;
-          chaseX = chaseX * 0.3 + perpX * 0.7;
-          chaseY = chaseY * 0.3 + perpY * 0.7;
+          chaseX = chaseX * 0.2 + perpX * 0.8;
+          chaseY = chaseY * 0.2 + perpY * 0.8;
         }
 
-        // Wall avoidance so bot glides around walls smoothly
-        const margin = 55;
-        if (me.x < b.x + margin) chaseX += 130;
-        if (me.x > b.x + b.w - margin) chaseX -= 130;
-        if (me.y < b.y + margin) chaseY += 130;
-        if (me.y > b.y + b.h - margin) chaseY -= 130;
+        // Add humanized imperfection based on difficulty
+        if (difficulty === 'bot_easy') {
+          chaseX += (Math.random() - 0.5) * 120;
+          chaseY += (Math.random() - 0.5) * 120;
+        } else if (difficulty === 'bot_normal') {
+          chaseX += (Math.random() - 0.5) * 45;
+          chaseY += (Math.random() - 0.5) * 45;
+        }
+
+        // Arena wall avoidance
+        const margin = 60;
+        if (me.x < b.x + margin) chaseX += 140;
+        if (me.x > b.x + b.w - margin) chaseX -= 140;
+        if (me.y < b.y + margin) chaseY += 140;
+        if (me.y > b.y + b.h - margin) chaseY -= 140;
 
         const mag = Math.hypot(chaseX, chaseY) || 1;
         const steer = chaseX / mag;
@@ -484,27 +528,27 @@ export class GhostFlashlightGame extends BaseGame {
       if (ghost) {
         const distToGhost = Math.hypot(ghost.x - me.x, ghost.y - me.y);
 
-        // Flee away from ghost
+        // Flee from ghost towards center or nearest candle sanctuary
         let fleeX = me.x - ghost.x;
         let fleeY = me.y - ghost.y;
 
-        // Wall & corner avoidance: Push toward arena center if close to edges
-        const margin = 75;
-        if (me.x < b.x + margin) fleeX += 150;
-        if (me.x > b.x + b.w - margin) fleeX -= 150;
-        if (me.y < b.y + margin) fleeY += 150;
-        if (me.y > b.y + b.h - margin) fleeY -= 150;
+        // Wall & corner avoidance
+        const margin = 70;
+        if (me.x < b.x + margin) fleeX += 160;
+        if (me.x > b.x + b.w - margin) fleeX -= 160;
+        if (me.y < b.y + margin) fleeY += 160;
+        if (me.y > b.y + b.h - margin) fleeY -= 160;
 
         const mag = Math.hypot(fleeX, fleeY) || 1;
         const steer = fleeX / mag;
         const throttle = -fleeY / mag;
 
-        // Clever defense: Aim flashlight DIRECTLY at the ghost to slow them down!
+        // Tactical flashlight defense: Aim directly at the approaching ghost
         me.flashlightAngle = Math.atan2(ghost.y - me.y, ghost.x - me.x);
 
-        // Fire Ultra-Beam if ghost gets too close and battery is good
+        // Fire Ultra-Beam if ghost gets too close and battery is sufficient
         let useUltra = false;
-        if (distToGhost < 145 && me.flashlightBattery > 25) {
+        if (distToGhost < (difficulty === 'bot_hard' ? 170 : 130) && me.flashlightBattery > 30) {
           useUltra = true;
         }
 
@@ -515,282 +559,311 @@ export class GhostFlashlightGame extends BaseGame {
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
     ctx.save();
-    const now = performance.now();
+    const curTheme = this.themes[this.mansionThemeIndex];
     const b = this.arenaBounds;
 
-    // 1. Haunted Victorian Mansion Parquet Floor
-    ctx.fillStyle = '#0B0912';
+    // Dark Hardwood Floor Background
+    ctx.fillStyle = curTheme.floorColor;
     ctx.fillRect(0, 0, width, height);
 
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(b.x, b.y, b.w, b.h);
-    ctx.clip();
-
-    // Weathered parquet planks
-    const plankH = 26;
-    for (let py = b.y; py < b.y + b.h; py += plankH) {
-      const isOdd = Math.floor(py / plankH) % 2 === 1;
-      ctx.fillStyle = isOdd ? '#16131F' : '#110E18';
-      ctx.fillRect(b.x, py, b.w, plankH - 2);
-
-      // Plank seams
-      ctx.strokeStyle = '#09070D';
-      ctx.lineWidth = 1.5;
-      for (let px = b.x + (isOdd ? 60 : 0); px < b.x + b.w; px += 120) {
-        ctx.beginPath();
-        ctx.moveTo(px, py);
-        ctx.lineTo(px, py + plankH - 2);
-        ctx.stroke();
-      }
+    // Hardwood Floor Planks
+    ctx.strokeStyle = curTheme.boardColor;
+    ctx.lineWidth = 1.5;
+    const plankH = 28;
+    for (let y = b.y; y < b.y + b.h; y += plankH) {
+      ctx.beginPath();
+      ctx.moveTo(b.x, y);
+      ctx.lineTo(b.x + b.w, y);
+      ctx.stroke();
     }
 
-    // Creaky Floorboard Traps (Highlighted weathered oak with hazard accents)
+    // Creaky Floorboards with glowing warning plank grain
     for (const cf of this.creakyFloorboards) {
-      ctx.fillStyle = '#241A12';
-      ctx.fillRect(cf.x, cf.y, cf.w, cf.h);
-      ctx.strokeStyle = '#D97706';
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.12)';
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.45)';
       ctx.lineWidth = 2;
       ctx.strokeRect(cf.x, cf.y, cf.w, cf.h);
+      ctx.fillRect(cf.x, cf.y, cf.w, cf.h);
 
-      // Antique brass rivets
-      ctx.fillStyle = '#92400E';
-      ctx.fillRect(cf.x + 3, cf.y + 3, 4, 4);
-      ctx.fillRect(cf.x + cf.w - 7, cf.y + 3, 4, 4);
-      ctx.fillRect(cf.x + 3, cf.y + cf.h - 7, 4, 4);
-      ctx.fillRect(cf.x + cf.w - 7, cf.y + cf.h - 7, 4, 4);
-
-      // Warning text on trap
-      ctx.fillStyle = 'rgba(217, 119, 6, 0.45)';
-      ctx.font = '700 9px Montserrat, sans-serif';
+      // Warning Footprint Icon
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.6)';
+      ctx.font = '900 13px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('CREAKY OAK', cf.x + cf.w / 2, cf.y + cf.h / 2);
+      ctx.fillText('👣 CREAK', cf.x + cf.w / 2, cf.y + cf.h / 2);
     }
 
-    // Sound Ripples (Expanding sonar wave rings from creaking)
+    // Candle Sanctuaries (Warm golden holy light pools)
+    for (const s of this.sanctuaries) {
+      const pulseR = s.radius + Math.sin(s.flicker) * 3;
+      const sGrad = ctx.createRadialGradient(s.x, s.y, 4, s.x, s.y, pulseR);
+      sGrad.addColorStop(0, 'rgba(254, 240, 138, 0.45)');
+      sGrad.addColorStop(0.5, 'rgba(245, 158, 11, 0.20)');
+      sGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+
+      ctx.fillStyle = sGrad;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, pulseR, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Center Candle Chandelier
+      ctx.fillStyle = '#FEF08A';
+      ctx.shadowColor = '#F59E0B';
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // Sound Ripples from Creaks
     for (const rip of this.soundRipples) {
-      ctx.save();
       ctx.strokeStyle = rip.color;
-      ctx.globalAlpha = Math.max(0, rip.alpha);
-      ctx.lineWidth = 2;
+      ctx.globalAlpha = rip.alpha;
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.arc(rip.x, rip.y, rip.radius, 0, Math.PI * 2);
       ctx.stroke();
+      ctx.globalAlpha = 1.0;
+    }
 
-      // Inner faint echo
-      ctx.lineWidth = 1;
+    // Volumetric Flashlight Beams from Humans
+    for (const p of this.mPlayers.values()) {
+      if (p.isGhost) continue;
+
+      const beamRange = p.isUltraBeam ? 290 : 205;
+      const beamHalf = p.isUltraBeam ? 0.65 : 0.46;
+
+      ctx.save();
+      const grad = ctx.createRadialGradient(p.x, p.y, 6, p.x, p.y, beamRange);
+      grad.addColorStop(0, p.isUltraBeam ? 'rgba(254, 240, 138, 0.95)' : 'rgba(254, 240, 138, 0.70)');
+      grad.addColorStop(0.6, p.isUltraBeam ? 'rgba(251, 191, 36, 0.45)' : 'rgba(251, 191, 36, 0.25)');
+      grad.addColorStop(1, 'rgba(251, 191, 36, 0)');
+
+      ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.arc(rip.x, rip.y, Math.max(2, rip.radius * 0.65), 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.moveTo(p.x, p.y);
+      ctx.arc(p.x, p.y, beamRange, p.flashlightAngle - beamHalf, p.flashlightAngle + beamHalf);
+      ctx.closePath();
+      ctx.fill();
       ctx.restore();
     }
 
+    // Ambient Darkness Overlay (Leaves flashlights and candles brightly visible)
+    ctx.save();
+    ctx.fillStyle = curTheme.ambientColor;
+    ctx.fillRect(b.x, b.y, b.w, b.h);
+
+    // Punch out holes for Candle Sanctuaries and Flashlight Beams
+    ctx.globalCompositeOperation = 'destination-out';
+    for (const s of this.sanctuaries) {
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.radius * 0.9, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    for (const p of this.mPlayers.values()) {
+      // Glow circle around human
+      if (!p.isGhost) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 38, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Flashlight punch-out cone
+        const beamRange = p.isUltraBeam ? 285 : 200;
+        const beamHalf = p.isUltraBeam ? 0.62 : 0.44;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.arc(p.x, p.y, beamRange, p.flashlightAngle - beamHalf, p.flashlightAngle + beamHalf);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        // Ghost has a small eerie purple luminescence
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 28, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
     ctx.restore();
 
-    // Stone Mansion Wall Perimeter
-    ctx.strokeStyle = '#334155';
-    ctx.lineWidth = 6;
-    ctx.strokeRect(b.x, b.y, b.w, b.h);
-
-    // 2. Volumetric Flashlight Cones & Ambient Illumination
+    // Render Players & Ghost
     for (const mp of this.mPlayers.values()) {
-      if (!mp.isGhost) {
+      const cfg = this.getPlayer(mp.id);
+      const isVisible = !mp.isGhost || mp.revealedTimer > 0 || mp.immunityTimer > 0;
+
+      ctx.save();
+      ctx.translate(mp.x, mp.y);
+
+      if (mp.isGhost) {
+        // --- 2.5D CURSED PHANTOM GHOST ---
         ctx.save();
-        ctx.translate(mp.x, mp.y);
-        ctx.rotate(mp.flashlightAngle);
+        ctx.globalAlpha = isVisible ? 1.0 : 0.22; // Partially translucent stealth in shadow
 
-        const range = mp.isUltraBeam ? 275 : 195;
-        const halfAngle = mp.isUltraBeam ? 0.62 : 0.44;
-
-        // Volumetric Light Cone
-        const grad = ctx.createRadialGradient(0, 0, 10, 0, 0, range);
-        if (mp.isUltraBeam) {
-          // Blinding golden-white Ultra-Beam
-          grad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-          grad.addColorStop(0.35, 'rgba(253, 224, 71, 0.7)');
-          grad.addColorStop(0.7, 'rgba(250, 204, 21, 0.3)');
-          grad.addColorStop(1, 'rgba(250, 204, 21, 0)');
-        } else {
-          // Warm focused beam
-          grad.addColorStop(0, 'rgba(254, 240, 138, 0.85)');
-          grad.addColorStop(0.4, 'rgba(253, 224, 71, 0.45)');
-          grad.addColorStop(0.8, 'rgba(250, 204, 21, 0.15)');
-          grad.addColorStop(1, 'rgba(250, 204, 21, 0)');
-        }
-
-        ctx.fillStyle = grad;
+        // Spectral Purple Aura
+        ctx.shadowColor = '#C084FC';
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = '#C084FC';
         ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.arc(0, 0, range, -halfAngle, halfAngle);
+        ctx.arc(0, 0, 18, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Floating Ghost Tail Wisps
+        const tailBob = Math.sin(this.animTimer * 8 + mp.id) * 4;
+        ctx.beginPath();
+        ctx.moveTo(-14, 8);
+        ctx.quadraticCurveTo(-6, 24 + tailBob, 0, 14);
+        ctx.quadraticCurveTo(6, 24 - tailBob, 14, 8);
         ctx.closePath();
         ctx.fill();
 
-        // Intense core ray line
-        ctx.strokeStyle = mp.isUltraBeam ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.5)';
-        ctx.lineWidth = mp.isUltraBeam ? 3.5 : 1.8;
+        // Glowing Ghost Eyes
+        ctx.fillStyle = '#FFFFFF';
+        ctx.shadowBlur = 8;
         ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(range * 0.92, 0);
+        ctx.arc(-5, -3, 3.5, 0, Math.PI * 2);
+        ctx.arc(5, -3, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#18181B';
+        ctx.beginPath();
+        ctx.arc(-5, -3, 1.8, 0, Math.PI * 2);
+        ctx.arc(5, -3, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Big Floating Role Badge
+        ctx.fillStyle = '#C084FC';
+        ctx.font = '900 11px Montserrat, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('👻 CURSED GHOST', 0, -28);
+
+        ctx.restore();
+      } else {
+        // --- 2.5D SURVIVOR WITH METAL FLASHLIGHT ---
+        // Player Base Mascot Disc
+        ctx.fillStyle = cfg?.color || '#3B82F6';
+        ctx.shadowColor = cfg?.color || '#3B82F6';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(0, 0, 16, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Outer Protective Armor Ring
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2.5;
         ctx.stroke();
 
-        ctx.restore();
-      }
-    }
-
-    // 3. Draw Players (Mascots & Spectral Phantom)
-    for (const mp of this.mPlayers.values()) {
-      if (mp.isGhost) {
+        // Flashlight Handle & Barrel pointing in flashlightAngle
         ctx.save();
-        ctx.translate(mp.x, mp.y);
-
-        // --- EERIE SPECTRAL GHOST ---
-        const isRevealed = mp.revealedTimer > 0;
-        const floatY = Math.sin(now * 0.007) * 4;
-        const pulse = (Math.sin(now * 0.009) + 1) * 3;
-
-        // In darkness, ghost is cloaked (translucent phantom); when hit by beam, 100% luminous!
-        ctx.globalAlpha = isRevealed ? 1.0 : 0.32;
-
-        // Spectral ectoplasm aura
-        ctx.shadowColor = isRevealed ? '#FACC15' : '#C084FC';
-        ctx.shadowBlur = isRevealed ? 30 : 20;
-        ctx.fillStyle = isRevealed ? 'rgba(250, 204, 21, 0.35)' : 'rgba(168, 85, 247, 0.3)';
-        ctx.beginPath();
-        ctx.arc(0, floatY, 26 + pulse, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Ghost body silhouette with rippling skirt
-        ctx.fillStyle = isRevealed ? '#FEF08A' : '#E9D5FF';
-        ctx.beginPath();
-        ctx.arc(0, floatY - 2, 17, Math.PI, 0, false);
-        ctx.lineTo(17, floatY + 16);
-        ctx.lineTo(11, floatY + 10);
-        ctx.lineTo(0, floatY + 17);
-        ctx.lineTo(-11, floatY + 10);
-        ctx.lineTo(-17, floatY + 16);
-        ctx.closePath();
-        ctx.fill();
-
-        // Glowing Haunted Eyes
-        ctx.fillStyle = isRevealed ? '#78350F' : '#3B0764';
-        ctx.beginPath();
-        ctx.ellipse(5, floatY - 3, 3, 5, 0, 0, Math.PI * 2);
-        ctx.ellipse(12, floatY - 3, 3, 5, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // O-shaped mouth
-        ctx.beginPath();
-        ctx.ellipse(8, floatY + 5, 2.5, 3.5, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Immunity runic barrier shield
-        if (mp.immunityTimer > 0) {
-          ctx.strokeStyle = '#38BDF8';
-          ctx.lineWidth = 2.5;
-          ctx.beginPath();
-          ctx.arc(0, floatY, 28, 0, Math.PI * 2);
-          ctx.stroke();
-
-          ctx.fillStyle = '#38BDF8';
-          ctx.font = '800 10px Montserrat, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(`CHARGING ${mp.immunityTimer.toFixed(1)}s`, 0, floatY - 32);
-        }
-
-        ctx.restore();
-      } else {
-        // --- HUMAN INVESTIGATOR MASCOT ---
-        this.drawPlayerMascot(ctx, mp.id, mp.x, mp.y, 15, mp.isUltraBeam ? 'focused' : 'idle', now * 0.001, mp.flashlightAngle);
-
-        // Flashlight cylinder in player's hand
-        ctx.save();
-        ctx.translate(mp.x, mp.y);
         ctx.rotate(mp.flashlightAngle);
-        ctx.fillStyle = '#94A3B8';
-        ctx.fillRect(10, -4, 10, 8);
-        ctx.fillStyle = mp.isUltraBeam ? '#FACC15' : '#FBBF24';
-        ctx.fillRect(18, -5, 4, 10);
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(8, -4, 14, 8);
+        ctx.fillStyle = '#FEF08A';
+        ctx.shadowColor = '#FACC15';
+        ctx.shadowBlur = 8;
+        ctx.fillRect(20, -5, 4, 10);
         ctx.restore();
 
-        // Battery meter under player
-        const barW = 34;
-        const barH = 5;
-        const barX = mp.x - barW / 2;
-        const barY = mp.y + 24;
+        // Battery Gauge Ring around avatar
+        const batPct = mp.flashlightBattery / 100;
+        ctx.strokeStyle = batPct > 0.3 ? '#4ADE80' : '#EF4444';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, 22, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * batPct);
+        ctx.stroke();
 
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-        ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
-        const fillW = (mp.flashlightBattery / 100) * barW;
-        ctx.fillStyle = mp.isUltraBeam ? '#FACC15' : '#38BDF8';
-        ctx.fillRect(barX, barY, fillW, barH);
+        // Player Name & Score
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '900 10px Montserrat, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${cfg?.name || 'P'}: ${mp.survivorScore}`, 0, -26);
       }
+
+      ctx.restore();
     }
 
-    // 4. Fixed High-Contrast Role & Instruction Banner (Top Center)
-    const bannerW = Math.min(620, b.w - 40);
-    const bannerH = 46;
-    const bannerX = b.x + (b.w - bannerW) / 2;
-    const bannerY = b.y + 10;
+    // Top Role Guidance HUD Badge
+    const myId = 0 as PlayerId;
+    const me = this.mPlayers.get(myId);
+    if (me) {
+      ctx.save();
+      const bannerBg = me.isGhost ? 'rgba(192, 132, 252, 0.90)' : 'rgba(30, 41, 59, 0.90)';
+      ctx.fillStyle = bannerBg;
+      ctx.strokeStyle = me.isGhost ? '#C084FC' : '#38BDF8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(width * 0.5 - 200, 52, 400, 26, 13);
+      else ctx.fillRect(width * 0.5 - 200, 52, 400, 26);
+      ctx.fill();
+      ctx.stroke();
 
-    const ghost = Array.from(this.mPlayers.values()).find((p) => p.isGhost);
-    const p1 = this.mPlayers.get(0);
-    const isP1Ghost = p1 ? p1.isGhost : false;
+      ctx.fillStyle = me.isGhost ? '#18181B' : '#FFFFFF';
+      ctx.font = '900 11px Montserrat, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      if (me.isGhost) {
+        ctx.fillText('👻 YOU ARE THE GHOST! CHASE & TAG A SURVIVOR TO PASS THE CURSE!', width * 0.5, 65);
+      } else {
+        ctx.fillText('🔦 SHINE FLASHLIGHT AT GHOST TO STUN THEM! SURVIVE TO SCORE!', width * 0.5, 65);
+      }
+      ctx.restore();
+    }
 
+    // Theme Pill at Bottom-Left (Rule compliant: x: 20, y: height - 44)
     ctx.save();
-    // Glassmorphic translucent badge
-    ctx.fillStyle = isP1Ghost ? 'rgba(59, 7, 100, 0.88)' : 'rgba(15, 23, 42, 0.88)';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(bannerX, bannerY, bannerW, bannerH, 12);
-    else ctx.rect(bannerX, bannerY, bannerW, bannerH);
+    if (ctx.roundRect) ctx.roundRect(20, height - 44, 350, 32, 16);
+    else ctx.fillRect(20, height - 44, 350, 32);
     ctx.fill();
-
-    ctx.strokeStyle = isP1Ghost ? '#C084FC' : '#FBBF24';
-    ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Primary Instruction Text
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.font = '800 13px Montserrat, sans-serif';
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = curTheme.wallColor;
+    ctx.font = '900 11px Montserrat, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(
+      `🏰 [${this.mansionThemeIndex + 1}/3] ${curTheme.name} | Move / Hold Forward`,
+      34,
+      height - 24
+    );
+    ctx.restore();
 
-    if (isP1Ghost) {
-      if (p1 && p1.immunityTimer > 0) {
-        ctx.fillText(`👻 YOU ARE THE GHOST! CHARGING CURSE: ${p1.immunityTimer.toFixed(1)}s (GET READY!)`, bannerX + bannerW / 2, bannerY + 16);
-      } else {
-        ctx.fillText(`👻 YOU ARE THE GHOST! CHASE & TAG SURVIVORS TO PASS THE CURSE!`, bannerX + bannerW / 2, bannerY + 16);
-      }
-    } else {
-      ctx.fillText(`🔦 SURVIVOR: AIM LIGHT AT GHOST TO SLOW THEM! HOLD ACTION FOR ULTRA-BEAM!`, bannerX + bannerW / 2, bannerY + 16);
+    ctx.restore();
+  }
+
+  public getScores(): Map<PlayerId, number> {
+    const scores = new Map<PlayerId, number>();
+    for (const p of this.mPlayers.values()) {
+      // Score is survivor time bonus minus ghost time penalty
+      const net = Math.max(0, p.survivorScore - Math.floor(p.timeAsGhost * 12));
+      scores.set(p.id, net);
     }
+    return scores;
+  }
 
-    // Subtitle / Controls / Timer reminder
-    ctx.font = '700 11px Montserrat, sans-serif';
-    ctx.fillStyle = isP1Ghost ? '#E9D5FF' : '#FDE047';
-    ctx.fillText(`Least time as Ghost wins! | ⏱️ Round: ${Math.ceil(this.roundTimer)}s`, bannerX + bannerW / 2, bannerY + 32);
+  public getRoundResult(): RoundResult {
+    const rankings = Array.from(this.mPlayers.values())
+      .map((p) => ({
+        playerId: p.id,
+        score: Math.max(0, p.survivorScore - Math.floor(p.timeAsGhost * 12)),
+        place: 1
+      }))
+      .sort((a, b) => b.score - a.score);
 
-    ctx.restore();
+    rankings.forEach((entry, idx) => {
+      entry.place = idx + 1;
+    });
 
-    ctx.restore();
+    const winnerId = rankings.length > 0 ? rankings[0].playerId : null;
+    return {
+      winnerId,
+      rankings,
+      mvpHighlight: winnerId ? `${winnerId} survived the haunted mansion in the light!` : 'The ghost claimed all souls!'
+    };
   }
 
   public isRoundOver(): boolean {
     return this.isFinished;
-  }
-
-  public getRoundResult(): RoundResult {
-    // Player who spent the LEAST time as ghost wins!
-    const list = Array.from(this.mPlayers.values()).sort((a, b) => a.timeAsGhost - b.timeAsGhost);
-    const winnerId = list.length > 0 ? list[0].id : null;
-    return {
-      winnerId,
-      rankings: list.map((mp, idx) => ({
-        playerId: mp.id,
-        score: Math.max(0, Math.floor(mp.survivorScore - mp.timeAsGhost * 10)),
-        place: idx + 1
-      })),
-      mvpHighlight: winnerId !== null ? `${this.players[winnerId].name} eluded the ghostly curse!` : 'Mansion conquered!'
-    };
   }
 }
