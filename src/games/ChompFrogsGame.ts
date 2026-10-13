@@ -3,8 +3,49 @@ import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
+import { drawCharacter, CharacterMood } from '../core/CharacterRenderer';
 
 export type PondTheme = 'emerald' | 'bayou' | 'zen';
+
+export interface PondThemeConfig {
+  id: PondTheme;
+  name: string;
+  bgWaterDeep: string;
+  bgWaterMid: string;
+  bgWaterShallow: string;
+  bankBorderColor: string;
+  pillColor: string;
+}
+
+export const THEME_CONFIGS: PondThemeConfig[] = [
+  {
+    id: 'emerald',
+    name: 'Emerald Oasis 🌿',
+    bgWaterDeep: '#075985',
+    bgWaterMid: '#0369A1',
+    bgWaterShallow: '#0284C7',
+    bankBorderColor: '#047857',
+    pillColor: '#10B981'
+  },
+  {
+    id: 'bayou',
+    name: 'Mystic Bayou 🔮',
+    bgWaterDeep: '#0F172A',
+    bgWaterMid: '#312E81',
+    bgWaterShallow: '#4C1D95',
+    bankBorderColor: '#6D28D9',
+    pillColor: '#8B5CF6'
+  },
+  {
+    id: 'zen',
+    name: 'Zen Rainfall 🌧️',
+    bgWaterDeep: '#0F172A',
+    bgWaterMid: '#1E293B',
+    bgWaterShallow: '#334155',
+    bankBorderColor: '#475569',
+    pillColor: '#38BDF8'
+  }
+];
 
 type InsectType = 'gnat' | 'firefly' | 'dragonfly' | 'golden_beetle' | 'lotus_butterfly' | 'wasp';
 
@@ -13,7 +54,7 @@ interface Insect {
   type: InsectType;
   x: number;
   y: number;
-  z: number; // Flight elevation
+  z: number;
   vx: number;
   vy: number;
   radius: number;
@@ -69,13 +110,13 @@ interface FrogPlayer {
   vx: number;
   vy: number;
   facingAngle: number;
-  hopZ: number;       // Visual vertical height during arc hop
+  hopZ: number;
   hopVz: number;
   isHopping: boolean;
   hopCooldown: number;
   onLilypadId: number | null;
   inWater: boolean;
-  
+
   // Instant Snap Tongue
   tongueState: 'IDLE' | 'SNAP_OUT' | 'SNAP_IN';
   tongueProgress: number; // 0 to 1
@@ -83,19 +124,21 @@ interface FrogPlayer {
   tongueLength: number;
   maxTongueRange: number;
   caughtInsects: Insect[];
-  
+
   // Visuals & Expressions
-  mouthOpen: number;   // 0 to 1
-  chewTimer: number;   // funny chewing puffed cheeks
-  throatPuff: number;  // rhythmic croaking throat sac
-  squashFactor: number;// squash & stretch on hop landing
+  mouthOpen: number;
+  chewTimer: number;
+  throatPuff: number;
+  squashFactor: number;
   stunTimer: number;
-  frenzyTimer: number; // Mega Chomp Frenzy mode
+  frenzyTimer: number;
   comboCount: number;
   comboTimer: number;
   score: number;
   insectsCaught: number;
-  
+  isUnderdog: boolean;
+  shoveCooldown: number;
+
   // AI State
   botReactionTimer: number;
   botTargetInsectId: number | null;
@@ -113,9 +156,14 @@ export class ChompFrogsGame extends BaseGame {
   private pondRadius: number = 240;
   private insectCounter: number = 0;
   private spawnTimer: number = 0;
-  private butterflySpawnTimer: number = 10;
+  private butterflySpawnTimer: number = 8;
   private rainParticles: { x: number; y: number; speed: number; len: number }[] = [];
+  private lastWidth: number = 960;
+  private lastHeight: number = 540;
   private keydownListener: ((e: KeyboardEvent) => void) | null = null;
+  private boundPointerDown: ((e: PointerEvent) => void) | null = null;
+  private suddenDeathAnnounced: boolean = false;
+  private animTimer: number = 0;
 
   constructor(
     players: PlayerConfig[],
@@ -127,36 +175,11 @@ export class ChompFrogsGame extends BaseGame {
   }
 
   public init(width: number, height: number): void {
+    this.lastWidth = width;
+    this.lastHeight = height;
+    this.bindKeyboardShortcuts();
+    this.bindCanvasPointer();
     this.reset(width, height);
-
-    if (typeof window !== 'undefined') {
-      this.keydownListener = (e: KeyboardEvent) => {
-        if (e.key === '1') this.switchTheme('emerald', width, height);
-        else if (e.key === '2') this.switchTheme('bayou', width, height);
-        else if (e.key === '3') this.switchTheme('zen', width, height);
-      };
-      window.addEventListener('keydown', this.keydownListener);
-    }
-  }
-
-  public override destroy(): void {
-    super.destroy();
-    if (typeof window !== 'undefined' && this.keydownListener) {
-      window.removeEventListener('keydown', this.keydownListener);
-      this.keydownListener = null;
-    }
-  }
-
-  public switchTheme(theme: PondTheme, width: number, height: number): void {
-    this.pondTheme = theme;
-    this.audio.playChime();
-    this.particles.showFloatingText(
-      `POND: ${theme.toUpperCase()}!`,
-      width / 2,
-      height / 2 - 40,
-      theme === 'emerald' ? '#34D399' : theme === 'bayou' ? '#A855F7' : '#38BDF8',
-      24
-    );
   }
 
   public reset(width: number, height: number): void {
@@ -168,6 +191,8 @@ export class ChompFrogsGame extends BaseGame {
     this.insectCounter = 0;
     this.spawnTimer = 0;
     this.butterflySpawnTimer = 8;
+    this.suddenDeathAnnounced = false;
+    this.animTimer = 0;
 
     this.pondCenterX = width / 2;
     this.pondCenterY = height / 2 + 16;
@@ -180,6 +205,106 @@ export class ChompFrogsGame extends BaseGame {
     for (let i = 0; i < 16; i++) {
       this.spawnInsect(false);
     }
+
+    this.syncDebug();
+  }
+
+  public syncDebug(): void {
+    if (typeof window !== 'undefined') {
+      (window as any).__CHOMP_FROGS_DEBUG__ = {
+        players: Array.from(this.playersState.values()),
+        insects: this.insects,
+        lilyPads: this.lilyPads,
+        roundTimer: this.roundTimer,
+        isFinished: this.isFinished,
+        theme: this.pondTheme,
+        setTheme: (theme: PondTheme) => this.switchTheme(theme),
+        cycleTheme: () => this.cycleTheme()
+      };
+    }
+  }
+
+  private bindCanvasPointer(): void {
+    if (typeof window === 'undefined') return;
+    const canvas = this.input.getCanvas();
+    if (!canvas) return;
+
+    this.boundPointerDown = (e: PointerEvent) => {
+      this.handlePointerDown(e);
+    };
+    canvas.addEventListener('pointerdown', this.boundPointerDown);
+  }
+
+  private handlePointerDown(e: PointerEvent): void {
+    const canvas = this.input.getCanvas();
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const clickX = ((e.clientX - rect.left) / rect.width) * this.lastWidth;
+    const clickY = ((e.clientY - rect.top) / rect.height) * this.lastHeight;
+
+    // Check Theme Pill click at (20, height - 44, 170, 32)
+    if (
+      clickX >= 20 &&
+      clickX <= 190 &&
+      clickY >= this.lastHeight - 44 &&
+      clickY <= this.lastHeight - 12
+    ) {
+      this.cycleTheme();
+    }
+  }
+
+  public cycleTheme(): void {
+    const curIdx = THEME_CONFIGS.findIndex((t) => t.id === this.pondTheme);
+    const nextIdx = (curIdx + 1) % THEME_CONFIGS.length;
+    this.switchTheme(THEME_CONFIGS[nextIdx].id);
+  }
+
+  public switchTheme(theme: PondTheme): void {
+    if (this.pondTheme === theme) return;
+    this.pondTheme = theme;
+    this.audio.playTap();
+    this.particles.spawnExplosion(100, this.lastHeight - 28, '#38BDF8', 12);
+    this.syncDebug();
+  }
+
+  private bindKeyboardShortcuts(): void {
+    if (typeof window === 'undefined') return;
+    this.unbindKeyboardShortcuts();
+
+    this.keydownListener = (e: KeyboardEvent) => {
+      if (e.key === 't' || e.key === 'T') {
+        this.cycleTheme();
+      } else if (e.key === '1') {
+        this.switchTheme('emerald');
+      } else if (e.key === '2') {
+        this.switchTheme('bayou');
+      } else if (e.key === '3') {
+        this.switchTheme('zen');
+      }
+    };
+    window.addEventListener('keydown', this.keydownListener);
+  }
+
+  private unbindKeyboardShortcuts(): void {
+    if (typeof window !== 'undefined' && this.keydownListener) {
+      window.removeEventListener('keydown', this.keydownListener);
+      this.keydownListener = null;
+    }
+  }
+
+  public override destroy(): void {
+    super.destroy();
+    this.unbindKeyboardShortcuts();
+    if (this.boundPointerDown) {
+      const canvas = this.input.getCanvas();
+      if (canvas) {
+        canvas.removeEventListener('pointerdown', this.boundPointerDown);
+      }
+      this.boundPointerDown = null;
+    }
+    if (typeof window !== 'undefined' && (window as any).__CHOMP_FROGS_DEBUG__) {
+      delete (window as any).__CHOMP_FROGS_DEBUG__;
+    }
   }
 
   private generatePondEnvironment(width: number, height: number): void {
@@ -187,7 +312,7 @@ export class ChompFrogsGame extends BaseGame {
     this.koiFish = [];
     this.ripples = [];
 
-    // 1. Center Giant Lotus Pad (Blooms rare butterflies!)
+    // Center Giant Lotus Pad
     this.lilyPads.push({
       id: 0,
       x: this.pondCenterX,
@@ -202,7 +327,7 @@ export class ChompFrogsGame extends BaseGame {
       bobSpeed: 1.2
     });
 
-    // 2. Ring of outer floating lily pads
+    // Ring of outer floating lily pads
     const padCount = 8;
     const ringRadius = this.pondRadius * 0.62;
     for (let i = 0; i < padCount; i++) {
@@ -226,7 +351,7 @@ export class ChompFrogsGame extends BaseGame {
       });
     }
 
-    // 3. Ambient Swimming Koi Fish
+    // Ambient Swimming Koi Fish
     const koiColors = ['#F97316', '#EF4444', '#FFFFFF', '#FBBF24'];
     for (let i = 0; i < 4; i++) {
       const angle = Math.random() * Math.PI * 2;
@@ -244,7 +369,7 @@ export class ChompFrogsGame extends BaseGame {
       });
     }
 
-    // 4. Rain Particles for Zen theme
+    // Rain Particles for Zen theme
     this.rainParticles = [];
     for (let i = 0; i < 45; i++) {
       this.rainParticles.push({
@@ -262,7 +387,6 @@ export class ChompFrogsGame extends BaseGame {
     const count = active.length;
 
     active.forEach((p, idx) => {
-      // Spawn players on distinct perimeter lily pads
       let spawnX = this.pondCenterX - 140;
       let spawnY = this.pondCenterY;
       let facing = 0;
@@ -272,12 +396,12 @@ export class ChompFrogsGame extends BaseGame {
         if (idx === 0) {
           spawnX = this.pondCenterX - 145;
           spawnY = this.pondCenterY;
-          facing = 0; // facing right towards center
+          facing = 0;
           padId = 1;
         } else {
           spawnX = this.pondCenterX + 145;
           spawnY = this.pondCenterY;
-          facing = Math.PI; // facing left towards center
+          facing = Math.PI;
           padId = 5;
         }
       } else {
@@ -305,7 +429,7 @@ export class ChompFrogsGame extends BaseGame {
         tongueProgress: 0,
         tongueAngle: facing,
         tongueLength: 0,
-        maxTongueRange: 135,
+        maxTongueRange: 140,
         caughtInsects: [],
         mouthOpen: 0,
         chewTimer: 0,
@@ -317,13 +441,15 @@ export class ChompFrogsGame extends BaseGame {
         comboTimer: 0,
         score: 0,
         insectsCaught: 0,
+        isUnderdog: false,
+        shoveCooldown: 0,
         botReactionTimer: 0.15 + idx * 0.05,
         botTargetInsectId: null
       });
     });
   }
 
-  private spawnInsect(isButterfly: boolean = false): void {
+  private spawnInsect(isButterfly: boolean = false, isQueenDragonfly: boolean = false): void {
     const angle = Math.random() * Math.PI * 2;
     const dist = Math.random() * (this.pondRadius * 0.82);
     const x = this.pondCenterX + Math.cos(angle) * dist;
@@ -343,10 +469,16 @@ export class ChompFrogsGame extends BaseGame {
       glowColor = '#FDA4AF';
       radius = 15;
       speed = 75;
+    } else if (isQueenDragonfly) {
+      type = 'dragonfly';
+      value = 300;
+      color = '#FACC15';
+      glowColor = '#FEF08A';
+      radius = 14;
+      speed = 95;
     } else {
       const roll = Math.random();
       if (roll < 0.35) {
-        // Gnat swarm
         type = 'gnat';
         value = 50;
         color = '#A3E635';
@@ -354,7 +486,6 @@ export class ChompFrogsGame extends BaseGame {
         radius = 7;
         speed = 45;
       } else if (roll < 0.65) {
-        // Firefly
         type = 'firefly';
         value = 100;
         color = '#FDE047';
@@ -362,7 +493,6 @@ export class ChompFrogsGame extends BaseGame {
         radius = 9;
         speed = 35;
       } else if (roll < 0.82) {
-        // Dragonfly
         type = 'dragonfly';
         value = 220;
         color = '#38BDF8';
@@ -370,7 +500,6 @@ export class ChompFrogsGame extends BaseGame {
         radius = 11;
         speed = 85;
       } else if (roll < 0.91) {
-        // Golden Beetle
         type = 'golden_beetle';
         value = 350;
         color = '#F59E0B';
@@ -378,7 +507,6 @@ export class ChompFrogsGame extends BaseGame {
         radius = 12;
         speed = 30;
       } else {
-        // Stinging Wasp
         type = 'wasp';
         value = -150;
         color = '#EF4444';
@@ -412,7 +540,48 @@ export class ChompFrogsGame extends BaseGame {
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
 
+    this.lastWidth = width;
+    this.lastHeight = height;
+    this.animTimer += dt;
     this.roundTimer = Math.max(0, this.roundTimer - dt);
+
+    const isSuddenDeath = this.roundTimer <= 15;
+
+    // Sudden Death Swarm Event
+    if (isSuddenDeath && !this.suddenDeathAnnounced) {
+      this.suddenDeathAnnounced = true;
+      this.audio.playBoost();
+      this.particles.shake(0.5);
+      this.particles.showFloatingText('⚡ QUEEN INSECT SWARM! ⚡', width / 2, height / 2 - 30, '#FACC15', 30);
+      // Spawn 3 Queen Dragonflies
+      for (let q = 0; q < 3; q++) {
+        this.spawnInsect(false, true);
+      }
+    }
+
+    // Determine Underdog Frog
+    const active = this.getActivePlayers();
+    if (active.length > 1) {
+      let minScore = 999999;
+      let maxScore = -1;
+      for (const p of active) {
+        const ps = this.playersState.get(p.id);
+        if (!ps) continue;
+        if (ps.score < minScore) minScore = ps.score;
+        if (ps.score > maxScore) maxScore = ps.score;
+      }
+
+      for (const p of active) {
+        const ps = this.playersState.get(p.id);
+        if (!ps) continue;
+        // Underdog triggers when trailing by 250+ points
+        ps.isUnderdog = (maxScore - ps.score >= 250);
+      }
+    } else {
+      for (const ps of this.playersState.values()) {
+        ps.isUnderdog = false;
+      }
+    }
 
     // Update Bot AI
     this.updateBots(dt, width, height);
@@ -420,12 +589,13 @@ export class ChompFrogsGame extends BaseGame {
     // Dynamic Spawners
     this.spawnTimer -= dt;
     const activeInsects = this.insects.filter((ins) => !ins.destroyed && ins.caughtBy === null);
-    if (this.spawnTimer <= 0 && activeInsects.length < 18) {
-      this.spawnInsect(false);
-      this.spawnTimer = 1.0 + Math.random() * 0.7;
+    const maxInsects = isSuddenDeath ? 24 : 18;
+    if (this.spawnTimer <= 0 && activeInsects.length < maxInsects) {
+      this.spawnInsect(false, isSuddenDeath && Math.random() < 0.35);
+      this.spawnTimer = isSuddenDeath ? 0.6 : 1.0 + Math.random() * 0.7;
     }
 
-    // Queen Lotus Butterfly event every 14 seconds
+    // Queen Lotus Butterfly
     this.butterflySpawnTimer -= dt;
     if (this.butterflySpawnTimer <= 0) {
       this.spawnInsect(true);
@@ -452,7 +622,6 @@ export class ChompFrogsGame extends BaseGame {
         if (r.y > height) {
           r.y = -10;
           r.x = Math.random() * width;
-          // Spawn little water ring on hit
           if (Math.random() < 0.25) {
             this.ripples.push({
               x: r.x,
@@ -467,7 +636,7 @@ export class ChompFrogsGame extends BaseGame {
       }
     }
 
-    // Update Koi Fish Swimming
+    // Update Koi Fish
     for (const fish of this.koiFish) {
       fish.turnTimer -= dt;
       if (fish.turnTimer <= 0) {
@@ -479,7 +648,6 @@ export class ChompFrogsGame extends BaseGame {
       fish.x += fish.vx * dt;
       fish.y += fish.vy * dt;
 
-      // Keep within pond
       const dCenter = Math.hypot(fish.x - this.pondCenterX, fish.y - this.pondCenterY);
       if (dCenter > this.pondRadius * 0.78) {
         const backAngle = Math.atan2(this.pondCenterY - fish.y, this.pondCenterX - fish.x);
@@ -492,14 +660,12 @@ export class ChompFrogsGame extends BaseGame {
     // Update Insects
     for (const ins of this.insects) {
       if (ins.destroyed) continue;
-
       ins.wingAngle += ins.flutterSpeed * dt;
 
       if (ins.caughtBy === null) {
         ins.flightTimer -= dt;
         if (ins.flightTimer <= 0) {
           ins.flightTimer = 0.8 + Math.random() * 1.6;
-          // Dragonflies dart in sharp angles; fireflies drift gently
           const turn = (Math.random() - 0.5) * (ins.type === 'dragonfly' ? 2.2 : 0.8);
           const curAngle = Math.atan2(ins.vy, ins.vx) + turn;
           const speed = Math.hypot(ins.vx, ins.vy);
@@ -510,7 +676,6 @@ export class ChompFrogsGame extends BaseGame {
         ins.x += ins.vx * dt;
         ins.y += ins.vy * dt;
 
-        // Bounce gently inside pond boundary
         const distCenter = Math.hypot(ins.x - this.pondCenterX, ins.y - this.pondCenterY);
         if (distCenter > this.pondRadius * 0.86) {
           const normal = Math.atan2(ins.y - this.pondCenterY, ins.x - this.pondCenterX);
@@ -530,7 +695,10 @@ export class ChompFrogsGame extends BaseGame {
       const ps = this.playersState.get(p.id);
       if (!ps) continue;
 
-      // Stun Timer (from wasps or head-on collision)
+      if (ps.shoveCooldown > 0) {
+        ps.shoveCooldown = Math.max(0, ps.shoveCooldown - dt);
+      }
+
       if (ps.stunTimer > 0) {
         ps.stunTimer = Math.max(0, ps.stunTimer - dt);
         ps.mouthOpen = 0;
@@ -540,10 +708,8 @@ export class ChompFrogsGame extends BaseGame {
         continue;
       }
 
-      // Frenzy Mode & Combo Timers
       if (ps.frenzyTimer > 0) {
         ps.frenzyTimer = Math.max(0, ps.frenzyTimer - dt);
-        // Golden frenzy sparkle trail
         if (Math.random() < 0.4) {
           this.particles.spawnConfetti(ps.x + (Math.random() - 0.5) * 16, ps.y + (Math.random() - 0.5) * 16, 2);
         }
@@ -560,13 +726,9 @@ export class ChompFrogsGame extends BaseGame {
         ps.chewTimer = Math.max(0, ps.chewTimer - dt);
       }
 
-      // Rhythmically puff vocal throat sac
       ps.throatPuff = Math.sin(performance.now() * 0.007 + Number(p.id)) * 0.5 + 0.5;
-
-      // Handle Hopping & Movement
       ps.hopCooldown = Math.max(0, ps.hopCooldown - dt);
 
-      // Read player inputs
       const steer = this.input.getSteer(p.id);
       const throttle = this.input.getThrottle(p.id);
       const inputMagnitude = Math.hypot(steer, throttle);
@@ -575,25 +737,25 @@ export class ChompFrogsGame extends BaseGame {
         ps.facingAngle = Math.atan2(throttle, steer);
       }
 
-      // Check for Instant Frog Jump
       const justAction = this.input.justAction(p.id);
       const justPressed = this.input.justPressed(p.id);
-      const isAction = this.input.isActionPressed(p.id);
 
-      // Free-roam hop if moving
+      // Underdog +25% hop speed
+      const hopSpeedMult = ps.isUnderdog ? 1.25 : 1.0;
+
+      // Free-roam hop
       if (!ps.isHopping && ps.hopCooldown <= 0 && inputMagnitude > 0.3) {
         ps.isHopping = true;
-        const jumpBase = ps.onLilypadId !== null ? 240 : 175;
+        const jumpBase = (ps.onLilypadId !== null ? 240 : 175) * hopSpeedMult;
         ps.hopVz = jumpBase;
         ps.hopZ = 2;
-        const hopSpeed = ps.onLilypadId !== null ? 220 : 150;
+        const hopSpeed = (ps.onLilypadId !== null ? 220 : 150) * hopSpeedMult;
         ps.vx = Math.cos(ps.facingAngle) * hopSpeed;
         ps.vy = Math.sin(ps.facingAngle) * hopSpeed;
-        ps.squashFactor = 0.75; // stretch upward
+        ps.squashFactor = 0.75;
         this.audio.playBounce();
 
         if (ps.inWater) {
-          // Water splash
           this.ripples.push({
             x: ps.x,
             y: ps.y,
@@ -612,16 +774,14 @@ export class ChompFrogsGame extends BaseGame {
         ps.x += ps.vx * dt;
         ps.y += ps.vy * dt;
 
-        // Landing
         if (ps.hopZ <= 0) {
           ps.hopZ = 0;
           ps.isHopping = false;
           ps.vx = 0;
           ps.vy = 0;
           ps.hopCooldown = 0.12;
-          ps.squashFactor = 1.35; // squash on landing
+          ps.squashFactor = 1.35;
 
-          // Check if landing on a lily pad
           let landedOnPad: LilyPad | null = null;
           for (const pad of this.lilyPads) {
             const dist = Math.hypot(ps.x - pad.x, ps.y - pad.y);
@@ -634,7 +794,6 @@ export class ChompFrogsGame extends BaseGame {
           if (landedOnPad) {
             ps.onLilypadId = landedOnPad.id;
             ps.inWater = false;
-            // Pad bob dip
             landedOnPad.bobPhase += 0.8;
           } else {
             ps.onLilypadId = null;
@@ -651,11 +810,10 @@ export class ChompFrogsGame extends BaseGame {
           }
         }
       } else {
-        // Friction when on ground/water
         ps.squashFactor += (1.0 - ps.squashFactor) * 8 * dt;
       }
 
-      // Keep Frog inside pond arena boundary
+      // Boundary clamp
       const distFromPondCenter = Math.hypot(ps.x - this.pondCenterX, ps.y - this.pondCenterY);
       if (distFromPondCenter > this.pondRadius * 0.92) {
         const edgeAngle = Math.atan2(ps.y - this.pondCenterY, ps.x - this.pondCenterX);
@@ -663,27 +821,28 @@ export class ChompFrogsGame extends BaseGame {
         ps.y = this.pondCenterY + Math.sin(edgeAngle) * (this.pondRadius * 0.92);
       }
 
-      // Trigger Instant Frog Chomp! (Space, Enter, Action or Tap without moving)
+      // Chomp Action
       const triggerChomp = justAction || (justPressed && inputMagnitude < 0.25);
       if (triggerChomp && ps.tongueState === 'IDLE') {
         ps.tongueState = 'SNAP_OUT';
         ps.tongueProgress = 0;
         ps.tongueAngle = ps.facingAngle;
         ps.mouthOpen = 1;
-        ps.maxTongueRange = ps.frenzyTimer > 0 ? 195 : 140;
+        // Underdog gets +35% base tongue reach! Frenzy gives max reach
+        const baseReach = ps.isUnderdog ? 190 : 140;
+        ps.maxTongueRange = ps.frenzyTimer > 0 ? 210 : baseReach;
         this.audio.playWhoosh();
       }
 
-      // Instant Tongue Snap Lifecycle
+      // Tongue Snap Lifecycle
       if (ps.tongueState === 'SNAP_OUT') {
-        const snapSpeed = ps.frenzyTimer > 0 ? 1100 : 880; // px/s
+        const snapSpeed = ps.frenzyTimer > 0 ? 1150 : (ps.isUnderdog ? 1020 : 880);
         ps.tongueProgress += (snapSpeed / ps.maxTongueRange) * dt;
         ps.tongueLength = Math.min(ps.maxTongueRange, ps.tongueProgress * ps.maxTongueRange);
 
         const tipX = ps.x + Math.cos(ps.tongueAngle) * ps.tongueLength;
         const tipY = ps.y + Math.sin(ps.tongueAngle) * ps.tongueLength;
 
-        // Snatch insect in path!
         let caughtOne = false;
         for (const ins of this.insects) {
           if (ins.destroyed || ins.caughtBy !== null) continue;
@@ -701,7 +860,7 @@ export class ChompFrogsGame extends BaseGame {
           ps.tongueState = 'SNAP_IN';
         }
       } else if (ps.tongueState === 'SNAP_IN') {
-        const retractSpeed = 1350; // lightning fast snap back into mouth
+        const retractSpeed = 1350;
         ps.tongueProgress -= (retractSpeed / ps.maxTongueRange) * dt;
         ps.tongueLength = Math.max(0, ps.tongueProgress * ps.maxTongueRange);
 
@@ -713,7 +872,6 @@ export class ChompFrogsGame extends BaseGame {
           ins.y = tipY;
         }
 
-        // Fully snapped back into frog's mouth!
         if (ps.tongueProgress <= 0) {
           ps.tongueState = 'IDLE';
           ps.tongueProgress = 0;
@@ -725,19 +883,24 @@ export class ChompFrogsGame extends BaseGame {
               ins.destroyed = true;
 
               if (ins.type === 'wasp') {
-                // Stung by Wasp!
-                ps.score = Math.max(0, ps.score + ins.value);
-                ps.stunTimer = 1.6;
-                this.audio.playStun();
-                this.particles.showFloatingText('STUNG! -150', ps.x, ps.y - 34, '#EF4444', 24);
-                this.particles.spawnExplosion(ps.x, ps.y, '#EF4444', 16);
-                ps.comboCount = 0;
+                if (ps.isUnderdog) {
+                  // Underdog Wasp Repellent: Wasp turns to honey bonus!
+                  ps.score += 150;
+                  this.audio.playScore();
+                  this.particles.showFloatingText('HONEY BONUS! +150 🍯', ps.x, ps.y - 34, '#FACC15', 22);
+                  this.particles.spawnExplosion(ps.x, ps.y, '#FACC15', 16);
+                } else {
+                  ps.score = Math.max(0, ps.score + ins.value);
+                  ps.stunTimer = 1.6;
+                  this.audio.playStun();
+                  this.particles.showFloatingText('STUNG! -150', ps.x, ps.y - 34, '#EF4444', 24);
+                  this.particles.spawnExplosion(ps.x, ps.y, '#EF4444', 16);
+                  ps.comboCount = 0;
+                }
               } else {
-                // Delicious Insect Chomp!
                 ps.comboCount += 1;
                 ps.comboTimer = 2.8;
 
-                // Frenzy activation at 3 consecutive catches!
                 if (ps.comboCount >= 3 && ps.frenzyTimer <= 0) {
                   ps.frenzyTimer = 5.0;
                   this.audio.playBoost();
@@ -762,8 +925,7 @@ export class ChompFrogsGame extends BaseGame {
       }
     }
 
-    // Frog vs Frog Body Bumping Collision
-    const active = this.getActivePlayers();
+    // Frog vs Frog Body Bumping Collision & Prey Stealing!
     for (let i = 0; i < active.length; i++) {
       for (let j = i + 1; j < active.length; j++) {
         const p1 = this.playersState.get(active[i].id);
@@ -771,9 +933,9 @@ export class ChompFrogsGame extends BaseGame {
         if (!p1 || !p2) continue;
 
         const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
-        if (dist < 36) {
+        if (dist < 36 && p1.shoveCooldown <= 0 && p2.shoveCooldown <= 0) {
           const pushAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-          const bumpForce = 140;
+          const bumpForce = 150;
           p1.x -= Math.cos(pushAngle) * 8;
           p1.y -= Math.sin(pushAngle) * 8;
           p2.x += Math.cos(pushAngle) * 8;
@@ -785,9 +947,35 @@ export class ChompFrogsGame extends BaseGame {
           p2.vy = Math.sin(pushAngle) * bumpForce;
 
           p1.isHopping = true;
-          p1.hopVz = 120;
+          p1.hopVz = 130;
           p2.isHopping = true;
-          p2.hopVz = 120;
+          p2.hopVz = 130;
+
+          p1.shoveCooldown = 0.4;
+          p2.shoveCooldown = 0.4;
+
+          // Couch Griefing: Drop caught insects on impact!
+          if (p1.caughtInsects.length > 0) {
+            for (const ins of p1.caughtInsects) {
+              ins.caughtBy = null;
+              ins.flightTimer = 0.5;
+            }
+            p1.caughtInsects = [];
+            p1.tongueState = 'IDLE';
+            p1.tongueLength = 0;
+            this.particles.showFloatingText('INSECT DROPPED!', p1.x, p1.y - 30, '#F59E0B', 20);
+          }
+
+          if (p2.caughtInsects.length > 0) {
+            for (const ins of p2.caughtInsects) {
+              ins.caughtBy = null;
+              ins.flightTimer = 0.5;
+            }
+            p2.caughtInsects = [];
+            p2.tongueState = 'IDLE';
+            p2.tongueLength = 0;
+            this.particles.showFloatingText('INSECT DROPPED!', p2.x, p2.y - 30, '#F59E0B', 20);
+          }
 
           this.audio.playBounce();
           this.particles.showFloatingText('BOING!', (p1.x + p2.x) / 2, (p1.y + p2.y) / 2 - 20, '#38BDF8', 20);
@@ -798,6 +986,8 @@ export class ChompFrogsGame extends BaseGame {
     if (this.roundTimer <= 0) {
       this.isFinished = true;
     }
+
+    this.syncDebug();
   }
 
   public isRoundOver(): boolean {
@@ -820,10 +1010,8 @@ export class ChompFrogsGame extends BaseGame {
     ps.botReactionTimer -= dt;
     if (ps.botReactionTimer > 0) return;
 
-    // Reset reaction timer based on difficulty
     ps.botReactionTimer = difficulty === 'bot_hard' ? 0.06 : difficulty === 'bot_normal' ? 0.12 : 0.28;
 
-    // Find optimal target insect
     let bestScore = -9999;
     let bestTarget: Insect | null = null;
 
@@ -833,17 +1021,16 @@ export class ChompFrogsGame extends BaseGame {
       const dist = Math.hypot(ins.x - ps.x, ins.y - ps.y);
       if (dist > this.pondRadius * 1.2) continue;
 
-      // Heavy penalty for wasps so bot naturally avoids them
+      // Avoid wasps unless underdog has repellent
       if (ins.type === 'wasp') {
-        if (dist < 60) {
-          // Danger close! Run away!
+        if (!ps.isUnderdog && dist < 60) {
           const fleeAngle = Math.atan2(ps.y - ins.y, ps.x - ins.x);
           const steer = Math.cos(fleeAngle);
           const throttle = Math.sin(fleeAngle);
           this.input.setBotInput(botId, true, steer, throttle, false);
           return;
         }
-        continue;
+        if (!ps.isUnderdog) continue;
       }
 
       let targetScore = (ins.value / (dist + 40)) * 100;
@@ -851,7 +1038,6 @@ export class ChompFrogsGame extends BaseGame {
       if (ins.type === 'golden_beetle') targetScore += 180;
       if (ins.type === 'dragonfly') targetScore += 120;
 
-      // Hard bots prioritize high value prey heavily
       if (difficulty === 'bot_hard' && ins.value >= 250) {
         targetScore *= 1.4;
       }
@@ -867,7 +1053,6 @@ export class ChompFrogsGame extends BaseGame {
       return;
     }
 
-    // Lead calculation for fast insects on Hard bot
     let targetX = bestTarget.x;
     let targetY = bestTarget.y;
     const distToTarget = Math.hypot(targetX - ps.x, targetY - ps.y);
@@ -880,19 +1065,16 @@ export class ChompFrogsGame extends BaseGame {
 
     const angleToTarget = Math.atan2(targetY - ps.y, targetX - ps.x);
     const angleDiff = Math.abs(ps.facingAngle - angleToTarget);
-    const maxRange = ps.frenzyTimer > 0 ? 190 : 135;
+    const maxRange = ps.frenzyTimer > 0 ? 195 : (ps.isUnderdog ? 180 : 135);
 
-    // In Chomp Range & Facing Target: SNAP!
     const tolerance = difficulty === 'bot_hard' ? 0.12 : difficulty === 'bot_normal' ? 0.22 : 0.38;
     if (distToTarget <= maxRange && angleDiff < tolerance && ps.tongueState === 'IDLE') {
-      if (difficulty === 'bot_easy' && Math.random() < 0.3) {
-        // Easy bot occasional hesitate
+      if (difficulty === 'bot_easy' && Math.random() < 0.25) {
         this.input.setBotInput(botId, false, 0, 0, false);
         return;
       }
       this.input.setBotInput(botId, true, 0, 0, true);
     } else {
-      // Navigate / Hop towards target!
       const steer = Math.cos(angleToTarget);
       const throttle = Math.sin(angleToTarget);
       this.input.setBotInput(botId, true, steer, throttle, false);
@@ -900,32 +1082,34 @@ export class ChompFrogsGame extends BaseGame {
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Lush Pond Base & Water Depth
-    this.renderPondWaters(ctx, width, height);
+    const theme = THEME_CONFIGS.find((t) => t.id === this.pondTheme) || THEME_CONFIGS[0];
 
-    // 2. Swimming Koi Silhouettes
+    // Pond Base & Water Depth
+    this.renderPondWaters(ctx, width, height, theme);
+
+    // Swimming Koi Silhouettes
     this.renderKoiFish(ctx);
 
-    // 3. Water Ripples & Splashes
+    // Water Ripples
     this.renderWaterRipples(ctx);
 
-    // 4. Floating Lily Pads & Lotus Blossoms
+    // Floating Lily Pads
     this.renderLilyPads(ctx);
 
-    // 5. Insects (Flies, Dragonflies, Butterflies, Wasps)
+    // Insects
     for (const ins of this.insects) {
       if (ins.destroyed) continue;
       this.renderInsect(ctx, ins);
     }
 
-    // 6. Frogs & Instant Tongues
+    // Frogs & Instant Tongues
     for (const p of this.getActivePlayers()) {
       const ps = this.playersState.get(p.id);
       if (!ps) continue;
-      this.renderFrogPlayer(ctx, ps, p.color);
+      this.renderFrogPlayer(ctx, ps, p);
     }
 
-    // 7. Ambient Rain (Zen theme)
+    // Ambient Rain (Zen theme)
     if (this.pondTheme === 'zen') {
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
       ctx.lineWidth = 1.2;
@@ -937,12 +1121,17 @@ export class ChompFrogsGame extends BaseGame {
       }
     }
 
-    // 8. Theme Indicator Pill (bottom-left, no overlap)
-    this.renderThemePill(ctx, height);
+    // Minigame HUD Pod at y = 56
+    this.renderCenterHudPod(ctx, width, theme);
+
+    // Theme Indicator Pill (bottom-left, x: 20, y: height - 44, w: 170, h: 32)
+    this.renderThemePill(ctx, height, theme);
+
+    // Control Hints (Right-aligned)
+    this.renderControlHints(ctx, width, height);
   }
 
-  private renderPondWaters(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // Ambient Garden Surroundings
+  private renderPondWaters(ctx: CanvasRenderingContext2D, width: number, height: number, theme: PondThemeConfig): void {
     if (this.pondTheme === 'emerald') {
       ctx.fillStyle = '#064E3B';
     } else if (this.pondTheme === 'bayou') {
@@ -952,7 +1141,6 @@ export class ChompFrogsGame extends BaseGame {
     }
     ctx.fillRect(0, 0, width, height);
 
-    // Deep Pond Gradient
     const pondGrad = ctx.createRadialGradient(
       this.pondCenterX,
       this.pondCenterY,
@@ -962,32 +1150,19 @@ export class ChompFrogsGame extends BaseGame {
       this.pondRadius
     );
 
-    if (this.pondTheme === 'emerald') {
-      pondGrad.addColorStop(0, '#0284C7');
-      pondGrad.addColorStop(0.65, '#0369A1');
-      pondGrad.addColorStop(1, '#075985');
-    } else if (this.pondTheme === 'bayou') {
-      pondGrad.addColorStop(0, '#4C1D95');
-      pondGrad.addColorStop(0.65, '#312E81');
-      pondGrad.addColorStop(1, '#0F172A');
-    } else {
-      // Zen slate
-      pondGrad.addColorStop(0, '#334155');
-      pondGrad.addColorStop(0.65, '#1E293B');
-      pondGrad.addColorStop(1, '#0F172A');
-    }
+    pondGrad.addColorStop(0, theme.bgWaterShallow);
+    pondGrad.addColorStop(0.65, theme.bgWaterMid);
+    pondGrad.addColorStop(1, theme.bgWaterDeep);
 
     ctx.beginPath();
     ctx.arc(this.pondCenterX, this.pondCenterY, this.pondRadius, 0, Math.PI * 2);
     ctx.fillStyle = pondGrad;
     ctx.fill();
 
-    // Pond Bank Border
     ctx.lineWidth = 7;
-    ctx.strokeStyle = this.pondTheme === 'emerald' ? '#047857' : this.pondTheme === 'bayou' ? '#6D28D9' : '#475569';
+    ctx.strokeStyle = theme.bankBorderColor;
     ctx.stroke();
 
-    // Subtle water caustics rings
     const time = performance.now() * 0.002;
     for (let r = 40; r < this.pondRadius; r += 55) {
       ctx.beginPath();
@@ -1005,16 +1180,14 @@ export class ChompFrogsGame extends BaseGame {
       ctx.translate(fish.x, fish.y);
       ctx.rotate(fish.angle);
 
-      // Swimming tail sway
       const sway = Math.sin(performance.now() * 0.008 + fish.length) * 0.35;
 
       ctx.fillStyle = fish.color;
-      ctx.globalAlpha = 0.45; // translucent beneath water surface
+      ctx.globalAlpha = 0.45;
       ctx.beginPath();
       ctx.ellipse(0, 0, fish.length * 0.5, fish.length * 0.22, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Tail fin
       ctx.beginPath();
       ctx.moveTo(-fish.length * 0.5, 0);
       ctx.lineTo(-fish.length * 0.85, -fish.length * 0.25 + sway * 8);
@@ -1046,13 +1219,11 @@ export class ChompFrogsGame extends BaseGame {
       const bobY = Math.sin(pad.bobPhase) * 3;
       ctx.translate(pad.x, pad.y + bobY);
 
-      // Pad drop shadow in water
       ctx.fillStyle = 'rgba(2, 6, 23, 0.35)';
       ctx.beginPath();
       ctx.arc(2, 4, pad.radius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Lush Lily Pad Leaf with V-shaped notch
       ctx.fillStyle = pad.isCenterLotus ? '#15803D' : '#16A34A';
       ctx.beginPath();
       const notchStart = pad.notchAngle + 0.35;
@@ -1066,7 +1237,6 @@ export class ChompFrogsGame extends BaseGame {
       ctx.strokeStyle = '#14532D';
       ctx.stroke();
 
-      // Pad leaf veins
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
       ctx.lineWidth = 1.2;
       for (let a = 0; a < Math.PI * 2; a += Math.PI * 0.4) {
@@ -1076,7 +1246,6 @@ export class ChompFrogsGame extends BaseGame {
         ctx.stroke();
       }
 
-      // Blooming Lotus Flower
       if (pad.hasFlower) {
         const petalCount = pad.isCenterLotus ? 8 : 6;
         const petalLen = pad.isCenterLotus ? 22 : 14;
@@ -1096,7 +1265,6 @@ export class ChompFrogsGame extends BaseGame {
           ctx.restore();
         }
 
-        // Golden Pollen Core
         ctx.beginPath();
         ctx.arc(0, 0, pad.isCenterLotus ? 9 : 5, 0, Math.PI * 2);
         ctx.fillStyle = '#FBBF24';
@@ -1114,8 +1282,7 @@ export class ChompFrogsGame extends BaseGame {
     ctx.save();
     ctx.translate(ins.x, ins.y - ins.z);
 
-    // Glowing Ambient Halo for Fireflies & Butterflies
-    if (ins.type === 'firefly' || ins.type === 'lotus_butterfly' || ins.type === 'golden_beetle') {
+    if (ins.type === 'firefly' || ins.type === 'lotus_butterfly' || ins.type === 'golden_beetle' || ins.color === '#FACC15') {
       const haloGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, ins.radius * 2.2);
       haloGrad.addColorStop(0, ins.glowColor);
       haloGrad.addColorStop(1, 'transparent');
@@ -1125,7 +1292,6 @@ export class ChompFrogsGame extends BaseGame {
       ctx.fill();
     }
 
-    // Fluttering Translucent Wings
     ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
     const wingFlap = Math.sin(ins.wingAngle) * (ins.radius * 0.7);
 
@@ -1134,7 +1300,6 @@ export class ChompFrogsGame extends BaseGame {
     ctx.ellipse(ins.radius * 0.7, -wingFlap, ins.radius * 0.8, ins.radius * 0.4, -0.35, 0, Math.PI * 2);
     ctx.fill();
 
-    // Main Insect Torso
     ctx.beginPath();
     ctx.arc(0, 0, ins.radius, 0, Math.PI * 2);
     ctx.fillStyle = ins.color;
@@ -1143,14 +1308,11 @@ export class ChompFrogsGame extends BaseGame {
     ctx.strokeStyle = '#0F172A';
     ctx.stroke();
 
-    // Insect Features
     if (ins.type === 'wasp') {
-      // Warning black stripes
       ctx.fillStyle = '#0F172A';
       ctx.fillRect(-ins.radius * 0.6, -ins.radius * 0.3, ins.radius * 1.2, 2.5);
       ctx.fillRect(-ins.radius * 0.6, ins.radius * 0.2, ins.radius * 1.2, 2.5);
     } else if (ins.type === 'lotus_butterfly') {
-      // Royal Crown / Sparkling Core
       ctx.beginPath();
       ctx.arc(0, 0, ins.radius * 0.4, 0, Math.PI * 2);
       ctx.fillStyle = '#FFFFFF';
@@ -1163,9 +1325,9 @@ export class ChompFrogsGame extends BaseGame {
   private renderFrogPlayer(
     ctx: CanvasRenderingContext2D,
     ps: FrogPlayer,
-    color: string
+    p: PlayerConfig
   ): void {
-    // 1. Elastic Sticky Tongue (when active)
+    // 1. Elastic Sticky Tongue
     if (ps.tongueLength > 0) {
       const tipX = ps.x + Math.cos(ps.tongueAngle) * ps.tongueLength;
       const tipY = ps.y + Math.sin(ps.tongueAngle) * ps.tongueLength;
@@ -1173,22 +1335,21 @@ export class ChompFrogsGame extends BaseGame {
       ctx.beginPath();
       ctx.moveTo(ps.x, ps.y);
       ctx.lineTo(tipX, tipY);
-      ctx.strokeStyle = ps.frenzyTimer > 0 ? '#F59E0B' : '#F43F5E';
+      ctx.strokeStyle = ps.frenzyTimer > 0 ? '#F59E0B' : (ps.isUnderdog ? '#FACC15' : '#F43F5E');
       ctx.lineWidth = ps.frenzyTimer > 0 ? 8 : 5.5;
       ctx.lineCap = 'round';
       ctx.stroke();
 
-      // Suction Cup Tip
       ctx.beginPath();
       ctx.arc(tipX, tipY, ps.frenzyTimer > 0 ? 10 : 8, 0, Math.PI * 2);
-      ctx.fillStyle = ps.frenzyTimer > 0 ? '#D97706' : '#BE123C';
+      ctx.fillStyle = ps.frenzyTimer > 0 ? '#D97706' : (ps.isUnderdog ? '#EAB308' : '#BE123C');
       ctx.fill();
       ctx.lineWidth = 2;
       ctx.strokeStyle = '#FFFFFF';
       ctx.stroke();
     }
 
-    // 2. Drop Shadow (under frog while airborne)
+    // 2. Drop Shadow under airborne frog
     if (ps.hopZ > 0) {
       ctx.fillStyle = 'rgba(2, 6, 23, 0.4)';
       ctx.beginPath();
@@ -1196,15 +1357,31 @@ export class ChompFrogsGame extends BaseGame {
       ctx.fill();
     }
 
-    // 3. Frog Body & Face
+    // 3. Underdog Golden Aura
+    if (ps.isUnderdog) {
+      ctx.save();
+      ctx.strokeStyle = '#F59E0B';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(ps.x, ps.y - ps.hopZ, 24, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#F59E0B';
+      ctx.font = '900 8px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('SURGE 🍯', ps.x, ps.y - ps.hopZ + 30);
+      ctx.restore();
+    }
+
+    // 4. Frog Body & Face
     ctx.save();
-    // Render elevated if hopping
     ctx.translate(ps.x, ps.y - ps.hopZ);
     ctx.rotate(ps.facingAngle);
     ctx.scale(ps.squashFactor, 1 / ps.squashFactor);
 
     // Hind Leg Flippers
-    ctx.fillStyle = color;
+    ctx.fillStyle = p.color;
     ctx.beginPath();
     ctx.ellipse(-14, -14, 8, 5, -0.4, 0, Math.PI * 2);
     ctx.ellipse(-14, 14, 8, 5, 0.4, 0, Math.PI * 2);
@@ -1216,22 +1393,38 @@ export class ChompFrogsGame extends BaseGame {
     // Main Torso
     ctx.beginPath();
     ctx.ellipse(0, 0, 19, 15, 0, 0, Math.PI * 2);
-    ctx.fillStyle = color;
+    ctx.fillStyle = p.color;
     ctx.fill();
     ctx.lineWidth = 2.2;
     ctx.strokeStyle = '#0F172A';
     ctx.stroke();
 
-    // Throat Sac (pulsing croak bubble)
+    // Throat Sac
     const throatRadius = 7 + ps.throatPuff * 3.5;
     ctx.beginPath();
     ctx.arc(5, 0, throatRadius, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
     ctx.fill();
 
-    // Player Mascot Skin Face / Rider
-    const mood = ps.stunTimer > 0 ? 'shocked' : ps.chewTimer > 0 || ps.frenzyTimer > 0 ? 'triumph' : 'focused';
-    this.drawPlayerMascot(ctx, ps.id, -2, 0, 9.5, mood, performance.now() * 0.001);
+    // Mascot Avatar Rider on Frog Back
+    let mood: CharacterMood = 'focused';
+    if (ps.stunTimer > 0) {
+      mood = 'shocked';
+    } else if (ps.chewTimer > 0 || ps.frenzyTimer > 0) {
+      mood = 'triumph';
+    } else if (ps.isHopping) {
+      mood = 'happy';
+    } else if (ps.isUnderdog) {
+      mood = 'focused';
+    } else {
+      mood = 'idle';
+    }
+
+    const isBot = p.type.startsWith('bot_');
+    ctx.save();
+    ctx.translate(-2, 0);
+    drawCharacter(ctx, 0, 0, 10, p.id, isBot, mood, this.animTimer * 3);
+    ctx.restore();
 
     // Bulging Frog Eyes
     ctx.fillStyle = '#FFFFFF';
@@ -1246,7 +1439,6 @@ export class ChompFrogsGame extends BaseGame {
     // Animated Pupils
     ctx.fillStyle = '#0F172A';
     if (ps.stunTimer > 0) {
-      // Dizzy X eyes
       ctx.font = '800 9px monospace';
       ctx.fillText('X', 5, -9);
       ctx.fillText('X', 5, 15);
@@ -1257,10 +1449,9 @@ export class ChompFrogsGame extends BaseGame {
       ctx.fill();
     }
 
-    // Frog Mouth (Mouth Snaps Open on Chomp, or Chews on Catch)
+    // Frog Mouth
     ctx.beginPath();
     if (ps.mouthOpen > 0) {
-      // Wide open cartoon snap
       ctx.ellipse(12, 0, 8, 10, 0, 0, Math.PI * 2);
       ctx.fillStyle = '#991B1B';
       ctx.fill();
@@ -1268,13 +1459,11 @@ export class ChompFrogsGame extends BaseGame {
       ctx.strokeStyle = '#0F172A';
       ctx.stroke();
     } else if (ps.chewTimer > 0) {
-      // Chewing puffed cheeks
       ctx.arc(11, 0, 7, -Math.PI * 0.35, Math.PI * 0.35);
       ctx.lineWidth = 2.5;
       ctx.strokeStyle = '#0F172A';
       ctx.stroke();
     } else {
-      // Cheerful frog smile
       ctx.arc(10, 0, 7, -Math.PI * 0.45, Math.PI * 0.45);
       ctx.lineWidth = 2;
       ctx.strokeStyle = '#0F172A';
@@ -1283,7 +1472,7 @@ export class ChompFrogsGame extends BaseGame {
 
     ctx.restore();
 
-    // Frenzy Aura Ring if active
+    // Frenzy Ring
     if (ps.frenzyTimer > 0) {
       ctx.beginPath();
       ctx.arc(ps.x, ps.y - ps.hopZ, 26, 0, Math.PI * 2);
@@ -1299,25 +1488,96 @@ export class ChompFrogsGame extends BaseGame {
     ctx.fillText(`${ps.score} pts`, ps.x, ps.y - ps.hopZ - 28);
   }
 
-  private renderThemePill(ctx: CanvasRenderingContext2D, height: number): void {
-    const pillW = 165;
-    const pillH = 26;
-    const pillX = 20;
-    const pillY = height - 44;
+  private renderCenterHudPod(ctx: CanvasRenderingContext2D, width: number, theme: PondThemeConfig): void {
+    const podW = 340;
+    const podH = 26;
+    const podX = width / 2 - podW / 2;
+    const podY = 56;
 
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
     ctx.beginPath();
-    ctx.roundRect(pillX, pillY, pillW, pillH, 13);
+    ctx.roundRect(podX, podY, podW, podH, 13);
     ctx.fill();
 
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
-    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    ctx.font = '700 11px Inter, system-ui, sans-serif';
+    // Map Name Badge
+    ctx.font = '700 11px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = theme.pillColor;
+    ctx.fillText(theme.name.toUpperCase(), podX + 16, podY + podH / 2);
+
+    // Center Sudden Death or Status
+    ctx.font = '800 11px system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = this.pondTheme === 'emerald' ? '#34D399' : this.pondTheme === 'bayou' ? '#C084FC' : '#38BDF8';
-    ctx.fillText(`POND: ${this.pondTheme.toUpperCase()} [1-3]`, pillX + pillW / 2, pillY + 17);
+    if (this.roundTimer <= 15) {
+      ctx.fillStyle = '#FACC15';
+      ctx.fillText('⚡ QUEEN INSECT SWARM', width / 2, podY + podH / 2);
+    } else {
+      ctx.fillStyle = '#94A3B8';
+      ctx.fillText('LILYPAD HOP & BUG CHOMP', width / 2, podY + podH / 2);
+    }
+
+    // Player Status Mini-Dots on Right
+    ctx.textAlign = 'right';
+    let dotX = podX + podW - 16;
+    const active = this.getActivePlayers();
+    for (let i = active.length - 1; i >= 0; i--) {
+      const p = active[i];
+      const ps = this.playersState.get(p.id);
+
+      ctx.beginPath();
+      ctx.arc(dotX, podY + podH / 2, 5, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      dotX -= 14;
+    }
+  }
+
+  private renderThemePill(ctx: CanvasRenderingContext2D, height: number, theme: PondThemeConfig): void {
+    const pillX = 20;
+    const pillY = height - 44;
+    const pillW = 170;
+    const pillH = 32;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, 16);
+    ctx.fill();
+
+    ctx.strokeStyle = theme.pillColor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '700 11px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(theme.name, pillX + 14, pillY + pillH / 2);
+
+    ctx.fillStyle = '#94A3B8';
+    ctx.font = '600 10px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('[T]', pillX + pillW - 12, pillY + pillH / 2);
+    ctx.restore();
+  }
+
+  private renderControlHints(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    ctx.save();
+    ctx.font = '600 11px system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.fillText('Steer: Aim & Hop | Action/Space: Instant Chomp', width - 24, height - 28);
+    ctx.restore();
   }
 
   public getRoundResult(): RoundResult {
