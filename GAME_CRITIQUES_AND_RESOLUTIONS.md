@@ -336,11 +336,13 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Micro Hockey'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *'Micro Hockey'* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Core Gameplay & Objective Overhaul:** Added **Multi-Puck Frenzy** at $\le 15$s remaining where an extra high-velocity puck is launched into play simultaneously, multiplying frantic deflections and clutch saves. Hold-to-Charge **Turbo Slap Shot** allows players to hold Action/press to charge their mallet and unleash an explosive 540 px/s shot with shockwaves and audio explosion.
+2. **Controls & Tactility Overhaul:** Active, zero-deadzone angular paddle steering (`3.8 rad/s`), directional stick/arrow steering with fallback deflection oscillation, and visual charge arc with sparks.
+3. **Multiplayer Chaos & Comeback Mechanic:** Trailing players with the most goals conceded activate **Underdog Surge**: paddle receives a +30% angular width cushion (`0.44 rad`) with a glowing dashed golden barrier so matches remain competitive until the final buzzer.
+4. **Visual & Audio Juice Polish:** 3 Procedural Visual Themes (*Neon Air Rink ⚡*, *Cyber Magma 🔥*, *Bioluminescent 🌌*) with micro-vent perforated surface, center face-off rings, glowing puck trails, and metallic mallet rims. Interactive bottom-left Theme Pill (`x: 20, y: height - 44, w: 180, h: 32`, shortcut `[T]`). Score badges repositioned safely outside the arena with zero timer overlap.
+5. **Humanized AI Tuning:** Bot AI evaluates ray-circle predictive trajectory vectors to intercept pucks in advance and charges turbo slaps on approaching pucks, calibrated across difficulty levels with human reaction jitter.
+
+#### ✅ STATUS: FULLY RESOLVED & VERIFIED (0 TypeScript/Vite Errors, Built in Antigravity_Games.html)
 
 ### #15. Quick Draw Western (ID: `quick_draw`) — [Reflex]
 - **Class Implementation:** `src/games/QuickDrawWesternGame.ts` (773 lines)
