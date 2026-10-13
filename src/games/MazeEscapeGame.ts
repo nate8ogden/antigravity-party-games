@@ -3,6 +3,53 @@ import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
+import { drawCharacter, CharacterMood } from '../core/CharacterRenderer';
+
+export type MazeTheme = 'crypt' | 'cyber' | 'volcanic';
+
+export interface MazeThemeConfig {
+  id: MazeTheme;
+  name: string;
+  bgColor: string;
+  wallColor: string;
+  wallStroke: string;
+  gemColor: string;
+  relicColor: string;
+  pillColor: string;
+}
+
+export const THEME_CONFIGS: MazeThemeConfig[] = [
+  {
+    id: 'crypt',
+    name: 'Ancient Crypt 🏛️',
+    bgColor: '#090D16',
+    wallColor: '#1E293B',
+    wallStroke: '#334155',
+    gemColor: '#38BDF8',
+    relicColor: '#F59E0B',
+    pillColor: '#38BDF8'
+  },
+  {
+    id: 'cyber',
+    name: 'Cyber Grid ⚡',
+    bgColor: '#030712',
+    wallColor: '#0F172A',
+    wallStroke: '#06B6D4',
+    gemColor: '#06B6D4',
+    relicColor: '#F43F5E',
+    pillColor: '#06B6D4'
+  },
+  {
+    id: 'volcanic',
+    name: 'Volcanic Catacombs 🔥',
+    bgColor: '#180B0B',
+    wallColor: '#450A0A',
+    wallStroke: '#7F1D1D',
+    gemColor: '#FBBF24',
+    relicColor: '#EF4444',
+    pillColor: '#F97316'
+  }
+];
 
 interface MazePlayer {
   id: PlayerId;
@@ -23,6 +70,9 @@ interface MazePlayer {
   facingDy: number;
   safeSpawnX: number;
   safeSpawnY: number;
+  isUnderdog: boolean;
+  ghostCooldown: number;
+  shoveCooldown: number;
 }
 
 interface MazeGem {
@@ -54,7 +104,6 @@ export interface MazeSentry {
   baseSpeed: number;
   chaseSpeed: number;
   state: 'PATROL' | 'CHASE' | 'RETURN';
-  // Invisible Territory Boundaries (Grid & World)
   minCol: number;
   maxCol: number;
   minRow: number;
@@ -78,10 +127,9 @@ export class MazeEscapeGame extends BaseGame {
   private gems: MazeGem[] = [];
   private traps: MazeTrap[] = [];
   private sentries: MazeSentry[] = [];
-  private currentMapName: string = 'Ancient Crypt';
   private wallGrid: boolean[][] = [];
-  private cols: number = 27; // Large sprawling labyrinth (previously 19)
-  private rows: number = 17; // Large labyrinth height (previously 13)
+  private cols: number = 27;
+  private rows: number = 17;
   private cellW: number = 34;
   private cellH: number = 28;
   private offsetX: number = 20;
@@ -89,7 +137,15 @@ export class MazeEscapeGame extends BaseGame {
   private gemCounter: number = 0;
   private relicRespawnTimer: number = 0;
 
-  // Backward compatibility getter for existing tests that read activeGame.sentry
+  // Theme & Layout Controls
+  public mapTheme: MazeTheme = 'crypt';
+  private lastWidth: number = 960;
+  private lastHeight: number = 540;
+  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
+  private boundPointerDown: ((e: PointerEvent) => void) | null = null;
+  private suddenDeathAnnounced: boolean = false;
+  private animTimer: number = 0;
+
   public get sentry(): MazeSentry {
     return (
       this.sentries[0] || {
@@ -135,6 +191,10 @@ export class MazeEscapeGame extends BaseGame {
   }
 
   public init(width: number, height: number): void {
+    this.lastWidth = width;
+    this.lastHeight = height;
+    this.bindKeyboardShortcuts();
+    this.bindCanvasPointer();
     this.reset(width, height);
   }
 
@@ -143,11 +203,11 @@ export class MazeEscapeGame extends BaseGame {
     this.roundTimer = 50;
     this.traps = [];
     this.relicRespawnTimer = 0;
+    this.suddenDeathAnnounced = false;
+    this.animTimer = 0;
 
-    // Direct manual control mode: releasing keys stops player completely
     this.input.setControlMode('directional');
 
-    // Compute large grid sizing
     this.cols = 27;
     this.rows = 17;
     this.offsetX = 20;
@@ -161,21 +221,115 @@ export class MazeEscapeGame extends BaseGame {
     this.syncDebug();
   }
 
-  private generateProceduralMap(): void {
-    const maps = [
-      'Ancient Crypt',
-      'Neon Cyber Grid',
-      'Overgrown Moss Ruins',
-      'Volcanic Catacombs'
-    ];
-    this.currentMapName = maps[Math.floor(Math.random() * maps.length)];
+  public syncDebug(): void {
+    if (typeof window !== 'undefined') {
+      const self = this;
+      (window as any).__MAZE_ESCAPE_DEBUG__ = {
+        get players() { return Array.from(self.playersState.values()); },
+        get sentries() { return self.sentries; },
+        get sentry() { return self.sentry; },
+        get gems() { return self.gems; },
+        get wallGrid() { return self.wallGrid; },
+        get roundTimer() { return self.roundTimer; },
+        get isFinished() { return self.isFinished; },
+        get cols() { return self.cols; },
+        get rows() { return self.rows; },
+        get theme() { return self.mapTheme; },
+        setTheme: (theme: MazeTheme) => self.setMapTheme(theme),
+        cycleTheme: () => self.cycleTheme(),
+        triggerSentryCollision: (playerId: PlayerId, sentryIndex: number = 0) =>
+          self.handleSentryCollision(playerId, sentryIndex)
+      };
+    }
+  }
 
-    // Initialize wall grid (true = solid wall, false = open corridor)
+  private bindCanvasPointer(): void {
+    if (typeof window === 'undefined') return;
+    const canvas = this.input.getCanvas();
+    if (!canvas) return;
+
+    this.boundPointerDown = (e: PointerEvent) => {
+      this.handlePointerDown(e);
+    };
+    canvas.addEventListener('pointerdown', this.boundPointerDown);
+  }
+
+  private handlePointerDown(e: PointerEvent): void {
+    const canvas = this.input.getCanvas();
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const clickX = ((e.clientX - rect.left) / rect.width) * this.lastWidth;
+    const clickY = ((e.clientY - rect.top) / rect.height) * this.lastHeight;
+
+    // Check Theme Pill click at (20, height - 44, 170, 32)
+    if (
+      clickX >= 20 &&
+      clickX <= 190 &&
+      clickY >= this.lastHeight - 44 &&
+      clickY <= this.lastHeight - 12
+    ) {
+      this.cycleTheme();
+    }
+  }
+
+  public cycleTheme(): void {
+    const curIdx = THEME_CONFIGS.findIndex((t) => t.id === this.mapTheme);
+    const nextIdx = (curIdx + 1) % THEME_CONFIGS.length;
+    this.setMapTheme(THEME_CONFIGS[nextIdx].id);
+  }
+
+  public setMapTheme(theme: MazeTheme): void {
+    if (this.mapTheme === theme) return;
+    this.mapTheme = theme;
+    this.audio.playTap();
+    this.particles.spawnExplosion(100, this.lastHeight - 28, '#38BDF8', 12);
+    this.syncDebug();
+  }
+
+  private bindKeyboardShortcuts(): void {
+    if (typeof window === 'undefined') return;
+    this.unbindKeyboardShortcuts();
+
+    this.keydownListener = (e: KeyboardEvent) => {
+      if (e.key === 't' || e.key === 'T') {
+        this.cycleTheme();
+      } else if (e.key === '1') {
+        this.setMapTheme('crypt');
+      } else if (e.key === '2') {
+        this.setMapTheme('cyber');
+      } else if (e.key === '3') {
+        this.setMapTheme('volcanic');
+      }
+    };
+    window.addEventListener('keydown', this.keydownListener);
+  }
+
+  private unbindKeyboardShortcuts(): void {
+    if (typeof window !== 'undefined' && this.keydownListener) {
+      window.removeEventListener('keydown', this.keydownListener);
+      this.keydownListener = null;
+    }
+  }
+
+  public override destroy(): void {
+    this.unbindKeyboardShortcuts();
+    if (this.boundPointerDown) {
+      const canvas = this.input.getCanvas();
+      if (canvas) {
+        canvas.removeEventListener('pointerdown', this.boundPointerDown);
+      }
+      this.boundPointerDown = null;
+    }
+    if (typeof window !== 'undefined' && (window as any).__MAZE_ESCAPE_DEBUG__) {
+      delete (window as any).__MAZE_ESCAPE_DEBUG__;
+    }
+  }
+
+  private generateProceduralMap(): void {
     this.wallGrid = Array.from({ length: this.rows }, () =>
       Array.from({ length: this.cols }, () => false)
     );
 
-    // Outer perimeter walls
     for (let c = 0; c < this.cols; c++) {
       this.wallGrid[0][c] = true;
       this.wallGrid[this.rows - 1][c] = true;
@@ -188,17 +342,14 @@ export class MazeEscapeGame extends BaseGame {
     const midR = Math.floor(this.rows / 2);
     const midC = Math.floor(this.cols / 2);
 
-    // Labyrinth walls: regular grid pillars with branching corridors
     for (let r = 2; r < this.rows - 2; r += 2) {
       for (let c = 2; c < this.cols - 2; c += 2) {
-        // Keep central 3x3 vault clear for the Golden Relic
         if (Math.abs(r - midR) <= 1 && Math.abs(c - midC) <= 2) {
           continue;
         }
 
         this.wallGrid[r][c] = true;
 
-        // Branch out in 1 direction to create corridors
         const dirs = [
           { dr: -1, dc: 0 },
           { dr: 1, dc: 0 },
@@ -209,7 +360,6 @@ export class MazeEscapeGame extends BaseGame {
         const branchR = r + chosen.dr;
         const branchC = c + chosen.dc;
 
-        // Do not block center vault or perimeter
         if (
           branchR > 0 &&
           branchR < this.rows - 1 &&
@@ -222,7 +372,6 @@ export class MazeEscapeGame extends BaseGame {
       }
     }
 
-    // Populate Gems in open corridors
     this.gems = [];
     this.gemCounter = 0;
 
@@ -230,7 +379,6 @@ export class MazeEscapeGame extends BaseGame {
       for (let c = 1; c < this.cols - 1; c++) {
         if (!this.wallGrid[r][c]) {
           const isCenter = r === midR && c === midC;
-          // Space out regular gems so the large map has plenty to collect
           if (isCenter || (r % 2 === 1 && c % 2 === 1) || Math.random() < 0.28) {
             this.gems.push({
               id: ++this.gemCounter,
@@ -250,7 +398,6 @@ export class MazeEscapeGame extends BaseGame {
     this.playersState.clear();
     const active = this.getActivePlayers();
 
-    // 4 Corner spawn positions in open corridors
     const corners = [
       { r: 1, c: 1 },
       { r: 1, c: this.cols - 2 },
@@ -281,7 +428,10 @@ export class MazeEscapeGame extends BaseGame {
         facingDx: idx % 2 === 0 ? 1 : -1,
         facingDy: 0,
         safeSpawnX: px,
-        safeSpawnY: py
+        safeSpawnY: py,
+        isUnderdog: false,
+        ghostCooldown: 0,
+        shoveCooldown: 0
       });
     });
   }
@@ -291,7 +441,6 @@ export class MazeEscapeGame extends BaseGame {
     const midR = Math.floor(this.rows / 2);
     const midC = Math.floor(this.cols / 2);
 
-    // 4 Distinct Patrol Quadrants / Invisible Territories
     const zones = [
       {
         id: 1,
@@ -340,7 +489,6 @@ export class MazeEscapeGame extends BaseGame {
     ];
 
     zones.forEach((z) => {
-      // Find open corridor cell in zone for start
       let startC = z.startCol;
       let startR = z.startRow;
       if (this.wallGrid[startR][startC]) {
@@ -394,12 +542,71 @@ export class MazeEscapeGame extends BaseGame {
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
 
+    this.lastWidth = width;
+    this.lastHeight = height;
+    this.animTimer += dt;
     this.roundTimer = Math.max(0, this.roundTimer - dt);
+
+    const isSuddenDeath = this.roundTimer <= 15;
+
+    // Sudden Death Minotaur Enrage Trigger
+    if (isSuddenDeath && !this.suddenDeathAnnounced) {
+      this.suddenDeathAnnounced = true;
+      this.audio.playBoost();
+      this.particles.shake(0.5);
+      this.particles.showFloatingText('⚠️ MINOTAUR ENRAGE! MEGA RELIC! ⚠️', width / 2, height / 2 - 30, '#FACC15', 28);
+
+      // Spawn Mega Golden Relic
+      const midR = Math.floor(this.rows / 2);
+      const midC = Math.floor(this.cols / 2);
+      this.gems.push({
+        id: ++this.gemCounter,
+        x: this.offsetX + (midC + 0.5) * this.cellW,
+        y: this.offsetY + (midR + 0.5) * this.cellH,
+        radius: 18,
+        isRelic: true,
+        collected: false
+      });
+    }
+
+    // Underdog Detection (trailing by >= 150 points)
+    const active = this.getActivePlayers();
+    if (active.length > 1) {
+      let minScore = 999999;
+      let maxScore = -1;
+      for (const p of active) {
+        const ps = this.playersState.get(p.id);
+        if (!ps) continue;
+        if (ps.score < minScore) minScore = ps.score;
+        if (ps.score > maxScore) maxScore = ps.score;
+      }
+
+      for (const p of active) {
+        const ps = this.playersState.get(p.id);
+        if (!ps) continue;
+        ps.isUnderdog = (maxScore - ps.score >= 150);
+
+        // Underdog auto-charges ghost phase cloak
+        if (ps.isUnderdog) {
+          ps.ghostCooldown = Math.max(0, ps.ghostCooldown - dt);
+          if (ps.ghostCooldown <= 0 && ps.ghostTimer <= 0) {
+            ps.ghostTimer = 2.2;
+            ps.ghostCooldown = 6.5;
+            this.audio.playBoost();
+            this.particles.showFloatingText('GHOST CLOAK! 👻', ps.x, ps.y - 25, '#F59E0B', 20);
+          }
+        }
+      }
+    } else {
+      for (const ps of this.playersState.values()) {
+        ps.isUnderdog = false;
+      }
+    }
 
     // Update bot decisions
     this.updateBots(dt, width, height);
 
-    // Relic respawn maintenance
+    // Relic respawn
     if (this.relicRespawnTimer > 0) {
       this.relicRespawnTimer -= dt;
       if (this.relicRespawnTimer <= 0) {
@@ -422,6 +629,8 @@ export class MazeEscapeGame extends BaseGame {
       const ps = this.playersState.get(p.id);
       if (!ps) continue;
 
+      if (ps.shoveCooldown > 0) ps.shoveCooldown = Math.max(0, ps.shoveCooldown - dt);
+
       if (ps.freezeTimer > 0) {
         ps.freezeTimer = Math.max(0, ps.freezeTimer - dt);
         ps.vx = 0;
@@ -433,29 +642,21 @@ export class MazeEscapeGame extends BaseGame {
       if (ps.ghostTimer > 0) ps.ghostTimer = Math.max(0, ps.ghostTimer - dt);
       if (ps.invulnerableTimer > 0) ps.invulnerableTimer = Math.max(0, ps.invulnerableTimer - dt);
 
-      // Read Inputs
       const steer = this.input.getSteer(p.id);
       const throttle = this.input.getThrottle(p.id);
       const rawSteer = this.input.getRawSteer(p.id);
       const rawThrottle = this.input.getRawThrottle(p.id);
 
       let effectiveSteer = 0;
-      if (rawSteer !== 0) {
-        effectiveSteer = rawSteer;
-      } else if (Math.abs(steer) > 0.35) {
-        effectiveSteer = steer;
-      }
+      if (rawSteer !== 0) effectiveSteer = rawSteer;
+      else if (Math.abs(steer) > 0.35) effectiveSteer = steer;
 
       let effectiveThrottle = 0;
-      if (rawThrottle !== 0) {
-        effectiveThrottle = rawThrottle;
-      } else if (Math.abs(throttle) > 0.35) {
-        effectiveThrottle = throttle;
-      }
+      if (rawThrottle !== 0) effectiveThrottle = rawThrottle;
+      else if (Math.abs(throttle) > 0.35) effectiveThrottle = throttle;
 
       const justAction = this.input.justAction(p.id) || this.input.justPressed(p.id);
 
-      // Place trap
       if (justAction && ps.hasTrap) {
         ps.hasTrap = false;
         this.traps.push({
@@ -468,20 +669,19 @@ export class MazeEscapeGame extends BaseGame {
         this.particles.showFloatingText('TRAP SET!', ps.x, ps.y - 20, '#38BDF8', 18);
       }
 
-      // Movement: Clean, 100% direct control. Releasing keys stops character completely!
-      const baseSpeed = ps.speedBoostTimer > 0 ? 250 : 170;
+      const speedMultiplier = ps.isUnderdog ? 1.22 : 1.0;
+      const baseSpeed = (ps.speedBoostTimer > 0 ? 250 : 170) * speedMultiplier;
+
       if (effectiveSteer !== 0 || effectiveThrottle !== 0) {
         ps.vx = effectiveSteer * baseSpeed;
         ps.vy = -effectiveThrottle * baseSpeed;
         if (effectiveSteer !== 0) ps.facingDx = Math.sign(effectiveSteer);
         if (effectiveThrottle !== 0) ps.facingDy = -Math.sign(effectiveThrottle);
       } else {
-        // Zero drift when left alone: character stops dead in tracks!
         ps.vx = 0;
         ps.vy = 0;
       }
 
-      // Wall collision resolution (unless ghost cloak is active)
       if (ps.ghostTimer > 0) {
         ps.x += ps.vx * dt;
         ps.y += ps.vy * dt;
@@ -501,11 +701,12 @@ export class MazeEscapeGame extends BaseGame {
           ps.gemsCollected += 1;
 
           if (gem.isRelic) {
-            ps.score += 250;
+            const points = isSuddenDeath ? 500 : 250;
+            ps.score += points;
             this.relicRespawnTimer = 12.0;
             this.audio.playFanfare();
             this.particles.shake(0.35);
-            this.particles.showFloatingText('GOLDEN RELIC! +250', ps.x, ps.y - 25, '#F59E0B', 24);
+            this.particles.showFloatingText(`GOLDEN RELIC! +${points}`, ps.x, ps.y - 25, '#F59E0B', 24);
             this.particles.spawnConfetti(gem.x, gem.y, 30);
           } else {
             ps.score += 15;
@@ -528,7 +729,7 @@ export class MazeEscapeGame extends BaseGame {
         }
       }
 
-      // Sentry Collisions with Significant Penalty & Distance Creation
+      // Sentry Collisions
       for (let sIdx = 0; sIdx < this.sentries.length; sIdx++) {
         const sentry = this.sentries[sIdx];
         if (sentry.stunTimer > 0 || ps.invulnerableTimer > 0) continue;
@@ -540,12 +741,36 @@ export class MazeEscapeGame extends BaseGame {
       }
     }
 
-    // Update All Sentries (Patrol, Territory Bounds, and Alert Chase)
-    this.updateSentries(dt);
+    // Player Shoving in Corridors
+    for (let i = 0; i < active.length; i++) {
+      for (let j = i + 1; j < active.length; j++) {
+        const p1 = this.playersState.get(active[i].id);
+        const p2 = this.playersState.get(active[j].id);
+        if (!p1 || !p2) continue;
+
+        const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+        if (dist < p1.radius + p2.radius + 2 && p1.shoveCooldown <= 0 && p2.shoveCooldown <= 0) {
+          const pushAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+          const shoveForce = 18;
+          p1.x -= Math.cos(pushAngle) * shoveForce;
+          p1.y -= Math.sin(pushAngle) * shoveForce;
+          p2.x += Math.cos(pushAngle) * shoveForce;
+          p2.y += Math.sin(pushAngle) * shoveForce;
+
+          p1.shoveCooldown = 0.35;
+          p2.shoveCooldown = 0.35;
+
+          this.audio.playBounce();
+          this.particles.showFloatingText('BUMP!', (p1.x + p2.x) / 2, (p1.y + p2.y) / 2 - 18, '#F59E0B', 16);
+        }
+      }
+    }
+
+    // Update Sentries (Enraged in Sudden Death)
+    this.updateSentries(dt, isSuddenDeath);
 
     this.syncDebug();
 
-    // End round check
     const remainingGems = this.gems.filter((g) => !g.collected);
     if (remainingGems.length === 0 || this.roundTimer <= 0) {
       this.isFinished = true;
@@ -557,19 +782,15 @@ export class MazeEscapeGame extends BaseGame {
     const sentry = this.sentries[sentryIndex];
     if (!ps || !sentry) return;
 
-    // 1. Significant Score Penalty & Drop Gems
     const penalty = 120;
     ps.score = Math.max(0, ps.score - penalty);
     const droppedGems = Math.min(ps.gemsCollected, 3);
     ps.gemsCollected = Math.max(0, ps.gemsCollected - droppedGems);
 
-    // 2. Guaranteed Distance Creation:
-    // Knock player 200px away or return to safe spawn corridor
     const repelAngle = Math.atan2(ps.y - sentry.y, ps.x - sentry.x);
     let targetX = ps.x + Math.cos(repelAngle) * 190;
     let targetY = ps.y + Math.sin(repelAngle) * 190;
 
-    // Check if target is inside wall or offscreen; if so, warp to player's safe quadrant spawn
     if (this.checkWallOverlap(targetX, targetY, ps.radius + 2)) {
       targetX = ps.safeSpawnX;
       targetY = ps.safeSpawnY;
@@ -579,10 +800,8 @@ export class MazeEscapeGame extends BaseGame {
     ps.vx = 0;
     ps.vy = 0;
 
-    // 3. Invulnerability shield so player is not immediately re-hit
     ps.invulnerableTimer = 2.4;
 
-    // 4. Stun sentry and reset to territory home
     sentry.stunTimer = 1.5;
     sentry.state = 'RETURN';
     sentry.targetPlayerId = null;
@@ -591,7 +810,6 @@ export class MazeEscapeGame extends BaseGame {
     sentry.x = sentry.homeX;
     sentry.y = sentry.homeY;
 
-    // 5. Sound & VFX feedback
     this.audio.playExplosion();
     this.particles.shake(0.45);
     this.particles.showFloatingText(`SENTRY SMASH! -${penalty} PTS!`, ps.x, ps.y - 30, '#EF4444', 24);
@@ -600,13 +818,11 @@ export class MazeEscapeGame extends BaseGame {
   }
 
   private resolvePlayerWallCollision(ps: MazePlayer, dt: number): void {
-    // Try X movement
     const nextX = ps.x + ps.vx * dt;
     if (!this.checkWallOverlap(nextX, ps.y, ps.radius)) {
       ps.x = nextX;
     }
 
-    // Try Y movement
     const nextY = ps.y + ps.vy * dt;
     if (!this.checkWallOverlap(ps.x, nextY, ps.radius)) {
       ps.y = nextY;
@@ -628,7 +844,6 @@ export class MazeEscapeGame extends BaseGame {
           const wTop = this.offsetY + r * this.cellH;
           const wBottom = wTop + this.cellH;
 
-          // Circle-Box overlap test
           const closeX = Math.max(wLeft, Math.min(x, wRight));
           const closeY = Math.max(wTop, Math.min(y, wBottom));
           if (Math.hypot(x - closeX, y - closeY) < radius) {
@@ -640,7 +855,7 @@ export class MazeEscapeGame extends BaseGame {
     return false;
   }
 
-  private updateSentries(dt: number): void {
+  private updateSentries(dt: number, isEnraged: boolean = false): void {
     for (const sentry of this.sentries) {
       if (sentry.stunTimer > 0) {
         sentry.stunTimer = Math.max(0, sentry.stunTimer - dt);
@@ -652,8 +867,7 @@ export class MazeEscapeGame extends BaseGame {
         if (sentry.alertTimer <= 0) sentry.alertState = 'NONE';
       }
 
-      // Check proximity for players inside sentry's territory
-      const detectionRadius = 145;
+      const detectionRadius = isEnraged ? 210 : 145;
       let detectedPlayer: MazePlayer | null = null;
       let closestDist = 9999;
 
@@ -661,14 +875,13 @@ export class MazeEscapeGame extends BaseGame {
         const ps = this.playersState.get(p.id);
         if (!ps || ps.ghostTimer > 0 || ps.invulnerableTimer > 0) continue;
 
-        // Is player within sentry's invisible boundary/territory?
         const inTerritory =
           ps.x >= sentry.minX - 10 &&
           ps.x <= sentry.maxX + 10 &&
           ps.y >= sentry.minY - 10 &&
           ps.y <= sentry.maxY + 10;
 
-        if (inTerritory) {
+        if (inTerritory || isEnraged) {
           const d = Math.hypot(ps.x - sentry.x, ps.y - sentry.y);
           if (d < detectionRadius && d < closestDist) {
             closestDist = d;
@@ -677,7 +890,6 @@ export class MazeEscapeGame extends BaseGame {
         }
       }
 
-      // State Transitions
       if (detectedPlayer) {
         if (sentry.state !== 'CHASE') {
           sentry.state = 'CHASE';
@@ -688,7 +900,6 @@ export class MazeEscapeGame extends BaseGame {
         }
         sentry.targetPlayerId = detectedPlayer.id;
       } else if (sentry.state === 'CHASE') {
-        // Player fled outside invisible boundary! Sentry gives up chase!
         sentry.state = 'RETURN';
         sentry.targetPlayerId = null;
         sentry.alertState = 'LOST';
@@ -696,13 +907,12 @@ export class MazeEscapeGame extends BaseGame {
         this.particles.showFloatingText('?', sentry.x, sentry.y - 24, '#38BDF8', 20);
       }
 
-      // Movement Execution
-      const currentSpeed = sentry.state === 'CHASE' ? sentry.chaseSpeed : sentry.baseSpeed;
+      const speedMult = isEnraged ? 1.30 : 1.0;
+      const currentSpeed = (sentry.state === 'CHASE' ? sentry.chaseSpeed : sentry.baseSpeed) * speedMult;
 
       if (sentry.state === 'CHASE' && sentry.targetPlayerId !== null) {
         const target = this.playersState.get(sentry.targetPlayerId);
         if (target) {
-          // Pursue along corridor toward player
           const toX = target.x - sentry.x;
           const toY = target.y - sentry.y;
           const angle = Math.atan2(toY, toX);
@@ -711,11 +921,9 @@ export class MazeEscapeGame extends BaseGame {
           let stepVx = Math.cos(angle) * currentSpeed;
           let stepVy = Math.sin(angle) * currentSpeed;
 
-          // Wall and boundary avoidance during chase
           const testX = sentry.x + stepVx * dt;
           const testY = sentry.y + stepVy * dt;
 
-          // Enforce invisible territory boundary: sentry stops at edge
           const clampedX = Math.max(sentry.minX + sentry.radius, Math.min(sentry.maxX - sentry.radius, testX));
           const clampedY = Math.max(sentry.minY + sentry.radius, Math.min(sentry.maxY - sentry.radius, testY));
 
@@ -730,7 +938,6 @@ export class MazeEscapeGame extends BaseGame {
           sentry.vy = stepVy;
         }
       } else if (sentry.state === 'RETURN') {
-        // Return toward home in center of territory
         const toHomeX = sentry.homeX - sentry.x;
         const toHomeY = sentry.homeY - sentry.y;
         const distHome = Math.hypot(toHomeX, toHomeY);
@@ -751,11 +958,9 @@ export class MazeEscapeGame extends BaseGame {
           }
         }
       } else {
-        // PATROL: smooth corridor navigation within territory
         sentry.x += sentry.vx * dt;
         sentry.y += sentry.vy * dt;
 
-        // Check wall collision or reaching invisible boundary
         const hitWall = this.checkWallOverlap(
           sentry.x + Math.sign(sentry.vx) * (sentry.radius + 6),
           sentry.y + Math.sign(sentry.vy) * (sentry.radius + 6),
@@ -768,11 +973,9 @@ export class MazeEscapeGame extends BaseGame {
           sentry.y >= sentry.maxY - sentry.radius - 4;
 
         if (hitWall || hitBoundary) {
-          // Clamp inside boundary
           sentry.x = Math.max(sentry.minX + sentry.radius + 5, Math.min(sentry.maxX - sentry.radius - 5, sentry.x));
           sentry.y = Math.max(sentry.minY + sentry.radius + 5, Math.min(sentry.maxY - sentry.radius - 5, sentry.y));
 
-          // Choose perpendicular open corridor within territory
           const options = [
             { vx: sentry.baseSpeed, vy: 0 },
             { vx: -sentry.baseSpeed, vy: 0 },
@@ -802,43 +1005,6 @@ export class MazeEscapeGame extends BaseGame {
     }
   }
 
-  public syncDebug(): void {
-    if (typeof window !== 'undefined') {
-      const self = this;
-      (window as any).__MAZE_ESCAPE_DEBUG__ = {
-        get players() {
-          return Array.from(self.playersState.values());
-        },
-        get sentries() {
-          return self.sentries;
-        },
-        get sentry() {
-          return self.sentry;
-        },
-        get gems() {
-          return self.gems;
-        },
-        get wallGrid() {
-          return self.wallGrid;
-        },
-        get roundTimer() {
-          return self.roundTimer;
-        },
-        get isFinished() {
-          return self.isFinished;
-        },
-        get cols() {
-          return self.cols;
-        },
-        get rows() {
-          return self.rows;
-        },
-        triggerSentryCollision: (playerId: PlayerId, sentryIndex: number = 0) =>
-          self.handleSentryCollision(playerId, sentryIndex)
-      };
-    }
-  }
-
   public isRoundOver(): boolean {
     return this.isFinished;
   }
@@ -863,7 +1029,6 @@ export class MazeEscapeGame extends BaseGame {
       difficulty === 'bot_hard' ? 0.08 : difficulty === 'bot_normal' ? 0.14 : 0.22;
     ps.botDecisionTimer = interval;
 
-    // 1. Check for incoming sentry threats (threat avoidance)
     let closestSentryDist = 9999;
     let threatSentry: MazeSentry | null = null;
     for (const sentry of this.sentries) {
@@ -874,7 +1039,6 @@ export class MazeEscapeGame extends BaseGame {
       }
     }
 
-    // 2. Candidate corridor directions
     const candidates = [
       { steer: 1, throttle: 0, dx: 1, dy: 0 },
       { steer: -1, throttle: 0, dx: -1, dy: 0 },
@@ -884,7 +1048,7 @@ export class MazeEscapeGame extends BaseGame {
 
     const lookAhead = 16;
     const validMoves = candidates.filter(
-      (c) => !this.checkWallOverlap(ps.x + c.dx * lookAhead, ps.y + c.dy * lookAhead, ps.radius)
+      (c) => ps.ghostTimer > 0 || !this.checkWallOverlap(ps.x + c.dx * lookAhead, ps.y + c.dy * lookAhead, ps.radius)
     );
 
     if (validMoves.length === 0) {
@@ -892,11 +1056,9 @@ export class MazeEscapeGame extends BaseGame {
       return;
     }
 
-    // 3. Score valid moves based on gem proximity and sentry evasion
     let bestMove = validMoves[0];
     let bestScore = -99999;
 
-    // Find best target gem (prioritize relic)
     let targetX = width / 2;
     let targetY = height / 2;
     let minGemDist = 9999;
@@ -915,12 +1077,10 @@ export class MazeEscapeGame extends BaseGame {
       const nextX = ps.x + move.dx * 20;
       const nextY = ps.y + move.dy * 20;
 
-      // Distance to target gem
       const distToGem = Math.hypot(targetX - nextX, targetY - nextY);
       let score = -distToGem;
 
-      // Sentry evasion penalty / reward
-      if (threatSentry) {
+      if (threatSentry && ps.ghostTimer <= 0) {
         const distToSentry = Math.hypot(threatSentry.x - nextX, threatSentry.y - nextY);
         if (distToSentry < 120) {
           score -= (140 - distToSentry) * 4.5;
@@ -928,7 +1088,6 @@ export class MazeEscapeGame extends BaseGame {
           score += distToSentry * 1.5;
         }
 
-        // Fleeing outside sentry territory boundary is heavily rewarded!
         const outsideTerritory =
           nextX < threatSentry.minX ||
           nextX > threatSentry.maxX ||
@@ -939,12 +1098,10 @@ export class MazeEscapeGame extends BaseGame {
         }
       }
 
-      // Avoid reverse oscillating unless dead end
       if (move.dx === -ps.facingDx && move.dy === -ps.facingDy && validMoves.length > 1) {
         score -= 50;
       }
 
-      // Difficulty noise
       if (difficulty === 'bot_easy') {
         score += (Math.random() - 0.5) * 60;
       }
@@ -955,7 +1112,6 @@ export class MazeEscapeGame extends BaseGame {
       }
     }
 
-    // Drop trap if opponents are nearby
     let useTrap = false;
     if (ps.hasTrap && difficulty !== 'bot_easy') {
       for (const p of this.getActivePlayers()) {
@@ -972,17 +1128,19 @@ export class MazeEscapeGame extends BaseGame {
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Maze Backdrop
-    ctx.fillStyle = '#090D16';
+    const theme = THEME_CONFIGS.find((t) => t.id === this.mapTheme) || THEME_CONFIGS[0];
+
+    // Maze Backdrop
+    ctx.fillStyle = theme.bgColor;
     ctx.fillRect(0, 0, width, height);
 
-    // 2. Maze Floor & Wall Grid
-    this.renderMazeWalls(ctx);
+    // Maze Floor & Wall Grid
+    this.renderMazeWalls(ctx, theme);
 
-    // 3. Faint Territory Boundary Guides for Sentries
+    // Territory Boundary Guides
     this.renderTerritoryBoundaries(ctx);
 
-    // 4. Traps
+    // Traps
     for (const trap of this.traps) {
       if (!trap.active) continue;
       ctx.fillStyle = '#38BDF8';
@@ -994,56 +1152,47 @@ export class MazeEscapeGame extends BaseGame {
       ctx.stroke();
     }
 
-    // 5. Gems & Golden Relic
+    // Gems & Golden Relic
     for (const gem of this.gems) {
       if (gem.collected) continue;
-      this.renderGem(ctx, gem);
+      this.renderGem(ctx, gem, theme);
     }
 
-    // 6. Multiple Sentries
+    // Sentries
     for (const sentry of this.sentries) {
       this.renderSentry(ctx, sentry);
     }
 
-    // 7. Players
+    // Players with CharacterRenderer Mascot
     for (const p of this.getActivePlayers()) {
       const ps = this.playersState.get(p.id);
       if (!ps) continue;
-      this.renderMazePlayer(ctx, ps, p.color);
+      this.renderMazePlayer(ctx, ps, p);
     }
 
-    // 8. Center HUD Pod
-    this.renderCenterHudPod(ctx, width);
+    // Center HUD Pod at y = 56
+    this.renderCenterHudPod(ctx, width, theme);
+
+    // Interactive Theme Pill (x: 20, y: height - 44, w: 170, h: 32)
+    this.renderThemePill(ctx, height, theme);
+
+    // Control Hints (Right-aligned)
+    this.renderControlHints(ctx, width, height);
   }
 
-  private renderMazeWalls(ctx: CanvasRenderingContext2D): void {
-    let wallColor = '#1E293B';
-    let wallStroke = '#334155';
-
-    if (this.currentMapName === 'Neon Cyber Grid') {
-      wallColor = '#0F172A';
-      wallStroke = '#06B6D4';
-    } else if (this.currentMapName === 'Overgrown Moss Ruins') {
-      wallColor = '#14532D';
-      wallStroke = '#166534';
-    } else if (this.currentMapName === 'Volcanic Catacombs') {
-      wallColor = '#450A0A';
-      wallStroke = '#7F1D1D';
-    }
-
+  private renderMazeWalls(ctx: CanvasRenderingContext2D, theme: MazeThemeConfig): void {
     for (let r = 0; r < this.rows; r++) {
       for (let c = 0; c < this.cols; c++) {
         const wx = this.offsetX + c * this.cellW;
         const wy = this.offsetY + r * this.cellH;
 
         if (this.wallGrid[r][c]) {
-          ctx.fillStyle = wallColor;
+          ctx.fillStyle = theme.wallColor;
           ctx.fillRect(wx, wy, this.cellW, this.cellH);
-          ctx.strokeStyle = wallStroke;
+          ctx.strokeStyle = theme.wallStroke;
           ctx.lineWidth = 1.2;
           ctx.strokeRect(wx, wy, this.cellW, this.cellH);
         } else {
-          // Floor corridor tile
           ctx.fillStyle = 'rgba(255, 255, 255, 0.015)';
           ctx.fillRect(wx + 1, wy + 1, this.cellW - 2, this.cellH - 2);
         }
@@ -1054,7 +1203,6 @@ export class MazeEscapeGame extends BaseGame {
   private renderTerritoryBoundaries(ctx: CanvasRenderingContext2D): void {
     ctx.save();
     for (const sentry of this.sentries) {
-      // Subtle dashed perimeter marking the sentry's invisible boundary
       ctx.strokeStyle = sentry.state === 'CHASE' ? sentry.color : 'rgba(255, 255, 255, 0.06)';
       ctx.lineWidth = sentry.state === 'CHASE' ? 1.5 : 1;
       ctx.setLineDash([4, 6]);
@@ -1069,33 +1217,32 @@ export class MazeEscapeGame extends BaseGame {
     ctx.restore();
   }
 
-  private renderGem(ctx: CanvasRenderingContext2D, gem: MazeGem): void {
+  private renderGem(ctx: CanvasRenderingContext2D, gem: MazeGem, theme: MazeThemeConfig): void {
     ctx.save();
     ctx.translate(gem.x, gem.y);
 
     if (gem.isRelic) {
-      // Golden Relic Idol
       ctx.beginPath();
       ctx.arc(0, 0, gem.radius, 0, Math.PI * 2);
-      ctx.fillStyle = '#F59E0B';
+      ctx.fillStyle = theme.relicColor;
       ctx.fill();
       ctx.lineWidth = 2.5;
       ctx.strokeStyle = '#FEF08A';
       ctx.stroke();
 
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 13px Inter, sans-serif';
+      ctx.font = '900 13px system-ui, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('★', 0, 4);
+      ctx.textBaseline = 'middle';
+      ctx.fillText('★', 0, 1);
     } else {
-      // Sparkling Cyan Gem
       ctx.beginPath();
       ctx.moveTo(0, -gem.radius);
       ctx.lineTo(gem.radius, 0);
       ctx.lineTo(0, gem.radius);
       ctx.lineTo(-gem.radius, 0);
       ctx.closePath();
-      ctx.fillStyle = '#38BDF8';
+      ctx.fillStyle = theme.gemColor;
       ctx.fill();
       ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = 1;
@@ -1109,7 +1256,6 @@ export class MazeEscapeGame extends BaseGame {
     ctx.save();
     ctx.translate(sentry.x, sentry.y);
 
-    // Alert pulsating aura in CHASE mode
     if (sentry.state === 'CHASE') {
       ctx.beginPath();
       ctx.arc(0, 0, sentry.radius + 8, 0, Math.PI * 2);
@@ -1122,7 +1268,6 @@ export class MazeEscapeGame extends BaseGame {
       ctx.fill();
     }
 
-    // Sentry Body
     ctx.beginPath();
     ctx.arc(0, 0, sentry.radius, 0, Math.PI * 2);
     ctx.fillStyle = sentry.color;
@@ -1131,7 +1276,6 @@ export class MazeEscapeGame extends BaseGame {
     ctx.strokeStyle = '#0F172A';
     ctx.stroke();
 
-    // Spiked Horns
     ctx.fillStyle = '#FBBF24';
     ctx.beginPath();
     ctx.moveTo(-9, -6);
@@ -1147,7 +1291,6 @@ export class MazeEscapeGame extends BaseGame {
     ctx.closePath();
     ctx.fill();
 
-    // Glowing Cyclops Eye (Red if chasing, Yellow if alert, Green/White if patrolling)
     const eyeColor = sentry.state === 'CHASE' ? '#EF4444' : '#FBBF24';
     ctx.fillStyle = eyeColor;
     ctx.beginPath();
@@ -1158,7 +1301,6 @@ export class MazeEscapeGame extends BaseGame {
     ctx.arc(1, -1, 2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Alert / Lost popup icon
     if (sentry.alertState === 'ALERT') {
       ctx.font = '900 16px Inter, sans-serif';
       ctx.fillStyle = '#EF4444';
@@ -1177,19 +1319,34 @@ export class MazeEscapeGame extends BaseGame {
   private renderMazePlayer(
     ctx: CanvasRenderingContext2D,
     ps: MazePlayer,
-    color: string
+    p: PlayerConfig
   ): void {
     ctx.save();
     ctx.translate(ps.x, ps.y);
 
-    // Ghost transparency or invulnerability flashing
     if (ps.ghostTimer > 0) {
       ctx.globalAlpha = 0.55;
     } else if (ps.invulnerableTimer > 0 && Math.floor(performance.now() / 100) % 2 === 0) {
       ctx.globalAlpha = 0.45;
     }
 
-    // Invulnerability Protective Shield Sphere
+    // Underdog Ghost Aura
+    if (ps.isUnderdog) {
+      ctx.save();
+      ctx.strokeStyle = '#F59E0B';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(0, 0, ps.radius + 6, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#F59E0B';
+      ctx.font = '900 8px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('GHOST 👻', 0, ps.radius + 14);
+      ctx.restore();
+    }
+
     if (ps.invulnerableTimer > 0) {
       ctx.beginPath();
       ctx.arc(0, 0, ps.radius + 6, 0, Math.PI * 2);
@@ -1200,22 +1357,27 @@ export class MazeEscapeGame extends BaseGame {
       ctx.stroke();
     }
 
-    // Floor Shadow
     ctx.beginPath();
     ctx.ellipse(0, 7, 9, 3.5, 0, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
     ctx.fill();
 
-    // Player Circle Body
-    ctx.beginPath();
-    ctx.arc(0, 0, ps.radius, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#0F172A';
-    ctx.stroke();
+    let mood: CharacterMood = 'focused';
+    if (ps.freezeTimer > 0) {
+      mood = 'shocked';
+    } else if (ps.ghostTimer > 0 || ps.speedBoostTimer > 0) {
+      mood = 'triumph';
+    } else if (ps.isUnderdog) {
+      mood = 'focused';
+    } else {
+      mood = 'happy';
+    }
 
-    // Ice cube overlay if frozen
+    const isBot = p.type.startsWith('bot_');
+
+    // Mascot Avatar via CharacterRenderer
+    drawCharacter(ctx, 0, 0, ps.radius + 2, p.id, isBot, mood, this.animTimer * 4);
+
     if (ps.freezeTimer > 0) {
       ctx.fillStyle = 'rgba(56, 189, 248, 0.6)';
       ctx.fillRect(-ps.radius - 2, -ps.radius - 2, (ps.radius + 2) * 2, (ps.radius + 2) * 2);
@@ -1224,31 +1386,15 @@ export class MazeEscapeGame extends BaseGame {
       ctx.strokeRect(-ps.radius - 2, -ps.radius - 2, (ps.radius + 2) * 2, (ps.radius + 2) * 2);
     }
 
-    // Eyes facing movement direction
-    const eyeOffsetX = ps.facingDx * 3;
-    const eyeOffsetY = ps.facingDy * 3;
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.arc(-3 + eyeOffsetX, -3 + eyeOffsetY, 2.8, 0, Math.PI * 2);
-    ctx.arc(3 + eyeOffsetX, -3 + eyeOffsetY, 2.8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#0F172A';
-    ctx.beginPath();
-    ctx.arc(-3 + eyeOffsetX, -3 + eyeOffsetY, 1.4, 0, Math.PI * 2);
-    ctx.arc(3 + eyeOffsetX, -3 + eyeOffsetY, 1.4, 0, Math.PI * 2);
-    ctx.fill();
-
     ctx.restore();
 
-    // Score Tag above player
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = '800 11px Inter, sans-serif';
+    ctx.font = '800 11px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(`${ps.score}`, ps.x, ps.y - 17);
   }
 
-  private renderCenterHudPod(ctx: CanvasRenderingContext2D, width: number): void {
+  private renderCenterHudPod(ctx: CanvasRenderingContext2D, width: number, theme: MazeThemeConfig): void {
     const podW = 380;
     const podH = 26;
     const podX = width / 2 - podW / 2;
@@ -1263,30 +1409,80 @@ export class MazeEscapeGame extends BaseGame {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Map Name Badge
-    ctx.font = '700 11px Inter, system-ui, sans-serif';
+    ctx.font = '700 11px system-ui, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillStyle = '#38BDF8';
-    ctx.fillText(`MAZE: ${this.currentMapName}`, podX + 14, podY + 17);
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = theme.pillColor;
+    ctx.fillText(theme.name.toUpperCase(), podX + 14, podY + podH / 2);
 
-    // Sentry status in center
-    ctx.font = '700 11px Inter, sans-serif';
+    ctx.font = '700 11px system-ui, sans-serif';
     ctx.textAlign = 'center';
     const chasingCount = this.sentries.filter((s) => s.state === 'CHASE').length;
-    if (chasingCount > 0) {
+    if (this.roundTimer <= 15) {
+      ctx.fillStyle = '#FACC15';
+      ctx.fillText('⚡ MINOTAUR ENRAGE!', width / 2, podY + podH / 2);
+    } else if (chasingCount > 0) {
       ctx.fillStyle = '#EF4444';
-      ctx.fillText(`⚠️ ${chasingCount} SENTRIES ALERT!`, width / 2, podY + 17);
+      ctx.fillText(`⚠️ ${chasingCount} SENTRIES ALERT!`, width / 2, podY + podH / 2);
     } else {
       ctx.fillStyle = '#10B981';
-      ctx.fillText(`4 SENTRIES PATROLLING`, width / 2, podY + 17);
+      ctx.fillText(`4 SENTRIES PATROLLING`, width / 2, podY + podH / 2);
     }
 
-    // Timer display
-    ctx.font = '700 12px Inter, system-ui, sans-serif';
+    // Mini status dots for players
     ctx.textAlign = 'right';
-    const timerColor = this.roundTimer < 10 ? '#EF4444' : '#F1F5F9';
-    ctx.fillStyle = timerColor;
-    ctx.fillText(`TIME: ${this.roundTimer.toFixed(1)}s`, podX + podW - 14, podY + 17);
+    let dotX = podX + podW - 14;
+    const active = this.getActivePlayers();
+    for (let i = active.length - 1; i >= 0; i--) {
+      const p = active[i];
+      ctx.beginPath();
+      ctx.arc(dotX, podY + podH / 2, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      dotX -= 12;
+    }
+  }
+
+  private renderThemePill(ctx: CanvasRenderingContext2D, height: number, theme: MazeThemeConfig): void {
+    const pillX = 20;
+    const pillY = height - 44;
+    const pillW = 170;
+    const pillH = 32;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, 16);
+    ctx.fill();
+
+    ctx.strokeStyle = theme.pillColor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '700 11px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(theme.name, pillX + 14, pillY + pillH / 2);
+
+    ctx.fillStyle = '#94A3B8';
+    ctx.font = '600 10px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('[T]', pillX + pillW - 12, pillY + pillH / 2);
+    ctx.restore();
+  }
+
+  private renderControlHints(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    ctx.save();
+    ctx.font = '600 11px system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.fillText('Arrows/WASD: Move | Space/Action: Drop Trap', width - 24, height - 28);
+    ctx.restore();
   }
 
   public getRoundResult(): RoundResult {
