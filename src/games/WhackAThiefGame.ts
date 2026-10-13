@@ -225,17 +225,18 @@ export class WhackAThiefGame extends BaseGame {
     for (let i = 0; i < count; i++) {
       const idx = Math.floor(Math.random() * emptyBoxes.length);
       const box = emptyBoxes.splice(idx, 1)[0];
-
-      const roll = Math.random();
-      if (roll < 0.20) {
-        box.state = 'shock_trap';
-      } else if (roll < 0.40) {
-        box.state = 'gold_thief';
-      } else {
-        box.state = 'thief';
+      if (box) {
+        const roll = Math.random();
+        if (roll < 0.20) {
+          box.state = 'shock_trap';
+        } else if (roll < 0.40) {
+          box.state = 'gold_thief';
+        } else {
+          box.state = 'thief';
+        }
+        box.stateTimer = 1.1 + Math.random() * 0.4;
+        box.isHit = false;
       }
-      box.stateTimer = 1.1 + Math.random() * 0.4;
-      box.isHit = false;
     }
   }
 

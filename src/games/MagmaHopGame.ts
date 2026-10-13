@@ -402,7 +402,9 @@ export class MagmaHopGame extends BaseGame {
     for (let i = 0; i < count; i++) {
       const pickIdx = Math.floor(Math.random() * candidatePillars.length);
       const chosen = candidatePillars.splice(pickIdx, 1)[0];
-      chosen.geyserWarningTimer = 1.2; // 1.2s clear telegraph
+      if (chosen) {
+        chosen.geyserWarningTimer = 1.2; // 1.2s clear telegraph
+      }
     }
   }
 
