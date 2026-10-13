@@ -382,11 +382,13 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Balloon Burst'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *'Balloon Burst'* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Core Gameplay & Objective Overhaul:** Redesigned into a true high-stakes **Push-Your-Luck Capacity Multiplier**: $0-55\%$ capacity ($1\times$), $55-78\%$ capacity ($2\times$), $78-92\%$ capacity ($3\times$ Danger Zone), and $92-99\%$ capacity ($5\times$ **Golden Jackpot Zone**). Greedy overpumping causes an explosive **POP** yielding 0 points.
+2. **Controls & Tactility Overhaul:** Hold-to-pump air valve with mechanical T-handle animations, analog pressure needle gauge, strain cracks, and dynamic balloon wobble that intensifies with rising pressure.
+3. **Multiplayer Chaos & Comeback Mechanic:** Trailing players down by $\ge 250$ points activate **Underdog Double-Wall Protection**: $+15\%$ burst limit expansion cushion and dashed golden halo so they can safely target the $5\times$ Golden Jackpot without popping early!
+4. **Visual & Audio Juice Polish:** 3 Procedural Visual Themes (*Carnival Fair 🎪*, *Neon Circus ⚡*, *Sunset Boardwalk 🌅*) with hanging bunting pennants, glowing light pegs, and wooden stage planks. Animated character mascots pumping the floor valves with emotional facial expressions (`focused` $\to$ `shocked` in danger zone $\to$ `triumph` on sealing $\to$ `shocked` on pop). Interactive bottom-left Theme Pill (`x: 20, y: height - 44, w: 170, h: 32`, shortcut `[T]`).
+5. **Humanized AI Tuning:** Bot AI calibrates risk appetite across difficulty (Hard: $93-97\%$ push for 5X jackpot; Normal: $81-88\%$ for 2X/3X; Easy: $28\%$ chance of greedy overpump explosion, else early release).
+
+#### ✅ STATUS: FULLY RESOLVED & VERIFIED (0 TypeScript/Vite Errors, Built in Antigravity_Games.html)
 
 ### #17. Swat the Fly (ID: `swat_fly`) — [Reflex]
 - **Class Implementation:** `src/games/SwatFlyGame.ts` (656 lines)
