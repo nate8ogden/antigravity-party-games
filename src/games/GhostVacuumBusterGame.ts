@@ -159,9 +159,10 @@ export class GhostVacuumBusterGame extends BaseGame {
 
             if (Math.abs(angleDiff) < coneAngle) {
               // Pull ghost inward towards player nozzle
+              const safeDist = Math.max(0.001, dist);
               const pullSpeed = 180 * (1 - dist / coneRange) + 60;
-              g.x -= (dx / dist) * pullSpeed * dt;
-              g.y -= (dy / dist) * pullSpeed * dt;
+              g.x -= (dx / safeDist) * pullSpeed * dt;
+              g.y -= (dy / safeDist) * pullSpeed * dt;
 
               // Check if captured
               if (dist < 32) {

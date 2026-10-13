@@ -255,8 +255,8 @@ export class PacMazeChompGame extends BaseGame {
     if (nearest) {
       const dx = nearest.x - ps.x;
       const dy = nearest.y - ps.y;
-      const dist = Math.hypot(dx, dy);
-      this.input.setBotInput(botId, true, dx / dist, -dy / dist);
+      const safeDist = Math.hypot(dx, dy) || 1;
+      this.input.setBotInput(botId, true, dx / safeDist, -dy / safeDist);
     } else {
       this.input.setBotInput(botId, false, 0, 0);
     }
