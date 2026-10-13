@@ -3,52 +3,121 @@ import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
+import { drawCharacter, CharacterMood } from '../core/CharacterRenderer';
 
-interface FloatingHit {
-  text: string;
+interface FoodItem {
+  id: number;
+  name: string;
   color: string;
+  points: number;
+  radius: number;
+  isGolden?: boolean;
+  isHazard?: boolean;
   x: number;
   y: number;
-  alpha: number;
-  scale: number;
-}
-
-interface SizzlingFood {
-  id: number;
-  type: 'shrimp' | 'zucchini' | 'mushroom' | 'ember';
-  x: number;
-  y: number; // altitude relative to spatula level
-  vy: number;
   vx: number;
-  rotation: number;
-  vRot: number;
-  cookStage: number; // 0 = raw, 1 = seared, 2 = flambé, 3 = ready to serve!
-  juggleCount: number;
+  vy: number;
+  rot: number;
+  rotSpeed: number;
 }
 
-interface HibachiStation {
+const FOOD_TEMPLATES = [
+  { name: 'Tiger Shrimp', color: '#FF7043', points: 15, radius: 14 },
+  { name: 'Grilled Zucchini', color: '#66BB6A', points: 12, radius: 13 },
+  { name: 'Shiitake Mushroom', color: '#8D6E63', points: 15, radius: 13 },
+  { name: 'Sirloin Cube', color: '#D84315', points: 24, radius: 14 },
+  { name: 'Golden Wagyu', color: '#FFD700', points: 45, radius: 16, isGolden: true },
+  { name: 'Burning Ember', color: '#37474F', points: -15, radius: 12, isHazard: true }
+];
+
+interface TeppanyakiChef {
   id: PlayerId;
   x: number;
-  y: number; // Spatula / Griddle height
-  foods: SizzlingFood[];
-  spawnTimer: number;
-  spatulaAnim: number;
-  spatulaAngle: number;
-  score: number;
-  combo: number;
-  shrimpServed: number;
-  flameBoostTimer: number;
+  y: number;
+  vx: number;
+  chargeTime: number;
+  isCharging: boolean;
+  bowlItems: string[];
+  loftAltitude: number;
+  vLoft: number;
+  shuntCooldown: number;
+  shuntActiveTimer: number;
+  shuntDir: number;
   stunTimer: number;
-  shakeTimer: number;
-  floatingHits: FloatingHit[];
+  score: number;
+  plattersServed: number;
+  combo: number;
+  isUnderdog: boolean;
+  mood: CharacterMood;
+  moodTimer: number;
+  animTimer: number;
 }
 
-export class TeppanyakiCatchGame extends BaseGame {
-  public playersState: Map<PlayerId, HibachiStation> = new Map();
-  public currentMapName: string = 'Tokyo Hibachi Teppanyaki Grill';
+interface TeppanyakiTheme {
+  id: string;
+  name: string;
+  icon: string;
+  bgTop: string;
+  bgBottom: string;
+  griddleColor: string;
+  griddleTrim: string;
+  counterColor: string;
+  accentColor: string;
+}
 
-  private foodIdCounter: number = 0;
+const THEMES: TeppanyakiTheme[] = [
+  {
+    id: 'ginza_steakhouse',
+    name: 'Ginza Hibachi 🥩',
+    icon: '🥩',
+    bgTop: '#1A0E0A',
+    bgBottom: '#0A0503',
+    griddleColor: '#263238',
+    griddleTrim: '#FF5722',
+    counterColor: '#3E2723',
+    accentColor: '#FFD54F'
+  },
+  {
+    id: 'cyber_teppan',
+    name: 'Cyber Teppan ⚡',
+    icon: '⚡',
+    bgTop: '#080E18',
+    bgBottom: '#02050A',
+    griddleColor: '#1A233A',
+    griddleTrim: '#00E5FF',
+    counterColor: '#0E1726',
+    accentColor: '#00E5FF'
+  },
+  {
+    id: 'osaka_street_grill',
+    name: 'Osaka Street Grill 🏮',
+    icon: '🏮',
+    bgTop: '#210C0C',
+    bgBottom: '#0D0404',
+    griddleColor: '#37474F',
+    griddleTrim: '#E53935',
+    counterColor: '#4E342E',
+    accentColor: '#FF9800'
+  }
+];
+
+export class TeppanyakiCatchGame extends BaseGame {
+  public currentMapName: string = 'Ginza Hibachi 🥩';
+  private currentThemeIdx: number = 0;
+
+  private chefs: Map<PlayerId, TeppanyakiChef> = new Map();
+  private flyingFoods: FoodItem[] = [];
+  private nextFoodId: number = 1;
+  private foodSpawnTimer: number = 0.5;
+
   private botReactionTimers: Map<PlayerId, number> = new Map();
+  private botTargetFood: Map<PlayerId, number | null> = new Map();
+
+  private screenShake: number = 0;
+  private hitStopTimer: number = 0;
+
+  private keydownHandler?: (e: KeyboardEvent) => void;
+  private clickHandler?: (e: MouseEvent) => void;
 
   constructor(
     players: PlayerConfig[],
@@ -58,6 +127,52 @@ export class TeppanyakiCatchGame extends BaseGame {
   ) {
     super(players, input, audio, particles);
     this.roundTimer = 35.0;
+
+    if (typeof window !== 'undefined') {
+      this.keydownHandler = (e: KeyboardEvent) => {
+        if (e.code === 'KeyT') {
+          this.cycleTheme();
+        } else if (e.code === 'Digit1') {
+          this.setTheme(0);
+        } else if (e.code === 'Digit2') {
+          this.setTheme(1);
+        } else if (e.code === 'Digit3') {
+          this.setTheme(2);
+        }
+      };
+      window.addEventListener('keydown', this.keydownHandler);
+
+      this.clickHandler = (e: MouseEvent) => {
+        const canvas = document.querySelector('canvas');
+        if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const clickX = (e.clientX - rect.left) * scaleX;
+        const clickY = (e.clientY - rect.top) * scaleY;
+        const pillX = 20;
+        const pillY = canvas.height - 44;
+        const pillW = 170;
+        const pillH = 32;
+
+        if (
+          clickX >= pillX &&
+          clickX <= pillX + pillW &&
+          clickY >= pillY &&
+          clickY <= pillY + pillH
+        ) {
+          this.cycleTheme();
+        }
+      };
+      window.addEventListener('click', this.clickHandler);
+    }
+  }
+
+  public override destroy(): void {
+    if (typeof window !== 'undefined') {
+      if (this.keydownHandler) window.removeEventListener('keydown', this.keydownHandler);
+      if (this.clickHandler) window.removeEventListener('click', this.clickHandler);
+    }
   }
 
   public init(width: number, height: number): void {
@@ -67,145 +182,237 @@ export class TeppanyakiCatchGame extends BaseGame {
   public reset(width: number = 800, height: number = 600): void {
     this.roundTimer = 35.0;
     this.isFinished = false;
-    this.playersState.clear();
+    this.screenShake = 0;
+    this.hitStopTimer = 0;
+    this.flyingFoods = [];
+    this.chefs.clear();
     this.botReactionTimers.clear();
+    this.botTargetFood.clear();
 
     const active = this.getActivePlayers();
     const count = active.length;
     const spacing = width / (count + 1);
-    const griddleY = height * 0.58;
 
     active.forEach((p, idx) => {
-      // Pre-seed an initial shrimp arcing toward each chef's spatulas
-      const initialFoods: SizzlingFood[] = [
-        {
-          id: ++this.foodIdCounter,
-          type: 'shrimp',
-          x: 0,
-          y: -70,
-          vy: 90,
-          vx: 0,
-          rotation: 0.3,
-          vRot: 2.0,
-          cookStage: 0,
-          juggleCount: 0
-        }
-      ];
-
-      this.playersState.set(p.id, {
+      this.chefs.set(p.id, {
         id: p.id,
         x: spacing * (idx + 1),
-        y: griddleY - 24,
-        foods: initialFoods,
-        spawnTimer: 0.6 + Math.random() * 0.4,
-        spatulaAnim: 0,
-        spatulaAngle: 0,
-        score: 0,
-        combo: 0,
-        shrimpServed: 0,
-        flameBoostTimer: 0,
+        y: height - 110,
+        vx: 0,
+        chargeTime: 0,
+        isCharging: false,
+        bowlItems: [],
+        loftAltitude: 0,
+        vLoft: 0,
+        shuntCooldown: 0,
+        shuntActiveTimer: 0,
+        shuntDir: 0,
         stunTimer: 0,
-        shakeTimer: 0,
-        floatingHits: []
+        score: 0,
+        plattersServed: 0,
+        combo: 0,
+        isUnderdog: false,
+        mood: 'idle',
+        moodTimer: 0,
+        animTimer: Math.random() * 5
       });
-      this.botReactionTimers.set(p.id, 0.2 + Math.random() * 0.2);
+      this.botReactionTimers.set(p.id, 0.15 + Math.random() * 0.1);
+      this.botTargetFood.set(p.id, null);
     });
+
+    this.currentThemeIdx = 0;
+    this.currentMapName = THEMES[0].name;
   }
 
-  public update(dt: number, _width: number, _height: number): void {
+  public cycleTheme(): void {
+    this.currentThemeIdx = (this.currentThemeIdx + 1) % THEMES.length;
+    this.currentMapName = THEMES[this.currentThemeIdx].name;
+    this.audio.playTap();
+  }
+
+  public setTheme(index: number): void {
+    if (index >= 0 && index < THEMES.length) {
+      this.currentThemeIdx = index;
+      this.currentMapName = THEMES[this.currentThemeIdx].name;
+      this.audio.playTap();
+    }
+  }
+
+  public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
+
+    if (this.screenShake > 0) {
+      this.screenShake = Math.max(0, this.screenShake - dt * 30);
+    }
+
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer -= dt;
+      return;
+    }
 
     this.roundTimer = Math.max(0, this.roundTimer - dt);
 
-    this.updateBots(dt, _width, _height);
+    // Identify leader score for Underdog surge
+    let maxScore = 0;
+    for (const c of this.chefs.values()) {
+      if (c.score > maxScore) maxScore = c.score;
+    }
 
+    // Update bots
+    this.updateBots(dt, width, height);
+
+    // Spawning flying food parabolas
+    this.foodSpawnTimer -= dt;
+    const spawnRate = this.roundTimer < 15 ? 0.42 : 0.72;
+    if (this.foodSpawnTimer <= 0) {
+      this.foodSpawnTimer = spawnRate + Math.random() * 0.3;
+      this.spawnFlyingFood(width);
+    }
+
+    // Update flying food
+    for (let i = this.flyingFoods.length - 1; i >= 0; i--) {
+      const f = this.flyingFoods[i];
+      f.x += f.vx * dt;
+      f.y += f.vy * dt;
+      f.vy += 240 * dt; // gravity
+      f.rot += f.rotSpeed * dt;
+
+      // Splat on iron griddle
+      if (f.y > height - 70) {
+        this.particles.emit(f.x, height - 75, 4, f.color);
+        this.flyingFoods.splice(i, 1);
+      }
+    }
+
+    // Update chefs
     for (const p of this.getActivePlayers()) {
-      const st = this.playersState.get(p.id);
-      if (!st) continue;
+      const chef = this.chefs.get(p.id);
+      if (!chef) continue;
 
-      // Update timers
-      if (st.spatulaAnim > 0) st.spatulaAnim = Math.max(0, st.spatulaAnim - dt * 6);
-      if (st.stunTimer > 0) st.stunTimer = Math.max(0, st.stunTimer - dt);
-      if (st.shakeTimer > 0) st.shakeTimer = Math.max(0, st.shakeTimer - dt);
-      if (st.flameBoostTimer > 0) st.flameBoostTimer = Math.max(0, st.flameBoostTimer - dt);
+      chef.animTimer += dt;
+      if (chef.moodTimer > 0) {
+        chef.moodTimer -= dt;
+        if (chef.moodTimer <= 0) chef.mood = 'idle';
+      }
 
-      // Update floating texts
-      for (let i = st.floatingHits.length - 1; i >= 0; i--) {
-        const hit = st.floatingHits[i];
-        hit.y -= dt * 32;
-        hit.alpha -= dt * 1.5;
-        hit.scale = Math.min(1.2, hit.scale + dt * 0.8);
-        if (hit.alpha <= 0) {
-          st.floatingHits.splice(i, 1);
+      // Check Underdog
+      chef.isUnderdog = maxScore >= 35 && chef.score <= maxScore - 30;
+
+      // Handle Stun
+      if (chef.stunTimer > 0) {
+        chef.stunTimer -= dt;
+        chef.vx *= 0.85;
+        chef.x += chef.vx * dt;
+        chef.x = Math.max(45, Math.min(width - 45, chef.x));
+        continue;
+      }
+
+      // Handle Shunt Cooldown & Active Timer
+      if (chef.shuntCooldown > 0) chef.shuntCooldown -= dt;
+      if (chef.shuntActiveTimer > 0) {
+        chef.shuntActiveTimer -= dt;
+        chef.vx = chef.shuntDir * 580;
+        this.particles.emit(chef.x - chef.shuntDir * 16, chef.y - 15, 2, '#FF5722');
+      }
+
+      // Loft altitude physics
+      if (chef.loftAltitude > 0 || chef.vLoft !== 0) {
+        chef.loftAltitude += chef.vLoft * dt;
+        chef.vLoft -= 580 * dt;
+        if (chef.loftAltitude <= 0) {
+          chef.loftAltitude = 0;
+          chef.vLoft = 0;
         }
       }
 
-      // Food Spawner
-      st.spawnTimer -= dt;
-      if (st.spawnTimer <= 0 && st.foods.length < 4) {
-        st.spawnTimer = 0.85 + Math.random() * 0.65;
+      const steer = this.input.getSteer(p.id);
+      const isAction = this.input.isActionPressed(p.id) || this.input.isPressed(p.id);
 
-        const rand = Math.random();
-        let type: 'shrimp' | 'zucchini' | 'mushroom' | 'ember' = 'shrimp';
-        if (rand < 0.12) {
-          type = 'ember'; // Burning charcoal ember hazard!
-        } else if (rand < 0.35) {
-          type = 'mushroom';
-        } else if (rand < 0.60) {
-          type = 'zucchini';
+      const baseSpeed = chef.isUnderdog ? 330 : 270;
+
+      // Hold-to-Charge Loft & Spatula Shunt
+      if (isAction && chef.shuntActiveTimer <= 0) {
+        chef.isCharging = true;
+        chef.chargeTime = Math.min(1.0, chef.chargeTime + dt * 2.2);
+
+        const chargeMoveSpeed = baseSpeed * 0.45;
+        if (Math.abs(steer) > 0.15) {
+          chef.vx = steer * chargeMoveSpeed;
+        } else {
+          chef.vx *= 0.8;
         }
-
-        st.foods.push({
-          id: ++this.foodIdCounter,
-          type,
-          x: (Math.random() - 0.5) * 24,
-          y: -110,
-          vy: 110 + Math.random() * 30,
-          vx: (Math.random() - 0.5) * 20,
-          rotation: Math.random() * Math.PI,
-          vRot: (Math.random() - 0.5) * 4,
-          cookStage: 0,
-          juggleCount: 0
-        });
-      }
-
-      // Update foods on the griddle
-      for (let i = st.foods.length - 1; i >= 0; i--) {
-        const food = st.foods[i];
-        food.y += food.vy * dt;
-        food.x += food.vx * dt;
-        food.vy += 490 * dt; // Gravity
-        food.rotation += food.vRot * dt;
-
-        // Food dropped onto the scorching iron grill without being juggled
-        if (food.y > 18) {
-          if (food.type === 'ember') {
-            // Embers burn out safely on the plate
-            this.particles.emit(st.x + food.x, st.y + 14, 3, '#424242');
-          } else {
-            // Scorched burnt food!
-            st.combo = 0;
-            st.score = Math.max(0, st.score - 8);
-            this.audio.playExplosion();
-            this.particles.emit(st.x + food.x, st.y + 14, 6, '#3E2723');
-
-            st.floatingHits.push({
-              text: 'SCORCHED! -8',
-              color: '#FF1744',
-              x: food.x,
-              y: 0,
-              alpha: 1.0,
-              scale: 1.0
-            });
+      } else {
+        if (chef.isCharging) {
+          // Release: Flambé Loft or Spatula Shunt!
+          chef.isCharging = false;
+          if (chef.chargeTime > 0.2) {
+            this.executeChefAction(chef, steer);
           }
-          st.foods.splice(i, 1);
+          chef.chargeTime = 0;
+        } else if (chef.shuntActiveTimer <= 0) {
+          if (Math.abs(steer) > 0.15) {
+            chef.vx = steer * baseSpeed;
+          } else {
+            chef.vx *= 0.82;
+          }
         }
       }
 
-      // Check player input
-      const justAction = this.input.justAction(p.id) || this.input.justPressed(p.id);
-      if (justAction) {
-        this.handleSpatulaFlick(st);
+      chef.x += chef.vx * dt;
+      // Screen bounds
+      if (chef.x < 50) {
+        chef.x = 50;
+        chef.vx = 0;
+      }
+      if (chef.x > width - 50) {
+        chef.x = width - 50;
+        chef.vx = 0;
+      }
+
+      // Catch Falling Food in Bowl
+      const bowlX = chef.x + (chef.vx > 10 ? 12 : chef.vx < -10 ? -12 : 6);
+      const bowlY = chef.y - 28;
+      const catchRadius = chef.isUnderdog ? 36 : 26;
+
+      for (let i = this.flyingFoods.length - 1; i >= 0; i--) {
+        const f = this.flyingFoods[i];
+        const dist = Math.hypot(f.x - bowlX, f.y - bowlY);
+
+        if (dist < catchRadius + f.radius) {
+          this.catchFood(chef, f);
+          this.flyingFoods.splice(i, 1);
+        }
+      }
+    }
+
+    // Inter-Player Body & Shunt Collisions
+    const chefsArr = this.getActivePlayers().map(p => this.chefs.get(p.id)!);
+    for (let i = 0; i < chefsArr.length; i++) {
+      for (let j = i + 1; j < chefsArr.length; j++) {
+        const c1 = chefsArr[i];
+        const c2 = chefsArr[j];
+        const dist = Math.abs(c1.x - c2.x);
+        const touchDist = 48;
+
+        if (dist < touchDist) {
+          const overlap = touchDist - dist;
+          const dir = c1.x < c2.x ? -1 : 1;
+          c1.x += dir * overlap * 0.5;
+          c2.x -= dir * overlap * 0.5;
+
+          // Check if one was shunting
+          if (c1.shuntActiveTimer > 0 && c2.shuntActiveTimer <= 0) {
+            this.executeSpatulaShunt(c1, c2, -dir);
+          } else if (c2.shuntActiveTimer > 0 && c1.shuntActiveTimer <= 0) {
+            this.executeSpatulaShunt(c2, c1, dir);
+          } else {
+            // Normal bump
+            const avgVx = (c1.vx + c2.vx) * 0.5;
+            c1.vx = avgVx + dir * 110;
+            c2.vx = avgVx - dir * 110;
+            this.audio.playBounce();
+          }
+        }
       }
     }
 
@@ -214,120 +421,139 @@ export class TeppanyakiCatchGame extends BaseGame {
     }
   }
 
-  /**
-   * Action handler: Lightning dual-spatula pop flip!
-   */
-  private handleSpatulaFlick(st: HibachiStation): void {
-    if (st.stunTimer > 0) return;
+  private spawnFlyingFood(width: number): void {
+    const margin = 70;
+    const x = margin + Math.random() * (width - margin * 2);
+    const isSuddenDeath = this.roundTimer < 15;
+    let pool = FOOD_TEMPLATES;
+    if (isSuddenDeath) {
+      pool = [
+        ...FOOD_TEMPLATES,
+        FOOD_TEMPLATES[4], // Golden Wagyu
+        FOOD_TEMPLATES[0]  // Tiger Shrimp
+      ];
+    }
+    const template = pool[Math.floor(Math.random() * pool.length)];
 
-    st.spatulaAnim = 1.0;
+    this.flyingFoods.push({
+      id: this.nextFoodId++,
+      name: template.name,
+      color: template.color,
+      points: template.points,
+      radius: template.radius,
+      isGolden: template.isGolden,
+      isHazard: template.isHazard,
+      x,
+      y: 70,
+      vx: (Math.random() - 0.5) * 80,
+      vy: 110 + Math.random() * 60,
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 3
+    });
+  }
 
-    // Strike Zone: y between -26 and 14
-    let bestIdx = -1;
-    let bestDist = 9999;
-
-    for (let i = 0; i < st.foods.length; i++) {
-      const f = st.foods[i];
-      if (f.y >= -28 && f.y <= 16 && f.vy > 0) {
-        const dist = Math.abs(f.y - (-4));
-        if (dist < bestDist) {
-          bestDist = dist;
-          bestIdx = i;
-        }
+  private catchFood(chef: TeppanyakiChef, food: FoodItem): void {
+    if (food.isHazard) {
+      // Burning ember! If not underdog, causes burn stun
+      if (!chef.isUnderdog) {
+        chef.score = Math.max(0, chef.score + food.points);
+        chef.stunTimer = 0.85;
+        chef.combo = 0;
+        chef.mood = 'shocked';
+        chef.moodTimer = 1.0;
+        this.audio.playExplosion();
+        this.screenShake = 6;
+        this.particles.emit(chef.x, chef.y - 25, 12, food.color);
+        return;
       }
     }
 
-    if (bestIdx !== -1) {
-      const food = st.foods[bestIdx];
+    chef.bowlItems.push(food.name);
+    chef.score += food.points;
+    chef.combo++;
+    chef.mood = 'happy';
+    chef.moodTimer = 0.6;
+    this.audio.playTap();
+    this.particles.emit(chef.x, chef.y - 25, 6, food.color);
+  }
 
-      if (food.type === 'ember') {
-        // HAZARD: BURNING CHARCOAL EMBER HIT!
-        st.score = Math.max(0, st.score - 20);
-        st.combo = 0;
-        st.stunTimer = 0.9;
-        st.shakeTimer = 0.4;
-        st.foods.splice(bestIdx, 1);
-
-        this.audio.playExplosion();
-        this.particles.emit(st.x, st.y, 8, '#FF3D00');
-
-        st.floatingHits.push({
-          text: 'BURNT SPATULA! -20 🔥',
-          color: '#FF1744',
-          x: 0,
-          y: -20,
-          alpha: 1.0,
-          scale: 1.15
-        });
-      } else {
-        // CLEAN SPATULA JUGGLE VOLLEY!
-        food.juggleCount++;
-        food.cookStage = Math.min(3, food.cookStage + 1);
-        st.combo++;
-
-        // Upward pop flip
-        food.vy = -310 - Math.random() * 40;
-        food.vRot = (Math.random() - 0.5) * 8;
-        this.audio.playFlipper();
-
-        if (food.cookStage >= 3) {
-          // 4th volley: MASTER SERVE FLICK!
-          st.shrimpServed++;
-          st.flameBoostTimer = 1.0;
-          const servePts = 60 + st.combo * 8;
-          st.score += servePts;
-          this.audio.playScore();
-          this.audio.playChime();
-          this.particles.spawnConfetti(st.x, st.y - 40, 16);
-
-          st.floatingHits.push({
-            text: `SERVED! +${servePts} 🍤`,
-            color: '#00E676',
-            x: food.x,
-            y: -35,
-            alpha: 1.0,
-            scale: 1.25
-          });
-
-          // Serve into customer bowl
-          st.foods.splice(bestIdx, 1);
-        } else {
-          // JUGGLE SEARING!
-          let pts = 15;
-          let label = 'JUGGLE!';
-          if (food.cookStage === 2) {
-            pts = 30;
-            label = 'FLAMBÉ SEAR!';
-            this.particles.spawnSparks(st.x + food.x, st.y + food.y, '#FFA000', 8);
-          } else {
-            this.particles.emit(st.x + food.x, st.y + food.y, 4, '#FFD54F');
-          }
-
-          const totalPts = pts + st.combo * 3;
-          st.score += totalPts;
-
-          st.floatingHits.push({
-            text: st.combo > 1 ? `${label} ${st.combo}x` : `${label} +${totalPts}`,
-            color: food.cookStage === 2 ? '#FF9100' : '#FFF9C4',
-            x: food.x,
-            y: food.y - 12,
-            alpha: 1.0,
-            scale: 1.0
-          });
-        }
-      }
-    } else {
-      // Empty air whiff
+  private executeChefAction(chef: TeppanyakiChef, steer: number): void {
+    // If moving horizontally with high force, trigger Spatula Shunt Dash!
+    const wantsShunt = Math.abs(steer) > 0.35 && chef.shuntCooldown <= 0;
+    if (wantsShunt) {
+      chef.shuntActiveTimer = 0.22;
+      chef.shuntDir = Math.sign(steer);
+      chef.shuntCooldown = 0.8;
       this.audio.playWhoosh();
-      st.floatingHits.push({
-        text: 'WHIFF!',
-        color: '#9E9E9E',
-        x: 0,
-        y: -15,
-        alpha: 0.7,
-        scale: 0.85
+      this.particles.emit(chef.x, chef.y - 20, 10, '#FF5722');
+      return;
+    }
+
+    // Otherwise, perform high-arc Hibachi Flambé Loft!
+    chef.vLoft = 270;
+    chef.loftAltitude = 10;
+
+    if (chef.bowlItems.length === 0) {
+      this.audio.playTap();
+      return;
+    }
+
+    const inSweetSpot = chef.chargeTime >= 0.72 && chef.chargeTime <= 0.98;
+    const multiplier = inSweetSpot ? 2.0 : 1.2;
+    const itemCount = chef.bowlItems.length;
+    const platterBonus = Math.round((25 + itemCount * 15 + chef.combo * 4) * multiplier);
+
+    chef.score += platterBonus;
+    chef.plattersServed++;
+    chef.bowlItems = [];
+
+    chef.mood = 'triumph';
+    chef.moodTimer = 1.4;
+
+    if (inSweetSpot) {
+      this.audio.playFanfare();
+      this.particles.emit(chef.x, chef.y - 45, 22, '#FFD54F');
+      this.particles.emit(chef.x, chef.y - 45, 15, '#FF5722');
+      this.screenShake = 8;
+      this.hitStopTimer = 0.04;
+    } else {
+      this.audio.playScore();
+      this.particles.emit(chef.x, chef.y - 35, 10, '#FF9800');
+    }
+  }
+
+  private executeSpatulaShunt(attacker: TeppanyakiChef, victim: TeppanyakiChef, dir: number): void {
+    attacker.score += 30; // Sabotage bonus
+    attacker.mood = 'triumph';
+    attacker.moodTimer = 1.2;
+
+    victim.vx = dir * 420;
+    victim.stunTimer = 0.75;
+    victim.mood = 'shocked';
+    victim.moodTimer = 1.2;
+
+    // Pop loose food item out of victim's bowl into air for attacker to steal!
+    if (victim.bowlItems.length > 0) {
+      victim.bowlItems.pop();
+      this.flyingFoods.push({
+        id: this.nextFoodId++,
+        name: 'Stolen Tiger Shrimp',
+        color: '#FF7043',
+        points: 25,
+        radius: 14,
+        x: victim.x,
+        y: victim.y - 45,
+        vx: -dir * 110,
+        vy: -170,
+        rot: 0,
+        rotSpeed: 4
       });
     }
+
+    this.audio.playExplosion();
+    this.particles.emit((attacker.x + victim.x) * 0.5, attacker.y - 25, 18, '#FF5252');
+    this.screenShake = 9;
+    this.hitStopTimer = 0.045;
   }
 
   protected updateBotAI(
@@ -343,32 +569,76 @@ export class TeppanyakiCatchGame extends BaseGame {
       return;
     }
 
-    const st = this.playersState.get(botId);
-    if (!st || st.stunTimer > 0) return;
+    const chef = this.chefs.get(botId);
+    if (!chef || chef.stunTimer > 0) return;
 
-    let shouldFlick = false;
-    let nextDelay = 0.2;
+    let delay = 0.24;
+    let blunder = false;
 
-    const inZone = st.foods.find(f => f.y >= -24 && f.y <= 14 && f.vy > 0);
+    if (difficulty === 'bot_easy') {
+      delay = 0.42;
+      blunder = Math.random() < 0.22;
+    } else if (difficulty === 'bot_hard') {
+      delay = 0.11;
+    }
 
-    if (inZone) {
-      if (inZone.type === 'ember') {
-        // Avoid hazard ember
-        if (difficulty === 'bot_easy' && Math.random() < 0.3) shouldFlick = true;
-        else shouldFlick = false;
-      } else {
-        if (difficulty === 'bot_easy') shouldFlick = Math.random() < 0.65;
-        else if (difficulty === 'bot_hard') shouldFlick = Math.random() < 0.95;
-        else shouldFlick = Math.random() < 0.82;
+    // 1. If chef has 2+ items in bowl, perform loft
+    if (chef.bowlItems.length >= 2 && chef.loftAltitude <= 5) {
+      this.executeChefAction(chef, 0);
+      this.botReactionTimers.set(botId, delay);
+      return;
+    }
+
+    // 2. Hard bot: shunt nearby rivals
+    if (difficulty === 'bot_hard' && chef.shuntCooldown <= 0) {
+      for (const p of this.getActivePlayers()) {
+        if (p.id === botId) continue;
+        const rival = this.chefs.get(p.id);
+        if (rival && Math.abs(rival.x - chef.x) < 80 && rival.bowlItems.length > 0) {
+          const shuntDir = rival.x > chef.x ? 1 : -1;
+          this.executeChefAction(chef, shuntDir);
+          this.botReactionTimers.set(botId, 0.3);
+          return;
+        }
       }
     }
 
-    if (shouldFlick) {
-      this.handleSpatulaFlick(st);
+    // 3. Locate best falling food
+    let bestFood: FoodItem | null = null;
+    let bestScore = -9999;
+
+    for (const f of this.flyingFoods) {
+      if (f.isHazard) continue; // avoid embers
+      let weight = f.points;
+      if (f.isGolden) weight += 30;
+
+      const timeToGround = Math.max(0.1, (chef.y - f.y) / Math.max(1, f.vy));
+      const projectedX = f.x + f.vx * timeToGround;
+      const dist = Math.abs(projectedX - chef.x);
+
+      const score = weight - dist * 0.4;
+      if (score > bestScore) {
+        bestScore = score;
+        bestFood = f;
+      }
     }
 
-    nextDelay = difficulty === 'bot_hard' ? 0.12 : difficulty === 'bot_normal' ? 0.20 : 0.35;
-    this.botReactionTimers.set(botId, nextDelay);
+    let steer = 0;
+    if (bestFood) {
+      const timeToCatch = Math.max(0.05, (chef.y - bestFood.y) / Math.max(1, bestFood.vy));
+      const targetX = bestFood.x + bestFood.vx * timeToCatch;
+
+      if (Math.abs(targetX - chef.x) > 16) {
+        steer = targetX > chef.x ? 1 : -1;
+      }
+    }
+
+    if (blunder) {
+      steer = -steer;
+    }
+
+    this.input.setBotInput(botId, false, steer, 0, false);
+    this.botReactionTimers.set(botId, delay);
   }
 
   public isRoundOver(): boolean {
@@ -377,11 +647,11 @@ export class TeppanyakiCatchGame extends BaseGame {
 
   public getRoundResult(): RoundResult {
     const scores = this.getActivePlayers().map((p) => {
-      const st = this.playersState.get(p.id);
+      const c = this.chefs.get(p.id);
       return {
         playerId: p.id,
-        score: st?.score || 0,
-        servings: st?.shrimpServed || 0
+        score: c?.score || 0,
+        platters: c?.plattersServed || 0
       };
     });
 
@@ -393,10 +663,10 @@ export class TeppanyakiCatchGame extends BaseGame {
       place: idx + 1
     }));
 
-    const topServings = scores[0]?.servings || 0;
+    const topPlayer = scores[0];
     const mvpHighlight = winnerId !== null
-      ? `Player ${winnerId + 1} juggled and served ${topServings} flambé teppanyaki master dishes!`
-      : 'The hibachi iron cooled before any master servings were completed!';
+      ? `Player ${winnerId + 1} served ${topPlayer.platters} succulent flambé teppanyaki platters!`
+      : 'The hibachi grill cooled down with no master teppan chef!';
 
     return {
       winnerId,
@@ -406,268 +676,363 @@ export class TeppanyakiCatchGame extends BaseGame {
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Japanese Teppanyaki Restaurant Backdrop
+    const theme = THEMES[this.currentThemeIdx];
+
+    ctx.save();
+    if (this.screenShake > 0) {
+      const shakeX = (Math.random() - 0.5) * this.screenShake;
+      const shakeY = (Math.random() - 0.5) * this.screenShake;
+      ctx.translate(shakeX, shakeY);
+    }
+
+    // Background Gradient
     const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#120A08');
-    bgGrad.addColorStop(0.35, '#20100C');
-    bgGrad.addColorStop(0.7, '#2E1510');
-    bgGrad.addColorStop(1, '#180B08');
+    bgGrad.addColorStop(0, theme.bgTop);
+    bgGrad.addColorStop(1, theme.bgBottom);
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
-    // Warm glowing charcoal spotlight
-    const spotlight = ctx.createRadialGradient(width / 2, height * 0.4, 40, width / 2, height * 0.4, width * 0.65);
-    spotlight.addColorStop(0, 'rgba(255, 112, 67, 0.14)');
-    spotlight.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = spotlight;
-    ctx.fillRect(0, 0, width, height);
+    // Decorative Backdrop
+    this.renderThemeBackdrop(ctx, width, height, theme);
 
-    // Teppanyaki Flat-Top Iron Grill Counter along lower screen
-    const counterY = height * 0.58;
-    const counterGrad = ctx.createLinearGradient(0, counterY, 0, height);
-    counterGrad.addColorStop(0, '#37474F');
-    counterGrad.addColorStop(0.06, '#263238');
-    counterGrad.addColorStop(1, '#1A2327');
-    ctx.fillStyle = counterGrad;
-    ctx.fillRect(0, counterY, width, height - counterY);
+    // Iron Griddle Counter
+    const griddleY = height - 90;
+    ctx.fillStyle = theme.griddleColor;
+    ctx.fillRect(0, griddleY, width, 90);
 
-    // Sizzling steel grill divider rails
-    ctx.fillStyle = '#FF7043';
-    ctx.fillRect(0, counterY - 4, width, 4);
-    ctx.fillStyle = '#FFAB91';
-    ctx.fillRect(0, counterY, width, 2);
+    ctx.fillStyle = theme.griddleTrim;
+    ctx.fillRect(0, griddleY, width, 8);
 
-    // 2. Instructions Pill (cleanly positioned below top HUD)
+    // Counter floor trim
+    ctx.fillStyle = theme.counterColor;
+    ctx.fillRect(0, height - 25, width, 25);
+
+    // Render Flying Food
+    for (const f of this.flyingFoods) {
+      this.renderFoodItem(ctx, f);
+    }
+
+    // Render Chefs
+    for (const p of this.getActivePlayers()) {
+      const chef = this.chefs.get(p.id);
+      if (!chef) continue;
+      this.renderChef(ctx, p, chef, theme);
+    }
+
+    // Render Particles
+    this.particles.render(ctx);
+
+    ctx.restore();
+
+    // UI Header & Theme Pill
+    this.renderUI(ctx, width, height);
+  }
+
+  private renderThemeBackdrop(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    theme: TeppanyakiTheme
+  ): void {
     ctx.save();
-    ctx.textAlign = 'center';
+    if (theme.id === 'ginza_steakhouse') {
+      // Warm Amber Lanterns & Wood Paneling
+      for (let x = 40; x < width; x += 110) {
+        ctx.fillStyle = 'rgba(255, 112, 67, 0.15)';
+        ctx.beginPath();
+        ctx.ellipse(x, 80, 16, 20, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (theme.id === 'cyber_teppan') {
+      // Laser Griddle Induction Lines
+      ctx.strokeStyle = 'rgba(0, 229, 255, 0.15)';
+      ctx.lineWidth = 1.5;
+      for (let x = 0; x < width; x += 55) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height - 90);
+        ctx.stroke();
+      }
+    } else {
+      // Osaka Street Festival Banners
+      ctx.fillStyle = 'rgba(229, 57, 53, 0.15)';
+      for (let x = 30; x < width; x += 70) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x + 35, 60);
+        ctx.lineTo(x + 70, 0);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+  private renderFoodItem(ctx: CanvasRenderingContext2D, f: FoodItem): void {
+    ctx.save();
+    ctx.translate(f.x, f.y);
+    ctx.rotate(f.rot);
+
+    if (f.isGolden) {
+      // Golden Wagyu Medallion
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath();
+      ctx.arc(0, 0, f.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = '#FFA000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Specular shine
+      ctx.fillStyle = '#FFFDE7';
+      ctx.beginPath();
+      ctx.arc(-4, -4, 4, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (f.isHazard) {
+      // Burning ember
+      ctx.fillStyle = '#263238';
+      ctx.beginPath();
+      ctx.rect(-f.radius, -f.radius, f.radius * 2, f.radius * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#FF5252';
+      ctx.font = '900 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('✕', 0, 0);
+    } else {
+      // Sizzling Tiger Shrimp / Veggie
+      ctx.fillStyle = f.color;
+      ctx.beginPath();
+      ctx.arc(0, 0, f.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  private renderChef(
+    ctx: CanvasRenderingContext2D,
+    p: PlayerConfig,
+    chef: TeppanyakiChef,
+    _theme: TeppanyakiTheme
+  ): void {
+    ctx.save();
+
+    // Underdog Golden Glow Aura
+    if (chef.isUnderdog) {
+      ctx.save();
+      const auraPulse = Math.sin(chef.animTimer * 8) * 6 + 18;
+      const grad = ctx.createRadialGradient(chef.x, chef.y - 30, 10, chef.x, chef.y - 30, auraPulse + 25);
+      grad.addColorStop(0, 'rgba(255, 215, 0, 0.45)');
+      grad.addColorStop(1, 'rgba(255, 215, 0, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(chef.x, chef.y - 30, auraPulse + 25, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Charge Indicator Ring
+    if (chef.chargeTime > 0) {
+      ctx.save();
+      const chargeRatio = chef.chargeTime / 1.0;
+      ctx.strokeStyle = '#FF5722';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(chef.x, chef.y - 25, 34, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * chargeRatio);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Draw Chef Mascot
+    const isBot = p.type !== 'human';
+    drawCharacter(
+      ctx,
+      chef.x,
+      chef.y - 22,
+      22,
+      p.id,
+      isBot,
+      chef.mood,
+      chef.animTimer,
+      undefined
+    );
+
+    // Draw Chef Toque Hat
+    ctx.save();
+    ctx.translate(chef.x, chef.y - 44);
+    ctx.fillStyle = '#FFFFFF';
     ctx.beginPath();
-    ctx.roundRect(width / 2 - 255, 56, 510, 26, 13);
+    ctx.moveTo(-12, 0);
+    ctx.lineTo(12, 0);
+    ctx.lineTo(14, -14);
+    ctx.quadraticCurveTo(0, -24, -14, -14);
+    ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 112, 67, 0.45)';
+    ctx.strokeStyle = '#E0E0E0';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // Draw Spatula & Bowl in Chef's Hands
+    const bowlX = chef.x + (chef.vx > 10 ? 14 : chef.vx < -10 ? -14 : 8);
+    const bowlY = chef.y - 28;
+
+    ctx.save();
+    ctx.translate(bowlX, bowlY);
+
+    // Ceramic Catch Bowl
+    ctx.fillStyle = chef.isUnderdog ? '#FFD700' : '#ECEFF1';
+    ctx.beginPath();
+    ctx.arc(0, 8, chef.isUnderdog ? 22 : 16, 0, Math.PI);
+    ctx.fill();
+
+    ctx.strokeStyle = chef.isUnderdog ? '#FF8F00' : '#78909C';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Dual Stainless Spatulas
+    ctx.fillStyle = '#B0BEC5';
+    ctx.fillRect(-14, -10, 5, 14);
+    ctx.fillRect(9, -10, 5, 14);
+
+    // Lofted Items inside Bowl
+    const loftY = 2 - chef.loftAltitude;
+    if (chef.bowlItems.length > 0) {
+      ctx.fillStyle = '#FF7043';
+      ctx.beginPath();
+      ctx.arc(0, loftY, 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+
+    // Overhead Name & Score Badge
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.beginPath();
+    ctx.roundRect(chef.x - 38, chef.y + 12, 76, 22, 6);
+    ctx.fill();
+
+    ctx.fillStyle = p.color;
+    ctx.font = '900 11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${p.name}: ${chef.score}`, chef.x, chef.y + 27);
+    ctx.restore();
+
+    ctx.restore();
+  }
+
+  private renderUI(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    // Top-Center Safe Zone (y: 12-44) is strictly reserved for global timer
+    // Minigame Header Badge strictly at y: 56
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+    ctx.beginPath();
+    ctx.roundRect(width / 2 - 130, 56, 260, 28, 8);
+    ctx.fill();
+
+    ctx.fillStyle = '#FFD54F';
+    ctx.font = '900 14px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`🥩 TEPPANYAKI CATCH • ${THEMES[this.currentThemeIdx].name}`, width / 2, 70);
+    ctx.restore();
+
+    // Theme Pill (bottom-left at x: 20, y: height - 44, w: 170, h: 32)
+    ctx.save();
+    const pillX = 20;
+    const pillY = height - 44;
+    const pillW = 170;
+    const pillH = 32;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, 8);
+    ctx.fill();
+
+    ctx.strokeStyle = '#38BDF8';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    ctx.font = '700 11px sans-serif';
-    ctx.fillStyle = '#FFCCBC';
-    ctx.fillText('SPATULA FLICK TO JUGGLE • SEAR & FLAMBÉ • DODGE EMBERS • SERVE CUSTOMERS!', width / 2, 73);
+    ctx.fillStyle = '#38BDF8';
+    ctx.font = '900 11px monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`[T] ${THEMES[this.currentThemeIdx].name}`, pillX + 10, pillY + pillH / 2);
     ctx.restore();
 
-    // 3. Render Hibachi Chef Stations
-    for (const p of this.getActivePlayers()) {
-      const st = this.playersState.get(p.id);
-      if (!st) continue;
+    // Player Cards at Corners (Offset to y: height - 128 to never overlap Theme Pill)
+    this.renderCornerPlayerCards(ctx, width, height);
 
-      ctx.save();
+    // Control Hints at Bottom Right
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.beginPath();
+    ctx.roundRect(width - 260, height - 36, 240, 26, 6);
+    ctx.fill();
 
-      let shakeX = 0;
-      let shakeY = 0;
-      if (st.shakeTimer > 0) {
-        shakeX = Math.sin(st.shakeTimer * 50) * 4;
-        shakeY = Math.cos(st.shakeTimer * 40) * 2;
-      }
-      ctx.translate(st.x + shakeX, st.y + shakeY);
-
-      // Sizzling Iron Flat-Top Plate
-      ctx.fillStyle = '#212121';
-      ctx.beginPath();
-      ctx.roundRect(-42, 6, 84, 18, [4, 4, 0, 0]);
-      ctx.fill();
-      ctx.strokeStyle = '#455A64';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      // Glowing heat element beneath griddle
-      const pulse = Math.sin(Date.now() * 0.008) * 0.2 + 0.8;
-      ctx.fillStyle = `rgba(255, 87, 34, ${pulse * 0.5})`;
-      ctx.fillRect(-36, 12, 72, 4);
-
-      // JUGGLE STRIKE ZONE GUIDE
-      ctx.save();
-      ctx.strokeStyle = 'rgba(255, 171, 145, 0.45)';
-      ctx.setLineDash([4, 4]);
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(-38, -20, 76, 26);
-      ctx.setLineDash([]);
-
-      ctx.fillStyle = 'rgba(255, 204, 188, 0.7)';
-      ctx.font = '800 8.5px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('JUGGLE ZONE', 0, -8);
-      ctx.restore();
-
-      // Render Foods arcing in the air
-      for (const food of st.foods) {
-        ctx.save();
-        ctx.translate(food.x, food.y);
-        ctx.rotate(food.rotation);
-
-        this.renderFood(ctx, food);
-
-        ctx.restore();
-      }
-
-      // DUAL STAINLESS STEEL SPATULAS
-      ctx.save();
-      const spatulaLift = st.spatulaAnim > 0 ? Math.sin(st.spatulaAnim * Math.PI) * 16 : 0;
-      ctx.translate(0, -spatulaLift);
-
-      // Left spatula
-      ctx.fillStyle = '#ECEFF1';
-      ctx.fillRect(-22, -4, 16, 7);
-      ctx.fillStyle = '#78909C';
-      ctx.fillRect(-18, 3, 4, 12);
-
-      // Right spatula
-      ctx.fillStyle = '#ECEFF1';
-      ctx.fillRect(6, -4, 16, 7);
-      ctx.fillStyle = '#78909C';
-      ctx.fillRect(14, 3, 4, 12);
-      ctx.restore();
-
-      // Customer Serving Bowl to the right
-      ctx.fillStyle = '#4E342E';
-      ctx.beginPath();
-      ctx.arc(36, 10, 10, 0, Math.PI);
-      ctx.closePath();
-      ctx.fill();
-
-      // Flambé celebration fire burst
-      if (st.flameBoostTimer > 0) {
-        ctx.fillStyle = '#FF3D00';
-        ctx.font = '22px sans-serif';
-        ctx.fillText('🔥', -11, -30);
-      }
-
-      // STUN WARNING OVERLAY
-      if (st.stunTimer > 0) {
-        ctx.fillStyle = 'rgba(211, 47, 47, 0.85)';
-        ctx.beginPath();
-        ctx.roundRect(-38, -35, 76, 24, 4);
-        ctx.fill();
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = '900 9px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('🔥 BURNT!', 0, -20);
-      }
-
-      // Floating hit texts
-      for (const hit of st.floatingHits) {
-        ctx.save();
-        ctx.translate(hit.x, hit.y);
-        ctx.scale(hit.scale, hit.scale);
-        ctx.globalAlpha = Math.max(0, hit.alpha);
-        ctx.font = '900 12px sans-serif';
-        ctx.textAlign = 'center';
-
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 3;
-        ctx.strokeText(hit.text, 0, 0);
-
-        ctx.fillStyle = hit.color;
-        ctx.fillText(hit.text, 0, 0);
-        ctx.restore();
-      }
-
-      ctx.restore();
-
-      // 4. Station Player Card affixed to counter front
-      ctx.save();
-      const cardY = counterY + 14;
-      const cardW = 100;
-      const cardH = 54;
-
-      ctx.fillStyle = '#1D1311';
-      ctx.beginPath();
-      ctx.roundRect(st.x - cardW / 2, cardY, cardW, cardH, 8);
-      ctx.fill();
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '800 12px sans-serif';
-      ctx.fillText(p.name, st.x, cardY + 17);
-
-      ctx.font = '900 18px monospace';
-      ctx.fillStyle = '#FFD54F';
-      ctx.fillText(`${st.score}`, st.x, cardY + 34);
-
-      if (st.combo >= 2) {
-        ctx.fillStyle = '#FF7043';
-        ctx.font = '800 10px monospace';
-        ctx.fillText(`🔥 ${st.combo}x JUGGLE`, st.x, cardY + 47);
-      } else {
-        ctx.fillStyle = '#FFAB91';
-        ctx.font = '700 9px monospace';
-        ctx.fillText(`🍤 Served: ${st.shrimpServed}`, st.x, cardY + 47);
-      }
-
-      ctx.restore();
-    }
+    ctx.fillStyle = '#E2E8F0';
+    ctx.font = '700 11px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Steer: Move • Hold Action: Loft & Shunt', width - 28, height - 23);
+    ctx.restore();
   }
 
-  private renderFood(ctx: CanvasRenderingContext2D, food: SizzlingFood): void {
-    if (food.type === 'ember') {
-      // Hot charcoal ember
-      ctx.fillStyle = '#212121';
-      ctx.beginPath();
-      ctx.arc(0, 0, 6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#FF3D00';
-      ctx.beginPath();
-      ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (food.type === 'zucchini') {
-      // Zucchini slice
-      ctx.fillStyle = '#2E7D32';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 7, 5, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = food.cookStage >= 2 ? '#C8E6C9' : '#DCEDC8';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 5, 3.5, 0, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (food.type === 'mushroom') {
-      // Garlic mushroom
-      ctx.fillStyle = food.cookStage >= 2 ? '#8D6E63' : '#D7CCC8';
-      ctx.beginPath();
-      ctx.arc(0, -1, 5, Math.PI, 0);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#795548';
-      ctx.fillRect(-1.5, -1, 3, 4);
-    } else {
-      // Jumbo Tiger Shrimp
-      // Color evolves: raw (translucent grey/pink) -> seared (bright pink) -> flambé (golden orange with grill marks)
-      let shrimpColor = '#CFD8DC';
-      if (food.cookStage === 1) shrimpColor = '#FF8A80';
-      else if (food.cookStage >= 2) shrimpColor = '#FF6E40';
+  private renderCornerPlayerCards(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const active = this.getActivePlayers();
+    active.forEach((p, idx) => {
+      const chef = this.chefs.get(p.id);
+      if (!chef) return;
 
-      ctx.fillStyle = shrimpColor;
+      const cardW = 130;
+      const cardH = 48;
+      let cx = 20;
+      let cy = height - 128; // safe offset above Theme Pill
+
+      if (idx === 1) {
+        cx = width - cardW - 20;
+        cy = height - 128;
+      } else if (idx === 2) {
+        cx = 20;
+        cy = 90;
+      } else if (idx === 3) {
+        cx = width - cardW - 20;
+        cy = 90;
+      }
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
       ctx.beginPath();
-      ctx.arc(0, 0, 7, -0.8, 2.2);
-      ctx.lineWidth = 4;
-      ctx.strokeStyle = shrimpColor;
+      ctx.roundRect(cx, cy, cardW, cardH, 6);
+      ctx.fill();
+
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Tail fan
-      ctx.fillStyle = '#D32F2F';
-      ctx.beginPath();
-      ctx.moveTo(-5, 4);
-      ctx.lineTo(-9, 8);
-      ctx.lineTo(-4, 9);
-      ctx.closePath();
-      ctx.fill();
+      ctx.fillStyle = p.color;
+      ctx.font = '900 12px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(p.name, cx + 10, cy + 18);
 
-      // Flambé glow / grill stripes
-      if (food.cookStage >= 2) {
-        ctx.fillStyle = '#FFD54F';
-        ctx.fillRect(-2, -3, 2, 2);
-        ctx.fillRect(1, -2, 2, 2);
-      }
-    }
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '800 13px monospace';
+      ctx.fillText(`${chef.score} pts`, cx + 10, cy + 36);
+
+      ctx.fillStyle = '#FFD54F';
+      ctx.font = '700 10px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(`🥩 ${chef.plattersServed}`, cx + cardW - 8, cy + 36);
+
+      ctx.restore();
+    });
   }
 }
