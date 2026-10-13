@@ -3,6 +3,57 @@ import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
+import { drawCharacter, CharacterMood } from '../core/CharacterRenderer';
+
+export type SnowMapTheme = 'alpine' | 'aurora' | 'twilight';
+
+export interface ThemeConfig {
+  id: SnowMapTheme;
+  name: string;
+  bgGradTop: string;
+  bgGradMid: string;
+  bgGradBottom: string;
+  borderColor: string;
+  pillColor: string;
+  snowColor: string;
+  treeColors: [string, string, string];
+}
+
+export const THEME_CONFIGS: ThemeConfig[] = [
+  {
+    id: 'alpine',
+    name: 'Alpine Blizzard ❄️',
+    bgGradTop: '#E0F2FE',
+    bgGradMid: '#F0F9FF',
+    bgGradBottom: '#E2E8F0',
+    borderColor: '#38BDF8',
+    pillColor: '#0284C7',
+    snowColor: '#FFFFFF',
+    treeColors: ['#166534', '#15803D', '#16A34A']
+  },
+  {
+    id: 'aurora',
+    name: 'Arctic Aurora 🌌',
+    bgGradTop: '#051026',
+    bgGradMid: '#0A2540',
+    bgGradBottom: '#0F3A4B',
+    borderColor: '#2DD4BF',
+    pillColor: '#0D9488',
+    snowColor: '#CCFBF1',
+    treeColors: ['#064E3B', '#047857', '#10B981']
+  },
+  {
+    id: 'twilight',
+    name: 'Twilight Frost 🌲',
+    bgGradTop: '#1E1B4B',
+    bgGradMid: '#312E81',
+    bgGradBottom: '#1E293B',
+    borderColor: '#A855F7',
+    pillColor: '#7C3AED',
+    snowColor: '#F3E8FF',
+    treeColors: ['#1E293B', '#334155', '#475569']
+  }
+];
 
 interface SnowballPlayer {
   id: PlayerId;
@@ -26,6 +77,9 @@ interface SnowballPlayer {
   throwCooldown: number;
   alive: boolean;
   score: number;
+  streak: number;
+  isUnderdog: boolean;
+  recentScoreTimer: number;
 }
 
 interface BallisticSnowball {
@@ -40,6 +94,7 @@ interface BallisticSnowball {
   radius: number;
   power: number;
   life: number;
+  isGolden: boolean;
 }
 
 interface SnowFortBlock {
@@ -63,6 +118,7 @@ interface SnowDecal {
   y: number;
   radius: number;
   alpha: number;
+  color?: string;
 }
 
 interface AmbientFlake {
@@ -87,6 +143,16 @@ export class SnowballFightGame extends BaseGame {
   private destructionOrder: PlayerId[] = [];
   private gravity: number = 550;
 
+  // Visual Themes & Controls
+  public mapTheme: SnowMapTheme = 'alpine';
+  private lastWidth: number = 960;
+  private lastHeight: number = 540;
+  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
+  private boundPointerDown: ((e: PointerEvent) => void) | null = null;
+  private suddenDeathAnnounced: boolean = false;
+  private suddenDeathTimer: number = 0;
+  private animTimer: number = 0;
+
   constructor(
     players: PlayerConfig[],
     input: InputRouter,
@@ -97,6 +163,10 @@ export class SnowballFightGame extends BaseGame {
   }
 
   public init(width: number, height: number): void {
+    this.lastWidth = width;
+    this.lastHeight = height;
+    this.bindKeyboardShortcuts();
+    this.bindCanvasPointer();
     this.reset(width, height);
   }
 
@@ -111,17 +181,20 @@ export class SnowballFightGame extends BaseGame {
     this.ballCounter = 0;
     this.totalSnowballsThrown = 0;
     this.destructionOrder = [];
+    this.suddenDeathAnnounced = false;
+    this.suddenDeathTimer = 0;
+    this.animTimer = 0;
 
-    // Ambient falling snow
+    // Ambient snowflakes
     this.ambientFlakes = [];
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 60; i++) {
       this.ambientFlakes.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 15,
-        vy: 20 + Math.random() * 35,
+        vx: (Math.random() - 0.5) * 20,
+        vy: 25 + Math.random() * 45,
         size: 1.5 + Math.random() * 2.5,
-        alpha: 0.3 + Math.random() * 0.5
+        alpha: 0.35 + Math.random() * 0.5
       });
     }
 
@@ -157,7 +230,10 @@ export class SnowballFightGame extends BaseGame {
         stunTimer: 0,
         throwCooldown: 0,
         alive: true,
-        score: 0
+        score: 0,
+        streak: 0,
+        isUnderdog: false,
+        recentScoreTimer: 0
       });
 
       this.playersState.set(p2.id, {
@@ -181,7 +257,10 @@ export class SnowballFightGame extends BaseGame {
         stunTimer: 0,
         throwCooldown: 0,
         alive: true,
-        score: 0
+        score: 0,
+        streak: 0,
+        isUnderdog: false,
+        recentScoreTimer: 0
       });
     } else {
       // 3 or 4 Players: 4 Corner quadrants facing arena center
@@ -224,7 +303,7 @@ export class SnowballFightGame extends BaseGame {
           minA: -Math.PI,
           maxA: -Math.PI * 0.5,
           side: 'se'
-        }  // P4 (Bottom-Right)
+        } // P4 (Bottom-Right)
       ];
 
       active.forEach((p, idx) => {
@@ -250,7 +329,10 @@ export class SnowballFightGame extends BaseGame {
           stunTimer: 0,
           throwCooldown: 0,
           alive: true,
-          score: 0
+          score: 0,
+          streak: 0,
+          isUnderdog: false,
+          recentScoreTimer: 0
         });
       });
     }
@@ -266,8 +348,93 @@ export class SnowballFightGame extends BaseGame {
         blocks: this.blocks,
         totalThrown: this.totalSnowballsThrown,
         roundTimer: this.roundTimer,
-        isFinished: this.isFinished
+        isFinished: this.isFinished,
+        theme: this.mapTheme,
+        setTheme: (theme: SnowMapTheme) => this.setMapTheme(theme),
+        cycleTheme: () => this.cycleTheme()
       };
+    }
+  }
+
+  private bindCanvasPointer(): void {
+    if (typeof window === 'undefined') return;
+    const canvas = this.input.getCanvas();
+    if (!canvas) return;
+
+    this.boundPointerDown = (e: PointerEvent) => {
+      this.handlePointerDown(e);
+    };
+    canvas.addEventListener('pointerdown', this.boundPointerDown);
+  }
+
+  private handlePointerDown(e: PointerEvent): void {
+    const canvas = this.input.getCanvas();
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const clickX = ((e.clientX - rect.left) / rect.width) * this.lastWidth;
+    const clickY = ((e.clientY - rect.top) / rect.height) * this.lastHeight;
+
+    // Check Theme Pill click at (20, height - 44, 170, 32)
+    if (
+      clickX >= 20 &&
+      clickX <= 190 &&
+      clickY >= this.lastHeight - 44 &&
+      clickY <= this.lastHeight - 12
+    ) {
+      this.cycleTheme();
+    }
+  }
+
+  public cycleTheme(): void {
+    const curIdx = THEME_CONFIGS.findIndex((t) => t.id === this.mapTheme);
+    const nextIdx = (curIdx + 1) % THEME_CONFIGS.length;
+    this.setMapTheme(THEME_CONFIGS[nextIdx].id);
+  }
+
+  public setMapTheme(theme: SnowMapTheme): void {
+    if (this.mapTheme === theme) return;
+    this.mapTheme = theme;
+    this.audio.playTap();
+    this.particles.spawnExplosion(100, this.lastHeight - 28, '#38BDF8', 14);
+    this.syncDebug();
+  }
+
+  private bindKeyboardShortcuts(): void {
+    if (typeof window === 'undefined') return;
+    this.unbindKeyboardShortcuts();
+
+    this.keydownListener = (e: KeyboardEvent) => {
+      if (e.key === 't' || e.key === 'T') {
+        this.cycleTheme();
+      } else if (e.key === '1') {
+        this.setMapTheme('alpine');
+      } else if (e.key === '2') {
+        this.setMapTheme('aurora');
+      } else if (e.key === '3') {
+        this.setMapTheme('twilight');
+      }
+    };
+    window.addEventListener('keydown', this.keydownListener);
+  }
+
+  private unbindKeyboardShortcuts(): void {
+    if (typeof window !== 'undefined' && this.keydownListener) {
+      window.removeEventListener('keydown', this.keydownListener);
+      this.keydownListener = null;
+    }
+  }
+
+  public override destroy(): void {
+    this.unbindKeyboardShortcuts();
+    if (this.boundPointerDown) {
+      const canvas = this.input.getCanvas();
+      if (canvas) {
+        canvas.removeEventListener('pointerdown', this.boundPointerDown);
+      }
+      this.boundPointerDown = null;
+    }
+    if (typeof window !== 'undefined' && (window as any).__SNOWBALL_FIGHT_DEBUG__) {
+      delete (window as any).__SNOWBALL_FIGHT_DEBUG__;
     }
   }
 
@@ -288,7 +455,6 @@ export class SnowballFightGame extends BaseGame {
     let blockId = 0;
 
     if (this.currentMapName === 'Twin Snow Forts') {
-      // Mirrored snow barricades
       const fortOffsets = isTwoPlayer
         ? [
             { x: cx - 110, y: cy - 70 },
@@ -319,12 +485,10 @@ export class SnowballFightGame extends BaseGame {
         });
       });
 
-      // Flanking pine trees
       this.trees.push({ x: cx, y: cy, radius: 26 });
       this.trees.push({ x: cx, y: cy - 140, radius: 22 });
       this.trees.push({ x: cx, y: cy + 140, radius: 22 });
     } else if (this.currentMapName === 'Pine Forest') {
-      // Clustered pine trees and tactical snow mounds
       const treeCoords = [
         { x: cx - 90, y: cy - 80 },
         { x: cx + 90, y: cy + 80 },
@@ -338,7 +502,6 @@ export class SnowballFightGame extends BaseGame {
         this.trees.push({ x: t.x, y: t.y, radius: 24 });
       });
 
-      // Scattered snow blocks
       const blockCoords = [
         { x: cx, y: cy - 100 },
         { x: cx, y: cy + 100 },
@@ -357,13 +520,11 @@ export class SnowballFightGame extends BaseGame {
         });
       });
     } else if (this.currentMapName === 'Igloo Village') {
-      // Central dome shelter and perimeter blocks
       this.trees.push({ x: cx - 140, y: cy - 110, radius: 20 });
       this.trees.push({ x: cx + 140, y: cy - 110, radius: 20 });
       this.trees.push({ x: cx - 140, y: cy + 110, radius: 20 });
       this.trees.push({ x: cx + 140, y: cy + 110, radius: 20 });
 
-      // Ring of destructible snow blocks around center
       for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 3) {
         const bx = cx + Math.cos(angle) * 85;
         const by = cy + Math.sin(angle) * 75;
@@ -378,7 +539,7 @@ export class SnowballFightGame extends BaseGame {
         });
       }
     } else {
-      // Glacier Ridge: Linear icy corridor with defensive trenches
+      // Glacier Ridge
       const rowY = [cy - 90, cy, cy + 90];
       rowY.forEach((ry) => {
         this.blocks.push({
@@ -408,15 +569,64 @@ export class SnowballFightGame extends BaseGame {
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
 
+    this.lastWidth = width;
+    this.lastHeight = height;
+    this.animTimer += dt;
     this.roundTimer = Math.max(0, this.roundTimer - dt);
 
-    // Update ambient snowflakes
+    const isSuddenDeath = this.roundTimer <= 15;
+
+    // Trigger sudden death alert once
+    if (isSuddenDeath && !this.suddenDeathAnnounced) {
+      this.suddenDeathAnnounced = true;
+      this.suddenDeathTimer = 3.0;
+      this.audio.playBoost();
+      this.particles.shake(0.5);
+      this.particles.showFloatingText('❄️ SUDDEN DEATH BLIZZARD! ❄️', width / 2, height / 2 - 30, '#FACC15', 30);
+    }
+
+    if (this.suddenDeathTimer > 0) {
+      this.suddenDeathTimer = Math.max(0, this.suddenDeathTimer - dt);
+    }
+
+    // Dynamic Blizzard Wind flakes
+    const windSpeedFactor = isSuddenDeath ? 1.9 : 1.0;
     for (const flake of this.ambientFlakes) {
-      flake.y += flake.vy * dt;
-      flake.x += flake.vx * dt;
+      flake.y += flake.vy * windSpeedFactor * dt;
+      flake.x += flake.vx * windSpeedFactor * dt;
       if (flake.y > height) {
         flake.y = -10;
         flake.x = Math.random() * width;
+      }
+    }
+
+    // Determine Underdog status (alive player with lowest HP or lowest score if tied)
+    const activeAlive = this.getActivePlayers().filter((p) => this.playersState.get(p.id)?.alive);
+    if (activeAlive.length > 1) {
+      let minHp = 999;
+      let minScore = 999999;
+      for (const p of activeAlive) {
+        const ps = this.playersState.get(p.id)!;
+        if (ps.hp < minHp) {
+          minHp = ps.hp;
+          minScore = ps.score;
+        } else if (ps.hp === minHp && ps.score < minScore) {
+          minScore = ps.score;
+        }
+      }
+
+      // Check max HP among alive
+      const maxHp = Math.max(...activeAlive.map((p) => this.playersState.get(p.id)!.hp));
+
+      for (const p of this.getActivePlayers()) {
+        const ps = this.playersState.get(p.id);
+        if (!ps) continue;
+        // Underdog triggers if player is behind by at least 1 HP, or 200 pts behind when tied
+        ps.isUnderdog = ps.alive && (maxHp - ps.hp >= 1);
+      }
+    } else {
+      for (const ps of this.playersState.values()) {
+        ps.isUnderdog = false;
       }
     }
 
@@ -434,9 +644,12 @@ export class SnowballFightGame extends BaseGame {
         ps.throwCooldown = Math.max(0, ps.throwCooldown - dt);
       }
 
+      if (ps.recentScoreTimer > 0) {
+        ps.recentScoreTimer = Math.max(0, ps.recentScoreTimer - dt);
+      }
+
       if (ps.stunTimer > 0) {
         ps.stunTimer = Math.max(0, ps.stunTimer - dt);
-        // Stunned players cannot aim or charge
         ps.isCharging = false;
         ps.chargePower = 0;
         ps.chargeTime = 0;
@@ -451,10 +664,12 @@ export class SnowballFightGame extends BaseGame {
 
       const hasMoveInput = Math.abs(steer) > 0.08 || Math.abs(throttle) > 0.08;
 
+      // Underdog Thermal Coat + Quick-Pack Mittens boost speed by 20%
+      const speedMultiplier = ps.isUnderdog ? 1.20 : 1.0;
+
       if (!ps.isCharging) {
         if (hasMoveInput) {
-          // Walk freely inside player's territory
-          const speed = 210;
+          const speed = 210 * speedMultiplier;
           ps.vx = steer * speed;
           ps.vy = -throttle * speed;
         } else {
@@ -472,12 +687,12 @@ export class SnowballFightGame extends BaseGame {
           ps.sweepDir = 1;
         }
       } else {
-        // While charging: slow down foot movement, and allow steer to adjust aim angle directly!
+        // While charging: slow down foot movement, and allow steer to adjust aim angle directly
         if (hasMoveInput) {
-          const chargeSpeed = 70;
+          const chargeSpeed = 75 * speedMultiplier;
           ps.vx = steer * chargeSpeed;
           ps.vy = -throttle * chargeSpeed;
-          ps.aimAngle += steer * 2.2 * dt;
+          ps.aimAngle += steer * 2.4 * dt;
         } else {
           ps.vx *= 0.85;
           ps.vy *= 0.85;
@@ -487,29 +702,32 @@ export class SnowballFightGame extends BaseGame {
       }
 
       // Handle power charging & throwing
+      // Underdog Quick-Pack Mittens: base charge starts at 0.50! Sudden Death increases charge speed by 35%
+      const baseCharge = ps.isUnderdog ? 0.50 : 0.20;
+      const chargeSpeedRamp = isSuddenDeath ? 1.35 : 1.0;
+
       if (isPressed && ps.throwCooldown <= 0) {
         if (!ps.isCharging) {
           ps.isCharging = true;
           ps.chargeTime = 0;
-          ps.chargePower = 0.2;
+          ps.chargePower = baseCharge;
         } else {
-          ps.chargeTime += dt;
-          // Charge power ramps up smoothly from 0.2 to 1.0 in ~1.0s, then oscillates gently
-          const ramp = ps.chargeTime / 1.0;
+          ps.chargeTime += dt * chargeSpeedRamp;
+          const ramp = ps.chargeTime / 0.95;
           if (ramp <= 1.0) {
-            ps.chargePower = 0.2 + ramp * 0.8;
+            ps.chargePower = baseCharge + ramp * (1.0 - baseCharge);
           } else {
-            // Oscillate smoothly between 0.75 and 1.0 so player can time peak power
+            // Oscillate smoothly near peak power
             ps.chargePower = 0.875 + Math.sin((ramp - 1.0) * Math.PI * 3) * 0.125;
           }
         }
       } else if (ps.isCharging) {
         // Button released: FIRE SNOWBALL!
-        this.throwSnowball(ps);
+        this.throwSnowball(ps, isSuddenDeath);
         ps.isCharging = false;
         ps.chargePower = 0;
         ps.chargeTime = 0;
-        ps.throwCooldown = 0.35;
+        ps.throwCooldown = isSuddenDeath ? 0.24 : 0.35;
       }
 
       // Apply velocity
@@ -521,7 +739,7 @@ export class SnowballFightGame extends BaseGame {
       const borderGap = 20;
       const wallPadding = 24;
       const topPadding = 56;
-      const bottomPadding = 26;
+      const bottomPadding = 48; // keep clear of bottom pill & hints
 
       const midX = width / 2;
       const midY = height / 2;
@@ -546,7 +764,7 @@ export class SnowballFightGame extends BaseGame {
         ps.y = Math.max(midY + borderGap + r, Math.min(height - bottomPadding, ps.y));
       }
 
-      // Block collisions (cannot walk through snow blocks)
+      // Block collisions
       for (const block of this.blocks) {
         const closestX = Math.max(block.x, Math.min(ps.x, block.x + block.w));
         const closestY = Math.max(block.y, Math.min(ps.y, block.y + block.h));
@@ -563,7 +781,7 @@ export class SnowballFightGame extends BaseGame {
         }
       }
 
-      // Pine tree collisions (cannot walk through trees)
+      // Pine tree collisions
       for (const tree of this.trees) {
         const d = Math.hypot(ps.x - tree.x, ps.y - tree.y);
         if (d < tree.radius + r && d > 0.01) {
@@ -583,6 +801,11 @@ export class SnowballFightGame extends BaseGame {
       b.y += b.vy * dt;
       b.z += b.vz * dt;
       b.vz -= this.gravity * dt;
+
+      // Golden snowball trail particles
+      if (b.isGolden && Math.random() < 0.4) {
+        this.particles.spawnExplosion(b.x, b.y - b.z, '#FACC15', 3);
+      }
 
       let collided = false;
 
@@ -607,17 +830,18 @@ export class SnowballFightGame extends BaseGame {
             b.x <= block.x + block.w &&
             b.y >= block.y &&
             b.y <= block.y + block.h &&
-            b.z < 30
+            b.z < 32
           ) {
-            block.hp -= 1;
+            const damage = b.isGolden ? 2 : 1;
+            block.hp -= damage;
             this.audio.playSnowSplat();
-            this.particles.spawnExplosion(b.x, b.y, '#E2E8F0', 16);
+            this.particles.spawnExplosion(b.x, b.y, '#E2E8F0', b.isGolden ? 22 : 16);
             if (block.hp <= 0) {
               this.particles.spawnExplosion(
                 block.x + block.w / 2,
                 block.y + block.h / 2,
                 '#CBD5E1',
-                22
+                28
               );
               this.blocks.splice(bi, 1);
             }
@@ -627,7 +851,7 @@ export class SnowballFightGame extends BaseGame {
         }
       }
 
-      // Check collision with Players (only if ball is near ground level z < 28)
+      // Check collision with Players (ball near ground level z < 28)
       if (!collided && b.z < 28) {
         for (const p of this.getActivePlayers()) {
           const ps = this.playersState.get(p.id);
@@ -636,32 +860,61 @@ export class SnowballFightGame extends BaseGame {
           const dist = Math.hypot(b.x - ps.x, b.y - ps.y);
           if (dist < 26) {
             // Hit player!
-            ps.hp -= 1;
-            ps.stunTimer = 1.1;
+            const damage = b.isGolden ? 2 : 1;
+            ps.hp -= damage;
+
+            // Underdog Thermal Coat: Halves stun timer
+            ps.stunTimer = ps.isUnderdog ? 0.50 : 1.10;
 
             // Knockback
             const pushAngle = Math.atan2(b.vy, b.vx);
-            ps.vx = Math.cos(pushAngle) * 5.5;
-            ps.vy = Math.sin(pushAngle) * 5.5;
+            const knockForce = b.isGolden ? 8.5 : 5.5;
+            const knockMult = ps.isUnderdog ? 0.70 : 1.0;
+            ps.vx = Math.cos(pushAngle) * knockForce * knockMult;
+            ps.vy = Math.sin(pushAngle) * knockForce * knockMult;
 
-            // Give shooter points
+            // Give shooter points & streak
             const shooter = this.playersState.get(b.ownerId);
             if (shooter) {
-              shooter.score += 100;
+              shooter.streak = Math.min(3, shooter.streak + 1);
+              const multiplier = shooter.streak;
+              const basePoints = b.isGolden ? 250 : 100;
+              const awarded = basePoints * multiplier;
+              shooter.score += awarded;
+              shooter.recentScoreTimer = 1.2;
+
+              if (multiplier > 1) {
+                this.particles.showFloatingText(
+                  `🔥 ${multiplier}X STREAK! +${awarded}`,
+                  shooter.x,
+                  shooter.y - 40,
+                  '#FACC15',
+                  24
+                );
+              } else {
+                this.particles.showFloatingText(
+                  `+${awarded}`,
+                  shooter.x,
+                  shooter.y - 36,
+                  '#FFFFFF',
+                  20
+                );
+              }
             }
 
             this.audio.playSnowSplat();
             this.audio.playStun();
-            this.particles.shake(0.35);
-            this.particles.spawnExplosion(ps.x, ps.y, p.color, 24);
-            this.particles.showFloatingText('SPLAT!', ps.x, ps.y - 24, p.color, 22);
-            this.addSnowDecal(ps.x, ps.y);
+            this.particles.shake(b.isGolden ? 0.45 : 0.32);
+            this.particles.spawnExplosion(ps.x, ps.y, p.color, b.isGolden ? 32 : 24);
+            this.particles.showFloatingText(b.isGolden ? '💥 MEGA SPLAT!' : 'SPLAT!', ps.x, ps.y - 24, p.color, 22);
+            this.addSnowDecal(ps.x, ps.y, b.isGolden ? '#FEF08A' : undefined);
 
             if (ps.hp <= 0) {
               ps.alive = false;
+              ps.streak = 0;
               this.destructionOrder.push(ps.id);
-              this.particles.spawnExplosion(ps.x, ps.y, '#FFFFFF', 30);
-              this.particles.showFloatingText('OUT!', ps.x, ps.y - 30, '#EF4444', 26);
+              this.particles.spawnExplosion(ps.x, ps.y, '#FFFFFF', 32);
+              this.particles.showFloatingText('OUT! ⛄', ps.x, ps.y - 30, '#EF4444', 26);
             }
 
             collided = true;
@@ -673,8 +926,8 @@ export class SnowballFightGame extends BaseGame {
       // Ground landing
       if (!collided && b.z <= 0) {
         this.audio.playSnowSplat();
-        this.particles.spawnExplosion(b.x, b.y, '#F1F5F9', 10);
-        this.addSnowDecal(b.x, b.y);
+        this.particles.spawnExplosion(b.x, b.y, b.isGolden ? '#FACC15' : '#F1F5F9', b.isGolden ? 16 : 10);
+        this.addSnowDecal(b.x, b.y, b.isGolden ? '#FEF08A' : undefined);
         collided = true;
       }
 
@@ -691,8 +944,10 @@ export class SnowballFightGame extends BaseGame {
     }
   }
 
-  private throwSnowball(ps: SnowballPlayer): void {
-    // Horizontal speed scales from 280 to 650 based on power
+  private throwSnowball(ps: SnowballPlayer, isSuddenDeath: boolean): void {
+    const isGolden = isSuddenDeath && ps.chargePower >= 0.85;
+
+    // Horizontal speed scales from 260 to 680 based on power
     const speed = 260 + ps.chargePower * 420;
     const vx = Math.cos(ps.aimAngle) * speed;
     const vy = Math.sin(ps.aimAngle) * speed;
@@ -714,16 +969,23 @@ export class SnowballFightGame extends BaseGame {
       vx,
       vy,
       vz,
-      radius: 7,
+      radius: isGolden ? 12 : 7,
       power: ps.chargePower,
-      life: 0
+      life: 0,
+      isGolden
     });
 
-    this.audio.playWhoosh();
-    this.particles.spawnExplosion(spawnX, spawnY, '#FFFFFF', 6);
+    if (isGolden) {
+      this.audio.playBoost();
+      this.particles.spawnExplosion(spawnX, spawnY, '#FACC15', 12);
+      this.particles.showFloatingText('⭐ GOLDEN SHOT!', ps.x, ps.y - 36, '#FACC15', 20);
+    } else {
+      this.audio.playWhoosh();
+      this.particles.spawnExplosion(spawnX, spawnY, '#FFFFFF', 6);
+    }
   }
 
-  private addSnowDecal(x: number, y: number): void {
+  private addSnowDecal(x: number, y: number, color?: string): void {
     if (this.decals.length > 35) {
       this.decals.shift();
     }
@@ -731,33 +993,58 @@ export class SnowballFightGame extends BaseGame {
       x,
       y,
       radius: 12 + Math.random() * 10,
-      alpha: 0.6
+      alpha: 0.6,
+      color
     });
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
     ctx.save();
 
-    // Winter Arctic Ice Background
+    const theme = THEME_CONFIGS.find((t) => t.id === this.mapTheme) || THEME_CONFIGS[0];
+
+    // Background Gradient
     const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-    bgGrad.addColorStop(0, '#E0F2FE'); // Pale arctic ice
-    bgGrad.addColorStop(0.5, '#F0F9FF'); // Soft snow field
-    bgGrad.addColorStop(1, '#E2E8F0'); // Frozen white-grey
+    bgGrad.addColorStop(0, theme.bgGradTop);
+    bgGrad.addColorStop(0.5, theme.bgGradMid);
+    bgGrad.addColorStop(1, theme.bgGradBottom);
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
+    // Arctic Aurora Ribbon Effect
+    if (this.mapTheme === 'aurora') {
+      ctx.save();
+      ctx.globalAlpha = 0.28;
+      const t = this.animTimer * 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, height * 0.25);
+      for (let x = 0; x <= width; x += 40) {
+        const y = height * 0.25 + Math.sin(x * 0.008 + t) * 35 + Math.cos(x * 0.015 - t * 0.8) * 20;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(width, 0);
+      ctx.lineTo(0, 0);
+      ctx.closePath();
+      const auroraGrad = ctx.createLinearGradient(0, 0, 0, height * 0.4);
+      auroraGrad.addColorStop(0, 'rgba(52, 211, 153, 0.4)');
+      auroraGrad.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+      ctx.fillStyle = auroraGrad;
+      ctx.fill();
+      ctx.restore();
+    }
+
     // Arena boundary lines
-    ctx.strokeStyle = '#BAE6FD';
+    ctx.strokeStyle = `${theme.borderColor}55`;
     ctx.lineWidth = 4;
     ctx.strokeRect(16, 16, width - 32, height - 32);
 
-    // Prominent Center Ice Dividing Border (Players cannot cross!)
+    // Center Ice Dividing Border (Players cannot cross!)
     const isTwoPlayer = this.getActivePlayers().length === 2;
     const midX = width / 2;
     const midY = height / 2;
 
     // Glowing Frost Zone Strip
-    ctx.fillStyle = 'rgba(186, 230, 253, 0.22)';
+    ctx.fillStyle = `${theme.borderColor}22`;
     if (isTwoPlayer) {
       ctx.fillRect(midX - 16, 16, 32, height - 32);
     } else {
@@ -765,19 +1052,17 @@ export class SnowballFightGame extends BaseGame {
       ctx.fillRect(16, midY - 16, width - 32, 32);
     }
 
-    // Dashed Cyan Boundary Lines
+    // Dashed Boundary Lines
     ctx.save();
-    ctx.strokeStyle = '#38BDF8';
+    ctx.strokeStyle = theme.borderColor;
     ctx.lineWidth = 3;
     ctx.setLineDash([8, 6]);
 
-    // Vertical Border
     ctx.beginPath();
     ctx.moveTo(midX, 20);
     ctx.lineTo(midX, height - 20);
     ctx.stroke();
 
-    // Horizontal Border (4-player mode)
     if (!isTwoPlayer) {
       ctx.beginPath();
       ctx.moveTo(20, midY);
@@ -786,59 +1071,52 @@ export class SnowballFightGame extends BaseGame {
     }
     ctx.restore();
 
-    // Boundary Ice Stakes / Posts along divider
+    // Boundary Ice Stakes along divider
     const stakeSpacing = 48;
     const startY = 40;
     for (let sy = startY; sy <= height - 35; sy += stakeSpacing) {
       ctx.save();
       ctx.translate(midX, sy);
-      // Ice crystal diamond stake
       ctx.beginPath();
       ctx.moveTo(0, -7);
       ctx.lineTo(6, 0);
       ctx.lineTo(0, 7);
       ctx.lineTo(-6, 0);
       ctx.closePath();
-      ctx.fillStyle = '#E0F2FE';
+      ctx.fillStyle = theme.snowColor;
       ctx.fill();
-      ctx.strokeStyle = '#0284C7';
+      ctx.strokeStyle = theme.borderColor;
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Frost glint
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(-2, -3, 3, 3);
       ctx.restore();
     }
 
-    // Center Icy Medallion & Border Label
+    // Center Medallion
     ctx.beginPath();
     ctx.arc(midX, midY, 24, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(224, 242, 254, 0.85)';
+    ctx.fillStyle = `${theme.pillColor}44`;
     ctx.fill();
-    ctx.strokeStyle = '#0284C7';
+    ctx.strokeStyle = theme.borderColor;
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    ctx.fillStyle = '#0369A1';
-    ctx.font = 'bold 11px system-ui, sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 12px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('❄️', midX, midY);
 
-    // Border warning indicators near top
-    ctx.fillStyle = '#0284C7';
-    ctx.font = '900 10px system-ui, sans-serif';
-    ctx.fillText('ICE BORDER', midX, 32);
-
-    // Check proximity of any player to border and render soft barrier glow
+    // Proximity barrier glow
     for (const p of this.getActivePlayers()) {
       const ps = this.playersState.get(p.id);
       if (!ps || !ps.alive) continue;
       const distToBorder = Math.abs(ps.x - midX);
       if (distToBorder < 40) {
         const alpha = Math.max(0, (40 - distToBorder) / 40) * 0.45;
-        ctx.fillStyle = `rgba(56, 189, 248, ${alpha})`;
+        ctx.fillStyle = `${theme.borderColor}${Math.round(alpha * 255).toString(16).padStart(2, '0')}`;
         ctx.beginPath();
         ctx.ellipse(midX, ps.y, 8, 22, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -849,39 +1127,34 @@ export class SnowballFightGame extends BaseGame {
     for (const decal of this.decals) {
       ctx.beginPath();
       ctx.arc(decal.x, decal.y, decal.radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 255, 255, ${decal.alpha})`;
+      ctx.fillStyle = decal.color || `rgba(255, 255, 255, ${decal.alpha})`;
       ctx.fill();
       ctx.lineWidth = 1;
-      ctx.strokeStyle = 'rgba(203, 213, 225, 0.5)';
+      ctx.strokeStyle = 'rgba(203, 213, 225, 0.4)';
       ctx.stroke();
     }
 
     // Render Snow Fort Blocks
     for (const block of this.blocks) {
-      // Drop shadow
-      ctx.fillStyle = 'rgba(148, 163, 184, 0.35)';
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.28)';
       ctx.fillRect(block.x + 3, block.y + 4, block.w, block.h);
 
-      // Snow block body
-      ctx.fillStyle = block.hp === 2 ? '#FFFFFF' : '#E2E8F0';
+      ctx.fillStyle = block.hp === 2 ? theme.snowColor : '#94A3B8';
       ctx.fillRect(block.x, block.y, block.w, block.h);
 
-      // Block outline & frosty bevel
-      ctx.strokeStyle = '#94A3B8';
+      ctx.strokeStyle = theme.borderColor;
       ctx.lineWidth = 2;
       ctx.strokeRect(block.x, block.y, block.w, block.h);
 
-      // Snow block brick lines / cracks if damaged
       if (block.hp < block.maxHp) {
-        ctx.strokeStyle = '#64748B';
+        ctx.strokeStyle = '#475569';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.moveTo(block.x + 8, block.y + 6);
         ctx.lineTo(block.x + block.w - 12, block.y + block.h - 8);
         ctx.stroke();
       } else {
-        // Ice crystal highlight
-        ctx.strokeStyle = '#38BDF8';
+        ctx.strokeStyle = `${theme.borderColor}88`;
         ctx.lineWidth = 1;
         ctx.strokeRect(block.x + 4, block.y + 4, block.w - 8, block.h - 8);
       }
@@ -889,17 +1162,15 @@ export class SnowballFightGame extends BaseGame {
 
     // Render Pine Trees
     for (const tree of this.trees) {
-      // Tree ground shadow
       ctx.beginPath();
       ctx.ellipse(tree.x + 4, tree.y + 6, tree.radius * 1.1, tree.radius * 0.7, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(100, 116, 139, 0.3)';
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
       ctx.fill();
 
-      // Evergreen tiered layers
       const tiers = [
-        { r: tree.radius, color: '#166534', yOffset: 0 },
-        { r: tree.radius * 0.75, color: '#15803D', yOffset: -8 },
-        { r: tree.radius * 0.5, color: '#16A34A', yOffset: -16 }
+        { r: tree.radius, color: theme.treeColors[0], yOffset: 0 },
+        { r: tree.radius * 0.75, color: theme.treeColors[1], yOffset: -8 },
+        { r: tree.radius * 0.5, color: theme.treeColors[2], yOffset: -16 }
       ];
 
       for (const t of tiers) {
@@ -907,24 +1178,24 @@ export class SnowballFightGame extends BaseGame {
         ctx.arc(tree.x, tree.y + t.yOffset, t.r, 0, Math.PI * 2);
         ctx.fillStyle = t.color;
         ctx.fill();
-        ctx.strokeStyle = '#14532D';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#064E3B';
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // Snow cap on top of each tier
+        // Snow cap
         ctx.beginPath();
         ctx.arc(tree.x, tree.y + t.yOffset - 3, t.r * 0.45, 0, Math.PI * 2);
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = theme.snowColor;
         ctx.fill();
       }
     }
 
-    // Render Ballistic Snowball Shadows (first, so they stay grounded)
+    // Render Ballistic Snowball Shadows
     for (const b of this.snowballs) {
       const shadowScale = Math.max(0.4, 1 - b.z / 180);
       ctx.beginPath();
       ctx.ellipse(b.x, b.y, b.radius * shadowScale * 1.3, b.radius * shadowScale * 0.7, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(100, 116, 139, 0.4)';
+      ctx.fillStyle = b.isGolden ? 'rgba(234, 179, 8, 0.45)' : 'rgba(15, 23, 42, 0.35)';
       ctx.fill();
     }
 
@@ -948,44 +1219,44 @@ export class SnowballFightGame extends BaseGame {
         continue;
       }
 
-      // Player shadow
-      ctx.beginPath();
-      ctx.ellipse(ps.x + 3, ps.y + 4, 18, 12, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(71, 85, 105, 0.35)';
-      ctx.fill();
+      // Underdog Thermal Coat Golden Aura
+      if (ps.isUnderdog) {
+        ctx.save();
+        ctx.strokeStyle = '#F59E0B';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.arc(ps.x, ps.y, 24, 0, Math.PI * 2);
+        ctx.stroke();
 
-      // Player Body (Winter Coat / Arctic Parka)
-      ctx.beginPath();
-      ctx.arc(ps.x, ps.y, 16, 0, Math.PI * 2);
-      ctx.fillStyle = p.color;
-      ctx.fill();
-      ctx.lineWidth = 2.5;
-      ctx.strokeStyle = '#1E293B';
-      ctx.stroke();
+        ctx.fillStyle = '#F59E0B';
+        ctx.font = '900 9px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('SURGE 🔥', ps.x, ps.y + 32);
+        ctx.restore();
+      }
 
-      // Winter Hood / Beanie trim
-      ctx.beginPath();
-      ctx.arc(ps.x, ps.y - 4, 9, 0, Math.PI * 2);
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fill();
-      ctx.strokeStyle = p.colorDark || '#334155';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
+      // Context-aware Character Mood
+      let mood: CharacterMood = 'idle';
+      if (ps.stunTimer > 0) {
+        mood = 'shocked';
+      } else if (ps.isCharging) {
+        mood = 'focused';
+      } else if (ps.recentScoreTimer > 0 || ps.streak >= 2) {
+        mood = 'triumph';
+      } else if (ps.hp === ps.maxHp) {
+        mood = 'happy';
+      }
 
-      // Eyes facing aim direction
-      const eyeOffset = 6;
-      const ex1 = ps.x + Math.cos(ps.aimAngle - 0.35) * eyeOffset;
-      const ey1 = ps.y + Math.sin(ps.aimAngle - 0.35) * eyeOffset - 4;
-      const ex2 = ps.x + Math.cos(ps.aimAngle + 0.35) * eyeOffset;
-      const ey2 = ps.y + Math.sin(ps.aimAngle + 0.35) * eyeOffset - 4;
+      const isBot = p.type.startsWith('bot_');
 
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.arc(ex1, ey1, 1.8, 0, Math.PI * 2);
-      ctx.arc(ex2, ey2, 1.8, 0, Math.PI * 2);
-      ctx.fill();
+      // Mascot Avatar via CharacterRenderer
+      ctx.save();
+      ctx.translate(ps.x, ps.y);
+      drawCharacter(ctx, 0, 0, 18, p.id, isBot, mood, this.animTimer * 3);
+      ctx.restore();
 
-      // Stun flurry if dazed
+      // Stun flurry
       if (ps.stunTimer > 0) {
         const stunAngle = performance.now() * 0.008;
         for (let s = 0; s < 3; s++) {
@@ -1012,24 +1283,29 @@ export class SnowballFightGame extends BaseGame {
       const sizeBonus = Math.min(6, b.z / 25);
       const drawRadius = b.radius + sizeBonus;
 
-      // Snowball glow & body
+      ctx.save();
+      if (b.isGolden) {
+        ctx.shadowColor = '#FACC15';
+        ctx.shadowBlur = 14;
+      }
+
       ctx.beginPath();
       ctx.arc(b.x, renderY, drawRadius, 0, Math.PI * 2);
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = b.isGolden ? '#FEF08A' : theme.snowColor;
       ctx.fill();
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = '#93C5FD';
+      ctx.lineWidth = b.isGolden ? 2 : 1.5;
+      ctx.strokeStyle = b.isGolden ? '#EAB308' : '#93C5FD';
       ctx.stroke();
 
-      // Powder glint
       ctx.beginPath();
       ctx.arc(b.x - drawRadius * 0.35, renderY - drawRadius * 0.35, drawRadius * 0.35, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
       ctx.fill();
+      ctx.restore();
     }
 
-    // Render Ambient Falling Snow
-    ctx.fillStyle = '#FFFFFF';
+    // Ambient Falling Snow
+    ctx.fillStyle = theme.snowColor;
     for (const flake of this.ambientFlakes) {
       ctx.globalAlpha = flake.alpha;
       ctx.beginPath();
@@ -1038,8 +1314,14 @@ export class SnowballFightGame extends BaseGame {
     }
     ctx.globalAlpha = 1.0;
 
-    // Render Central HUD Pod at top corridor (y = 56)
+    // Center HUD Pod at y = 56
     this.renderCenterHudPod(ctx, width);
+
+    // Interactive Theme Pill (x: 20, y: height - 44, w: 170, h: 32)
+    this.renderThemePill(ctx, height, theme);
+
+    // Control Hints (Right-aligned)
+    this.renderControlHints(ctx, width, height);
 
     ctx.restore();
   }
@@ -1049,7 +1331,6 @@ export class SnowballFightGame extends BaseGame {
     const ax = ps.x + Math.cos(ps.aimAngle) * aimLen;
     const ay = ps.y + Math.sin(ps.aimAngle) * aimLen;
 
-    // Aim Pointer Line
     ctx.strokeStyle = color;
     ctx.lineWidth = ps.isCharging ? 3.5 : 2;
     ctx.beginPath();
@@ -1057,7 +1338,6 @@ export class SnowballFightGame extends BaseGame {
     ctx.lineTo(ax, ay);
     ctx.stroke();
 
-    // Arrow Tip
     const arrowAngle = ps.aimAngle;
     const arrowHeadLen = 9;
     ctx.fillStyle = color;
@@ -1074,9 +1354,7 @@ export class SnowballFightGame extends BaseGame {
     ctx.closePath();
     ctx.fill();
 
-    // If Charging: Render Ballistic Prediction Arc & Power Bar
     if (ps.isCharging) {
-      // Estimated range based on current power
       const predictedRange = 120 + ps.chargePower * 280;
       const stepCount = 5;
       ctx.save();
@@ -1084,7 +1362,7 @@ export class SnowballFightGame extends BaseGame {
         const dist = (predictedRange * s) / stepCount;
         const px = ps.x + Math.cos(ps.aimAngle) * dist;
         const py = ps.y + Math.sin(ps.aimAngle) * dist;
-        const dotAlpha = (s / stepCount) * 0.7;
+        const dotAlpha = (s / stepCount) * 0.75;
 
         ctx.beginPath();
         ctx.arc(px, py, 2.5 + (s === stepCount ? 2 : 0), 0, Math.PI * 2);
@@ -1092,7 +1370,6 @@ export class SnowballFightGame extends BaseGame {
         ctx.fill();
       }
 
-      // Circular/Curved Power Arc above player head
       const barW = 44;
       const barH = 6;
       const barX = ps.x - barW / 2;
@@ -1101,7 +1378,6 @@ export class SnowballFightGame extends BaseGame {
       ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
       ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
 
-      // Power gradient from green to red
       const pGrad = ctx.createLinearGradient(barX, barY, barX + barW, barY);
       pGrad.addColorStop(0, '#22C55E');
       pGrad.addColorStop(0.6, '#FBBF24');
@@ -1118,7 +1394,6 @@ export class SnowballFightGame extends BaseGame {
   }
 
   private renderSnowman(ctx: CanvasRenderingContext2D, x: number, y: number, color: string): void {
-    // Bottom snowball
     ctx.beginPath();
     ctx.arc(x, y + 6, 15, 0, Math.PI * 2);
     ctx.fillStyle = '#FFFFFF';
@@ -1127,7 +1402,6 @@ export class SnowballFightGame extends BaseGame {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Head snowball
     ctx.beginPath();
     ctx.arc(x, y - 10, 10, 0, Math.PI * 2);
     ctx.fillStyle = '#FFFFFF';
@@ -1136,7 +1410,6 @@ export class SnowballFightGame extends BaseGame {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Coal eyes & carrot nose
     ctx.fillStyle = '#0F172A';
     ctx.fillRect(x - 4, y - 13, 2.5, 2.5);
     ctx.fillRect(x + 2, y - 13, 2.5, 2.5);
@@ -1147,7 +1420,6 @@ export class SnowballFightGame extends BaseGame {
     ctx.lineTo(x - 1, y - 7);
     ctx.fill();
 
-    // Player colored scarf
     ctx.fillStyle = color;
     ctx.fillRect(x - 10, y - 2, 20, 5);
     ctx.fillRect(x + 2, y + 1, 5, 10);
@@ -1178,12 +1450,11 @@ export class SnowballFightGame extends BaseGame {
   }
 
   private renderCenterHudPod(ctx: CanvasRenderingContext2D, width: number): void {
-    const podW = 340;
+    const podW = 360;
     const podH = 26;
     const podX = width / 2 - podW / 2;
     const podY = 56;
 
-    // Dark sleek capsule
     ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
     ctx.beginPath();
     ctx.roundRect(podX, podY, podW, podH, 13);
@@ -1194,21 +1465,22 @@ export class SnowballFightGame extends BaseGame {
     ctx.stroke();
 
     // Map Name Badge
-    ctx.font = '700 11px Inter, system-ui, sans-serif';
+    ctx.font = '700 11px system-ui, sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#38BDF8';
     ctx.fillText(`❄️ ${this.currentMapName.toUpperCase()}`, podX + 16, podY + podH / 2);
 
-    // Round Timer
-    const mins = Math.floor(this.roundTimer / 60);
-    const secs = Math.floor(this.roundTimer % 60);
-    const timerStr = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-
-    ctx.font = '800 13px Inter, monospace';
+    // Sudden death or sub-status in center
+    ctx.font = '800 11px system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = this.roundTimer <= 10 ? '#EF4444' : '#FFFFFF';
-    ctx.fillText(timerStr, width / 2, podY + podH / 2);
+    if (this.roundTimer <= 15) {
+      ctx.fillStyle = '#FACC15';
+      ctx.fillText('⚡ BLIZZARD OVERDRIVE', width / 2, podY + podH / 2);
+    } else {
+      ctx.fillStyle = '#94A3B8';
+      ctx.fillText('ARTILLERY SNOW FORT DUEL', width / 2, podY + podH / 2);
+    }
 
     // Player Status Mini-Dots on Right
     ctx.textAlign = 'right';
@@ -1231,6 +1503,45 @@ export class SnowballFightGame extends BaseGame {
     }
   }
 
+  private renderThemePill(ctx: CanvasRenderingContext2D, height: number, theme: ThemeConfig): void {
+    const pillX = 20;
+    const pillY = height - 44;
+    const pillW = 170;
+    const pillH = 32;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, 16);
+    ctx.fill();
+
+    ctx.strokeStyle = theme.pillColor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '700 11px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(theme.name, pillX + 14, pillY + pillH / 2);
+
+    ctx.fillStyle = '#94A3B8';
+    ctx.font = '600 10px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('[T]', pillX + pillW - 12, pillY + pillH / 2);
+    ctx.restore();
+  }
+
+  private renderControlHints(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    ctx.save();
+    ctx.font = '600 11px system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.fillText('Hold: Charge Throw | Release: Fire | Steer: Aim & Walk', width - 24, height - 28);
+    ctx.restore();
+  }
+
   public isRoundOver(): boolean {
     return this.isFinished;
   }
@@ -1238,7 +1549,6 @@ export class SnowballFightGame extends BaseGame {
   public getRoundResult(): RoundResult {
     const active = this.getActivePlayers();
 
-    // Compute rankings: Survivors first (ranked by HP, then score), followed by destruction order
     const survivors = active
       .filter((p) => this.playersState.get(p.id)?.alive)
       .sort((a, b) => {
@@ -1256,7 +1566,6 @@ export class SnowballFightGame extends BaseGame {
 
     const fullOrder = [...survivors, ...eliminated];
 
-    // Build rankings list
     const rankings = fullOrder.map((p, idx) => ({
       playerId: p.id,
       score: this.playersState.get(p.id)?.score ?? 0,
@@ -1286,7 +1595,6 @@ export class SnowballFightGame extends BaseGame {
       return;
     }
 
-    // Find nearest alive enemy
     const enemies = this.getActivePlayers()
       .filter((p) => p.id !== botId && this.playersState.get(p.id)?.alive)
       .map((p) => this.playersState.get(p.id)!);
@@ -1316,7 +1624,6 @@ export class SnowballFightGame extends BaseGame {
       if (b.ownerId !== botId) {
         const d = Math.hypot(b.x - ps.x, b.y - ps.y);
         if (d < 150) {
-          // If ball is flying toward us, dodge vertically
           const dodgeDir = b.y > ps.y ? -1 : 1;
           idealY = ps.y + dodgeDir * 80;
           break;
@@ -1324,12 +1631,11 @@ export class SnowballFightGame extends BaseGame {
       }
     }
 
-    // Clamp ideal position within bot's legal bounds
-    idealY = Math.max(65, Math.min(height - 40, idealY));
+    idealY = Math.max(65, Math.min(height - 55, idealY));
 
     const moveX = Math.max(-1, Math.min(1, (idealX - ps.x) / 35));
     const moveY = Math.max(-1, Math.min(1, (idealY - ps.y) / 35));
-    const navThrottle = -moveY; // throttle: +1 up, -1 down
+    const navThrottle = -moveY;
 
     const dx = target.x - ps.x;
     const dy = target.y - ps.y;
@@ -1338,28 +1644,22 @@ export class SnowballFightGame extends BaseGame {
 
     // Apply difficulty modifiers
     let aimTolerance = 0.22;
-    let powerTolerance = 0.15;
     let steerDir = 0;
 
     if (difficulty === 'bot_easy') {
-      // Slower reaction, large aim dispersion
-      aimTolerance = 0.45;
-      powerTolerance = 0.3;
-      if (Math.random() < 0.03) {
+      aimTolerance = 0.40;
+      if (Math.random() < 0.04) {
         this.input.setBotInput(botId, false, moveX * 0.5, navThrottle * 0.5, false);
         return;
       }
     } else if (difficulty === 'bot_hard') {
-      // Pinpoint precision, leading moving targets
       aimTolerance = 0.08;
-      powerTolerance = 0.05;
       if (target.vx !== 0 || target.vy !== 0) {
-        const leadTime = dist / 450;
+        const leadTime = dist / 460;
         targetAngle = Math.atan2(target.y + target.vy * leadTime - ps.y, target.x + target.vx * leadTime - ps.x);
       }
     }
 
-    // Steer aim towards target
     let angleDiff = targetAngle - ps.aimAngle;
     while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
@@ -1368,32 +1668,26 @@ export class SnowballFightGame extends BaseGame {
       steerDir = angleDiff > 0 ? 1 : -1;
     }
 
-    // Calculate required throw power for distance
     const rawPower = Math.min(1.0, Math.max(0.3, (dist - 80) / 370));
     const powerJitter =
       difficulty === 'bot_easy'
-        ? (Math.random() - 0.5) * 0.2
+        ? (Math.random() - 0.5) * 0.22
         : difficulty === 'bot_normal'
         ? (Math.random() - 0.5) * 0.08
         : 0;
     const targetPower = Math.min(1.0, Math.max(0.28, rawPower + powerJitter));
 
-    // Decision: charge or release or move
     if (Math.abs(angleDiff) <= aimTolerance) {
       if (!ps.isCharging) {
-        // Start charging
         this.input.setBotInput(botId, true, steerDir, 0, true);
       } else {
         if (ps.chargePower >= targetPower) {
-          // Release throw!
           this.input.setBotInput(botId, false, 0, 0, false);
         } else {
-          // Keep charging
           this.input.setBotInput(botId, true, steerDir, 0, true);
         }
       }
     } else {
-      // Not yet aligned: move toward ideal tactical spot and guide aim
       if (ps.isCharging) {
         this.input.setBotInput(botId, true, steerDir, 0, true);
       } else {
