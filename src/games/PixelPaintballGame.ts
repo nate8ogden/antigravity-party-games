@@ -3,6 +3,43 @@ import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
+import { drawCharacter, CharacterMood } from '../core/CharacterRenderer';
+
+export interface PaintballTheme {
+  name: string;
+  floorColor: string;
+  gridLineColor: string;
+  bunkerDefaultColor: string;
+  bunkerStroke: string;
+  themePillColor: string;
+}
+
+export const PAINTBALL_THEMES: PaintballTheme[] = [
+  {
+    name: 'Speedball Arena 🎯',
+    floorColor: '#0F172A',
+    gridLineColor: '#1E293B',
+    bunkerDefaultColor: '#38BDF8',
+    bunkerStroke: '#FFFFFF',
+    themePillColor: '#38BDF8'
+  },
+  {
+    name: 'Cyber Splat Grid ⚡',
+    floorColor: '#050D1A',
+    gridLineColor: 'rgba(6, 182, 212, 0.25)',
+    bunkerDefaultColor: '#06B6D4',
+    bunkerStroke: '#38BDF8',
+    themePillColor: '#06B6D4'
+  },
+  {
+    name: 'Toyroom Splatterfest 🎨',
+    floorColor: '#1C1917',
+    gridLineColor: '#292524',
+    bunkerDefaultColor: '#F59E0B',
+    bunkerStroke: '#FDE047',
+    themePillColor: '#F59E0B'
+  }
+];
 
 interface PaintPlayer {
   x: number;
@@ -13,6 +50,8 @@ interface PaintPlayer {
   score: number;
   fireCooldown: number;
   stunTimer: number;
+  isUnderdog: boolean;
+  streak: number;
   botBurstTimer?: number;
   botBurstPause?: number;
 }
@@ -26,6 +65,7 @@ interface PaintPellet {
   color: string;
   bounces: number;
   lifetime: number;
+  isSuper: boolean;
 }
 
 interface PaintSplat {
@@ -41,7 +81,9 @@ interface TargetPinata {
   vx: number;
   vy: number;
   hp: number;
+  maxHp: number;
   radius: number;
+  isMega: boolean;
 }
 
 interface ArenaBunker {
@@ -59,6 +101,17 @@ export class PixelPaintballGame extends BaseGame {
   private bunkers: ArenaBunker[] = [];
   private spawnPinataTimer: number = 2.0;
 
+  private currentThemeIndex: number = 0;
+  public currentMapName: string = 'Speedball X';
+
+  private isSuddenDeath: boolean = false;
+  private suddenDeathFlashTimer: number = 0;
+
+  private boundPointerDown: ((e: PointerEvent) => void) | null = null;
+  private boundKeyDown: ((e: KeyboardEvent) => void) | null = null;
+  private lastWidth: number = 800;
+  private lastHeight: number = 600;
+
   constructor(
     players: PlayerConfig[],
     input: InputRouter,
@@ -66,11 +119,16 @@ export class PixelPaintballGame extends BaseGame {
     particles: ParticleSystem
   ) {
     super(players, input, audio, particles);
+    this.currentThemeIndex = Math.floor(Math.random() * PAINTBALL_THEMES.length);
   }
 
   public init(width: number, height: number): void {
+    this.lastWidth = width;
+    this.lastHeight = height;
     this.roundTimer = 40;
     this.isFinished = false;
+    this.isSuddenDeath = false;
+    this.suddenDeathFlashTimer = 0;
     this.playersState.clear();
     this.pellets = [];
     this.splats = [];
@@ -80,7 +138,6 @@ export class PixelPaintballGame extends BaseGame {
     const cx = width / 2;
     const cy = height / 2;
 
-    // Procedural Tactical Bunker Layout
     this.generateRandomMap(cx, cy, width, height);
 
     const active = this.getActivePlayers();
@@ -101,16 +158,29 @@ export class PixelPaintballGame extends BaseGame {
         angle: Math.atan2(height / 2 - pos.y, width / 2 - pos.x),
         score: 0,
         fireCooldown: 0,
-        stunTimer: 0
+        stunTimer: 0,
+        isUnderdog: false,
+        streak: 0
       });
     });
 
     // Spawn 2 initial pinatas
     for (let i = 0; i < 2; i++) {
-      this.spawnPinata(width, height);
+      this.spawnPinata(width, height, false);
     }
 
-    // Expose debug hook for testing
+    // Bind event listeners
+    const canvas = this.input.getCanvas();
+    if (canvas && !this.boundPointerDown) {
+      this.boundPointerDown = this.handlePointerDown.bind(this);
+      canvas.addEventListener('pointerdown', this.boundPointerDown);
+    }
+    if (!this.boundKeyDown) {
+      this.boundKeyDown = this.handleKeyDown.bind(this);
+      window.addEventListener('keydown', this.boundKeyDown);
+    }
+
+    // Expose debug hook
     (window as any).__PIXEL_PAINTBALL_DEBUG__ = {
       getPlayerState: (pid: PlayerId) => {
         const ps = this.playersState.get(pid);
@@ -128,11 +198,57 @@ export class PixelPaintballGame extends BaseGame {
       },
       getPellets: () => this.pellets.map((p) => ({ x: p.x, y: p.y, vx: p.vx, vy: p.vy, ownerId: p.ownerId })),
       getPinatas: () => this.pinatas.map((p) => ({ x: p.x, y: p.y, hp: p.hp })),
-      getBunkers: () => [...this.bunkers]
+      getBunkers: () => [...this.bunkers],
+      getThemeIndex: () => this.currentThemeIndex,
+      setThemeIndex: (idx: number) => {
+        this.currentThemeIndex = idx % PAINTBALL_THEMES.length;
+      }
     };
   }
 
-  public currentMapName: string = 'Speedball X';
+  private handleKeyDown(e: KeyboardEvent): void {
+    if (e.key === 't' || e.key === 'T') {
+      this.toggleTheme();
+    }
+  }
+
+  private toggleTheme(): void {
+    this.currentThemeIndex = (this.currentThemeIndex + 1) % PAINTBALL_THEMES.length;
+    this.audio.playTap();
+  }
+
+  private handlePointerDown(e: PointerEvent): void {
+    const canvas = this.input.getCanvas();
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const clickX = ((e.clientX - rect.left) / rect.width) * this.lastWidth;
+    const clickY = ((e.clientY - rect.top) / rect.height) * this.lastHeight;
+
+    // Check Theme Pill click: [T] Theme Pill at (20, height - 44, 170, 32)
+    if (
+      clickX >= 20 &&
+      clickX <= 190 &&
+      clickY >= this.lastHeight - 44 &&
+      clickY <= this.lastHeight - 12
+    ) {
+      this.toggleTheme();
+    }
+  }
+
+  public override destroy(): void {
+    if (this.boundPointerDown) {
+      const canvas = this.input.getCanvas();
+      if (canvas) {
+        canvas.removeEventListener('pointerdown', this.boundPointerDown);
+      }
+      this.boundPointerDown = null;
+    }
+    if (this.boundKeyDown) {
+      window.removeEventListener('keydown', this.boundKeyDown);
+      this.boundKeyDown = null;
+    }
+  }
 
   private generateRandomMap(cx: number, cy: number, width: number, height: number): void {
     const archetypes = ['Speedball X', 'Fortress Ring', 'Dual Citadel', 'Scatter Pillboxes'];
@@ -141,7 +257,6 @@ export class PixelPaintballGame extends BaseGame {
 
     switch (this.currentMapName) {
       case 'Speedball X':
-        // Central X formation + 4 flank bunkers
         this.bunkers = [
           { x: cx, y: cy, radius: 26, color: '#38BDF8' },
           { x: cx - width * 0.22, y: cy, radius: 22, color: '#EC4899' },
@@ -152,7 +267,6 @@ export class PixelPaintballGame extends BaseGame {
         break;
 
       case 'Fortress Ring':
-        // Hexagonal ring of 6 protective barricades
         for (let i = 0; i < 6; i++) {
           const ang = (i / 6) * Math.PI * 2;
           const dist = Math.min(width, height) * 0.24;
@@ -167,7 +281,6 @@ export class PixelPaintballGame extends BaseGame {
         break;
 
       case 'Dual Citadel':
-        // Two large defensive shields with 4 angled rebound corners
         this.bunkers = [
           { x: cx - width * 0.14, y: cy, radius: 28, color: '#38BDF8' },
           { x: cx + width * 0.14, y: cy, radius: 28, color: '#EC4899' },
@@ -180,7 +293,6 @@ export class PixelPaintballGame extends BaseGame {
 
       case 'Scatter Pillboxes':
       default:
-        // 7 procedurally scattered bunkers ensuring open lines for players
         const scatterColors = ['#38BDF8', '#EC4899', '#FACC15', '#10B981', '#A855F7', '#EF4444', '#06B6D4'];
         this.bunkers.push({ x: cx, y: cy, radius: 24, color: '#FBBF24' });
         for (let i = 0; i < 6; i++) {
@@ -197,19 +309,24 @@ export class PixelPaintballGame extends BaseGame {
     }
   }
 
-  private spawnPinata(width: number, height: number) {
+  private spawnPinata(width: number, height: number, isMega: boolean = false) {
     this.pinatas.push({
       x: width * 0.35 + Math.random() * width * 0.3,
       y: height * 0.35 + Math.random() * height * 0.3,
       vx: (Math.random() - 0.5) * 80,
       vy: (Math.random() - 0.5) * 80,
-      hp: 3,
-      radius: 18
+      hp: isMega ? 6 : 3,
+      maxHp: isMega ? 6 : 3,
+      radius: isMega ? 25 : 18,
+      isMega
     });
   }
 
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
+
+    this.lastWidth = width;
+    this.lastHeight = height;
 
     this.roundTimer -= dt;
     if (this.roundTimer <= 0) {
@@ -218,11 +335,33 @@ export class PixelPaintballGame extends BaseGame {
       return;
     }
 
+    // Sudden Death Activation (<= 15s remaining)
+    if (this.roundTimer <= 15.0 && !this.isSuddenDeath) {
+      this.isSuddenDeath = true;
+      this.audio.playBoost();
+      this.particles.shake(6);
+      // Spawn Golden Mega Piñata in center!
+      this.spawnPinata(width, height, true);
+    }
+
+    if (this.isSuddenDeath) {
+      this.suddenDeathFlashTimer += dt;
+    }
+
+    // Underdog surge calculations
+    let maxScore = -1;
+    for (const ps of this.playersState.values()) {
+      if (ps.score > maxScore) maxScore = ps.score;
+    }
+    for (const ps of this.playersState.values()) {
+      ps.isUnderdog = maxScore >= 3 && ps.score <= maxScore - 3;
+    }
+
     // Spawn pinatas periodically
     this.spawnPinataTimer -= dt;
-    if (this.spawnPinataTimer <= 0 && this.pinatas.length < 3) {
-      this.spawnPinata(width, height);
-      this.spawnPinataTimer = 6.0;
+    if (this.spawnPinataTimer <= 0 && this.pinatas.length < (this.isSuddenDeath ? 4 : 3)) {
+      this.spawnPinata(width, height, this.isSuddenDeath && Math.random() < 0.5);
+      this.spawnPinataTimer = 5.0;
     }
 
     // Update Pinatas
@@ -251,49 +390,44 @@ export class PixelPaintballGame extends BaseGame {
       if (ps.fireCooldown > 0) ps.fireCooldown -= dt;
 
       const steer = this.input.getSteer(p.id);
-      const throttle = this.input.getThrottle(p.id); // +1 up, -1 down
+      const throttle = this.input.getThrottle(p.id);
       const isAction = this.input.isActionPressed(p.id) || this.input.justAction(p.id) || this.input.justPressed(p.id);
       const isButtonHeld = this.input.isPressed(p.id);
 
-      // 8-directional input vector: steer is X (right +1, left -1), throttle is Y (up +1, down -1)
       const inputX = steer;
-      const inputY = -throttle; // Canvas Y (down is positive, up is negative)
+      const inputY = -throttle;
       const inputMag = Math.hypot(inputX, inputY);
 
       const pCfg = this.getPlayer(p.id);
       const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
 
+      // Underdog +20% move speed boost (264 vs 220)
+      const baseMoveSpeed = ps.isUnderdog ? 264 : 220;
+
       if (!isBot) {
         if (inputMag > 0.15) {
-          // Direct, intuitive 8-directional WASD / Arrow movement!
           const normX = inputX / inputMag;
           const normY = inputY / inputMag;
-          const moveSpeed = 220;
-          ps.vx = normX * moveSpeed;
-          ps.vy = normY * moveSpeed;
-          // Aim in movement direction
+          ps.vx = normX * baseMoveSpeed;
+          ps.vy = normY * baseMoveSpeed;
           ps.angle = Math.atan2(normY, normX);
         } else if (isButtonHeld && this.input.getControlMode() === 'single_button') {
-          // Single-button mobile fallback: hold button to drive forward in current scan direction
-          const driveSpeed = 190;
+          const driveSpeed = ps.isUnderdog ? 228 : 190;
           ps.vx = Math.cos(ps.angle) * driveSpeed;
           ps.vy = Math.sin(ps.angle) * driveSpeed;
         } else {
-          // Decelerate smoothly to a stop when no movement keys are pressed
           ps.vx *= Math.pow(0.80, dt * 60);
           ps.vy *= Math.pow(0.80, dt * 60);
           if (Math.abs(ps.vx) < 1) ps.vx = 0;
           if (Math.abs(ps.vy) < 1) ps.vy = 0;
 
-          // If in single-button mode without directional keys, slowly rotate scanner
           if (this.input.getControlMode() === 'single_button') {
             ps.angle += 2.0 * dt;
           }
         }
       } else {
-        // Bot physics: bot sets ps.angle and presses thrust/fire
         if (isButtonHeld) {
-          const botSpeed = 185;
+          const botSpeed = ps.isUnderdog ? 222 : 185;
           ps.vx = Math.cos(ps.angle) * botSpeed;
           ps.vy = Math.sin(ps.angle) * botSpeed;
         } else {
@@ -321,14 +455,16 @@ export class PixelPaintballGame extends BaseGame {
       ps.x = Math.max(r + 10, Math.min(width - r - 10, ps.x));
       ps.y = Math.max(r + 65, Math.min(height - r - 65, ps.y));
 
-      // Firing Paint Pellets (Action key / Space / Enter / button hold)
+      // Firing Paint Pellets
       const isFiring = isAction || (isButtonHeld && (isBot || inputMag < 0.15 || this.input.getControlMode() !== 'single_button'));
       if (isFiring && ps.fireCooldown <= 0) {
-        ps.fireCooldown = 0.22;
+        // Fire cooldown: Underdog has faster fire rate (0.14s vs 0.22s) or Sudden Death (0.11s)
+        const baseCooldown = this.isSuddenDeath ? 0.11 : (ps.isUnderdog ? 0.14 : 0.22);
+        ps.fireCooldown = baseCooldown;
         this.input.consumeAction(p.id);
         this.audio.playLaser();
 
-        const pelletSpeed = 520;
+        const pelletSpeed = this.isSuddenDeath ? 600 : 520;
         this.pellets.push({
           x: ps.x + Math.cos(ps.angle) * 18,
           y: ps.y + Math.sin(ps.angle) * 18,
@@ -337,12 +473,13 @@ export class PixelPaintballGame extends BaseGame {
           ownerId: p.id,
           color: p.color,
           bounces: 0,
-          lifetime: 1.4
+          lifetime: 1.4,
+          isSuper: ps.isUnderdog || this.isSuddenDeath
         });
       }
     }
 
-    // Solid Player-to-Player Collision & Separation (prevents players/bots from going on top of each other!)
+    // Solid Player-to-Player Elastic Collision
     const activeList = active
       .map((p) => this.playersState.get(p.id))
       .filter((ps): ps is PaintPlayer => Boolean(ps));
@@ -354,20 +491,18 @@ export class PixelPaintballGame extends BaseGame {
         const dx = p2.x - p1.x;
         const dy = p2.y - p1.y;
         const dist = Math.hypot(dx, dy);
-        const minDist = 34; // Sum of radii (17 + 17)
+        const minDist = 34;
 
         if (dist < minDist) {
           const overlap = minDist - (dist || 0.01);
           const nx = dist > 0.001 ? dx / dist : 1;
           const ny = dist > 0.001 ? dy / dist : 0;
 
-          // Push apart symmetrically
           p1.x -= nx * (overlap * 0.5);
           p1.y -= ny * (overlap * 0.5);
           p2.x += nx * (overlap * 0.5);
           p2.y += ny * (overlap * 0.5);
 
-          // Elastic bounce impulse
           const rvx = p2.vx - p1.vx;
           const rvy = p2.vy - p1.vy;
           const velAlongNormal = rvx * nx + rvy * ny;
@@ -388,6 +523,7 @@ export class PixelPaintballGame extends BaseGame {
     }
 
     // Update Pellets
+    const maxBounces = this.isSuddenDeath ? 3 : 2;
     for (let i = this.pellets.length - 1; i >= 0; i--) {
       const pel = this.pellets[i];
       pel.lifetime -= dt;
@@ -431,7 +567,6 @@ export class PixelPaintballGame extends BaseGame {
         pel.bounces++;
         this.audio.playBounce();
 
-        // Floor / Wall Splat Mark
         if (this.splats.length > 80) this.splats.shift();
         this.splats.push({
           x: pel.x,
@@ -440,7 +575,7 @@ export class PixelPaintballGame extends BaseGame {
           color: pel.color
         });
 
-        if (pel.bounces >= 2) {
+        if (pel.bounces >= maxBounces) {
           this.pellets.splice(i, 1);
           continue;
         }
@@ -454,19 +589,18 @@ export class PixelPaintballGame extends BaseGame {
           pin.hp--;
           hitPinata = true;
           this.audio.playBounce();
-
-          // Particle burst
-          this.particles.spawnSparks(pin.x, pin.y, '#F59E0B', 8);
+          this.particles.spawnSparks(pin.x, pin.y, pin.isMega ? '#FBBF24' : '#F59E0B', 8);
 
           if (pin.hp <= 0) {
             this.pinatas.splice(j, 1);
             const owner = this.playersState.get(pel.ownerId);
             if (owner) {
-              owner.score += 3;
+              const pts = pin.isMega ? 5 : 3;
+              owner.score += pts;
               this.audio.playTone(660, 0.1, 'triangle');
               setTimeout(() => this.audio.playTone(990, 0.15, 'sine'), 80);
-              this.particles.spawnExplosion(pin.x, pin.y, '#F59E0B', 24);
-              this.particles.showFloatingText('+3 PIÑATA BUST!', pin.x, pin.y - 12, '#FACC15', 18);
+              this.particles.spawnExplosion(pin.x, pin.y, pin.isMega ? '#FBBF24' : '#F59E0B', 24);
+              this.particles.showFloatingText(`+${pts} ${pin.isMega ? 'MEGA PIÑATA!' : 'PIÑATA BUST!'}`, pin.x, pin.y - 12, '#FACC15', 18);
               if (owner.score >= 15) this.isFinished = true;
             }
           }
@@ -485,19 +619,24 @@ export class PixelPaintballGame extends BaseGame {
         if (!ps || ps.stunTimer > 0) continue;
 
         if (Math.hypot(pel.x - ps.x, pel.y - ps.y) < 18) {
-          // Paintball Tag!
-          ps.stunTimer = 1.0;
+          // Underdog stun duration halved (0.5s vs 1.0s)
+          ps.stunTimer = ps.isUnderdog ? 0.5 : 1.0;
           ps.vx = pel.vx * 0.4;
           ps.vy = pel.vy * 0.4;
+          ps.streak = 0;
 
           const shooter = this.playersState.get(pel.ownerId);
           if (shooter) {
-            shooter.score += 1;
+            shooter.streak += 1;
+            const streakBonus = shooter.streak >= 3 ? 2 : 1;
+            shooter.score += streakBonus;
             this.audio.playScore();
+            if (streakBonus > 1) {
+              this.particles.showFloatingText(`+${streakBonus} STREAK!`, ps.x, ps.y - 16, '#FBBF24', 16);
+            }
             if (shooter.score >= 15) this.isFinished = true;
           }
 
-          // Massive colored splat on floor
           this.splats.push({
             x: ps.x,
             y: ps.y,
@@ -518,13 +657,12 @@ export class PixelPaintballGame extends BaseGame {
     dt: number,
     botId: PlayerId,
     difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
-    width: number,
-    height: number
+    _width: number,
+    _height: number
   ): void {
     const ps = this.playersState.get(botId);
     if (!ps || ps.stunTimer > 0) return;
 
-    // Nearest opponent
     let nearestOpp: PaintPlayer | null = null;
     let minOppDist = Infinity;
     for (const [id, opp] of this.playersState.entries()) {
@@ -536,31 +674,30 @@ export class PixelPaintballGame extends BaseGame {
       }
     }
 
-    // Nearest pinata
     let nearestPinata: TargetPinata | null = null;
     let minPinDist = Infinity;
     for (const pin of this.pinatas) {
       const d = Math.hypot(pin.x - ps.x, pin.y - ps.y);
-      if (d < minPinDist) {
-        minPinDist = d;
+      // Mega pinata priority
+      const effectiveD = pin.isMega ? d * 0.6 : d;
+      if (effectiveD < minPinDist) {
+        minPinDist = effectiveD;
         nearestPinata = pin;
       }
     }
 
-    // Initialize bot timers if missing
     if (ps.botBurstTimer === undefined) ps.botBurstTimer = 0;
     if (ps.botBurstPause === undefined) ps.botBurstPause = 0;
 
-    const target = nearestPinata && minPinDist < 240 ? nearestPinata : nearestOpp;
+    const target = nearestPinata && minPinDist < 260 ? nearestPinata : nearestOpp;
 
     if (difficulty === 'bot_easy') {
-      // Easy: frequently wanders, aims loosely, shoots infrequently
       if (Math.random() < 0.03) {
         ps.angle = Math.random() * Math.PI * 2;
       }
       if (target && Math.hypot(target.x - ps.x, target.y - ps.y) < 220) {
         const rawAngle = Math.atan2(target.y - ps.y, target.x - ps.x);
-        ps.angle = rawAngle + (Math.random() - 0.5) * 0.70; // High aim inaccuracy
+        ps.angle = rawAngle + (Math.random() - 0.5) * 0.70;
         this.input.setBotPressed(botId, Math.random() < 0.35);
       } else {
         this.input.setBotPressed(botId, Math.random() < 0.20);
@@ -569,10 +706,8 @@ export class PixelPaintballGame extends BaseGame {
     }
 
     if (difficulty === 'bot_normal') {
-      // Normal: Fun and beatable! Keeps tactical distance, smooth turning, aim jitter, burst pauses
       if (!target) return;
 
-      // Tactical distance: if closer than 140px to human player, back away or strafe!
       if (nearestOpp && minOppDist < 140) {
         const awayAngle = Math.atan2(ps.y - nearestOpp.y, ps.x - nearestOpp.x);
         ps.angle = awayAngle + (Math.random() - 0.5) * 0.6;
@@ -580,7 +715,6 @@ export class PixelPaintballGame extends BaseGame {
         return;
       }
 
-      // Smooth aim tracking with realistic human inaccuracy
       const rawTargetAngle = Math.atan2(target.y - ps.y, target.x - ps.x);
       const aimJitter = (Math.sin(Date.now() * 0.003 + botId) * 0.22) + (Math.random() - 0.5) * 0.15;
       const desiredAngle = rawTargetAngle + aimJitter;
@@ -590,7 +724,6 @@ export class PixelPaintballGame extends BaseGame {
       while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
       ps.angle += angleDiff * Math.min(1.0, 5.0 * dt);
 
-      // Burst firing: shoot in controlled bursts with pauses so humans have room to dodge/counter
       ps.botBurstTimer -= dt;
       if (ps.botBurstPause > 0) {
         ps.botBurstPause -= dt;
@@ -603,7 +736,7 @@ export class PixelPaintballGame extends BaseGame {
         }
       }
     } else {
-      // Hard: tactical kiting with lead compensation, but still avoids ramming into player
+      // Hard: tactical kiting with lead compensation
       if (!target) return;
       if (nearestOpp && minOppDist < 120) {
         ps.angle = Math.atan2(ps.y - nearestOpp.y, ps.x - nearestOpp.x);
@@ -624,12 +757,14 @@ export class PixelPaintballGame extends BaseGame {
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // Indoor Laser Paintball Arena Floor
-    ctx.fillStyle = '#0F172A';
+    const theme = PAINTBALL_THEMES[this.currentThemeIndex];
+
+    // Arena Floor
+    ctx.fillStyle = theme.floorColor;
     ctx.fillRect(0, 0, width, height);
 
     // Floor tactical grid
-    ctx.strokeStyle = '#1E293B';
+    ctx.strokeStyle = theme.gridLineColor;
     ctx.lineWidth = 1;
     const gridSize = 40;
     for (let x = 0; x < width; x += gridSize) {
@@ -653,7 +788,6 @@ export class PixelPaintballGame extends BaseGame {
       ctx.arc(splat.x, splat.y, splat.radius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Droplet specks
       for (let k = 0; k < 4; k++) {
         const a = (k / 4) * Math.PI * 2;
         ctx.beginPath();
@@ -672,19 +806,17 @@ export class PixelPaintballGame extends BaseGame {
       ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
       ctx.fillStyle = b.color;
       ctx.fill();
-      ctx.strokeStyle = '#FFFFFF';
+      ctx.strokeStyle = theme.bunkerStroke;
       ctx.lineWidth = 2.5;
       ctx.stroke();
 
-      // Inflatable Cylindrical Highlight
       ctx.beginPath();
       ctx.arc(b.x - b.radius * 0.3, b.y - b.radius * 0.3, b.radius * 0.35, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
       ctx.fill();
 
-      // Bunker emblem
       ctx.fillStyle = '#0F172A';
-      ctx.font = 'bold 10px Montserrat, sans-serif';
+      ctx.font = 'bold 9px Montserrat, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('COVER', b.x, b.y);
@@ -694,20 +826,21 @@ export class PixelPaintballGame extends BaseGame {
     // Render Pinatas
     for (const pin of this.pinatas) {
       ctx.save();
-      ctx.shadowColor = '#F59E0B';
-      ctx.shadowBlur = 12;
-      ctx.fillStyle = '#FBBF24';
+      ctx.shadowColor = pin.isMega ? '#FBBF24' : '#F59E0B';
+      ctx.shadowBlur = pin.isMega ? 18 : 12;
+      ctx.fillStyle = pin.isMega ? '#FDE047' : '#FBBF24';
       ctx.beginPath();
       ctx.arc(pin.x, pin.y, pin.radius, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = '#D97706';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = pin.isMega ? '#B45309' : '#D97706';
+      ctx.lineWidth = pin.isMega ? 3 : 2;
       ctx.stroke();
 
       ctx.fillStyle = '#78350F';
-      ctx.font = '900 12px Montserrat, sans-serif';
+      ctx.font = `900 ${pin.isMega ? 13 : 11}px Montserrat, sans-serif`;
       ctx.textAlign = 'center';
-      ctx.fillText(`🎯 ${pin.hp}`, pin.x, pin.y + 4.5);
+      ctx.textBaseline = 'middle';
+      ctx.fillText(pin.isMega ? `🌟 ${pin.hp}` : `🎯 ${pin.hp}`, pin.x, pin.y);
       ctx.restore();
     }
 
@@ -715,10 +848,16 @@ export class PixelPaintballGame extends BaseGame {
     for (const pel of this.pellets) {
       ctx.save();
       ctx.shadowColor = pel.color;
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = pel.isSuper ? 16 : 10;
       ctx.fillStyle = pel.color;
       ctx.beginPath();
-      ctx.arc(pel.x, pel.y, 5, 0, Math.PI * 2);
+      ctx.arc(pel.x, pel.y, pel.isSuper ? 6.5 : 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Core glow
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(pel.x, pel.y, 2, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
@@ -728,12 +867,26 @@ export class PixelPaintballGame extends BaseGame {
     for (const p of active) {
       const ps = this.playersState.get(p.id);
       if (!ps) continue;
+      const isBot = p.type.startsWith('bot_');
 
       ctx.save();
       ctx.translate(ps.x, ps.y);
+
+      // Underdog Paint Shield Aura
+      if (ps.isUnderdog) {
+        ctx.save();
+        ctx.strokeStyle = '#F59E0B';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.arc(0, 0, 24, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
       ctx.rotate(ps.angle);
 
-      // Stun overlay if hit
+      // Stun ring if hit
       if (ps.stunTimer > 0) {
         ctx.strokeStyle = '#FBBF24';
         ctx.lineWidth = 2.5;
@@ -747,7 +900,7 @@ export class PixelPaintballGame extends BaseGame {
       ctx.fillRect(8, -3.5, 12, 7);
 
       // Laser Aim Guide for Human Players
-      const isHuman = !p.type.startsWith('bot_');
+      const isHuman = !isBot;
       if (isHuman && ps.stunTimer <= 0) {
         ctx.save();
         ctx.strokeStyle = p.colorLight + '99';
@@ -759,7 +912,6 @@ export class PixelPaintballGame extends BaseGame {
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // Small laser crosshair dot
         ctx.fillStyle = p.colorLight;
         ctx.beginPath();
         ctx.arc(60, 0, 2.5, 0, Math.PI * 2);
@@ -781,8 +933,20 @@ export class PixelPaintballGame extends BaseGame {
       // Paint Hopper Tank on back
       ctx.fillStyle = p.colorLight;
       ctx.beginPath();
-      ctx.arc(-6, 0, 6, 0, Math.PI * 2);
+      ctx.arc(-7, 0, 6, 0, Math.PI * 2);
       ctx.fill();
+
+      // Mascot Face in Turret Hatch
+      let mood: CharacterMood = 'focused';
+      if (ps.stunTimer > 0) {
+        mood = 'shocked';
+      } else if (ps.score >= 12 || this.isFinished) {
+        mood = 'triumph';
+      } else if (ps.streak >= 2) {
+        mood = 'happy';
+      }
+
+      drawCharacter(ctx, 0, 0, 8, p.id, isBot, mood, 0);
 
       ctx.restore();
 
@@ -810,8 +974,8 @@ export class PixelPaintballGame extends BaseGame {
       ctx.fillText(p.name, ps.x, ps.y - 20);
     }
 
-    // Top Center Score Corridor
-    const hudW = 290;
+    // Minigame Subheader at safe position y: 56
+    const hudW = Math.min(width - 60, 480);
     const hudH = 26;
     const hudX = width / 2 - hudW / 2;
     const hudY = 56;
@@ -821,39 +985,56 @@ export class PixelPaintballGame extends BaseGame {
     ctx.shadowBlur = 10;
     ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(hudX, hudY, hudW, hudH, 13);
-    else ctx.rect(hudX, hudY, hudW, hudH);
+    ctx.roundRect(hudX, hudY, hudW, hudH, 13);
     ctx.fill();
-    ctx.strokeStyle = '#38BDF8';
+    ctx.strokeStyle = this.isSuddenDeath ? '#EF4444' : theme.themePillColor;
     ctx.lineWidth = 1.5;
     ctx.stroke();
-    ctx.restore();
 
     ctx.font = '900 11px Montserrat, sans-serif';
     ctx.textAlign = 'center';
-    let summary = active.map((p) => {
-      const ps = this.playersState.get(p.id);
-      return `${p.name}: 🎨 ${ps?.score || 0}/15`;
-    }).join('   •   ');
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(summary, width / 2, hudY + 17);
+    ctx.textBaseline = 'middle';
+    if (this.isSuddenDeath) {
+      const flash = Math.sin(this.suddenDeathFlashTimer * 10) > 0;
+      ctx.fillStyle = flash ? '#FDE047' : '#EF4444';
+      ctx.fillText('⚡ SUDDEN DEATH: MEGA PIÑATAS & RAPID RICOCHETS! ⚡', width / 2, hudY + 13);
+    } else {
+      const summary = active.map((p) => {
+        const ps = this.playersState.get(p.id);
+        return `${p.name}: 🎨 ${ps?.score || 0}/15`;
+      }).join('   •   ');
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText(summary, width / 2, hudY + 13);
+    }
+    ctx.restore();
 
-    // On-screen control instructions banner at bottom
+    // Theme Pill at bottom-left: x: 20, y: height - 44, w: 170, h: 32
     ctx.save();
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+    const pillX = 20;
+    const pillY = height - 44;
+    const pillW = 170;
+    const pillH = 32;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(width / 2 - 215, height - 36, 430, 26, 6);
-    else ctx.rect(width / 2 - 215, height - 36, 430, 26);
+    ctx.roundRect(pillX, pillY, pillW, pillH, 16);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = theme.themePillColor;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    ctx.font = '600 11px Montserrat, sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 11px "Outfit", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#94A3B8';
-    ctx.fillText('P1: [W A S D] Move • [SPACE] Shoot   |   P2: [ARROWS] Move • [ENTER] Shoot', width / 2, height - 23);
+    ctx.fillText(`${theme.name} [T]`, pillX + pillW * 0.5, pillY + pillH * 0.5);
+
+    // Right-aligned Control Hints
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.font = '11px "Outfit", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Steer: WASD / Arrows • Shoot: Space / Enter', width - 24, height - 28);
     ctx.restore();
   }
 
@@ -894,7 +1075,7 @@ export class PixelPaintballGame extends BaseGame {
     return {
       winnerId,
       rankings,
-      mvpHighlight: winnerId !== null ? `${this.players[winnerId].name} dominated the Paintball Arena!` : 'Paint splatter covered the arena in a draw!'
+      mvpHighlight: winnerId !== null ? `${this.players[winnerId].name} dominated the Paintball Arena with ${highestScore} points!` : 'Paint splatter covered the arena in a draw!'
     };
   }
 
