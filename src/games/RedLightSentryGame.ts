@@ -3,6 +3,55 @@ import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
+import { CharacterMood } from '../core/CharacterRenderer';
+
+export interface SentryTheme {
+  name: string;
+  floorGradTop: string;
+  floorGradBot: string;
+  laneColor: string;
+  laneBorder: string;
+  towerColor: string;
+  trophyColor: string;
+  themePillColor: string;
+  eyeType: 'doll' | 'cyber' | 'gargoyle';
+}
+
+export const SENTRY_THEMES: SentryTheme[] = [
+  {
+    name: 'Squid Courtyard 👧',
+    floorGradTop: '#D97706',
+    floorGradBot: '#78350F',
+    laneColor: 'rgba(254, 240, 138, 0.08)',
+    laneBorder: 'rgba(254, 240, 138, 0.22)',
+    towerColor: '#F43F5E',
+    trophyColor: '#FBBF24',
+    themePillColor: '#F59E0B',
+    eyeType: 'doll'
+  },
+  {
+    name: 'Cyber Security Vault ⚡',
+    floorGradTop: '#0F172A',
+    floorGradBot: '#020617',
+    laneColor: 'rgba(56, 189, 248, 0.06)',
+    laneBorder: 'rgba(56, 189, 248, 0.25)',
+    towerColor: '#0284C7',
+    trophyColor: '#38BDF8',
+    themePillColor: '#38BDF8',
+    eyeType: 'cyber'
+  },
+  {
+    name: 'Haunted Gargoyle 🪨',
+    floorGradTop: '#1E293B',
+    floorGradBot: '#090D16',
+    laneColor: 'rgba(148, 163, 184, 0.06)',
+    laneBorder: 'rgba(148, 163, 184, 0.20)',
+    towerColor: '#475569',
+    trophyColor: '#CBD5E1',
+    themePillColor: '#94A3B8',
+    eyeType: 'gargoyle'
+  }
+];
 
 interface Runner {
   id: PlayerId;
@@ -10,13 +59,17 @@ interface Runner {
   y: number;
   startX: number;
   targetX: number;
-  dir: 1 | -1; // 1: running right toward center, -1: running left toward center
+  dir: 1 | -1;
   speed: number;
   isRunning: boolean;
   stunTimer: number;
   runAnim: number;
   hasFinished: boolean;
   finishTime: number;
+  isUnderdog: boolean;
+  shoveCooldown: number;
+  recentMood: CharacterMood;
+  moodTimer: number;
 }
 
 interface BotSentryState {
@@ -34,12 +87,17 @@ export class RedLightSentryGame extends BaseGame {
   private currentPhaseDuration: number = 1.2;
   private currentYellowDuration: number = 0.65;
   private greenCycleCount: number = 0;
-  private sentryAngle: number = 0; // eye rotation
+  private sentryAngle: number = 0;
   private warningBeepTimer: number = 0;
   private laserSweepAngle: number = 0;
   private zappedLaserBeam: { x: number; y: number; timer: number } | null = null;
   private trophyX: number = 0;
   private botStates: Map<PlayerId, BotSentryState> = new Map();
+
+  // Themes and Listeners
+  private currentThemeIndex: number = 0;
+  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
+  private pointerdownListener: ((e: PointerEvent) => void) | null = null;
 
   constructor(
     players: PlayerConfig[],
@@ -51,7 +109,60 @@ export class RedLightSentryGame extends BaseGame {
   }
 
   public init(width: number, height: number): void {
+    this.setupListeners();
     this.reset(width, height);
+  }
+
+  public destroy(): void {
+    this.removeListeners();
+    super.destroy();
+    if (typeof window !== 'undefined' && (window as unknown as { __RED_LIGHT_DEBUG__?: unknown }).__RED_LIGHT_DEBUG__) {
+      delete (window as unknown as { __RED_LIGHT_DEBUG__?: unknown }).__RED_LIGHT_DEBUG__;
+    }
+  }
+
+  private setupListeners(): void {
+    if (typeof window === 'undefined') return;
+    this.removeListeners();
+
+    this.keydownListener = (e: KeyboardEvent) => {
+      if (this.isFinished) return;
+      if (e.code === 'KeyT') {
+        this.currentThemeIndex = (this.currentThemeIndex + 1) % SENTRY_THEMES.length;
+        this.audio.playTap();
+      }
+    };
+    window.addEventListener('keydown', this.keydownListener);
+
+    this.pointerdownListener = (e: PointerEvent) => {
+      if (this.isFinished) return;
+      const canvas = e.target as HTMLCanvasElement;
+      if (!canvas || !canvas.getBoundingClientRect) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const clickY = (e.clientY - rect.top) * scaleY;
+
+      // Theme pill is at x: 20, y: canvas.height - 44, w: 170, h: 32
+      if (clickX >= 20 && clickX <= 190 && clickY >= canvas.height - 44 && clickY <= canvas.height - 12) {
+        this.currentThemeIndex = (this.currentThemeIndex + 1) % SENTRY_THEMES.length;
+        this.audio.playTap();
+      }
+    };
+    window.addEventListener('pointerdown', this.pointerdownListener);
+  }
+
+  private removeListeners(): void {
+    if (typeof window === 'undefined') return;
+    if (this.keydownListener) {
+      window.removeEventListener('keydown', this.keydownListener);
+      this.keydownListener = null;
+    }
+    if (this.pointerdownListener) {
+      window.removeEventListener('pointerdown', this.pointerdownListener);
+      this.pointerdownListener = null;
+    }
   }
 
   public reset(width: number = 800, height: number = 600): void {
@@ -65,10 +176,9 @@ export class RedLightSentryGame extends BaseGame {
 
     const active = this.getActivePlayers();
     active.forEach((p, idx) => {
-      // 2 players: P1 starts on left edge, P2 starts on right edge
       const isLeft = idx % 2 === 0;
       const startX = isLeft ? 26 : width - 26;
-      const laneY = active.length === 2 ? (idx === 0 ? height * 0.42 : height * 0.58) : height * 0.32 + idx * 75;
+      const laneY = active.length === 2 ? (idx === 0 ? height * 0.44 : height * 0.60) : height * 0.32 + idx * 75;
 
       this.runners.set(p.id, {
         id: p.id,
@@ -77,12 +187,16 @@ export class RedLightSentryGame extends BaseGame {
         startX,
         targetX: this.trophyX,
         dir: isLeft ? 1 : -1,
-        speed: 92, // Requires substantial distance travelled across multiple green-yellow-red light cycles
+        speed: 95,
         isRunning: false,
         stunTimer: 0,
         runAnim: 0,
         hasFinished: false,
-        finishTime: 0
+        finishTime: 0,
+        isUnderdog: false,
+        shoveCooldown: 0,
+        recentMood: 'focused',
+        moodTimer: 0
       });
 
       this.botStates.set(p.id, {
@@ -93,19 +207,20 @@ export class RedLightSentryGame extends BaseGame {
     });
 
     // Expose debug hook for testing
-    (window as any).__RED_LIGHT_DEBUG__ = {
-      getRunners: () => Array.from(this.runners.values()).map(r => ({
-        id: r.id,
-        x: r.x,
-        y: r.y,
-        startX: r.startX,
-        targetX: r.targetX,
-        dir: r.dir,
-        speed: r.speed,
-        isRunning: r.isRunning,
-        stunTimer: r.stunTimer,
-        hasFinished: r.hasFinished
-      })),
+    (window as unknown as { __RED_LIGHT_DEBUG__?: unknown }).__RED_LIGHT_DEBUG__ = {
+      getRunners: () =>
+        Array.from(this.runners.values()).map((r) => ({
+          id: r.id,
+          x: r.x,
+          y: r.y,
+          startX: r.startX,
+          targetX: r.targetX,
+          dir: r.dir,
+          speed: r.speed,
+          isRunning: r.isRunning,
+          stunTimer: r.stunTimer,
+          hasFinished: r.hasFinished
+        })),
       getPhase: () => this.sentryPhase,
       getPhaseTimer: () => this.phaseTimer,
       getYellowDuration: () => this.currentYellowDuration,
@@ -131,14 +246,21 @@ export class RedLightSentryGame extends BaseGame {
       const p = this.players[pid];
       if (p?.type.startsWith('bot_')) {
         const diff = p.type as 'bot_easy' | 'bot_normal' | 'bot_hard';
-        state.greenReactionTimer = diff === 'bot_easy' ? (0.42 + Math.random() * 0.32) : diff === 'bot_normal' ? (0.24 + Math.random() * 0.20) : (0.08 + Math.random() * 0.08);
+        state.greenReactionTimer =
+          diff === 'bot_easy'
+            ? 0.40 + Math.random() * 0.30
+            : diff === 'bot_normal'
+            ? 0.22 + Math.random() * 0.18
+            : 0.08 + Math.random() * 0.08;
         state.willMistimeYellow = false;
       }
     }
 
-    // Unpredictable green durations with distinct behavioral archetypes:
+    const isSuddenDeath = this.roundTimer <= 15;
     let duration: number;
-    if (this.greenCycleCount === 1) {
+    if (isSuddenDeath) {
+      duration = 0.5 + Math.random() * 0.4; // Frantic quick bursts
+    } else if (this.greenCycleCount === 1) {
       duration = 1.0 + Math.random() * 0.4;
     } else {
       const roll = Math.random();
@@ -162,8 +284,8 @@ export class RedLightSentryGame extends BaseGame {
 
   private triggerYellowPhase(): void {
     this.sentryPhase = 'yellow';
-    // Variable yellow warning: 0.6s - 0.95s
-    const yellowDur = 0.6 + Math.random() * 0.35;
+    const isSuddenDeath = this.roundTimer <= 15;
+    const yellowDur = isSuddenDeath ? 0.45 + Math.random() * 0.2 : 0.6 + Math.random() * 0.35;
     this.phaseTimer = yellowDur;
     this.currentPhaseDuration = yellowDur;
     this.currentYellowDuration = yellowDur;
@@ -173,7 +295,7 @@ export class RedLightSentryGame extends BaseGame {
       const p = this.players[pid];
       if (p?.type.startsWith('bot_')) {
         const diff = p.type as 'bot_easy' | 'bot_normal' | 'bot_hard';
-        const mistimeChance = diff === 'bot_easy' ? 0.45 : diff === 'bot_normal' ? 0.24 : 0.08;
+        const mistimeChance = diff === 'bot_easy' ? 0.40 : diff === 'bot_normal' ? 0.20 : 0.06;
         state.willMistimeYellow = Math.random() < mistimeChance;
         state.mistimeReleaseDelay = 0.12;
       }
@@ -184,7 +306,6 @@ export class RedLightSentryGame extends BaseGame {
 
   private triggerRedPhase(): void {
     this.sentryPhase = 'red';
-    // Variable red light freeze scan: 1.5s - 3.0s
     const redDur = 1.5 + Math.random() * 1.5;
     this.phaseTimer = redDur;
     this.currentPhaseDuration = redDur;
@@ -206,6 +327,23 @@ export class RedLightSentryGame extends BaseGame {
       }
     }
 
+    // Check underdog surge: trailing by >= 130px from closest runner to trophy
+    let bestDistToTrophy = width;
+    for (const r of this.runners.values()) {
+      const dist = Math.abs(this.trophyX - r.x);
+      if (dist < bestDistToTrophy) bestDistToTrophy = dist;
+    }
+    for (const r of this.runners.values()) {
+      const myDist = Math.abs(this.trophyX - r.x);
+      r.isUnderdog = myDist >= bestDistToTrophy + 130;
+      if (r.shoveCooldown > 0) r.shoveCooldown -= dt;
+      if (r.moodTimer > 0) {
+        r.moodTimer -= dt;
+      } else {
+        r.recentMood = r.stunTimer > 0 ? 'shocked' : r.isRunning ? 'happy' : 'focused';
+      }
+    }
+
     // Update Sentry Light State Machine
     this.phaseTimer -= dt;
 
@@ -215,7 +353,6 @@ export class RedLightSentryGame extends BaseGame {
         this.triggerYellowPhase();
       }
     } else if (this.sentryPhase === 'yellow') {
-      // Rapid spinning eye with pitch-accelerating warning beeps
       this.sentryAngle += dt * 6.5;
       this.warningBeepTimer -= dt;
       if (this.warningBeepTimer <= 0) {
@@ -228,7 +365,6 @@ export class RedLightSentryGame extends BaseGame {
         this.triggerRedPhase();
       }
     } else if (this.sentryPhase === 'red') {
-      // Red light scan: sweeping searchlight angle
       this.laserSweepAngle += dt * 2.8;
       this.sentryAngle = Math.sin(this.laserSweepAngle) * 0.7;
 
@@ -247,16 +383,20 @@ export class RedLightSentryGame extends BaseGame {
         continue;
       }
 
-      // Check player holding corner button
-      const isHolding = this.input.isPressed(r.id);
+      const isHolding = this.input.isPressed(r.id) || this.input.isActionPressed(r.id);
       r.isRunning = isHolding;
 
       if (isHolding) {
-        if (this.sentryPhase === 'red') {
+        // Underdog gets a 0.20s grace period when red light begins
+        const underdogGrace = r.isUnderdog && (this.currentPhaseDuration - this.phaseTimer) < 0.20;
+
+        if (this.sentryPhase === 'red' && !underdogGrace) {
           // CAUGHT MOVING DURING RED LIGHT! SENTRY LASER STRIKE!
           r.stunTimer = 1.3;
           r.isRunning = false;
-          // Substantial knockback toward start (pushed back 160px!)
+          r.recentMood = 'shocked';
+          r.moodTimer = 1.3;
+
           const knockbackDist = 160;
           r.x -= r.dir * knockbackDist;
           if (r.dir === 1) r.x = Math.max(r.startX, r.x);
@@ -269,11 +409,11 @@ export class RedLightSentryGame extends BaseGame {
           this.particles.spawnSparks(r.x, r.y, '#EF4444', 32);
           this.particles.addTrauma(0.45);
         } else {
-          // Safe to run!
-          r.x += r.dir * r.speed * dt;
+          // Safe to run (+20% speed for Underdog)
+          const runSpeed = r.speed * (r.isUnderdog ? 1.20 : 1.0);
+          r.x += r.dir * runSpeed * dt;
           r.runAnim += dt * 14;
 
-          // Spawn running dust puffs
           if (Math.random() < 0.2) {
             this.particles.spawnSparks(r.x - r.dir * 12, r.y + 12, 'rgba(255,255,255,0.4)', 3);
           }
@@ -282,6 +422,8 @@ export class RedLightSentryGame extends BaseGame {
           const distToFinish = (this.trophyX - r.x) * r.dir;
           if (distToFinish <= 0) {
             r.hasFinished = true;
+            r.recentMood = 'triumph';
+            r.moodTimer = 2.0;
             r.x = this.trophyX - r.dir * 10;
             this.audio.playFanfare();
             this.particles.showFloatingText('TROPHY REACHED! 🏆', r.x, r.y - 45, '#F59E0B', 26);
@@ -321,12 +463,10 @@ export class RedLightSentryGame extends BaseGame {
         state.greenReactionTimer -= dt;
         this.input.setBotInput(botId, false);
       } else {
-        // Sprinting forward during green light
         this.input.setBotInput(botId, true);
       }
     } else if (this.sentryPhase === 'yellow') {
       if (state.willMistimeYellow) {
-        // Greedy bot pushes too hard and overstays into red light!
         this.input.setBotInput(botId, true);
       } else {
         const brakeThreshold = difficulty === 'bot_hard' ? 0.08 : difficulty === 'bot_normal' ? 0.16 : 0.14;
@@ -337,18 +477,16 @@ export class RedLightSentryGame extends BaseGame {
         }
       }
     } else {
-      // Red light phase
       if (state.willMistimeYellow) {
         if (state.mistimeReleaseDelay > 0) {
           state.mistimeReleaseDelay -= dt;
-          this.input.setBotInput(botId, true); // Caught running into red!
+          this.input.setBotInput(botId, true);
           return;
         } else {
           state.willMistimeYellow = false;
         }
       }
 
-      // Impatient twitch during red light
       if (difficulty === 'bot_easy' && Math.random() < 0.08 * dt) {
         this.input.setBotInput(botId, true);
       } else if (difficulty === 'bot_normal' && Math.random() < 0.03 * dt) {
@@ -361,22 +499,24 @@ export class RedLightSentryGame extends BaseGame {
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
     ctx.save();
+    const theme = SENTRY_THEMES[this.currentThemeIndex];
+    const isSuddenDeath = this.roundTimer <= 15;
 
-    // 1. High-Tech Industrial Stealth Arena Flooring
+    // 1. Flooring
     const floorGrad = ctx.createLinearGradient(0, 0, 0, height);
-    floorGrad.addColorStop(0, '#0F172A');
-    floorGrad.addColorStop(0.5, '#1E293B');
-    floorGrad.addColorStop(1, '#0F172A');
+    floorGrad.addColorStop(0, theme.floorGradTop);
+    floorGrad.addColorStop(0.5, theme.floorGradBot);
+    floorGrad.addColorStop(1, '#020617');
     ctx.fillStyle = floorGrad;
     ctx.fillRect(0, 0, width, height);
 
     // Running Track Lanes
     for (const r of this.runners.values()) {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+      ctx.fillStyle = theme.laneColor;
       ctx.fillRect(0, r.y - 25, width, 50);
 
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = theme.laneBorder;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(0, r.y + 25);
       ctx.lineTo(width, r.y + 25);
@@ -385,7 +525,7 @@ export class RedLightSentryGame extends BaseGame {
 
     // 2. Center Trophy Line
     ctx.save();
-    ctx.strokeStyle = '#FBBF24';
+    ctx.strokeStyle = isSuddenDeath ? '#EF4444' : theme.trophyColor;
     ctx.lineWidth = 4;
     ctx.setLineDash([10, 8]);
     ctx.beginPath();
@@ -408,7 +548,6 @@ export class RedLightSentryGame extends BaseGame {
     ctx.strokeStyle = '#B45309';
     ctx.lineWidth = 1.5;
 
-    // Cup cup body
     ctx.beginPath();
     ctx.moveTo(tX - 10, tY - 11);
     ctx.lineTo(tX + 10, tY - 11);
@@ -418,11 +557,9 @@ export class RedLightSentryGame extends BaseGame {
     ctx.fill();
     ctx.stroke();
 
-    // Cup stem & base
     ctx.fillRect(tX - 2.5, tY + 7, 5, 5);
     ctx.fillRect(tX - 8, tY + 12, 16, 3);
 
-    // Cup handles
     ctx.beginPath();
     ctx.arc(tX - 10, tY - 4, 4, Math.PI * 0.5, Math.PI * 1.5);
     ctx.stroke();
@@ -437,21 +574,18 @@ export class RedLightSentryGame extends BaseGame {
     const sentryY = 105;
 
     ctx.save();
-    // Tower base
-    ctx.fillStyle = '#334155';
+    ctx.fillStyle = theme.towerColor;
     ctx.fillRect(sentryX - 30, 48, 60, 48);
-    ctx.strokeStyle = '#475569';
+    ctx.strokeStyle = '#1E293B';
     ctx.lineWidth = 2;
     ctx.strokeRect(sentryX - 30, 48, 60, 48);
 
-    // Sentry Eye Housing Dome
     ctx.fillStyle = '#1E293B';
     ctx.beginPath();
     ctx.arc(sentryX, sentryY, 26, 0, Math.PI * 2);
     ctx.fill();
 
-    // Sentry Scanning Light Color
-    let eyeColor = '#10B981'; // Green
+    let eyeColor = '#10B981';
     let glowColor = 'rgba(16, 185, 129, 0.3)';
     let phaseText = 'GREEN LIGHT: SPRINT!';
 
@@ -493,7 +627,6 @@ export class RedLightSentryGame extends BaseGame {
     ctx.arc(sentryX, sentryY, 14, 0, Math.PI * 2);
     ctx.fill();
 
-    // Inner mechanical iris
     ctx.fillStyle = '#0F172A';
     ctx.beginPath();
     ctx.arc(sentryX, sentryY, 6, 0, Math.PI * 2);
@@ -507,7 +640,6 @@ export class RedLightSentryGame extends BaseGame {
     ctx.fillText(phaseText, sentryX, 146);
 
     if (this.sentryPhase === 'yellow') {
-      // ONLY show countdown timer and progress bar during YELLOW LIGHT!
       const yellowRemaining = Math.max(0, this.phaseTimer).toFixed(1);
       ctx.fillStyle = '#F59E0B';
       ctx.font = '800 15px Montserrat, sans-serif';
@@ -522,24 +654,21 @@ export class RedLightSentryGame extends BaseGame {
 
       ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
       ctx.beginPath();
-      ctx.roundRect(barX, barY, barW, barH, 4);
+      if (ctx.roundRect) ctx.roundRect(barX, barY, barW, barH, 4);
+      else ctx.rect(barX, barY, barW, barH);
       ctx.fill();
 
       ctx.fillStyle = '#F59E0B';
-      ctx.shadowColor = '#F59E0B';
-      ctx.shadowBlur = 10;
       ctx.beginPath();
-      ctx.roundRect(barX, barY, barW * progress, barH, 4);
+      if (ctx.roundRect) ctx.roundRect(barX, barY, barW * progress, barH, 4);
+      else ctx.rect(barX, barY, barW * progress, barH);
       ctx.fill();
-      ctx.shadowBlur = 0;
     } else if (this.sentryPhase === 'green') {
-      // Hidden duration for suspense: no timer or progress bar!
       ctx.fillStyle = '#6EE7B7';
       ctx.font = '600 13px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('Sprint to the trophy! Sentry turns yellow unpredictably...', sentryX, 172);
     } else {
-      // Hidden duration for suspense: no timer or progress bar!
       ctx.fillStyle = '#FCA5A5';
       ctx.font = '600 13px sans-serif';
       ctx.textAlign = 'center';
@@ -568,14 +697,9 @@ export class RedLightSentryGame extends BaseGame {
         ctx.moveTo(sentryX, sentryY);
         ctx.lineTo(targetX, targetY);
         ctx.stroke();
-
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 1;
-        ctx.stroke();
         ctx.restore();
       }
 
-      // High-intensity perimeter alert border
       ctx.save();
       const pulseAlpha = 0.3 + Math.sin(performance.now() * 0.02) * 0.2;
       ctx.strokeStyle = `rgba(239, 68, 68, ${pulseAlpha})`;
@@ -594,7 +718,6 @@ export class RedLightSentryGame extends BaseGame {
       ctx.beginPath();
       ctx.moveTo(sentryX, sentryY);
 
-      // Jagged lightning segments
       const steps = 6;
       for (let s = 1; s < steps; s++) {
         const t = s / steps;
@@ -604,19 +727,42 @@ export class RedLightSentryGame extends BaseGame {
       }
       ctx.lineTo(this.zappedLaserBeam.x, this.zappedLaserBeam.y);
       ctx.stroke();
-
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 2;
-      ctx.stroke();
       ctx.restore();
     }
 
     ctx.restore();
 
-    // 4. Render Runners
+    // 4. Render Runners & Mascots
     for (const r of this.runners.values()) {
       this.renderRunner(ctx, r);
     }
+
+    // 5. Interactive Bottom-Left Theme Pill (x: 20, y: height - 44, w: 170, h: 32)
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(20, height - 44, 170, 32, 16);
+    else ctx.rect(20, height - 44, 170, 32);
+    ctx.fill();
+    ctx.strokeStyle = theme.themePillColor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = theme.themePillColor;
+    ctx.font = '700 11px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${theme.name} [T]`, 20 + 85, height - 44 + 16);
+    ctx.restore();
+
+    // 6. On-screen Controls Pill (Offset to right, never overlapping theme pill)
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.70)';
+    ctx.font = '600 11px Montserrat, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Hold Button to Sprint • Release to Freeze on Red • First to Center Trophy Wins', width - 24, height - 28);
+    ctx.restore();
 
     ctx.restore();
   }
@@ -626,6 +772,23 @@ export class RedLightSentryGame extends BaseGame {
 
     ctx.save();
     ctx.translate(r.x, r.y);
+
+    // Underdog Stealth Shimmer Aura
+    if (r.isUnderdog) {
+      ctx.save();
+      ctx.strokeStyle = '#FBBF24';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 24, 28, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.fillStyle = '#FBBF24';
+      ctx.font = '800 9.5px Montserrat, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('⭐ STEALTH SURGE', 0, -42);
+    }
 
     // Runner shadow
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
@@ -642,48 +805,31 @@ export class RedLightSentryGame extends BaseGame {
     ctx.lineWidth = 4;
     ctx.lineCap = 'round';
 
-    // Left leg
     ctx.beginPath();
     ctx.moveTo(-4, 0 + bob);
     ctx.lineTo(-4 - legSwing * r.dir, 14);
     ctx.stroke();
 
-    // Right leg
     ctx.beginPath();
     ctx.moveTo(4, 0 + bob);
     ctx.lineTo(4 + legSwing * r.dir, 14);
     ctx.stroke();
 
-    // Torso / Jersey
-    ctx.fillStyle = p.color;
-    ctx.fillRect(-10, -18 + bob, 20, 20);
-
-    // Number tag on jersey
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 11px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`${r.id + 1}`, 0, -4 + bob);
-
-    // Head
-    ctx.fillStyle = '#FED7AA';
-    ctx.beginPath();
-    ctx.arc(0, -26 + bob, 9, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Athletic Sweatband
-    ctx.fillStyle = p.colorDark;
-    ctx.fillRect(-9, -30 + bob, 18, 4);
+    // Mascot Runner Face & Torso
+    this.drawPlayerMascot(ctx, r.id, 0, -14 + bob, 15, r.recentMood, performance.now() * 0.001);
 
     // Stunned indicator
     if (r.stunTimer > 0) {
       ctx.fillStyle = '#EF4444';
       ctx.font = '900 13px Montserrat, sans-serif';
-      ctx.fillText('ZAPPED!', 0, -40);
+      ctx.textAlign = 'center';
+      ctx.fillText('ZAPPED!', 0, -42);
     }
 
     // Name label
     ctx.fillStyle = p.color;
-    ctx.font = '800 12px Montserrat, sans-serif';
+    ctx.font = '800 11px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
     ctx.fillText(p.name.toUpperCase(), 0, 32);
 
     ctx.restore();
@@ -695,7 +841,6 @@ export class RedLightSentryGame extends BaseGame {
 
   public getRoundResult(): RoundResult {
     const active = this.getActivePlayers();
-    // Sort by who reached finish or closest distance to center
     const sorted = [...active].sort((a, b) => {
       const ra = this.runners.get(a.id);
       const rb = this.runners.get(b.id);
