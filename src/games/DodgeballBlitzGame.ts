@@ -3,6 +3,61 @@ import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
+import { drawCharacter, CharacterMood } from '../core/CharacterRenderer';
+
+export type DodgeballThemeId = 'gym' | 'cyber' | 'caldera';
+
+interface DodgeballTheme {
+  id: DodgeballThemeId;
+  name: string;
+  icon: string;
+  floorColor: string;
+  floorPlankColor: string;
+  courtLineColor: string;
+  centerLineColor: string;
+  ballBaseColor: string;
+  ballGlowColor: string;
+  accentColor: string;
+}
+
+const THEMES: Record<DodgeballThemeId, DodgeballTheme> = {
+  gym: {
+    id: 'gym',
+    name: 'Hardwood Gym',
+    icon: '🏀',
+    floorColor: '#D97706',
+    floorPlankColor: 'rgba(180, 83, 9, 0.35)',
+    courtLineColor: '#FFFFFF',
+    centerLineColor: '#FBBF24',
+    ballBaseColor: '#EF4444',
+    ballGlowColor: '#FCA5A5',
+    accentColor: '#F59E0B'
+  },
+  cyber: {
+    id: 'cyber',
+    name: 'Cyberpunk Grid',
+    icon: '⚡',
+    floorColor: '#0F172A',
+    floorPlankColor: 'rgba(56, 189, 248, 0.12)',
+    courtLineColor: '#06B6D4',
+    centerLineColor: '#38BDF8',
+    ballBaseColor: '#06B6D4',
+    ballGlowColor: '#67E8F9',
+    accentColor: '#38BDF8'
+  },
+  caldera: {
+    id: 'caldera',
+    name: 'Volcanic Court',
+    icon: '🔥',
+    floorColor: '#261208',
+    floorPlankColor: 'rgba(239, 68, 68, 0.22)',
+    courtLineColor: '#F97316',
+    centerLineColor: '#EF4444',
+    ballBaseColor: '#EA580C',
+    ballGlowColor: '#FDBA74',
+    accentColor: '#F97316'
+  }
+};
 
 export interface Dodgeball {
   id: number;
@@ -39,6 +94,8 @@ export interface DodgePlayer {
   ballHoldTimer: number;
   team: 'LEFT' | 'RIGHT';
   dodgeAnimTimer: number;
+  mood: CharacterMood;
+  moodTimer: number;
 }
 
 interface BotMemory {
@@ -54,19 +111,24 @@ interface BotMemory {
 }
 
 export class DodgeballBlitzGame extends BaseGame {
+  private currentThemeId: DodgeballThemeId = 'gym';
   public playersState: Map<PlayerId, DodgePlayer> = new Map();
   public balls: Dodgeball[] = [];
-  public currentMapName: string = 'High School Gymnasium';
 
-  private courtBounds = { minX: 60, maxX: 740, minY: 70, maxY: 550 };
+  private courtBounds = { minX: 60, maxX: 740, minY: 72, maxY: 530 };
   private centerLineX: number = 400;
   private botReactionTimers: Map<PlayerId, number> = new Map();
   private botMemories: Map<PlayerId, BotMemory> = new Map();
   private ballRollTimer: number = 0;
   private roundResetTimer: number = 0;
   private currentSet: number = 1;
-  private targetWins: number = 2; // Best of 3 rounds
+  private targetWins: number = 2; // Best of 3 sets
   private teamWins: { LEFT: number; RIGHT: number } = { LEFT: 0, RIGHT: 0 };
+
+  private animTimer: number = 0;
+  private suddenDeathTriggered: boolean = false;
+
+  private onKeyDownBound: (e: KeyboardEvent) => void;
 
   constructor(
     players: PlayerConfig[],
@@ -76,14 +138,48 @@ export class DodgeballBlitzGame extends BaseGame {
   ) {
     super(players, input, audio, particles);
     this.roundTimer = 55.0;
+    this.onKeyDownBound = this.handleKeyDown.bind(this);
+    window.addEventListener('keydown', this.onKeyDownBound);
   }
 
   public init(width: number, height: number): void {
+    const themeKeys: DodgeballThemeId[] = ['gym', 'cyber', 'caldera'];
+    this.currentThemeId = themeKeys[Math.floor(Math.random() * themeKeys.length)];
     this.reset(width, height);
   }
 
+  private handleKeyDown(e: KeyboardEvent): void {
+    if (e.key === 't' || e.key === 'T') {
+      this.cycleTheme();
+    } else if (e.key === '1') {
+      this.setTheme('gym');
+    } else if (e.key === '2') {
+      this.setTheme('cyber');
+    } else if (e.key === '3') {
+      this.setTheme('caldera');
+    }
+  }
+
+  public cycleTheme(): void {
+    const list: DodgeballThemeId[] = ['gym', 'cyber', 'caldera'];
+    const curIdx = list.indexOf(this.currentThemeId);
+    this.setTheme(list[(curIdx + 1) % list.length]);
+  }
+
+  public setTheme(id: DodgeballThemeId): void {
+    if (this.currentThemeId !== id) {
+      this.currentThemeId = id;
+      this.audio.playTap();
+      this.particles.emit(100, 300, 15, THEMES[id].accentColor);
+    }
+  }
+
   public destroy(): void {
-    if (typeof window !== 'undefined' && (window as unknown as { __DODGEBALL_DEBUG__?: unknown }).__DODGEBALL_DEBUG__) {
+    window.removeEventListener('keydown', this.onKeyDownBound);
+    if (
+      typeof window !== 'undefined' &&
+      (window as unknown as { __DODGEBALL_DEBUG__?: unknown }).__DODGEBALL_DEBUG__
+    ) {
       delete (window as unknown as { __DODGEBALL_DEBUG__?: unknown }).__DODGEBALL_DEBUG__;
     }
   }
@@ -91,6 +187,8 @@ export class DodgeballBlitzGame extends BaseGame {
   public reset(width: number = 800, height: number = 600): void {
     this.roundTimer = 55.0;
     this.isFinished = false;
+    this.animTimer = 0;
+    this.suddenDeathTriggered = false;
     this.playersState.clear();
     this.botReactionTimers.clear();
     this.botMemories.clear();
@@ -102,8 +200,8 @@ export class DodgeballBlitzGame extends BaseGame {
     this.courtBounds = {
       minX: width * 0.08,
       maxX: width * 0.92,
-      minY: height * 0.12,
-      maxY: height * 0.90
+      minY: 76,
+      maxY: height - 52
     };
     this.centerLineX = width * 0.5;
 
@@ -111,8 +209,9 @@ export class DodgeballBlitzGame extends BaseGame {
     const active = this.getActivePlayers();
     active.forEach((p, idx) => {
       const team = idx % 2 === 0 ? 'LEFT' : 'RIGHT';
-      const startX = team === 'LEFT' ? this.courtBounds.minX + 90 : this.courtBounds.maxX - 90;
-      const startY = idx < 2 ? height * 0.38 : height * 0.62;
+      const startX =
+        team === 'LEFT' ? this.courtBounds.minX + 90 : this.courtBounds.maxX - 90;
+      const startY = idx < 2 ? height * 0.36 : height * 0.64;
 
       this.playersState.set(p.id, {
         id: p.id,
@@ -134,7 +233,9 @@ export class DodgeballBlitzGame extends BaseGame {
         heldBallId: null,
         ballHoldTimer: 0,
         team,
-        dodgeAnimTimer: 0
+        dodgeAnimTimer: 0,
+        mood: 'idle',
+        moodTimer: 0
       });
 
       this.botReactionTimers.set(p.id, 0.05 + Math.random() * 0.1);
@@ -181,8 +282,9 @@ export class DodgeballBlitzGame extends BaseGame {
       const ps = this.playersState.get(p.id);
       if (!ps) return;
       const team = ps.team;
-      const startX = team === 'LEFT' ? this.courtBounds.minX + 90 : this.courtBounds.maxX - 90;
-      const startY = idx < 2 ? height * 0.38 : height * 0.62;
+      const startX =
+        team === 'LEFT' ? this.courtBounds.minX + 90 : this.courtBounds.maxX - 90;
+      const startY = idx < 2 ? height * 0.36 : height * 0.64;
 
       ps.x = startX;
       ps.y = startY;
@@ -197,6 +299,8 @@ export class DodgeballBlitzGame extends BaseGame {
       ps.catchWindow = 0;
       ps.invulnerableTimer = 1.0;
       ps.dodgeAnimTimer = 0;
+      ps.mood = 'idle';
+      ps.moodTimer = 0;
 
       const mem = this.botMemories.get(p.id);
       if (mem) {
@@ -255,12 +359,27 @@ export class DodgeballBlitzGame extends BaseGame {
     }
   }
 
+  private isUnderdog(playerId: PlayerId): boolean {
+    const ps = this.playersState.get(playerId);
+    if (!ps) return false;
+    const enemyTeam = ps.team === 'LEFT' ? 'RIGHT' : 'LEFT';
+    const myWins = this.teamWins[ps.team];
+    const enemyWins = this.teamWins[enemyTeam];
+    return enemyWins > myWins;
+  }
+
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
 
+    this.animTimer += dt;
     this.roundTimer = Math.max(0, this.roundTimer - dt);
 
-    // Round reset countdown intermission
+    if (this.roundTimer <= 15.0 && !this.suddenDeathTriggered) {
+      this.suddenDeathTriggered = true;
+      this.audio.playWhoosh();
+    }
+
+    // Round reset intermission countdown
     if (this.roundResetTimer > 0) {
       this.roundResetTimer -= dt;
       if (this.roundResetTimer <= 0) {
@@ -272,10 +391,15 @@ export class DodgeballBlitzGame extends BaseGame {
     // 1. Update bot decisions
     this.updateBots(dt, width, height);
 
-    // 2. Update players (movement, inputs, boundaries, ball attachments)
+    // 2. Update players
     for (const p of this.getActivePlayers()) {
       const ps = this.playersState.get(p.id);
       if (!ps || !ps.isAlive) continue;
+
+      if (ps.moodTimer > 0) {
+        ps.moodTimer -= dt;
+        if (ps.moodTimer <= 0) ps.mood = 'idle';
+      }
 
       if (ps.throwCooldown > 0) ps.throwCooldown -= dt;
       if (ps.catchWindow > 0) ps.catchWindow -= dt;
@@ -285,7 +409,6 @@ export class DodgeballBlitzGame extends BaseGame {
       const isBot = p.type.startsWith('bot_');
 
       if (!isBot) {
-        // Human Inputs
         const steer = this.input.getSteer(p.id);
         const throttle = this.input.getThrottle(p.id);
         const justAction = this.input.justAction(p.id) || this.input.justPressed(p.id);
@@ -294,7 +417,8 @@ export class DodgeballBlitzGame extends BaseGame {
           ps.angle = Math.atan2(-throttle, steer);
         }
 
-        const speed = 250;
+        const underdog = this.isUnderdog(p.id);
+        const speed = underdog ? 300 : 250;
         ps.vx = steer * speed;
         ps.vy = -throttle * speed;
 
@@ -307,17 +431,25 @@ export class DodgeballBlitzGame extends BaseGame {
         }
       }
 
-      // Apply velocity to position
       ps.x += ps.vx * dt;
       ps.y += ps.vy * dt;
 
       // Restrict movement to team's court half
-      const minX = ps.team === 'LEFT' ? this.courtBounds.minX + ps.radius : this.centerLineX + ps.radius + 6;
-      const maxX = ps.team === 'LEFT' ? this.centerLineX - ps.radius - 6 : this.courtBounds.maxX - ps.radius;
+      const minX =
+        ps.team === 'LEFT'
+          ? this.courtBounds.minX + ps.radius
+          : this.centerLineX + ps.radius + 6;
+      const maxX =
+        ps.team === 'LEFT'
+          ? this.centerLineX - ps.radius - 6
+          : this.courtBounds.maxX - ps.radius;
       ps.x = Math.max(minX, Math.min(maxX, ps.x));
-      ps.y = Math.max(this.courtBounds.minY + ps.radius, Math.min(this.courtBounds.maxY - ps.radius, ps.y));
+      ps.y = Math.max(
+        this.courtBounds.minY + ps.radius,
+        Math.min(this.courtBounds.maxY - ps.radius, ps.y)
+      );
 
-      // Ball pickup check if player doesn't have a ball
+      // Ball pickup check
       if (!ps.hasBall) {
         ps.ballHoldTimer = 0;
         for (const ball of this.balls) {
@@ -327,10 +459,11 @@ export class DodgeballBlitzGame extends BaseGame {
               ps.hasBall = true;
               ps.heldBallId = ball.id;
               ps.ballHoldTimer = 0;
+              ps.mood = 'focused';
               ball.state = 'held';
               ball.holderId = ps.id;
               this.audio.playTap();
-              this.particles.spawnSparks(ball.x, ball.y, '#3B82F6', 8);
+              this.particles.emit(ball.x, ball.y, 8, '#3B82F6');
               break;
             }
           }
@@ -345,7 +478,7 @@ export class DodgeballBlitzGame extends BaseGame {
         }
       }
 
-      // Keep held ball tethered to player hands
+      // Keep held ball tethered
       if (ps.hasBall && ps.heldBallId !== null) {
         const ball = this.balls.find((b) => b.id === ps.heldBallId);
         if (ball) {
@@ -365,7 +498,6 @@ export class DodgeballBlitzGame extends BaseGame {
         ball.x += ball.vx * dt;
         ball.y += ball.vy * dt;
 
-        // Smooth hardwood friction
         const frictionRate = ball.state === 'thrown' ? 0.988 : 0.965;
         ball.vx *= Math.pow(frictionRate, dt * 60);
         ball.vy *= Math.pow(frictionRate, dt * 60);
@@ -376,7 +508,6 @@ export class DodgeballBlitzGame extends BaseGame {
           ball.throwerId = null;
         }
 
-        // Particle trail when flying fast
         if (ball.state === 'thrown' && currentSpeed > 180) {
           ball.trail.push({ x: ball.x, y: ball.y });
           if (ball.trail.length > 9) ball.trail.shift();
@@ -409,8 +540,7 @@ export class DodgeballBlitzGame extends BaseGame {
         if (bounced) {
           ball.bounces++;
           this.audio.playBounce();
-          this.particles.spawnSparks(ball.x, ball.y, '#EF4444', 6);
-          // After 2 wall bounces, ball safely transitions to idle
+          this.particles.emit(ball.x, ball.y, 6, '#EF4444');
           if (ball.bounces >= 2) {
             ball.state = 'idle';
             ball.throwerId = null;
@@ -420,11 +550,15 @@ export class DodgeballBlitzGame extends BaseGame {
         // Collision check against opponents when ball is thrown
         if (ball.state === 'thrown' && ball.throwerId !== null) {
           for (const target of this.playersState.values()) {
-            if (!target.isAlive || target.id === ball.throwerId || target.invulnerableTimer > 0) continue;
+            if (
+              !target.isAlive ||
+              target.id === ball.throwerId ||
+              target.invulnerableTimer > 0
+            )
+              continue;
 
             const dist = Math.hypot(ball.x - target.x, ball.y - target.y);
             if (dist < target.radius + ball.radius) {
-              // Catch attempt evaluation
               const angleToBall = Math.atan2(ball.y - target.y, ball.x - target.x);
               let angleDiff = Math.abs(angleToBall - target.angle);
               while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
@@ -432,12 +566,15 @@ export class DodgeballBlitzGame extends BaseGame {
 
               const throwerId = ball.throwerId;
 
-              if (target.catchWindow > 0 && angleDiff < 1.15) {
+              if (target.catchWindow > 0 && angleDiff < 1.2) {
                 // SUCCESSFUL CATCH!
                 target.score += 250;
                 target.catches += 1;
                 target.hasBall = true;
                 target.heldBallId = ball.id;
+                target.mood = 'triumph';
+                target.moodTimer = 1.0;
+
                 ball.state = 'held';
                 ball.holderId = target.id;
                 ball.throwerId = null;
@@ -446,28 +583,52 @@ export class DodgeballBlitzGame extends BaseGame {
                 ball.bounces = 0;
 
                 this.audio.playScore();
-                this.particles.spawnSparks(target.x, target.y, '#10B981', 20);
-                this.particles.showFloatingText('🧤 CAUGHT! +250', target.x, target.y - 25, '#10B981', 22);
+                this.particles.emit(target.x, target.y, 16, '#10B981');
+                this.particles.showFloatingText(
+                  '🧤 CAUGHT! +250',
+                  target.x,
+                  target.y - 25,
+                  '#10B981',
+                  22
+                );
 
                 if (throwerId !== null) {
                   const thrower = this.playersState.get(throwerId);
                   if (thrower) {
-                    this.particles.showFloatingText('STUNNED!', thrower.x, thrower.y - 25, '#F59E0B', 18);
+                    thrower.mood = 'shocked';
+                    thrower.moodTimer = 1.0;
+                    this.particles.showFloatingText(
+                      'STUNNED!',
+                      thrower.x,
+                      thrower.y - 25,
+                      '#F59E0B',
+                      18
+                    );
                   }
                 }
                 break;
               } else {
                 // DIRECT HIT - ELIMINATION!
-                this.audio.playExplosion();
-                this.particles.shake(7);
-                this.particles.spawnExplosion(target.x, target.y, '#EF4444', 24);
-                this.particles.showFloatingText('💥 OUT!', target.x, target.y - 25, '#EF4444', 24);
+                this.audio.playBounce();
+                target.mood = 'shocked';
+                target.moodTimer = 1.5;
+                this.particles.emit(target.x, target.y, 20, '#EF4444');
+                this.particles.showFloatingText(
+                  '💥 OUT!',
+                  target.x,
+                  target.y - 25,
+                  '#EF4444',
+                  24
+                );
 
                 if (throwerId !== null) {
                   const thrower = this.playersState.get(throwerId);
                   if (thrower) {
-                    thrower.score += 200;
+                    const multi = this.suddenDeathTriggered ? 2 : 1;
+                    thrower.score += 200 * multi;
                     thrower.hits += 1;
+                    thrower.mood = 'triumph';
+                    thrower.moodTimer = 1.0;
                   }
                 }
 
@@ -496,11 +657,19 @@ export class DodgeballBlitzGame extends BaseGame {
       }
     }
 
-    // 4. Stalling Prevention: ensure both sides have balls
-    const leftBalls = this.balls.filter((b) => b.state === 'idle' && b.x < this.centerLineX);
-    const rightBalls = this.balls.filter((b) => b.state === 'idle' && b.x > this.centerLineX);
-    const leftHeld = Array.from(this.playersState.values()).filter((p) => p.isAlive && p.team === 'LEFT' && p.hasBall).length;
-    const rightHeld = Array.from(this.playersState.values()).filter((p) => p.isAlive && p.team === 'RIGHT' && p.hasBall).length;
+    // 4. Stalling Prevention: roll balls across if one side runs out
+    const leftBalls = this.balls.filter(
+      (b) => b.state === 'idle' && b.x < this.centerLineX
+    );
+    const rightBalls = this.balls.filter(
+      (b) => b.state === 'idle' && b.x > this.centerLineX
+    );
+    const leftHeld = Array.from(this.playersState.values()).filter(
+      (p) => p.isAlive && p.team === 'LEFT' && p.hasBall
+    ).length;
+    const rightHeld = Array.from(this.playersState.values()).filter(
+      (p) => p.isAlive && p.team === 'RIGHT' && p.hasBall
+    ).length;
 
     const leftTotal = leftBalls.length + leftHeld;
     const rightTotal = rightBalls.length + rightHeld;
@@ -512,7 +681,7 @@ export class DodgeballBlitzGame extends BaseGame {
         const ballToRoll = rightBalls[0];
         ballToRoll.vx = -240;
         this.audio.playBounce();
-        this.particles.spawnSparks(ballToRoll.x, ballToRoll.y, '#38BDF8', 8);
+        this.particles.emit(ballToRoll.x, ballToRoll.y, 8, '#38BDF8');
       }
     } else if (rightTotal === 0 && leftBalls.length > 1) {
       this.ballRollTimer += dt;
@@ -521,13 +690,12 @@ export class DodgeballBlitzGame extends BaseGame {
         const ballToRoll = leftBalls[0];
         ballToRoll.vx = 240;
         this.audio.playBounce();
-        this.particles.spawnSparks(ballToRoll.x, ballToRoll.y, '#38BDF8', 8);
+        this.particles.emit(ballToRoll.x, ballToRoll.y, 8, '#38BDF8');
       }
     } else {
       this.ballRollTimer = 0;
     }
 
-    // Match clock expiration
     if (this.roundTimer <= 0) {
       this.isFinished = true;
     }
@@ -545,6 +713,7 @@ export class DodgeballBlitzGame extends BaseGame {
     ps.heldBallId = null;
     ps.throwCooldown = 0.45;
     ps.ballHoldTimer = 0;
+    ps.mood = 'focused';
 
     ball.state = 'thrown';
     ball.holderId = null;
@@ -553,53 +722,82 @@ export class DodgeballBlitzGame extends BaseGame {
     ball.x = ps.x + Math.cos(angle) * (ps.radius + ball.radius + 4);
     ball.y = ps.y + Math.sin(angle) * (ps.radius + ball.radius + 4);
 
-    const throwSpeed = 640;
-    ball.vx = Math.cos(angle) * throwSpeed;
-    ball.vy = Math.sin(angle) * throwSpeed;
+    const speedBonus = this.suddenDeathTriggered ? 800 : 650;
+    ball.vx = Math.cos(angle) * speedBonus;
+    ball.vy = Math.sin(angle) * speedBonus;
 
-    this.audio.playLaser();
-    this.particles.spawnSparks(ball.x, ball.y, '#EF4444', 10);
+    this.audio.playWhoosh();
+    this.particles.emit(ball.x, ball.y, 10, '#EF4444');
   }
 
   public performCatch(ps: DodgePlayer): void {
     if (ps.hasBall || ps.catchWindow > 0) return;
-    ps.catchWindow = 0.32;
+    const underdog = this.isUnderdog(ps.id);
+    ps.catchWindow = underdog ? 0.48 : 0.32;
     this.audio.playTap();
-    this.particles.spawnSparks(ps.x + Math.cos(ps.angle) * 15, ps.y + Math.sin(ps.angle) * 15, '#10B981', 8);
+    this.particles.emit(
+      ps.x + Math.cos(ps.angle) * 15,
+      ps.y + Math.sin(ps.angle) * 15,
+      8,
+      '#10B981'
+    );
   }
 
   private checkSetOver(width: number, height: number): void {
-    const leftAlive = Array.from(this.playersState.values()).filter((p) => p.isAlive && p.team === 'LEFT').length;
-    const rightAlive = Array.from(this.playersState.values()).filter((p) => p.isAlive && p.team === 'RIGHT').length;
+    const leftAlive = Array.from(this.playersState.values()).filter(
+      (p) => p.isAlive && p.team === 'LEFT'
+    ).length;
+    const rightAlive = Array.from(this.playersState.values()).filter(
+      (p) => p.isAlive && p.team === 'RIGHT'
+    ).length;
 
     if (leftAlive === 0 || rightAlive === 0) {
       if (leftAlive > 0) {
         this.teamWins.LEFT++;
-        this.particles.showFloatingText(`🏆 TEAM RED WINS SET ${this.currentSet}!`, width / 2, 70, '#EF4444', 24);
+        this.particles.showFloatingText(
+          `🏆 TEAM RED WINS SET ${this.currentSet}!`,
+          width / 2,
+          70,
+          '#EF4444',
+          24
+        );
         for (const p of this.playersState.values()) {
           if (p.team === 'LEFT') {
             p.roundWins++;
             p.score += 400;
+            p.mood = 'triumph';
+            p.moodTimer = 1.5;
           }
         }
       } else if (rightAlive > 0) {
         this.teamWins.RIGHT++;
-        this.particles.showFloatingText(`🏆 TEAM BLUE WINS SET ${this.currentSet}!`, width / 2, 70, '#3B82F6', 24);
+        this.particles.showFloatingText(
+          `🏆 TEAM BLUE WINS SET ${this.currentSet}!`,
+          width / 2,
+          70,
+          '#3B82F6',
+          24
+        );
         for (const p of this.playersState.values()) {
           if (p.team === 'RIGHT') {
             p.roundWins++;
             p.score += 400;
+            p.mood = 'triumph';
+            p.moodTimer = 1.5;
           }
         }
       }
 
       this.audio.playFanfare();
 
-      if (this.teamWins.LEFT >= this.targetWins || this.teamWins.RIGHT >= this.targetWins) {
+      if (
+        this.teamWins.LEFT >= this.targetWins ||
+        this.teamWins.RIGHT >= this.targetWins
+      ) {
         this.isFinished = true;
       } else {
         this.currentSet++;
-        this.roundResetTimer = 2.0; // 2s pause before next set
+        this.roundResetTimer = 2.4;
       }
     }
   }
@@ -614,214 +812,140 @@ export class DodgeballBlitzGame extends BaseGame {
     const bot = this.playersState.get(botId);
     if (!bot || !bot.isAlive) return;
 
+    let timer = this.botReactionTimers.get(botId) || 0;
+    timer -= dt;
+
     let mem = this.botMemories.get(botId);
     if (!mem) {
       mem = {
-        state: 'DEFEND_PATROL',
+        state: 'RUSH_BALL',
         targetBallId: null,
         windUpTimer: 0,
-        targetAimAngle: bot.angle,
+        targetAimAngle: bot.team === 'LEFT' ? 0 : Math.PI,
         dodgeTimer: 0,
         dodgeVelX: 0,
         dodgeVelY: 0,
-        patrolYDir: Math.random() < 0.5 ? 1 : -1,
+        patrolYDir: 1,
         patrolTimer: 0
       };
       this.botMemories.set(botId, mem);
     }
 
-    // Reaction & calibration tuning
-    const botSpeed = difficulty === 'bot_easy' ? 200 : difficulty === 'bot_normal' ? 245 : 270;
-    const leadFactor = difficulty === 'bot_easy' ? 0.0 : difficulty === 'bot_normal' ? 0.55 : 0.90;
-    const catchChance = difficulty === 'bot_easy' ? 0.18 : difficulty === 'bot_normal' ? 0.52 : 0.85;
+    const botSpeed =
+      difficulty === 'bot_easy' ? 190 : difficulty === 'bot_normal' ? 240 : 270;
 
-    // 1. ACTIVE THREAT DETECTION: Check for incoming thrown enemy balls
-    let urgentBall: Dodgeball | null = null;
-    let minTimeToImpact = 999;
-    let bestDodgeVector = { x: 0, y: 0 };
-
-    for (const ball of this.balls) {
-      if (ball.state !== 'thrown' || ball.throwerId === bot.id) continue;
-      const bSpeed = Math.hypot(ball.vx, ball.vy);
-      if (bSpeed < 80) continue;
-
-      const toBotX = bot.x - ball.x;
-      const toBotY = bot.y - ball.y;
-      const dot = toBotX * ball.vx + toBotY * ball.vy;
-
-      // Ball is moving towards bot if dot > 0
-      if (dot > 0) {
-        const timeToClosest = dot / (bSpeed * bSpeed);
-        if (timeToClosest < 0.65) {
-          const closestX = ball.x + ball.vx * timeToClosest;
-          const closestY = ball.y + ball.vy * timeToClosest;
-          const missDist = Math.hypot(bot.x - closestX, bot.y - closestY);
-
-          if (missDist < bot.radius + ball.radius + 22) {
-            if (timeToClosest < minTimeToImpact) {
-              minTimeToImpact = timeToClosest;
-              urgentBall = ball;
-
-              // Perpendicular dodge direction away from walls
-              const perpX = -ball.vy / bSpeed;
-              const perpY = ball.vx / bSpeed;
-
-              // Test which perpendicular direction has more court clearance
-              const roomPos = Math.min(bot.y + perpY * 70 - this.courtBounds.minY, this.courtBounds.maxY - (bot.y + perpY * 70));
-              const roomNeg = Math.min(bot.y - perpY * 70 - this.courtBounds.minY, this.courtBounds.maxY - (bot.y - perpY * 70));
-
-              const sign = roomPos >= roomNeg ? 1 : -1;
-              const backX = bot.team === 'LEFT' ? -0.4 : 0.4;
-              bestDodgeVector = {
-                x: perpX * sign * 0.7 + backX,
-                y: perpY * sign
-              };
-            }
-          }
+    // Incoming ball avoidance check
+    let incomingThreat: Dodgeball | null = null;
+    let minThreatDist = 9999;
+    for (const b of this.balls) {
+      if (b.state === 'thrown' && b.throwerId !== null && b.throwerId !== bot.id) {
+        const d = Math.hypot(b.x - bot.x, b.y - bot.y);
+        const headingToMe = (b.vx > 0 && bot.x > b.x) || (b.vx < 0 && bot.x < b.x);
+        if (headingToMe && d < 220 && d < minThreatDist) {
+          minThreatDist = d;
+          incomingThreat = b;
         }
       }
     }
 
-    // Threat response
-    if (urgentBall) {
-      const distToBall = Math.hypot(urgentBall.x - bot.x, urgentBall.y - bot.y);
-
-      // Attempt catch if within range & roll passes
-      if (distToBall < 130 && minTimeToImpact < 0.24 && bot.catchWindow <= 0 && Math.random() < catchChance) {
-        bot.angle = Math.atan2(urgentBall.y - bot.y, urgentBall.x - bot.x);
+    if (incomingThreat && timer <= 0) {
+      const catchChance =
+        difficulty === 'bot_easy' ? 0.15 : difficulty === 'bot_normal' ? 0.45 : 0.8;
+      if (!bot.hasBall && Math.random() < catchChance && minThreatDist < 120) {
+        bot.angle = Math.atan2(incomingThreat.y - bot.y, incomingThreat.x - bot.x);
         this.performCatch(bot);
       } else {
-        // Dodge maneuver!
-        const dLen = Math.hypot(bestDodgeVector.x, bestDodgeVector.y) || 1;
-        bot.vx = (bestDodgeVector.x / dLen) * botSpeed * 1.15;
-        bot.vy = (bestDodgeVector.y / dLen) * botSpeed * 1.15;
-        bot.angle = Math.atan2(bot.vy, bot.vx);
-        mem.dodgeTimer = 0.22;
+        mem.state = 'DODGE';
+        mem.dodgeTimer = 0.35;
+        const dodgeDirY = incomingThreat.y > bot.y ? -1 : 1;
+        mem.dodgeVelY = dodgeDirY * botSpeed * 1.1;
+        mem.dodgeVelX =
+          bot.team === 'LEFT' ? -botSpeed * 0.5 : botSpeed * 0.5;
+      }
+      this.botReactionTimers.set(
+        botId,
+        difficulty === 'bot_easy' ? 0.35 : difficulty === 'bot_normal' ? 0.2 : 0.08
+      );
+      return;
+    }
+
+    if (mem.state === 'DODGE') {
+      mem.dodgeTimer -= dt;
+      bot.vx = mem.dodgeVelX;
+      bot.vy = mem.dodgeVelY;
+      if (mem.dodgeTimer <= 0) {
+        mem.state = bot.hasBall ? 'ATTACK' : 'RUSH_BALL';
       }
       return;
     }
 
-    if (mem.dodgeTimer > 0) {
-      mem.dodgeTimer -= dt;
-      return;
-    }
-
-    // 2. OFFENSIVE STRIKE: Bot is holding a dodgeball
     if (bot.hasBall) {
-      const enemies = Array.from(this.playersState.values()).filter((p) => p.isAlive && p.team !== bot.team);
+      mem.state = 'ATTACK';
+      const enemies = Array.from(this.playersState.values()).filter(
+        (p) => p.isAlive && p.team !== bot.team
+      );
       if (enemies.length === 0) return;
 
-      // Select target: prioritize enemies without a ball or closest
-      enemies.sort((a, b) => {
-        const aScore = (a.hasBall ? 50 : 0) + Math.hypot(a.x - bot.x, a.y - bot.y);
-        const bScore = (b.hasBall ? 50 : 0) + Math.hypot(b.x - bot.x, b.y - bot.y);
-        return aScore - bScore;
-      });
-      const target = enemies[0];
+      const target = enemies[Math.floor(Math.random() * enemies.length)];
+      const targetAngle = Math.atan2(target.y - bot.y, target.x - bot.x);
+      bot.angle = targetAngle;
 
-      // Attack zone X near the center line (55px from center line)
-      const attackLineX = bot.team === 'LEFT' ? this.centerLineX - 60 : this.centerLineX + 60;
-      const distToAttackLine = Math.abs(bot.x - attackLineX);
+      const idealAttackX =
+        bot.team === 'LEFT' ? this.centerLineX - 45 : this.centerLineX + 45;
+      const dx = idealAttackX - bot.x;
+      bot.vx = Math.sign(dx) * Math.min(botSpeed, Math.abs(dx) * 4);
+      bot.vy = Math.sin(this.animTimer * 4) * botSpeed * 0.4;
 
-      // Advance toward attack line while tracking target
-      if (distToAttackLine > 30 && bot.ballHoldTimer < 1.8) {
-        const advanceDirX = Math.sign(attackLineX - bot.x);
-        const advanceDirY = Math.sign(target.y - bot.y) * 0.45;
-
-        bot.vx = advanceDirX * botSpeed;
-        bot.vy = advanceDirY * botSpeed;
-        bot.angle = Math.atan2(target.y - bot.y, target.x - bot.x);
-      } else {
-        // In attack zone: wind up and lead target!
-        mem.windUpTimer += dt;
-
-        // Predictive Aim Calculation
-        const dist = Math.hypot(target.x - bot.x, target.y - bot.y);
-        const throwSpeed = 640;
-        const timeToTarget = dist / throwSpeed;
-
-        let predictedX = target.x + target.vx * timeToTarget * leadFactor;
-        let predictedY = target.y + target.vy * timeToTarget * leadFactor;
-
-        if (difficulty === 'bot_easy') {
-          predictedY += (Math.random() - 0.5) * 60;
-        }
-
-        const aimAngle = Math.atan2(predictedY - bot.y, predictedX - bot.x);
-        bot.angle = aimAngle;
-        bot.vx *= 0.3;
-        bot.vy *= 0.3;
-
-        // Throw after brief windup
-        const requiredWindUp = difficulty === 'bot_hard' ? 0.12 : difficulty === 'bot_normal' ? 0.22 : 0.35;
-        if (mem.windUpTimer >= requiredWindUp || bot.ballHoldTimer >= 2.5) {
-          if (bot.throwCooldown <= 0) {
-            mem.windUpTimer = 0;
-            this.performThrow(bot, aimAngle);
-          }
-        }
+      mem.windUpTimer += dt;
+      const throwThreshold =
+        difficulty === 'bot_easy' ? 0.8 : difficulty === 'bot_normal' ? 0.4 : 0.2;
+      if (mem.windUpTimer >= throwThreshold) {
+        mem.windUpTimer = 0;
+        this.performThrow(bot, targetAngle);
       }
       return;
     }
 
-    // 3. SEEK LOOSE BALL: Find nearest reachable idle ball on bot's half of the court
-    const reachableBalls = this.balls.filter((b) => {
-      if (b.state !== 'idle') return false;
-      if (bot.team === 'LEFT') {
-        return b.x <= this.centerLineX + 18;
-      } else {
-        return b.x >= this.centerLineX - 18;
+    // Unarmed: Rush available ball or patrol
+    const availableBalls = this.balls.filter(
+      (b) =>
+        b.state === 'idle' &&
+        ((bot.team === 'LEFT' && b.x <= this.centerLineX + 15) ||
+          (bot.team === 'RIGHT' && b.x >= this.centerLineX - 15))
+    );
+
+    if (availableBalls.length > 0) {
+      availableBalls.sort(
+        (a, b) =>
+          Math.hypot(a.x - bot.x, a.y - bot.y) -
+          Math.hypot(b.x - bot.x, b.y - bot.y)
+      );
+      const targetBall = availableBalls[0];
+      const angle = Math.atan2(targetBall.y - bot.y, targetBall.x - bot.x);
+      bot.angle = angle;
+      bot.vx = Math.cos(angle) * botSpeed;
+      bot.vy = Math.sin(angle) * botSpeed;
+    } else {
+      // Patrol defensive line
+      const patrolBaseX =
+        bot.team === 'LEFT'
+          ? this.courtBounds.minX + (this.centerLineX - this.courtBounds.minX) * 0.45
+          : this.centerLineX + (this.courtBounds.maxX - this.centerLineX) * 0.55;
+
+      mem.patrolTimer += dt;
+      if (bot.y < this.courtBounds.minY + 50) {
+        mem.patrolYDir = 1;
+      } else if (bot.y > this.courtBounds.maxY - 50) {
+        mem.patrolYDir = -1;
+      } else if (mem.patrolTimer > 1.2) {
+        mem.patrolTimer = 0;
+        if (Math.random() < 0.4) mem.patrolYDir = mem.patrolYDir === 1 ? -1 : 1;
       }
-    });
 
-    if (reachableBalls.length > 0) {
-      reachableBalls.sort((a, b) => {
-        const da = Math.hypot(a.x - bot.x, a.y - bot.y);
-        const db = Math.hypot(b.x - bot.x, b.y - bot.y);
-        return da - db;
-      });
-      const targetBall = reachableBalls[0];
-
-      const toBallX = targetBall.x - bot.x;
-      const toBallY = targetBall.y - bot.y;
-      const dist = Math.hypot(toBallX, toBallY);
-
-      if (dist > 5) {
-        bot.vx = (toBallX / dist) * botSpeed;
-        bot.vy = (toBallY / dist) * botSpeed;
-        bot.angle = Math.atan2(toBallY, toBallX);
-      }
-      return;
+      const diffX = patrolBaseX - bot.x;
+      bot.vx = Math.sign(diffX) * Math.min(botSpeed * 0.7, Math.abs(diffX) * 5);
+      bot.vy = mem.patrolYDir * botSpeed * 0.75;
     }
-
-    // 4. DEFENSIVE PATROL: No ball and no loose balls on bot's side
-    // Position at mid-court depth and actively weave up/down so as not to be a sitting duck
-    const patrolBaseX =
-      bot.team === 'LEFT'
-        ? this.courtBounds.minX + (this.centerLineX - this.courtBounds.minX) * 0.45
-        : this.centerLineX + (this.courtBounds.maxX - this.centerLineX) * 0.55;
-
-    // Face the primary enemy threat
-    const enemies = Array.from(this.playersState.values()).filter((p) => p.isAlive && p.team !== bot.team);
-    const enemyWithBall = enemies.find((e) => e.hasBall) || enemies[0];
-    if (enemyWithBall) {
-      bot.angle = Math.atan2(enemyWithBall.y - bot.y, enemyWithBall.x - bot.x);
-    }
-
-    mem.patrolTimer += dt;
-    if (bot.y < this.courtBounds.minY + 60) {
-      mem.patrolYDir = 1;
-    } else if (bot.y > this.courtBounds.maxY - 60) {
-      mem.patrolYDir = -1;
-    } else if (mem.patrolTimer > 1.2) {
-      mem.patrolTimer = 0;
-      if (Math.random() < 0.4) mem.patrolYDir = mem.patrolYDir === 1 ? -1 : 1;
-    }
-
-    const targetX = patrolBaseX;
-    const diffX = targetX - bot.x;
-    bot.vx = Math.sign(diffX) * Math.min(botSpeed * 0.7, Math.abs(diffX) * 5);
-    bot.vy = mem.patrolYDir * botSpeed * 0.75;
   }
 
   public isRoundOver(): boolean {
@@ -831,7 +955,9 @@ export class DodgeballBlitzGame extends BaseGame {
   public getRoundResult(): RoundResult {
     const scores = this.getActivePlayers().map((p) => {
       const ps = this.playersState.get(p.id);
-      const pts = ps ? ps.score + ps.roundWins * 300 + (ps.isAlive ? 150 : 0) : 0;
+      const pts = ps
+        ? ps.score + ps.roundWins * 300 + (ps.isAlive ? 150 : 0)
+        : 0;
       return {
         playerId: p.id,
         score: pts,
@@ -841,7 +967,8 @@ export class DodgeballBlitzGame extends BaseGame {
     });
 
     scores.sort((a, b) => b.score - a.score);
-    const winnerId = scores.length > 0 && scores[0].score > 0 ? scores[0].playerId : null;
+    const winnerId =
+      scores.length > 0 && scores[0].score > 0 ? scores[0].playerId : null;
     const rankings = scores.map((s, idx) => ({
       playerId: s.playerId,
       score: s.score,
@@ -851,7 +978,7 @@ export class DodgeballBlitzGame extends BaseGame {
     const topHits = scores[0]?.hits || 0;
     const mvpHighlight =
       winnerId !== null
-        ? `Player ${winnerId + 1} dominated the gymnasium with ${topHits} direct eliminations!`
+        ? `Player ${winnerId + 1} dominated the court with ${topHits} direct eliminations across ${THEMES[this.currentThemeId].name}!`
         : 'Draw! Both teams eliminated in crossfire!';
 
     return {
@@ -862,12 +989,14 @@ export class DodgeballBlitzGame extends BaseGame {
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Polished hardwood gymnasium floor
-    ctx.fillStyle = '#D97706';
+    const theme = THEMES[this.currentThemeId];
+
+    // 1. Gymnasium Court Floor
+    ctx.fillStyle = theme.floorColor;
     ctx.fillRect(0, 0, width, height);
 
-    // Wood floor planks texture
-    ctx.strokeStyle = 'rgba(180, 83, 9, 0.35)';
+    // Floor planks / grid lines
+    ctx.strokeStyle = theme.floorPlankColor;
     ctx.lineWidth = 1;
     for (let y = this.courtBounds.minY; y <= this.courtBounds.maxY; y += 22) {
       ctx.beginPath();
@@ -876,8 +1005,8 @@ export class DodgeballBlitzGame extends BaseGame {
       ctx.stroke();
     }
 
-    // Gymnasium court boundary lines
-    ctx.strokeStyle = '#FFFFFF';
+    // Court boundary lines
+    ctx.strokeStyle = theme.courtLineColor;
     ctx.lineWidth = 3.5;
     ctx.strokeRect(
       this.courtBounds.minX,
@@ -886,8 +1015,8 @@ export class DodgeballBlitzGame extends BaseGame {
       this.courtBounds.maxY - this.courtBounds.minY
     );
 
-    // Center division line with center circle
-    ctx.strokeStyle = '#FBBF24';
+    // Center division line & circle
+    ctx.strokeStyle = theme.centerLineColor;
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.moveTo(this.centerLineX, this.courtBounds.minY);
@@ -895,25 +1024,17 @@ export class DodgeballBlitzGame extends BaseGame {
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.arc(this.centerLineX, (this.courtBounds.minY + this.courtBounds.maxY) / 2, 60, 0, Math.PI * 2);
+    ctx.arc(
+      this.centerLineX,
+      (this.courtBounds.minY + this.courtBounds.maxY) / 2,
+      60,
+      0,
+      Math.PI * 2
+    );
     ctx.stroke();
-
-    // Attack lines (dashed lines 60px from center line)
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-    ctx.setLineDash([8, 6]);
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(this.centerLineX - 60, this.courtBounds.minY);
-    ctx.lineTo(this.centerLineX - 60, this.courtBounds.maxY);
-    ctx.moveTo(this.centerLineX + 60, this.courtBounds.minY);
-    ctx.lineTo(this.centerLineX + 60, this.courtBounds.maxY);
-    ctx.stroke();
-    ctx.restore();
 
     // 2. Draw Dodgeballs and trails
     for (const b of this.balls) {
-      // Particle trail
       if (b.trail.length > 1) {
         ctx.save();
         ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)';
@@ -933,10 +1054,17 @@ export class DodgeballBlitzGame extends BaseGame {
       ctx.ellipse(b.x, b.y + 4, b.radius, b.radius * 0.6, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Red rubber dodgeball with radial sheen
-      const ballGrad = ctx.createRadialGradient(b.x - 3, b.y - 3, 2, b.x, b.y, b.radius);
-      ballGrad.addColorStop(0, '#FCA5A5');
-      ballGrad.addColorStop(0.5, '#EF4444');
+      // Dodgeball
+      const ballGrad = ctx.createRadialGradient(
+        b.x - 3,
+        b.y - 3,
+        2,
+        b.x,
+        b.y,
+        b.radius
+      );
+      ballGrad.addColorStop(0, theme.ballGlowColor);
+      ballGrad.addColorStop(0.5, theme.ballBaseColor);
       ballGrad.addColorStop(1, '#991B1B');
 
       ctx.fillStyle = ballGrad;
@@ -966,6 +1094,17 @@ export class DodgeballBlitzGame extends BaseGame {
       ctx.beginPath();
       ctx.ellipse(p.x, p.y + 6, p.radius * 1.1, p.radius * 0.6, 0, 0, Math.PI * 2);
       ctx.fill();
+
+      // Underdog aura
+      if (this.isUnderdog(p.id)) {
+        ctx.strokeStyle = '#FBBF24';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius + 10, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
 
       // Catch shield window halo
       if (p.catchWindow > 0) {
@@ -1001,66 +1140,127 @@ export class DodgeballBlitzGame extends BaseGame {
       ctx.fill();
 
       ctx.restore();
-
-      // Player Tag Pill
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 11px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      const isBot = cfg?.type.startsWith('bot_');
-      const tag = isBot ? `BOT ${p.id + 1}` : `P${p.id + 1}`;
-      ctx.fillText(tag, p.x, p.y - p.radius - 8);
-
-      // Set score indicator dots
-      if (p.roundWins > 0) {
-        ctx.fillStyle = '#F59E0B';
-        ctx.font = '10px sans-serif';
-        ctx.fillText('⭐'.repeat(p.roundWins), p.x, p.y + p.radius + 12);
-      }
     }
 
-    // 4. Draw HUD
-    this.renderHUD(ctx, width, height);
-  }
+    // 4. Header Badge (Safe-zone: y: 56, h: 26)
+    const headerW = 340;
+    const headerH = 26;
+    const headerX = width / 2 - headerW / 2;
+    const headerY = 56;
 
-  private renderHUD(ctx: CanvasRenderingContext2D, width: number, _height: number): void {
-    ctx.save();
-    // Round timer badge
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeStyle = theme.accentColor;
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(width * 0.5 - 65, 12, 130, 36, 10);
+    if (ctx.roundRect) ctx.roundRect(headerX, headerY, headerW, headerH, 6);
+    else ctx.rect(headerX, headerY, headerW, headerH);
     ctx.fill();
-    ctx.strokeStyle = '#F59E0B';
-    ctx.lineWidth = 2;
     ctx.stroke();
 
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 17px "Chakra Petch", monospace';
+    ctx.fillStyle = '#F8FAFC';
+    ctx.font = 'bold 12px sans-serif';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(`SET ${this.currentSet} • ${Math.ceil(this.roundTimer)}s`, width * 0.5, 30);
+    ctx.fillText(
+      `${theme.icon} ${theme.name.toUpperCase()} • SET ${this.currentSet} (RED ${this.teamWins.LEFT} - ${this.teamWins.RIGHT} BLUE)`,
+      width / 2,
+      headerY + 17
+    );
 
-    // Score sub-bar
-    const active = this.getActivePlayers();
-    const itemW = 105;
-    const subBarW = active.length * itemW;
-    const subBarX = width * 0.5 - subBarW * 0.5;
-
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-    ctx.beginPath();
-    ctx.roundRect(subBarX, 54, subBarW, 26, 6);
-    ctx.fill();
-
-    active.forEach((p, idx) => {
+    // 5. Corner Player HUD Cards with CharacterRenderer Mascots
+    // Offset bottom-left card above Theme Pill (y: height - 128)
+    for (const p of this.getActivePlayers()) {
       const ps = this.playersState.get(p.id);
-      const px = subBarX + idx * itemW + itemW / 2;
-      ctx.fillStyle = p.color;
-      ctx.font = 'bold 11px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const status = ps?.isAlive ? `🎯${ps?.hits || 0} ⭐${ps?.roundWins || 0}` : '💀OUT';
-      ctx.fillText(`P${p.id + 1}: ${status}`, px, 67);
-    });
+      if (!ps) continue;
 
-    ctx.restore();
+      let cx = 16;
+      let cy = 72;
+      const cardW = 124;
+      const cardH = 66;
+
+      if (p.corner === 'top-right') {
+        cx = width - cardW - 16;
+        cy = 72;
+      } else if (p.corner === 'bottom-left') {
+        cx = 16;
+        cy = height - cardH - 52;
+      } else if (p.corner === 'bottom-right') {
+        cx = width - cardW - 16;
+        cy = height - cardH - 52;
+      }
+
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+      ctx.strokeStyle = ps.isAlive ? p.color : '#64748B';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(cx, cy, cardW, cardH, 8);
+      else ctx.rect(cx, cy, cardW, cardH);
+      ctx.fill();
+      ctx.stroke();
+
+      // Mascot Avatar
+      const isBot = p.type !== 'human';
+      drawCharacter(ctx, cx + 22, cy + 33, 16, p.id, isBot, ps.mood, this.animTimer);
+
+      // Name & Score
+      ctx.fillStyle = ps.isAlive ? p.color : '#94A3B8';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(p.name, cx + 46, cy + 22);
+
+      ctx.fillStyle = '#F8FAFC';
+      ctx.font = 'bold 14px monospace';
+      ctx.fillText(`${ps.score} pts`, cx + 46, cy + 40);
+
+      ctx.fillStyle = ps.isAlive ? '#10B981' : '#EF4444';
+      ctx.font = 'bold 10px sans-serif';
+      const statusText = ps.isAlive
+        ? `Hits: ${ps.hits} | Catches: ${ps.catches}`
+        : '💀 ELIMINATED';
+      ctx.fillText(statusText, cx + 46, cy + 56);
+    }
+
+    // 6. Interactive Theme Pill (Bottom-left: x: 20, y: height - 44, w: 170, h: 32)
+    const pillX = 20;
+    const pillY = height - 44;
+    const pillW = 170;
+    const pillH = 32;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+    ctx.strokeStyle = theme.accentColor;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(pillX, pillY, pillW, pillH, 8);
+    else ctx.rect(pillX, pillY, pillW, pillH);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#F8FAFC';
+    ctx.font = '600 11px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${theme.icon} ${theme.name} [T]`, pillX + 10, pillY + 20);
+
+    // 7. Control hints (Bottom-right: x: width - 20, y: height - 28)
+    ctx.fillStyle = '#94A3B8';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Move: Run | Tap Action: Throw / Catch', width - 20, height - 24);
+  }
+
+  public syncDebug(): Record<string, unknown> {
+    return {
+      theme: this.currentThemeId,
+      currentSet: this.currentSet,
+      teamWins: this.teamWins,
+      suddenDeath: this.suddenDeathTriggered,
+      roundTimer: this.roundTimer,
+      players: Array.from(this.playersState.entries()).map(([id, p]) => ({
+        id,
+        team: p.team,
+        isAlive: p.isAlive,
+        hits: p.hits,
+        score: p.score,
+        isUnderdog: this.isUnderdog(id)
+      }))
+    };
   }
 }
