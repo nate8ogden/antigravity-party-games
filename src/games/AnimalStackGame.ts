@@ -432,8 +432,50 @@ export class AnimalStackGame extends BaseGame {
       }
     }
 
-    // Raft tilt is locked to 0: wood CANNOT tip!
-    this.raftTilt = 0;
+    // DYNAMIC BUOYANT RAFT TILT & SLIDING PHYSICS (Inspired by Sumo Iceberg!)
+    let netTorque = 0;
+    for (const a of this.animals) {
+      if (a.settled) {
+        const arm = a.x - this.raftX;
+        netTorque += arm * a.type.mass * 0.00016;
+      }
+    }
+
+    // Natural wave rocking
+    const waveRock = Math.sin(this.waterWaveOffset) * 0.035;
+    const targetTilt = Math.max(-0.25, Math.min(0.25, netTorque * 0.35 + waveRock));
+    this.raftTilt += (targetTilt - this.raftTilt) * Math.min(1, 4.5 * dt);
+
+    // If tilt exceeds threshold, animals slide down the slope!
+    if (Math.abs(this.raftTilt) > 0.08) {
+      const slideDir = Math.sign(this.raftTilt);
+      const slideForce = (Math.abs(this.raftTilt) - 0.08) * 110 * dt;
+      for (const a of this.animals) {
+        if (a.settled) {
+          a.x += slideDir * slideForce;
+          const ext = AnimalStackGame.getExtents(a.type, a.angle);
+          if (a.x < this.raftX - this.raftWidth / 2 - ext.halfW || a.x > this.raftX + this.raftWidth / 2 + ext.halfW) {
+            a.settled = false;
+            a.vy = 120;
+            this.particles.showFloatingText('SLID OFF! 🌊', a.x, a.y - 15, '#EF4444', 18);
+            this.audio.playWhoosh();
+          }
+        }
+      }
+    }
+
+    // Clean up animals that tumbled into the ocean
+    for (let i = this.animals.length - 1; i >= 0; i--) {
+      const a = this.animals[i];
+      if (!a.settled) {
+        a.y += a.vy * dt;
+        a.vy += 650 * dt;
+        if (a.y > this.raftY + 35) {
+          this.triggerSplash(a.x, this.raftY + 20);
+          this.animals.splice(i, 1);
+        }
+      }
+    }
 
     if (this.nextTurnTimer > 0) {
       this.nextTurnTimer -= dt;
