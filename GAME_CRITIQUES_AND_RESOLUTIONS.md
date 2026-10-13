@@ -359,11 +359,13 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Quick Draw Western'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *'Quick Draw Western'* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Core Gameplay & Objective Overhaul:** Added **Decoy Bait Mind-Games**: 35% chance during the tense waiting period for a bait word ("DRINK!", "DANCE!", "DROP!") to flash in amber; itchy trigger fingers who shoot early foul and forfeit the round, creating high-energy room-wide laughter and tension.
+2. **Controls & Tactility Overhaul:** Snappy, instantaneous tap trigger with millisecond precision timer, muzzle fire blast particle spikes, and heavy screen recoil upon firing.
+3. **Multiplayer Chaos & Comeback Mechanic:** Trailing players down by $\ge 2$ stars activate **Underdog Dead-Eye Focus**: golden dashed aura around the gunslinger and an automatic +28ms latency compensation cushion on draw timing, making clutch comebacks achievable.
+4. **Visual & Audio Juice Polish:** 3 Procedural Visual Themes (*High Noon Sunset 🌅*, *Ghost Town Midnight 🌌*, *Dust Bowl Sirocco 🏜️*) with sun/moon lighting, layered canyon mesas, frontier storefronts, and procedural rolling tumbleweeds. Richly animated western gunslingers with duster coats, spurs, gunbelts, and dynamic mascot emotional reactions. Interactive bottom-left Theme Pill (`x: 20, y: height - 44, w: 180, h: 32`, shortcut `[T]`).
+5. **Humanized AI Tuning:** Bots have calibrated human reaction times (Hard: 210-250ms, Normal: 310-390ms, Easy: 480-640ms) and can fall for decoy bait words on Easy and Normal difficulty.
+
+#### ✅ STATUS: FULLY RESOLVED & VERIFIED (0 TypeScript/Vite Errors, Built in Antigravity_Games.html)
 
 ### #16. Balloon Burst (ID: `balloon_burst`) — [Party]
 - **Class Implementation:** `src/games/BalloonBurstGame.ts` (372 lines)
