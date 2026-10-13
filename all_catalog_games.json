@@ -1,0 +1,2342 @@
+[
+  {
+    "id": "tanks",
+    "title": "Cyber Tanks 2.0",
+    "tagline": "Ricochet Arena Duel",
+    "category": "Action",
+    "icon": "[G-01]",
+    "instructions": "Best of 3 Match! The battlefield is packed with tactical obstacles. Cannon shells have a 1.2s reload recharge. Hold to rotate; release to drive; tap to fire bouncing shells!",
+    "controlPrompt": "Hold: Rotate | Release: Drive | Tap: Fire (1.2s Recharge)"
+  },
+  {
+    "id": "hovercraft",
+    "title": "Neon Bumper Derby",
+    "tagline": "Pinball Demolition Arena",
+    "category": "Action",
+    "icon": "[G-02]",
+    "instructions": "Smash into rival bumper cars! Slam opponents into electric perimeter rails and center pinball bumpers to deplete their shields. Grab battery sparks to recharge!",
+    "controlPrompt": "WASD / Arrows: Steer & Drive | Space / Tap: Turbo Boost | Grippy Tires"
+  },
+  {
+    "id": "laser_grid",
+    "title": "Laser Grid Reflex",
+    "tagline": "Tile Overcharge Dodge",
+    "category": "Reflex",
+    "icon": "[G-03]",
+    "instructions": "Watch telegraphed tile flashes! Tap to dash around the grid; hold to reverse direction. Grab golden overcharge batteries!",
+    "controlPrompt": "Tap: Dash Step | Hold: Reverse Direction"
+  },
+  {
+    "id": "orbital",
+    "title": "Orbital Slingshot",
+    "tagline": "Meteor Miner Physics",
+    "category": "Physics",
+    "icon": "[G-04]",
+    "instructions": "Hold [W] (or [↑] / Space) to tether to nearby planets; release to launch into a gravitational slingshot arc. You cannot move or steer without a planet! Mine space crystals and avoid the singularity.",
+    "controlPrompt": "Hold [W] / [↑]: Tether Orbit | Release: Slingshot Arc"
+  },
+  {
+    "id": "micro_gp",
+    "title": "Micro Turbo GP",
+    "tagline": "Single-Button Drift Racer",
+    "category": "Racing",
+    "icon": "[G-05]",
+    "instructions": "Hold button to power-drift around curves and charge multi-tier Nitro! Release to blast off with explosive Nitro Speed and straighten out. Track walls and auto-rescue prevent getting stuck in loops.",
+    "controlPrompt": "Hold: Drift & Charge Nitro | Release: Unleash Nitro Blast"
+  },
+  {
+    "id": "ghost_flashlight",
+    "title": "Ghost Flashlight",
+    "tagline": "Darkness Tag & Stealth",
+    "category": "Action",
+    "icon": "[G-06]",
+    "instructions": "Survive the haunted mansion! Aim your flashlight at the Ghost to reveal and slow them down. Hold Action / Space for the Ultra-Beam! If tagged, you become the Ghost—hunt survivors to pass the curse!",
+    "controlPrompt": "Move: Direct / WASD / Stick | Hold Action: Ultra-Beam | Least Ghost Time Wins"
+  },
+  {
+    "id": "kitchen_chaos",
+    "title": "Kitchen Chaos",
+    "tagline": "High-Speed Food Fling",
+    "category": "Party",
+    "icon": "[G-07]",
+    "instructions": "Hold to charge fling launcher, release to toss food ingredients onto center rotating plates. Spicy peppers trigger 2X Fever Mode!",
+    "controlPrompt": "Hold: Charge Throw | Release: Fling Food"
+  },
+  {
+    "id": "skyline_sumo",
+    "title": "Skyline Sumo",
+    "tagline": "Springboard Platform Climber",
+    "category": "Action",
+    "icon": "[G-08]",
+    "instructions": "Hold to charge jump spring and oscillating aim angle; release to leap upwards! Bop opponents on the head to stun them.",
+    "controlPrompt": "Hold: Charge Jump & Aim | Release: Spring Leap"
+  },
+  {
+    "id": "animal_stack",
+    "title": "Animal Stack",
+    "tagline": "Sky Crane Animal Stacker",
+    "category": "Physics",
+    "icon": "[G-09]",
+    "instructions": "Overhead crane swings animals across the sky. Rotate and drop uniquely shaped animals onto the sturdy moored raft to build the ultimate towering animal stack!",
+    "controlPrompt": "Space / Tap: Drop | W / S / ↑ / ↓ / R: Rotate | A / D / ← / →: Steer"
+  },
+  {
+    "id": "sumo_iceberg",
+    "title": "Sumo Iceberg",
+    "tagline": "Dynamic Tilting Disc",
+    "category": "Physics",
+    "icon": "[G-10]",
+    "instructions": "Dynamic ice disc tilts with player weights and melts over time! Sprint multiple times with tactical recharges to ram opponents off the slippery edges.",
+    "controlPrompt": "Tap / Space: Sprint Tackle (3 Charges) | Steer: Ice Drift"
+  },
+  {
+    "id": "cannon_barrage",
+    "title": "Cannon Barrage",
+    "tagline": "Destructible Fortress Duel",
+    "category": "Action",
+    "icon": "[G-13]",
+    "instructions": "Demolish the 2 outer guard bastions to bring down the enemy fortress shield! Only the main tower can fire, and it can only be damaged once both outer towers fall.",
+    "controlPrompt": "Tap: Fire Cannonball"
+  },
+  {
+    "id": "anvil_rain",
+    "title": "Anvil Rain",
+    "tagline": "Shadow Dodging Survival",
+    "category": "Reflex",
+    "icon": "[G-14]",
+    "instructions": "Giant, golden & iron anvils plummet from the sky! Tap / Space to dash and body-check rivals under falling shadows. Protect your Hard Hat!",
+    "controlPrompt": "Steer: Run | Tap / Space: Dash & Body-Check"
+  },
+  {
+    "id": "bomb_relay",
+    "title": "Bomb Relay",
+    "tagline": "Hot Potato Explosive Tag",
+    "category": "Action",
+    "icon": "[G-18]",
+    "instructions": "A ticking time-bomb is lit! Tap to sprint and tackle opponents to pass the bomb. When the fuse runs out, BOOM!",
+    "controlPrompt": "Tap/Hold: Dash & Tag"
+  },
+  {
+    "id": "micro_hockey",
+    "title": "Micro Hockey",
+    "tagline": "4-Way Circular Air Table",
+    "category": "Action",
+    "icon": "[G-12]",
+    "instructions": "Guard your goal arch on the circular air hockey table! Hold to swing your paddle along the rim and deflect the puck into opponent goals.",
+    "controlPrompt": "Hold: Defend & Slap Puck"
+  },
+  {
+    "id": "quick_draw",
+    "title": "Quick Draw Western",
+    "tagline": "High Noon Millisecond Duel",
+    "category": "Reflex",
+    "icon": "[G-19]",
+    "instructions": "Wait for the tense countdown... when \"DRAW!\" flashes, tap instantly! Misfiring early will foul your gun.",
+    "controlPrompt": "Tap on DRAW!: Fire Gun"
+  },
+  {
+    "id": "balloon_burst",
+    "title": "Balloon Burst",
+    "tagline": "Pressure Inflation Showdown",
+    "category": "Party",
+    "icon": "[G-20]",
+    "instructions": "Hold your pump valve to inflate your balloon for score. If you pump past maximum capacity, it POPs and loses points!",
+    "controlPrompt": "Hold: Pump Air | Release: Bank Score"
+  },
+  {
+    "id": "swat_fly",
+    "title": "Swat the Fly",
+    "tagline": "Picnic Pest Buster",
+    "category": "Reflex",
+    "icon": "[G-21]",
+    "instructions": "Flies buzz across the checkered tablecloth! Move your flyswatter across the table and slam down on pests mid-flight or landed. Golden dragonflies give +3, but beware stinging wasps (-2)!",
+    "controlPrompt": "WASD / Arrows to Move • Space / Enter to Swat"
+  },
+  {
+    "id": "stop_at_zero",
+    "title": "Stop at Zero",
+    "tagline": "Blind Precision Stopwatch",
+    "category": "Reflex",
+    "icon": "[G-24]",
+    "instructions": "Countdown ticks from 5.000s; digits vanish at 3.000s! Tap your button closest to exactly 0.000s to win the round.",
+    "controlPrompt": "Tap: Freeze Blind Clock"
+  },
+  {
+    "id": "turf_whack",
+    "title": "Turf Whack",
+    "tagline": "Garden Mole Whacker",
+    "category": "Party",
+    "icon": "[G-25]",
+    "instructions": "Moles pop out of garden burrow holes! Tap to swing your wooden mallet. Gold moles give +2, but avoid TNT dynamite (-2)!",
+    "controlPrompt": "Tap: Swing Mallet"
+  },
+  {
+    "id": "neon_lightcycles",
+    "title": "Neon Lightcycles",
+    "tagline": "Cyber Grid Trail Duel",
+    "category": "Racing",
+    "icon": "[G-29]",
+    "instructions": "Drive at lightspeed leaving a solid neon light ribbon! Tap to turn 90° clockwise. Trap rivals into crashing into trails or borders.",
+    "controlPrompt": "Tap: Turn 90° Clockwise"
+  },
+  {
+    "id": "blade_parry",
+    "title": "Blade Parry",
+    "tagline": "Rock \\",
+    "category": "Action",
+    "icon": "[G-22]",
+    "instructions": "Step into the boxing ring with spring-neck combat robots! Throw Left & Right blade punches and time your Blade Parry to guard-break your rival. Pop their head off for the Knockout!",
+    "controlPrompt": "A / D / ← / →: Shuffle | W / ↑: Left Punch | S / ↓: Right Punch | Space / Enter: Parry"
+  },
+  {
+    "id": "safe_dial",
+    "title": "Safe Dial Lock",
+    "tagline": "Bank Vault Lockpicker",
+    "category": "Puzzle",
+    "icon": "[G-23]",
+    "instructions": "Spinning dial needle sweeps across combinations! Tap when the needle enters the glowing green sector to crack a tumbler. Crack 3 to pop the vault!",
+    "controlPrompt": "Tap: Lock Tumbler"
+  },
+  {
+    "id": "coin_apex",
+    "title": "Coin Apex",
+    "tagline": "Zero-Velocity Catch",
+    "category": "Reflex",
+    "icon": "[G-26]",
+    "instructions": "Gold doubloons are catapulted skyward! Tap precisely when the coin reaches its highest zero-velocity apex point for +3 Perfect points.",
+    "controlPrompt": "Tap: Catch at Apex"
+  },
+  {
+    "id": "red_light_sentry",
+    "title": "Red Light Sentry",
+    "tagline": "Watchtower Stealth Dash",
+    "category": "Party",
+    "icon": "[G-27]",
+    "instructions": "Mechanical watchtower sentry scans the arena. Hold your corner button to sprint toward the trophy; release to freeze before the Red Light scans!",
+    "controlPrompt": "Hold: Sprint | Release: Freeze"
+  },
+  {
+    "id": "laser_leap",
+    "title": "Laser Leap",
+    "tagline": "Neon Laser Jump Rope",
+    "category": "Reflex",
+    "icon": "[G-28]",
+    "instructions": "A high-voltage rotating laser beam sweeps across the arena. Tap to leap over the beam right as it sweeps under your feet! Watch out for sudden direction reversals.",
+    "controlPrompt": "Tap: Jump Over Laser Beam"
+  },
+  {
+    "id": "color_clash",
+    "title": "Color Clash",
+    "tagline": "Turf Painter Duel",
+    "category": "Action",
+    "icon": "[G-15]",
+    "instructions": "Drive your paint roller rover across the arena grid to paint tiles in your color! Snatch golden Paint Bombs to blast a 3x3 territory burst. Most tiles wins!",
+    "controlPrompt": "Steer: Paint Tiles | Seek Paint Bombs"
+  },
+  {
+    "id": "meteor_shield",
+    "title": "Meteor Shield",
+    "tagline": "Planetary Core Defense",
+    "category": "Physics",
+    "icon": "[G-17]",
+    "instructions": "Meteors plummet toward your planetary core! Orbit your curved deflector shield to ricochet fiery meteors toward rival planets. Tap for kinetic boost.",
+    "controlPrompt": "Steer: Orbit Shield | Tap: Kinetic Pulse"
+  },
+  {
+    "id": "sequence_clash",
+    "title": "Sequence Clash",
+    "tagline": "Cyber Memory Duel",
+    "category": "Puzzle",
+    "icon": "[G-30]",
+    "instructions": "Holographic cyber pads illuminate in accelerating musical patterns. Memorize the sequence and repeat it step-by-step! First mistake eliminates.",
+    "controlPrompt": "WASD / Arrows: Enter Sequence"
+  },
+  {
+    "id": "bubble_soccer",
+    "title": "Bubble Soccer",
+    "tagline": "Inflatable Bumper Derby",
+    "category": "Action",
+    "icon": "[G-31]",
+    "instructions": "Bounce rivals across the turf in high-elasticity bubble suits! Ram into the giant soccer ball, deflect ricochets, and blast goals into the enemy net.",
+    "controlPrompt": "Steer: Drive Suit | Tap: Turbo Dash"
+  },
+  {
+    "id": "wire_cutter",
+    "title": "Wire Cutter",
+    "tagline": "Cyber Defusal Relay",
+    "category": "Puzzle",
+    "icon": "[G-32]",
+    "instructions": "Analyze fast-scrambling terminal diagnostics! Snip the wire that matches the color or inverted prompt before the cyber bomb detonates. Fastest clean cut scores!",
+    "controlPrompt": "WASD / Arrows: Snip Red/Blue/Green/Yellow Wire"
+  },
+  {
+    "id": "magma_hop",
+    "title": "Magma Hop",
+    "tagline": "Volcanic Basalt Survival",
+    "category": "Reflex",
+    "icon": "[G-33]",
+    "instructions": "Hop between sinking basalt stepping stones over a boiling sea of molten lava! Snatch floating fire crystals and dodge erupting magma geysers.",
+    "controlPrompt": "Steer / Arrows / Tap: Leap To Adjacent Pillar"
+  },
+  {
+    "id": "rhythm_duel",
+    "title": "Rhythm Duel",
+    "tagline": "Synthwave Neon Highway",
+    "category": "Reflex",
+    "icon": "[G-34]",
+    "instructions": "Hit incoming glowing notes right on the judgment line to sync with the 128 BPM electronic beat! Rack up combo streaks for massive score multipliers.",
+    "controlPrompt": "Space / Enter / Primary Tap: Hit Note On Beat"
+  },
+  {
+    "id": "cosmic_vortex",
+    "title": "Cosmic Vortex",
+    "tagline": "Gravitational Singularity Duel",
+    "category": "Physics",
+    "icon": "[G-35]",
+    "instructions": "Navigate the swirling accretion disk around a supermassive black hole! Tap thrusters to slingshot out of gravitational pull, pulse repulsor shields, and harvest antimatter orbs before crossing the event horizon.",
+    "controlPrompt": "Hold: Fire Thrusters | Tap: Repulsor Pulse"
+  },
+  {
+    "id": "pixel_paintball",
+    "title": "Pixel Paintball",
+    "tagline": "Ricochet Splat Arena",
+    "category": "Action",
+    "icon": "[G-36]",
+    "instructions": "Blast bouncing paint pellets around the arena! Splat rival suits, bust spinning neon piñatas, and control the splatter zone. Stun opponents with direct pellet headshots!",
+    "controlPrompt": "Hold: Aim Cannon | Release: Fire Splat Pellet"
+  },
+  {
+    "id": "minefield_dash",
+    "title": "Minefield Dash",
+    "tagline": "Proximity Rune Sprint",
+    "category": "Puzzle",
+    "icon": "[G-37]",
+    "instructions": "Sprint through a high-stakes cyber hex minefield! Observe proximity warning runes (1, 2, 3) to deduce concealed explosive triggers. Extract golden battery cores and survive the blast shockwaves!",
+    "controlPrompt": "WASD / Arrows: Move • Space / Enter: Dash Sprint"
+  },
+  {
+    "id": "asteroid_miner",
+    "title": "Asteroid Miner",
+    "tagline": "Zero-G Kinetic Salvage",
+    "category": "Physics",
+    "icon": "[G-38]",
+    "instructions": "Pilot zero-g mining tugboats equipped with rotary diamond drills! Shatter crystalline asteroids into glittering gems, vacuum up cargo, and deposit loot into your salvage depot. Steal cargo by ramming rivals or raiding their depot! Highest banked score when the 50s shift expires wins.",
+    "controlPrompt": "A/D or Left/Right: Steer • Space/Enter or W/Up: Fire Thrusters"
+  },
+  {
+    "id": "dont_look_down",
+    "title": "Don",
+    "tagline": "90-Second Vertical Tower Rush",
+    "category": "Physics",
+    "icon": "[G-39]",
+    "instructions": "Ascend a perilous vertical tower! Jump across floating triangles, planetary spheres, crystal diamonds, and tech hexagons. Press Space/W or Enter/Up for instant zero-stall leaps and mid-air flutter jumps! Press 1-3 to switch map themes.",
+    "controlPrompt": "A/D or Left/Right: Steer • Space/W or Enter/Up: Instant Leap & Air Jump • 1-3: Switch Map"
+  },
+  {
+    "id": "snowball_fight",
+    "title": "Snowball Fight",
+    "tagline": "Artillery Snow Fort Duel",
+    "category": "Action",
+    "icon": "[G-40]",
+    "instructions": "Aim your sweeping arrow and hold your button to charge throw power. Release to fling snowballs in high ballistic arcs over snow fort walls and splat opponents!",
+    "controlPrompt": "Hold: Charge Power | Release: Throw | A/D or Steer: Aim"
+  },
+  {
+    "id": "highway_hop",
+    "title": "Highway Hop",
+    "tagline": "Procedural Crossy Freeway",
+    "category": "Action",
+    "icon": "[G-41]",
+    "instructions": "Hop across speeding highways, rushing river rapids on floating logs, and dangerous railway tracks with flashing signals! Reach the golden finish pasture to score big!",
+    "controlPrompt": "Tap/Space: Hop Forward | Arrows/WASD: Steer & Jump"
+  },
+  {
+    "id": "gold_miner",
+    "title": "Gold Rush Miner",
+    "tagline": "Underground Reel & Claw Winch",
+    "category": "Physics",
+    "icon": "[G-42]",
+    "instructions": "Watch your oscillating mechanical winch crane and tap to shoot your claw deep into underground caverns. Retrieve sparkling diamonds and heavy gold nuggets; beware explosive TNT!",
+    "controlPrompt": "Tap / Down: Fire Winch Claw"
+  },
+  {
+    "id": "chomp_frogs",
+    "title": "Chomp Frogs",
+    "tagline": "Lilypad Hop & Bug Chomp Arena",
+    "category": "Action",
+    "icon": "[G-43]",
+    "instructions": "Leap dynamically across floating lily pads and rippling pond waters! Tap to snap your lightning-fast tongue, devouring gnats, fireflies, golden beetles, and giant royal butterflies. Bump rivals into the water and avoid stinging wasps! 1-3 to switch ponds.",
+    "controlPrompt": "Steer/WASD/Arrows: Aim & Hop | Space/Enter/Tap: Instant Chomp | 1-3: Switch Pond"
+  },
+  {
+    "id": "tug_of_war",
+    "title": "Tug of War",
+    "tagline": "High-Voltage Rhythm Pit Heave",
+    "category": "Action",
+    "icon": "[G-44]",
+    "instructions": "Time your taps in the green sweet spot of your oscillating power meter to unleash powerful rope heaves! Pull opponents across the cliff edge into the bubbling hazard pit!",
+    "controlPrompt": "Tap / Space: Rhythm Power Pull"
+  },
+  {
+    "id": "volley_spike",
+    "title": "Volley Spike",
+    "tagline": "Beach Volley Smash Duel",
+    "category": "Physics",
+    "icon": "[G-45]",
+    "instructions": "Bump, set, and smash! Move left and right across the sand, time your jumps, and leap at apex to unleash flaming downward Power Spikes over the center net!",
+    "controlPrompt": "A/D or Steer: Move | Tap/Space: Jump & Spike"
+  },
+  {
+    "id": "maze_escape",
+    "title": "Maze Escape",
+    "tagline": "Labyrinth Relic Dash",
+    "category": "Puzzle",
+    "icon": "[G-46]",
+    "instructions": "Navigate a procedurally shifting labyrinth! Grab glowing gems and snatch the center Golden Relic while evading the roaming Minotaur Sentry. Drop freeze traps to halt rivals!",
+    "controlPrompt": "Arrows/WASD: Move | Tap/Space: Drop Trap"
+  },
+  {
+    "id": "pinball_battle",
+    "title": "Pinball Battle",
+    "tagline": "Multi-Flipper Defense Arena",
+    "category": "Action",
+    "icon": "[G-47]",
+    "instructions": "Guard your goal slot with responsive flipper paddles! Bank speeding pinballs off neon bumpers into rival goals, and survive multi-ball frenzy!",
+    "controlPrompt": "Steer: Move Paddle | Tap/Hold Space: Fire Flippers"
+  },
+  {
+    "id": "mole_panic",
+    "title": "Mole Panic",
+    "tagline": "Carnival Whack-A-Mole Stampede",
+    "category": "Reflex",
+    "icon": "[G-48]",
+    "instructions": "Slam your giant squeaky mallet down on emerging moles across 12 dirt burrows! Whack Golden King Moles and Prismatic Star Moles for mega points; beware explosive TNT moles!",
+    "controlPrompt": "Steer / Move: Position Mallet | Tap/Space: Whack!"
+  },
+  {
+    "id": "color_flood",
+    "title": "Color Flood",
+    "tagline": "Territory Capture Grid",
+    "category": "Puzzle",
+    "icon": "[G-49]",
+    "instructions": "Flood the arena with jewel colors! Tap button or steer to cycle available colors and absorb matching adjacent territory. Capture over 50% of the arena to dominate!",
+    "controlPrompt": "Tap/Space: Flood Color | Steer: Pick Color"
+  },
+  {
+    "id": "memory_matrix",
+    "title": "Memory Matrix",
+    "tagline": "Musical Reflex Sequence",
+    "category": "Reflex",
+    "icon": "[G-50]",
+    "instructions": "Memorize luminous musical tile patterns! When the rotating pointer points at your target pad, tap in sequence to chime without striking out!",
+    "controlPrompt": "Tap/Space: Strike Pad | Sweep: Auto Pointer"
+  },
+  {
+    "id": "snake_arena",
+    "title": "Snake Arena",
+    "tagline": "4-Player Battle Royale",
+    "category": "Action",
+    "icon": "[G-51]",
+    "instructions": "Slither across neon grids, gobble power pellets to grow longer, and trap rivals into fatal collisions! Tapping executes sharp 90-degree tactical turns.",
+    "controlPrompt": "Tap/Space: 90° Turn | Steer: Guide Direction"
+  },
+  {
+    "id": "mirror_laser",
+    "title": "Mirror Laser",
+    "tagline": "Reflective Core Duel",
+    "category": "Reflex",
+    "icon": "[G-52]",
+    "instructions": "Central emitter core fires high-energy laser pulses! Tap to rotate your diagonal reflector mirror 45 degrees to deflect beams into rival base cores.",
+    "controlPrompt": "Tap/Space: Rotate Mirror 45° | Deflect Beams"
+  },
+  {
+    "id": "domino_cascade",
+    "title": "Domino Cascade",
+    "tagline": "Rhythmic Chain Topple",
+    "category": "Reflex",
+    "icon": "[G-53]",
+    "instructions": "Lay domino tiles in sync with the musical rhythm before the descending barrier drops! Trigger a spectacular cascading topple for bonus fireworks and chime bells.",
+    "controlPrompt": "Tap/Space in Rhythm: Lay Tile | Topple Chain"
+  },
+  {
+    "id": "water_balloon",
+    "title": "Water Balloon Barrage",
+    "tagline": "Backyard Artillery Duel",
+    "category": "Action",
+    "icon": "[G-54]",
+    "instructions": "Catapult wobbly water balloons over the central garden fence! Hold to oscillate trajectory angle and charge launch power; release to soak opponents!",
+    "controlPrompt": "Hold: Angle & Power | Release: Launch Splash"
+  },
+  {
+    "id": "sheep_dog",
+    "title": "Sheep Dog Corrals",
+    "tagline": "Meadow Herding Frenzy",
+    "category": "Party",
+    "icon": "[G-55]",
+    "instructions": "Guide energetic sheep dogs around the meadow! Hold button to sprint, and release to unleash an acoustic BARK shockwave that scatters sheep into your corner corral!",
+    "controlPrompt": "Hold: Sprint | Release: Bark Shockwave"
+  },
+  {
+    "id": "chest_snatch",
+    "title": "Chest Snatch",
+    "tagline": "Mimic Vault Jewel Heist",
+    "category": "Reflex",
+    "icon": "[G-56]",
+    "instructions": "Snatch sparkling rubies, emeralds, and diamonds from inside the giant mimic chest! Watch for the jaw chatter warning and pull your hand back before the razor teeth clamp shut!",
+    "controlPrompt": "Hold: Reach In & Grab | Release: Pull Hand Back"
+  },
+  {
+    "id": "rapid_drop4",
+    "title": "Rapid Drop 4",
+    "tagline": "Real-Time 4-in-a-Row",
+    "category": "Puzzle",
+    "icon": "[G-57]",
+    "instructions": "No turn waiting! Slide across columns and drop heavy tokens in real-time gravity duels. Connect 4 tokens in any direction for laser celebrations!",
+    "controlPrompt": "Steer: Choose Column | Tap/Space: Drop Token"
+  },
+  {
+    "id": "floor_painter",
+    "title": "Floor Painter",
+    "tagline": "Roller Skate Turf War",
+    "category": "Action",
+    "icon": "[G-58]",
+    "instructions": "Glide across the arena on roller skates leaving behind thick coats of your player paint! Steal opponent turf, snag golden mega-rollers, and bump rivals!",
+    "controlPrompt": "Hold: Steer & Drift | Bump Rivals: Steal Paint"
+  },
+  {
+    "id": "dodgeball_blitz",
+    "title": "Dodgeball Blitz",
+    "tagline": "Gymnasium Ball Elimination",
+    "category": "Action",
+    "icon": "[G-59]",
+    "instructions": "Evade red rubber dodgeballs bouncing across the hardwood gym! Scoop up loose balls, aim across the division line, and throw with Space. Catch incoming balls to stun rivals!",
+    "controlPrompt": "WASD / Arrows: Run | Space / Enter: Throw or Catch"
+  },
+  {
+    "id": "gravity_golf",
+    "title": "Gravity Golf",
+    "tagline": "Celestial Orbital Mini-Golf",
+    "category": "Physics",
+    "icon": "[G-60]",
+    "instructions": "Tee off across celestial planetary bodies! Steer to aim your launch trajectory and hold Space to charge stroke power. Slingshot around gravity wells into the cosmic wormhole cup!",
+    "controlPrompt": "Steer: Aim Angle | Hold Space: Charge Power"
+  },
+  {
+    "id": "cyber_disc",
+    "title": "Cyber Disc",
+    "tagline": "Tron Energy Disc Duel",
+    "category": "Action",
+    "icon": "[G-61]",
+    "instructions": "Deflect the high-speed energized disc across the cyber grid velodrome! Hold defensive shields to power-reflect incoming discs past opponent goal lines.",
+    "controlPrompt": "WASD / Arrows: Skim | Space / Enter: Energy Shield"
+  },
+  {
+    "id": "sumo_spheres",
+    "title": "Sumo Spheres",
+    "tagline": "Tilting Gyro Platform Derby",
+    "category": "Physics",
+    "icon": "[G-62]",
+    "instructions": "Roll heavy motorized gyro-spheres on an elevating, tilting platform over the abyss! Tap turbo boost to ram rivals over the edge while keeping the arena balanced.",
+    "controlPrompt": "WASD / Arrows: Roll | Space / Enter: Turbo Ram"
+  },
+  {
+    "id": "sky_gliders",
+    "title": "Sky Gliders",
+    "tagline": "Paper Airplane Canyon Flight",
+    "category": "Action",
+    "icon": "[G-63]",
+    "instructions": "Pilot paper delta-wing gliders through sunset mountain canyons! Pull pitch to climb or dive for speed, catch golden thermal updraft rings, and nail the runway bullseye!",
+    "controlPrompt": "Throttle Up/Down: Pitch Climb/Dive | Steer: Bank Left/Right"
+  },
+  {
+    "id": "whack_a_thief",
+    "title": "Whack-A-Thief",
+    "tagline": "Bank Vault Reflex Zap",
+    "category": "Reflex",
+    "icon": "[G-64]",
+    "instructions": "Masked raccoon bandits are raiding the bank safe deposit boxes! Steer your reticle across the 4x3 vault and zap thieves for cash. Avoid red flashing electric shock traps!",
+    "controlPrompt": "WASD / Arrows: Move Reticle | Space / Enter: Zap Thief"
+  },
+  {
+    "id": "pixel_curling",
+    "title": "Pixel Curling",
+    "tagline": "Olympic Friction Ice Clash",
+    "category": "Sports",
+    "icon": "[G-65]",
+    "instructions": "Launch 44-pound polished granite curling stones down the ice sheet! Steer your curl trajectory, charge launch force, and rapidly sweep your broom to melt ice friction towards the button!",
+    "controlPrompt": "Steer: Aim Curl | Hold Space: Launch | Tap Space: Sweep"
+  },
+  {
+    "id": "bumper_boats",
+    "title": "Bumper Boats",
+    "tagline": "Splash Lagoon Water Derby",
+    "category": "Action",
+    "icon": "[G-66]",
+    "instructions": "Steer motorized inflatable bumper boats through tropical water canals! Blast rivals with high-pressure water cannons and bounce them into the swirling central whirlpool!",
+    "controlPrompt": "Steer: Rudder | Throttle: Propeller | Space: Water Cannon"
+  },
+  {
+    "id": "target_sniper",
+    "title": "Target Sniper",
+    "tagline": "Carnival Shooting Gallery",
+    "category": "Reflex",
+    "icon": "[G-67]",
+    "instructions": "Take aim at moving ducks, clay targets, and spinning stars across the 3-tier carnival gallery! Chain consecutive bulls-eyes for 4x score multipliers and avoid pirate skull hazards!",
+    "controlPrompt": "WASD / Arrows: Aim Reticle | Space / Enter: Fire Shot"
+  },
+  {
+    "id": "fruit_chopper",
+    "title": "Fruit Chopper",
+    "tagline": "Airborne Katana Dojo Slice",
+    "category": "Reflex",
+    "icon": "[G-68]",
+    "instructions": "Airborne watermelons, pineapples, oranges, and strawberries are tossed across the dojo! Slice airborne fruits into juicy halves with your katana, chain combos, and dodge black bombs!",
+    "controlPrompt": "WASD / Arrows: Move Blade | Space / Enter: Katana Slice"
+  },
+  {
+    "id": "catapult_clash",
+    "title": "Catapult Clash",
+    "tagline": "Destructible Castle Siege",
+    "category": "Physics",
+    "icon": "[G-67]",
+    "instructions": "Launch boulders at rival stone battlements! Adjust elevation & power trajectory to crush enemy ramparts before yours are pulverized.",
+    "controlPrompt": "Hold: Power / Arc | Release: Catapult Fire"
+  },
+  {
+    "id": "jousting_knights",
+    "title": "Jousting Knights",
+    "tagline": "Galloping Steed Tilt Clash",
+    "category": "Action",
+    "icon": "[G-68]",
+    "instructions": "Gallop down the medieval tilt rail at breakneck speed! Time your lance elevation to splinter the opponent’s wooden shield and unhorse them.",
+    "controlPrompt": "Hold / Drag: Aim Lance | Tap: Charge & Couched Strike"
+  },
+  {
+    "id": "dragon_tamer",
+    "title": "Dragon Tamer",
+    "tagline": "Fire Drake Corral Panic",
+    "category": "Party",
+    "icon": "[G-69]",
+    "instructions": "Sound your acoustic dinner horn to herd fiery baby drakes into your corner stables! Avoid wild tail whips and capture the rare Golden Wyrmling for 3x points!",
+    "controlPrompt": "WASD / Move: Guide Tamer | Tap / Space: Sound Horn"
+  },
+  {
+    "id": "castle_archer",
+    "title": "Castle Archer",
+    "tagline": "Parapet Volley Defense",
+    "category": "Reflex",
+    "icon": "[G-70]",
+    "instructions": "Snipe advancing goblin battering rams and shield-bearers with ballistic longbow arrows from high castle ramparts! Chain headshots for fire arrows!",
+    "controlPrompt": "WASD / Arrows: Aim Arc | Space / Tap: Release Bowstring"
+  },
+  {
+    "id": "drawbridge_panic",
+    "title": "Drawbridge Panic",
+    "tagline": "Moat Drop Gatekeeper",
+    "category": "Reflex",
+    "icon": "[G-71]",
+    "instructions": "Guard the castle gateway! Lower the drawbridge to grant safe passage to royal gold wagons, and raise it instantly to plunge raiding barbarians into the alligator moat!",
+    "controlPrompt": "Hold: Lower Bridge | Release: Raise Gate"
+  },
+  {
+    "id": "blacksmith_forge",
+    "title": "Blacksmith Forge",
+    "tagline": "Rhythmic Anvil Blade Striking",
+    "category": "Reflex",
+    "icon": "[G-72]",
+    "instructions": "Strike while the iron is red hot! Time heavy hammer swings on the oscillating sweet-spot bar to forge legendary glowing broadswords with combo multipliers.",
+    "controlPrompt": "Tap / Press: Anvil Hammer Strike"
+  },
+  {
+    "id": "potion_alchemist",
+    "title": "Potion Alchemist",
+    "tagline": "Bubbling Cauldron Alchemy",
+    "category": "Reflex",
+    "icon": "[G-73]",
+    "instructions": "Match bubbling reagent formulas before cauldrons boil over! Time your tap on Dragon Root, Moon Lotus, and Emerald Moss to brew royal potions.",
+    "controlPrompt": "Tap / Space: Add Active Reagent"
+  },
+  {
+    "id": "royal_feast",
+    "title": "Royal Feast",
+    "tagline": "Banquet Platter Catcher",
+    "category": "Party",
+    "icon": "[G-74]",
+    "instructions": "Slide across the grand banquet hall with your golden platter! Catch falling roast turkeys, sweet pies, and goblets while evading rotten fish and poison cabbage!",
+    "controlPrompt": "Move / Tap: Steer Platter / Reverse Direction"
+  },
+  {
+    "id": "sword_in_stone",
+    "title": "Sword in the Stone",
+    "tagline": "Excalibur Pull Showdown",
+    "category": "Reflex",
+    "icon": "[G-75]",
+    "instructions": "Only the true High King can heave Excalibur from the ancient runestone! Time your rhythmic power tugs at the golden apex to draw the sacred blade.",
+    "controlPrompt": "Tap / Press: Power Heave Tug"
+  },
+  {
+    "id": "dungeon_escape",
+    "title": "Dungeon Maze Runner",
+    "tagline": "Pendulum Blade Citadel",
+    "category": "Action",
+    "icon": "[G-76]",
+    "instructions": "Navigate dangerous dungeon catacombs! Dash past oscillating pendulum axe blades and retracting floor spike traps to reach the golden portcullis exit.",
+    "controlPrompt": "WASD / Move: Steer Runner | Tap: 90° Quick Turn"
+  },
+  {
+    "id": "neon_drifters",
+    "title": "Neon Drifters",
+    "tagline": "Cyberpunk Drift Circuit",
+    "category": "Racing",
+    "icon": "[G-77]",
+    "instructions": "Drift through glowing cyber hairpin turns! Hold tight angles to build drift scores and boost ahead to conquer 3 high-speed laps.",
+    "controlPrompt": "WASD / Move: Steer / Drift | Space / Gas: Accelerate"
+  },
+  {
+    "id": "hoverboard_rail",
+    "title": "Hoverboard Rail",
+    "tagline": "Aero Skyline Rail Grind",
+    "category": "Action",
+    "icon": "[G-78]",
+    "instructions": "Grind along elevated magnetic sky-rails! Switch rails to snatch golden battery cells, and time ollie jumps over neon barricades.",
+    "controlPrompt": "Up / Down: Switch Rails | Tap / Space: Ollie Jump"
+  },
+  {
+    "id": "traffic_jam",
+    "title": "Traffic Jam Fury",
+    "tagline": "Cyber Highway Expressway",
+    "category": "Racing",
+    "icon": "[G-79]",
+    "instructions": "Weave through 5-lane cyber highway traffic at breakneck speeds! Score near-miss speed streaks and hold turbo to reach maximum distance.",
+    "controlPrompt": "Left / Right: Switch Lanes | Hold: Turbo Throttle"
+  },
+  {
+    "id": "nitro_kart",
+    "title": "Nitro Kart Arena",
+    "tagline": "Weaponized Derby Clash",
+    "category": "Action",
+    "icon": "[G-80]",
+    "instructions": "Derby combat in an energized arena! Grab mystery boxes to launch homing missiles and lay slippery oil slicks to spin out rivals.",
+    "controlPrompt": "Steer: Drive Kart | Tap / Space: Launch Weapon"
+  },
+  {
+    "id": "monorail_hijack",
+    "title": "Monorail Hijack",
+    "tagline": "Maglev Rooftop Heist",
+    "category": "Action",
+    "icon": "[G-81]",
+    "instructions": "Leap between speeding monorail car roofs! Snatch crypto bounty briefcases while ducking low under high-speed tunnel gantries.",
+    "controlPrompt": "Left / Right: Run Roof | Up / Tap: Jump | Down: Duck"
+  },
+  {
+    "id": "drone_delivery",
+    "title": "Drone Delivery",
+    "tagline": "Wind Tunnel Quadcopter",
+    "category": "Physics",
+    "icon": "[G-82]",
+    "instructions": "Pilot delivery quadcopters through gusting wind tunnels! Fetch cargo crates from the central depot and touch down on your colored landing pad.",
+    "controlPrompt": "Steer: Tilt Drone | Hold: Rotor Lift"
+  },
+  {
+    "id": "rocket_skates",
+    "title": "Rocket Skates",
+    "tagline": "Loop-de-Loop Velodrome",
+    "category": "Racing",
+    "icon": "[G-83]",
+    "instructions": "Nitro-boosted roller skates on a banked oval velodrome! Cut into tight inner turns and fire your rocket backpack for blistering laps.",
+    "controlPrompt": "Steer: Inner/Outer Lane | Hold: Rocket Boost"
+  },
+  {
+    "id": "cyber_demolition",
+    "title": "Cyber Demolition",
+    "tagline": "Monster Truck Wrecking Ball",
+    "category": "Physics",
+    "icon": "[G-84]",
+    "instructions": "Drive heavy monster trucks towing physics wrecking balls! Build pendulum momentum to smash scrap towers into valuable metallic debris.",
+    "controlPrompt": "Steer & Drive: Swing Wrecking Ball"
+  },
+  {
+    "id": "laser_speedway",
+    "title": "Laser Speedway",
+    "tagline": "Micro Slot-Car Overheat",
+    "category": "Racing",
+    "icon": "[G-85]",
+    "instructions": "Micro slot-cars on laser guide tracks! Hold throttle to accelerate down straights, but ease off in tight corners to avoid capacitor blowouts.",
+    "controlPrompt": "Hold: Accelerate | Release: Coast & Cool Down"
+  },
+  {
+    "id": "gravity_pods",
+    "title": "Gravity Pods",
+    "tagline": "Magnetic Pipeline Racer",
+    "category": "Action",
+    "icon": "[G-86]",
+    "instructions": "Glide around the 360° perimeter of a sub-orbital magnetic tube! Dodge plasma mines and snatch golden warp rings for turbo speeds.",
+    "controlPrompt": "Steer: Rotate Around Tube | Tap: Nitro Surge"
+  },
+  {
+    "id": "pancake_flipper",
+    "title": "Pancake Flipper",
+    "tagline": "Precision Pan Flipping",
+    "category": "Reflex",
+    "icon": "[G-87]",
+    "instructions": "Watch your pancake sizzle in the hot skillet! Wait for the golden sweet spot, then tap to flip. Catch it neatly on the plate without burning or undercooking.",
+    "controlPrompt": "Tap / Space: Flip Pancake"
+  },
+  {
+    "id": "sushi_express",
+    "title": "Sushi Express",
+    "tagline": "Conveyor Snatch Race",
+    "category": "Reflex",
+    "icon": "[G-88]",
+    "instructions": "A rapid conveyor belt carries fresh nigiri and maki rolls! Grab the target sushi requested at the top. Grabbing incorrect plates or wasabi traps costs points.",
+    "controlPrompt": "Tap / Space: Snatch Plate"
+  },
+  {
+    "id": "pizza_toss",
+    "title": "Pizza Toss",
+    "tagline": "Dough Spinning Rhythm",
+    "category": "Reflex",
+    "icon": "[G-89]",
+    "instructions": "Toss pizza dough high into the pizzeria air! Tap precisely when it descends into your chef hands to spin it wider. Drop it and you have to start fresh!",
+    "controlPrompt": "Tap / Space: Catch & Toss Dough"
+  },
+  {
+    "id": "burger_stack",
+    "title": "Burger Stack",
+    "tagline": "Falling Patty Balance",
+    "category": "Action",
+    "icon": "[G-90]",
+    "instructions": "Patties, cheese, lettuce, and onions rain from above! Steer your burger plate left and right to build a towering gourmet stack before topping with a sesame bun.",
+    "controlPrompt": "Steer: Move Plate Left / Right"
+  },
+  {
+    "id": "ice_cream_scoop",
+    "title": "Ice Cream Scoop",
+    "tagline": "Wobbly Cone Stacker",
+    "category": "Action",
+    "icon": "[G-91]",
+    "instructions": "Delicious gelato scoops drop from the ceiling dispensers! Slide your waffle cone underneath to balance a towering ice cream masterpiece without toppling.",
+    "controlPrompt": "Steer: Move Cone Left / Right"
+  },
+  {
+    "id": "wok_stir_fry",
+    "title": "Wok Stir Fry",
+    "tagline": "Flaming Toss Timing",
+    "category": "Reflex",
+    "icon": "[G-92]",
+    "instructions": "Toss noodles and veggies over blazing flames! Keep ingredients airborne to sear them evenly. Keep heat under control to avoid burning your wok.",
+    "controlPrompt": "Tap / Space: Toss Wok"
+  },
+  {
+    "id": "donut_glazer",
+    "title": "Donut Glazer",
+    "tagline": "Glaze Conveyor Drop",
+    "category": "Reflex",
+    "icon": "[G-93]",
+    "instructions": "Hot golden donuts cruise on an assembly belt. Tap to trigger the glaze dispenser nozzle right as each donut passes directly underneath for perfection!",
+    "controlPrompt": "Tap / Space: Dispense Glaze"
+  },
+  {
+    "id": "fruit_blender",
+    "title": "Fruit Blender",
+    "tagline": "Smoothie Slicing Frenzy",
+    "category": "Action",
+    "icon": "[G-94]",
+    "instructions": "Whole pineapples, watermelons, and berries drop into the giant glass blender! Tap blade pulse to chop them into smoothie nectar while avoiding ice bombs.",
+    "controlPrompt": "Tap / Space: Pulse Blender Blades"
+  },
+  {
+    "id": "teppanyaki_catch",
+    "title": "Teppanyaki Catch",
+    "tagline": "Sizzling Shrimp Catch",
+    "category": "Action",
+    "icon": "[G-95]",
+    "instructions": "The hibachi chef flings sizzling tiger shrimp across the table! Slide your ceramic bowl across the grill to catch every succulent bite.",
+    "controlPrompt": "Steer: Slide Bowl Across Griddle"
+  },
+  {
+    "id": "popcorn_popper",
+    "title": "Popcorn Popper",
+    "tagline": "Cinema Kernel Catch",
+    "category": "Action",
+    "icon": "[G-96]",
+    "instructions": "Kernels heat and burst high from the theater popper! Tap when kernels pop into the air to snag them into your bucket before they burn on the bottom.",
+    "controlPrompt": "Tap / Space: Snag Popped Kernels"
+  },
+  {
+    "id": "submarine_torpedo",
+    "title": "Submarine Torpedo",
+    "tagline": "Deep Trench Sonar Duel",
+    "category": "Action",
+    "icon": "[G-97]",
+    "instructions": "Pilot submarines through murky ocean trenches! Fire torpedoes that rebound off rock pillars. Deplete rival hull integrity before sonar expires.",
+    "controlPrompt": "Steer: Navigate Trench | Tap / Space: Launch Torpedo"
+  },
+  {
+    "id": "jellyfish_jump",
+    "title": "Jellyfish Jump",
+    "tagline": "Abyss Bioluminescent Ascent",
+    "category": "Action",
+    "icon": "[G-98]",
+    "instructions": "Ascend a vertical oceanic trench by bouncing atop glowing jellyfish bell domes! Steer left and right to land on floating bells and achieve maximum altitude.",
+    "controlPrompt": "Steer: Move Diver Left / Right"
+  },
+  {
+    "id": "pearl_divers",
+    "title": "Pearl Divers",
+    "tagline": "Deep Reef Clam Snatch",
+    "category": "Reflex",
+    "icon": "[G-99]",
+    "instructions": "Free-dive toward the seabed where giant clams open! Tap to plunge down and pluck glowing pearls before the shell snaps shut on your fingers.",
+    "controlPrompt": "Tap / Space: Plunge Dive"
+  },
+  {
+    "id": "shark_bait",
+    "title": "Shark Bait",
+    "tagline": "Feeding Frenzy Lagoon",
+    "category": "Action",
+    "icon": "[G-100]",
+    "instructions": "Steer inflatable rescue rafts through predator-infested waters! Collect red lifebuoys to score while evading circling great white shark fins.",
+    "controlPrompt": "Steer: Navigate Raft"
+  },
+  {
+    "id": "sunken_treasure",
+    "title": "Sunken Treasure",
+    "tagline": "Galleon Winch Crane",
+    "category": "Reflex",
+    "icon": "[G-101]",
+    "instructions": "Lower salvage winch hooks over a sunken pirate shipwreck! Time your drop to haul up gold doubloon chests and silver ingots while avoiding spiked sea urchins.",
+    "controlPrompt": "Tap / Space: Drop Winch Hook"
+  },
+  {
+    "id": "octopus_ink",
+    "title": "Octopus Ink",
+    "tagline": "Kraken Whirlpool Vortex",
+    "category": "Action",
+    "icon": "[G-102]",
+    "instructions": "Ride the swirling currents of a kraken whirlpool! Dodge giant sweeping tentacles and blinding ink clouds while collecting glowing plankton canisters.",
+    "controlPrompt": "Steer: Orbit / Radial | Tap / Space: Turbo Thrust"
+  },
+  {
+    "id": "crab_walk",
+    "title": "Crab Walk",
+    "tagline": "Lateral Beach Scuttle",
+    "category": "Action",
+    "icon": "[G-103]",
+    "instructions": "Scuttle left and right along the sandy beach tide line! Catch falling seashells and starfish with your claws while dodging heavy falling coconuts.",
+    "controlPrompt": "Steer: Scuttle Left / Right"
+  },
+  {
+    "id": "electric_eel",
+    "title": "Electric Eel",
+    "tagline": "Cavern High-Voltage Slalom",
+    "category": "Action",
+    "icon": "[G-104]",
+    "instructions": "Navigate tight underwater cavern circuits! Time your passage through electric eel pylon gates when the high-voltage arcs cycle off to avoid paralysis.",
+    "controlPrompt": "Steer: Pilot Submersible"
+  },
+  {
+    "id": "water_scooter",
+    "title": "Water Scooter",
+    "tagline": "Jet-Ski Slalom Sprint",
+    "category": "Racing",
+    "icon": "[G-105]",
+    "instructions": "High-speed jet-ski slalom through floating maritime buoys! Carve tight turns around green and red channel markers to build maximum lap speed.",
+    "controlPrompt": "Steer: Carve Turns | Hold: Accelerate"
+  },
+  {
+    "id": "deep_sea_harpoon",
+    "title": "Deep Sea Harpoon",
+    "tagline": "Midnight Trench Sniping",
+    "category": "Reflex",
+    "icon": "[G-106]",
+    "instructions": "Rotate your flashlight-mounted harpoon turret in the pitch-black abyss! Snipe luminous anglerfish, neon squids, and the legendary golden nautilus.",
+    "controlPrompt": "Tap / Space: Fire Harpoon"
+  },
+  {
+    "id": "moon_lander",
+    "title": "Moon Lander",
+    "tagline": "Lunar Crater Touchdown",
+    "category": "Physics",
+    "icon": "[G-107]",
+    "instructions": "Control thrusters and tilt angle for safe touchdown on lunar landing pads! Soft landings earn score multipliers. Avoid hard surface crashes.",
+    "controlPrompt": "Steer: Tilt Lander | Hold: Fire Thrusters"
+  },
+  {
+    "id": "space_junk_salvage",
+    "title": "Space Junk Salvage",
+    "tagline": "Orbital Debris Tractor",
+    "category": "Action",
+    "icon": "[G-108]",
+    "instructions": "Fire magnetic tractor beams to pull orbital scrap into your cargo bay! Return scrap to the recycling depot while dodging communication satellites.",
+    "controlPrompt": "Steer: Pilot Tug | Action: Magnetic Tractor Beam"
+  },
+  {
+    "id": "alien_probe",
+    "title": "Alien Probe",
+    "tagline": "Mothership Core Recon",
+    "category": "Action",
+    "icon": "[G-109]",
+    "instructions": "Pilot scout saucers through alien defense grids! Collect transmission crystals and activate stealth cloaking to pass through sweeping laser beams.",
+    "controlPrompt": "Steer: Fly Saucer | Action: Stealth Cloaking"
+  },
+  {
+    "id": "solar_flare",
+    "title": "Solar Flare",
+    "tagline": "Coronal Wave Glider",
+    "category": "Action",
+    "icon": "[G-110]",
+    "instructions": "Unfurl your diamond solar sail to ride high-speed coronal plasma winds! Watch your temperature gauge and furl sails during peak flares to avoid burning.",
+    "controlPrompt": "Steer: Navigate | Action / Up: Unfurl Solar Sail"
+  },
+  {
+    "id": "wormhole_leap",
+    "title": "Wormhole Leap",
+    "tagline": "Quantum Portal Chaining",
+    "category": "Action",
+    "icon": "[G-111]",
+    "instructions": "Fly into paired color-coded singularity wormholes to warp across sectors! Collect quantum crystals and build portal combo streaks.",
+    "controlPrompt": "Steer: Navigate | Action: Quantum Warp Burst"
+  },
+  {
+    "id": "astro_miner",
+    "title": "Astro Miner",
+    "tagline": "Asteroid Geode Blaster",
+    "category": "Action",
+    "icon": "[G-112]",
+    "instructions": "Blast drifting asteroid geodes with mining lasers! Shatter mineral crusts to release and vacuum up rubies, sapphires, and emeralds.",
+    "controlPrompt": "Steer: Pilot Miner | Action / Space: Fire Mining Laser"
+  },
+  {
+    "id": "nebula_drift",
+    "title": "Nebula Drift",
+    "tagline": "Cosmic Dust Circuit",
+    "category": "Racing",
+    "icon": "[G-113]",
+    "instructions": "Zero-drag inertial drifting race through cosmic nebula dust clouds! Pass through waypoint rings and unleash turbo nitro boosts.",
+    "controlPrompt": "Steer: Drift Craft | Action: Turbo Nitro Boost"
+  },
+  {
+    "id": "satellite_laser",
+    "title": "Satellite Laser",
+    "tagline": "Solar Reflector Grid",
+    "category": "Puzzle",
+    "icon": "[G-114]",
+    "instructions": "Position satellite mirrors to reflect high-power solar laser beams directly into your home base receiver capacitor!",
+    "controlPrompt": "Steer: Position Satellite | Action: Rotate Mirror"
+  },
+  {
+    "id": "mars_rover",
+    "title": "Mars Rover",
+    "tagline": "Red Planet Sample Drill",
+    "category": "Action",
+    "icon": "[G-115]",
+    "instructions": "Drive 6-wheel rovers across Martian dunes! Drill precious soil samples and deliver them back to the habitat rocket while dodging dust devils.",
+    "controlPrompt": "Steer: Drive Rover | Action: Deploy Soil Drill"
+  },
+  {
+    "id": "zero_g_tether",
+    "title": "Zero-G Tether",
+    "tagline": "Orbital Spacewalk Duels",
+    "category": "Physics",
+    "icon": "[G-116]",
+    "instructions": "Reel in elastic quantum cables to slingshot around station anchor pylons! Snatch drifting cargo capsules in zero gravity.",
+    "controlPrompt": "Steer: Thrusters | Action: Reel / Latch Tether"
+  },
+  {
+    "id": "saloon_brawler",
+    "title": "Saloon Brawler",
+    "tagline": "Mug Slide & Barstool Duck",
+    "category": "Action",
+    "icon": "[G-117]",
+    "instructions": "Slide foamy beer mugs down the mahogany counter to thirsty outlaws! Hold to duck flying barstools and shattered bottles.",
+    "controlPrompt": "Tap: Slide Mug | Hold: Duck Counter"
+  },
+  {
+    "id": "train_heist",
+    "title": "Train Heist",
+    "tagline": "Locomotive Rooftop Dash",
+    "category": "Action",
+    "icon": "[G-118]",
+    "instructions": "Sprint atop runaway train cars! Tap to jump chimney gaps and hold to duck under water tower beams while snagging gold loot sacks.",
+    "controlPrompt": "Tap: Jump Gap | Hold: Duck Low"
+  },
+  {
+    "id": "gold_panning",
+    "title": "Gold Panning",
+    "tagline": "Resonant River Silt Swirl",
+    "category": "Puzzle",
+    "icon": "[G-119]",
+    "instructions": "Swirl river silt at resonance frequency to wash away mud! Once shiny gold nuggets drift into the center ring, tap to scoop!",
+    "controlPrompt": "Hold: Swirl Pan | Tap: Scoop Center Nugget"
+  },
+  {
+    "id": "rodeo_bull",
+    "title": "Rodeo Bull",
+    "tagline": "Mechanical Bronco Balance",
+    "category": "Physics",
+    "icon": "[G-120]",
+    "instructions": "Hang on tight! Counter-lean against unpredictable mechanical bucking kicks. Stay in the green balance sweet spot to survive.",
+    "controlPrompt": "Tap / Hold: Counter-Lean Balance"
+  },
+  {
+    "id": "horseshoe_toss",
+    "title": "Horseshoe Toss",
+    "tagline": "Iron Stake Ringers",
+    "category": "Sports",
+    "icon": "[G-121]",
+    "instructions": "Tap to lock pitch angle, then tap again to gauge throw power! Ring iron stakes for 10 points or score 5 for leaners.",
+    "controlPrompt": "Tap 1: Lock Aim | Tap 2: Pitch Power"
+  },
+  {
+    "id": "dynamite_tumble",
+    "title": "Dynamite Tumble",
+    "tagline": "TNT Sizzle Boot",
+    "category": "Action",
+    "icon": "[G-122]",
+    "instructions": "Sizzling sticks of dynamite tumble toward your bunker! Tap when TNT enters your perimeter to boot it toward rivals before the fuse blows.",
+    "controlPrompt": "Tap: Kick Dynamite Away"
+  },
+  {
+    "id": "cactus_slalom",
+    "title": "Cactus Slalom",
+    "tagline": "Desert Gallop Weave",
+    "category": "Racing",
+    "icon": "[G-123]",
+    "instructions": "Gallop at top speed across desert canyons! Tap to switch slalom direction, weaving around prickly saguaro cacti and snatching horseshoes.",
+    "controlPrompt": "Tap: Slalom Turn"
+  },
+  {
+    "id": "bandit_chase",
+    "title": "Bandit Chase",
+    "tagline": "Stagecoach Quadrant Defense",
+    "category": "Action",
+    "icon": "[G-124]",
+    "instructions": "Outlaws on horseback are ambushing the stagecoach! Time your sweeping reticle and tap to blast bandits before they plunder cargo.",
+    "controlPrompt": "Tap: Fire Shotgun Blast"
+  },
+  {
+    "id": "rattlesnake_reflex",
+    "title": "Rattlesnake Reflex",
+    "tagline": "High-Noon Snake Strike Duel",
+    "category": "Reflex",
+    "icon": "[G-125]",
+    "instructions": "Listen to the ominous rattle buildup! Tap the instant the snake lunges to snatch golden eggs. False starts get bitten!",
+    "controlPrompt": "Wait for Strike... Tap Instant!"
+  },
+  {
+    "id": "western_poker",
+    "title": "Western Poker Showdown",
+    "tagline": "Rapid Card River Draft",
+    "category": "Party",
+    "icon": "[G-126]",
+    "instructions": "Cards slide down the saloon river! Tap to draft high-value cards and form pairs, three of a kind, or flushes for maximum points.",
+    "controlPrompt": "Tap: Draft Card in River"
+  },
+  {
+    "id": "laser_tripwire",
+    "title": "Laser Tripwire",
+    "tagline": "Vault Corridor Infiltration",
+    "category": "Reflex",
+    "icon": "[G-127]",
+    "instructions": "Contort and crawl beneath oscillating security lasers! Hold to crawl, tap to jump, and snatch classified intel.",
+    "controlPrompt": "Tap: Jump | Hold: Crawl Low"
+  },
+  {
+    "id": "vault_safe",
+    "title": "Vault Safe Stethoscope",
+    "tagline": "Titanium Combination Crack",
+    "category": "Puzzle",
+    "icon": "[G-128]",
+    "instructions": "Listen to the mechanical click resonance! Tap when the combination dial passes the high-frequency gate to pop all 3 tumblers.",
+    "controlPrompt": "Tap: Lock Tumbler Gate"
+  },
+  {
+    "id": "security_camera",
+    "title": "Security Camera Freeze",
+    "tagline": "CCTV Vision Cone Sneak",
+    "category": "Action",
+    "icon": "[G-129]",
+    "instructions": "Sweeping CCTV cameras scan the museum! Hold to advance forward, but freeze completely still when the red spotlight sweeps overhead.",
+    "controlPrompt": "Hold: Sneak | Release: Freeze Still"
+  },
+  {
+    "id": "briefcase_snatch",
+    "title": "Briefcase Snatch",
+    "tagline": "Subway Station Turnstile Dash",
+    "category": "Action",
+    "icon": "[G-130]",
+    "instructions": "Grab classified briefcases and dash through open subway turnstiles to bank points! Tag rivals to steal their briefcase.",
+    "controlPrompt": "Hold: Turn / Steer"
+  },
+  {
+    "id": "hack_terminal",
+    "title": "Hack The Terminal",
+    "tagline": "Cyber Mainframe ICE Decrypt",
+    "category": "Puzzle",
+    "icon": "[G-131]",
+    "instructions": "Match the target hexadecimal cipher code as packets scroll! Tap when your cursor aligns with the key node before ICE locks you out.",
+    "controlPrompt": "Tap: Decrypt Node"
+  },
+  {
+    "id": "smoke_bomb_escape",
+    "title": "Smoke Bomb Escape",
+    "tagline": "Shipyard Searchlight Evasion",
+    "category": "Action",
+    "icon": "[G-132]",
+    "instructions": "Sneak past shipyard searchlights to reach the extraction chopper! Tap to deploy thick smoke canisters that block beam detection.",
+    "controlPrompt": "Tap: Deploy Smoke Canister"
+  },
+  {
+    "id": "micro_wiretap",
+    "title": "Micro Wiretap",
+    "tagline": "Silent Embassy Bug Plant",
+    "category": "Reflex",
+    "icon": "[G-133]",
+    "instructions": "Screw listening bugs under the ambassador desk! Tap only when the decibel needle is in the green silent zone.",
+    "controlPrompt": "Tap in Green: Tighten Screw"
+  },
+  {
+    "id": "rooftop_zipline",
+    "title": "Rooftop Zipline",
+    "tagline": "Skyscraper Antenna Glider",
+    "category": "Racing",
+    "icon": "[G-134]",
+    "instructions": "Zipline between skyscraper radio towers! Tap to switch between upper and lower cables, snagging data chips and dodging voltage sparks.",
+    "controlPrompt": "Tap: Switch Cable Line"
+  },
+  {
+    "id": "drone_intercept",
+    "title": "Drone Intercept",
+    "tagline": "EMP Surveillance Jammer",
+    "category": "Action",
+    "icon": "[G-135]",
+    "instructions": "Surveillance drones swarm overhead! Align your aiming reticle and tap to fire electromagnetic pulses to fry hostile drones.",
+    "controlPrompt": "Tap: Discharge EMP Shockwave"
+  },
+  {
+    "id": "disguise_shuffle",
+    "title": "Disguise Shuffle",
+    "tagline": "Masquerade Ball Double Agent",
+    "category": "Party",
+    "icon": "[G-136]",
+    "instructions": "Spot the rogue double agent wearing the Golden Mask in the masquerade ballroom! Tap when your spotlight sweeps over the agent.",
+    "controlPrompt": "Tap: Unmask Rogue Agent"
+  },
+  {
+    "id": "synthwave_highway",
+    "title": "Synthwave Highway",
+    "tagline": "Neon Outrun Drifter",
+    "category": "Action",
+    "icon": "[G-137]",
+    "instructions": "Cruise down an endless neon synthwave highway! Tap to shift lanes, avoiding grid roadblocks while collecting digital audio cassettes.",
+    "controlPrompt": "Tap: Switch Lane"
+  },
+  {
+    "id": "drum_solo",
+    "title": "Drum Solo",
+    "tagline": "Percussion Precision Clash",
+    "category": "Party",
+    "icon": "[G-138]",
+    "instructions": "Follow the pulsating drum fills! Tap exactly as the rhythmic strike marker aligns with the snare drum target.",
+    "controlPrompt": "Tap: Strike Snare"
+  },
+  {
+    "id": "turntable_scratch",
+    "title": "Turntable Scratch",
+    "tagline": "Vinyl DJ Beat Match",
+    "category": "Party",
+    "icon": "[G-139]",
+    "instructions": "Spin the vinyl platter! Tap to scratch back and forth right as the needle passes over beat cue zones.",
+    "controlPrompt": "Tap: Scratch Record"
+  },
+  {
+    "id": "bass_drop",
+    "title": "Bass Drop",
+    "tagline": "Subwoofer Soundwave Jump",
+    "category": "Action",
+    "icon": "[G-140]",
+    "instructions": "Giant subwoofers emit crushing low-frequency shockwaves! Tap to jump and hover above shockwave rings before they knock you off the stage.",
+    "controlPrompt": "Tap: Shockwave Leap"
+  },
+  {
+    "id": "vocal_pitch",
+    "title": "Vocal Pitch",
+    "tagline": "Autotune Frequency Lock",
+    "category": "Party",
+    "icon": "[G-141]",
+    "instructions": "A dynamic vocal melody curve scrolls across the screen. Tap to modulate your pitch frequency to stay inside the golden harmony window.",
+    "controlPrompt": "Tap: Modulate Pitch"
+  },
+  {
+    "id": "breakdance_battle",
+    "title": "Breakdance Battle",
+    "tagline": "Neon B-Boy Freeze Clash",
+    "category": "Party",
+    "icon": "[G-142]",
+    "instructions": "Show off your best power moves! Tap during the peak freeze window to score crowd hype points without wiping out.",
+    "controlPrompt": "Tap: Freeze Pose"
+  },
+  {
+    "id": "neon_metronome",
+    "title": "Neon Metronome",
+    "tagline": "Pendulum Tempo Match",
+    "category": "Party",
+    "icon": "[G-143]",
+    "instructions": "A glowing tempo needle swings across the arc. Tap precisely when the needle hits the center tick for maximum combo multipliers.",
+    "controlPrompt": "Tap: Hit Downbeat"
+  },
+  {
+    "id": "equalizer_bounce",
+    "title": "Equalizer Bounce",
+    "tagline": "Audio Spectrum Trampoline",
+    "category": "Action",
+    "icon": "[G-144]",
+    "instructions": "Ride the frequency bars of a booming audio equalizer! Tap to bounce from peak to peak as sound levels surge and crash.",
+    "controlPrompt": "Tap: Surge Bounce"
+  },
+  {
+    "id": "retro_chiptune",
+    "title": "Retro Chiptune",
+    "tagline": "8-Bit Arpeggio Step Sequencer",
+    "category": "Party",
+    "icon": "[G-145]",
+    "instructions": "The 4-step sequencer sweeps rapidly across the synthesizer! Tap to trigger notes in time with the master lead melody.",
+    "controlPrompt": "Tap: Trigger Step Note"
+  },
+  {
+    "id": "disco_tile",
+    "title": "Disco Tile",
+    "tagline": "Neon Dance Floor Drop",
+    "category": "Action",
+    "icon": "[G-146]",
+    "instructions": "The disco dance floor flashes to the beat! Stand on the announced safe color before unlit tiles drop out beneath you.",
+    "controlPrompt": "Tap: Rotate 90°"
+  },
+  {
+    "id": "ring_toss",
+    "title": "Neon Ring Pitch",
+    "tagline": "Rotating Bottle Tray Toss",
+    "category": "Reflex",
+    "icon": "[G-147]",
+    "instructions": "Pitch glowing neon hoops onto 3 rotating concentric trays of glass bottles! Land consecutive ringers for combo multipliers, and aim for the center Golden Decanter for 300 bonus points!",
+    "controlPrompt": "Steer: Aim Angle | Tap/Space: Pitch Hoop | 1-3: Switch Theme"
+  },
+  {
+    "id": "rollercoaster_thrill",
+    "title": "Rollercoaster Thrill",
+    "tagline": "Runaway Coaster Banking",
+    "category": "Action",
+    "icon": "[G-148]",
+    "instructions": "Speed along high-speed wooden coaster tracks! Tap to lean into sharp hairpin turns and 360-degree loops.",
+    "controlPrompt": "Tap: Lean Into Curve"
+  },
+  {
+    "id": "balloon_dart",
+    "title": "Balloon Dart Gallery",
+    "tagline": "Multi-Tier Conveyor Pop Gallery",
+    "category": "Action",
+    "icon": "[G-149]",
+    "instructions": "Aim your dart catapult and pop balloons along 3 moving conveyor tiers! Snipe golden star balloons for bonus points and trigger chain-reaction bomb balloons to wipe entire rows. Watch out for crosswinds!",
+    "controlPrompt": "Steer: Aim Angle | Tap/Space: Pitch Dart | 1-3: Switch Gallery"
+  },
+  {
+    "id": "dunk_tank",
+    "title": "Plunger Dunk Splashdown",
+    "tagline": "4-Player Trapdoor Water Duel",
+    "category": "Action",
+    "icon": "[G-150]",
+    "instructions": "Perched high above individual water tanks, fire rubber plunger cannons at rival bullseye levers! Land 3 hits to trigger their trapdoor and plunge them into the water. Mash your button to climb back up!",
+    "controlPrompt": "Steer: Aim Cannon | Tap/Space: Fire Plunger | Mash Tap: Climb Ladder | 1-3: Switch Tank"
+  },
+  {
+    "id": "ferris_wheel",
+    "title": "Sky Wheel Balance",
+    "tagline": "High-Altitude Spoke Tilt",
+    "category": "Physics",
+    "icon": "[G-151]",
+    "instructions": "Traverse the rotating structural iron spokes of the giant carnival ferris wheel 100 feet in the air! Gather golden star tokens and crystal gems while fighting slope gravity and high-altitude wind gusts. Don\\'t slip off the outer rim!",
+    "controlPrompt": "Up/Down: Climb Spoke | Left/Right/Space: Jump Adjacent Spoke | 1-3: Switch Theme"
+  },
+  {
+    "id": "funhouse_mirrors",
+    "title": "Funhouse Mirrors",
+    "tagline": "Hall of Illusions Maze",
+    "category": "Party",
+    "icon": "[G-152]",
+    "instructions": "Navigate optical mirror reflections! Tap to turn and snatch golden prize tickets while dodging deceptive glass reflections.",
+    "controlPrompt": "Tap: Turn 90°"
+  },
+  {
+    "id": "cotton_candy",
+    "title": "Sugar Cloud Stacker",
+    "tagline": "Candy Tower Balance Rush",
+    "category": "Party",
+    "icon": "[G-153]",
+    "instructions": "Slide your paper stick to catch falling pastel sugar drops and build towering, wobbly cotton candy clouds! Tap to cash in your stack for banked bonus multipliers before it tips over. Beware burnt crisps!",
+    "controlPrompt": "Steer: Slide Stick | Tap/Space: Cash In Stack | 1-3: Switch Theme"
+  },
+  {
+    "id": "test_strength",
+    "title": "Test Your Strength",
+    "tagline": "High-Striker Sledgehammer",
+    "category": "Action",
+    "icon": "[G-154]",
+    "instructions": "Swing the carnival sledgehammer with maximum torque! Time the surging power meter at 100% peak to shoot the puck and ring the brass bell.",
+    "controlPrompt": "Tap: Slam Hammer"
+  },
+  {
+    "id": "haunted_mansion",
+    "title": "Haunted Mansion",
+    "tagline": "UV Strobe Specter Hunt",
+    "category": "Action",
+    "icon": "[G-155]",
+    "instructions": "Ghosts materialize in the darkened Victorian parlor! Sweep your flashlight cone and tap to flash high-voltage UV strobe pulses.",
+    "controlPrompt": "Tap: Fire UV Strobe"
+  },
+  {
+    "id": "fireworks_finale",
+    "title": "Fireworks Grand Finale",
+    "tagline": "Pyrotechnic Sky Spectacular",
+    "category": "Party",
+    "icon": "[G-156]",
+    "instructions": "Launch rockets into the midnight sky! Tap right as fireworks reach their apex detonation rings to unleash brilliant starbursts.",
+    "controlPrompt": "Tap: Detonate Apex"
+  },
+  {
+    "id": "hydra_slayer",
+    "title": "Hydra Swamp Slayer",
+    "tagline": "Multi-Headed Mythic Duel",
+    "category": "Action",
+    "icon": "[G-157]",
+    "instructions": "The serpent Hydra lashes from the swamp! Tap on apex crunch zones to sever heads, and dodge corrosive venom spit.",
+    "controlPrompt": "Tap: Blade Strike"
+  },
+  {
+    "id": "pharaoh_tomb",
+    "title": "Pharaoh Tomb Escape",
+    "tagline": "Rolling Boulder & Spike Vault",
+    "category": "Reflex",
+    "icon": "[G-158]",
+    "instructions": "Outrun the massive rolling skull boulder! Tap to vault over sharp spike pits and snatch golden scarab idols.",
+    "controlPrompt": "Tap: Vault Jump"
+  },
+  {
+    "id": "spartan_shield",
+    "title": "Spartan Phalanx Wall",
+    "tagline": "Shield Wall & Spear Counter",
+    "category": "Action",
+    "icon": "[G-159]",
+    "instructions": "Persian fire arrows rain from above! Hold to raise your bronze Aspis shield, then release to thrust your spear at charging foes.",
+    "controlPrompt": "Hold: Shield • Release: Spear"
+  },
+  {
+    "id": "kraken_whirlpool",
+    "title": "Kraken Maelstrom Vortex",
+    "tagline": "Tentacle Dodge & Treasure Tacking",
+    "category": "Reflex",
+    "icon": "[G-160]",
+    "instructions": "Navigate the stormy vortex! Tap to tack your longship in and out to dodge crashing colossal tentacles and collect floating chests.",
+    "controlPrompt": "Tap: Steer Rudder"
+  },
+  {
+    "id": "icarus_wings",
+    "title": "Flight of Icarus",
+    "tagline": "Thermal Updrafts & Solar Blaze",
+    "category": "Physics",
+    "icon": "[G-161]",
+    "instructions": "Flap feathered wax wings to ride golden thermals! Avoid flying too close to the scorching sun or crashing into Aegean sea waves.",
+    "controlPrompt": "Tap: Flap Wings"
+  },
+  {
+    "id": "minotaur_labyrinth",
+    "title": "Knossos Labyrinth",
+    "tagline": "Ariadne Thread & Beast Escape",
+    "category": "Puzzle",
+    "icon": "[G-162]",
+    "instructions": "The fearsome Minotaur stalks the stone maze! Tap to switch corridors, grab Ariadne golden skeins, and trap the beast.",
+    "controlPrompt": "Tap: Switch Corridor"
+  },
+  {
+    "id": "olympus_lightning",
+    "title": "Olympus Lightning Conduit",
+    "tagline": "Divine Bolt Catch & Discharge",
+    "category": "Reflex",
+    "icon": "[G-163]",
+    "instructions": "Zeus hurls crackling thunderbolts from Mount Olympus! Tap precisely as bolts hit the gold sweet spot to channel divine fury.",
+    "controlPrompt": "Tap: Catch Lightning"
+  },
+  {
+    "id": "anubis_scales",
+    "title": "Anubis Scales of Truth",
+    "tagline": "Maat Feather Soul Balance",
+    "category": "Puzzle",
+    "icon": "[G-164]",
+    "instructions": "Stand trial in the Hall of Two Truths! Tap to drop soul offerings and balance your scale pan level with the Feather of Truth.",
+    "controlPrompt": "Tap: Drop Offering"
+  },
+  {
+    "id": "gorgon_gaze",
+    "title": "Gorgon Mirror Deflection",
+    "tagline": "Petrifying Gaze Mirror Counter",
+    "category": "Action",
+    "icon": "[G-165]",
+    "instructions": "Medusa emerges from dark stone ruins! Hold your polished bronze mirror shield right as her emerald eyes glow to reflect the deadly beam.",
+    "controlPrompt": "Hold: Mirror Shield"
+  },
+  {
+    "id": "viking_longship",
+    "title": "Viking Fjord Raid",
+    "tagline": "War Drum Cadence & Ice Ram",
+    "category": "Racing",
+    "icon": "[G-166]",
+    "instructions": "Strike the war drum in perfect rhythm! Catch the thumping beat for a Valhalla surge and ram clean through frozen icebergs.",
+    "controlPrompt": "Tap: Drum Beat"
+  },
+  {
+    "id": "antimatter_containment",
+    "title": "Antimatter Containment",
+    "tagline": "Magnetic Coils & Singularity Pulse",
+    "category": "Reflex",
+    "icon": "[G-167]",
+    "instructions": "Stabilize the fluctuating antimatter core! Tap when the fluctuating energy enters the green sweet zone to fire magnetic stabilization pulses.",
+    "controlPrompt": "Tap: Magnetic Pulse"
+  },
+  {
+    "id": "warp_gate_jump",
+    "title": "Warp Gate Hyperdrive",
+    "tagline": "Chromatic Gate Trajectory Alignment",
+    "category": "Action",
+    "icon": "[G-168]",
+    "instructions": "Approach lightspeed warp gates! Tap right when your trajectory alignment needle points directly through the rotating green gate opening.",
+    "controlPrompt": "Tap: Warp Jump"
+  },
+  {
+    "id": "solar_sail_rider",
+    "title": "Solar Sail Corona Rider",
+    "tagline": "Photon Gale & Ion Storm Tack",
+    "category": "Racing",
+    "icon": "[G-169]",
+    "instructions": "Ride the photon winds of a blazing star! Tap to deploy sails during golden solar flares, and furl sails to slip through purple ion storms.",
+    "controlPrompt": "Tap: Deploy / Furl Sail"
+  },
+  {
+    "id": "planetary_rover",
+    "title": "Martian Planetary Rover",
+    "tagline": "Low-Gravity Crater Hop",
+    "category": "Physics",
+    "icon": "[G-170]",
+    "instructions": "Traverse the craggy Martian surface! Tap to hop your 6-wheeled rover over deep impact craters and snag floating green xenocrystals.",
+    "controlPrompt": "Tap: Low-G Hop"
+  },
+  {
+    "id": "pulsar_signal",
+    "title": "Pulsar Radio Signal",
+    "tagline": "Frequency Lock & Cosmic Wave Sync",
+    "category": "Reflex",
+    "icon": "[G-171]",
+    "instructions": "Tune into the rotating neutron star! Tap as the radio telescope dish sweeps into direct alignment with the pulsar lighthouse beam.",
+    "controlPrompt": "Tap: Lock Frequency"
+  },
+  {
+    "id": "asteroid_catcher",
+    "title": "Kuiper Asteroid Catcher",
+    "tagline": "Magnetic Harpoon & Refinery Mining",
+    "category": "Action",
+    "icon": "[G-172]",
+    "instructions": "Fire the mining tractor harpoon! Time the swinging pendulum to spear rich gold and platinum asteroids while avoiding explosive red mines.",
+    "controlPrompt": "Tap: Fire Harpoon"
+  },
+  {
+    "id": "alien_abduction",
+    "title": "UFO Alien Abduction",
+    "tagline": "Tractor Beam Specimen Hoist",
+    "category": "Party",
+    "icon": "[G-173]",
+    "instructions": "Hover above nighttime farm pastures! Hold your tractor beam to hoist prized cows into your flying saucer, but beware of explosive dynamite tractors.",
+    "controlPrompt": "Hold: Tractor Beam"
+  },
+  {
+    "id": "space_elevator",
+    "title": "Space Elevator Tether",
+    "tagline": "Orbital Climber & Mag-Surge",
+    "category": "Racing",
+    "icon": "[G-174]",
+    "instructions": "Ascend the 36,000 km carbon nanotube tether! Tap at magnetic induction boost rings for acceleration surges, avoiding electrostatic lightning.",
+    "controlPrompt": "Tap: Magnetic Surge"
+  },
+  {
+    "id": "orbital_drop_pod",
+    "title": "Orbital Drop Pod",
+    "tagline": "Atmospheric Re-entry Burn",
+    "category": "Physics",
+    "icon": "[G-175]",
+    "instructions": "Plummet through the fiery atmospheric insertion! Tap retro-thrusters to cool your ablative heat shield within the green thermal threshold.",
+    "controlPrompt": "Tap: Retro-Thruster"
+  },
+  {
+    "id": "dyson_sphere_collector",
+    "title": "Dyson Swarm Collector",
+    "tagline": "Solar Flare Mega-Capacitor",
+    "category": "Action",
+    "icon": "[G-176]",
+    "instructions": "Orbit inside the Dyson megastructure! Hold to deploy solar collector panels and absorb plasma flares into your capacitor while dodging coronal spikes.",
+    "controlPrompt": "Hold: Deploy Panels"
+  },
+  {
+    "id": "penguin_slide",
+    "title": "Penguin Glacier Slide",
+    "tagline": "High-Speed Bobsled Slalom",
+    "category": "Racing",
+    "icon": "[G-177]",
+    "instructions": "Tuck and belly-slide down the glacier! Steer left/right to weave through slalom flags and boost over ice ramps while dodging jagged crevasses.",
+    "controlPrompt": "Tap: Steer / Bank"
+  },
+  {
+    "id": "iceberg_breaker",
+    "title": "Icebreaker Ram",
+    "tagline": "Arctic Pack Ice Demolition",
+    "category": "Action",
+    "icon": "[G-178]",
+    "instructions": "Pilot a heavy arctic icebreaker cutter! Hold to charge steam turbines and ram dense ice floes to harvest frozen core diamonds before rivals.",
+    "controlPrompt": "Hold: Charge Ram"
+  },
+  {
+    "id": "blizzard_beacon",
+    "title": "Blizzard Lighthouse",
+    "tagline": "Zero-Visibility Fog Guide",
+    "category": "Puzzle",
+    "icon": "[G-179]",
+    "instructions": "A blinding whiteout blizzard engulfs the coast! Align your rotating searchlight beacon to illuminate stranded expedition ships and guide them safely to port.",
+    "controlPrompt": "Tap: Lock Beam Angle"
+  },
+  {
+    "id": "walrus_bask",
+    "title": "Walrus Iceberg King",
+    "tagline": "Sumo Tusk King of the Hill",
+    "category": "Physics",
+    "icon": "[G-180]",
+    "instructions": "Bask on the prime sunlit iceberg! Belly-slam and nudge rival walruses into the freezing sea to claim sole ownership of the ice shelf.",
+    "controlPrompt": "Hold: Belly Charge"
+  },
+  {
+    "id": "polar_ice_fishing",
+    "title": "Polar Ice Fishing",
+    "tagline": "Deep Trench Frost Angler",
+    "category": "Reflex",
+    "icon": "[G-181]",
+    "instructions": "Drill an ice hole over deep trenches! Cast your glowing lure and jerk the line the microsecond an abyssal arctic trout strikes.",
+    "controlPrompt": "Tap: Cast & Strike"
+  },
+  {
+    "id": "aurora_collector",
+    "title": "Aurora Borealis Weaver",
+    "tagline": "Geomagnetic Light Prism",
+    "category": "Party",
+    "icon": "[G-182]",
+    "instructions": "The sky dances with northern lights! Adjust your magnetic polar crystal to absorb flowing ribbon waves of green, magenta, and solar violet.",
+    "controlPrompt": "Tap: Shift Polarity"
+  },
+  {
+    "id": "dog_sled_dash",
+    "title": "Husky Dog Sled Sprint",
+    "tagline": "Great Northern Mushers",
+    "category": "Racing",
+    "icon": "[G-183]",
+    "instructions": "Mush through howling snowy winds! Tap in rhythm with your lead huskies to leap fallen pine logs and leap across gaping crevasse gaps.",
+    "controlPrompt": "Tap: Leap Obstacle"
+  },
+  {
+    "id": "mammoth_stampede",
+    "title": "Mammoth Stampede",
+    "tagline": "Tundra Ice Age Survival",
+    "category": "Action",
+    "icon": "[G-184]",
+    "instructions": "A thundering herd of woolly mammoths stampedes across the permafrost! Dodge massive tusk sweeps and giant stomps to remain the last hunter standing.",
+    "controlPrompt": "Hold: Move / Dodge"
+  },
+  {
+    "id": "frostbite_cavern",
+    "title": "Frostbite Stalactite Cavern",
+    "tagline": "Glacial Drop Hazard Reflex",
+    "category": "Reflex",
+    "icon": "[G-185]",
+    "instructions": "The ancient cavern roof is collapsing under heavy frost! Dash under falling razor-sharp ice stalactites to gather frozen prehistoric relics.",
+    "controlPrompt": "Tap: Direction Dash"
+  },
+  {
+    "id": "geyser_leap",
+    "title": "Geothermal Geyser Leap",
+    "tagline": "Icelandic Volcanic Hot Springs",
+    "category": "Action",
+    "icon": "[G-186]",
+    "instructions": "Leap across arctic thermal stepping stones! Time your jumps between boiling steam vents so you do not get blasted into the sky by scalding geysers.",
+    "controlPrompt": "Tap: Leap Next Stone"
+  },
+  {
+    "id": "clockwork_cogs",
+    "title": "Clockwork Cog Synchrony",
+    "tagline": "Precision Escapement Mesh",
+    "category": "Reflex",
+    "icon": "[G-187]",
+    "instructions": "Big Ben gears are uncoupled! Tap when the golden drive teeth align with the driven escapement gear to mesh the gear train and generate kinetic torque.",
+    "controlPrompt": "Tap: Mesh Gears"
+  },
+  {
+    "id": "steam_boiler_relief",
+    "title": "Steam Boiler Relief",
+    "tagline": "High-Pressure Safety Regulator",
+    "category": "Physics",
+    "icon": "[G-188]",
+    "instructions": "The locomotive furnace is raging! Hold to vent steam safety valves and sustain maximum horsepower in the gold 80-95 PSI sweet spot without triggering a catastrophic blowout.",
+    "controlPrompt": "Hold: Vent Steam Valve"
+  },
+  {
+    "id": "zeppelin_dogfight",
+    "title": "Zeppelin Sky Duel",
+    "tagline": "Victorian Dirigible Aerial Combat",
+    "category": "Action",
+    "icon": "[G-189]",
+    "instructions": "Pilot an armored steam dirigible over London smog! Rotate to aim steam cannons and hold to burst forward while puncturing rival airship gasbags.",
+    "controlPrompt": "Tap: Rotate & Shoot | Hold: Thrust"
+  },
+  {
+    "id": "tesla_coil_arc",
+    "title": "Tesla Coil Lightning Net",
+    "tagline": "Wardenclyffe High-Voltage Harvester",
+    "category": "Reflex",
+    "icon": "[G-190]",
+    "instructions": "Nikola Tesla high-voltage discharges whip around the perimeter! Hold your grounding rod to channel lightning arcs into your Leyden capacitor jars.",
+    "controlPrompt": "Hold: Ground Rod"
+  },
+  {
+    "id": "automator_assembly",
+    "title": "Automaton Clockwork Assembly",
+    "tagline": "Hydraulic Toy Stamp Factory",
+    "category": "Action",
+    "icon": "[G-191]",
+    "instructions": "Conveyor belts carry unfinished brass automatons! Tap the steam press to stamp heart gears and windup keys into moving automatons with perfect rhythm.",
+    "controlPrompt": "Tap: Stamp Gear"
+  },
+  {
+    "id": "pneumatic_tube_rush",
+    "title": "Pneumatic Tube Dispatch",
+    "tagline": "Underground Brass Capsule Sorter",
+    "category": "Puzzle",
+    "icon": "[G-192]",
+    "instructions": "Pressurized brass capsules speed through the city tube grid! Tap to toggle your suction diverter gate: collect gold and silver dispatches while avoiding volatile nitro bombs.",
+    "controlPrompt": "Tap: Toggle Gate"
+  },
+  {
+    "id": "ornithopter_flock",
+    "title": "Ornithopter Wing Flight",
+    "tagline": "Da Vinci Flapping Air Spire",
+    "category": "Racing",
+    "icon": "[G-193]",
+    "instructions": "Soar through clock spires on leather mechanical wings! Tap in steady avian cadence to flap for lift and catch rising thermal updrafts.",
+    "controlPrompt": "Tap: Flap Wings"
+  },
+  {
+    "id": "pressure_gauge_lock",
+    "title": "Pressure Gauge Safe Cracker",
+    "tagline": "Clockwork Tumbler Lock Duel",
+    "category": "Puzzle",
+    "icon": "[G-194]",
+    "instructions": "Crack the Bank of England brass safe! Time needle clicks to lock concentric tumblers into the golden resonance sweet spots.",
+    "controlPrompt": "Tap: Lock Tumbler Pin"
+  },
+  {
+    "id": "copper_conduit",
+    "title": "Copper Conduit Smelter",
+    "tagline": "Foundry Molten Flow Manifold",
+    "category": "Action",
+    "icon": "[G-195]",
+    "instructions": "Molten copper drips from overhead crucibles! Tap to rotate elbow valves and align the conduit pipe network so molten metal pours safely into ingot molds.",
+    "controlPrompt": "Tap: Rotate Valve"
+  },
+  {
+    "id": "monocycle_derby",
+    "title": "Velodrome Monocycle Derby",
+    "tagline": "Giant Gyroscopic Single-Wheel Sprint",
+    "category": "Racing",
+    "icon": "[G-196]",
+    "instructions": "Race giant 6-foot monocycles inside the wooden velodrome! Hold to pedal and lean into the curve, but release before you over-torque into a faceplant wipeout.",
+    "controlPrompt": "Hold: Pedal & Lean"
+  },
+  {
+    "id": "cyber_samurai_slash",
+    "title": "Cyber Samurai Katana Duel",
+    "tagline": "High-Speed Neon Energy Parry",
+    "category": "Action",
+    "icon": "[G-197]",
+    "instructions": "Clash atop rainy cyber-skyscrapers! Tap for swift katana slashes; hold to raise an energy parry shield to deflect and stun incoming blade strikes.",
+    "controlPrompt": "Tap: Slash | Hold: Parry Shield"
+  },
+  {
+    "id": "mainframe_breach",
+    "title": "Mainframe ICE Core Breach",
+    "tagline": "Quantum Data Packet Injection",
+    "category": "Puzzle",
+    "icon": "[G-198]",
+    "instructions": "Concentric ICE firewalls protect the quantum mainframe! Time your data packet injection beams through rotating firewall gaps to breach the core.",
+    "controlPrompt": "Tap: Fire Data Packet"
+  },
+  {
+    "id": "hovercar_skyline",
+    "title": "Hovercar Skyline Highway",
+    "tagline": "Neo-Tokyo Cyberway Traffic Weave",
+    "category": "Racing",
+    "icon": "[G-199]",
+    "instructions": "Speed down multi-tier neon skyways! Tap to switch cyber-lanes, dodging heavy autonomous cargo haulers while grabbing turbo battery orbs.",
+    "controlPrompt": "Tap: Switch Lane"
+  },
+  {
+    "id": "hologram_glitch",
+    "title": "Hologram Glitch Purge",
+    "tagline": "Android Replica Perception Reflex",
+    "category": "Reflex",
+    "icon": "[G-200]",
+    "instructions": "Holographic android avatars stand on inspection pedestals! The moment an avatar displays chromatic scanline glitching, tap first to purge the imposter.",
+    "controlPrompt": "Tap: Purge Glitch"
+  },
+  {
+    "id": "laser_grapple",
+    "title": "Laser Grapple Swing",
+    "tagline": "Skyline Tether Kinetic Physics",
+    "category": "Physics",
+    "icon": "[G-201]",
+    "instructions": "Swing across neon anchor spires in the night sky! Hold to tether onto ahead anchor nodes; release at the forward apex to fling in soaring parabolic leaps.",
+    "controlPrompt": "Hold: Grapple | Release: Leap"
+  },
+  {
+    "id": "neural_synapse",
+    "title": "Neural Synapse Bridge",
+    "tagline": "AI Cortex Impulses & Ion Channels",
+    "category": "Party",
+    "icon": "[G-202]",
+    "instructions": "Consciousness surges across synthetic brain axons! Tap to toggle synaptic gates open to conduct harmonic thoughts while blocking corrupt virus packets.",
+    "controlPrompt": "Tap: Toggle Synapse"
+  },
+  {
+    "id": "drone_swarm_defense",
+    "title": "Drone Swarm EMP Bastion",
+    "tagline": "Data Vault Shockwave Annihilation",
+    "category": "Action",
+    "icon": "[G-203]",
+    "instructions": "Swarms of hostile micro-drones dive toward your data terminal! Time resonant EMP shockwave bursts to vaporize clusters before they breach your core.",
+    "controlPrompt": "Tap: EMP Shockwave"
+  },
+  {
+    "id": "synth_keytar_solo",
+    "title": "Synthwave Keytar Solo",
+    "tagline": "Neon Outrun Rhythm Rocker",
+    "category": "Reflex",
+    "icon": "[G-204]",
+    "instructions": "Rock the stadium with searing synthesizer power chords! Tap when neon synth notes cross the keytar strike line to unleash massive crowd hype.",
+    "controlPrompt": "Tap: Strike Note"
+  },
+  {
+    "id": "quantum_tunneling",
+    "title": "Quantum Tunneling Accelerator",
+    "tagline": "Subatomic Wave-Particle Duality",
+    "category": "Reflex",
+    "icon": "[G-205]",
+    "instructions": "Race along subatomic magnetic rails! Hold to phase-shift into an intangible wave to tunnel through solid particle barriers without shattering.",
+    "controlPrompt": "Hold: Phase Shift"
+  },
+  {
+    "id": "hyperloop_racer",
+    "title": "Maglev Hyperloop Velocity",
+    "tagline": "Vacuum Tube 360-Degree Helical Sprint",
+    "category": "Racing",
+    "icon": "[G-206]",
+    "instructions": "Blast through vacuum maglev tubes at Mach 1! Hold to engage linear magnetic induction thrust, but release to cool coils before thermal burnout.",
+    "controlPrompt": "Hold: Maglev Thrust"
+  },
+  {
+    "id": "ring_toss_frenzy",
+    "title": "Ring Toss Frenzy",
+    "tagline": "Midway Bottle Ringer Duel",
+    "category": "Reflex",
+    "icon": "[G-207]",
+    "instructions": "Time your sweeping aim guide and charge power to heave rings onto spinning carnival glass bottles! Score golden bottles for massive points.",
+    "controlPrompt": "Hold: Charge Throw | Release: Pitch Ring"
+  },
+  {
+    "id": "balloon_dart_clown",
+    "title": "Balloon Dart Clown",
+    "tagline": "Rotating Clown Wheel Shootout",
+    "category": "Action",
+    "icon": "[G-208]",
+    "instructions": "Aim your sweeping dart reticle and pop colorful balloons on the rotating clown wheel! Hit the laughing clown nose for a loud honk and jackpot points!",
+    "controlPrompt": "Tap / Action: Fire Dart"
+  },
+  {
+    "id": "duck_pond_derby",
+    "title": "Duck Pond Derby",
+    "tagline": "Magnetic Rubber Duck Winch",
+    "category": "Physics",
+    "icon": "[G-209]",
+    "instructions": "Launch your magnetic fishing hook into the swirling current pond to snag bobbing rubber ducks! Golden star ducks award maximum prize points.",
+    "controlPrompt": "Tap / Action: Drop & Reel Hook"
+  },
+  {
+    "id": "milk_bottle_knockdown",
+    "title": "Milk Bottle Knockdown",
+    "tagline": "Carnival Baseball Strikeout",
+    "category": "Action",
+    "icon": "[G-210]",
+    "instructions": "Hurl heavy weighted baseballs at tiered pyramids of porcelain milk bottles! Hit the base for full strike collapses and score multiplier bonuses.",
+    "controlPrompt": "Hold: Charge Pitch | Release: Throw Baseball"
+  },
+  {
+    "id": "bumper_car_derby",
+    "title": "Bumper Car Derby",
+    "tagline": "Electric Arena Smash",
+    "category": "Action",
+    "icon": "[G-211]",
+    "instructions": "Ram opponents with heavy rubber bumpers! Drive through spark zones to recharge boost and slam rivals into bouncing electrified walls.",
+    "controlPrompt": "Steer: Drive | Tap: Nitro Ram"
+  },
+  {
+    "id": "cotton_candy_spin",
+    "title": "Cotton Candy Spin",
+    "tagline": "Centrifugal Sugar Cloud Maker",
+    "category": "Party",
+    "icon": "[G-212]",
+    "instructions": "Spin your paper cone along the perimeter of the giant spinning sugar drum to catch flying cotton candy strands! Build huge fluffy clouds for giant bonus payouts.",
+    "controlPrompt": "Tap / Steer: Reverse Cone Spin"
+  },
+  {
+    "id": "roller_coaster_brake",
+    "title": "Roller Coaster Brake",
+    "tagline": "Wooden Trestle Thrill Braker",
+    "category": "Racing",
+    "icon": "[G-213]",
+    "instructions": "Hurtle down steep wooden drops and hairpin loops! Hold your brake on extreme danger curves to prevent catastrophic derailment while sustaining top thrill speeds.",
+    "controlPrompt": "Hold: Apply Track Brakes"
+  },
+  {
+    "id": "ferris_wheel_hop",
+    "title": "Ferris Wheel Hop",
+    "tagline": "Counter-Rotating Gondola Leap",
+    "category": "Physics",
+    "icon": "[G-214]",
+    "instructions": "Time leaps between counter-rotating Ferris wheel gondolas as they align at the apex! Snatch floating prize ribbons without tumbling to the safety net below.",
+    "controlPrompt": "Tap / Action: Leap Gondola"
+  },
+  {
+    "id": "dunk_clown_tank",
+    "title": "Dunk Clown Tank",
+    "tagline": "Bullseye Heckler Splashdown",
+    "category": "Reflex",
+    "icon": "[G-215]",
+    "instructions": "Heckling clown perches on the wooden plank above the splash tank! Time your pitch to strike the oscillating metal bullseye target and drop him into the water!",
+    "controlPrompt": "Tap / Action: Pitch Softball"
+  },
+  {
+    "id": "fortune_teller_tarot",
+    "title": "Fortune Teller Tarot",
+    "tagline": "Mystic Arcana Crystal Match",
+    "category": "Party",
+    "icon": "[G-216]",
+    "instructions": "Watch the glowing crystal ball reveal an ancient Arcana rune! Tap when your sweeping tarot deck cycles to the matching symbol to build cosmic multiplier streaks.",
+    "controlPrompt": "Tap / Action: Select Arcana Card"
+  },
+  {
+    "id": "vine_swing_canopy",
+    "title": "Vine Swing Canopy",
+    "tagline": "Jungle Pendulum Liana Rush",
+    "category": "Physics",
+    "icon": "[G-217]",
+    "instructions": "Swing on hanging jungle lianas across a deep rainforest waterfall! Time releases to fly through the air, catch the next vine, and snatch floating tropical fruits.",
+    "controlPrompt": "Tap: Release / Catch Vine"
+  },
+  {
+    "id": "trex_egg_scramble",
+    "title": "T-Rex Egg Scramble",
+    "tagline": "Prehistoric Nest Heist",
+    "category": "Action",
+    "icon": "[G-218]",
+    "instructions": "Sneak into the center dinosaur nest and gather glowing prehistoric eggs! When the sleeping T-Rex stirs and opens its amber eye, FREEZE instantly or get roared back home!",
+    "controlPrompt": "Steer: Sneak | Release: Freeze"
+  },
+  {
+    "id": "piranha_river_hop",
+    "title": "Piranha River Hop",
+    "tagline": "Rapids Log Frog Crossing",
+    "category": "Reflex",
+    "icon": "[G-219]",
+    "instructions": "Hop across drifting river logs and mossy bark to reach the opposite jungle bank! Watch out for sharp-toothed red piranhas leaping out of the turbulent river currents.",
+    "controlPrompt": "Tap: Hop Forward | Steer: Hop Lateral"
+  },
+  {
+    "id": "pterodactyl_glide",
+    "title": "Pterodactyl Glide",
+    "tagline": "Volcanic Thermal Flight",
+    "category": "Racing",
+    "icon": "[G-220]",
+    "instructions": "Soar through prehistoric skies on leathery pterosaur wings! Flap to gain altitude, dive for speed, catch volcanic thermal updrafts, and swoop through floating air rings.",
+    "controlPrompt": "Tap: Flap Wings | Hold: Dive"
+  },
+  {
+    "id": "quicksand_escape",
+    "title": "Quicksand Escape",
+    "tagline": "Bubbling Mud Pit Rescue",
+    "category": "Party",
+    "icon": "[G-221]",
+    "instructions": "The bubbling prehistoric quicksand is pulling you down! Tap vigorously to kick your legs up to safety, and grab overhead swinging rescue ropes to hoist completely free.",
+    "controlPrompt": "Tap: Kick Mud | Hold: Grab Rope"
+  },
+  {
+    "id": "blowpipe_target",
+    "title": "Blowpipe Target",
+    "tagline": "Ancient Ruins Dart Aim",
+    "category": "Reflex",
+    "icon": "[G-222]",
+    "instructions": "Aim a traditional hollow bamboo blowpipe as the crosshair oscillates! Inhale to build lung power and exhale darts to strike moving stone masks and Aztec golden suns.",
+    "controlPrompt": "Hold: Inhale Breath | Release: Fire Dart"
+  },
+  {
+    "id": "amber_fossil_excavate",
+    "title": "Amber Fossil Excavate",
+    "tagline": "Paleontology Quarry Chisel",
+    "category": "Puzzle",
+    "icon": "[G-223]",
+    "instructions": "Chisel sedimentary shale rock slabs in an ancient quarry! Break through hardened stone layers to unearth preserved golden amber gems and ancient trilobite shells.",
+    "controlPrompt": "Tap: Chisel Rock Block"
+  },
+  {
+    "id": "raptor_pounce_dodge",
+    "title": "Raptor Pounce Dodge",
+    "tagline": "Velociraptor Ambush Evasion",
+    "category": "Action",
+    "icon": "[G-224]",
+    "instructions": "Cunning velociraptors stalk from tall savanna ferns! Watch the glowing red trajectory telegraph lines and dodge-roll out of the pounce strike zone to score close-call bonuses.",
+    "controlPrompt": "Steer: Move | Tap: Dodge Roll"
+  },
+  {
+    "id": "bamboo_pole_vault",
+    "title": "Bamboo Pole Vault",
+    "tagline": "Jungle Ravine Spring Leap",
+    "category": "Sports",
+    "icon": "[G-225]",
+    "instructions": "Sprint down the runway and plant your flexible green bamboo pole into the stone vault box! Hold to bend the pole and release at maximum spring tension to vault the chasm.",
+    "controlPrompt": "Tap: Plant Pole | Release: Launch Vault"
+  },
+  {
+    "id": "volcano_lava_leap",
+    "title": "Volcano Lava Leap",
+    "tagline": "Caldera Basalt Pillar Hop",
+    "category": "Action",
+    "icon": "[G-226]",
+    "instructions": "Survive in the boiling crater of an active supervolcano! Hop between obsidian basalt pillars, avoid rumbling pillars about to submerge in molten lava, and collect fire rubies.",
+    "controlPrompt": "Steer / Tap: Leap Basalt Pillar"
+  },
+  {
+    "id": "caterpillar_inchworm",
+    "title": "Caterpillar Inchworm",
+    "tagline": "Dewy Twig Scrunch & Surge",
+    "category": "Reflex",
+    "icon": "[G-227]",
+    "instructions": "Inchworm along garden rose branches! Hold to contract your tail forward into an arched U-shape, then release to surge your head forward and snatch morning dew drops.",
+    "controlPrompt": "Hold: Contract Tail | Release: Extend Head"
+  },
+  {
+    "id": "honeybee_nectar_relay",
+    "title": "Honeybee Nectar Relay",
+    "tagline": "Wildflower Harvest Rush",
+    "category": "Racing",
+    "icon": "[G-228]",
+    "instructions": "Buzz across the blooming flower meadow! Sip nectar from clover and lavender blossoms, dodge patrolling garden wasps, and deposit sweet honey into your hive cell.",
+    "controlPrompt": "Steer: Fly Bee | Hover: Sip Nectar"
+  },
+  {
+    "id": "spider_web_tangle",
+    "title": "Spider Web Tangle",
+    "tagline": "Radial Dew Web Trapper",
+    "category": "Puzzle",
+    "icon": "[G-229]",
+    "instructions": "Traverse an 8-spoke morning spiderweb! Crawl across radial threads to wrap trapped fruit flies and gnats in sticky silk before the morning rain arrives.",
+    "controlPrompt": "Tap: Crawl Web | Steer: Radial Switch"
+  },
+  {
+    "id": "ant_colony_haul",
+    "title": "Ant Colony Haul",
+    "tagline": "Subterranean Picnic Pantry",
+    "category": "Action",
+    "icon": "[G-230]",
+    "instructions": "Scurry to the surface picnic table and haul heavy sugar cubes, watermelon seeds, and berry crumbs deep into the underground colony queen pantry chamber.",
+    "controlPrompt": "Steer: Scurry Ant | Touch: Grab & Deliver"
+  },
+  {
+    "id": "firefly_night_beacon",
+    "title": "Firefly Night Beacon",
+    "tagline": "Midnight Meadow Glow Harmony",
+    "category": "Party",
+    "icon": "[G-231]",
+    "instructions": "Synchronize your bioluminescent firefly lantern with the rhythmic flashes of the central meadow mother beacon! Go dark when predatory night bats swoop overhead.",
+    "controlPrompt": "Tap: Flash Lantern | Steer: Hover"
+  },
+  {
+    "id": "dung_beetle_roll",
+    "title": "Dung Beetle Roll",
+    "tagline": "Colossal Soil Sphere Smash",
+    "category": "Physics",
+    "icon": "[G-232]",
+    "instructions": "Roll an expanding sphere of rich garden moss and soil! Gather loose soil clumps to grow the ball into an unstoppable boulder and score into the compost goal.",
+    "controlPrompt": "Steer: Roll Mud Ball | Ram: Bump Rivals"
+  },
+  {
+    "id": "ladybug_aphid_hunt",
+    "title": "Ladybug Aphid Hunt",
+    "tagline": "Rose Leaf Pest Gobbler",
+    "category": "Action",
+    "icon": "[G-233]",
+    "instructions": "Skitter across broad green rose leaves hunting garden aphid pests! Gobble green and golden royal aphids, and tap to flutter your spotted wings in a rapid snap dash.",
+    "controlPrompt": "Steer: Skitter | Tap: Flutter Dash"
+  },
+  {
+    "id": "grasshopper_high_jump",
+    "title": "Grasshopper High Jump",
+    "tagline": "Spring Leg Meadow Leap",
+    "category": "Sports",
+    "icon": "[G-234]",
+    "instructions": "Charge your powerful hind legs to launch soaring parabolic leaps across garden stepping stones! Time releases to land dead-center on 3-leaf golden clover landing pads.",
+    "controlPrompt": "Hold: Charge Jump | Release: Launch Leap"
+  },
+  {
+    "id": "dragonfly_dogfight",
+    "title": "Dragonfly Dogfight",
+    "tagline": "Lily Pond Aerial Ace Duel",
+    "category": "Action",
+    "icon": "[G-235]",
+    "instructions": "Dart across the tranquil garden lily pond at supersonic speeds! Hover-dash to snap flying mosquitoes out of the air and dive on rival dragonflies in mid-air duels.",
+    "controlPrompt": "Steer: Fly Dragonfly | Tap: Supersonic Dash"
+  },
+  {
+    "id": "centipede_slalom",
+    "title": "Centipede Slalom",
+    "tagline": "Wiggling Pebble Gate Weave",
+    "category": "Racing",
+    "icon": "[G-236]",
+    "instructions": "Guide a multi-segmented wriggling garden centipede through narrow red-and-white slalom gate pairs! Weave cleanly without crashing your trailing body into stone posts.",
+    "controlPrompt": "Steer: Slalom Wiggle"
+  },
+  {
+    "id": "poltergeist_possession",
+    "title": "Poltergeist Possession",
+    "tagline": "Haunted Furniture Hover",
+    "category": "Action",
+    "icon": "[G-237]",
+    "instructions": "Hurl and hover antique chairs and grandfather clocks across the haunted ballroom to crush spectral manifestations.",
+    "controlPrompt": "Steer: Move Ghost | Tap: Possess & Hurl"
+  },
+  {
+    "id": "graveyard_zombie_bash",
+    "title": "Graveyard Zombie Bash",
+    "tagline": "Midnight Tombstone Whack",
+    "category": "Action",
+    "icon": "[G-238]",
+    "instructions": "Smash spooky green zombies rising from open mossy graves! Avoid striking consecrated angelic statues that stun you.",
+    "controlPrompt": "Steer: Run Graveyard | Tap: Shovel Bash"
+  },
+  {
+    "id": "phantom_mirror_gaze",
+    "title": "Phantom Mirror Gaze",
+    "tagline": "True Reflection Reflex",
+    "category": "Puzzle",
+    "icon": "[G-239]",
+    "instructions": "Gaze into ornate spectral mirrors! Spot the one mirror where the ghostly reflection blinks or raises the wrong hand and strike it.",
+    "controlPrompt": "Steer: Select Mirror | Tap: Shatter Mirror"
+  },
+  {
+    "id": "cauldron_witch_brew",
+    "title": "Cauldron Witch Brew",
+    "tagline": "Bioluminescent Potion Craft",
+    "category": "Puzzle",
+    "icon": "[G-240]",
+    "instructions": "Stir boiling green witch cauldrons and toss in eye-of-newt and toadstools in exact recipe sequences before the brew boils over.",
+    "controlPrompt": "Steer: Select Ingredient | Tap: Drop In Cauldron"
+  },
+  {
+    "id": "gargoyle_stone_stare",
+    "title": "Gargoyle Stone Stare",
+    "tagline": "Cathedral Belfry Freeze",
+    "category": "Reflex",
+    "icon": "[G-241]",
+    "instructions": "Creep across cathedral rooftop tiles towards the bell! When the stone gargoyle opens its glowing red eyes, freeze solid.",
+    "controlPrompt": "Steer: Creep Forward | Release: Freeze Solid"
+  },
+  {
+    "id": "ghost_vacuum_buster",
+    "title": "Ghost Vacuum Buster",
+    "tagline": "Proton Ecto-Canister Trap",
+    "category": "Action",
+    "icon": "[G-242]",
+    "instructions": "Engage high-powered proton suction beams to pull floating ectoplasmic ghosts into your vacuum canister before time expires.",
+    "controlPrompt": "Steer: Aim Nozzle | Hold: Vacuum Suction"
+  },
+  {
+    "id": "tombstone_crypt_slider",
+    "title": "Tombstone Crypt Slider",
+    "tagline": "Ancient Sarcophagus Shove",
+    "category": "Physics",
+    "icon": "[G-243]",
+    "instructions": "Slide heavy carved stone sarcophagus lids across the crypt floor to loot golden relics and scarabs while dodging cursed mummy traps.",
+    "controlPrompt": "Steer: Approach Tomb | Hold: Slide Slab"
+  },
+  {
+    "id": "creepy_doll_crawl",
+    "title": "Creepy Doll Crawl",
+    "tagline": "Victorian Wind-Up Race",
+    "category": "Racing",
+    "icon": "[G-244]",
+    "instructions": "Wind up the porcelain doll back-key spring to the sweet spot and release to crawl across the attic floor, avoiding cobwebs.",
+    "controlPrompt": "Hold: Wind Spring | Release: Crawl Sprint"
+  },
+  {
+    "id": "ouija_spirit_board",
+    "title": "Ouija Spirit Board",
+    "tagline": "Occult Planchette Spelling",
+    "category": "Party",
+    "icon": "[G-245]",
+    "instructions": "Guide your wooden planchette across the antique Ouija board to spell out mystic words whispered from beyond the grave.",
+    "controlPrompt": "Steer: Slide Planchette | Tap: Lock Letter"
+  },
+  {
+    "id": "cursed_clocktower_pendulum",
+    "title": "Cursed Clocktower Pendulum",
+    "tagline": "Razor Scythe Rafter Leap",
+    "category": "Action",
+    "icon": "[G-246]",
+    "instructions": "Dodge a gigantic swinging razor-sharp clock pendulum slicing across cathedral rafters while gathering golden clockwork gears.",
+    "controlPrompt": "Steer: Run Rafters | Hold: Duck / Crouch"
+  },
+  {
+    "id": "synthwave_neon_racer",
+    "title": "Synthwave Neon Racer",
+    "tagline": "Wireframe Sunset Highway",
+    "category": "Racing",
+    "icon": "[G-247]",
+    "instructions": "Cruise down an endless 80s synthwave perspective highway! Dodge retro cruisers and hit cyan boost chevron pads towards the glowing sun.",
+    "controlPrompt": "Steer: Switch Lanes | Hold: Turbo Nitro"
+  },
+  {
+    "id": "pixel_space_invader",
+    "title": "Pixel Space Invader",
+    "tagline": "Descending Alien Matrix",
+    "category": "Action",
+    "icon": "[G-248]",
+    "instructions": "Defend the bottom baseline from marching waves of descending pixel invaders and alien drop-bombs! Shoot mystery UFOs for massive bonus points.",
+    "controlPrompt": "Steer: Move Cannon | Tap: Fire Laser"
+  },
+  {
+    "id": "vector_tank_battle",
+    "title": "Vector Tank Battle",
+    "tagline": "1980 Wireframe Radar Duel",
+    "category": "Action",
+    "icon": "[G-249]",
+    "instructions": "Command wireframe green tanks across a phosphor vector CRT battlefield! Shoot bouncing ricochet shells off geometric wireframe barriers.",
+    "controlPrompt": "Steer: Rotate Turret | Throttle: Drive | Tap: Shoot"
+  },
+  {
+    "id": "pac_maze_chomp",
+    "title": "Pac Maze Chomp",
+    "tagline": "Neon Dot Labyrinth Gobbler",
+    "category": "Action",
+    "icon": "[G-250]",
+    "instructions": "Chomp glowing yellow dots across neon blue maze corridors! Snatch big corner power energizers to turn the tables and chomp wandering ghosts.",
+    "controlPrompt": "Steer: Navigate Maze | Chomp Pellets"
+  },
+  {
+    "id": "breakout_brick_blaster",
+    "title": "Breakout Brick Blaster",
+    "tagline": "Rainbow Neon Wall Smash",
+    "category": "Physics",
+    "icon": "[G-251]",
+    "instructions": "Slide metallic neon paddles to volley high-velocity vector balls into rainbow rows of destructible bricks before the ball slips past.",
+    "controlPrompt": "Steer: Slide Paddle | Volley Ball"
+  },
+  {
+    "id": "laser_disc_dance",
+    "title": "LaserDisc Dance",
+    "tagline": "Interactive Synth QTE",
+    "category": "Party",
+    "icon": "[G-252]",
+    "instructions": "Sync your rhythm to the holographic spinning LaserDisc! Tap illuminated neon directional arrows in perfect time with the electronic synthwave beat.",
+    "controlPrompt": "Steer / Tap: Match Arrow On Beat"
+  },
+  {
+    "id": "crt_scanline_sniper",
+    "title": "CRT Scanline Sniper",
+    "tagline": "Phosphor Target Gallery",
+    "category": "Reflex",
+    "icon": "[G-253]",
+    "instructions": "Target floating pixel ducks, soda cans, and golden UFOs drifting across curved CRT scanlines with rapid laser lightgun trigger reflexes.",
+    "controlPrompt": "Steer: Move Crosshair | Tap: Fire Lightgun"
+  },
+  {
+    "id": "cyber_grid_runner",
+    "title": "Cyber Grid Runner",
+    "tagline": "Hoverboard Data Core Chaser",
+    "category": "Action",
+    "icon": "[G-254]",
+    "instructions": "Pilot agile cyber hoverboards across an electrified synthwave grid! Snatch floating data cores, trigger nitro speed boosts, and unleash EMP shockwaves to steal rival data packets.",
+    "controlPrompt": "WASD / Arrows: 360° Hover | Space / Enter: Nitro Boost & EMP Shock"
+  },
+  {
+    "id": "synth_drum_pad",
+    "title": "Synth Drum Pad",
+    "tagline": "808 Electronic Beat Battle",
+    "category": "Party",
+    "icon": "[G-255]",
+    "instructions": "Strike silicone rubber drum pads (Kick, Snare, Hi-Hat, Tom) in sync with the step sequencer to lay down the fattest retro drum groove.",
+    "controlPrompt": "Steer: Select Pad | Tap: Strike On Beat"
+  },
+  {
+    "id": "matrix_code_rain",
+    "title": "Matrix Code Rain",
+    "tagline": "Falling Terminal Cipher Stream",
+    "category": "Puzzle",
+    "icon": "[G-256]",
+    "instructions": "Catch golden cipher keys falling through green digital code rain to charge your decryption buffer while evading corrupt red glitch fragments.",
+    "controlPrompt": "Steer: Slide Hacker Terminal | Catch Keys"
+  },
+  {
+    "id": "sharks_and_minnows",
+    "title": "Sharks & Minnows",
+    "tagline": "Deep Ocean Lagoon Dash",
+    "category": "Action",
+    "icon": "[G-257]",
+    "instructions": "The classic pool duel! Minnows must sprint across the deep ocean channel from shore to shore. The Shark patrols the deep water with sudden chomp lunges. Score points for safe crossings and catching minnows!",
+    "controlPrompt": "WASD / Arrows: Swim • Space / Enter: Dash / Lunge"
+  },
+  {
+    "id": "power_path_clash",
+    "title": "Power Path Clash",
+    "tagline": "Math Tower Combat Showdown",
+    "category": "Action",
+    "icon": "[G-258]",
+    "instructions": "Calculate the ultimate progression! Fight weaker enemies to absorb their damage, grab multiplier runes, and build unstoppable power. Climax with an epic anime-style showdown where the highest damage warrior wins!",
+    "controlPrompt": "WASD / Arrows: Select Door • Space / Enter: Advance"
+  },
+  {
+    "id": "landscape_artillery",
+    "title": "Landscape Artillery",
+    "tagline": "Turn-Based Hillside Slingshot Duel",
+    "category": "Physics",
+    "icon": "[G-259]",
+    "instructions": "Turn-based artillery showdown on destructible terrain! Camera zooms into your turn. Aim left or right, pull back to set angle and power. Master gravity, wind, and body shots: direct headshots deliver 2.5x critical damage!",
+    "controlPrompt": "Left/Right: Aim • Down/Up: Pull Back Power • Space/Enter: Launch"
+  },
+  {
+    "id": "spam_click_showdown",
+    "title": "Spam Click Showdown",
+    "tagline": "Furious Button-Mashing Soda Blastoff",
+    "category": "Party",
+    "icon": "[G-260]",
+    "instructions": "Spam click as fast as humanly possible! Every click pumps pressurized fizzy soda into your rocket bottle. Hit over 8 CPS to activate burning Overdrive and reach 1000 PSI first to blast off into the stratosphere!",
+    "controlPrompt": "SPAM CLICK MOUSE / TAP / SPACE / ENTER / BUTTONS AS FAST AS YOU CAN!"
+  }
+]
