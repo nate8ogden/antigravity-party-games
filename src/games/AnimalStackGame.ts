@@ -57,6 +57,17 @@ export class AnimalStackGame extends BaseGame {
   private playerEliminated: Map<PlayerId, boolean> = new Map();
   private playerScores: Map<PlayerId, number> = new Map();
   private playerLives: Map<PlayerId, number> = new Map();
+  private sabotageCooldown: Map<PlayerId, number> = new Map();
+  private waveImpulse: number = 0;
+
+  // Visual Themes
+  public static readonly THEMES = [
+    { name: 'Sunset Lagoon 🌅', skyTop: '#0F172A', skyMid: '#1E293B', skyBot: '#075985', sunColor: '#FEF08A', waterColor: 'rgba(2, 132, 199, 0.75)' },
+    { name: 'Tropical Reef 🌴', skyTop: '#082F49', skyMid: '#0C4A6E', skyBot: '#0D9488', sunColor: '#FDE047', waterColor: 'rgba(13, 148, 136, 0.75)' },
+    { name: 'Bioluminescent 🌌', skyTop: '#030712', skyMid: '#1E1B4B', skyBot: '#4C1D95', sunColor: '#A78BFA', waterColor: 'rgba(99, 102, 241, 0.75)' }
+  ];
+  private currentThemeIndex: number = 0;
+  private themePillRect = { x: 20, y: 0, w: 160, h: 32 };
 
   // Active stack & physics
   private animals: StackedAnimal[] = [];
@@ -103,7 +114,16 @@ export class AnimalStackGame extends BaseGame {
     this.removeListeners();
 
     this.keydownListener = (e: KeyboardEvent) => {
-      if (this.isFinished || this.fallingAnimal || this.nextTurnTimer > 0) return;
+      if (this.isFinished) return;
+
+      // Key T cycles visual themes
+      if (e.code === 'KeyT') {
+        this.currentThemeIndex = (this.currentThemeIndex + 1) % AnimalStackGame.THEMES.length;
+        this.audio.playTap();
+        return;
+      }
+
+      if (this.fallingAnimal || this.nextTurnTimer > 0) return;
       const currentPid = this.activePlayerOrder[this.activePlayerIndex];
 
       // Key R rotates 45° for any active human player
@@ -112,37 +132,59 @@ export class AnimalStackGame extends BaseGame {
         return;
       }
 
-      // Player 0 keys (W, S) rotate 45° clockwise / counter-clockwise
+      // Player 0 keys (W, S) rotate 45° clockwise / counter-clockwise if their turn
       if (currentPid === 0 && (e.code === 'KeyW' || e.code === 'KeyS')) {
         this.rotateCurrentAnimal(e.code === 'KeyW' ? 1 : -1);
         return;
       }
 
-      // Player 1 keys (ArrowUp, ArrowDown) rotate 45°
+      // Player 1 keys (ArrowUp, ArrowDown) rotate 45° if their turn
       if (currentPid === 1 && (e.code === 'ArrowUp' || e.code === 'ArrowDown')) {
         this.rotateCurrentAnimal(e.code === 'ArrowUp' ? 1 : -1);
         return;
       }
 
-      // Drop keys: Space, Enter, or player action keys
+      // Drop keys if active player:
       if (
-        e.code === 'Space' ||
         (currentPid === 0 && (e.code === 'KeyF' || e.code === 'KeyE')) ||
-        (currentPid === 1 && (e.code === 'Enter' || e.code === 'ShiftRight' || e.code === 'NumpadEnter'))
+        (currentPid === 1 && (e.code === 'Enter' || e.code === 'ShiftRight' || e.code === 'NumpadEnter')) ||
+        e.code === 'Space'
       ) {
         this.dropAnimal(currentPid);
+        return;
+      }
+
+      // Spectator Sabotage: non-active player keys
+      if (currentPid !== 0 && (e.code === 'KeyF' || e.code === 'KeyE')) {
+        this.triggerSpectatorSabotage(0);
+      } else if (currentPid !== 1 && (e.code === 'Enter' || e.code === 'ShiftRight' || e.code === 'NumpadEnter')) {
+        this.triggerSpectatorSabotage(1);
       }
     };
     window.addEventListener('keydown', this.keydownListener);
 
     this.pointerdownListener = (e: PointerEvent) => {
-      if (this.isFinished || this.fallingAnimal || this.nextTurnTimer > 0) return;
+      if (this.isFinished) return;
       const canvas = document.querySelector('canvas');
       if (!canvas) return;
 
       const rect = canvas.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
       const clickY = e.clientY - rect.top;
+
+      // Check if tap hit the theme pill
+      if (
+        clickX >= this.themePillRect.x &&
+        clickX <= this.themePillRect.x + this.themePillRect.w &&
+        clickY >= this.themePillRect.y &&
+        clickY <= this.themePillRect.y + this.themePillRect.h
+      ) {
+        this.currentThemeIndex = (this.currentThemeIndex + 1) % AnimalStackGame.THEMES.length;
+        this.audio.playTap();
+        return;
+      }
+
+      if (this.fallingAnimal || this.nextTurnTimer > 0) return;
 
       // Check if tap hit the rotate button
       if (
@@ -201,14 +243,16 @@ export class AnimalStackGame extends BaseGame {
     this.heldRotation = 0;
     this.prevThrottle = 0;
     this.rotateCooldown = 0;
+    this.waveImpulse = 0;
 
     const btnW = 154;
     const btnH = 30;
     this.rotateBtnRect = { x: width / 2 - btnW / 2, y: 94, w: btnW, h: btnH };
+    this.themePillRect = { x: 20, y: height - 44, w: 165, h: 32 };
 
     this.raftX = width / 2;
     this.raftY = height - 90;
-    this.raftTilt = 0; // Level and firmly moored
+    this.raftTilt = 0;
 
     this.craneX = width / 2;
     this.craneDir = 1;
@@ -220,11 +264,13 @@ export class AnimalStackGame extends BaseGame {
     this.playerEliminated.clear();
     this.playerScores.clear();
     this.playerLives.clear();
+    this.sabotageCooldown.clear();
 
     for (const pid of this.activePlayerOrder) {
       this.playerEliminated.set(pid, false);
       this.playerScores.set(pid, 0);
       this.playerLives.set(pid, 3); // 3 drop lives per player
+      this.sabotageCooldown.set(pid, 0);
     }
 
     this.currentAnimalIndex = Math.floor(Math.random() * ANIMAL_TYPES.length);
@@ -262,6 +308,9 @@ export class AnimalStackGame extends BaseGame {
     }
 
     const currentTurnPid = this.activePlayerOrder[this.activePlayerIndex];
+    const isUnderdog = (this.playerLives.get(currentTurnPid) || 0) <= 1 &&
+      this.activePlayerOrder.some(p => p !== currentTurnPid && (this.playerLives.get(p) || 0) >= 2);
+    const effectiveCraneSpeed = isUnderdog ? this.craneSpeed * 0.72 : this.craneSpeed;
 
     // Crane oscillation back and forth across playfield
     const minCraneX = Math.max(70, this.raftX - this.raftWidth * 0.72);
@@ -270,9 +319,9 @@ export class AnimalStackGame extends BaseGame {
     // Crane steering if player nudges steer
     const steer = this.input.getSteer(currentTurnPid);
     if (steer !== 0) {
-      this.craneX += steer * 160 * dt;
+      this.craneX += steer * (isUnderdog ? 120 : 160) * dt;
     } else {
-      this.craneX += this.craneDir * this.craneSpeed * dt;
+      this.craneX += this.craneDir * effectiveCraneSpeed * dt;
       if (this.craneX > maxCraneX) {
         this.craneX = maxCraneX;
         this.craneDir = -1;
@@ -282,6 +331,18 @@ export class AnimalStackGame extends BaseGame {
       }
     }
     this.craneX = Math.max(minCraneX, Math.min(maxCraneX, this.craneX));
+
+    // Handle spectator sabotage cooldowns and input
+    for (const pid of this.activePlayerOrder) {
+      const cd = this.sabotageCooldown.get(pid) || 0;
+      if (cd > 0) this.sabotageCooldown.set(pid, cd - dt);
+
+      if (pid !== currentTurnPid && !this.playerEliminated.get(pid)) {
+        if (this.input.justPressed(pid) || this.input.justAction(pid)) {
+          this.triggerSpectatorSabotage(pid);
+        }
+      }
+    }
 
     // Check throttle input for rotation (W / S or Up / Down or analog stick in 45° steps)
     const throttle = this.input.getThrottle(currentTurnPid);
@@ -441,10 +502,11 @@ export class AnimalStackGame extends BaseGame {
       }
     }
 
-    // Natural wave rocking
-    const waveRock = Math.sin(this.waterWaveOffset) * 0.035;
+    // Natural wave rocking + spectator sabotage impulse
+    const waveRock = Math.sin(this.waterWaveOffset) * 0.035 + this.waveImpulse;
     const targetTilt = Math.max(-0.25, Math.min(0.25, netTorque * 0.35 + waveRock));
     this.raftTilt += (targetTilt - this.raftTilt) * Math.min(1, 4.5 * dt);
+    this.waveImpulse *= Math.max(0, 1 - 3.2 * dt);
 
     // If tilt exceeds threshold, animals slide down the slope!
     if (Math.abs(this.raftTilt) > 0.08) {
@@ -480,6 +542,22 @@ export class AnimalStackGame extends BaseGame {
     if (this.nextTurnTimer > 0) {
       this.nextTurnTimer -= dt;
     }
+  }
+
+  public triggerSpectatorSabotage(pid: PlayerId): void {
+    const cd = this.sabotageCooldown.get(pid) || 0;
+    if (cd > 0 || this.isFinished) return;
+    this.sabotageCooldown.set(pid, 3.8); // 3.8s cooldown
+
+    const side = (pid % 2 === 0) ? -1 : 1;
+    this.waveImpulse += side * 0.12;
+    const p = this.players[pid];
+    const splashX = this.raftX + side * (this.raftWidth * 0.52);
+    const splashY = this.raftY + 12;
+
+    this.particles.spawnExplosion(splashX, splashY, '#38BDF8', 25);
+    this.particles.showFloatingText(`🌊 ${p?.name || 'P' + (pid + 1)} WAVE SABOTAGE!`, splashX, splashY - 30, p?.color || '#38BDF8', 16);
+    this.audio.playWhoosh();
   }
 
   private dropAnimal(pid: PlayerId) {
@@ -526,6 +604,12 @@ export class AnimalStackGame extends BaseGame {
   ): void {
     const currentPid = this.activePlayerOrder[this.activePlayerIndex];
     if (currentPid !== botId || this.fallingAnimal || this.nextTurnTimer > 0) {
+      if (currentPid !== botId && this.fallingAnimal) {
+        const cd = this.sabotageCooldown.get(botId) || 0;
+        if (cd <= 0 && Math.random() < (difficulty === 'bot_hard' ? 0.05 : difficulty === 'bot_normal' ? 0.025 : 0)) {
+          this.triggerSpectatorSabotage(botId);
+        }
+      }
       this.input.setBotInput(botId, false, 0, 0, false);
       return;
     }
@@ -617,21 +701,23 @@ export class AnimalStackGame extends BaseGame {
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
     ctx.save();
 
-    // 1. Tropical Sunset Ocean Sky Gradient
+    const theme = AnimalStackGame.THEMES[this.currentThemeIndex];
+
+    // 1. Theme Ocean Sky Gradient
     const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
-    skyGrad.addColorStop(0, '#0F172A');
-    skyGrad.addColorStop(0.35, '#1E293B');
+    skyGrad.addColorStop(0, theme.skyTop);
+    skyGrad.addColorStop(0.35, theme.skyMid);
     skyGrad.addColorStop(0.65, '#0369A1');
     skyGrad.addColorStop(0.85, '#0284C7');
-    skyGrad.addColorStop(1, '#075985');
+    skyGrad.addColorStop(1, theme.skyBot);
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, width, height);
 
     // 2. Glowing Tropical Sunset Sun
     ctx.save();
-    ctx.shadowColor = '#FBBF24';
+    ctx.shadowColor = theme.sunColor;
     ctx.shadowBlur = 24;
-    ctx.fillStyle = '#FEF08A';
+    ctx.fillStyle = theme.sunColor;
     ctx.beginPath();
     ctx.arc(width * 0.78, 110, 46, 0, Math.PI * 2);
     ctx.fill();
@@ -801,10 +887,16 @@ export class AnimalStackGame extends BaseGame {
     ctx.arc(bannerX + 18, bannerY + 17, 7, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.font = '800 12.5px Montserrat, sans-serif';
+    const isUnderdog = (this.playerLives.get(currentPid) || 0) <= 1 &&
+      this.activePlayerOrder.some(p => p !== currentPid && (this.playerLives.get(p) || 0) >= 2);
+
+    ctx.font = '800 12px Montserrat, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(`${curPlayer.name.toUpperCase()}'S TURN — DROP TO STACK!`, bannerX + bannerW / 2 + 8, bannerY + 21.5);
+    ctx.fillStyle = isUnderdog ? '#FDE047' : '#FFFFFF';
+    const turnText = isUnderdog
+      ? `${curPlayer.name.toUpperCase()}'S TURN ⚡ UNDERDOG SURGE!`
+      : `${curPlayer.name.toUpperCase()}'S TURN — DROP TO STACK!`;
+    ctx.fillText(turnText, bannerX + bannerW / 2 + 8, bannerY + 21.5);
     ctx.restore();
 
     // Interactive On-screen [ 🔄 ROTATE 45° ] Pill Button
@@ -835,19 +927,36 @@ export class AnimalStackGame extends BaseGame {
     ctx.font = '700 10.5px Montserrat, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#CBD5E1';
-    ctx.fillText('Keys: [W/S] or [↑/↓] or [R] or Tap Button to rotate 45°', width / 2, btnY + btnH + 13);
+    ctx.fillText('Keys: [W/S] or [↑/↓] or [R] or Tap Button to rotate 45° | Action: Sabotage Wave', width / 2, btnY + btnH + 13);
     ctx.restore();
 
-    // Bottom HUD: Stack Height & Player Lives Counter
-    const hudW = Math.min(width - 32, 420);
-    const hudH = 34;
-    const hudX = width / 2 - hudW / 2;
-    const hudY = height - 42;
+    // Bottom-Left Visual Theme Switcher Pill (x: 20, y: height - 44, h: 32)
+    const theme = AnimalStackGame.THEMES[this.currentThemeIndex];
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    ctx.beginPath();
+    ctx.roundRect(20, height - 44, 160, 32, 16);
+    ctx.fill();
+    ctx.strokeStyle = '#38BDF8';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.font = '800 11px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#E0F2FE';
+    ctx.fillText(`${theme.name} [T]`, 20 + 80, height - 23.5);
+    ctx.restore();
+
+    // Bottom HUD: Stack Height & Player Lives Counter (Positioned to avoid bottom-left pill)
+    const hudW = Math.min(width - 200, 420);
+    const hudH = 32;
+    const hudX = Math.max(190, width - hudW - 20);
+    const hudY = height - 44;
 
     ctx.save();
     ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
     ctx.beginPath();
-    ctx.roundRect(hudX, hudY, hudW, hudH, 17);
+    ctx.roundRect(hudX, hudY, hudW, hudH, 16);
     ctx.fill();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.lineWidth = 1.5;
@@ -864,10 +973,10 @@ export class AnimalStackGame extends BaseGame {
       }
     }
 
-    ctx.font = '800 12px Montserrat, sans-serif';
+    ctx.font = '800 11.5px Montserrat, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillStyle = '#38BDF8';
-    ctx.fillText(`🪵 STACK: ${this.animals.length} ANIMALS (${Math.round(maxStackHeight)}px)`, hudX + 16, hudY + 21);
+    ctx.fillText(`🪵 STACK: ${this.animals.length} ANIMALS (${Math.round(maxStackHeight)}px)`, hudX + 14, hudY + 20);
 
     // Player Lives Pips
     ctx.textAlign = 'right';
@@ -880,7 +989,7 @@ export class AnimalStackGame extends BaseGame {
 
       ctx.fillStyle = p.color;
       ctx.font = '700 11px Montserrat, sans-serif';
-      ctx.fillText(`${p.name}: ${hearts}`, pipsX, hudY + 21);
+      ctx.fillText(`${p.name}: ${hearts}`, pipsX, hudY + 20);
       pipsX -= 115;
     }
     ctx.restore();
