@@ -4,6 +4,46 @@ import { CharacterMood } from '../core/CharacterRenderer';
 
 export type AnvilType = 'normal' | 'giant' | 'golden';
 
+export interface AnvilTheme {
+  name: string;
+  floorBg: string;
+  tileA: string;
+  tileB: string;
+  border: string;
+  glow: string;
+  accent: string;
+}
+
+export const ANVIL_THEMES: AnvilTheme[] = [
+  {
+    name: 'Blacksmith Forge 🔨',
+    floorBg: '#18181B',
+    tileA: '#27272A',
+    tileB: '#1F1F23',
+    border: '#F59E0B',
+    glow: '#F59E0B',
+    accent: '#FBBF24'
+  },
+  {
+    name: 'Neon Cyberpunk ⚡',
+    floorBg: '#0B0F19',
+    tileA: '#111827',
+    tileB: '#0F172A',
+    border: '#06B6D4',
+    glow: '#06B6D4',
+    accent: '#EC4899'
+  },
+  {
+    name: 'Volcano Foundry 🌋',
+    floorBg: '#1C0D0A',
+    tileA: '#29120D',
+    tileB: '#1F0D09',
+    border: '#EF4444',
+    glow: '#EF4444',
+    accent: '#F97316'
+  }
+];
+
 export interface AnvilDrop {
   id: number;
   type: AnvilType;
@@ -71,6 +111,11 @@ export interface DodgingRunner {
 }
 
 export class AnvilRainGame extends BaseGame {
+  public static readonly THEMES = ANVIL_THEMES;
+  private currentThemeIndex: number = 0;
+  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
+  private pointerdownListener: ((e: PointerEvent) => void) | null = null;
+
   private runners: Map<PlayerId, DodgingRunner> = new Map();
   private anvils: AnvilDrop[] = [];
   private powerups: PowerUpItem[] = [];
@@ -85,7 +130,57 @@ export class AnvilRainGame extends BaseGame {
   private stormIntensity: number = 1.0;
 
   public init(width: number, height: number): void {
+    this.setupListeners();
     this.reset(width, height);
+  }
+
+  public destroy(): void {
+    this.removeListeners();
+    super.destroy();
+  }
+
+  private setupListeners(): void {
+    if (typeof window === 'undefined') return;
+    this.removeListeners();
+
+    this.keydownListener = (e: KeyboardEvent) => {
+      if (this.isFinished) return;
+      if (e.code === 'KeyT') {
+        this.currentThemeIndex = (this.currentThemeIndex + 1) % ANVIL_THEMES.length;
+        this.audio.playTap();
+      }
+    };
+    window.addEventListener('keydown', this.keydownListener);
+
+    this.pointerdownListener = (e: PointerEvent) => {
+      if (this.isFinished) return;
+      const canvas = e.target as HTMLCanvasElement;
+      if (!canvas || !canvas.getBoundingClientRect) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const clickY = (e.clientY - rect.top) * scaleY;
+
+      // Theme pill is at x: 20, y: canvas.height - 44, w: 160, h: 32
+      if (clickX >= 20 && clickX <= 180 && clickY >= canvas.height - 44 && clickY <= canvas.height - 12) {
+        this.currentThemeIndex = (this.currentThemeIndex + 1) % ANVIL_THEMES.length;
+        this.audio.playTap();
+      }
+    };
+    window.addEventListener('pointerdown', this.pointerdownListener);
+  }
+
+  private removeListeners(): void {
+    if (typeof window === 'undefined') return;
+    if (this.keydownListener) {
+      window.removeEventListener('keydown', this.keydownListener);
+      this.keydownListener = null;
+    }
+    if (this.pointerdownListener) {
+      window.removeEventListener('pointerdown', this.pointerdownListener);
+      this.pointerdownListener = null;
+    }
   }
 
   public reset(width: number, height: number): void {
