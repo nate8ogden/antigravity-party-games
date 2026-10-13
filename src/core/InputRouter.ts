@@ -435,8 +435,9 @@ export class InputRouter {
             if (dist > deadzone) {
               const clamped = Math.min(dist, maxRadius);
               const norm = (clamped - deadzone) / (maxRadius - deadzone);
-              this.touchSteer[pid] = (dx / dist) * norm;
-              this.touchThrottle[pid] = (-dy / dist) * norm; // upwards drag is forward throttle
+              const safeDist = Math.max(0.001, dist);
+              this.touchSteer[pid] = (dx / safeDist) * norm;
+              this.touchThrottle[pid] = (-dy / safeDist) * norm; // upwards drag is forward throttle
             } else {
               this.touchSteer[pid] = 0;
               this.touchThrottle[pid] = 0;

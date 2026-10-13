@@ -27,6 +27,7 @@ export interface FortressTower {
   hp: number;
   reloadTimer: number;
   reloadTime: number;
+  chargeTimer: number;
   alive: boolean;
   score: number;
   subTowers: SubTower[];
@@ -40,6 +41,8 @@ export interface Cannonball {
   vx: number;
   vy: number;
   radius: number;
+  isCharged: boolean;
+  bouncesLeft: number;
   life: number;
 }
 
@@ -48,6 +51,19 @@ export class CannonBarrageGame extends BaseGame {
   private cannonballs: Cannonball[] = [];
   private ballIdCounter: number = 0;
   private destructionOrder: PlayerId[] = [];
+
+  // Procedural Arena Themes
+  public static readonly THEMES = [
+    { name: 'Citadel Siege 🏰', bg: '#1E293B', grid: '#0F172A', stone: '#334155', accent: '#F59E0B' },
+    { name: 'Magma Cavern 🔥', bg: '#180B0B', grid: '#2C0F0F', stone: '#4A1D1D', accent: '#EF4444' },
+    { name: 'Neon Bastion ⚡', bg: '#030712', grid: '#0B1528', stone: '#1E293B', accent: '#38BDF8' }
+  ];
+  private currentThemeIndex: number = 0;
+  private themePillRect = { x: 20, y: 0, w: 165, h: 32 };
+
+  // Listeners
+  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
+  private pointerdownListener: ((e: PointerEvent) => void) | null = null;
 
   public areSubTowersDown(f: FortressTower): boolean {
     return f.subTowers.length === 0 || f.subTowers.every((st) => !st.alive);
@@ -58,7 +74,58 @@ export class CannonBarrageGame extends BaseGame {
   }
 
   public init(width: number, height: number): void {
+    this.setupListeners();
     this.reset(width, height);
+  }
+
+  public destroy(): void {
+    this.removeListeners();
+  }
+
+  private setupListeners(): void {
+    if (typeof window === 'undefined') return;
+    this.removeListeners();
+
+    this.keydownListener = (e: KeyboardEvent) => {
+      if (this.isFinished) return;
+      if (e.code === 'KeyT') {
+        this.currentThemeIndex = (this.currentThemeIndex + 1) % CannonBarrageGame.THEMES.length;
+        this.audio.playTap();
+      }
+    };
+    window.addEventListener('keydown', this.keydownListener);
+
+    this.pointerdownListener = (e: PointerEvent) => {
+      if (this.isFinished) return;
+      const canvas = document.querySelector('canvas');
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      if (
+        clickX >= this.themePillRect.x &&
+        clickX <= this.themePillRect.x + this.themePillRect.w &&
+        clickY >= this.themePillRect.y &&
+        clickY <= this.themePillRect.y + this.themePillRect.h
+      ) {
+        this.currentThemeIndex = (this.currentThemeIndex + 1) % CannonBarrageGame.THEMES.length;
+        this.audio.playTap();
+      }
+    };
+    window.addEventListener('pointerdown', this.pointerdownListener);
+  }
+
+  private removeListeners(): void {
+    if (typeof window === 'undefined') return;
+    if (this.keydownListener) {
+      window.removeEventListener('keydown', this.keydownListener);
+      this.keydownListener = null;
+    }
+    if (this.pointerdownListener) {
+      window.removeEventListener('pointerdown', this.pointerdownListener);
+      this.pointerdownListener = null;
+    }
   }
 
   public reset(width: number, height: number): void {
@@ -68,6 +135,7 @@ export class CannonBarrageGame extends BaseGame {
     this.cannonballs = [];
     this.ballIdCounter = 0;
     this.destructionOrder = [];
+    this.themePillRect = { x: 20, y: height - 44, w: 165, h: 32 };
 
     const active = this.getActivePlayers();
     const isTwoPlayer = active.length === 2;
@@ -115,6 +183,7 @@ export class CannonBarrageGame extends BaseGame {
         hp: 4,
         reloadTimer: 0,
         reloadTime: 0.85,
+        chargeTimer: 0,
         alive: true,
         score: 0,
         subTowers: p1SubTowers
@@ -158,6 +227,7 @@ export class CannonBarrageGame extends BaseGame {
         hp: 4,
         reloadTimer: 0,
         reloadTime: 0.85,
+        chargeTimer: 0,
         alive: true,
         score: 0,
         subTowers: p2SubTowers
@@ -241,6 +311,7 @@ export class CannonBarrageGame extends BaseGame {
           hp: 3,
           reloadTimer: 0,
           reloadTime: 0.95,
+          chargeTimer: 0,
           alive: true,
           score: 0,
           subTowers
@@ -252,7 +323,15 @@ export class CannonBarrageGame extends BaseGame {
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
 
+    const prevTimer = this.roundTimer;
     this.roundTimer = Math.max(0, this.roundTimer - dt);
+    const isSuddenDeath = this.roundTimer <= 15;
+
+    if (prevTimer > 15 && isSuddenDeath) {
+      this.particles.showFloatingText('VOLATILE AMMO! ALL SHOTS EXPLODE! 💣', width / 2, height / 2, '#EF4444', 24);
+      this.audio.playExplosion();
+      this.particles.addTrauma(0.35);
+    }
 
     // Update bots
     this.updateBots(dt, width, height);
@@ -263,24 +342,53 @@ export class CannonBarrageGame extends BaseGame {
 
       if (f.reloadTimer > 0) f.reloadTimer -= dt;
 
-      // Oscillate cannon aim
-      f.cannonAngle += f.sweepDir * f.sweepSpeed * dt;
-      if (f.cannonAngle >= f.sweepMaxAngle) {
-        f.cannonAngle = f.sweepMaxAngle;
-        f.sweepDir = -1;
-      } else if (f.cannonAngle <= f.sweepMinAngle) {
-        f.cannonAngle = f.sweepMinAngle;
-        f.sweepDir = 1;
+      // Underdog Siege check: Sub-towers down while at least one rival has sub-towers
+      const isUnderdog = this.areSubTowersDown(f) &&
+        Array.from(this.fortresses.values()).some((other) => other.id !== f.id && other.alive && !this.areSubTowersDown(other));
+      const effectiveReloadTime = isUnderdog ? f.reloadTime * 0.65 : f.reloadTime;
+
+      // Active Steering or smooth oscillation
+      const steer = this.input.getSteer(f.id);
+      if (steer !== 0) {
+        f.cannonAngle += steer * 2.4 * dt;
+        f.cannonAngle = Math.max(f.sweepMinAngle, Math.min(f.sweepMaxAngle, f.cannonAngle));
+      } else {
+        f.cannonAngle += f.sweepDir * f.sweepSpeed * dt;
+        if (f.cannonAngle >= f.sweepMaxAngle) {
+          f.cannonAngle = f.sweepMaxAngle;
+          f.sweepDir = -1;
+        } else if (f.cannonAngle <= f.sweepMinAngle) {
+          f.cannonAngle = f.sweepMinAngle;
+          f.sweepDir = 1;
+        }
       }
 
-      // Check player fire input
-      const justPressed = this.input.justPressed(f.id) || this.input.isActionPressed(f.id);
-      if (justPressed && f.reloadTimer <= 0) {
-        this.fireCannon(f);
+      // Hold-to-Charge Mortar vs Quick Tap Fire Input
+      const isHolding = this.input.isPressed(f.id) || this.input.isActionPressed(f.id);
+      const justPressed = this.input.justPressed(f.id);
+
+      if (f.reloadTimer <= 0) {
+        if (isHolding) {
+          f.chargeTimer += dt;
+          if (f.chargeTimer >= 0.5) {
+            const barrelLength = 34;
+            const mx = f.x + Math.cos(f.cannonAngle) * barrelLength;
+            const my = f.y + Math.sin(f.cannonAngle) * barrelLength;
+            this.particles.spawnSparks(mx, my, '#EF4444', 1);
+          }
+        } else if (f.chargeTimer > 0) {
+          const isCharged = f.chargeTimer >= 0.45;
+          this.fireCannon(f, isCharged, isUnderdog, isSuddenDeath, effectiveReloadTime);
+          f.chargeTimer = 0;
+        } else if (justPressed) {
+          this.fireCannon(f, false, isUnderdog, isSuddenDeath, effectiveReloadTime);
+        }
+      } else {
+        f.chargeTimer = 0;
       }
     }
 
-    // Process Cannonballs
+    // Process Cannonballs & Ricochets
     for (let i = this.cannonballs.length - 1; i >= 0; i--) {
       const b = this.cannonballs[i];
       b.x += b.vx * dt;
@@ -288,8 +396,38 @@ export class CannonBarrageGame extends BaseGame {
       b.life -= dt;
 
       // Cannonball smoke trail
-      if (Math.random() < 0.45) {
-        this.particles.spawnSparks(b.x, b.y, '#94A3B8', 1);
+      if (Math.random() < (b.isCharged ? 0.8 : 0.45)) {
+        this.particles.spawnSparks(b.x, b.y, b.isCharged ? '#EF4444' : '#94A3B8', 1);
+      }
+
+      // Arena Wall Ricochet Bouncing
+      if (b.bouncesLeft > 0) {
+        let bounced = false;
+        if (b.x - b.radius <= 14 && b.vx < 0) {
+          b.vx = -b.vx;
+          b.x = 14 + b.radius;
+          bounced = true;
+        } else if (b.x + b.radius >= width - 14 && b.vx > 0) {
+          b.vx = -b.vx;
+          b.x = width - 14 - b.radius;
+          bounced = true;
+        }
+        if (b.y - b.radius <= 14 && b.vy < 0) {
+          b.vy = -b.vy;
+          b.y = 14 + b.radius;
+          bounced = true;
+        } else if (b.y + b.radius >= height - 14 && b.vy > 0) {
+          b.vy = -b.vy;
+          b.y = height - 14 - b.radius;
+          bounced = true;
+        }
+
+        if (bounced) {
+          b.bouncesLeft--;
+          this.audio.playBounce();
+          this.particles.spawnSparks(b.x, b.y, '#38BDF8', 10);
+          this.particles.showFloatingText('RICOCHET! 💥', b.x, b.y - 14, '#38BDF8', 13);
+        }
       }
 
       // Out of bounds or life expired
@@ -303,19 +441,35 @@ export class CannonBarrageGame extends BaseGame {
       for (const target of this.fortresses.values()) {
         if (!target.alive || target.id === b.shooterId) continue;
 
+        // Damage amount: 2 for charged mortar / sudden death, 1 for normal
+        const dmg = (b.isCharged || isSuddenDeath) ? 2 : 1;
+
         // 1. Check outer guard towers (sub-towers) first
         for (const st of target.subTowers) {
           if (!st.alive) continue;
           const dSub = Math.hypot(b.x - st.x, b.y - st.y);
           if (dSub < st.radius + b.radius) {
             hit = true;
-            st.hp -= 1;
+            st.hp = Math.max(0, st.hp - 1);
             this.audio.playExplosion();
-            this.particles.addTrauma(0.15);
-            this.particles.spawnExplosion(b.x, b.y, '#F59E0B', 16);
+            this.particles.addTrauma(b.isCharged ? 0.25 : 0.15);
+            this.particles.spawnExplosion(b.x, b.y, '#F59E0B', b.isCharged ? 24 : 16);
 
             const shooter = this.fortresses.get(b.shooterId);
-            if (shooter) shooter.score += 50;
+            if (shooter) shooter.score += 50 * dmg;
+
+            // AoE Splash damage if charged mortar
+            if (b.isCharged || isSuddenDeath) {
+              for (const otherSt of target.subTowers) {
+                if (otherSt.id !== st.id && otherSt.alive && Math.hypot(b.x - otherSt.x, b.y - otherSt.y) <= 48) {
+                  otherSt.hp = Math.max(0, otherSt.hp - 1);
+                  if (otherSt.hp === 0) {
+                    otherSt.alive = false;
+                    this.particles.spawnExplosion(otherSt.x, otherSt.y, '#EF4444', 28);
+                  }
+                }
+              }
+            }
 
             if (st.hp <= 0) {
               st.alive = false;
@@ -344,7 +498,7 @@ export class CannonBarrageGame extends BaseGame {
 
         // 2. Check main fortress tower
         const dMain = Math.hypot(b.x - target.x, b.y - target.y);
-        if (dMain < 36) {
+        if (dMain < 36 + (b.isCharged ? 4 : 0)) {
           hit = true;
 
           // If outer guard towers are still standing, main fortress is completely shielded!
@@ -361,13 +515,13 @@ export class CannonBarrageGame extends BaseGame {
             );
           } else {
             // Shield is down! Direct damage to main tower!
-            target.hp -= 1;
+            target.hp = Math.max(0, target.hp - dmg);
             this.audio.playExplosion();
-            this.particles.addTrauma(0.25);
-            this.particles.spawnExplosion(b.x, b.y, '#F59E0B', 24);
+            this.particles.addTrauma(b.isCharged ? 0.35 : 0.25);
+            this.particles.spawnExplosion(b.x, b.y, '#EF4444', b.isCharged ? 32 : 24);
 
             const shooter = this.fortresses.get(b.shooterId);
-            if (shooter) shooter.score += 100;
+            if (shooter) shooter.score += 100 * dmg;
 
             if (target.hp <= 0) {
               target.alive = false;
@@ -375,7 +529,13 @@ export class CannonBarrageGame extends BaseGame {
               this.particles.spawnExplosion(target.x, target.y, '#EF4444', 50);
               this.particles.showFloatingText('MAIN FORTRESS DESTROYED!', target.x, target.y, '#EF4444', 24);
             } else {
-              this.particles.showFloatingText(`DIRECT HIT! [${target.hp}/${target.maxHp} HP]`, target.x, target.y - 25, '#EF4444', 18);
+              this.particles.showFloatingText(
+                `${b.isCharged ? 'HEAVY MORTAR' : 'DIRECT'} HIT! [${target.hp}/${target.maxHp} HP]`,
+                target.x,
+                target.y - 25,
+                '#EF4444',
+                18
+              );
             }
           }
           break;
@@ -394,27 +554,46 @@ export class CannonBarrageGame extends BaseGame {
     }
   }
 
-  private fireCannon(f: FortressTower) {
-    f.reloadTimer = f.reloadTime;
+  private fireCannon(
+    f: FortressTower,
+    isCharged: boolean,
+    isUnderdog: boolean,
+    isSuddenDeath: boolean,
+    reloadTime: number
+  ): void {
+    f.reloadTimer = reloadTime;
 
-    const speed = 480;
+    const speed = isCharged ? 410 : 490;
     const barrelLength = 34;
+    const radius = isCharged ? 9.5 : 6.5;
     const spawnX = f.x + Math.cos(f.cannonAngle) * barrelLength;
     const spawnY = f.y + Math.sin(f.cannonAngle) * barrelLength;
 
-    this.cannonballs.push({
-      id: ++this.ballIdCounter,
-      shooterId: f.id,
-      x: spawnX,
-      y: spawnY,
-      vx: Math.cos(f.cannonAngle) * speed,
-      vy: Math.sin(f.cannonAngle) * speed,
-      radius: 6.5,
-      life: 2.5
-    });
+    const angles = isUnderdog ? [f.cannonAngle - 0.12, f.cannonAngle + 0.12] : [f.cannonAngle];
 
-    this.audio.playLaser();
-    this.particles.spawnSparks(spawnX, spawnY, '#F59E0B', 8);
+    for (const ang of angles) {
+      this.cannonballs.push({
+        id: ++this.ballIdCounter,
+        shooterId: f.id,
+        x: spawnX,
+        y: spawnY,
+        vx: Math.cos(ang) * speed,
+        vy: Math.sin(ang) * speed,
+        radius,
+        isCharged: isCharged || isSuddenDeath,
+        bouncesLeft: 1, // 1 arena wall ricochet
+        life: 2.8
+      });
+    }
+
+    if (isCharged) {
+      this.audio.playExplosion();
+      this.particles.addTrauma(0.2);
+      this.particles.showFloatingText('HEAVY MORTAR! 💣', spawnX, spawnY - 18, '#EF4444', 16);
+    } else {
+      this.audio.playLaser();
+    }
+    this.particles.spawnSparks(spawnX, spawnY, isCharged ? '#EF4444' : '#F59E0B', isCharged ? 14 : 8);
   }
 
   protected updateBotAI(
@@ -431,8 +610,6 @@ export class CannonBarrageGame extends BaseGame {
     }
 
     // Collect all valid targets across all alive enemies:
-    // If an enemy has alive sub-towers, target those sub-towers!
-    // Once an enemy's outer towers are down, target their vulnerable main tower!
     const enemyTargets: { x: number; y: number; isMain: boolean; name: string }[] = [];
     for (const other of this.fortresses.values()) {
       if (other.id === botId || !other.alive) continue;
@@ -450,25 +627,25 @@ export class CannonBarrageGame extends BaseGame {
 
     if (enemyTargets.length === 0) return;
 
+    // Pick closest or highest priority target
+    const target = enemyTargets[0];
+    const angleToTarget = Math.atan2(target.y - f.y, target.x - f.x);
+    let diff = angleToTarget - f.cannonAngle;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+
+    const tolerance = difficulty === 'bot_hard' ? 0.08 : difficulty === 'bot_normal' ? 0.16 : 0.28;
+    const steerDir = Math.abs(diff) > tolerance ? Math.sign(diff) : 0;
+
     let shouldFire = false;
-    const tolerance = difficulty === 'bot_hard' ? 0.09 : difficulty === 'bot_normal' ? 0.16 : 0.28;
-
-    for (const target of enemyTargets) {
-      const angleToTarget = Math.atan2(target.y - f.y, target.x - f.x);
-      let diff = angleToTarget - f.cannonAngle;
-      while (diff > Math.PI) diff -= Math.PI * 2;
-      while (diff < -Math.PI) diff += Math.PI * 2;
-
-      if (Math.abs(diff) <= tolerance) {
-        const fireChance = difficulty === 'bot_hard' ? 0.96 : difficulty === 'bot_normal' ? 0.72 : 0.45;
-        if (Math.random() < fireChance) {
-          shouldFire = true;
-          break;
-        }
+    if (Math.abs(diff) <= tolerance) {
+      const fireChance = difficulty === 'bot_hard' ? 0.96 : difficulty === 'bot_normal' ? 0.75 : 0.45;
+      if (Math.random() < fireChance) {
+        shouldFire = true;
       }
     }
 
-    this.input.setBotInput(botId, shouldFire, 0, 0, false);
+    this.input.setBotInput(botId, shouldFire, steerDir, 0, false);
   }
 
   public isRoundOver(): boolean {
@@ -506,12 +683,14 @@ export class CannonBarrageGame extends BaseGame {
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
     ctx.save();
 
-    // Stone Cobblestone Battlefield Background
-    ctx.fillStyle = '#1E293B';
+    const theme = CannonBarrageGame.THEMES[this.currentThemeIndex];
+
+    // Battlefield Background
+    ctx.fillStyle = theme.bg;
     ctx.fillRect(0, 0, width, height);
 
     // Stone tile grid lines
-    ctx.strokeStyle = '#0F172A';
+    ctx.strokeStyle = theme.grid;
     ctx.lineWidth = 1.5;
     for (let x = 0; x < width; x += 50) {
       ctx.beginPath();
@@ -526,11 +705,16 @@ export class CannonBarrageGame extends BaseGame {
       ctx.stroke();
     }
 
+    // Outer arena stone ricochet border
+    ctx.strokeStyle = theme.stone;
+    ctx.lineWidth = 6;
+    ctx.strokeRect(3, 3, width - 6, height - 6);
+
     // Render Defensive Curtain Walls connecting Main Fortress to Sub Towers
     for (const f of this.fortresses.values()) {
       for (const st of f.subTowers) {
         ctx.save();
-        ctx.strokeStyle = '#0F172A';
+        ctx.strokeStyle = theme.grid;
         ctx.lineWidth = 10;
         ctx.beginPath();
         ctx.moveTo(f.x, f.y);
@@ -680,6 +864,45 @@ export class CannonBarrageGame extends BaseGame {
 
       ctx.restore();
 
+      // Mortar Charging Ring indicator around cannon muzzle
+      if (f.chargeTimer > 0) {
+        const chargeRatio = Math.min(1, f.chargeTimer / 0.5);
+        const mx = f.x + Math.cos(f.cannonAngle) * 36;
+        const my = f.y + Math.sin(f.cannonAngle) * 36;
+        ctx.save();
+        ctx.strokeStyle = chargeRatio >= 1 ? '#EF4444' : '#F59E0B';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(mx, my, 8 + chargeRatio * 6, 0, Math.PI * 2 * chargeRatio);
+        ctx.stroke();
+
+        if (chargeRatio >= 1) {
+          ctx.fillStyle = '#EF4444';
+          ctx.font = 'bold 9px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('CHARGED!', mx, my - 12);
+        }
+        ctx.restore();
+      }
+
+      // Underdog Siege Golden Aura
+      const isUnderdog = this.areSubTowersDown(f) &&
+        Array.from(this.fortresses.values()).some((other) => other.id !== f.id && other.alive && !this.areSubTowersDown(other));
+      if (isUnderdog) {
+        ctx.save();
+        ctx.strokeStyle = '#FBBF24';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, 48, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.font = 'bold 8.5px sans-serif';
+        ctx.fillStyle = '#FBBF24';
+        ctx.textAlign = 'center';
+        ctx.fillText('⚡ UNDERDOG SIEGE', f.x, f.y + 54);
+        ctx.restore();
+      }
+
       // Cannon Turret Pivot Base
       ctx.fillStyle = '#0F172A';
       ctx.beginPath();
@@ -795,19 +1018,49 @@ export class CannonBarrageGame extends BaseGame {
     // Render Cannonballs
     for (const b of this.cannonballs) {
       ctx.save();
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-      ctx.fill();
+      if (b.isCharged) {
+        ctx.shadowColor = '#EF4444';
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = '#DC2626';
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+        ctx.fill();
 
-      // Metallic highlight
-      ctx.fillStyle = '#94A3B8';
-      ctx.beginPath();
-      ctx.arc(b.x - 2, b.y - 2, b.radius * 0.45, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.fillStyle = '#FEF08A';
+        ctx.beginPath();
+        ctx.arc(b.x - 2, b.y - 2, b.radius * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#0F172A';
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+        ctx.fill();
 
+        // Metallic highlight
+        ctx.fillStyle = '#94A3B8';
+        ctx.beginPath();
+        ctx.arc(b.x - 2, b.y - 2, b.radius * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.restore();
     }
+
+    // Bottom-Left Visual Theme Switcher Pill (x: 20, y: height - 44, h: 32)
+    const currentTheme = CannonBarrageGame.THEMES[this.currentThemeIndex];
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    ctx.beginPath();
+    ctx.roundRect(20, height - 44, 165, 32, 16);
+    ctx.fill();
+    ctx.strokeStyle = '#38BDF8';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.font = '800 11px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#E0F2FE';
+    ctx.fillText(`${currentTheme.name} [T]`, 20 + 82, height - 23.5);
+    ctx.restore();
 
     ctx.restore();
   }

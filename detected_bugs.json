@@ -1,0 +1,2007 @@
+{
+  "nan_division": [
+    {
+      "file": "AlienProbeGame.ts",
+      "line": 256,
+      "code": "moveX = dx / dist;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "AlienProbeGame.ts",
+      "line": 257,
+      "code": "moveY = dy / dist;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "BombRelayGame.ts",
+      "line": 359,
+      "code": "steerX = dx / mag;",
+      "var": "mag",
+      "description": "Direct division by `mag` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `mag == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "BombRelayGame.ts",
+      "line": 360,
+      "code": "steerY = dy / mag;",
+      "var": "mag",
+      "description": "Direct division by `mag` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `mag == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "BombRelayGame.ts",
+      "line": 391,
+      "code": "this.input.setBotInput(botId, true, steerX / mag, -steerY / mag, false);",
+      "var": "mag",
+      "description": "Direct division by `mag` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `mag == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "BubbleSoccerGame.ts",
+      "line": 208,
+      "code": "b.vx += (dashDirX / len) * 380;",
+      "var": "len",
+      "description": "Direct division by `len` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `len == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "BubbleSoccerGame.ts",
+      "line": 209,
+      "code": "b.vy += (dashDirY / len) * 380;",
+      "var": "len",
+      "description": "Direct division by `len` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `len == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "BumperCarDerbyGame.ts",
+      "line": 476,
+      "code": "const normX = dx / dist;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "BumperCarDerbyGame.ts",
+      "line": 477,
+      "code": "const normY = dy / dist;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "ColorClashGame.ts",
+      "line": 456,
+      "code": "let steerX = dx / mag;",
+      "var": "mag",
+      "description": "Direct division by `mag` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `mag == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "ColorClashGame.ts",
+      "line": 457,
+      "code": "let steerY = dy / mag;",
+      "var": "mag",
+      "description": "Direct division by `mag` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `mag == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "CosmicVortexGame.ts",
+      "line": 373,
+      "code": "const toCenterX = (cx - ps.x) / dist;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "CosmicVortexGame.ts",
+      "line": 374,
+      "code": "const toCenterY = (cy - ps.y) / dist;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "CyberDemolitionGame.ts",
+      "line": 177,
+      "code": "const normX = dx / dist;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "CyberDemolitionGame.ts",
+      "line": 178,
+      "code": "const normY = dy / dist;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "CyberGridRunnerGame.ts",
+      "line": 394,
+      "code": "node.x += ((ps.x - node.x) / dist) * pullForce;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "CyberGridRunnerGame.ts",
+      "line": 395,
+      "code": "node.y += ((ps.y - node.y) / dist) * pullForce;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "DodgeballBlitzGame.ts",
+      "line": 790,
+      "code": "bot.vx = (toBallX / dist) * botSpeed;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "DodgeballBlitzGame.ts",
+      "line": 791,
+      "code": "bot.vy = (toBallY / dist) * botSpeed;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "DragonTamerGame.ts",
+      "line": 181,
+      "code": "d.vx += (dx / dist) * 190 * dt;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "DragonTamerGame.ts",
+      "line": 182,
+      "code": "d.vy += (dy / dist) * 190 * dt;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "DuckPondDerbyGame.ts",
+      "line": 24,
+      "code": "hookDist: number; // distance extended from station",
+      "var": "distance",
+      "description": "Direct division by `distance` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `distance == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "FerrisWheelGame.ts",
+      "line": 22,
+      "code": "dist: number;       // distance along spoke (30 to 210)",
+      "var": "distance",
+      "description": "Direct division by `distance` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `distance == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "GhostFlashlightGame.ts",
+      "line": 519,
+      "code": "const steer = chaseX / mag;",
+      "var": "mag",
+      "description": "Direct division by `mag` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `mag == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "GhostFlashlightGame.ts",
+      "line": 520,
+      "code": "const throttle = -chaseY / mag;",
+      "var": "mag",
+      "description": "Direct division by `mag` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `mag == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "GhostFlashlightGame.ts",
+      "line": 543,
+      "code": "const steer = fleeX / mag;",
+      "var": "mag",
+      "description": "Direct division by `mag` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `mag == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "GhostFlashlightGame.ts",
+      "line": 544,
+      "code": "const throttle = -fleeY / mag;",
+      "var": "mag",
+      "description": "Direct division by `mag` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `mag == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "GhostVacuumBusterGame.ts",
+      "line": 163,
+      "code": "g.x -= (dx / dist) * pullSpeed * dt;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "GhostVacuumBusterGame.ts",
+      "line": 164,
+      "code": "g.y -= (dy / dist) * pullSpeed * dt;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "GoldMinerGame.ts",
+      "line": 393,
+      "code": "let util = (item.value / dist) * 100;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "GravityGolfGame.ts",
+      "line": 199,
+      "code": "b.vx += (dx / dist) * force * dt;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "GravityGolfGame.ts",
+      "line": 200,
+      "code": "b.vy += (dy / dist) * force * dt;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "GravityGolfGame.ts",
+      "line": 204,
+      "code": "const nx = dx / dist;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "GravityGolfGame.ts",
+      "line": 205,
+      "code": "const ny = dy / dist;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "GravityGolfGame.ts",
+      "line": 501,
+      "code": "simVx += (pdx / dist) * force * simDt;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "GravityGolfGame.ts",
+      "line": 502,
+      "code": "simVy += (pdy / dist) * force * simDt;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "GravityPodsGame.ts",
+      "line": 8,
+      "code": "distance: number; // distance along tunnel",
+      "var": "distance",
+      "description": "Direct division by `distance` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `distance == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "HoneybeeNectarRelayGame.ts",
+      "line": 490,
+      "code": "const steer = dx / mag;",
+      "var": "mag",
+      "description": "Direct division by `mag` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `mag == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "HoneybeeNectarRelayGame.ts",
+      "line": 491,
+      "code": "const throttle = -dy / mag;",
+      "var": "mag",
+      "description": "Direct division by `mag` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `mag == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "KitchenChaosGame.ts",
+      "line": 666,
+      "code": "const steer = dx / mag;",
+      "var": "mag",
+      "description": "Direct division by `mag` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `mag == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "KitchenChaosGame.ts",
+      "line": 667,
+      "code": "const throttle = -dy / mag;",
+      "var": "mag",
+      "description": "Direct division by `mag` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `mag == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "MeteorShieldGame.ts",
+      "line": 258,
+      "code": "vx: (dx / dist) * speed,",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "MeteorShieldGame.ts",
+      "line": 259,
+      "code": "vy: (dy / dist) * speed,",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "OuijaSpiritBoardGame.ts",
+      "line": 124,
+      "code": "ps.x += (dx / dist) * 140 * dt;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "OuijaSpiritBoardGame.ts",
+      "line": 125,
+      "code": "ps.y += (dy / dist) * 140 * dt;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "OuijaSpiritBoardGame.ts",
+      "line": 193,
+      "code": "this.input.setBotInput(botId, true, dx / dist, -dy / dist);",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "PacMazeChompGame.ts",
+      "line": 223,
+      "code": "this.input.setBotInput(botId, true, dx / dist, -dy / dist);",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "PacMazeChompGame.ts",
+      "line": 259,
+      "code": "this.input.setBotInput(botId, true, dx / dist, -dy / dist);",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "RaptorPounceDodgeGame.ts",
+      "line": 357,
+      "code": "this.input.setBotInput(botId, true, perpX / mag, -perpY / mag, true);",
+      "var": "mag",
+      "description": "Direct division by `mag` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `mag == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "RaptorPounceDodgeGame.ts",
+      "line": 359,
+      "code": "this.input.setBotInput(botId, true, perpX / mag, -perpY / mag, false);",
+      "var": "mag",
+      "description": "Direct division by `mag` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `mag == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "RaptorPounceDodgeGame.ts",
+      "line": 369,
+      "code": "this.input.setBotInput(botId, true, dx / d, -dy / d, false);",
+      "var": "d",
+      "description": "Direct division by `d` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `d == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "RhythmDuelGame.ts",
+      "line": 474,
+      "code": "// diff <= 0.065 is PERFECT (~40%), 0.065..0.135 is GREAT (~45%), 0.135..0.210 is OK (~15%)",
+      "var": "diff",
+      "description": "Direct division by `diff` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `diff == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "RollercoasterThrillGame.ts",
+      "line": 8,
+      "code": "y: number; // distance down track (0 to height)",
+      "var": "distance",
+      "description": "Direct division by `distance` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `distance == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "SharksAndMinnowsGame.ts",
+      "line": 799,
+      "code": "hs.vx = (dx / dist) * speed;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "SharksAndMinnowsGame.ts",
+      "line": 800,
+      "code": "hs.vy = (dy / dist) * speed;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "SkylineSumoGame.ts",
+      "line": 594,
+      "code": "this.rescuerX += (dx / dist) * Math.min(flightSpeed * dt, Math.abs(dx));",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "SkylineSumoGame.ts",
+      "line": 595,
+      "code": "this.rescuerY += (dy / dist) * Math.min(flightSpeed * dt, Math.abs(dy));",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "SwatFlyGame.ts",
+      "line": 180,
+      "code": "ins.x += (dx / dist) * speed * dt + Math.sin(ins.flutterPhase) * 1.8;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "SwatFlyGame.ts",
+      "line": 181,
+      "code": "ins.y += (dy / dist) * speed * dt + Math.cos(ins.flutterPhase) * 1.8;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "SwatFlyGame.ts",
+      "line": 225,
+      "code": "sw.x += (dx / d) * 240 * dt;",
+      "var": "d",
+      "description": "Direct division by `d` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `d == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "SwatFlyGame.ts",
+      "line": 226,
+      "code": "sw.y += (dy / d) * 240 * dt;",
+      "var": "d",
+      "description": "Direct division by `d` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `d == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "SwatFlyGame.ts",
+      "line": 370,
+      "code": "sw.x += (dx / dist) * moveSpeed * dt;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "SwatFlyGame.ts",
+      "line": 371,
+      "code": "sw.y += (dy / dist) * moveSpeed * dt;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "TargetSniperGame.ts",
+      "line": 288,
+      "code": "bot.reticleX += (dx / dist) * Math.min(dist, trackingSpeed * dt * 4);",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "TargetSniperGame.ts",
+      "line": 289,
+      "code": "bot.reticleY += (dy / dist) * Math.min(dist, trackingSpeed * dt * 4);",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "TombstoneCryptSliderGame.ts",
+      "line": 235,
+      "code": "this.input.setBotInput(botId, false, dx / dist, -dy / dist);",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "TurfWhackGame.ts",
+      "line": 193,
+      "code": "m.x += (dx / d) * 280 * dt;",
+      "var": "d",
+      "description": "Direct division by `d` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `d == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "TurfWhackGame.ts",
+      "line": 194,
+      "code": "m.y += (dy / d) * 280 * dt;",
+      "var": "d",
+      "description": "Direct division by `d` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `d == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "TurfWhackGame.ts",
+      "line": 392,
+      "code": "m.x += (dx / dist) * glideSpeed * dt;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "TurfWhackGame.ts",
+      "line": 393,
+      "code": "m.y += (dy / dist) * glideSpeed * dt;",
+      "var": "dist",
+      "description": "Direct division by `dist` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `dist == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "VolcanoLavaLeapGame.ts",
+      "line": 171,
+      "code": "const dirX = steerX / mag;",
+      "var": "mag",
+      "description": "Direct division by `mag` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `mag == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "VolcanoLavaLeapGame.ts",
+      "line": 172,
+      "code": "const dirY = steerY / mag;",
+      "var": "mag",
+      "description": "Direct division by `mag` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `mag == 0`, injecting `NaN` into coordinates and freezing game physics."
+    },
+    {
+      "file": "VolcanoLavaLeapGame.ts",
+      "line": 179,
+      "code": "const dot = (dx / d) * dirX + (dy / d) * dirY;",
+      "var": "d",
+      "description": "Direct division by `d` without zero check or epsilon guard. If objects overlap or spawn at identical coordinates, `d == 0`, injecting `NaN` into coordinates and freezing game physics."
+    }
+  ],
+  "array_splice": [
+    {
+      "file": "MagmaHopGame.ts",
+      "line": 404,
+      "code": "const chosen = candidatePillars.splice(pickIdx, 1)[0];",
+      "loop_var": "i",
+      "arr": "candidatePillars",
+      "description": "Forward for-loop (`let i = 0; ...; i++`) calls `candidatePillars.splice(i, 1)` without decrementing `i--`. The immediately following element is skipped during that frame, resulting in ghost hitboxes and skipped updates."
+    },
+    {
+      "file": "SushiExpressGame.ts",
+      "line": 161,
+      "code": "this.plates.splice(snatchedIdx, 1);",
+      "loop_var": "i",
+      "arr": "this.plates",
+      "description": "Forward for-loop (`let i = 0; ...; i++`) calls `this.plates.splice(i, 1)` without decrementing `i--`. The immediately following element is skipped during that frame, resulting in ghost hitboxes and skipped updates."
+    },
+    {
+      "file": "WhackAThiefGame.ts",
+      "line": 227,
+      "code": "const box = emptyBoxes.splice(idx, 1)[0];",
+      "loop_var": "i",
+      "arr": "emptyBoxes",
+      "description": "Forward for-loop (`let i = 0; ...; i++`) calls `emptyBoxes.splice(i, 1)` without decrementing `i--`. The immediately following element is skipped during that frame, resulting in ghost hitboxes and skipped updates."
+    }
+  ],
+  "missing_destroy": [
+    {
+      "file": "AlienAbductionGame.ts",
+      "line": 1,
+      "code": "class AlienAbductionGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "AlienProbeGame.ts",
+      "line": 1,
+      "code": "class AlienProbeGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "AmberFossilExcavateGame.ts",
+      "line": 1,
+      "code": "class AmberFossilExcavateGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "AntColonyHaulGame.ts",
+      "line": 1,
+      "code": "class AntColonyHaulGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "AntimatterContainmentGame.ts",
+      "line": 1,
+      "code": "class AntimatterContainmentGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "AnubisScalesGame.ts",
+      "line": 1,
+      "code": "class AnubisScalesGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "AnvilRainGame.ts",
+      "line": 1,
+      "code": "class AnvilRainGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "AsteroidCatcherGame.ts",
+      "line": 1,
+      "code": "class AsteroidCatcherGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "AsteroidMinerGame.ts",
+      "line": 1,
+      "code": "class AsteroidMinerGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "AstroMinerGame.ts",
+      "line": 1,
+      "code": "class AstroMinerGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "AuroraCollectorGame.ts",
+      "line": 1,
+      "code": "class AuroraCollectorGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "AutomatorAssemblyGame.ts",
+      "line": 1,
+      "code": "class AutomatorAssemblyGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "BalloonBurstGame.ts",
+      "line": 1,
+      "code": "class BalloonBurstGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "BalloonDartClownGame.ts",
+      "line": 1,
+      "code": "class BalloonDartClownGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "BambooPoleVaultGame.ts",
+      "line": 1,
+      "code": "class BambooPoleVaultGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "BanditChaseGame.ts",
+      "line": 1,
+      "code": "class BanditChaseGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "BassDropGame.ts",
+      "line": 1,
+      "code": "class BassDropGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "BlacksmithForgeGame.ts",
+      "line": 1,
+      "code": "class BlacksmithForgeGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "BlizzardBeaconGame.ts",
+      "line": 1,
+      "code": "class BlizzardBeaconGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "BlowpipeTargetGame.ts",
+      "line": 1,
+      "code": "class BlowpipeTargetGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "BombRelayGame.ts",
+      "line": 1,
+      "code": "class BombRelayGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "BreakdanceBattleGame.ts",
+      "line": 1,
+      "code": "class BreakdanceBattleGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "BreakoutBrickBlasterGame.ts",
+      "line": 1,
+      "code": "class BreakoutBrickBlasterGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "BriefcaseSnatchGame.ts",
+      "line": 1,
+      "code": "class BriefcaseSnatchGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "BubbleSoccerGame.ts",
+      "line": 1,
+      "code": "class BubbleSoccerGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "BumperBoatsGame.ts",
+      "line": 1,
+      "code": "class BumperBoatsGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "BumperCarDerbyGame.ts",
+      "line": 1,
+      "code": "class BumperCarDerbyGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "BumperHovercraftGame.ts",
+      "line": 1,
+      "code": "class BumperHovercraftGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "BurgerStackGame.ts",
+      "line": 1,
+      "code": "class BurgerStackGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CactusSlalomGame.ts",
+      "line": 1,
+      "code": "class CactusSlalomGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CastleArcherGame.ts",
+      "line": 1,
+      "code": "class CastleArcherGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CatapultClashGame.ts",
+      "line": 1,
+      "code": "class CatapultClashGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CaterpillarInchwormGame.ts",
+      "line": 1,
+      "code": "class CaterpillarInchwormGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CauldronWitchBrewGame.ts",
+      "line": 1,
+      "code": "class CauldronWitchBrewGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CentipedeSlalomGame.ts",
+      "line": 1,
+      "code": "class CentipedeSlalomGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "ChestSnatchGame.ts",
+      "line": 1,
+      "code": "class ChestSnatchGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "ClockworkCogsGame.ts",
+      "line": 1,
+      "code": "class ClockworkCogsGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CoinApexGame.ts",
+      "line": 1,
+      "code": "class CoinApexGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "ColorClashGame.ts",
+      "line": 1,
+      "code": "class ColorClashGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "ColorFloodGame.ts",
+      "line": 1,
+      "code": "class ColorFloodGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CopperConduitGame.ts",
+      "line": 1,
+      "code": "class CopperConduitGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CosmicVortexGame.ts",
+      "line": 1,
+      "code": "class CosmicVortexGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CottonCandySpinGame.ts",
+      "line": 1,
+      "code": "class CottonCandySpinGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CrabWalkGame.ts",
+      "line": 1,
+      "code": "class CrabWalkGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CreepyDollCrawlGame.ts",
+      "line": 1,
+      "code": "class CreepyDollCrawlGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CrtScanlineSniperGame.ts",
+      "line": 1,
+      "code": "class CrtScanlineSniperGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CursedClocktowerPendulumGame.ts",
+      "line": 1,
+      "code": "class CursedClocktowerPendulumGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CyberDemolitionGame.ts",
+      "line": 1,
+      "code": "class CyberDemolitionGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CyberDiscGame.ts",
+      "line": 1,
+      "code": "class CyberDiscGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CyberSamuraiSlashGame.ts",
+      "line": 1,
+      "code": "class CyberSamuraiSlashGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "CyberTanksGame.ts",
+      "line": 1,
+      "code": "class CyberTanksGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DeepSeaHarpoonGame.ts",
+      "line": 1,
+      "code": "class DeepSeaHarpoonGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DiscoTileGame.ts",
+      "line": 1,
+      "code": "class DiscoTileGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DisguiseShuffleGame.ts",
+      "line": 1,
+      "code": "class DisguiseShuffleGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DogSledDashGame.ts",
+      "line": 1,
+      "code": "class DogSledDashGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DominoCascadeGame.ts",
+      "line": 1,
+      "code": "class DominoCascadeGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DonutGlazerGame.ts",
+      "line": 1,
+      "code": "class DonutGlazerGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DragonTamerGame.ts",
+      "line": 1,
+      "code": "class DragonTamerGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DragonflyDogfightGame.ts",
+      "line": 1,
+      "code": "class DragonflyDogfightGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DrawbridgePanicGame.ts",
+      "line": 1,
+      "code": "class DrawbridgePanicGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DroneDeliveryGame.ts",
+      "line": 1,
+      "code": "class DroneDeliveryGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DroneInterceptGame.ts",
+      "line": 1,
+      "code": "class DroneInterceptGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DroneSwarmDefenseGame.ts",
+      "line": 1,
+      "code": "class DroneSwarmDefenseGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DrumSoloGame.ts",
+      "line": 1,
+      "code": "class DrumSoloGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DuckPondDerbyGame.ts",
+      "line": 1,
+      "code": "class DuckPondDerbyGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DungBeetleRollGame.ts",
+      "line": 1,
+      "code": "class DungBeetleRollGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DungeonEscapeGame.ts",
+      "line": 1,
+      "code": "class DungeonEscapeGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DunkClownTankGame.ts",
+      "line": 1,
+      "code": "class DunkClownTankGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DynamiteTumbleGame.ts",
+      "line": 1,
+      "code": "class DynamiteTumbleGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "DysonSphereCollectorGame.ts",
+      "line": 1,
+      "code": "class DysonSphereCollectorGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "ElectricEelGame.ts",
+      "line": 1,
+      "code": "class ElectricEelGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "EqualizerBounceGame.ts",
+      "line": 1,
+      "code": "class EqualizerBounceGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "FerrisWheelHopGame.ts",
+      "line": 1,
+      "code": "class FerrisWheelHopGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "FireflyNightBeaconGame.ts",
+      "line": 1,
+      "code": "class FireflyNightBeaconGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "FireworksFinaleGame.ts",
+      "line": 1,
+      "code": "class FireworksFinaleGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "FloorPainterGame.ts",
+      "line": 1,
+      "code": "class FloorPainterGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "FortuneTellerTarotGame.ts",
+      "line": 1,
+      "code": "class FortuneTellerTarotGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "FrostbiteCavernGame.ts",
+      "line": 1,
+      "code": "class FrostbiteCavernGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "FruitBlenderGame.ts",
+      "line": 1,
+      "code": "class FruitBlenderGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "FruitChopperGame.ts",
+      "line": 1,
+      "code": "class FruitChopperGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "FunhouseMirrorsGame.ts",
+      "line": 1,
+      "code": "class FunhouseMirrorsGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "GargoyleStoneStareGame.ts",
+      "line": 1,
+      "code": "class GargoyleStoneStareGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "GeyserLeapGame.ts",
+      "line": 1,
+      "code": "class GeyserLeapGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "GhostFlashlightGame.ts",
+      "line": 1,
+      "code": "class GhostFlashlightGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "GhostVacuumBusterGame.ts",
+      "line": 1,
+      "code": "class GhostVacuumBusterGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "GoldMinerGame.ts",
+      "line": 1,
+      "code": "class GoldMinerGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "GoldPanningGame.ts",
+      "line": 1,
+      "code": "class GoldPanningGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "GorgonGazeGame.ts",
+      "line": 1,
+      "code": "class GorgonGazeGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "GrasshopperHighJumpGame.ts",
+      "line": 1,
+      "code": "class GrasshopperHighJumpGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "GraveyardZombieBashGame.ts",
+      "line": 1,
+      "code": "class GraveyardZombieBashGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "GravityGolfGame.ts",
+      "line": 1,
+      "code": "class GravityGolfGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "GravityPodsGame.ts",
+      "line": 1,
+      "code": "class GravityPodsGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "HackTerminalGame.ts",
+      "line": 1,
+      "code": "class HackTerminalGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "HauntedMansionGame.ts",
+      "line": 1,
+      "code": "class HauntedMansionGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "HighwayHopGame.ts",
+      "line": 1,
+      "code": "class HighwayHopGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "HologramGlitchGame.ts",
+      "line": 1,
+      "code": "class HologramGlitchGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "HoneybeeNectarRelayGame.ts",
+      "line": 1,
+      "code": "class HoneybeeNectarRelayGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "HorseshoeTossGame.ts",
+      "line": 1,
+      "code": "class HorseshoeTossGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "HoverboardRailGame.ts",
+      "line": 1,
+      "code": "class HoverboardRailGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "HovercarSkylineGame.ts",
+      "line": 1,
+      "code": "class HovercarSkylineGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "HydraSlayerGame.ts",
+      "line": 1,
+      "code": "class HydraSlayerGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "HyperloopRacerGame.ts",
+      "line": 1,
+      "code": "class HyperloopRacerGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "IcarusWingsGame.ts",
+      "line": 1,
+      "code": "class IcarusWingsGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "IceCreamScoopGame.ts",
+      "line": 1,
+      "code": "class IceCreamScoopGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "IcebergBreakerGame.ts",
+      "line": 1,
+      "code": "class IcebergBreakerGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "JellyfishJumpGame.ts",
+      "line": 1,
+      "code": "class JellyfishJumpGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "JoustingKnightsGame.ts",
+      "line": 1,
+      "code": "class JoustingKnightsGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "KitchenChaosGame.ts",
+      "line": 1,
+      "code": "class KitchenChaosGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "KrakenWhirlpoolGame.ts",
+      "line": 1,
+      "code": "class KrakenWhirlpoolGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "LadybugAphidHuntGame.ts",
+      "line": 1,
+      "code": "class LadybugAphidHuntGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "LandscapeArtilleryGame.ts",
+      "line": 1,
+      "code": "class LandscapeArtilleryGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "LaserDiscDanceGame.ts",
+      "line": 1,
+      "code": "class LaserDiscDanceGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "LaserGrappleGame.ts",
+      "line": 1,
+      "code": "class LaserGrappleGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "LaserGridReflexGame.ts",
+      "line": 1,
+      "code": "class LaserGridReflexGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "LaserLeapGame.ts",
+      "line": 1,
+      "code": "class LaserLeapGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "LaserSpeedwayGame.ts",
+      "line": 1,
+      "code": "class LaserSpeedwayGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "LaserTripwireGame.ts",
+      "line": 1,
+      "code": "class LaserTripwireGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MagmaHopGame.ts",
+      "line": 1,
+      "code": "class MagmaHopGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MainframeBreachGame.ts",
+      "line": 1,
+      "code": "class MainframeBreachGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MammothStampedeGame.ts",
+      "line": 1,
+      "code": "class MammothStampedeGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MarsRoverGame.ts",
+      "line": 1,
+      "code": "class MarsRoverGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MatrixCodeRainGame.ts",
+      "line": 1,
+      "code": "class MatrixCodeRainGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MazeEscapeGame.ts",
+      "line": 1,
+      "code": "class MazeEscapeGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MemoryMatrixGame.ts",
+      "line": 1,
+      "code": "class MemoryMatrixGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MeteorShieldGame.ts",
+      "line": 1,
+      "code": "class MeteorShieldGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MicroTurboGPGame.ts",
+      "line": 1,
+      "code": "class MicroTurboGPGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MicroWiretapGame.ts",
+      "line": 1,
+      "code": "class MicroWiretapGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MilkBottleKnockdownGame.ts",
+      "line": 1,
+      "code": "class MilkBottleKnockdownGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MinefieldDashGame.ts",
+      "line": 1,
+      "code": "class MinefieldDashGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MinotaurLabyrinthGame.ts",
+      "line": 1,
+      "code": "class MinotaurLabyrinthGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MirrorLaserGame.ts",
+      "line": 1,
+      "code": "class MirrorLaserGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MolePanicGame.ts",
+      "line": 1,
+      "code": "class MolePanicGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MonocycleDerbyGame.ts",
+      "line": 1,
+      "code": "class MonocycleDerbyGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MonorailHijackGame.ts",
+      "line": 1,
+      "code": "class MonorailHijackGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "MoonLanderGame.ts",
+      "line": 1,
+      "code": "class MoonLanderGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "NebulaDriftGame.ts",
+      "line": 1,
+      "code": "class NebulaDriftGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "NeonDriftersGame.ts",
+      "line": 1,
+      "code": "class NeonDriftersGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "NeonLightcyclesGame.ts",
+      "line": 1,
+      "code": "class NeonLightcyclesGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "NeonMetronomeGame.ts",
+      "line": 1,
+      "code": "class NeonMetronomeGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "NeuralSynapseGame.ts",
+      "line": 1,
+      "code": "class NeuralSynapseGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "NitroKartGame.ts",
+      "line": 1,
+      "code": "class NitroKartGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "OctopusInkGame.ts",
+      "line": 1,
+      "code": "class OctopusInkGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "OlympusLightningGame.ts",
+      "line": 1,
+      "code": "class OlympusLightningGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "OrbitalDropPodGame.ts",
+      "line": 1,
+      "code": "class OrbitalDropPodGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "OrbitalSlingshotGame.ts",
+      "line": 1,
+      "code": "class OrbitalSlingshotGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "OrnithopterFlockGame.ts",
+      "line": 1,
+      "code": "class OrnithopterFlockGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "OuijaSpiritBoardGame.ts",
+      "line": 1,
+      "code": "class OuijaSpiritBoardGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PacMazeChompGame.ts",
+      "line": 1,
+      "code": "class PacMazeChompGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PancakeFlipperGame.ts",
+      "line": 1,
+      "code": "class PancakeFlipperGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PearlDiversGame.ts",
+      "line": 1,
+      "code": "class PearlDiversGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PenguinSlideGame.ts",
+      "line": 1,
+      "code": "class PenguinSlideGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PhantomMirrorGazeGame.ts",
+      "line": 1,
+      "code": "class PhantomMirrorGazeGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PharaohTombGame.ts",
+      "line": 1,
+      "code": "class PharaohTombGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PinballBattleGame.ts",
+      "line": 1,
+      "code": "class PinballBattleGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PiranhaRiverHopGame.ts",
+      "line": 1,
+      "code": "class PiranhaRiverHopGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PixelPaintballGame.ts",
+      "line": 1,
+      "code": "class PixelPaintballGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PixelSpaceInvaderGame.ts",
+      "line": 1,
+      "code": "class PixelSpaceInvaderGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PizzaTossGame.ts",
+      "line": 1,
+      "code": "class PizzaTossGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PlanetaryRoverGame.ts",
+      "line": 1,
+      "code": "class PlanetaryRoverGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PneumaticTubeRushGame.ts",
+      "line": 1,
+      "code": "class PneumaticTubeRushGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PolarIceFishingGame.ts",
+      "line": 1,
+      "code": "class PolarIceFishingGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PoltergeistPossessionGame.ts",
+      "line": 1,
+      "code": "class PoltergeistPossessionGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PopcornPopperGame.ts",
+      "line": 1,
+      "code": "class PopcornPopperGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PotionAlchemistGame.ts",
+      "line": 1,
+      "code": "class PotionAlchemistGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PowerPathClashGame.ts",
+      "line": 1,
+      "code": "class PowerPathClashGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PressureGaugeLockGame.ts",
+      "line": 1,
+      "code": "class PressureGaugeLockGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PterodactylGlideGame.ts",
+      "line": 1,
+      "code": "class PterodactylGlideGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "PulsarSignalGame.ts",
+      "line": 1,
+      "code": "class PulsarSignalGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "QuantumTunnelingGame.ts",
+      "line": 1,
+      "code": "class QuantumTunnelingGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "QuickDrawWesternGame.ts",
+      "line": 1,
+      "code": "class QuickDrawWesternGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "QuicksandEscapeGame.ts",
+      "line": 1,
+      "code": "class QuicksandEscapeGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "RapidDrop4Game.ts",
+      "line": 1,
+      "code": "class RapidDrop4Game extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "RaptorPounceDodgeGame.ts",
+      "line": 1,
+      "code": "class RaptorPounceDodgeGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "RattlesnakeReflexGame.ts",
+      "line": 1,
+      "code": "class RattlesnakeReflexGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "RedLightSentryGame.ts",
+      "line": 1,
+      "code": "class RedLightSentryGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "RetroChiptuneGame.ts",
+      "line": 1,
+      "code": "class RetroChiptuneGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "RingTossFrenzyGame.ts",
+      "line": 1,
+      "code": "class RingTossFrenzyGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "RocketSkatesGame.ts",
+      "line": 1,
+      "code": "class RocketSkatesGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "RodeoBullGame.ts",
+      "line": 1,
+      "code": "class RodeoBullGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "RollerCoasterBrakeGame.ts",
+      "line": 1,
+      "code": "class RollerCoasterBrakeGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "RollercoasterThrillGame.ts",
+      "line": 1,
+      "code": "class RollercoasterThrillGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "RooftopZiplineGame.ts",
+      "line": 1,
+      "code": "class RooftopZiplineGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "RoyalFeastGame.ts",
+      "line": 1,
+      "code": "class RoyalFeastGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SafeDialGame.ts",
+      "line": 1,
+      "code": "class SafeDialGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SaloonBrawlerGame.ts",
+      "line": 1,
+      "code": "class SaloonBrawlerGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SatelliteLaserGame.ts",
+      "line": 1,
+      "code": "class SatelliteLaserGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SecurityCameraGame.ts",
+      "line": 1,
+      "code": "class SecurityCameraGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SharkBaitGame.ts",
+      "line": 1,
+      "code": "class SharkBaitGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SheepDogCorralsGame.ts",
+      "line": 1,
+      "code": "class SheepDogCorralsGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SkyGlidersGame.ts",
+      "line": 1,
+      "code": "class SkyGlidersGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SkylineSumoGame.ts",
+      "line": 1,
+      "code": "class SkylineSumoGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SmokeBombEscapeGame.ts",
+      "line": 1,
+      "code": "class SmokeBombEscapeGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SnakeArenaGame.ts",
+      "line": 1,
+      "code": "class SnakeArenaGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SnowballFightGame.ts",
+      "line": 1,
+      "code": "class SnowballFightGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SolarFlareGame.ts",
+      "line": 1,
+      "code": "class SolarFlareGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SolarSailRiderGame.ts",
+      "line": 1,
+      "code": "class SolarSailRiderGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SpaceElevatorGame.ts",
+      "line": 1,
+      "code": "class SpaceElevatorGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SpaceJunkSalvageGame.ts",
+      "line": 1,
+      "code": "class SpaceJunkSalvageGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SpartanShieldGame.ts",
+      "line": 1,
+      "code": "class SpartanShieldGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SpiderWebTangleGame.ts",
+      "line": 1,
+      "code": "class SpiderWebTangleGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SteamBoilerReliefGame.ts",
+      "line": 1,
+      "code": "class SteamBoilerReliefGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "StopAtZeroGame.ts",
+      "line": 1,
+      "code": "class StopAtZeroGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SubmarineTorpedoGame.ts",
+      "line": 1,
+      "code": "class SubmarineTorpedoGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SumoIcebergGame.ts",
+      "line": 1,
+      "code": "class SumoIcebergGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SumoSpheresGame.ts",
+      "line": 1,
+      "code": "class SumoSpheresGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SunkenTreasureGame.ts",
+      "line": 1,
+      "code": "class SunkenTreasureGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SushiExpressGame.ts",
+      "line": 1,
+      "code": "class SushiExpressGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SwordInStoneGame.ts",
+      "line": 1,
+      "code": "class SwordInStoneGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SynthDrumPadGame.ts",
+      "line": 1,
+      "code": "class SynthDrumPadGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SynthKeytarSoloGame.ts",
+      "line": 1,
+      "code": "class SynthKeytarSoloGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SynthwaveHighwayGame.ts",
+      "line": 1,
+      "code": "class SynthwaveHighwayGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "SynthwaveNeonRacerGame.ts",
+      "line": 1,
+      "code": "class SynthwaveNeonRacerGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "TargetSniperGame.ts",
+      "line": 1,
+      "code": "class TargetSniperGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "TeppanyakiCatchGame.ts",
+      "line": 1,
+      "code": "class TeppanyakiCatchGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "TeslaCoilArcGame.ts",
+      "line": 1,
+      "code": "class TeslaCoilArcGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "TestStrengthGame.ts",
+      "line": 1,
+      "code": "class TestStrengthGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "TombstoneCryptSliderGame.ts",
+      "line": 1,
+      "code": "class TombstoneCryptSliderGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "TrafficJamGame.ts",
+      "line": 1,
+      "code": "class TrafficJamGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "TrainHeistGame.ts",
+      "line": 1,
+      "code": "class TrainHeistGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "TrexEggScrambleGame.ts",
+      "line": 1,
+      "code": "class TrexEggScrambleGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "TugOfWarGame.ts",
+      "line": 1,
+      "code": "class TugOfWarGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "TurfWhackGame.ts",
+      "line": 1,
+      "code": "class TurfWhackGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "TurntableScratchGame.ts",
+      "line": 1,
+      "code": "class TurntableScratchGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "VaultSafeGame.ts",
+      "line": 1,
+      "code": "class VaultSafeGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "VectorTankBattleGame.ts",
+      "line": 1,
+      "code": "class VectorTankBattleGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "VikingLongshipGame.ts",
+      "line": 1,
+      "code": "class VikingLongshipGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "VineSwingCanopyGame.ts",
+      "line": 1,
+      "code": "class VineSwingCanopyGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "VocalPitchGame.ts",
+      "line": 1,
+      "code": "class VocalPitchGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "VolcanoLavaLeapGame.ts",
+      "line": 1,
+      "code": "class VolcanoLavaLeapGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "VolleySpikeGame.ts",
+      "line": 1,
+      "code": "class VolleySpikeGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "WalrusBaskGame.ts",
+      "line": 1,
+      "code": "class WalrusBaskGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "WarpGateJumpGame.ts",
+      "line": 1,
+      "code": "class WarpGateJumpGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "WaterBalloonBarrageGame.ts",
+      "line": 1,
+      "code": "class WaterBalloonBarrageGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "WaterScooterGame.ts",
+      "line": 1,
+      "code": "class WaterScooterGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "WesternPokerGame.ts",
+      "line": 1,
+      "code": "class WesternPokerGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "WhackAThiefGame.ts",
+      "line": 1,
+      "code": "class WhackAThiefGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "WokStirFryGame.ts",
+      "line": 1,
+      "code": "class WokStirFryGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "WormholeLeapGame.ts",
+      "line": 1,
+      "code": "class WormholeLeapGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "ZeppelinDogfightGame.ts",
+      "line": 1,
+      "code": "class ZeppelinDogfightGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    },
+    {
+      "file": "ZeroGTetherGame.ts",
+      "line": 1,
+      "code": "class ZeroGTetherGame extends BaseGame",
+      "description": "Class does not override `public destroy(): void`. When switching games in the lobby, active entities, listeners, or timers created by this game remain uncollected."
+    }
+  ],
+  "unbounded_arrays": [
+    {
+      "file": "PinballBattleGame.ts",
+      "line": 1,
+      "code": "private balls: ...[] = []",
+      "arr": "balls",
+      "description": "Array `balls` is continuously appended via `.push()` but has no `.splice()`, `.filter()`, `.shift()`, or length cap. In long rounds, this array grows indefinitely, degrading frame rate."
+    }
+  ],
+  "listener_leaks": [],
+  "core_engine_bugs": [
+    {
+      "file": "src/core/InputRouter.ts",
+      "line": 438,
+      "code": "this.touchSteer[pid] = (dx / dist) * norm;",
+      "description": "Potential division by zero in core engine subsystem."
+    },
+    {
+      "file": "src/core/InputRouter.ts",
+      "line": 439,
+      "code": "this.touchThrottle[pid] = (-dy / dist) * norm; // upwards drag is forward throttle",
+      "description": "Potential division by zero in core engine subsystem."
+    }
+  ]
+}

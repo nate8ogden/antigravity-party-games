@@ -194,6 +194,9 @@ export class PinballBattleGame extends BaseGame {
   }
 
   private spawnBall(x: number, y: number): void {
+    if (this.balls.length >= 10) {
+      this.balls.shift();
+    }
     const angle = (Math.random() - 0.5) * Math.PI * 0.8 + (Math.random() > 0.5 ? 0 : Math.PI);
     const speed = 320;
     this.balls.push({
