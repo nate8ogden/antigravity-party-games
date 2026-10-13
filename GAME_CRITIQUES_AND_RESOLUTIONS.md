@@ -2069,11 +2069,21 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Pancake Flipper'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *'Pancake Flipper'* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Core Gameplay & Objective Overhaul:** Redesigned *'Pancake Flipper'* from a static single-button wait timer into an exhilarating high-flying breakfast kitchen scramble! Chefs move laterally along the kitchen counter, managing sizzling pans (raw batter -> golden sweet spot -> overcooked crisp -> burnt ash). Golden flips launch pancakes high into the air (+20 pts). Stacking pancakes builds combo multipliers, while Golden Souffle Pancakes (+50 pts) trigger frantic positioning scrambles.
+2. **Controls & Hold-to-Charge Loft Flips:** Steer moves the chef and skillet laterally along the griddle. Holding action loads spatula spring tension; releasing triggers a high-trajectory loft flip into the air (airtime 1.2s). Prematurely flipping raw batter splatters uselessly (-5 pts), while waiting too long scorches the pancake into charred ash.
+3. **Multiplayer Chaos & Mid-Air Pancake Heists:**
+   - **Pancake Heists:** When another player lofts a golden pancake into the air, ANY chef can scurry under it and catch it on their pan to execute a **🥞 PANCAKE HEIST!** (+40 pts Sabotage, 45ms hit-stop, and confetti).
+   - **Chef Counter Shunts:** Bumping into a rival chef on the line shoves them away with an elastic buttery bounce (+25 pts Chef Shunt), knocking them off balance right as a pancake lands.
+   - **Charred Ash Splats:** Catching a burnt pancake from an opponent stuns the chef and ruins the pan (-10 pts).
+4. **3 Procedural Visual Themes with Theme Pill:**
+   - **Retro Breakfast Diner 🥞:** Cozy 50s diner counter, warm maple syrup glow, chrome countertop trim, and butter pats.
+   - **Cyber Molecular Kitchen ⚡:** High-tech cooking pods with turquoise induction griddles and blue plasma sizzles.
+   - **Royal French Patisserie 👑:** Burgundy velvet bakery, golden spatulas, and powdered sugar dust.
+   - Swappable dynamically via the bottom-left Theme Pill (`x: 20, y: height - 44, w: 170, h: 32`) or pressing keyboard shortcut `[T]` / keys `[1-3]`.
+5. **Underdog Golden Spatula & Sudden Death:** Trailing chefs ($\ge 40$ points behind) activate **Underdog Golden Spatula**: equips an oversized spatula with a maple syrup attractor that vacuums falling pancakes from +40% wider radius, +30% movement speed, and immunity to burnt splats. In Sudden Death ($\le 15$s remaining), pancake stack points double and Golden Souffle pancakes rain down constantly.
+6. **Mascots & Safe UI Layout:** Chefs rendered via `CharacterRenderer.drawCharacter` with white chef hats, cast iron skillets with sizzling batter, growing side stacks of pancakes with melting butter, and reactive moods (`idle`, `focused`, `shocked` when pancakes stolen, `triumph` on heists/stacks). Corner player cards safely offset to `y: height - 128` (130x52px). Preserved top-center global timer safe zone (`y: 12-44`) with minigame header badge at `y: 56`. Calibrated bot AI (Easy: 380-450ms lag, 22% blunder; Normal: 220-250ms, competitive catching; Hard: 90-130ms, airborne pancake tracking and aggressive heists).
+7. **Verification:** Built with 0 TypeScript errors via `npm run build` and verified in single-file artifact `Antigravity_Games.html`.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #88. Sushi Express (ID: `sushi_express`) — [Reflex]
 - **Class Implementation:** `src/games/SushiExpressGame.ts` (413 lines)
