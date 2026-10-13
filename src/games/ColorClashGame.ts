@@ -3,6 +3,51 @@ import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
+import { drawCharacter, CharacterMood } from '../core/CharacterRenderer';
+
+export interface ColorClashTheme {
+  name: string;
+  bgGradStart: string;
+  bgGradEnd: string;
+  gridFloor: string;
+  tileBorder: string;
+  neutralTile: string;
+  tileGlow: string;
+  accentPill: string;
+}
+
+export const COLOR_CLASH_THEMES: ColorClashTheme[] = [
+  {
+    name: 'Neon Arcade Grid ⚡',
+    bgGradStart: '#0B0F19',
+    bgGradEnd: '#020617',
+    gridFloor: '#0F172A',
+    tileBorder: '#1E293B',
+    neutralTile: '#1E293B',
+    tileGlow: '#38BDF8',
+    accentPill: '#38BDF8'
+  },
+  {
+    name: 'Toy Room Splat 🎨',
+    bgGradStart: '#2A1810',
+    bgGradEnd: '#180D07',
+    gridFloor: '#3B2314',
+    tileBorder: '#54321D',
+    neutralTile: '#452B1B',
+    tileGlow: '#F59E0B',
+    accentPill: '#F59E0B'
+  },
+  {
+    name: 'Cyber Foundry 🏭',
+    bgGradStart: '#131722',
+    bgGradEnd: '#0A0C14',
+    gridFloor: '#1C2333',
+    tileBorder: '#303B52',
+    neutralTile: '#242D40',
+    tileGlow: '#10B981',
+    accentPill: '#10B981'
+  }
+];
 
 interface PaintRover {
   id: PlayerId;
@@ -14,6 +59,9 @@ interface PaintRover {
   speed: number;
   tileCount: number;
   turboTimer: number;
+  paintStreak: number;
+  isUnderdog: boolean;
+  bumpStunTimer: number;
 }
 
 interface PaintTile {
@@ -32,6 +80,7 @@ interface PaintBomb {
   respawnTimer: number;
   nextX?: number;
   nextY?: number;
+  isSuperBomb?: boolean;
 }
 
 export class ColorClashGame extends BaseGame {
@@ -42,9 +91,16 @@ export class ColorClashGame extends BaseGame {
   private tileW: number = 50;
   private tileH: number = 50;
   private gridOriginX: number = 50;
-  private gridOriginY: number = 60;
+  private gridOriginY: number = 70;
   private paintBombs: PaintBomb[] = [];
   private totalTiles: number = 126;
+
+  // Theme & Polish properties
+  private currentThemeIndex: number = 0;
+  private animTimer: number = 0;
+  private suddenDeathAnnounced: boolean = false;
+  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
+  private pointerdownListener: ((e: PointerEvent) => void) | null = null;
 
   constructor(
     players: PlayerConfig[],
@@ -56,21 +112,77 @@ export class ColorClashGame extends BaseGame {
   }
 
   public init(width: number, height: number): void {
+    this.setupListeners();
     this.reset(width, height);
+  }
+
+  public destroy(): void {
+    this.removeListeners();
+    super.destroy();
+    if (typeof window !== 'undefined' && (window as unknown as { __COLOR_CLASH_DEBUG__?: unknown }).__COLOR_CLASH_DEBUG__) {
+      delete (window as unknown as { __COLOR_CLASH_DEBUG__?: unknown }).__COLOR_CLASH_DEBUG__;
+    }
+  }
+
+  private setupListeners(): void {
+    if (typeof window === 'undefined') return;
+    this.removeListeners();
+
+    this.keydownListener = (e: KeyboardEvent) => {
+      if (this.isFinished) return;
+      if (e.code === 'KeyT') {
+        this.currentThemeIndex = (this.currentThemeIndex + 1) % COLOR_CLASH_THEMES.length;
+        this.audio.playTap();
+      }
+    };
+    window.addEventListener('keydown', this.keydownListener);
+
+    this.pointerdownListener = (e: PointerEvent) => {
+      if (this.isFinished) return;
+      const canvas = document.querySelector('canvas');
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const clickY = (e.clientY - rect.top) * scaleY;
+
+      // Theme pill at x: 20, y: canvas.height - 44, w: 170, h: 32
+      if (clickX >= 20 && clickX <= 190 && clickY >= canvas.height - 44 && clickY <= canvas.height - 12) {
+        this.currentThemeIndex = (this.currentThemeIndex + 1) % COLOR_CLASH_THEMES.length;
+        this.audio.playTap();
+      }
+    };
+    window.addEventListener('pointerdown', this.pointerdownListener);
+  }
+
+  private removeListeners(): void {
+    if (typeof window === 'undefined') return;
+    if (this.keydownListener) {
+      window.removeEventListener('keydown', this.keydownListener);
+      this.keydownListener = null;
+    }
+    if (this.pointerdownListener) {
+      window.removeEventListener('pointerdown', this.pointerdownListener);
+      this.pointerdownListener = null;
+    }
   }
 
   public reset(width: number = 800, height: number = 600): void {
     this.roundTimer = 35;
     this.isFinished = false;
+    this.suddenDeathAnnounced = false;
     this.rovers.clear();
     this.tiles = [];
     this.paintBombs = [];
+    this.animTimer = 0;
 
-    // Calculate grid dimensions centered
+    // Centered grid dimensions safe from HUD
     const marginX = 50;
-    const marginY = 65;
+    const marginTop = 84; // Avoid y: 12-44 timer & y: 56 badge
+    const marginBottom = 54; // Avoid bottom theme pill & controls
     const availableW = width - marginX * 2;
-    const availableH = height - marginY * 2;
+    const availableH = height - marginTop - marginBottom;
 
     this.cols = 14;
     this.rows = 9;
@@ -78,7 +190,7 @@ export class ColorClashGame extends BaseGame {
     this.tileW = availableW / this.cols;
     this.tileH = availableH / this.rows;
     this.gridOriginX = marginX;
-    this.gridOriginY = marginY;
+    this.gridOriginY = marginTop;
 
     // Initialize blank neutral grid
     for (let r = 0; r < this.rows; r++) {
@@ -117,16 +229,19 @@ export class ColorClashGame extends BaseGame {
         vx: 0,
         vy: 0,
         angle: sp.angle,
-        speed: 195,
+        speed: 205,
         tileCount: 0,
-        turboTimer: 0
+        turboTimer: 0,
+        paintStreak: 0,
+        isUnderdog: false,
+        bumpStunTimer: 0
       });
 
       // Paint starting tile
       this.paintTile(sp.col, sp.row, p.id);
     });
 
-    // Spawn 2 paint bomb canisters at distinct, randomized arena locations
+    // Spawn 2 initial paint bomb canisters
     this.paintBombs = [];
     const b1Pos = this.getRandomBombPosition();
     this.paintBombs.push({
@@ -151,14 +266,19 @@ export class ColorClashGame extends BaseGame {
         active: b.active,
         respawnTimer: b.respawnTimer,
         nextX: b.nextX,
-        nextY: b.nextY
+        nextY: b.nextY,
+        isSuperBomb: b.isSuperBomb
       })),
       getRovers: () => Array.from(this.rovers.values()).map((r) => ({
         id: r.id,
         x: r.x,
         y: r.y,
+        vx: r.vx,
+        vy: r.vy,
         turboTimer: r.turboTimer,
-        tileCount: r.tileCount
+        tileCount: r.tileCount,
+        isUnderdog: r.isUnderdog,
+        paintStreak: r.paintStreak
       })),
       triggerPickup: (bombIndex: number, roverId: PlayerId) => {
         const b = this.paintBombs[bombIndex];
@@ -173,7 +293,11 @@ export class ColorClashGame extends BaseGame {
           this.paintBombs[bombIndex].respawnTimer = timer;
         }
       },
-      getRandomBombPosition: (excludeIndex?: number) => this.getRandomBombPosition(excludeIndex)
+      getRandomBombPosition: (excludeIndex?: number) => this.getRandomBombPosition(excludeIndex),
+      getTheme: () => COLOR_CLASH_THEMES[this.currentThemeIndex].name,
+      setTheme: (idx: number) => {
+        this.currentThemeIndex = Math.max(0, Math.min(idx, COLOR_CLASH_THEMES.length - 1));
+      }
     };
   }
 
@@ -181,6 +305,17 @@ export class ColorClashGame extends BaseGame {
     if (this.isFinished) return;
 
     this.roundTimer = Math.max(0, this.roundTimer - dt);
+    this.animTimer += dt;
+    const isSuddenDeath = this.roundTimer <= 15;
+
+    // Sudden death announcement
+    if (isSuddenDeath && !this.suddenDeathAnnounced) {
+      this.suddenDeathAnnounced = true;
+      this.audio.playExplosion();
+      this.particles.addTrauma(0.4);
+      this.particles.showFloatingText('🎨 SUDDEN DEATH: SUPER BOMB STORM! 🎨', width / 2, height / 2 - 40, '#FACC15', 28);
+    }
+
     this.updateBots(dt, width, height);
 
     // Update tile splash animations
@@ -193,13 +328,14 @@ export class ColorClashGame extends BaseGame {
       }
     }
 
-    // Update paint bombs
+    // Dynamic sudden death bomb spawn accelerator
     for (let i = 0; i < this.paintBombs.length; i++) {
       const b = this.paintBombs[i];
       if (!b.active) {
         b.respawnTimer -= dt;
         if (b.respawnTimer <= 0) {
           b.active = true;
+          b.isSuperBomb = isSuddenDeath;
           if (b.nextX !== undefined && b.nextY !== undefined) {
             b.x = b.nextX;
             b.y = b.nextY;
@@ -210,37 +346,65 @@ export class ColorClashGame extends BaseGame {
           }
           b.nextX = undefined;
           b.nextY = undefined;
-          this.particles.spawnSparks(b.x, b.y, '#F59E0B', 16);
-          this.particles.showFloatingText('BOMB LANDED! 💣', b.x, b.y - 20, '#F59E0B', 18);
+          this.particles.spawnSparks(b.x, b.y, b.isSuperBomb ? '#EF4444' : '#F59E0B', 18);
+          this.particles.showFloatingText(
+            b.isSuperBomb ? 'SUPER BOMB! 💥' : 'BOMB LANDED! 💣',
+            b.x,
+            b.y - 20,
+            b.isSuperBomb ? '#EF4444' : '#F59E0B',
+            18
+          );
           this.audio.playTap();
         }
       }
     }
 
+    // Calculate Leader and Underdog status
+    let maxTiles = 0;
+    let minTiles = Infinity;
+    for (const r of this.rovers.values()) {
+      if (r.tileCount > maxTiles) maxTiles = r.tileCount;
+      if (r.tileCount < minTiles) minTiles = r.tileCount;
+    }
+
+    for (const r of this.rovers.values()) {
+      const deficit = maxTiles - r.tileCount;
+      r.isUnderdog = deficit >= 14 && maxTiles >= 20;
+    }
+
     // Process Player Rovers
-    for (const rover of this.rovers.values()) {
+    const roversList = Array.from(this.rovers.values());
+
+    for (const rover of roversList) {
       if (rover.turboTimer > 0) {
         rover.turboTimer -= dt;
+      }
+      if (rover.bumpStunTimer > 0) {
+        rover.bumpStunTimer -= dt;
       }
 
       const steer = this.input.getSteer(rover.id);
       const throttle = this.input.getThrottle(rover.id);
       const isPressed = this.input.isActionPressed(rover.id) || (this.input.isPressed(rover.id) && steer === 0 && throttle === 0);
 
-      const curSpeed = rover.turboTimer > 0 ? rover.speed * 1.5 : rover.speed;
+      // Base speed with Underdog & Turbo modifiers
+      let curSpeed = rover.speed;
+      if (rover.isUnderdog) curSpeed *= 1.20;
+      if (rover.turboTimer > 0) curSpeed *= 1.45;
+      if (rover.bumpStunTimer > 0) curSpeed *= 0.35;
+
       const inputY = -throttle;
 
       if (steer !== 0 || throttle !== 0) {
         // Direct directional steering with WASD / Arrow keys
         const targetAngle = Math.atan2(inputY, steer);
-        // Smooth turn towards target direction
         rover.angle = targetAngle;
-        rover.vx += (Math.cos(rover.angle) * curSpeed - rover.vx) * dt * 9;
-        rover.vy += (Math.sin(rover.angle) * curSpeed - rover.vy) * dt * 9;
+        rover.vx += (Math.cos(rover.angle) * curSpeed - rover.vx) * dt * 10;
+        rover.vy += (Math.sin(rover.angle) * curSpeed - rover.vy) * dt * 10;
       } else if (isPressed) {
         // 1-button auto drive forward
-        rover.vx += (Math.cos(rover.angle) * curSpeed - rover.vx) * dt * 8;
-        rover.vy += (Math.sin(rover.angle) * curSpeed - rover.vy) * dt * 8;
+        rover.vx += (Math.cos(rover.angle) * curSpeed - rover.vx) * dt * 8.5;
+        rover.vy += (Math.sin(rover.angle) * curSpeed - rover.vy) * dt * 8.5;
       } else {
         // Idle clockwise slow turn so 1-button players can re-orient
         rover.angle += dt * 3.2;
@@ -260,34 +424,63 @@ export class ColorClashGame extends BaseGame {
       rover.x = Math.max(minX, Math.min(maxX, rover.x));
       rover.y = Math.max(minY, Math.min(maxY, rover.y));
 
-      // Paint current occupied tile
+      // Paint occupied tile(s)
       const col = Math.floor((rover.x - this.gridOriginX) / this.tileW);
       const row = Math.floor((rover.y - this.gridOriginY) / this.tileH);
+
       if (col >= 0 && col < this.cols && row >= 0 && row < this.rows) {
-        this.paintTile(col, row, rover.id);
+        const painted = this.paintTile(col, row, rover.id);
+        if (painted) {
+          rover.paintStreak++;
+        }
+
+        // Underdog Mega Roller paints adjacent tiles too
+        if (rover.isUnderdog) {
+          const offsets = [
+            { dc: 1, dr: 0 },
+            { dc: -1, dr: 0 },
+            { dc: 0, dr: 1 },
+            { dc: 0, dr: -1 }
+          ];
+          for (const off of offsets) {
+            const nc = col + off.dc;
+            const nr = row + off.dr;
+            if (nc >= 0 && nc < this.cols && nr >= 0 && nr < this.rows) {
+              this.paintTile(nc, nr, rover.id);
+            }
+          }
+        }
       }
 
       // Check Paint Bomb pickup
       for (let i = 0; i < this.paintBombs.length; i++) {
         const b = this.paintBombs[i];
-        if (b.active && Math.hypot(rover.x - b.x, rover.y - b.y) < 26) {
+        if (b.active && Math.hypot(rover.x - b.x, rover.y - b.y) < 28) {
           b.active = false;
-          b.respawnTimer = 4.5 + Math.random() * 2.0;
+          b.respawnTimer = isSuddenDeath ? 3.0 : 4.5 + Math.random() * 2.0;
           const nextPos = this.getRandomBombPosition(i);
           b.nextX = nextPos.x;
           b.nextY = nextPos.y;
           rover.turboTimer = 3.5;
           const pColor = this.getPlayer(rover.id)?.color || '#38BDF8';
           this.audio.playExplosion();
-          this.particles.addTrauma(0.25);
-          this.particles.spawnExplosion(b.x, b.y, pColor, 35);
-          this.particles.showFloatingText('PAINT BURST! 💣', b.x, b.y - 20, pColor, 24);
+          this.particles.addTrauma(b.isSuperBomb ? 0.38 : 0.25);
+          this.particles.spawnExplosion(b.x, b.y, pColor, b.isSuperBomb ? 55 : 35);
+          this.particles.showFloatingText(
+            b.isSuperBomb ? 'SUPER PAINT BURST! 💥' : 'PAINT BURST! 💣',
+            b.x,
+            b.y - 22,
+            pColor,
+            b.isSuperBomb ? 26 : 22
+          );
 
-          // Explode 3x3 tiles surrounding the bomb into this player's color
+          // Explode 3x3 (or 5x5 if super bomb) tiles surrounding the bomb
+          const radius = b.isSuperBomb ? 2 : 1;
           const bombCol = Math.floor((b.x - this.gridOriginX) / this.tileW);
           const bombRow = Math.floor((b.y - this.gridOriginY) / this.tileH);
-          for (let dr = -1; dr <= 1; dr++) {
-            for (let dc = -1; dc <= 1; dc++) {
+
+          for (let dr = -radius; dr <= radius; dr++) {
+            for (let dc = -radius; dc <= radius; dc++) {
               const tc = bombCol + dc;
               const tr = bombRow + dr;
               if (tc >= 0 && tc < this.cols && tr >= 0 && tr < this.rows) {
@@ -300,8 +493,47 @@ export class ColorClashGame extends BaseGame {
 
       // Paint trail particles
       const roverColor = this.getPlayer(rover.id)?.color || '#38BDF8';
-      if (Math.random() < 0.3 && Math.hypot(rover.vx, rover.vy) > 40) {
-        this.particles.spawnSparks(rover.x, rover.y, roverColor, 1);
+      if (Math.random() < 0.35 && Math.hypot(rover.vx, rover.vy) > 35) {
+        this.particles.spawnSparks(rover.x, rover.y, roverColor, 2);
+      }
+    }
+
+    // Rover-to-Rover Elastic Bumper Car Collisions
+    for (let i = 0; i < roversList.length; i++) {
+      for (let j = i + 1; j < roversList.length; j++) {
+        const r1 = roversList[i];
+        const r2 = roversList[j];
+        const dx = r2.x - r1.x;
+        const dy = r2.y - r1.y;
+        const dist = Math.hypot(dx, dy);
+        const minDist = 30; // 2x rover collision radius
+
+        if (dist < minDist && dist > 0.001) {
+          // Normal vector
+          const nx = dx / dist;
+          const ny = dy / dist;
+
+          // Separation displacement
+          const overlap = minDist - dist;
+          r1.x -= nx * overlap * 0.5;
+          r1.y -= ny * overlap * 0.5;
+          r2.x += nx * overlap * 0.5;
+          r2.y += ny * overlap * 0.5;
+
+          // Elastic bounce impulse
+          const separationSpeed = 280;
+          r1.vx = -nx * separationSpeed;
+          r1.vy = -ny * separationSpeed;
+          r2.vx = nx * separationSpeed;
+          r2.vy = ny * separationSpeed;
+
+          r1.bumpStunTimer = 0.22;
+          r2.bumpStunTimer = 0.22;
+
+          this.audio.playBounce();
+          this.particles.addTrauma(0.18);
+          this.particles.spawnSparks((r1.x + r2.x) / 2, (r1.y + r2.y) / 2, '#FFFFFF', 10);
+        }
       }
     }
 
@@ -335,7 +567,6 @@ export class ColorClashGame extends BaseGame {
     };
     let bestScore = -Infinity;
 
-    // Available tile column and row bounds (avoid outer-most borders for better gameplay)
     const minCol = 1;
     const maxCol = this.cols - 2;
     const minRow = 1;
@@ -347,7 +578,6 @@ export class ColorClashGame extends BaseGame {
       const candX = this.gridOriginX + (col + 0.5) * this.tileW;
       const candY = this.gridOriginY + (row + 0.5) * this.tileH;
 
-      // Distance to other paint bombs (active or scheduled landing target)
       let minOtherBombDist = Infinity;
       for (let i = 0; i < this.paintBombs.length; i++) {
         if (excludeIndex !== undefined && i === excludeIndex) continue;
@@ -358,14 +588,12 @@ export class ColorClashGame extends BaseGame {
         if (d < minOtherBombDist) minOtherBombDist = d;
       }
 
-      // Distance to all rovers
       let minRoverDist = Infinity;
       for (const rov of this.rovers.values()) {
         const d = Math.hypot(candX - rov.x, candY - rov.y);
         if (d < minRoverDist) minRoverDist = d;
       }
 
-      // Ideal requirements: at least 3.2 tiles away from other bomb, at least 75px from any rover
       const bombSeparationOk = minOtherBombDist >= this.tileW * 3.2;
       const roverClearanceOk = minRoverDist >= 75;
 
@@ -373,7 +601,6 @@ export class ColorClashGame extends BaseGame {
         return { x: candX, y: candY };
       }
 
-      // Weighted score prioritizing separation
       const score = Math.min(minOtherBombDist, 250) + Math.min(minRoverDist, 180);
       if (score > bestScore) {
         bestScore = score;
@@ -384,17 +611,19 @@ export class ColorClashGame extends BaseGame {
     return bestCandidate;
   }
 
-  private paintTile(col: number, row: number, pid: PlayerId): void {
+  private paintTile(col: number, row: number, pid: PlayerId): boolean {
     const t = this.tiles[row][col];
     if (t.ownerId !== pid) {
       t.ownerId = pid;
       t.splashAnim = 1.0;
       this.audio.playTap();
+      return true;
     }
+    return false;
   }
 
   protected updateBotAI(
-    dt: number,
+    _dt: number,
     botId: PlayerId,
     difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
     width: number,
@@ -403,7 +632,7 @@ export class ColorClashGame extends BaseGame {
     const rover = this.rovers.get(botId);
     if (!rover) return;
 
-    // 1. Look for active Paint Bombs first (or incoming reticles)
+    // 1. Look for active Paint Bombs first
     let targetX = width / 2;
     let targetY = height / 2;
     let foundBomb = false;
@@ -428,7 +657,6 @@ export class ColorClashGame extends BaseGame {
       const myCol = Math.floor((rover.x - this.gridOriginX) / this.tileW);
       const myRow = Math.floor((rover.y - this.gridOriginY) / this.tileH);
 
-      // Search radiating outwards
       const radius = difficulty === 'bot_hard' ? 5 : difficulty === 'bot_normal' ? 3 : 2;
       for (let dr = -radius; dr <= radius; dr++) {
         for (let dc = -radius; dc <= radius; dc++) {
@@ -456,14 +684,16 @@ export class ColorClashGame extends BaseGame {
     let steerX = dx / mag;
     let steerY = dy / mag;
 
-    // Inaccuracy / blunder for easy bots
+    // Human perception inaccuracy for easy bots
     if (difficulty === 'bot_easy') {
-      steerX += (Math.random() - 0.5) * 0.8;
-      steerY += (Math.random() - 0.5) * 0.8;
+      steerX += (Math.random() - 0.5) * 0.75;
+      steerY += (Math.random() - 0.5) * 0.75;
+    } else if (difficulty === 'bot_normal') {
+      steerX += (Math.random() - 0.5) * 0.25;
+      steerY += (Math.random() - 0.5) * 0.25;
     }
 
     const finalMag = Math.hypot(steerX, steerY) || 1;
-    // Pass -steerY because throttle > 0 is Up (-Y)
     this.input.setBotInput(botId, true, steerX / finalMag, -steerY / finalMag, false);
   }
 
@@ -483,15 +713,22 @@ export class ColorClashGame extends BaseGame {
         score: r.tileCount,
         place: idx + 1
       })),
-      mvpHighlight: winnerId !== null ? `${winnerName} PAINTED THE ARENA (${sorted[0].tileCount} TILES)!` : 'DRAW! ARENA UNCLAIMED!'
+      mvpHighlight: winnerId !== null
+        ? `${winnerName} DOMINATED THE TURF WITH ${sorted[0].tileCount} TILES (${Math.round((sorted[0].tileCount / this.totalTiles) * 100)}%)!`
+        : 'ARENA UNCLAIMED! STALEMATE!'
     };
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
     ctx.save();
+    const theme = COLOR_CLASH_THEMES[this.currentThemeIndex];
+    const isSuddenDeath = this.roundTimer <= 15;
 
-    // 1. Sleek Dark Canvas Floor
-    ctx.fillStyle = '#0B0F19';
+    // 1. Theme Canvas Floor
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, theme.bgGradStart);
+    bgGrad.addColorStop(1, theme.bgGradEnd);
+    ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
     // 2. Render Paint Tiles Grid
@@ -507,17 +744,28 @@ export class ColorClashGame extends BaseGame {
           const pColor = this.getPlayer(t.ownerId)?.color || '#38BDF8';
           ctx.save();
           ctx.fillStyle = pColor;
-          ctx.globalAlpha = 0.85 + t.splashAnim * 0.15;
-          ctx.fillRect(tx, ty, tw, th);
+          ctx.globalAlpha = 0.88 + t.splashAnim * 0.12;
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(tx, ty, tw, th, 4);
+          else ctx.rect(tx, ty, tw, th);
+          ctx.fill();
 
-          // Tile beveled gloss
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+          // Beveled gloss shine
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.20)';
           ctx.fillRect(tx, ty, tw, 4);
           ctx.restore();
         } else {
-          // Neutral unpainted dark grid tile
-          ctx.fillStyle = '#1E293B';
-          ctx.fillRect(tx, ty, tw, th);
+          // Neutral unpainted tile
+          ctx.save();
+          ctx.fillStyle = theme.neutralTile;
+          ctx.strokeStyle = theme.tileBorder;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(tx, ty, tw, th, 4);
+          else ctx.rect(tx, ty, tw, th);
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
         }
       }
     }
@@ -526,22 +774,23 @@ export class ColorClashGame extends BaseGame {
     for (const b of this.paintBombs) {
       if (!b.active) {
         if (b.respawnTimer <= 1.2 && b.nextX !== undefined && b.nextY !== undefined) {
-          // Render incoming bomb drop reticle
           ctx.save();
           const p = 1.0 - (b.respawnTimer / 1.2);
-          const ringRadius = 13 + (1 - p) * 22;
-          ctx.strokeStyle = `rgba(245, 158, 11, ${0.4 + p * 0.6})`;
-          ctx.lineWidth = 2;
+          const ringRadius = 14 + (1 - p) * 24;
+          ctx.strokeStyle = b.isSuperBomb
+            ? `rgba(239, 68, 68, ${0.4 + p * 0.6})`
+            : `rgba(245, 158, 11, ${0.4 + p * 0.6})`;
+          ctx.lineWidth = 2.5;
           ctx.setLineDash([4, 4]);
           ctx.beginPath();
           ctx.arc(b.nextX, b.nextY, ringRadius, 0, Math.PI * 2);
           ctx.stroke();
 
-          // Reticle crosshair
-          ctx.strokeStyle = '#FACC15';
+          // Crosshairs
+          ctx.strokeStyle = b.isSuperBomb ? '#EF4444' : '#FACC15';
           ctx.lineWidth = 1.5;
           ctx.setLineDash([]);
-          const crossSize = 6;
+          const crossSize = 7;
           ctx.beginPath();
           ctx.moveTo(b.nextX - crossSize, b.nextY);
           ctx.lineTo(b.nextX + crossSize, b.nextY);
@@ -549,7 +798,6 @@ export class ColorClashGame extends BaseGame {
           ctx.lineTo(b.nextX + crossSize, b.nextY);
           ctx.stroke();
 
-          // Small shadow beneath landing zone
           ctx.fillStyle = `rgba(0, 0, 0, ${0.2 + p * 0.3})`;
           ctx.beginPath();
           ctx.ellipse(b.nextX, b.nextY + 12, 10 * p, 5 * p, 0, 0, Math.PI * 2);
@@ -560,20 +808,26 @@ export class ColorClashGame extends BaseGame {
       }
 
       ctx.save();
-      ctx.shadowColor = '#F59E0B';
-      ctx.shadowBlur = 15;
+      ctx.shadowColor = b.isSuperBomb ? '#EF4444' : '#F59E0B';
+      ctx.shadowBlur = b.isSuperBomb ? 22 : 15;
 
-      // Golden Bomb Sphere
-      const bombGrad = ctx.createRadialGradient(b.x, b.y, 2, b.x, b.y, 14);
-      bombGrad.addColorStop(0, '#FEF08A');
-      bombGrad.addColorStop(0.6, '#F59E0B');
-      bombGrad.addColorStop(1, '#B45309');
+      // Bomb Sphere
+      const bombGrad = ctx.createRadialGradient(b.x, b.y, 2, b.x, b.y, 15);
+      if (b.isSuperBomb) {
+        bombGrad.addColorStop(0, '#FCA5A5');
+        bombGrad.addColorStop(0.5, '#EF4444');
+        bombGrad.addColorStop(1, '#991B1B');
+      } else {
+        bombGrad.addColorStop(0, '#FEF08A');
+        bombGrad.addColorStop(0.6, '#F59E0B');
+        bombGrad.addColorStop(1, '#B45309');
+      }
       ctx.fillStyle = bombGrad;
       ctx.beginPath();
-      ctx.arc(b.x, b.y, 13, 0, Math.PI * 2);
+      ctx.arc(b.x, b.y, b.isSuperBomb ? 16 : 13, 0, Math.PI * 2);
       ctx.fill();
 
-      // Bomb fuse & spark
+      // Spark Fuse
       ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -587,71 +841,132 @@ export class ColorClashGame extends BaseGame {
       ctx.restore();
     }
 
-    // 4. Render Paint Rovers
+    // 4. Render Paint Rovers with Mascot Drivers
     for (const rover of this.rovers.values()) {
       const pColor = this.getPlayer(rover.id)?.color || '#38BDF8';
+      const isBot = this.getPlayer(rover.id)?.type.startsWith('bot_') ?? false;
 
       ctx.save();
       ctx.translate(rover.x, rover.y);
       ctx.rotate(rover.angle);
 
       // Rover Shadow
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
       ctx.beginPath();
-      ctx.ellipse(2, 3, 16, 12, 0, 0, Math.PI * 2);
+      ctx.ellipse(2, 3, 18, 14, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Rover Body
+      // Underdog Golden Surge Aura
+      if (rover.isUnderdog) {
+        ctx.strokeStyle = '#F59E0B';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 24, 18, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Rover Chassis
       ctx.shadowColor = rover.turboTimer > 0 ? '#FACC15' : pColor;
-      ctx.shadowBlur = rover.turboTimer > 0 ? 16 : 8;
+      ctx.shadowBlur = rover.turboTimer > 0 ? 18 : 8;
       ctx.fillStyle = pColor;
       ctx.beginPath();
-      ctx.roundRect(-14, -10, 28, 20, 5);
+      if (ctx.roundRect) ctx.roundRect(-15, -11, 30, 22, 5);
+      else ctx.rect(-15, -11, 30, 22);
       ctx.fill();
 
       // Front Paint Roller Barrel
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
-      ctx.roundRect(10, -11, 7, 22, 3);
+      const rollerWidth = rover.isUnderdog ? 32 : 24;
+      if (ctx.roundRect) ctx.roundRect(11, -rollerWidth / 2, 8, rollerWidth, 3);
+      else ctx.rect(11, -rollerWidth / 2, 8, rollerWidth);
       ctx.fill();
 
-      // Rear Wheels
+      // Rear Heavy Wheels
       ctx.fillStyle = '#0F172A';
-      ctx.fillRect(-12, -13, 6, 4);
-      ctx.fillRect(-12, 9, 6, 4);
+      ctx.fillRect(-13, -15, 7, 4);
+      ctx.fillRect(-13, 11, 7, 4);
 
       ctx.restore();
 
+      // Determine Driver Mood
+      let mood: CharacterMood = 'focused';
+      if (rover.bumpStunTimer > 0) {
+        mood = 'shocked';
+      } else if (rover.turboTimer > 0 || rover.paintStreak >= 5) {
+        mood = 'happy';
+      } else if (this.isFinished) {
+        mood = 'triumph';
+      }
+
+      // Render Character Mascot Driver on Top of Rover
+      drawCharacter(ctx, rover.x, rover.y - 4, 13, rover.id, isBot, mood, this.animTimer);
+
       // Percentage / Count Badge floating above rover
       const pct = Math.round((rover.tileCount / this.totalTiles) * 100);
+      ctx.save();
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 11px Montserrat, sans-serif';
+      ctx.font = '700 11px Montserrat, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(`${pct}%`, rover.x, rover.y - 20);
+      ctx.fillText(`${pct}% (${rover.tileCount})`, rover.x, rover.y - 25);
+      ctx.restore();
     }
 
-    // 5. Top Center Live Territory Ownership Bar
-    const barW = Math.min(420, width * 0.6);
-    const barH = 14;
-    const barX = width / 2 - barW / 2;
-    const barY = 24;
-
+    // 5. Instruction Header Badge (y: 56)
     ctx.save();
-    ctx.fillStyle = '#1E293B';
+    const pillW = 440;
+    const pillH = 26;
+    const pillX = width / 2 - pillW / 2;
+    const pillY = 56;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeStyle = isSuddenDeath ? '#EF4444' : theme.accentPill;
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(barX, barY, barW, barH, 7);
+    if (ctx.roundRect) ctx.roundRect(pillX, pillY, pillW, pillH, 13);
+    else ctx.rect(pillX, pillY, pillW, pillH);
     ctx.fill();
+    ctx.stroke();
 
-    let curOffset = barX;
-    for (const rover of this.rovers.values()) {
-      const pColor = this.getPlayer(rover.id)?.color || '#38BDF8';
-      const segmentW = (rover.tileCount / this.totalTiles) * barW;
-      if (segmentW > 0) {
-        ctx.fillStyle = pColor;
-        ctx.fillRect(curOffset, barY, segmentW, barH);
-        curOffset += segmentW;
-      }
-    }
+    ctx.fillStyle = isSuddenDeath ? '#F87171' : '#FFFFFF';
+    ctx.font = '700 11px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(
+      isSuddenDeath
+        ? '🎨 SUPER BOMB STORM! GRAB BOMBS FOR 5X5 EXPLOSIONS! 🎨'
+        : 'DRIVE ROVER • CLAIM TURF • RAM RIVALS & GRAB BOMBS!',
+      width / 2,
+      pillY + pillH / 2
+    );
+    ctx.restore();
+
+    // 6. Interactive Bottom-Left Theme Pill (x: 20, y: height - 44, w: 170, h: 32)
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(20, height - 44, 170, 32, 16);
+    else ctx.rect(20, height - 44, 170, 32);
+    ctx.fill();
+    ctx.strokeStyle = theme.accentPill;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = theme.accentPill;
+    ctx.font = '700 11px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${theme.name} [T]`, 20 + 85, height - 44 + 16);
+    ctx.restore();
+
+    // 7. On-screen Controls Pill (Offset to right, never overlapping theme pill)
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.70)';
+    ctx.font = '600 11px Montserrat, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('WASD / Arrows: Steer Rover | Tap: Drive', width - 24, height - 28);
     ctx.restore();
 
     ctx.restore();
