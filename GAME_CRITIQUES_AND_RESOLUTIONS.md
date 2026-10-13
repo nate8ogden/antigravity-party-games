@@ -428,11 +428,19 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Stop at Zero'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *'Stop at Zero'* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Core Gameplay & Objective Overhaul:** Redesigned into a high-stakes, push-your-luck **Stopwatch Precision Tournament** across 3 cumulative rounds with dynamic Multiplier Tiers:
+   - 🎯 **5X BULLSEYE JACKPOT (1000 pts)**: within $\pm 0.045$s with golden explosion and fanfare!
+   - ⚡ **3X SHARP STOP (500 pts)**: within $\pm 0.125$s
+   - ⏱️ **2X CLOSE CALL (250 pts)**: within $\pm 0.320$s
+   - 🛡️ **1X SAFE STOP (100 pts)**: within $\pm 0.650$s
+   - ⚠️ **LATE STOP (25 pts)**: within $\pm 1.000$s
+   - 💥 **BUST / TIME-OUT (0 pts)**: over $\pm 1.000$s or no input before clock expiration.
+2. **Controls & Tactility Overhaul:** Heavy slam button with spring recoil physics, tactile downward press animation (`buttonYOffset`), instant tap trigger with millisecond stamp badge, and offset bottom control hint (`width - 24, height - 28`).
+3. **Multiplayer Chaos & Comeback Mechanic:** Trailing players down by $\ge 350$ points activate **Underdog Time Dilation**: golden dashed precision aura and an automatic $+0.045$s accuracy cushion applied to their delta, making clutch 5X Bullseye comebacks possible! Added mid-countdown **Distraction Glitch Waves** (random sensory glitch buzz between 2.2s and 0.8s) that tests player mental cadence.
+4. **Visual & Audio Juice Polish:** 3 Procedural Visual Themes (*Cyberpunk Vault ⚡*, *Cold War Bunker 💣*, *Tokyo Synthwave ⏱️*) featuring industrial plate riveted chassis, amber nixie tubes, neon laser grids, and interactive bottom-left Theme Pill (`x: 20, y: height - 44, w: 170, h: 32`, shortcut `[T]`). Integrated `CharacterRenderer` mascot faces on pedestals with context-aware emotional facial expressions (`focused` $\to$ `triumph` on 5X Bullseye $\to$ `shocked` on bust).
+5. **Humanized AI Tuning:** Bots have human internal metronome estimation with calibrated Gaussian error (Hard: skilled human tournament timing $\pm 0.07$s; Normal: steady rhythm $\pm 0.24$s; Easy: casual $\pm 0.45$s with a 22% chance to twitch and miss during the sensory glitch wave).
+
+#### ✅ STATUS: FULLY RESOLVED & VERIFIED (0 TypeScript/Vite Errors, Built in Antigravity_Games.html)
 
 ### #19. Turf Whack (ID: `turf_whack`) — [Party]
 - **Class Implementation:** `src/games/TurfWhackGame.ts` (719 lines)
