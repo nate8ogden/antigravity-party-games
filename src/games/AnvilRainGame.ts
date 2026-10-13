@@ -238,13 +238,21 @@ export class AnvilRainGame extends BaseGame {
     this.roundTimer = Math.max(0, this.roundTimer - dt);
     this.stormIntensity += dt * 0.022; // Escalates over time!
 
+    // Sudden Death check (<= 15s)
+    const isSuddenDeath = this.roundTimer <= 15;
+    if (isSuddenDeath) {
+      this.spawnInterval = 0.38; // Extreme anvil storm!
+    } else {
+      this.spawnInterval = 0.85;
+    }
+
     // Update bot decisions with intelligent 16-ray safety grid
     this.updateBots(dt, width, height);
 
     // Spawn falling anvils (Normal, Giant, or Golden)
     this.spawnTimer -= dt * this.stormIntensity;
     if (this.spawnTimer <= 0) {
-      this.spawnTimer = Math.max(0.24, this.spawnInterval / this.stormIntensity);
+      this.spawnTimer = Math.max(0.18, this.spawnInterval / this.stormIntensity);
       this.spawnAnvil(width, height);
     }
 
@@ -253,6 +261,29 @@ export class AnvilRainGame extends BaseGame {
     if (this.powerupTimer <= 0) {
       this.powerupTimer = 4.5 + Math.random() * 3.0;
       this.spawnPowerUp(width, height);
+    }
+
+    // Calculate maximum score for Underdog Surge
+    let maxScore = 0;
+    for (const runner of this.runners.values()) {
+      if (runner.alive && runner.score > maxScore) {
+        maxScore = runner.score;
+      }
+    }
+
+    // Underdog magnetic suction on nearby powerups & coins
+    for (const r of this.runners.values()) {
+      if (!r.alive) continue;
+      const isUnderdog = maxScore - r.score >= 35 || (!r.hasHelmet && maxScore > 25);
+      if (isUnderdog) {
+        for (const pu of this.powerups) {
+          const d = Math.hypot(r.x - pu.x, r.y - pu.y);
+          if (d < 135 && d > 4) {
+            pu.x += ((r.x - pu.x) / d) * 165 * dt;
+            pu.y += ((r.y - pu.y) / d) * 165 * dt;
+          }
+        }
+      }
     }
 
     // Process Powerup Lifetimes & Pickup
@@ -367,7 +398,8 @@ export class AnvilRainGame extends BaseGame {
       // Continuous movement when not stunned
       if (r.stunTimer <= 0) {
         const inputY = -throttle;
-        const baseSpeed = r.speedBoostTimer > 0 ? 280 : 210;
+        const isUnderdog = r.alive && (maxScore - r.score >= 35 || (!r.hasHelmet && maxScore > 25));
+        const baseSpeed = (r.speedBoostTimer > 0 ? 280 : 210) * (isUnderdog ? 1.15 : 1.0);
         if (steer !== 0 || throttle !== 0) {
           r.facingAngle = Math.atan2(inputY, steer);
           r.vx += (steer * baseSpeed - r.vx) * dt * 12;
@@ -401,7 +433,7 @@ export class AnvilRainGame extends BaseGame {
         r.vy = -Math.abs(r.vy) * 0.5;
       }
 
-      // Runner vs Runner Body-Check / Shove Mechanics
+      // Runner vs Runner Body-Check & Elastic Bumping Mechanics
       for (const other of this.runners.values()) {
         if (other.id === r.id || !other.alive) continue;
         const d = Math.hypot(r.x - other.x, r.y - other.y);
@@ -431,6 +463,15 @@ export class AnvilRainGame extends BaseGame {
             this.particles.addTrauma(0.14);
             this.particles.spawnSparks(other.x, other.y, '#F59E0B', 12);
             this.particles.showFloatingText('💥 BODY-CHECK!', other.x, other.y - 22, '#F59E0B', 18);
+          } else if (other.dashDuration <= 0) {
+            // Elastic collision bounce so players can nudge rivals into shadows
+            const normX = (other.x - r.x) / (d || 1);
+            const normY = (other.y - r.y) / (d || 1);
+            const bounceImpulse = 95;
+            r.vx -= normX * bounceImpulse;
+            r.vy -= normY * bounceImpulse;
+            other.vx += normX * bounceImpulse;
+            other.vy += normY * bounceImpulse;
           }
         }
       }
@@ -569,23 +610,36 @@ export class AnvilRainGame extends BaseGame {
     const x = padding + Math.random() * (width - padding * 2);
     const y = padding + 35 + Math.random() * (height - padding * 2 - 35);
 
-    // Roll anvil type: Normal (75%), Giant (18%), Golden (7%)
+    // Roll anvil type: Normal, Giant, or Golden
     const roll = Math.random();
     let type: AnvilType = 'normal';
     let radius = 28;
     let baseWarning = 1.15;
 
-    if (roll < 0.18) {
-      type = 'giant';
-      radius = 45;
-      baseWarning = 1.45;
-    } else if (roll < 0.25) {
-      type = 'golden';
-      radius = 30;
-      baseWarning = 1.25;
+    const isSuddenDeath = this.roundTimer <= 15;
+    if (isSuddenDeath) {
+      if (roll < 0.40) {
+        type = 'golden';
+        radius = 32;
+        baseWarning = 1.05;
+      } else if (roll < 0.65) {
+        type = 'giant';
+        radius = 48;
+        baseWarning = 1.25;
+      }
+    } else {
+      if (roll < 0.18) {
+        type = 'giant';
+        radius = 45;
+        baseWarning = 1.45;
+      } else if (roll < 0.25) {
+        type = 'golden';
+        radius = 30;
+        baseWarning = 1.25;
+      }
     }
 
-    const warning = Math.max(0.62, baseWarning / Math.sqrt(this.stormIntensity));
+    const warning = Math.max(0.55, baseWarning / Math.sqrt(this.stormIntensity));
 
     this.anvils.push({
       id: ++this.anvilIdCounter,
@@ -776,8 +830,10 @@ export class AnvilRainGame extends BaseGame {
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
     ctx.save();
 
-    // 1. Blacksmith Forge Stone Arena Background
-    ctx.fillStyle = '#18181B';
+    const theme = AnvilRainGame.THEMES[this.currentThemeIndex];
+
+    // 1. Theme Stone Arena Background
+    ctx.fillStyle = theme.floorBg;
     ctx.fillRect(0, 0, width, height);
 
     // Stone flagstone tiles
@@ -786,13 +842,13 @@ export class AnvilRainGame extends BaseGame {
       for (let x = 0; x < width; x += tileSize) {
         const isOffset = Math.floor(y / tileSize) % 2 === 1;
         const tileX = isOffset ? x + tileSize / 2 : x;
-        ctx.fillStyle = (Math.floor(tileX / tileSize) + Math.floor(y / tileSize)) % 2 === 0 ? '#27272A' : '#1F1F23';
+        ctx.fillStyle = (Math.floor(tileX / tileSize) + Math.floor(y / tileSize)) % 2 === 0 ? theme.tileA : theme.tileB;
         ctx.fillRect(tileX, y, tileSize - 2, tileSize - 2);
       }
     }
 
     // Industrial hazard perimeter border with hazard stripes
-    ctx.strokeStyle = '#F59E0B';
+    ctx.strokeStyle = theme.border;
     ctx.lineWidth = 4;
     ctx.strokeRect(10, 10, width - 20, height - 20);
 
@@ -1032,6 +1088,29 @@ export class AnvilRainGame extends BaseGame {
         ctx.stroke();
       }
 
+      // Underdog Golden Aura & Badge
+      let maxScore = 0;
+      for (const other of this.runners.values()) {
+        if (other.alive && other.score > maxScore) maxScore = other.score;
+      }
+      const isUnderdog = r.alive && (maxScore - r.score >= 35 || (!r.hasHelmet && maxScore > 25));
+      if (isUnderdog) {
+        ctx.save();
+        ctx.strokeStyle = '#FBBF24';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, r.radius + 6, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#FBBF24';
+        ctx.font = 'bold 9px Montserrat, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('⚡ SURGE', r.x, r.y + r.radius + 15);
+        ctx.restore();
+      }
+
       // Dash Cooldown indicator bar below player
       if (r.dashCooldown > 0) {
         const ratio = 1 - r.dashCooldown / 0.75;
@@ -1130,22 +1209,45 @@ export class AnvilRainGame extends BaseGame {
     const pillH = 26;
     const pillX = width / 2 - pillW / 2;
     const pillY = 56;
+    const isSuddenDeath = this.roundTimer <= 15;
 
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
     ctx.beginPath();
     if (ctx.roundRect) ctx.roundRect(pillX, pillY, pillW, pillH, 13);
     else ctx.rect(pillX, pillY, pillW, pillH);
     ctx.fill();
-    ctx.strokeStyle = '#F59E0B';
+    ctx.strokeStyle = isSuddenDeath ? '#EF4444' : theme.border;
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    ctx.fillStyle = '#F59E0B';
+    ctx.fillStyle = isSuddenDeath ? '#EF4444' : theme.accent;
     ctx.font = '800 11px Montserrat, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const aliveCount = Array.from(this.runners.values()).filter((r) => r.alive).length;
-    ctx.fillText(`⚡ STORM: ${Math.round(this.stormIntensity * 100)}%  •  ALIVE: ${aliveCount}  •  DASH TO SHOVE! ⚡`, width / 2, pillY + pillH / 2);
+    if (isSuddenDeath) {
+      ctx.fillText(`🚨 SUDDEN DEATH: GOLDEN SHOWER! 🚨 (${aliveCount} ALIVE)`, width / 2, pillY + pillH / 2);
+    } else {
+      ctx.fillText(`⚡ STORM: ${Math.round(this.stormIntensity * 100)}%  •  ALIVE: ${aliveCount}  •  DASH TO SHOVE! ⚡`, width / 2, pillY + pillH / 2);
+    }
+    ctx.restore();
+
+    // 9. Interactive Bottom-Left Theme Pill (x: 20, y: height - 44, w: 160, h: 32)
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(20, height - 44, 160, 32, 16);
+    else ctx.rect(20, height - 44, 160, 32);
+    ctx.fill();
+    ctx.strokeStyle = theme.border;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = theme.accent;
+    ctx.font = '700 11px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${theme.name}  [T]`, 20 + 80, height - 44 + 16);
     ctx.restore();
 
     ctx.restore();
