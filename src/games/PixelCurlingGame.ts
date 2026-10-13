@@ -3,6 +3,91 @@ import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
+import { drawCharacter, CharacterMood } from '../core/CharacterRenderer';
+
+export type PixelCurlingThemeId = 'olympic' | 'cyber' | 'aurora';
+
+interface PixelCurlingTheme {
+  id: PixelCurlingThemeId;
+  name: string;
+  icon: string;
+  iceGrad0: string;
+  iceGrad1: string;
+  iceGrad2: string;
+  iceGrad3: string;
+  pebbleColor: string;
+  woodRail: string;
+  woodHighlight: string;
+  hogLineColor: string;
+  teeLineColor: string;
+  houseOuterRing: string;
+  houseMidRing: string;
+  houseInnerRing: string;
+  buttonPinColor: string;
+  accentColor: string;
+}
+
+const THEMES: Record<PixelCurlingThemeId, PixelCurlingTheme> = {
+  olympic: {
+    id: 'olympic',
+    name: 'Olympic Coliseum',
+    icon: '❄️',
+    iceGrad0: '#F0F9FF',
+    iceGrad1: '#E0F2FE',
+    iceGrad2: '#BAE6FD',
+    iceGrad3: '#93C5FD',
+    pebbleColor: 'rgba(255, 255, 255, 0.45)',
+    woodRail: '#78350F',
+    woodHighlight: '#92400E',
+    hogLineColor: '#2563EB',
+    teeLineColor: '#DC2626',
+    houseOuterRing: '#1D4ED8',
+    houseMidRing: '#FFFFFF',
+    houseInnerRing: '#DC2626',
+    buttonPinColor: '#F59E0B',
+    accentColor: '#38BDF8'
+  },
+  cyber: {
+    id: 'cyber',
+    name: 'Cyber Neon Rink',
+    icon: '⚡',
+    iceGrad0: '#0B0F2A',
+    iceGrad1: '#111836',
+    iceGrad2: '#1E1B4B',
+    iceGrad3: '#0F172A',
+    pebbleColor: 'rgba(6, 182, 212, 0.25)',
+    woodRail: '#0F172A',
+    woodHighlight: '#06B6D4',
+    hogLineColor: '#38BDF8',
+    teeLineColor: '#EC4899',
+    houseOuterRing: '#A855F7',
+    houseMidRing: '#0F172A',
+    houseInnerRing: '#06B6D4',
+    buttonPinColor: '#F43F5E',
+    accentColor: '#06B6D4'
+  },
+  aurora: {
+    id: 'aurora',
+    name: 'Midnight Aurora',
+    icon: '🌌',
+    iceGrad0: '#022C22',
+    iceGrad1: '#064E3B',
+    iceGrad2: '#0F3E34',
+    iceGrad3: '#021F18',
+    pebbleColor: 'rgba(52, 211, 153, 0.3)',
+    woodRail: '#062822',
+    woodHighlight: '#10B981',
+    hogLineColor: '#10B981',
+    teeLineColor: '#34D399',
+    houseOuterRing: '#047857',
+    houseMidRing: '#064E3B',
+    houseInnerRing: '#34D399',
+    buttonPinColor: '#FBBF24',
+    accentColor: '#34D399'
+  }
+};
+
+const THEME_ORDER: PixelCurlingThemeId[] = ['olympic', 'cyber', 'aurora'];
 
 export interface CurlingStone {
   id: number;
@@ -44,7 +129,10 @@ export class PixelCurlingGame extends BaseGame {
   public houseX: number = 680;
   public houseY: number = 300;
   public houseRadius: number = 105;
-  public currentMapName: string = 'Olympic Ice Coliseum';
+  public currentTheme: PixelCurlingThemeId = 'olympic';
+  public get currentMapName(): string {
+    return THEMES[this.currentTheme].name;
+  }
 
   private turnOrder: PlayerId[] = [];
   private botReactionTimers: Map<PlayerId, number> = new Map();
@@ -59,13 +147,14 @@ export class PixelCurlingGame extends BaseGame {
 
   // Touch control buttons
   private touchBtns = {
-    aimLeft: { x: 0, y: 0, w: 54, h: 44 },
-    aimRight: { x: 0, y: 0, w: 54, h: 44 },
-    launch: { x: 0, y: 0, w: 90, h: 44 },
-    sweep: { x: 0, y: 0, w: 100, h: 48 }
+    aimLeft: { x: 0, y: 0, w: 56, h: 32 },
+    aimRight: { x: 0, y: 0, w: 56, h: 32 },
+    launch: { x: 0, y: 0, w: 92, h: 32 },
+    sweep: { x: 0, y: 0, w: 110, h: 32 }
   };
   private pointerdownHandler: ((e: PointerEvent) => void) | null = null;
   private pointerupHandler: ((e: PointerEvent) => void) | null = null;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
 
   constructor(
     players: PlayerConfig[],
@@ -89,16 +178,56 @@ export class PixelCurlingGame extends BaseGame {
     }
   }
 
+  public cycleTheme(): void {
+    const idx = THEME_ORDER.indexOf(this.currentTheme);
+    this.setTheme(THEME_ORDER[(idx + 1) % THEME_ORDER.length]);
+  }
+
+  public setTheme(themeId: PixelCurlingThemeId): void {
+    this.currentTheme = themeId;
+    this.audio.playTap();
+    this.particles.showFloatingText(
+      `${THEMES[themeId].icon} ${THEMES[themeId].name}`,
+      400,
+      120,
+      THEMES[themeId].accentColor,
+      20
+    );
+  }
+
   private setupListeners(): void {
     if (typeof window === 'undefined') return;
     this.removeListeners();
+
+    this.keyHandler = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      if (key === 't') {
+        this.cycleTheme();
+      } else if (key === '1') {
+        this.setTheme('olympic');
+      } else if (key === '2') {
+        this.setTheme('cyber');
+      } else if (key === '3') {
+        this.setTheme('aurora');
+      }
+    };
+    window.addEventListener('keydown', this.keyHandler);
 
     this.pointerdownHandler = (e: PointerEvent) => {
       const canvas = document.querySelector('canvas');
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const clickY = (e.clientY - rect.top) * scaleY;
+
+      // Theme pill zone: x: 20, y: height - 44, w: 170, h: 32
+      const pillY = canvas.height - 44;
+      if (clickX >= 20 && clickX <= 190 && clickY >= pillY && clickY <= pillY + 32) {
+        this.cycleTheme();
+        return;
+      }
 
       const currentPid = this.turnOrder[this.currentTurnIndex];
       const curPlayer = currentPid !== undefined ? this.playersState.get(currentPid) : null;
@@ -157,6 +286,10 @@ export class PixelCurlingGame extends BaseGame {
 
   private removeListeners(): void {
     if (typeof window === 'undefined') return;
+    if (this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
     if (this.pointerdownHandler) {
       window.removeEventListener('pointerdown', this.pointerdownHandler);
       this.pointerdownHandler = null;
@@ -217,11 +350,11 @@ export class PixelCurlingGame extends BaseGame {
   }
 
   private updateTouchButtons(width: number, height: number): void {
-    const bottomY = height - 56;
-    this.touchBtns.aimLeft = { x: 20, y: bottomY, w: 60, h: 44 };
-    this.touchBtns.aimRight = { x: 90, y: bottomY, w: 60, h: 44 };
-    this.touchBtns.launch = { x: 165, y: bottomY, w: 110, h: 44 };
-    this.touchBtns.sweep = { x: width * 0.5 - 55, y: bottomY - 6, w: 110, h: 48 };
+    const bottomY = height - 44;
+    this.touchBtns.aimLeft = { x: 200, y: bottomY, w: 56, h: 32 };
+    this.touchBtns.aimRight = { x: 262, y: bottomY, w: 56, h: 32 };
+    this.touchBtns.launch = { x: 324, y: bottomY, w: 92, h: 32 };
+    this.touchBtns.sweep = { x: width * 0.5 - 55, y: bottomY, w: 110, h: 32 };
   }
 
   private exposeDebug(width: number, height: number): void {
