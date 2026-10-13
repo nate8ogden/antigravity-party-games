@@ -349,5 +349,9 @@ export abstract class BaseGame {
     ctx.restore();
   }
 
-  public destroy(): void {}
+  public destroy(): void {
+    this.antiLoopTrackers.clear();
+    this.particles.clear();
+    this.input.resetAll();
+  }
 }
