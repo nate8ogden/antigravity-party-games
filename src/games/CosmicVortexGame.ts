@@ -370,8 +370,9 @@ export class CosmicVortexGame extends BaseGame {
       const inCornerX = ps.x < cornerPocket || ps.x > width - cornerPocket;
       const inCornerY = ps.y < cornerPocket || ps.y > height - cornerPocket;
       if (inCornerX && inCornerY) {
-        const toCenterX = (cx - ps.x) / dist;
-        const toCenterY = (cy - ps.y) / dist;
+        const cornerDist = Math.hypot(cx - ps.x, cy - ps.y) || 1;
+        const toCenterX = (cx - ps.x) / cornerDist;
+        const toCenterY = (cy - ps.y) / cornerDist;
         const cornerPush = 280; // Strong spring force pushing out of corner
         ps.vx += toCenterX * cornerPush * dt;
         ps.vy += toCenterY * cornerPush * dt;
