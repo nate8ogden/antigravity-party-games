@@ -3,64 +3,126 @@ import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
+import { drawCharacter, CharacterMood } from '../core/CharacterRenderer';
 
-interface FloatingHit {
-  text: string;
+interface FruitType {
+  name: string;
   color: string;
-  x: number;
-  y: number;
-  alpha: number;
-  scale: number;
+  points: number;
+  radius: number;
+  isGolden?: boolean;
+  isHazard?: boolean;
 }
 
-interface JuiceSplatter {
-  x: number;
-  y: number;
-  r: number;
-  color: string;
-  alpha: number;
-}
+const FRUIT_TYPES: FruitType[] = [
+  { name: 'Strawberry', color: '#FF1744', points: 12, radius: 13 },
+  { name: 'Banana', color: '#FFEA00', points: 15, radius: 14 },
+  { name: 'Watermelon', color: '#00E676', points: 18, radius: 15 },
+  { name: 'Pineapple', color: '#FF9100', points: 22, radius: 15 },
+  { name: 'Golden Dragonfruit', color: '#FFD700', points: 42, radius: 16, isGolden: true },
+  { name: 'Metal Spoon', color: '#90A4AE', points: -15, radius: 12, isHazard: true }
+];
 
-interface FallingIngredient {
+interface FallingFruit {
   id: number;
-  type: 'strawberry' | 'banana' | 'watermelon' | 'pineapple' | 'spoon';
   x: number;
   y: number;
+  vx: number;
   vy: number;
-  rotation: number;
-  vRot: number;
-  scale: number;
+  type: FruitType;
+  rot: number;
+  rotSpeed: number;
 }
 
-interface BlenderStation {
+interface BlenderPlayer {
   id: PlayerId;
   x: number;
   y: number;
-  ingredients: FallingIngredient[];
-  spawnTimer: number;
-  liquidProgress: number; // 0 to 100%
+  vx: number;
+  torque: number; // 0 to 100%
+  isCharging: boolean;
+  fruitsInJug: FruitType[];
+  liquidLevel: number; // 0 to 100%
   liquidColor: string;
-  bladeSpeed: number;
   bladeAngle: number;
-  smoothiesServed: number;
+  shuntCooldown: number;
+  shuntActiveTimer: number;
+  shuntDir: number;
+  stunTimer: number;
   score: number;
+  smoothiesServed: number;
   combo: number;
-  pulseAnim: number;
-  jamTimer: number;
-  jamMaxTimer: number;
-  whiffCooldown: number;
-  shakeTimer: number;
-  serveCelebrationTimer: number;
-  splatters: JuiceSplatter[];
-  floatingHits: FloatingHit[];
+  isUnderdog: boolean;
+  mood: CharacterMood;
+  moodTimer: number;
+  animTimer: number;
 }
 
-export class FruitBlenderGame extends BaseGame {
-  public playersState: Map<PlayerId, BlenderStation> = new Map();
-  public currentMapName: string = 'Tropical Juice Bar';
+interface BlenderTheme {
+  id: string;
+  name: string;
+  icon: string;
+  bgTop: string;
+  bgBottom: string;
+  barColor: string;
+  barTrim: string;
+  deckColor: string;
+  accentColor: string;
+}
 
-  private ingredientIdCounter: number = 0;
+const THEMES: BlenderTheme[] = [
+  {
+    id: 'tropical_tiki',
+    name: 'Tropical Tiki Bar 🍹',
+    icon: '🍹',
+    bgTop: '#FFF8E1',
+    bgBottom: '#FFE082',
+    barColor: '#5D4037',
+    barTrim: '#FFB300',
+    deckColor: '#3E2723',
+    accentColor: '#FF6D00'
+  },
+  {
+    id: 'cyber_juice_lab',
+    name: 'Cyber Juice Lab ⚡',
+    icon: '⚡',
+    bgTop: '#0A0E17',
+    bgBottom: '#02050A',
+    barColor: '#1A233A',
+    barTrim: '#00E5FF',
+    deckColor: '#0F1626',
+    accentColor: '#00E5FF'
+  },
+  {
+    id: 'mediterranean_bistro',
+    name: 'Royal Mediterranean 🍇',
+    icon: '🍇',
+    bgTop: '#FBE9E7',
+    bgBottom: '#FFCCBC',
+    barColor: '#795548',
+    barTrim: '#E64A19',
+    deckColor: '#4E342E',
+    accentColor: '#D84315'
+  }
+];
+
+export class FruitBlenderGame extends BaseGame {
+  public currentMapName: string = 'Tropical Tiki Bar 🍹';
+  private currentThemeIdx: number = 0;
+
+  private blenderPlayers: Map<PlayerId, BlenderPlayer> = new Map();
+  private fallingFruits: FallingFruit[] = [];
+  private nextFruitId: number = 1;
+  private fruitSpawnTimer: number = 0.5;
+
   private botReactionTimers: Map<PlayerId, number> = new Map();
+  private botTargetFruit: Map<PlayerId, number | null> = new Map();
+
+  private screenShake: number = 0;
+  private hitStopTimer: number = 0;
+
+  private keydownHandler?: (e: KeyboardEvent) => void;
+  private clickHandler?: (e: MouseEvent) => void;
 
   constructor(
     players: PlayerConfig[],
@@ -70,6 +132,52 @@ export class FruitBlenderGame extends BaseGame {
   ) {
     super(players, input, audio, particles);
     this.roundTimer = 35.0;
+
+    if (typeof window !== 'undefined') {
+      this.keydownHandler = (e: KeyboardEvent) => {
+        if (e.code === 'KeyT') {
+          this.cycleTheme();
+        } else if (e.code === 'Digit1') {
+          this.setTheme(0);
+        } else if (e.code === 'Digit2') {
+          this.setTheme(1);
+        } else if (e.code === 'Digit3') {
+          this.setTheme(2);
+        }
+      };
+      window.addEventListener('keydown', this.keydownHandler);
+
+      this.clickHandler = (e: MouseEvent) => {
+        const canvas = document.querySelector('canvas');
+        if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const clickX = (e.clientX - rect.left) * scaleX;
+        const clickY = (e.clientY - rect.top) * scaleY;
+        const pillX = 20;
+        const pillY = canvas.height - 44;
+        const pillW = 170;
+        const pillH = 32;
+
+        if (
+          clickX >= pillX &&
+          clickX <= pillX + pillW &&
+          clickY >= pillY &&
+          clickY <= pillY + pillH
+        ) {
+          this.cycleTheme();
+        }
+      };
+      window.addEventListener('click', this.clickHandler);
+    }
+  }
+
+  public override destroy(): void {
+    if (typeof window !== 'undefined') {
+      if (this.keydownHandler) window.removeEventListener('keydown', this.keydownHandler);
+      if (this.clickHandler) window.removeEventListener('click', this.clickHandler);
+    }
   }
 
   public init(width: number, height: number): void {
@@ -79,176 +187,232 @@ export class FruitBlenderGame extends BaseGame {
   public reset(width: number = 800, height: number = 600): void {
     this.roundTimer = 35.0;
     this.isFinished = false;
-    this.playersState.clear();
+    this.screenShake = 0;
+    this.hitStopTimer = 0;
+    this.fallingFruits = [];
+    this.blenderPlayers.clear();
     this.botReactionTimers.clear();
+    this.botTargetFruit.clear();
 
     const active = this.getActivePlayers();
     const count = active.length;
     const spacing = width / (count + 1);
-    const counterY = height * 0.58;
 
     active.forEach((p, idx) => {
-      // Pre-seed an initial juicy fruit drifting down into each pitcher
-      const initialIngredients: FallingIngredient[] = [
-        {
-          id: ++this.ingredientIdCounter,
-          type: 'strawberry',
-          x: (Math.random() - 0.5) * 16,
-          y: -40,
-          vy: 110,
-          rotation: 0.2,
-          vRot: 1.5,
-          scale: 1.0
-        },
-        {
-          id: ++this.ingredientIdCounter,
-          type: 'banana',
-          x: (Math.random() - 0.5) * 16,
-          y: -95,
-          vy: 120,
-          rotation: -0.5,
-          vRot: -1.2,
-          scale: 1.0
-        }
-      ];
-
-      this.playersState.set(p.id, {
+      this.blenderPlayers.set(p.id, {
         id: p.id,
         x: spacing * (idx + 1),
-        y: counterY - 26,
-        ingredients: initialIngredients,
-        spawnTimer: 0.8 + Math.random() * 0.4,
-        liquidProgress: 15,
+        y: height - 110,
+        vx: 0,
+        torque: 0,
+        isCharging: false,
+        fruitsInJug: [],
+        liquidLevel: 0,
         liquidColor: '#FF4081',
-        bladeSpeed: 100,
         bladeAngle: 0,
-        smoothiesServed: 0,
+        shuntCooldown: 0,
+        shuntActiveTimer: 0,
+        shuntDir: 0,
+        stunTimer: 0,
         score: 0,
+        smoothiesServed: 0,
         combo: 0,
-        pulseAnim: 0,
-        jamTimer: 0,
-        jamMaxTimer: 1.1,
-        whiffCooldown: 0,
-        shakeTimer: 0,
-        serveCelebrationTimer: 0,
-        splatters: [],
-        floatingHits: []
+        isUnderdog: false,
+        mood: 'idle',
+        moodTimer: 0,
+        animTimer: Math.random() * 5
       });
-      this.botReactionTimers.set(p.id, 0.2 + Math.random() * 0.2);
+      this.botReactionTimers.set(p.id, 0.15 + Math.random() * 0.1);
+      this.botTargetFruit.set(p.id, null);
     });
+
+    this.currentThemeIdx = 0;
+    this.currentMapName = THEMES[0].name;
   }
 
-  public update(dt: number, _width: number, _height: number): void {
+  public cycleTheme(): void {
+    this.currentThemeIdx = (this.currentThemeIdx + 1) % THEMES.length;
+    this.currentMapName = THEMES[this.currentThemeIdx].name;
+    this.audio.playTap();
+  }
+
+  public setTheme(index: number): void {
+    if (index >= 0 && index < THEMES.length) {
+      this.currentThemeIdx = index;
+      this.currentMapName = THEMES[this.currentThemeIdx].name;
+      this.audio.playTap();
+    }
+  }
+
+  public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
+
+    if (this.screenShake > 0) {
+      this.screenShake = Math.max(0, this.screenShake - dt * 30);
+    }
+
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer -= dt;
+      return;
+    }
 
     this.roundTimer = Math.max(0, this.roundTimer - dt);
 
-    this.updateBots(dt, _width, _height);
+    // Identify leader score for Underdog surge
+    let maxScore = 0;
+    for (const bp of this.blenderPlayers.values()) {
+      if (bp.score > maxScore) maxScore = bp.score;
+    }
 
+    // Update bots
+    this.updateBots(dt, width, height);
+
+    // Spawning falling fruits
+    this.fruitSpawnTimer -= dt;
+    const spawnRate = this.roundTimer < 15 ? 0.42 : 0.72;
+    if (this.fruitSpawnTimer <= 0) {
+      this.fruitSpawnTimer = spawnRate + Math.random() * 0.3;
+      this.spawnFallingFruit(width);
+    }
+
+    // Update falling fruits
+    for (let i = this.fallingFruits.length - 1; i >= 0; i--) {
+      const f = this.fallingFruits[i];
+      f.x += f.vx * dt;
+      f.y += f.vy * dt;
+      f.vy += 230 * dt; // gravity
+      f.rot += f.rotSpeed * dt;
+
+      // Splat on bar counter
+      if (f.y > height - 70) {
+        this.particles.emit(f.x, height - 75, 4, f.type.color);
+        this.fallingFruits.splice(i, 1);
+      }
+    }
+
+    // Update blender chefs
     for (const p of this.getActivePlayers()) {
-      const st = this.playersState.get(p.id);
-      if (!st) continue;
+      const bp = this.blenderPlayers.get(p.id);
+      if (!bp) continue;
 
-      // Update timers & animations
-      if (st.pulseAnim > 0) st.pulseAnim = Math.max(0, st.pulseAnim - dt * 5);
-      if (st.jamTimer > 0) st.jamTimer = Math.max(0, st.jamTimer - dt);
-      if (st.whiffCooldown > 0) st.whiffCooldown = Math.max(0, st.whiffCooldown - dt);
-      if (st.shakeTimer > 0) st.shakeTimer = Math.max(0, st.shakeTimer - dt);
-      if (st.serveCelebrationTimer > 0) st.serveCelebrationTimer = Math.max(0, st.serveCelebrationTimer - dt);
-
-      // Blade spin physics
-      st.bladeAngle += (st.bladeSpeed * dt * Math.PI) / 180;
-      st.bladeSpeed = Math.max(80, st.bladeSpeed - 240 * dt);
-
-      // Update floating texts
-      for (let i = st.floatingHits.length - 1; i >= 0; i--) {
-        const hit = st.floatingHits[i];
-        hit.y -= dt * 32;
-        hit.alpha -= dt * 1.5;
-        hit.scale = Math.min(1.2, hit.scale + dt * 0.8);
-        if (hit.alpha <= 0) {
-          st.floatingHits.splice(i, 1);
-        }
+      bp.animTimer += dt;
+      if (bp.moodTimer > 0) {
+        bp.moodTimer -= dt;
+        if (bp.moodTimer <= 0) bp.mood = 'idle';
       }
 
-      // Update splatters sliding down glass
-      for (let i = st.splatters.length - 1; i >= 0; i--) {
-        const splat = st.splatters[i];
-        splat.y += dt * 8;
-        splat.alpha -= dt * 0.4;
-        if (splat.alpha <= 0) {
-          st.splatters.splice(i, 1);
-        }
+      // Check Underdog
+      bp.isUnderdog = maxScore >= 35 && bp.score <= maxScore - 30;
+
+      // Handle Stun
+      if (bp.stunTimer > 0) {
+        bp.stunTimer -= dt;
+        bp.vx *= 0.85;
+        bp.x += bp.vx * dt;
+        bp.x = Math.max(45, Math.min(width - 45, bp.x));
+        continue;
       }
 
-      // Ingredient Spawner
-      st.spawnTimer -= dt;
-      if (st.spawnTimer <= 0 && st.ingredients.length < 5) {
-        st.spawnTimer = 0.75 + Math.random() * 0.55;
+      // Blade spin animation
+      const bladeSpeed = bp.isCharging ? 18 : 6;
+      bp.bladeAngle += bladeSpeed * dt * Math.PI * 2;
 
-        // Ingredient probability: 32% Strawberry, 28% Banana, 20% Watermelon, 10% Pineapple, 10% Metal Spoon Hazard
-        const rand = Math.random();
-        let type: 'strawberry' | 'banana' | 'watermelon' | 'pineapple' | 'spoon' = 'strawberry';
-        let vy = 115 + Math.random() * 35;
-
-        if (rand < 0.10) {
-          type = 'spoon'; // Hazard!
-          vy = 145 + Math.random() * 40;
-        } else if (rand < 0.20) {
-          type = 'pineapple'; // Jackpot!
-          vy = 130 + Math.random() * 30;
-        } else if (rand < 0.40) {
-          type = 'watermelon';
-          vy = 125 + Math.random() * 30;
-        } else if (rand < 0.68) {
-          type = 'banana';
-          vy = 115 + Math.random() * 25;
-        }
-
-        st.ingredients.push({
-          id: ++this.ingredientIdCounter,
-          type,
-          x: (Math.random() - 0.5) * 20,
-          y: -105,
-          vy,
-          rotation: (Math.random() - 0.5) * 1.5,
-          vRot: (Math.random() - 0.5) * 3,
-          scale: 1.0
-        });
+      // Handle Shunt Cooldown & Active Timer
+      if (bp.shuntCooldown > 0) bp.shuntCooldown -= dt;
+      if (bp.shuntActiveTimer > 0) {
+        bp.shuntActiveTimer -= dt;
+        bp.vx = bp.shuntDir * 580;
+        this.particles.emit(bp.x - bp.shuntDir * 16, bp.y - 15, 2, '#00E5FF');
       }
 
-      // Update falling ingredients
-      for (let i = st.ingredients.length - 1; i >= 0; i--) {
-        const item = st.ingredients[i];
-        item.y += item.vy * dt;
-        item.rotation += item.vRot * dt;
+      const steer = this.input.getSteer(p.id);
+      const isAction = this.input.isActionPressed(p.id) || this.input.isPressed(p.id);
 
-        // Fall past blades without being blended
-        if (item.y > 22) {
-          if (item.type === 'spoon') {
-            // Dodged danger successfully!
-            this.audio.playBounce();
-            st.floatingHits.push({
-              text: 'DODGED! 🛡️',
-              color: '#81C784',
-              x: 0,
-              y: 8,
-              alpha: 0.9,
-              scale: 0.9
-            });
-          } else {
-            // Unblended fruit drops into the drain
-            const splatColor = this.getFruitColor(item.type);
-            this.particles.emit(st.x + item.x, st.y + 18, 3, splatColor);
+      const baseSpeed = bp.isUnderdog ? 330 : 270;
+
+      // Hold-to-Charge Torque & Blitz Action
+      if (isAction && bp.shuntActiveTimer <= 0) {
+        bp.isCharging = true;
+        bp.torque = Math.min(100, bp.torque + 80 * dt);
+
+        const chargeMoveSpeed = baseSpeed * 0.45;
+        if (Math.abs(steer) > 0.15) {
+          bp.vx = steer * chargeMoveSpeed;
+        } else {
+          bp.vx *= 0.8;
+        }
+      } else {
+        if (bp.isCharging) {
+          // Release: Execute Blitz Pulse or Pitcher Shunt!
+          bp.isCharging = false;
+          if (bp.torque > 0.2) {
+            this.executeBlenderAction(bp, steer);
           }
-          st.ingredients.splice(i, 1);
+          bp.torque = 0;
+        } else if (bp.shuntActiveTimer <= 0) {
+          if (Math.abs(steer) > 0.15) {
+            bp.vx = steer * baseSpeed;
+          } else {
+            bp.vx *= 0.82;
+          }
         }
       }
 
-      // Check player input
-      const justAction = this.input.justAction(p.id) || this.input.justPressed(p.id);
-      if (justAction) {
-        this.handlePulse(st);
+      bp.x += bp.vx * dt;
+      // Screen bounds
+      if (bp.x < 50) {
+        bp.x = 50;
+        bp.vx = 0;
+      }
+      if (bp.x > width - 50) {
+        bp.x = width - 50;
+        bp.vx = 0;
+      }
+
+      // Catch Falling Fruits into Jug
+      const jugX = bp.x + (bp.vx > 10 ? 12 : bp.vx < -10 ? -12 : 6);
+      const jugY = bp.y - 30;
+      const catchRadius = bp.isUnderdog ? 36 : 26;
+
+      for (let i = this.fallingFruits.length - 1; i >= 0; i--) {
+        const f = this.fallingFruits[i];
+        const dist = Math.hypot(f.x - jugX, f.y - jugY);
+
+        if (dist < catchRadius + f.type.radius) {
+          this.catchFruit(bp, f.type);
+          this.fallingFruits.splice(i, 1);
+        }
+      }
+    }
+
+    // Inter-Player Body & Pitcher Shunt Collisions
+    const chefsArr = this.getActivePlayers().map(p => this.blenderPlayers.get(p.id)!);
+    for (let i = 0; i < chefsArr.length; i++) {
+      for (let j = i + 1; j < chefsArr.length; j++) {
+        const c1 = chefsArr[i];
+        const c2 = chefsArr[j];
+        const dist = Math.abs(c1.x - c2.x);
+        const touchDist = 48;
+
+        if (dist < touchDist) {
+          const overlap = touchDist - dist;
+          const dir = c1.x < c2.x ? -1 : 1;
+          c1.x += dir * overlap * 0.5;
+          c2.x -= dir * overlap * 0.5;
+
+          // Check if one was shunting
+          if (c1.shuntActiveTimer > 0 && c2.shuntActiveTimer <= 0) {
+            this.executePitcherShunt(c1, c2, -dir);
+          } else if (c2.shuntActiveTimer > 0 && c1.shuntActiveTimer <= 0) {
+            this.executePitcherShunt(c2, c1, dir);
+          } else {
+            // Normal bump
+            const avgVx = (c1.vx + c2.vx) * 0.5;
+            c1.vx = avgVx + dir * 110;
+            c2.vx = avgVx - dir * 110;
+            this.audio.playBounce();
+          }
+        }
       }
     }
 
@@ -257,170 +421,132 @@ export class FruitBlenderGame extends BaseGame {
     }
   }
 
-  /**
-   * Action handler: Pulses blender blades into overdrive to chop and blitz fruits in the Blitz Zone
-   */
-  private handlePulse(st: PopperStationLike): void {
-    // 1. If currently jammed from chopping a metal spoon, input is locked out
-    if (st.jamTimer > 0) {
-      this.audio.playTone(150, 0.08, 'sawtooth');
-      return;
+  private spawnFallingFruit(width: number): void {
+    const margin = 70;
+    const x = margin + Math.random() * (width - margin * 2);
+    const isSuddenDeath = this.roundTimer < 15;
+    let pool = FRUIT_TYPES;
+    if (isSuddenDeath) {
+      pool = [
+        ...FRUIT_TYPES,
+        FRUIT_TYPES[4], // Golden Dragonfruit
+        FRUIT_TYPES[3]  // Pineapple
+      ];
     }
+    const template = pool[Math.floor(Math.random() * pool.length)];
 
-    // 2. If whiff cooldown active, ignore fast button mashing
-    if (st.whiffCooldown > 0) {
-      return;
-    }
+    this.fallingFruits.push({
+      id: this.nextFruitId++,
+      x,
+      y: 70,
+      vx: (Math.random() - 0.5) * 80,
+      vy: 110 + Math.random() * 60,
+      type: template,
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 3
+    });
+  }
 
-    // Trigger visual pulse & blade surge
-    st.pulseAnim = 1.0;
-    st.bladeSpeed = 850;
-
-    // 3. Find candidate ingredient in the Blitz Strike Zone (-20 to 14)
-    let bestIdx = -1;
-    let bestDist = 9999;
-    const bladeLevel = 0; // Blade center level
-
-    for (let i = 0; i < st.ingredients.length; i++) {
-      const item = st.ingredients[i];
-      if (item.y >= -24 && item.y <= 16) {
-        const dist = Math.abs(item.y - bladeLevel);
-        if (dist < bestDist) {
-          bestDist = dist;
-          bestIdx = i;
-        }
-      }
-    }
-
-    // 4. Process strike
-    if (bestIdx !== -1) {
-      const target = st.ingredients[bestIdx];
-
-      if (target.type === 'spoon') {
-        // HAZARD: BLADE JAMMED!
-        st.score = Math.max(0, st.score - 25);
-        st.combo = 0;
-        st.jamTimer = 1.1;
-        st.jamMaxTimer = 1.1;
-        st.shakeTimer = 0.45;
-        st.bladeSpeed = 0;
-        st.ingredients.splice(bestIdx, 1);
-
+  private catchFruit(bp: BlenderPlayer, fruit: FruitType): void {
+    if (fruit.isHazard) {
+      // Metal spoon! If not underdog, causes immediate blade jam stun
+      if (!bp.isUnderdog) {
+        bp.score = Math.max(0, bp.score + fruit.points);
+        bp.stunTimer = 0.85;
+        bp.combo = 0;
+        bp.mood = 'shocked';
+        bp.moodTimer = 1.0;
         this.audio.playExplosion();
-        this.particles.emit(st.x, st.y, 8, '#78909C');
-        this.particles.spawnSparks(st.x, st.y, '#FF3D00', 10);
-
-        st.floatingHits.push({
-          text: 'BLADE JAMMED! -25',
-          color: '#FF1744',
-          x: 0,
-          y: -20,
-          alpha: 1.0,
-          scale: 1.1
-        });
-      } else {
-        // FRUIT BLITZ!
-        const isPerfect = target.y >= -10 && target.y <= 8;
-        st.combo++;
-        const fruitColor = this.getFruitColor(target.type);
-
-        let pts = 20;
-        let fruitName = 'BERRY';
-
-        if (target.type === 'pineapple') {
-          pts = isPerfect ? 75 : 55;
-          fruitName = 'PINEAPPLE';
-          this.audio.playScore();
-          this.particles.spawnSparks(st.x, st.y - 10, '#FFD700', 14);
-        } else if (target.type === 'watermelon') {
-          pts = isPerfect ? 50 : 35;
-          fruitName = 'MELON';
-          this.audio.playScore();
-          this.particles.emit(st.x, st.y - 8, 8, '#FF5252');
-        } else if (target.type === 'banana') {
-          pts = isPerfect ? 35 : 25;
-          fruitName = 'BANANA';
-          this.audio.playTap();
-          this.particles.emit(st.x, st.y - 8, 6, '#FDD835');
-        } else {
-          pts = isPerfect ? 30 : 20;
-          fruitName = 'BERRY';
-          this.audio.playTap();
-          this.particles.emit(st.x, st.y - 8, 6, '#FF4081');
-        }
-
-        const totalPts = pts + st.combo * 4;
-        st.score += totalPts;
-        st.liquidColor = fruitColor;
-        st.liquidProgress = Math.min(100, st.liquidProgress + 25);
-
-        // Splatters on glass
-        st.splatters.push({
-          x: (Math.random() - 0.5) * 36,
-          y: -30 + Math.random() * 30,
-          r: 3 + Math.random() * 4,
-          color: fruitColor,
-          alpha: 0.85
-        });
-
-        st.floatingHits.push({
-          text: isPerfect
-            ? (st.combo > 1 ? `PERFECT ${fruitName}! ${st.combo}x` : `PERFECT ${fruitName}! +${totalPts}`)
-            : `BLITZ! +${totalPts}`,
-          color: isPerfect ? '#FFEE58' : '#FFFFFF',
-          x: target.x,
-          y: target.y - 14,
-          alpha: 1.0,
-          scale: isPerfect ? 1.15 : 0.95
-        });
-
-        st.ingredients.splice(bestIdx, 1);
-
-        // Check if smoothie completed (100% capacity)
-        if (st.liquidProgress >= 100) {
-          st.smoothiesServed++;
-          const serveBonus = 80 + st.combo * 10;
-          st.score += serveBonus;
-          st.liquidProgress = 0;
-          st.serveCelebrationTimer = 1.2;
-
-          this.audio.playChime();
-          this.particles.spawnConfetti(st.x, st.y - 50, 18);
-
-          st.floatingHits.push({
-            text: 'SMOOTHIE SERVED! +80 🍹',
-            color: '#00E676',
-            x: 0,
-            y: -50,
-            alpha: 1.0,
-            scale: 1.25
-          });
-        }
+        this.screenShake = 6;
+        this.particles.emit(bp.x, bp.y - 30, 12, fruit.color);
+        return;
       }
-    } else {
-      // 5. Whiffed empty pulse
-      st.whiffCooldown = 0.42;
-      this.audio.playWhoosh();
-      this.particles.emit(st.x, st.y + 4, 3, '#B0BEC5');
+    }
 
-      st.floatingHits.push({
-        text: 'WHIFF!',
-        color: '#B0BEC5',
-        x: 0,
-        y: -15,
-        alpha: 0.7,
-        scale: 0.85
-      });
+    bp.fruitsInJug.push(fruit);
+    bp.liquidLevel = Math.min(100, bp.liquidLevel + 25);
+    bp.liquidColor = fruit.color;
+    bp.score += fruit.points;
+    bp.mood = 'happy';
+    bp.moodTimer = 0.6;
+    this.audio.playTap();
+    this.particles.emit(bp.x, bp.y - 30, 6, fruit.color);
+  }
+
+  private executeBlenderAction(bp: BlenderPlayer, steer: number): void {
+    // If holding lateral direction strongly and near a rival, trigger Pitcher Shunt!
+    const wantsShunt = Math.abs(steer) > 0.35 && bp.shuntCooldown <= 0;
+    if (wantsShunt) {
+      bp.shuntActiveTimer = 0.22;
+      bp.shuntDir = Math.sign(steer);
+      bp.shuntCooldown = 0.8;
+      this.audio.playWhoosh();
+      this.particles.emit(bp.x, bp.y - 20, 10, '#00E5FF');
+      return;
+    }
+
+    // Otherwise, execute Master Tropical Smoothie Blitz!
+    if (bp.fruitsInJug.length === 0) {
+      // Empty whir
+      this.audio.playTap();
+      return;
+    }
+
+    const inSweetSpot = bp.torque >= 70 && bp.torque <= 98;
+    const multiplier = inSweetSpot ? 2.0 : 1.2;
+    const fruitCount = bp.fruitsInJug.length;
+    const smoothieBonus = Math.round((25 + fruitCount * 15 + bp.combo * 4) * multiplier);
+
+    bp.score += smoothieBonus;
+    bp.smoothiesServed++;
+    bp.combo++;
+    bp.fruitsInJug = [];
+    bp.liquidLevel = 0;
+
+    bp.mood = 'triumph';
+    bp.moodTimer = 1.4;
+
+    if (inSweetSpot) {
+      this.audio.playFanfare();
+      this.particles.emit(bp.x, bp.y - 45, 22, bp.liquidColor);
+      this.particles.emit(bp.x, bp.y - 45, 14, '#FFD700');
+      this.screenShake = 8;
+      this.hitStopTimer = 0.04;
+    } else {
+      this.audio.playScore();
+      this.particles.emit(bp.x, bp.y - 35, 10, bp.liquidColor);
     }
   }
 
-  private getFruitColor(type: string): string {
-    switch (type) {
-      case 'pineapple': return '#FFA000';
-      case 'watermelon': return '#FF5252';
-      case 'banana': return '#FDD835';
-      case 'strawberry': default: return '#E91E63';
+  private executePitcherShunt(attacker: BlenderPlayer, victim: BlenderPlayer, dir: number): void {
+    attacker.score += 30; // Sabotage bonus
+    attacker.mood = 'triumph';
+    attacker.moodTimer = 1.2;
+
+    victim.vx = dir * 420;
+    victim.stunTimer = 0.75;
+    victim.mood = 'shocked';
+    victim.moodTimer = 1.2;
+
+    // Dislodge 1-2 fruits from victim's blender into air for attacker to steal!
+    if (victim.fruitsInJug.length > 0) {
+      const stolen = victim.fruitsInJug.pop()!;
+      this.fallingFruits.push({
+        id: this.nextFruitId++,
+        x: victim.x,
+        y: victim.y - 45,
+        vx: -dir * 110,
+        vy: -170,
+        type: stolen,
+        rot: 0,
+        rotSpeed: 4
+      });
     }
+
+    this.audio.playExplosion();
+    this.particles.emit((attacker.x + victim.x) * 0.5, attacker.y - 25, 18, '#FF5252');
+    this.screenShake = 9;
+    this.hitStopTimer = 0.045;
   }
 
   protected updateBotAI(
@@ -436,54 +562,76 @@ export class FruitBlenderGame extends BaseGame {
       return;
     }
 
-    const st = this.playersState.get(botId);
-    if (!st) return;
+    const bp = this.blenderPlayers.get(botId);
+    if (!bp || bp.stunTimer > 0) return;
 
-    if (st.jamTimer > 0 || st.whiffCooldown > 0) {
-      this.botReactionTimers.set(botId, 0.15);
+    let delay = 0.24;
+    let blunder = false;
+
+    if (difficulty === 'bot_easy') {
+      delay = 0.42;
+      blunder = Math.random() < 0.22;
+    } else if (difficulty === 'bot_hard') {
+      delay = 0.11;
+    }
+
+    // 1. If pitcher has 2+ fruits, trigger blitz
+    if (bp.fruitsInJug.length >= 2) {
+      this.executeBlenderAction(bp, 0);
+      this.botReactionTimers.set(botId, delay);
       return;
     }
 
-    let shouldPulse = false;
-    let nextDelay = 0.2;
-
-    const inZone = st.ingredients.find(item => item.y >= -20 && item.y <= 12);
-
-    if (difficulty === 'bot_easy') {
-      nextDelay = 0.38 + Math.random() * 0.2;
-      if (inZone) {
-        if (inZone.type === 'spoon' && Math.random() < 0.35) {
-          shouldPulse = true; // Mistake on hazard
-        } else if (inZone.type !== 'spoon' && Math.random() < 0.65) {
-          shouldPulse = true;
-        }
-      } else if (Math.random() < 0.08) {
-        shouldPulse = true; // Random whiff
-      }
-    } else if (difficulty === 'bot_hard') {
-      nextDelay = 0.10 + Math.random() * 0.08;
-      // High-precision timing on fruits, 100% hazard avoidance
-      const perfectFruit = st.ingredients.find(item => item.type !== 'spoon' && item.y >= -10 && item.y <= 8);
-      if (perfectFruit && Math.random() < 0.94) {
-        shouldPulse = true;
-      }
-    } else {
-      // Normal bot
-      nextDelay = 0.20 + Math.random() * 0.12;
-      if (inZone) {
-        if (inZone.type === 'spoon') {
-          if (Math.random() < 0.12) shouldPulse = true; // Rare mistake
-        } else if (Math.random() < 0.82) {
-          shouldPulse = true;
+    // 2. Hard bot: pitcher shunt nearby rivals
+    if (difficulty === 'bot_hard' && bp.shuntCooldown <= 0) {
+      for (const p of this.getActivePlayers()) {
+        if (p.id === botId) continue;
+        const rival = this.blenderPlayers.get(p.id);
+        if (rival && Math.abs(rival.x - bp.x) < 80 && rival.fruitsInJug.length > 0) {
+          const shuntDir = rival.x > bp.x ? 1 : -1;
+          this.executeBlenderAction(bp, shuntDir);
+          this.botReactionTimers.set(botId, 0.3);
+          return;
         }
       }
     }
 
-    if (shouldPulse) {
-      this.handlePulse(st);
+    // 3. Locate best falling fruit
+    let bestFruit: FallingFruit | null = null;
+    let bestScore = -9999;
+
+    for (const f of this.fallingFruits) {
+      if (f.type.isHazard) continue; // avoid spoons
+      let weight = f.type.points;
+      if (f.type.isGolden) weight += 30;
+
+      const timeToGround = Math.max(0.1, (bp.y - f.y) / Math.max(1, f.vy));
+      const projectedX = f.x + f.vx * timeToGround;
+      const dist = Math.abs(projectedX - bp.x);
+
+      const score = weight - dist * 0.4;
+      if (score > bestScore) {
+        bestScore = score;
+        bestFruit = f;
+      }
     }
 
-    this.botReactionTimers.set(botId, nextDelay);
+    let steer = 0;
+    if (bestFruit) {
+      const timeToCatch = Math.max(0.05, (bp.y - bestFruit.y) / Math.max(1, bestFruit.vy));
+      const targetX = bestFruit.x + bestFruit.vx * timeToCatch;
+
+      if (Math.abs(targetX - bp.x) > 16) {
+        steer = targetX > bp.x ? 1 : -1;
+      }
+    }
+
+    if (blunder) {
+      steer = -steer;
+    }
+
+    this.input.setBotInput(botId, false, steer, 0, false);
+    this.botReactionTimers.set(botId, delay);
   }
 
   public isRoundOver(): boolean {
@@ -492,11 +640,11 @@ export class FruitBlenderGame extends BaseGame {
 
   public getRoundResult(): RoundResult {
     const scores = this.getActivePlayers().map((p) => {
-      const st = this.playersState.get(p.id);
+      const bp = this.blenderPlayers.get(p.id);
       return {
         playerId: p.id,
-        score: st?.score || 0,
-        smoothies: st?.smoothiesServed || 0
+        score: bp?.score || 0,
+        smoothies: bp?.smoothiesServed || 0
       };
     });
 
@@ -508,10 +656,10 @@ export class FruitBlenderGame extends BaseGame {
       place: idx + 1
     }));
 
-    const topSmoothies = scores[0]?.smoothies || 0;
+    const topPlayer = scores[0];
     const mvpHighlight = winnerId !== null
-      ? `Player ${winnerId + 1} blended and served ${topSmoothies} gourmet tropical smoothies!`
-      : 'The blender jars sat empty with unmashed fruit!';
+      ? `Player ${winnerId + 1} served ${topPlayer.smoothies} fresh tropical master smoothies!`
+      : 'The blender counter was covered in spilled fruit nectar!';
 
     return {
       winnerId,
@@ -521,448 +669,376 @@ export class FruitBlenderGame extends BaseGame {
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Tropical Juice Bar Backdrop
+    const theme = THEMES[this.currentThemeIdx];
+
+    ctx.save();
+    if (this.screenShake > 0) {
+      const shakeX = (Math.random() - 0.5) * this.screenShake;
+      const shakeY = (Math.random() - 0.5) * this.screenShake;
+      ctx.translate(shakeX, shakeY);
+    }
+
+    // Background Gradient
     const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#0E1A10');
-    bgGrad.addColorStop(0.35, '#162E1C');
-    bgGrad.addColorStop(0.7, '#1F4229');
-    bgGrad.addColorStop(1, '#112415');
+    bgGrad.addColorStop(0, theme.bgTop);
+    bgGrad.addColorStop(1, theme.bgBottom);
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
-    // Warm tropical beach bar spotlight
-    const spotlight = ctx.createRadialGradient(width / 2, height * 0.35, 40, width / 2, height * 0.35, width * 0.6);
-    spotlight.addColorStop(0, 'rgba(255, 249, 196, 0.12)');
-    spotlight.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = spotlight;
-    ctx.fillRect(0, 0, width, height);
+    // Decorative Backdrop
+    this.renderThemeBackdrop(ctx, width, height, theme);
 
-    // Tropical Bar Counter along lower screen
-    const counterY = height * 0.58;
-    const counterGrad = ctx.createLinearGradient(0, counterY, 0, height);
-    counterGrad.addColorStop(0, '#5D4037');
-    counterGrad.addColorStop(0.06, '#3E2723');
-    counterGrad.addColorStop(1, '#271916');
-    ctx.fillStyle = counterGrad;
-    ctx.fillRect(0, counterY, width, height - counterY);
+    // Tropical Bar Counter
+    const barY = height - 90;
+    ctx.fillStyle = theme.barColor;
+    ctx.fillRect(0, barY, width, 90);
 
-    // Polished bamboo counter trim
-    ctx.fillStyle = '#C8E6C9';
-    ctx.fillRect(0, counterY - 4, width, 4);
-    ctx.fillStyle = '#81C784';
-    ctx.fillRect(0, counterY, width, 2);
+    ctx.fillStyle = theme.barTrim;
+    ctx.fillRect(0, barY, width, 8);
 
-    // 2. Instructions Pill (cleanly positioned below top HUD)
-    ctx.save();
-    ctx.textAlign = 'center';
+    // Floor deck
+    ctx.fillStyle = theme.deckColor;
+    ctx.fillRect(0, height - 25, width, 25);
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-    ctx.beginPath();
-    ctx.roundRect(width / 2 - 255, 56, 510, 26, 13);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(129, 199, 132, 0.45)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    // Render Falling Fruits
+    for (const f of this.fallingFruits) {
+      this.renderFruitItem(ctx, f);
+    }
 
-    ctx.font = '700 11px sans-serif';
-    ctx.fillStyle = '#C8E6C9';
-    ctx.fillText('BLITZ AT THE BLADES! • AVOID METAL SPOONS • FILL & SERVE SMOOTHIES!', width / 2, 73);
+    // Render Blender Chefs
+    for (const p of this.getActivePlayers()) {
+      const bp = this.blenderPlayers.get(p.id);
+      if (!bp) continue;
+      this.renderBlenderPlayer(ctx, p, bp, theme);
+    }
+
+    // Render Particles
+    this.particles.render(ctx);
+
     ctx.restore();
 
-    // 3. Render Blender Stations
-    for (const p of this.getActivePlayers()) {
-      const st = this.playersState.get(p.id);
-      if (!st) continue;
+    // UI Header & Theme Pill
+    this.renderUI(ctx, width, height);
+  }
 
-      ctx.save();
-
-      // Station vibration shake
-      let shakeX = 0;
-      let shakeY = 0;
-      if (st.shakeTimer > 0) {
-        shakeX = Math.sin(st.shakeTimer * 50) * 4;
-        shakeY = Math.cos(st.shakeTimer * 40) * 2;
-      }
-      ctx.translate(st.x + shakeX, st.y + shakeY);
-
-      // Glass Pitcher dimensions
-      const pitcherW = 68;
-      const pitcherH = 100;
-      const pitcherTop = -90;
-
-      // Overhead Fruit Chute Dispenser
-      ctx.fillStyle = '#37474F';
-      ctx.beginPath();
-      ctx.roundRect(-22, pitcherTop - 14, 44, 12, [4, 4, 1, 1]);
-      ctx.fill();
-      ctx.fillStyle = '#78909C';
-      ctx.fillRect(-18, pitcherTop - 4, 36, 4);
-
-      // Glass Pitcher Chamber
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-      ctx.fillRect(-pitcherW / 2, pitcherTop, pitcherW, pitcherH);
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-      ctx.fillRect(-pitcherW / 2, pitcherTop, pitcherW, pitcherH);
-
-      // Liquid Fill inside Pitcher
-      const maxLiquidHeight = 78;
-      const curLiquidHeight = (st.liquidProgress / 100) * maxLiquidHeight;
-
-      if (curLiquidHeight > 0) {
-        ctx.save();
+  private renderThemeBackdrop(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    theme: BlenderTheme
+  ): void {
+    ctx.save();
+    if (theme.id === 'tropical_tiki') {
+      // Palm Thatch Awning
+      ctx.fillStyle = 'rgba(93, 64, 55, 0.15)';
+      for (let x = 20; x < width; x += 80) {
         ctx.beginPath();
-        const liquidTopY = 10 - curLiquidHeight;
-
-        // Waveform surface
-        ctx.moveTo(-pitcherW / 2 + 2, liquidTopY);
-        for (let lx = -pitcherW / 2 + 2; lx <= pitcherW / 2 - 2; lx += 4) {
-          const wave = Math.sin(Date.now() * 0.008 + lx * 0.15) * (st.pulseAnim > 0 ? 3.5 : 1.5);
-          // Whirlpool vortex dip at center when pulsing
-          const vortexDip = st.pulseAnim > 0 ? Math.max(0, 6 - Math.abs(lx) * 0.2) : 0;
-          ctx.lineTo(lx, liquidTopY + wave + vortexDip);
-        }
-        ctx.lineTo(pitcherW / 2 - 2, 10);
-        ctx.lineTo(-pitcherW / 2 + 2, 10);
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x + 40, 70);
+        ctx.lineTo(x + 80, 0);
         ctx.closePath();
-
-        ctx.fillStyle = st.liquidColor;
-        ctx.globalAlpha = 0.75;
         ctx.fill();
-        ctx.globalAlpha = 1.0;
-
-        // Foam / Bubble cap on surface
-        ctx.fillStyle = '#FFFFFF';
-        ctx.globalAlpha = 0.4;
-        ctx.fillRect(-pitcherW / 2 + 4, liquidTopY - 2, pitcherW - 8, 3);
-        ctx.globalAlpha = 1.0;
-        ctx.restore();
       }
-
-      // Measurement Notches on glass
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.fillRect(-pitcherW / 2 + 3, pitcherTop + 24, 8, 1.5);
-      ctx.fillRect(-pitcherW / 2 + 3, pitcherTop + 46, 8, 1.5);
-      ctx.fillRect(-pitcherW / 2 + 3, pitcherTop + 68, 8, 1.5);
-
-      // Internal Glass Splatters
-      for (const splat of st.splatters) {
-        ctx.fillStyle = splat.color;
-        ctx.globalAlpha = Math.max(0, splat.alpha);
+    } else if (theme.id === 'cyber_juice_lab') {
+      // Glowing Hologram Centrifuges
+      ctx.strokeStyle = 'rgba(0, 229, 255, 0.15)';
+      ctx.lineWidth = 1.5;
+      for (let x = 0; x < width; x += 55) {
         ctx.beginPath();
-        ctx.arc(splat.x, splat.y, splat.r, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height - 90);
+        ctx.stroke();
       }
-      ctx.globalAlpha = 1.0;
-
-      // BLITZ ZONE TARGET RETICLE
-      ctx.save();
-      ctx.strokeStyle = 'rgba(129, 199, 132, 0.55)';
-      ctx.setLineDash([4, 4]);
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(-pitcherW / 2 + 5, -14, pitcherW - 10, 22);
-      ctx.setLineDash([]);
-
-      ctx.fillStyle = '#C8E6C9';
-      ctx.font = '800 8.5px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('BLITZ ZONE', 0, -3);
-      ctx.restore();
-
-      // Render Falling Ingredients
-      for (const item of st.ingredients) {
-        ctx.save();
-        ctx.translate(item.x, item.y);
-        ctx.rotate(item.rotation);
-
-        this.renderIngredient(ctx, item.type);
-
-        ctx.restore();
+    } else {
+      // Mediterranean Sunlit Arches
+      ctx.fillStyle = 'rgba(216, 67, 21, 0.12)';
+      for (let x = 40; x < width; x += 110) {
+        ctx.fillRect(x, 40, 30, height - 130);
       }
+    }
+    ctx.restore();
+  }
 
-      // Glass Pitcher Highlights & Border
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(-pitcherW / 2, pitcherTop, pitcherW, pitcherH);
+  private renderFruitItem(ctx: CanvasRenderingContext2D, f: FallingFruit): void {
+    ctx.save();
+    ctx.translate(f.x, f.y);
+    ctx.rotate(f.rot);
 
-      // Glass glare reflection stripe
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+    if (f.type.isGolden) {
+      // Golden Dragonfruit
+      ctx.fillStyle = '#FFD700';
       ctx.beginPath();
-      ctx.moveTo(-pitcherW / 2 + 5, pitcherTop + 2);
-      ctx.lineTo(-pitcherW / 2 + 15, pitcherTop + 2);
-      ctx.lineTo(-pitcherW / 2 + 3, pitcherTop + pitcherH - 8);
-      ctx.lineTo(-pitcherW / 2 + 1, pitcherTop + pitcherH - 8);
-      ctx.closePath();
+      ctx.arc(0, 0, f.type.radius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Stainless Steel Blender Blades at bottom
-      ctx.save();
-      ctx.translate(0, 8);
-      ctx.rotate(st.bladeAngle);
-
-      ctx.fillStyle = '#ECEFF1';
-      ctx.fillRect(-14, -2.5, 28, 5);
-      ctx.fillRect(-2.5, -14, 5, 28);
-      ctx.fillStyle = '#B0BEC5';
-      ctx.beginPath();
-      ctx.arc(0, 0, 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
-      // Blender Motor Base Unit
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.roundRect(-pitcherW / 2 - 4, 10, pitcherW + 8, 22, [4, 4, 6, 6]);
-      ctx.fill();
-      ctx.strokeStyle = '#263238';
+      ctx.strokeStyle = '#FFA000';
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Chrome Rotary Control Knob & LED
-      ctx.fillStyle = '#CFD8DC';
+      // Specular highlight
+      ctx.fillStyle = '#FFFDE7';
       ctx.beginPath();
-      ctx.arc(0, 21, 6, 0, Math.PI * 2);
+      ctx.arc(-4, -4, 4, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#37474F';
-      ctx.fillRect(-1, 16, 2, 5);
-
-      // Speed indicator LED
-      ctx.fillStyle = st.pulseAnim > 0 ? '#00E676' : '#FFD54F';
+    } else if (f.type.isHazard) {
+      // Metal spoon
+      ctx.fillStyle = '#90A4AE';
       ctx.beginPath();
-      ctx.arc(pitcherW / 2 - 8, 21, 3, 0, Math.PI * 2);
+      ctx.rect(-4, -f.type.radius, 8, f.type.radius * 2);
       ctx.fill();
 
-      // JAMMED WARNING OVERLAY
-      if (st.jamTimer > 0) {
-        const jamRatio = st.jamTimer / st.jamMaxTimer;
-        ctx.fillStyle = 'rgba(211, 47, 47, 0.88)';
-        ctx.beginPath();
-        ctx.roundRect(-pitcherW / 2 + 2, -45, pitcherW - 4, 28, 4);
-        ctx.fill();
-        ctx.strokeStyle = '#FFCDD2';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = '900 9.5px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('⚠️ MOTOR JAMMED!', 0, -32);
-
-        // Lockout progress bar
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-        ctx.fillRect(-pitcherW / 2 + 6, -26, pitcherW - 12, 4);
-        ctx.fillStyle = '#FFEB3B';
-        ctx.fillRect(-pitcherW / 2 + 6, -26, (pitcherW - 12) * (1 - jamRatio), 4);
-      }
-
-      // SMOOTHIE SERVED CELEBRATION COCKTAIL GLASS
-      if (st.serveCelebrationTimer > 0) {
-        ctx.save();
-        ctx.translate(pitcherW / 2 + 18, -10);
-
-        // Chilled Glass
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-        ctx.fillRect(-8, -25, 16, 32);
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(-8, -25, 16, 32);
-
-        // Smoothie liquid inside glass
-        ctx.fillStyle = st.liquidColor;
-        ctx.fillRect(-7, -23, 14, 28);
-
-        // Foam head
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(-7, -25, 14, 3);
-
-        // Little Cocktail Umbrella
-        ctx.fillStyle = '#FF4081';
-        ctx.beginPath();
-        ctx.moveTo(0, -34);
-        ctx.lineTo(-12, -26);
-        ctx.lineTo(12, -26);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.strokeStyle = '#FFD54F';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(0, -34);
-        ctx.lineTo(4, -14);
-        ctx.stroke();
-
-        ctx.restore();
-      }
-
-      // Floating hit texts
-      for (const hit of st.floatingHits) {
-        ctx.save();
-        ctx.translate(hit.x, hit.y);
-        ctx.scale(hit.scale, hit.scale);
-        ctx.globalAlpha = Math.max(0, hit.alpha);
-        ctx.font = '900 12px sans-serif';
-        ctx.textAlign = 'center';
-
-        // Dark outline
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 3;
-        ctx.strokeText(hit.text, 0, 0);
-
-        ctx.fillStyle = hit.color;
-        ctx.fillText(hit.text, 0, 0);
-        ctx.restore();
-      }
-
-      ctx.restore();
-
-      // 4. Station Player Card & Scoreboard affixed to counter front
-      ctx.save();
-      const cardY = counterY + 14;
-      const cardW = 100;
-      const cardH = 54;
-
-      // Card bevel background
-      ctx.fillStyle = '#172319';
-      ctx.beginPath();
-      ctx.roundRect(st.x - cardW / 2, cardY, cardW, cardH, 8);
-      ctx.fill();
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      // Player name & score
+      ctx.fillStyle = '#FF5252';
+      ctx.font = '900 11px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '800 12px sans-serif';
-      ctx.fillText(p.name, st.x, cardY + 17);
+      ctx.textBaseline = 'middle';
+      ctx.fillText('✕', 0, 0);
+    } else {
+      // Fresh Fruit sphere
+      ctx.fillStyle = f.type.color;
+      ctx.beginPath();
+      ctx.arc(0, 0, f.type.radius, 0, Math.PI * 2);
+      ctx.fill();
 
-      ctx.font = '900 18px monospace';
-      ctx.fillStyle = '#FFD54F';
-      ctx.fillText(`${st.score}`, st.x, cardY + 34);
-
-      // Streak/combo or smoothie count badge
-      if (st.combo >= 2) {
-        ctx.fillStyle = '#FF7043';
-        ctx.font = '800 10px monospace';
-        ctx.fillText(`🔥 ${st.combo}x STREAK`, st.x, cardY + 47);
-      } else {
-        ctx.fillStyle = '#C8E6C9';
-        ctx.font = '700 9px monospace';
-        ctx.fillText(`🍹 Served: ${st.smoothiesServed}`, st.x, cardY + 47);
-      }
-
-      ctx.restore();
+      ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
     }
+
+    ctx.restore();
   }
 
-  /**
-   * Procedural vector rendering for each fruit / hazard type
-   */
-  private renderIngredient(ctx: CanvasRenderingContext2D, type: string): void {
-    if (type === 'spoon') {
-      // Metallic spoon hazard with warning icon
-      ctx.fillStyle = '#CFD8DC';
+  private renderBlenderPlayer(
+    ctx: CanvasRenderingContext2D,
+    p: PlayerConfig,
+    bp: BlenderPlayer,
+    _theme: BlenderTheme
+  ): void {
+    ctx.save();
+
+    // Underdog Golden Glow Aura
+    if (bp.isUnderdog) {
+      ctx.save();
+      const auraPulse = Math.sin(bp.animTimer * 8) * 6 + 18;
+      const grad = ctx.createRadialGradient(bp.x, bp.y - 30, 10, bp.x, bp.y - 30, auraPulse + 25);
+      grad.addColorStop(0, 'rgba(255, 215, 0, 0.45)');
+      grad.addColorStop(1, 'rgba(255, 215, 0, 0)');
+      ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.ellipse(0, -6, 5, 8, 0, 0, Math.PI * 2);
+      ctx.arc(bp.x, bp.y - 30, auraPulse + 25, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillRect(-1.5, 2, 3, 14);
-
-      ctx.fillStyle = '#B0BEC5';
-      ctx.fillRect(-1, 4, 2, 12);
-
-      // Red hazard glow
-      ctx.fillStyle = '#FF1744';
-      ctx.beginPath();
-      ctx.arc(0, -6, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (type === 'pineapple') {
-      // Golden Pineapple
-      ctx.fillStyle = '#FFA000';
-      ctx.beginPath();
-      ctx.ellipse(0, 2, 8, 11, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Texture criss-cross
-      ctx.strokeStyle = '#FF6F00';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(-5, -4); ctx.lineTo(5, 8);
-      ctx.moveTo(5, -4); ctx.lineTo(-5, 8);
-      ctx.stroke();
-
-      // Green spiked crown leaves
-      ctx.fillStyle = '#2E7D32';
-      ctx.beginPath();
-      ctx.moveTo(0, -8);
-      ctx.lineTo(-6, -17);
-      ctx.lineTo(-2, -12);
-      ctx.lineTo(0, -20);
-      ctx.lineTo(2, -12);
-      ctx.lineTo(6, -17);
-      ctx.closePath();
-      ctx.fill();
-    } else if (type === 'watermelon') {
-      // Watermelon Slice
-      ctx.fillStyle = '#2E7D32'; // Rind
-      ctx.beginPath();
-      ctx.arc(0, 0, 11, 0.2, Math.PI - 0.2);
-      ctx.lineTo(0, 0);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = '#FF5252'; // Flesh
-      ctx.beginPath();
-      ctx.arc(0, -1, 9, 0.3, Math.PI - 0.3);
-      ctx.lineTo(0, -1);
-      ctx.closePath();
-      ctx.fill();
-
-      // Seeds
-      ctx.fillStyle = '#212121';
-      ctx.fillRect(-3, 3, 1.5, 1.5);
-      ctx.fillRect(2, 3, 1.5, 1.5);
-      ctx.fillRect(0, 6, 1.5, 1.5);
-    } else if (type === 'banana') {
-      // Curved Banana
-      ctx.fillStyle = '#FDD835';
-      ctx.beginPath();
-      ctx.arc(0, 0, 9, -0.6, 1.8);
-      ctx.lineWidth = 5;
-      ctx.strokeStyle = '#FDD835';
-      ctx.stroke();
-
-      ctx.fillStyle = '#795548';
-      ctx.fillRect(6, -6, 2.5, 2.5);
-    } else {
-      // Fresh Strawberry
-      ctx.fillStyle = '#E91E63';
-      ctx.beginPath();
-      ctx.moveTo(0, 10);
-      ctx.quadraticCurveTo(8, 4, 7, -4);
-      ctx.quadraticCurveTo(0, -7, -7, -4);
-      ctx.quadraticCurveTo(-8, 4, 0, 10);
-      ctx.fill();
-
-      // Green calyx top leaves
-      ctx.fillStyle = '#4CAF50';
-      ctx.beginPath();
-      ctx.moveTo(0, -5);
-      ctx.lineTo(-6, -10);
-      ctx.lineTo(-2, -6);
-      ctx.lineTo(0, -11);
-      ctx.lineTo(2, -6);
-      ctx.lineTo(6, -10);
-      ctx.closePath();
-      ctx.fill();
-
-      // Yellow seeds
-      ctx.fillStyle = '#FFF59D';
-      ctx.fillRect(-2, -1, 1, 1.5);
-      ctx.fillRect(2, -1, 1, 1.5);
-      ctx.fillRect(0, 3, 1, 1.5);
+      ctx.restore();
     }
+
+    // Torque Charge Ring
+    if (bp.torque > 0) {
+      ctx.save();
+      const chargeRatio = bp.torque / 100;
+      ctx.strokeStyle = '#FF6D00';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(bp.x, bp.y - 25, 34, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * chargeRatio);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Draw Chef Mascot
+    const isBot = p.type !== 'human';
+    drawCharacter(
+      ctx,
+      bp.x,
+      bp.y - 22,
+      22,
+      p.id,
+      isBot,
+      bp.mood,
+      bp.animTimer,
+      undefined
+    );
+
+    // Draw Chef Toque Hat
+    ctx.save();
+    ctx.translate(bp.x, bp.y - 44);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.moveTo(-12, 0);
+    ctx.lineTo(12, 0);
+    ctx.lineTo(14, -14);
+    ctx.quadraticCurveTo(0, -24, -14, -14);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#E0E0E0';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // Draw Blender Pitcher in Chef's Hands
+    const jugX = bp.x + (bp.vx > 10 ? 14 : bp.vx < -10 ? -14 : 8);
+    const jugY = bp.y - 28;
+
+    ctx.save();
+    ctx.translate(jugX, jugY);
+
+    // Glass Jar Body (Trapezoid)
+    ctx.fillStyle = bp.isUnderdog ? 'rgba(255, 215, 0, 0.35)' : 'rgba(255, 255, 255, 0.25)';
+    ctx.beginPath();
+    ctx.moveTo(-10, -20);
+    ctx.lineTo(10, -20);
+    ctx.lineTo(7, 10);
+    ctx.lineTo(-7, 10);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = bp.isUnderdog ? '#FFD700' : 'rgba(255, 255, 255, 0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Liquid inside jug
+    if (bp.liquidLevel > 0) {
+      const liquidH = (bp.liquidLevel / 100) * 24;
+      ctx.fillStyle = bp.liquidColor;
+      ctx.beginPath();
+      ctx.rect(-6, 10 - liquidH, 12, liquidH);
+      ctx.fill();
+    }
+
+    // Blender Motor Base
+    ctx.fillStyle = '#37474F';
+    ctx.fillRect(-8, 10, 16, 8);
+
+    // Spinning Blade inside base
+    ctx.save();
+    ctx.translate(0, 8);
+    ctx.rotate(bp.bladeAngle);
+    ctx.strokeStyle = '#CFD8DC';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-6, 0);
+    ctx.lineTo(6, 0);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.restore();
+
+    // Overhead Name & Score Badge
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.beginPath();
+    ctx.roundRect(bp.x - 38, bp.y + 12, 76, 22, 6);
+    ctx.fill();
+
+    ctx.fillStyle = p.color;
+    ctx.font = '900 11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${p.name}: ${bp.score}`, bp.x, bp.y + 27);
+    ctx.restore();
+
+    ctx.restore();
+  }
+
+  private renderUI(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    // Top-Center Safe Zone (y: 12-44) is strictly reserved for global timer
+    // Minigame Header Badge strictly at y: 56
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+    ctx.beginPath();
+    ctx.roundRect(width / 2 - 130, 56, 260, 28, 8);
+    ctx.fill();
+
+    ctx.fillStyle = '#FFD54F';
+    ctx.font = '900 14px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`🍹 FRUIT BLENDER • ${THEMES[this.currentThemeIdx].name}`, width / 2, 70);
+    ctx.restore();
+
+    // Theme Pill (bottom-left at x: 20, y: height - 44, w: 170, h: 32)
+    ctx.save();
+    const pillX = 20;
+    const pillY = height - 44;
+    const pillW = 170;
+    const pillH = 32;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, 8);
+    ctx.fill();
+
+    ctx.strokeStyle = '#38BDF8';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#38BDF8';
+    ctx.font = '900 11px monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`[T] ${THEMES[this.currentThemeIdx].name}`, pillX + 10, pillY + pillH / 2);
+    ctx.restore();
+
+    // Player Cards at Corners (Offset to y: height - 128 to never overlap Theme Pill)
+    this.renderCornerPlayerCards(ctx, width, height);
+
+    // Control Hints at Bottom Right
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.beginPath();
+    ctx.roundRect(width - 260, height - 36, 240, 26, 6);
+    ctx.fill();
+
+    ctx.fillStyle = '#E2E8F0';
+    ctx.font = '700 11px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Steer: Move • Hold Action: Blitz & Shunt', width - 28, height - 23);
+    ctx.restore();
+  }
+
+  private renderCornerPlayerCards(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const active = this.getActivePlayers();
+    active.forEach((p, idx) => {
+      const bp = this.blenderPlayers.get(p.id);
+      if (!bp) return;
+
+      const cardW = 130;
+      const cardH = 48;
+      let cx = 20;
+      let cy = height - 128; // safe offset above Theme Pill
+
+      if (idx === 1) {
+        cx = width - cardW - 20;
+        cy = height - 128;
+      } else if (idx === 2) {
+        cx = 20;
+        cy = 90;
+      } else if (idx === 3) {
+        cx = width - cardW - 20;
+        cy = 90;
+      }
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.beginPath();
+      ctx.roundRect(cx, cy, cardW, cardH, 6);
+      ctx.fill();
+
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = p.color;
+      ctx.font = '900 12px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(p.name, cx + 10, cy + 18);
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '800 13px monospace';
+      ctx.fillText(`${bp.score} pts`, cx + 10, cy + 36);
+
+      ctx.fillStyle = '#FFD54F';
+      ctx.font = '700 10px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(`🍹 ${bp.smoothiesServed}`, cx + cardW - 8, cy + 36);
+
+      ctx.restore();
+    });
   }
 }
-
-// Helper type alias for internal method signatures
-type PopperStationLike = BlenderStation;
