@@ -1,277 +1,412 @@
 import { BaseGame } from './BaseGame';
-import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
+import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
 
-interface FossilBlock {
-  type: 'AMBER' | 'TRILOBITE' | 'STONE';
-  health: number;
-  revealed: boolean;
-  points: number;
+type QuarryTheme = 'amber_canyon' | 'crystal_grotto' | 'obsidian_dig';
+
+interface QuarryPalette {
+  name: string;
+  bgTop: string;
+  bgBot: string;
+  shaleColor: string;
+  amberColor: string;
 }
 
-interface ExcavatorState {
+const THEMES: Record<QuarryTheme, QuarryPalette> = {
+  amber_canyon: {
+    name: 'Badlands Amber Quarry',
+    bgTop: '#451a03',
+    bgBot: '#1c1917',
+    shaleColor: '#78350f',
+    amberColor: '#fbbf24',
+  },
+  crystal_grotto: {
+    name: 'Subterranean Geode Dig',
+    bgTop: '#1e1b4b',
+    bgBot: '#090d16',
+    shaleColor: '#334155',
+    amberColor: '#38bdf8',
+  },
+  obsidian_dig: {
+    name: 'Volcanic Trilobite Site',
+    bgTop: '#27272a',
+    bgBot: '#09090b',
+    shaleColor: '#52525b',
+    amberColor: '#f59e0b',
+  },
+};
+
+const THEME_KEYS: QuarryTheme[] = ['amber_canyon', 'crystal_grotto', 'obsidian_dig'];
+
+interface FossilNode {
+  id: number;
+  x: number;
+  y: number;
+  hp: number;
+  kind: 'trilobite' | 'golden_amber' | 'gas_pocket';
+}
+
+interface Paleontologist {
   id: PlayerId;
-  cursorRow: number;
-  cursorCol: number;
-  grid: FossilBlock[][];
-  sweepTimer: number;
-  cooldown: number;
+  color: string;
+  isBot: boolean;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
   score: number;
+  combo: number;
+  charge: number;
+  holding: boolean;
+  stunTimer: number;
+  underdog: boolean;
+  botTimer: number;
+  botChargeGoal: number;
+  calloutText: string;
+  calloutTimer: number;
 }
 
 export class AmberFossilExcavateGame extends BaseGame {
-  private playersState: Map<PlayerId, ExcavatorState> = new Map();
+  private diggers: Paleontologist[] = [];
+  private nodes: FossilNode[] = [];
+  private timeElapsed = 0;
+  private roundTime = 45;
+  private suddenDeath = false;
+  private hitStopTimer = 0;
+  private shakeTimer = 0;
+  private shakeIntensity = 0;
+  private themeIdx = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
 
-  constructor(
-    players: PlayerConfig[],
-    input: InputRouter,
-    audio: AudioEngine,
-    particles: ParticleSystem
-  ) {
+  constructor(players: PlayerConfig[], input: InputRouter, audio: AudioEngine, particles: ParticleSystem) {
     super(players, input, audio, particles);
   }
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+          this.audio.playTap();
+        } else if (e.key === '1') this.themeIdx = 0;
+        else if (e.key === '2') this.themeIdx = 1;
+        else if (e.key === '3') this.themeIdx = 2;
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
   }
 
   public reset(width: number, height: number): void {
+    this.timeElapsed = 0;
+    this.roundTime = 45;
     this.isFinished = false;
-    this.roundTimer = 30;
-    this.playersState.clear();
+    this.suddenDeath = false;
+    this.hitStopTimer = 0;
+    this.shakeTimer = 0;
+    this.shakeIntensity = 0;
+    this.diggers = [];
+    this.nodes = [];
 
     const active = this.getActivePlayers();
-    active.forEach((p) => {
-      this.playersState.set(p.id, {
+    active.forEach((p, idx) => {
+      this.diggers.push({
         id: p.id,
-        cursorRow: 0,
-        cursorCol: 0,
-        grid: this.generateDigGrid(),
-        sweepTimer: 0,
-        cooldown: 0,
-        score: 0
+        color: p.color,
+        isBot: p.type.startsWith('bot_'),
+        x: width * (0.3 + idx * 0.2),
+        y: height * 0.54,
+        vx: 0,
+        vy: 0,
+        score: 0,
+        combo: 1,
+        charge: 0,
+        holding: false,
+        stunTimer: 0,
+        underdog: false,
+        botTimer: 0.22,
+        botChargeGoal: 0.82,
+        calloutText: '',
+        calloutTimer: 0,
       });
     });
+
+    for (let i = 0; i < 12; i++) {
+      this.nodes.push(this.spawnNode(width, height, i));
+    }
   }
 
-  private generateDigGrid(): FossilBlock[][] {
-    const grid: FossilBlock[][] = [];
-    for (let r = 0; r < 4; r++) {
-      const row: FossilBlock[] = [];
-      for (let c = 0; c < 4; c++) {
-        const rand = Math.random();
-        if (rand < 0.3) {
-          row.push({ type: 'AMBER', health: 2, revealed: false, points: 30 });
-        } else if (rand < 0.45) {
-          row.push({ type: 'TRILOBITE', health: 3, revealed: false, points: 50 });
-        } else {
-          row.push({ type: 'STONE', health: 1, revealed: false, points: 10 });
-        }
-      }
-      grid.push(row);
-    }
-    return grid;
+  private spawnNode(width: number, height: number, id: number): FossilNode {
+    const r = Math.random();
+    return {
+      id,
+      x: width * (0.15 + Math.random() * 0.7),
+      y: height * (0.18 + Math.random() * 0.66),
+      hp: 2,
+      kind: r < 0.26 ? 'golden_amber' : r < 0.82 ? 'trilobite' : 'gas_pocket',
+    };
+  }
+
+  private triggerHitStop(ms: number, shake: number): void {
+    this.hitStopTimer = Math.max(this.hitStopTimer, ms / 1000);
+    this.shakeTimer = Math.max(this.shakeTimer, 0.22);
+    this.shakeIntensity = Math.min(18, Math.max(this.shakeIntensity, shake));
+  }
+
+  private showCallout(d: Paleontologist, text: string): void {
+    d.calloutText = text;
+    d.calloutTimer = 1.15;
   }
 
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
-    this.roundTimer = Math.max(0, this.roundTimer - dt);
+
+    if (this.shakeTimer > 0) this.shakeTimer = Math.max(0, this.shakeTimer - dt);
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer = Math.max(0, this.hitStopTimer - dt);
+      return;
+    }
+
+    this.timeElapsed += dt;
+    const remaining = Math.max(0, this.roundTime - this.timeElapsed);
+    if (remaining <= 15 && !this.suddenDeath) {
+      this.suddenDeath = true;
+      this.audio.playBuzzer();
+      this.diggers.forEach((d) => this.showCallout(d, 'AMBER RUSH 2X!'));
+    }
+    if (remaining <= 0) {
+      this.isFinished = true;
+      this.audio.playFanfare();
+      return;
+    }
+
     this.updateBots(dt, width, height);
+    const maxScore = Math.max(0, ...this.diggers.map((d) => d.score));
 
-    for (const p of this.getActivePlayers()) {
-      const ps = this.playersState.get(p.id);
-      if (!ps) continue;
-
-      if (ps.cooldown > 0) {
-        ps.cooldown -= dt;
+    for (const d of this.diggers) {
+      d.underdog = maxScore - d.score >= 150;
+      if (d.calloutTimer > 0) d.calloutTimer = Math.max(0, d.calloutTimer - dt);
+      if (d.stunTimer > 0) {
+        d.stunTimer = Math.max(0, d.stunTimer - dt);
+        continue;
       }
 
-      // Automatically move cursor across grid row by col
-      ps.sweepTimer += dt;
-      if (ps.sweepTimer > 0.32) {
-        ps.sweepTimer = 0;
-        ps.cursorCol++;
-        if (ps.cursorCol >= 4) {
-          ps.cursorCol = 0;
-          ps.cursorRow = (ps.cursorRow + 1) % 4;
-        }
+      const sx = this.input.getSteer(d.id);
+      const sy = this.input.getThrottle(d.id);
+      const justTap = this.input.justPressed(d.id) || this.input.justAction(d.id);
+      const isHold = this.input.isActionPressed(d.id) || this.input.isPressed(d.id);
+
+      const accel = 1350 * (d.underdog ? 1.15 : 1.0);
+      d.vx += sx * accel * dt;
+      d.vy += (sy !== 0 ? -sy : 0) * accel * dt;
+      d.vx *= Math.pow(0.05, dt);
+      d.vy *= Math.pow(0.05, dt);
+      d.x = Math.max(width * 0.1, Math.min(width * 0.9, d.x + d.vx * dt));
+      d.y = Math.max(height * 0.16, Math.min(height * 0.88, d.y + d.vy * dt));
+
+      if (justTap) {
+        this.chiselNearby(d, width, height, 65, false);
       }
 
-      // Tap to Chisel!
-      const tap = this.input.justPressed(p.id);
-      if (tap && ps.cooldown <= 0) {
-        const blk = ps.grid[ps.cursorRow][ps.cursorCol];
-        if (!blk.revealed) {
-          blk.health--;
-          this.audio.playTap();
+      // Hold-to-charge Seismic Jackhammer & Quarry Shunt (72%-98% Sweet Spot)
+      if (isHold) {
+        d.holding = true;
+        d.charge = Math.min(1, d.charge + dt * 0.92);
+      } else if (d.holding) {
+        const sweet = d.charge >= 0.72 && d.charge <= 0.98;
+        if (sweet) {
+          d.score += 85;
+          d.combo = Math.min(4, d.combo + 1);
+          this.showCallout(d, 'SEISMIC CHISEL +85!');
+          this.audio.playBoost();
+          this.triggerHitStop(45, 12);
+          this.chiselNearby(d, width, height, 155, true);
 
-          if (blk.health <= 0) {
-            blk.revealed = true;
-            ps.score += blk.points;
-            if (blk.type === 'AMBER' || blk.type === 'TRILOBITE') {
-              this.audio.playScore();
-              this.particles.showFloatingText(`+${blk.points} FOSSIL!`, width / 2, height / 2, '#FBBF24', 22);
+          for (const other of this.diggers) {
+            if (other.id !== d.id && Math.hypot(other.x - d.x, other.y - d.y) < 165) {
+              const dx = other.x - d.x;
+              const dy = other.y - d.y;
+              const dist = Math.max(1, Math.hypot(dx, dy));
+              other.vx += (dx / dist) * 520;
+              other.vy += (dy / dist) * 520;
+              d.score += 70;
+              this.showCallout(d, 'QUARRY TREMOR SHUNT +70!');
+              this.audio.playBounce();
             }
           }
+        } else if (d.charge > 0.98) {
+          d.stunTimer = 0.9;
+          d.combo = 1;
+          this.showCallout(d, 'CHISEL JAM!');
+          this.audio.playStun();
         }
-
-        // Check if all valuable fossils revealed
-        const remainingValuables = ps.grid.flat().filter((b) => !b.revealed && b.type !== 'STONE');
-        if (remainingValuables.length === 0) {
-          ps.score += 60; // Clean slab bonus
-          this.audio.playFanfare();
-          this.particles.showFloatingText('SLAB CLEARED! +60', width / 2, height / 2, '#10B981', 24);
-          this.particles.spawnConfetti(width / 2, height / 2, 16);
-          ps.grid = this.generateDigGrid();
-        }
+        d.holding = false;
+        d.charge = 0;
       }
     }
 
-    if (this.roundTimer <= 0) {
-      this.isFinished = true;
+    // Digger-to-Digger Bumping
+    for (let i = 0; i < this.diggers.length; i++) {
+      for (let j = i + 1; j < this.diggers.length; j++) {
+        const a = this.diggers[i];
+        const b = this.diggers[j];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 0 && dist < 36) {
+          const nx = dx / dist;
+          const ny = dy / dist;
+          a.vx -= nx * 280;
+          a.vy -= ny * 280;
+          b.vx += nx * 280;
+          b.vy += ny * 280;
+          this.audio.playBounce();
+        }
+      }
     }
   }
 
-  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Sedimentary Shale Quarry Dig Site
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#1C1917');
-    bgGrad.addColorStop(0.5, '#292524');
-    bgGrad.addColorStop(1, '#0C0A09');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
-
-    // 2. Draw Player Excavation Slabs
-    const active = this.getActivePlayers();
-    const count = active.length;
-    const zoneW = width / count;
-
-    active.forEach((p, idx) => {
-      const ps = this.playersState.get(p.id);
-      if (!ps) return;
-      const zoneCenterX = zoneW * idx + zoneW / 2;
-      const slabY = height * 0.52;
-      const slabSize = Math.min(zoneW * 0.85, height * 0.65);
-      const cellSize = slabSize / 4;
-      const startX = zoneCenterX - slabSize / 2;
-      const startY = slabY - slabSize / 2;
-
-      // Heavy Stone Slab Frame
-      ctx.fillStyle = '#44403C';
-      ctx.fillRect(startX - 6, startY - 6, slabSize + 12, slabSize + 12);
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 3;
-      ctx.strokeRect(startX - 6, startY - 6, slabSize + 12, slabSize + 12);
-
-      // 4x4 Grid Cells
-      for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 4; c++) {
-          const blk = ps.grid[r][c];
-          const cx = startX + c * cellSize;
-          const cy = startY + r * cellSize;
-          const isCursor = r === ps.cursorRow && c === ps.cursorCol;
-
-          ctx.save();
-          if (blk.revealed) {
-            // Revealed fossil bed
-            ctx.fillStyle = '#1C1917';
-            ctx.fillRect(cx + 2, cy + 2, cellSize - 4, cellSize - 4);
-
-            if (blk.type === 'AMBER') {
-              // Glowing Golden Amber Gem
-              ctx.fillStyle = '#F59E0B';
-              ctx.shadowColor = '#FBBF24';
-              ctx.shadowBlur = 10;
-              ctx.beginPath();
-              ctx.ellipse(cx + cellSize / 2, cy + cellSize / 2, cellSize * 0.32, cellSize * 0.38, 0.2, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.shadowBlur = 0;
-            } else if (blk.type === 'TRILOBITE') {
-              // Ancient Trilobite Carapace
-              ctx.fillStyle = '#38BDF8';
-              ctx.beginPath();
-              ctx.arc(cx + cellSize / 2, cy + cellSize / 2, cellSize * 0.3, 0, Math.PI * 2);
-              ctx.fill();
-            } else {
-              // Rubble
-              ctx.fillStyle = '#78716C';
-              ctx.fillRect(cx + cellSize * 0.3, cy + cellSize * 0.3, cellSize * 0.4, cellSize * 0.4);
-            }
+  private chiselNearby(d: Paleontologist, width: number, height: number, radius: number, instantBreak: boolean): void {
+    for (let i = 0; i < this.nodes.length; i++) {
+      const n = this.nodes[i];
+      if (Math.hypot(n.x - d.x, n.y - d.y) < radius) {
+        n.hp -= instantBreak ? 2 : 1;
+        if (n.hp <= 0) {
+          if (n.kind === 'gas_pocket' && !instantBreak && !d.underdog) {
+            d.stunTimer = 1.0;
+            d.combo = 1;
+            this.showCallout(d, 'GAS VENT!');
+            this.audio.playStun();
           } else {
-            // Unexcavated Rock Layer
-            ctx.fillStyle = blk.health === 3 ? '#57534E' : blk.health === 2 ? '#78716C' : '#A8A29E';
-            ctx.fillRect(cx + 2, cy + 2, cellSize - 4, cellSize - 4);
-            ctx.strokeStyle = '#292524';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(cx + 2, cy + 2, cellSize - 4, cellSize - 4);
-
-            // Crack lines if damaged
-            if (blk.health < (blk.type === 'TRILOBITE' ? 3 : blk.type === 'AMBER' ? 2 : 1)) {
-              ctx.strokeStyle = '#000000';
-              ctx.beginPath();
-              ctx.moveTo(cx + 6, cy + 6);
-              ctx.lineTo(cx + cellSize - 6, cy + cellSize - 6);
-              ctx.stroke();
-            }
+            const base = n.kind === 'golden_amber' ? 95 : 50;
+            const pts = base * d.combo * (this.suddenDeath ? 2 : 1);
+            d.score += pts;
+            d.combo = Math.min(4, d.combo + 1);
+            this.showCallout(d, n.kind === 'golden_amber' ? `GOLDEN AMBER +${pts}!` : `TRILOBITE +${pts}`);
+            this.audio.playScore();
+            this.particles.spawnSparks(n.x, n.y, '#fbbf24', 10);
           }
-
-          // Chisel Reticle Cursor
-          if (isCursor) {
-            ctx.strokeStyle = p.color;
-            ctx.lineWidth = 3;
-            ctx.strokeRect(cx + 1, cy + 1, cellSize - 2, cellSize - 2);
-
-            // Pickaxe symbol in cursor
-            ctx.fillStyle = '#FEF08A';
-            ctx.beginPath();
-            ctx.arc(cx + cellSize / 2, cy + cellSize / 2, 4, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          ctx.restore();
+          this.nodes[i] = this.spawnNode(width, height, n.id);
+        } else {
+          this.audio.playTap();
         }
       }
-
-      // Player Score Tag
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 12px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${p.name}: ${ps.score}`, zoneCenterX, startY - 14);
-    });
-
-    // 3. Header HUD
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 20px Montserrat, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`TIME: ${Math.ceil(this.roundTimer)}s`, width / 2, 28);
+    }
   }
 
   protected updateBotAI(
     dt: number,
     botId: PlayerId,
     difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
-    width: number,
-    height: number
+    _width: number,
+    _height: number
   ): void {
-    const ps = this.playersState.get(botId);
-    if (!ps || ps.cooldown > 0) return;
+    const bot = this.diggers.find((d) => d.id === botId);
+    if (!bot || bot.stunTimer > 0) return;
 
-    const blk = ps.grid[ps.cursorRow][ps.cursorCol];
-    if (!blk.revealed) {
-      const chance = difficulty === 'bot_hard' ? 0.95 : difficulty === 'bot_normal' ? 0.75 : 0.5;
-      if (Math.random() < chance) {
-        this.input.setBotInput(botId, true, 0, 0, true);
-      } else {
-        this.input.setBotInput(botId, false, 0, 0, false);
-      }
-    } else {
-      this.input.setBotInput(botId, false, 0, 0, false);
+    bot.botTimer -= dt;
+    if (bot.botTimer <= 0) {
+      bot.botTimer = difficulty === 'bot_hard' ? 0.18 : 0.26;
+      bot.botChargeGoal = 0.76 + Math.random() * 0.18;
     }
+
+    let best: FossilNode | null = null;
+    let bestD = 9999;
+    for (const n of this.nodes) {
+      if (n.kind === 'gas_pocket') continue;
+      const dist = Math.hypot(n.x - bot.x, n.y - bot.y);
+      if (dist < bestD) {
+        bestD = dist;
+        best = n;
+      }
+    }
+
+    if (best) {
+      const dx = best.x - bot.x;
+      const dy = best.y - bot.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      bot.vx += (dx / dist) * 1100 * dt;
+      bot.vy += (dy / dist) * 1100 * dt;
+    }
+
+    const hold = (bestD < 130 && !bot.holding) || (bot.holding && bot.charge < bot.botChargeGoal);
+    this.input.setBotState(botId, hold);
   }
 
-  public getScore(playerId: PlayerId): number {
-    return this.playersState.get(playerId)?.score ?? 0;
+  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const pal = THEMES[THEME_KEYS[this.themeIdx]];
+    ctx.save();
+
+    if (this.shakeTimer > 0) {
+      const s = this.shakeIntensity * (this.shakeTimer / 0.22);
+      ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+    }
+
+    const bg = ctx.createLinearGradient(0, 0, 0, height);
+    bg.addColorStop(0, pal.bgTop);
+    bg.addColorStop(1, pal.bgBot);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    // Fossil Nodes
+    for (const n of this.nodes) {
+      ctx.save();
+      ctx.translate(n.x, n.y);
+      ctx.fillStyle = n.kind === 'golden_amber' ? pal.amberColor : n.kind === 'trilobite' ? pal.shaleColor : '#ef4444';
+      ctx.beginPath();
+      ctx.roundRect(-20, -16, 40, 32, 8);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Diggers
+    for (const d of this.diggers) {
+      ctx.save();
+      ctx.translate(d.x, d.y);
+      if (d.holding && d.charge > 0.05) {
+        const sweet = d.charge >= 0.72 && d.charge <= 0.98;
+        ctx.strokeStyle = sweet ? '#4ade80' : '#fbbf24';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, 26, -Math.PI / 2, -Math.PI / 2 + d.charge * Math.PI * 2);
+        ctx.stroke();
+      }
+      const mood = d.stunTimer > 0 ? 'shocked' : d.holding ? 'focused' : 'happy';
+      this.drawPlayerMascot(ctx, d.id, 0, 0, 17, mood, this.timeElapsed, d.vx * 0.0005);
+      if (d.calloutTimer > 0 && d.calloutText) {
+        ctx.fillStyle = '#fef08a';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(d.calloutText, 0, -28);
+      }
+      ctx.restore();
+    }
+
+    // HUD
+    const remaining = Math.max(0, Math.ceil(this.roundTime - this.timeElapsed));
+    ctx.fillStyle = 'rgba(15,23,42,0.82)';
+    ctx.fillRect(0, 0, width, 46);
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 15px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      `⛏️ AMBER FOSSIL EXCAVATE • ${pal.name} [T/1-3] • ${remaining}s ${this.suddenDeath ? '🔥 2X AMBER' : ''}`,
+      width * 0.5,
+      19
+    );
+
+    this.diggers.forEach((d, idx) => {
+      ctx.fillStyle = d.color;
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`P${d.id}: ${Math.round(d.score)} pts (${d.combo}x)`, 90 + idx * 170, 38);
+    });
+
+    ctx.restore();
   }
 
   public isRoundOver(): boolean {
@@ -279,19 +414,19 @@ export class AmberFossilExcavateGame extends BaseGame {
   }
 
   public getRoundResult(): RoundResult {
-    const rankings = Array.from(this.playersState.entries())
-      .map(([playerId, ps]) => ({ playerId, score: ps.score, place: 1 }))
-      .sort((a, b) => b.score - a.score);
-
-    rankings.forEach((entry, idx) => {
-      entry.place = idx + 1;
-    });
-
-    const winnerId = rankings.length > 0 && rankings[0].score > 0 ? rankings[0].playerId : null;
+    const sorted = [...this.diggers].sort((a, b) => b.score - a.score);
     return {
-      winnerId,
-      rankings,
-      mvpHighlight: winnerId ? `${winnerId} unearthed ancient amber fossils like a master paleontologist!` : 'Tied fossil excavation!'
+      winnerId: sorted[0]?.id ?? 1,
+      rankings: sorted.map((d, i) => ({
+        playerId: d.id,
+        score: Math.round(d.score),
+        place: i + 1,
+      })),
+      mvpHighlight: `Master Paleontologist ${Math.round(sorted[0]?.score ?? 0)} pts!`,
     };
+  }
+
+  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+    return false;
   }
 }

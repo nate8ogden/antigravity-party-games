@@ -1,380 +1,448 @@
 import { BaseGame } from './BaseGame';
-import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
+import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
 
-interface RaptorAttack {
-  startX: number;
-  startY: number;
-  targetX: number;
-  targetY: number;
-  currentX: number;
-  currentY: number;
-  telegraphTimer: number; // counts down to pounce
-  pounceProgress: number; // 0 to 1 during leap
-  isLeaping: boolean;
-  done: boolean;
+type RaptorTheme = 'savanna_ferns' | 'moonlit_paddock' | 'redwood_canyon';
+
+interface RaptorPalette {
+  name: string;
+  bgTop: string;
+  bgBot: string;
+  strikeColor: string;
 }
 
-interface RaptorPlayer {
+const THEMES: Record<RaptorTheme, RaptorPalette> = {
+  savanna_ferns: {
+    name: 'Long Grass Raptor Savanna',
+    bgTop: '#14532d',
+    bgBot: '#052e16',
+    strikeColor: '#ef4444',
+  },
+  moonlit_paddock: {
+    name: 'Isla Nublar Night Paddock',
+    bgTop: '#0f172a',
+    bgBot: '#020617',
+    strikeColor: '#ec4899',
+  },
+  redwood_canyon: {
+    name: 'Redwood Fern Clearing',
+    bgTop: '#451a03',
+    bgBot: '#1c1917',
+    strikeColor: '#f97316',
+  },
+};
+
+const THEME_KEYS: RaptorTheme[] = ['savanna_ferns', 'moonlit_paddock', 'redwood_canyon'];
+
+interface RaptorPounce {
+  id: number;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  timer: number;
+  phase: 'telegraph' | 'strike';
+}
+
+interface AmberRelic {
+  id: number;
+  x: number;
+  y: number;
+  golden: boolean;
+}
+
+interface Survivor {
   id: PlayerId;
+  color: string;
+  isBot: boolean;
   x: number;
   y: number;
   vx: number;
   vy: number;
-  dodgeCooldown: number;
-  stunTimer: number;
   score: number;
+  combo: number;
+  charge: number;
+  holding: boolean;
+  rollInvulnTimer: number;
+  stunTimer: number;
+  underdog: boolean;
+  botTimer: number;
+  botChargeGoal: number;
+  calloutText: string;
+  calloutTimer: number;
 }
 
 export class RaptorPounceDodgeGame extends BaseGame {
-  private raptors: RaptorAttack[] = [];
-  private playersState: Map<PlayerId, RaptorPlayer> = new Map();
-  private spawnRaptorTimer: number = 0;
+  private survivors: Survivor[] = [];
+  private pounces: RaptorPounce[] = [];
+  private relics: AmberRelic[] = [];
+  private spawnTimer = 1.1;
+  private timeElapsed = 0;
+  private roundTime = 45;
+  private suddenDeath = false;
+  private hitStopTimer = 0;
+  private shakeTimer = 0;
+  private shakeIntensity = 0;
+  private themeIdx = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
 
-  constructor(
-    players: PlayerConfig[],
-    input: InputRouter,
-    audio: AudioEngine,
-    particles: ParticleSystem
-  ) {
+  constructor(players: PlayerConfig[], input: InputRouter, audio: AudioEngine, particles: ParticleSystem) {
     super(players, input, audio, particles);
   }
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+          this.audio.playTap();
+        } else if (e.key === '1') this.themeIdx = 0;
+        else if (e.key === '2') this.themeIdx = 1;
+        else if (e.key === '3') this.themeIdx = 2;
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
   }
 
   public reset(width: number, height: number): void {
+    this.timeElapsed = 0;
+    this.roundTime = 45;
     this.isFinished = false;
-    this.roundTimer = 30;
-    this.raptors = [];
-    this.spawnRaptorTimer = 1.0;
-    this.playersState.clear();
+    this.suddenDeath = false;
+    this.hitStopTimer = 0;
+    this.shakeTimer = 0;
+    this.shakeIntensity = 0;
+    this.survivors = [];
+    this.pounces = [];
+    this.relics = [];
 
     const active = this.getActivePlayers();
-    const count = active.length;
-    const cx = width / 2;
-    const cy = height / 2;
-
     active.forEach((p, idx) => {
-      const angle = (idx / count) * Math.PI * 2;
-      this.playersState.set(p.id, {
+      this.survivors.push({
         id: p.id,
-        x: cx + Math.cos(angle) * 70,
-        y: cy + Math.sin(angle) * 70,
+        color: p.color,
+        isBot: p.type.startsWith('bot_'),
+        x: width * (0.32 + idx * 0.18),
+        y: height * 0.54,
         vx: 0,
         vy: 0,
-        dodgeCooldown: 0,
+        score: 0,
+        combo: 1,
+        charge: 0,
+        holding: false,
+        rollInvulnTimer: 0,
         stunTimer: 0,
-        score: 0
+        underdog: false,
+        botTimer: 0.22,
+        botChargeGoal: 0.82,
+        calloutText: '',
+        calloutTimer: 0,
       });
     });
+
+    for (let i = 0; i < 8; i++) {
+      this.relics.push(this.spawnRelic(width, height, i));
+    }
+  }
+
+  private spawnRelic(width: number, height: number, id: number): AmberRelic {
+    return {
+      id,
+      x: width * (0.16 + Math.random() * 0.68),
+      y: height * (0.18 + Math.random() * 0.66),
+      golden: Math.random() < 0.28,
+    };
+  }
+
+  private triggerHitStop(ms: number, shake: number): void {
+    this.hitStopTimer = Math.max(this.hitStopTimer, ms / 1000);
+    this.shakeTimer = Math.max(this.shakeTimer, 0.22);
+    this.shakeIntensity = Math.min(18, Math.max(this.shakeIntensity, shake));
+  }
+
+  private showCallout(s: Survivor, text: string): void {
+    s.calloutText = text;
+    s.calloutTimer = 1.15;
   }
 
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
-    this.roundTimer = Math.max(0, this.roundTimer - dt);
-    this.updateBots(dt, width, height);
 
-    // Spawn velociraptor pounces
-    this.spawnRaptorTimer -= dt;
-    if (this.spawnRaptorTimer <= 0) {
-      this.spawnRaptorTimer = 1.4 + Math.random() * 0.8;
+    if (this.shakeTimer > 0) this.shakeTimer = Math.max(0, this.shakeTimer - dt);
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer = Math.max(0, this.hitStopTimer - dt);
+      return;
+    }
 
-      // Pick a random player as the target
-      const active = this.getActivePlayers();
-      const targetP = active[Math.floor(Math.random() * active.length)];
-      const ps = this.playersState.get(targetP.id);
-      const tx = ps ? ps.x : width / 2;
-      const ty = ps ? ps.y : height / 2;
+    this.timeElapsed += dt;
+    const remaining = Math.max(0, this.roundTime - this.timeElapsed);
+    if (remaining <= 15 && !this.suddenDeath) {
+      this.suddenDeath = true;
+      this.audio.playBuzzer();
+      this.survivors.forEach((s) => this.showCallout(s, 'PACK AMBUSH 2X!'));
+    }
+    if (remaining <= 0) {
+      this.isFinished = true;
+      this.audio.playFanfare();
+      return;
+    }
 
-      // Spawn from outside arena edge
-      const angle = Math.random() * Math.PI * 2;
-      const spawnDist = Math.max(width, height) * 0.55;
-      const sx = width / 2 + Math.cos(angle) * spawnDist;
-      const sy = height / 2 + Math.sin(angle) * spawnDist;
-
-      this.raptors.push({
-        startX: sx,
-        startY: sy,
-        targetX: tx,
-        targetY: ty,
-        currentX: sx,
-        currentY: sy,
-        telegraphTimer: 0.85,
-        pounceProgress: 0,
-        isLeaping: false,
-        done: false
+    // Spawn Raptor Pounce Telegraphs
+    this.spawnTimer -= dt;
+    if (this.spawnTimer <= 0) {
+      this.spawnTimer = this.suddenDeath ? 0.85 : 1.3;
+      const target = this.survivors[Math.floor(Math.random() * this.survivors.length)];
+      const ty = target ? target.y : height * 0.5;
+      this.pounces.push({
+        id: Math.random(),
+        x1: width * 0.08,
+        y1: ty + (Math.random() - 0.5) * 90,
+        x2: width * 0.92,
+        y2: ty + (Math.random() - 0.5) * 90,
+        timer: 1.05,
+        phase: 'telegraph',
       });
     }
 
-    // Update raptors
-    for (let i = this.raptors.length - 1; i >= 0; i--) {
-      const r = this.raptors[i];
-      if (!r.isLeaping) {
-        r.telegraphTimer -= dt;
-        if (r.telegraphTimer <= 0) {
-          r.isLeaping = true;
-          this.audio.playWhoosh();
-        }
-      } else {
-        r.pounceProgress += dt * 3.4; // very fast leap
-        r.currentX = r.startX + (r.targetX - r.startX) * r.pounceProgress;
-        r.currentY = r.startY + (r.targetY - r.startY) * r.pounceProgress;
-
-        // Check claw strikes on players
-        for (const p of this.getActivePlayers()) {
-          const ps = this.playersState.get(p.id);
-          if (!ps || ps.stunTimer > 0) continue;
-
-          const dist = Math.hypot(ps.x - r.currentX, ps.y - r.currentY);
-          if (dist < 26) {
-            // Pounced!
-            ps.stunTimer = 1.2;
-            ps.score = Math.max(0, ps.score - 15);
-            this.audio.playStun();
-            this.particles.showFloatingText('CLAWED! -15', ps.x, ps.y - 20, '#EF4444', 22);
-            this.particles.spawnExplosion(ps.x, ps.y, '#DC2626', 12);
-          } else if (dist < 55 && r.pounceProgress > 0.8 && r.pounceProgress < 1.0) {
-            // Close Call Dodge!
-            ps.score += 25;
-            this.audio.playScore();
-            this.particles.showFloatingText('CLOSE DODGE! +25', ps.x, ps.y - 18, '#10B981', 18);
+    for (const p of this.pounces) {
+      p.timer -= dt;
+      if (p.phase === 'telegraph' && p.timer <= 0) {
+        p.phase = 'strike';
+        p.timer = 0.28;
+        this.audio.playWhoosh();
+        for (const s of this.survivors) {
+          const dist = Math.abs((p.y2 - p.y1) * s.x - (p.x2 - p.x1) * s.y + p.x2 * p.y1 - p.y2 * p.x1) /
+            Math.max(1, Math.hypot(p.y2 - p.y1, p.x2 - p.x1));
+          if (dist < 34) {
+            if (s.rollInvulnTimer > 0 || s.underdog) {
+              s.score += 60;
+              this.showCallout(s, 'CLOSE CALL DODGE +60!');
+              this.audio.playScore();
+            } else {
+              s.stunTimer = 1.05;
+              s.combo = 1;
+              this.showCallout(s, 'POUNCED!');
+              this.audio.playStun();
+              this.triggerHitStop(45, 12);
+            }
           }
         }
+      }
+    }
+    this.pounces = this.pounces.filter((p) => !(p.phase === 'strike' && p.timer <= 0));
 
-        if (r.pounceProgress >= 1.2) {
-          r.done = true;
-          this.raptors.splice(i, 1);
+    this.updateBots(dt, width, height);
+    const maxScore = Math.max(0, ...this.survivors.map((s) => s.score));
+
+    for (const s of this.survivors) {
+      s.underdog = maxScore - s.score >= 150;
+      if (s.calloutTimer > 0) s.calloutTimer = Math.max(0, s.calloutTimer - dt);
+      if (s.rollInvulnTimer > 0) s.rollInvulnTimer = Math.max(0, s.rollInvulnTimer - dt);
+      if (s.stunTimer > 0) {
+        s.stunTimer = Math.max(0, s.stunTimer - dt);
+        continue;
+      }
+
+      const sx = this.input.getSteer(s.id);
+      const sy = this.input.getThrottle(s.id);
+      const justTap = this.input.justPressed(s.id) || this.input.justAction(s.id);
+      const isHold = this.input.isActionPressed(s.id) || this.input.isPressed(s.id);
+
+      const accel = 1350 * (s.underdog ? 1.15 : 1.0);
+      s.vx += sx * accel * dt;
+      s.vy += (sy !== 0 ? -sy : 0) * accel * dt;
+      s.vx *= Math.pow(0.05, dt);
+      s.vy *= Math.pow(0.05, dt);
+
+      if (justTap) {
+        s.rollInvulnTimer = 0.45;
+        this.audio.playTap();
+      }
+
+      // Hold-to-charge Flare Decoy Roll & Savanna Shunt (72%-98% Sweet Spot)
+      if (isHold) {
+        s.holding = true;
+        s.charge = Math.min(1, s.charge + dt * 0.92);
+      } else if (s.holding) {
+        const sweet = s.charge >= 0.72 && s.charge <= 0.98;
+        if (sweet) {
+          s.rollInvulnTimer = 2.0;
+          s.score += 85;
+          s.combo = Math.min(4, s.combo + 1);
+          this.showCallout(s, 'FLARE ROLL +85!');
+          this.audio.playBoost();
+          this.triggerHitStop(45, 11);
+
+          for (const other of this.survivors) {
+            if (other.id !== s.id && Math.hypot(other.x - s.x, other.y - s.y) < 165) {
+              const dx = other.x - s.x;
+              const dy = other.y - s.y;
+              const d = Math.max(1, Math.hypot(dx, dy));
+              other.vx += (dx / d) * 520;
+              other.vy += (dy / d) * 520;
+              s.score += 70;
+              this.showCallout(s, 'RAPTOR BAIT SHUNT +70!');
+              this.audio.playBounce();
+            }
+          }
+        } else if (s.charge > 0.98) {
+          s.stunTimer = 0.9;
+          s.combo = 1;
+          this.showCallout(s, 'STUMBLED!');
+          this.audio.playStun();
+        }
+        s.holding = false;
+        s.charge = 0;
+      }
+
+      s.x = Math.max(width * 0.1, Math.min(width * 0.9, s.x + s.vx * dt));
+      s.y = Math.max(height * 0.16, Math.min(height * 0.88, s.y + s.vy * dt));
+
+      for (let i = 0; i < this.relics.length; i++) {
+        const rl = this.relics[i];
+        if (Math.hypot(s.x - rl.x, s.y - rl.y) < 32) {
+          const base = rl.golden ? 95 : 50;
+          const pts = base * s.combo * (this.suddenDeath ? 2 : 1);
+          s.score += pts;
+          s.combo = Math.min(4, s.combo + 1);
+          this.showCallout(s, rl.golden ? `GOLDEN CLAW +${pts}!` : `RELIC +${pts}`);
+          this.audio.playScore();
+          this.particles.spawnSparks(rl.x, rl.y, '#fbbf24', 10);
+          this.relics[i] = this.spawnRelic(width, height, rl.id);
         }
       }
     }
 
-    // Update players
-    for (const p of this.getActivePlayers()) {
-      const ps = this.playersState.get(p.id);
-      if (!ps) continue;
-
-      if (ps.stunTimer > 0) {
-        ps.stunTimer -= dt;
-        continue;
-      }
-      if (ps.dodgeCooldown > 0) ps.dodgeCooldown -= dt;
-
-      const steerX = this.input.getSteer(p.id);
-      const steerY = -this.input.getThrottle(p.id);
-      const mag = Math.hypot(steerX, steerY);
-
-      if (mag > 0.2) {
-        const speed = 210;
-        ps.x += (steerX / mag) * speed * dt;
-        ps.y += (steerY / mag) * speed * dt;
-      }
-
-      // Tap to Dodge Roll
-      if (this.input.justPressed(p.id) && ps.dodgeCooldown <= 0) {
-        ps.dodgeCooldown = 0.8;
-        const rollDirX = mag > 0.2 ? steerX / mag : Math.cos(Math.random() * Math.PI * 2);
-        const rollDirY = mag > 0.2 ? steerY / mag : Math.sin(Math.random() * Math.PI * 2);
-        ps.x += rollDirX * 65;
-        ps.y += rollDirY * 65;
-        this.audio.playBounce();
-        this.particles.spawnDust(ps.x, ps.y, 6);
-      }
-
-      // Keep within arena bounds
-      const cx = width / 2;
-      const cy = height / 2;
-      const maxR = Math.min(width, height) * 0.42;
-      const distFromCenter = Math.hypot(ps.x - cx, ps.y - cy);
-      if (distFromCenter > maxR) {
-        const a = Math.atan2(ps.y - cy, ps.x - cx);
-        ps.x = cx + Math.cos(a) * maxR;
-        ps.y = cy + Math.sin(a) * maxR;
+    // Survivor-to-Survivor Bumping
+    for (let i = 0; i < this.survivors.length; i++) {
+      for (let j = i + 1; j < this.survivors.length; j++) {
+        const a = this.survivors[i];
+        const b = this.survivors[j];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 0 && dist < 36) {
+          const nx = dx / dist;
+          const ny = dy / dist;
+          a.vx -= nx * 280;
+          a.vy -= ny * 280;
+          b.vx += nx * 280;
+          b.vy += ny * 280;
+          this.audio.playBounce();
+        }
       }
     }
-
-    if (this.roundTimer <= 0) {
-      this.isFinished = true;
-    }
-  }
-
-  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Prehistoric Fern Clearing
-    const cx = width / 2;
-    const cy = height / 2;
-    const arenaR = Math.min(width, height) * 0.44;
-
-    const bgGrad = ctx.createRadialGradient(cx, cy, 30, cx, cy, width * 0.7);
-    bgGrad.addColorStop(0, '#064E3B');
-    bgGrad.addColorStop(0.7, '#022C22');
-    bgGrad.addColorStop(1, '#0F172A');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
-
-    // Arena Perimeter Ring of Dense Ferns
-    ctx.strokeStyle = '#059669';
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.arc(cx, cy, arenaR, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // 2. Draw Raptor Telegraphs & Leaping Raptors
-    for (const r of this.raptors) {
-      ctx.save();
-      if (!r.isLeaping) {
-        // Red laser trajectory threat line
-        ctx.strokeStyle = '#EF4444';
-        ctx.lineWidth = 2.5;
-        ctx.setLineDash([8, 8]);
-        ctx.beginPath();
-        ctx.moveTo(r.startX, r.startY);
-        ctx.lineTo(r.targetX, r.targetY);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // Danger Pounce Reticle at target
-        ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
-        ctx.beginPath();
-        ctx.arc(r.targetX, r.targetY, 26, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#EF4444';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Glowing Raptor Eyes in brush
-        ctx.fillStyle = '#F59E0B';
-        ctx.beginPath();
-        ctx.arc(r.startX - 5, r.startY, 3, 0, Math.PI * 2);
-        ctx.arc(r.startX + 5, r.startY, 3, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        // Flying Leaping Velociraptor Sprite
-        ctx.translate(r.currentX, r.currentY);
-        const leapAngle = Math.atan2(r.targetY - r.startY, r.targetX - r.startX);
-        ctx.rotate(leapAngle);
-
-        // Scaled Raptor Body
-        ctx.fillStyle = '#B45309';
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 24, 11, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#78350F';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Sickle Claw Extended
-        ctx.strokeStyle = '#FEF08A';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(8, 8);
-        ctx.quadraticCurveTo(18, 14, 22, 6);
-        ctx.stroke();
-
-        // Raptor Jaws
-        ctx.fillStyle = '#DC2626';
-        ctx.beginPath();
-        ctx.moveTo(18, -4);
-        ctx.lineTo(28, 0);
-        ctx.lineTo(18, 4);
-        ctx.closePath();
-        ctx.fill();
-      }
-      ctx.restore();
-    }
-
-    // 3. Draw Players
-    for (const p of this.getActivePlayers()) {
-      const ps = this.playersState.get(p.id);
-      if (!ps) continue;
-
-      ctx.save();
-      ctx.translate(ps.x, ps.y);
-
-      // Player circle
-      ctx.fillStyle = ps.stunTimer > 0 ? '#64748B' : p.color;
-      ctx.beginPath();
-      ctx.arc(0, 0, 13, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Stun indicator if stunned
-      if (ps.stunTimer > 0) {
-        ctx.fillStyle = '#FBBF24';
-        ctx.font = '900 10px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('*STUN*', 0, -18);
-      }
-      ctx.restore();
-
-      // Score
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 11px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${p.name}: ${ps.score}`, ps.x, ps.y - 20);
-    }
-
-    // 4. Header HUD
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 20px Montserrat, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`TIME: ${Math.ceil(this.roundTimer)}s`, width / 2, 28);
   }
 
   protected updateBotAI(
     dt: number,
     botId: PlayerId,
     difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
-    width: number,
-    height: number
+    _width: number,
+    _height: number
   ): void {
-    const ps = this.playersState.get(botId);
-    if (!ps || ps.stunTimer > 0) return;
+    const bot = this.survivors.find((s) => s.id === botId);
+    if (!bot || bot.stunTimer > 0) return;
 
-    // Check incoming raptors aimed near bot
-    let imminentThreat: RaptorAttack | null = null;
-    for (const r of this.raptors) {
-      if (Math.hypot(ps.x - r.targetX, ps.y - r.targetY) < 60) {
-        imminentThreat = r;
-        break;
-      }
+    bot.botTimer -= dt;
+    if (bot.botTimer <= 0) {
+      bot.botTimer = difficulty === 'bot_hard' ? 0.18 : 0.26;
+      bot.botChargeGoal = 0.76 + Math.random() * 0.18;
     }
 
-    if (imminentThreat && ps.dodgeCooldown <= 0) {
-      // Evade perpendicular to threat line
-      const dx = imminentThreat.targetX - imminentThreat.startX;
-      const dy = imminentThreat.targetY - imminentThreat.startY;
-      const perpX = -dy;
-      const perpY = dx;
-      const mag = Math.hypot(perpX, perpY) || 1;
-
-      const shouldRoll = difficulty === 'bot_hard' || (difficulty === 'bot_normal' && Math.random() < 0.7);
-      if (shouldRoll) {
-        this.input.setBotInput(botId, true, perpX / mag, -perpY / mag, true);
-      } else {
-        this.input.setBotInput(botId, true, perpX / mag, -perpY / mag, false);
-      }
-    } else {
-      // Calm movement towards center
-      const cx = width / 2;
-      const cy = height / 2;
-      const dx = cx - ps.x;
-      const dy = cy - ps.y;
-      const d = Math.hypot(dx, dy);
-      if (d > 30) {
-        this.input.setBotInput(botId, true, dx / d, -dy / d, false);
-      } else {
-        this.input.setBotInput(botId, false, 0, 0, false);
-      }
+    const best = this.relics[0];
+    if (best) {
+      const dx = best.x - bot.x;
+      const dy = best.y - bot.y;
+      const d = Math.max(1, Math.hypot(dx, dy));
+      bot.vx += (dx / d) * 1100 * dt;
+      bot.vy += (dy / d) * 1100 * dt;
     }
+
+    const hold = !bot.holding || bot.charge < bot.botChargeGoal;
+    this.input.setBotState(botId, hold);
   }
 
-  public getScore(playerId: PlayerId): number {
-    return this.playersState.get(playerId)?.score ?? 0;
+  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const pal = THEMES[THEME_KEYS[this.themeIdx]];
+    ctx.save();
+
+    if (this.shakeTimer > 0) {
+      const s = this.shakeIntensity * (this.shakeTimer / 0.22);
+      ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+    }
+
+    const bg = ctx.createLinearGradient(0, 0, 0, height);
+    bg.addColorStop(0, pal.bgTop);
+    bg.addColorStop(1, pal.bgBot);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    // Raptor Pounce Lines
+    for (const p of this.pounces) {
+      ctx.strokeStyle = p.phase === 'strike' ? '#ffffff' : pal.strikeColor;
+      ctx.lineWidth = p.phase === 'strike' ? 14 : 4;
+      ctx.beginPath();
+      ctx.moveTo(p.x1, p.y1);
+      ctx.lineTo(p.x2, p.y2);
+      ctx.stroke();
+    }
+
+    // Relics
+    for (const rl of this.relics) {
+      ctx.fillStyle = rl.golden ? '#fbbf24' : '#34d399';
+      ctx.beginPath();
+      ctx.arc(rl.x, rl.y, rl.golden ? 15 : 12, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Survivors
+    for (const s of this.survivors) {
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      if (s.holding && s.charge > 0.05) {
+        const sweet = s.charge >= 0.72 && s.charge <= 0.98;
+        ctx.strokeStyle = sweet ? '#4ade80' : '#fbbf24';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, 26, -Math.PI / 2, -Math.PI / 2 + s.charge * Math.PI * 2);
+        ctx.stroke();
+      }
+      const mood = s.stunTimer > 0 ? 'shocked' : s.rollInvulnTimer > 0 ? 'triumph' : s.holding ? 'focused' : 'happy';
+      this.drawPlayerMascot(ctx, s.id, 0, 0, 17, mood, this.timeElapsed, s.vx * 0.0005);
+      if (s.calloutTimer > 0 && s.calloutText) {
+        ctx.fillStyle = '#fef08a';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(s.calloutText, 0, -28);
+      }
+      ctx.restore();
+    }
+
+    // HUD
+    const remaining = Math.max(0, Math.ceil(this.roundTime - this.timeElapsed));
+    ctx.fillStyle = 'rgba(15,23,42,0.82)';
+    ctx.fillRect(0, 0, width, 46);
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 15px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      `🦎 RAPTOR POUNCE DODGE • ${pal.name} [T/1-3] • ${remaining}s ${this.suddenDeath ? '🔥 2X AMBUSH' : ''}`,
+      width * 0.5,
+      19
+    );
+
+    this.survivors.forEach((s, idx) => {
+      ctx.fillStyle = s.color;
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`P${s.id}: ${Math.round(s.score)} pts (${s.combo}x)`, 90 + idx * 170, 38);
+    });
+
+    ctx.restore();
   }
 
   public isRoundOver(): boolean {
@@ -382,19 +450,19 @@ export class RaptorPounceDodgeGame extends BaseGame {
   }
 
   public getRoundResult(): RoundResult {
-    const rankings = Array.from(this.playersState.entries())
-      .map(([playerId, ps]) => ({ playerId, score: ps.score, place: 1 }))
-      .sort((a, b) => b.score - a.score);
-
-    rankings.forEach((entry, idx) => {
-      entry.place = idx + 1;
-    });
-
-    const winnerId = rankings.length > 0 && rankings[0].score > 0 ? rankings[0].playerId : null;
+    const sorted = [...this.survivors].sort((a, b) => b.score - a.score);
     return {
-      winnerId,
-      rankings,
-      mvpHighlight: winnerId ? `${winnerId} dodged savage velociraptor pounces with lightning reflexes!` : 'Tied raptor dodging!'
+      winnerId: sorted[0]?.id ?? 1,
+      rankings: sorted.map((s, i) => ({
+        playerId: s.id,
+        score: Math.round(s.score),
+        place: i + 1,
+      })),
+      mvpHighlight: `Raptor Evasion Ace ${Math.round(sorted[0]?.score ?? 0)} pts!`,
     };
+  }
+
+  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+    return false;
   }
 }
