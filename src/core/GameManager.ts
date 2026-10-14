@@ -2430,11 +2430,11 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   {
     id: 'phantom_mirror_gaze',
     title: 'Phantom Mirror Gaze',
-    tagline: 'True Reflection Reflex',
+    tagline: 'Hall of Illusions Shatter',
     category: 'Puzzle',
     icon: '[G-239]',
-    instructions: 'Gaze into ornate spectral mirrors! Spot the one mirror where the ghostly reflection blinks or raises the wrong hand and strike it.',
-    controlPrompt: 'Steer: Select Mirror | Tap: Shatter Mirror'
+    instructions: 'Sprint across the Hall of Mirrors! Smash purple Impostor Mirrors with your silver mallet, absorb Royal Crown blessings, and unleash Prism Shatter Waves.',
+    controlPrompt: 'Steer: Run Gallery | Tap: Smash Mirror | Hold (72-98%): Prism Wave'
   },
   {
     id: 'cauldron_witch_brew',
@@ -2483,12 +2483,12 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   },
   {
     id: 'ouija_spirit_board',
-    title: 'Ouija Spirit Board',
-    tagline: 'Occult Planchette Spelling',
+    title: 'Celestial Star Compass',
+    tagline: 'Galactic Constellation Decoder',
     category: 'Party',
     icon: '[G-245]',
-    instructions: 'Guide your wooden planchette across the antique Ouija board to spell out mystic words whispered from beyond the grave.',
-    controlPrompt: 'Steer: Slide Planchette | Tap: Lock Letter'
+    instructions: 'Pilot your brass Astro-Compass across the planetarium star-chart! Lock onto glowing star runes to trace cosmic constellations (`COMET`, `NOVA`, `ORBIT`) and bump rivals.',
+    controlPrompt: 'Steer: Pilot Astro-Compass | Hold (72-98%): Supernova Pulse'
   },
   {
     id: 'cursed_clocktower_pendulum',

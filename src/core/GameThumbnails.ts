@@ -13859,67 +13859,53 @@ function drawCreepyDollCrawlArt(ctx: CanvasRenderingContext2D, x: number, y: num
 }
 
 function drawOuijaSpiritBoardArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  // Séance candlelit table
-  ctx.fillStyle = '#1c1007';
+  // Deep Sapphire Planetarium Dome
+  ctx.fillStyle = '#06152d';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
 
-  // Antique Carved Wooden Spirit Board
-  ctx.fillStyle = '#451a03';
-  ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(cx - 24, cy - 18, 48, 36, 4);
-  else ctx.rect(cx - 24, cy - 18, 48, 36);
-  ctx.fill();
-
-  // Pyrography Burned Gold Border
-  ctx.strokeStyle = '#b45309';
+  // Celestial Armillary Brass Rings
+  ctx.strokeStyle = 'rgba(250, 204, 21, 0.45)';
   ctx.lineWidth = 1.5;
-  ctx.strokeRect(cx - 22, cy - 16, 44, 32);
-
-  // Arched Alphabet Guide Arc (A - Z)
-  ctx.strokeStyle = '#fde68a';
-  ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.arc(cx, cy + 8, 18, Math.PI * 1.15, Math.PI * 1.85);
+  ctx.arc(cx, cy, 20, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(cx, cy, 12, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Sun & Moon Corner Emblems
-  ctx.fillStyle = '#fde68a';
+  // Glowing Golden Constellation Line & Star Nodes
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 1.8;
   ctx.beginPath();
-  ctx.arc(cx - 16, cy - 10, 3, 0, Math.PI * 2); // Sun
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(cx + 16, cy - 10, 3, 0, Math.PI * 2); // Moon
-  ctx.fill();
-  ctx.fillStyle = '#451a03';
-  ctx.beginPath();
-  ctx.arc(cx + 15, cy - 11, 2.5, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.moveTo(cx - 14, cy + 8);
+  ctx.lineTo(cx - 4, cy - 10);
+  ctx.lineTo(cx + 12, cy - 6);
+  ctx.lineTo(cx + 15, cy + 10);
+  ctx.stroke();
 
-  // Glowing Heart-Shaped Planchette moving across letters
-  const plX = cx + 2;
-  const plY = cy - 2;
-  ctx.fillStyle = '#78350f';
-  ctx.shadowColor = '#4ade80';
-  ctx.shadowBlur = 6;
-  ctx.beginPath();
-  ctx.moveTo(plX, plY - 10);
-  ctx.lineTo(plX + 9, plY + 5);
-  ctx.quadraticCurveTo(plX, plY + 2, plX - 9, plY + 5);
-  ctx.closePath();
-  ctx.fill();
-  ctx.shadowBlur = 0;
+  const stars = [
+    { sx: cx - 14, sy: cy + 8 },
+    { sx: cx - 4, sy: cy - 10 },
+    { sx: cx + 12, sy: cy - 6 },
+    { sx: cx + 15, sy: cy + 10 },
+  ];
+  ctx.fillStyle = '#fef08a';
+  for (const st of stars) {
+    ctx.beginPath();
+    ctx.arc(st.sx, st.sy, 2.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
-  // Planchette Glass Viewing Lens (Glowing Cyan)
-  ctx.fillStyle = '#38bdf8';
+  // Brass Astro-Compass Lens in Center
+  ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+  ctx.strokeStyle = '#facc15';
+  ctx.lineWidth = 2.2;
   ctx.beginPath();
-  ctx.arc(plX, plY - 2, 3.5, 0, Math.PI * 2);
+  ctx.arc(cx + 2, cy - 1, 8, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.arc(plX - 1, plY - 3, 1.2, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.stroke();
 }
 
 function drawCursedClocktowerPendulumArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
