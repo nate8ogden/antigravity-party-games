@@ -48,6 +48,7 @@ export class SpamClickShowdownGame extends BaseGame {
   private blastoffSequence: boolean = false;
   private celebrationTimer: number = 0;
   private stageLightsPhase: number = 0;
+  private rhythmPhase: number = 0;
   private clickListener: ((e: MouseEvent) => void) | null = null;
 
   constructor(
@@ -70,6 +71,7 @@ export class SpamClickShowdownGame extends BaseGame {
     this.blastoffSequence = false;
     this.celebrationTimer = 0;
     this.stageLightsPhase = 0;
+    this.rhythmPhase = 0;
 
     // Set control mode to single_button for rapid tap responsiveness
     this.input.setControlMode('single_button');
@@ -105,8 +107,8 @@ export class SpamClickShowdownGame extends BaseGame {
       // Configure bot target CPS by difficulty
       let targetCps = 5.0;
       if (p.type === 'bot_easy') targetCps = 4.5 + Math.random() * 1.5;
-      else if (p.type === 'bot_normal') targetCps = 8.0 + Math.random() * 2.0;
-      else if (p.type === 'bot_hard') targetCps = 12.5 + Math.random() * 2.5;
+      else if (p.type === 'bot_normal') targetCps = 7.6 + Math.random() * 1.8;
+      else if (p.type === 'bot_hard') targetCps = 11.5 + Math.random() * 2.2;
 
       this.playersState.set(p.id, {
         id: p.id,
@@ -205,11 +207,30 @@ export class SpamClickShowdownGame extends BaseGame {
       ps.overdriveTimer = 0.6;
     }
 
+    // Check Underdog Surge & Sweet-Spot Rhythm Beat (72% - 98%)
+    let maxP = 0;
+    for (const other of this.playersState.values()) {
+      if (other.targetPressure > maxP) maxP = other.targetPressure;
+    }
+    const isUnderdog = maxP - ps.targetPressure >= 220;
+    const inSweetBeat = this.rhythmPhase >= 0.72 && this.rhythmPhase <= 0.98;
+
     // Pressure gain per click
     const baseGain = 14;
-    const bonus = ps.overdrive ? 1.35 : 1.0;
+    const bonus = (ps.overdrive ? 1.35 : 1.0) * (isUnderdog ? 1.25 : 1.0) * (inSweetBeat ? 1.45 : 1.0);
     const addedPressure = baseGain * bonus;
     ps.targetPressure = Math.min(this.maxPressure, ps.targetPressure + addedPressure);
+
+    // Every 8th click in Sweet-Spot Beat unleashes a Fizz-Wave Shunt on rivals!
+    if (inSweetBeat && ps.totalClicks % 8 === 0) {
+      for (const rival of this.playersState.values()) {
+        if (rival.id !== ps.id && !rival.hasPopped && rival.targetPressure > 40) {
+          rival.targetPressure = Math.max(0, rival.targetPressure - 18);
+          rival.rotation = (Math.random() - 0.5) * 0.35;
+        }
+      }
+      this.particles.showFloatingText('⚡ FIZZ-WAVE SHUNT!', ps.x, ps.y - 165, '#38BDF8', 16);
+    }
 
     // Punchy squash & stretch feedback
     ps.scaleY = 0.72;
@@ -219,7 +240,7 @@ export class SpamClickShowdownGame extends BaseGame {
     // Visual fizz & steam bursts
     const neckY = ps.y - 120;
     this.particles.spawnDust(ps.x + (Math.random() - 0.5) * 20, neckY, 4);
-    if (ps.overdrive) {
+    if (ps.overdrive || inSweetBeat) {
       this.particles.spawnSparks(ps.x, neckY, '#F59E0B', 5);
       this.audio.playLaser();
     } else {
@@ -253,6 +274,7 @@ export class SpamClickShowdownGame extends BaseGame {
     if (this.isFinished) return;
 
     this.stageLightsPhase += dt * 3.5;
+    this.rhythmPhase = (this.rhythmPhase + dt * 1.1) % 1.0;
 
     // Update Bots via BaseGame
     this.updateBots(dt, width, height);
