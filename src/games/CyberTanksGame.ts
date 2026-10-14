@@ -985,13 +985,14 @@ export class CyberTanksGame extends BaseGame {
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const curTheme = this.themes[this.themeIndex] || this.themes[0];
     // Draw sci-fi metallic grid floor
     ctx.save();
-    ctx.fillStyle = '#111827';
+    ctx.fillStyle = curTheme.floorColor;
     ctx.fillRect(this.arenaBounds.x, this.arenaBounds.y, this.arenaBounds.w, this.arenaBounds.h);
 
     // Grid lines
-    ctx.strokeStyle = 'rgba(55, 65, 81, 0.4)';
+    ctx.strokeStyle = curTheme.gridColor;
     ctx.lineWidth = 1;
     const step = 40;
     for (let x = this.arenaBounds.x; x < this.arenaBounds.x + this.arenaBounds.w; x += step) {
@@ -1019,7 +1020,7 @@ export class CyberTanksGame extends BaseGame {
     }
 
     // Outer neon boundary
-    ctx.strokeStyle = '#38BDF8';
+    ctx.strokeStyle = curTheme.borderColor;
     ctx.lineWidth = 3;
     ctx.strokeRect(this.arenaBounds.x, this.arenaBounds.y, this.arenaBounds.w, this.arenaBounds.h);
 
@@ -1034,15 +1035,15 @@ export class CyberTanksGame extends BaseGame {
         ctx.lineWidth = 2.5;
         ctx.stroke();
       } else if (obs.destructible) {
-        ctx.fillStyle = '#D97706';
+        ctx.fillStyle = curTheme.crateFill;
         ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-        ctx.strokeStyle = '#FDE68A';
+        ctx.strokeStyle = curTheme.crateStroke;
         ctx.lineWidth = 2;
         ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
       } else {
-        ctx.fillStyle = '#374151';
+        ctx.fillStyle = curTheme.wallFill;
         ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-        ctx.strokeStyle = '#6B7280';
+        ctx.strokeStyle = curTheme.wallStroke;
         ctx.lineWidth = 3;
         ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
       }
@@ -1305,6 +1306,28 @@ export class CyberTanksGame extends BaseGame {
       ctx.fillText(sub, this.arenaBounds.x + this.arenaBounds.w / 2, this.arenaBounds.y + this.arenaBounds.h / 2 + 20);
       ctx.restore();
     }
+
+    // Theme Pill at Bottom-Left (x: 20, y: height - 44)
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(20, height - 44, 380, 30, 15);
+    else ctx.fillRect(20, height - 44, 380, 30);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = curTheme.borderColor;
+    ctx.font = '900 11px Montserrat, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(
+      `🛡️ [T] [${this.themeIndex + 1}/3] ${curTheme.name} • ${this.currentMapName}`,
+      34,
+      height - 29
+    );
+    ctx.restore();
 
     ctx.restore();
   }

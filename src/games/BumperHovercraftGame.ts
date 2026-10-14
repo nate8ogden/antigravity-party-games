@@ -40,9 +40,58 @@ export class BumperHovercraftGame extends BaseGame {
   private batteries: BatteryDrop[] = [];
   private eliminationOrder: PlayerId[] = [];
   private electricPulseTimer: number = 0;
+  private themeIndex: number = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
+
+  private themes = [
+    {
+      name: 'Neon Thunderdome',
+      floorColor: '#0B0F19',
+      gridColor: 'rgba(56, 189, 248, 0.09)',
+      wallColor: '#38BDF8',
+      stripeColor: '#F59E0B'
+    },
+    {
+      name: 'Magma Forge Pit',
+      floorColor: '#1C0D0A',
+      gridColor: 'rgba(249, 115, 22, 0.11)',
+      wallColor: '#F97316',
+      stripeColor: '#EF4444'
+    },
+    {
+      name: 'Cyber Punk Rink',
+      floorColor: '#130722',
+      gridColor: 'rgba(236, 72, 153, 0.10)',
+      wallColor: '#EC4899',
+      stripeColor: '#A855F7'
+    }
+  ];
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIndex = (this.themeIndex + 1) % this.themes.length;
+          this.audio.playTap();
+        } else if (e.key === '1') {
+          this.themeIndex = 0;
+        } else if (e.key === '2') {
+          this.themeIndex = 1;
+        } else if (e.key === '3') {
+          this.themeIndex = 2;
+        }
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
+  }
+
+  public destroy(): void {
+    if (typeof window !== 'undefined' && this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
+    super.destroy();
   }
 
   public reset(width: number, height: number): void {
@@ -556,14 +605,15 @@ export class BumperHovercraftGame extends BaseGame {
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const curTheme = this.themes[this.themeIndex] || this.themes[0];
     ctx.save();
 
     // Dark Neon Stadium Floor
-    ctx.fillStyle = '#0B0F19';
+    ctx.fillStyle = curTheme.floorColor;
     ctx.fillRect(0, 0, width, height);
 
     // Neon Floor Grid
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
+    ctx.strokeStyle = curTheme.gridColor;
     ctx.lineWidth = 1;
     const step = 32;
     for (let x = this.arena.x; x <= this.arena.x + this.arena.w; x += step) {
@@ -580,9 +630,9 @@ export class BumperHovercraftGame extends BaseGame {
     }
 
     // Outer Electric Cushioned Wall
-    ctx.strokeStyle = '#38BDF8';
+    ctx.strokeStyle = curTheme.wallColor;
     ctx.lineWidth = 4;
-    ctx.shadowColor = '#38BDF8';
+    ctx.shadowColor = curTheme.wallColor;
     ctx.shadowBlur = 10;
     if (ctx.roundRect) {
       ctx.beginPath();
@@ -595,7 +645,7 @@ export class BumperHovercraftGame extends BaseGame {
 
     // Corner Warning Stripes
     const stripeSize = 28;
-    ctx.fillStyle = '#F59E0B';
+    ctx.fillStyle = curTheme.stripeColor;
     ctx.fillRect(this.arena.x, this.arena.y, stripeSize, 6);
     ctx.fillRect(this.arena.x, this.arena.y, 6, stripeSize);
     ctx.fillRect(this.arena.x + this.arena.w - stripeSize, this.arena.y, stripeSize, 6);
