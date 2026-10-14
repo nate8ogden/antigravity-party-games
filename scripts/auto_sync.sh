@@ -8,7 +8,7 @@ cd "$REPO_DIR" || exit 1
 echo "Auto-sync watcher started for Antigravity Party Games..."
 
 while true; do
-  sleep 45
+  sleep 120
 
   # Check if there are unstaged or uncommitted changes
   CHANGES=$(git status --porcelain)
