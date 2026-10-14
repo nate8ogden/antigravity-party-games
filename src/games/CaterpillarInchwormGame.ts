@@ -40,11 +40,12 @@ const THEMES: Record<TwigTheme, TwigPalette> = {
 
 const THEME_KEYS: TwigTheme[] = ['rose_garden', 'cherry_blossom', 'neon_terrarium'];
 
-interface DewPickup {
-  id: number;
-  x: number;
+interface BranchPlatform {
+  x1: number;
+  x2: number;
   y: number;
-  kind: 'dew_drop' | 'golden_nectar' | 'thorn';
+  hasDew: boolean;
+  hasGoldenBud: boolean;
 }
 
 interface Inchworm {
@@ -55,6 +56,8 @@ interface Inchworm {
   y: number;
   vx: number;
   vy: number;
+  grounded: boolean;
+  scrunchPhase: number;
   score: number;
   combo: number;
   charge: number;
@@ -70,7 +73,7 @@ interface Inchworm {
 
 export class CaterpillarInchwormGame extends BaseGame {
   private worms: Inchworm[] = [];
-  private pickups: DewPickup[] = [];
+  private branches: BranchPlatform[] = [];
   private timeElapsed = 0;
   private roundTime = 45;
   private suddenDeath = false;
@@ -108,18 +111,28 @@ export class CaterpillarInchwormGame extends BaseGame {
     this.shakeTimer = 0;
     this.shakeIntensity = 0;
     this.worms = [];
-    this.pickups = [];
+    this.branches = [
+      { x1: width * 0.08, x2: width * 0.44, y: height * 0.78, hasDew: true, hasGoldenBud: false },
+      { x1: width * 0.56, x2: width * 0.92, y: height * 0.78, hasDew: true, hasGoldenBud: false },
+      { x1: width * 0.24, x2: width * 0.76, y: height * 0.58, hasDew: true, hasGoldenBud: true },
+      { x1: width * 0.1, x2: width * 0.45, y: height * 0.38, hasDew: true, hasGoldenBud: false },
+      { x1: width * 0.55, x2: width * 0.9, y: height * 0.38, hasDew: false, hasGoldenBud: true },
+      { x1: width * 0.32, x2: width * 0.68, y: height * 0.2, hasDew: false, hasGoldenBud: true },
+    ];
 
     const active = this.getActivePlayers();
     active.forEach((p, idx) => {
+      const b = this.branches[idx % 2];
       this.worms.push({
         id: p.id,
         color: p.color,
         isBot: p.type.startsWith('bot_'),
-        x: width * (0.28 + idx * 0.2),
-        y: height * 0.54,
+        x: (b.x1 + b.x2) * 0.5,
+        y: b.y,
         vx: 0,
         vy: 0,
+        grounded: true,
+        scrunchPhase: 0,
         score: 0,
         combo: 1,
         charge: 0,
@@ -133,20 +146,6 @@ export class CaterpillarInchwormGame extends BaseGame {
         calloutTimer: 0,
       });
     });
-
-    for (let i = 0; i < 12; i++) {
-      this.pickups.push(this.spawnPickup(width, height, i));
-    }
-  }
-
-  private spawnPickup(width: number, height: number, id: number): DewPickup {
-    const r = Math.random();
-    return {
-      id,
-      x: width * (0.14 + Math.random() * 0.72),
-      y: height * (0.18 + Math.random() * 0.66),
-      kind: r < 0.25 ? 'golden_nectar' : r < 0.82 ? 'dew_drop' : 'thorn',
-    };
   }
 
   private triggerHitStop(ms: number, shake: number): void {
@@ -174,7 +173,7 @@ export class CaterpillarInchwormGame extends BaseGame {
     if (remaining <= 15 && !this.suddenDeath) {
       this.suddenDeath = true;
       this.audio.playBuzzer();
-      this.worms.forEach((w) => this.showCallout(w, 'BUTTERFLY SURGE 2X!'));
+      this.worms.forEach((w) => this.showCallout(w, 'CANOPY SPRING 2X!'));
     }
     if (remaining <= 0) {
       this.isFinished = true;
@@ -195,73 +194,99 @@ export class CaterpillarInchwormGame extends BaseGame {
       }
 
       const sx = this.input.getSteer(w.id);
-      const sy = this.input.getThrottle(w.id);
+      const justTap = this.input.justPressed(w.id) || this.input.justAction(w.id);
       const isHold = this.input.isActionPressed(w.id) || this.input.isPressed(w.id);
 
-      const accel = 1300 * (w.underdog ? 1.15 : 1.0) * (w.surgeBoostTimer > 0 ? 1.35 : 1.0);
-      w.vx += sx * accel * dt;
-      w.vy += (sy !== 0 ? -sy : 0) * accel * dt;
-      w.vx *= Math.pow(0.05, dt);
-      w.vy *= Math.pow(0.05, dt);
+      // Accordion scrunch movement along branches + gravity when airborne
+      if (w.grounded) {
+        w.vx += sx * 980 * (w.underdog ? 1.15 : 1.0) * dt;
+        w.vx *= Math.pow(0.04, dt);
+        w.scrunchPhase += Math.abs(w.vx) * dt * 0.08;
+        if (justTap) {
+          w.vy = -420;
+          w.grounded = false;
+          this.audio.playTap();
+        }
+      } else {
+        w.vx += sx * 520 * dt;
+        w.vy += 680 * dt;
+      }
 
-      // Hold-to-contract Scrunch & Spring-Lunge Shunt (72%-98% Sweet Spot)
+      // Hold-to-contract Accordion Catapult & Branch-Shake Shunt (72%-98% Sweet Spot)
       if (isHold) {
         w.holding = true;
-        w.charge = Math.min(1, w.charge + dt * 0.92);
+        w.charge = Math.min(1, w.charge + dt * 0.94);
       } else if (w.holding) {
         const sweet = w.charge >= 0.72 && w.charge <= 0.98;
+        w.grounded = false;
+        w.vy = sweet ? -620 : -460;
+        w.vx += sx * 320;
         if (sweet) {
           w.surgeBoostTimer = 2.2;
           w.score += 85;
           w.combo = Math.min(4, w.combo + 1);
-          this.showCallout(w, 'SPRING LUNGE +85!');
+          this.showCallout(w, 'ACCORDION CATAPULT +85!');
           this.audio.playBoost();
           this.triggerHitStop(45, 11);
 
           for (const other of this.worms) {
-            if (other.id !== w.id && Math.hypot(other.x - w.x, other.y - w.y) < 165) {
-              const dx = other.x - w.x;
-              const dy = other.y - w.y;
-              const d = Math.max(1, Math.hypot(dx, dy));
-              other.vx += (dx / d) * 520;
-              other.vy += (dy / d) * 520;
+            if (other.id !== w.id && Math.hypot(other.x - w.x, other.y - w.y) < 170) {
+              other.grounded = false;
+              other.vy = -280;
+              other.vx += (other.x >= w.x ? 1 : -1) * 480;
               w.score += 70;
-              this.showCallout(w, 'TWIG BOUNCE SHUNT +70!');
+              this.showCallout(w, 'BRANCH SHAKE SHUNT +70!');
               this.audio.playBounce();
             }
           }
         } else if (w.charge > 0.98) {
-          w.stunTimer = 0.9;
+          w.stunTimer = 0.85;
           w.combo = 1;
-          this.showCallout(w, 'TANGLED!');
+          this.showCallout(w, 'KNOTTED UP!');
           this.audio.playStun();
         }
         w.holding = false;
         w.charge = 0;
       }
 
-      w.x = Math.max(width * 0.1, Math.min(width * 0.9, w.x + w.vx * dt));
-      w.y = Math.max(height * 0.16, Math.min(height * 0.88, w.y + w.vy * dt));
+      const prevY = w.y;
+      w.x = Math.max(width * 0.08, Math.min(width * 0.92, w.x + w.vx * dt));
+      w.y += w.vy * dt;
 
-      for (let i = 0; i < this.pickups.length; i++) {
-        const pk = this.pickups[i];
-        if (Math.hypot(w.x - pk.x, w.y - pk.y) < 32) {
-          if (pk.kind === 'thorn' && w.surgeBoostTimer <= 0 && !w.underdog) {
-            w.stunTimer = 1.0;
-            w.combo = 1;
-            this.showCallout(w, 'ROSE THORN!');
-            this.audio.playStun();
-          } else {
-            const base = pk.kind === 'golden_nectar' ? 95 : 50;
-            const pts = base * w.combo * (this.suddenDeath ? 2 : 1);
+      // Check landing on multi-tiered branches
+      w.grounded = false;
+      for (const b of this.branches) {
+        if (w.x >= b.x1 && w.x <= b.x2 && prevY <= b.y + 8 && w.y >= b.y - 6 && w.vy >= 0) {
+          w.y = b.y;
+          w.vy = 0;
+          w.grounded = true;
+
+          const mid = (b.x1 + b.x2) * 0.5;
+          if (Math.abs(w.x - mid) < 42 && (b.hasGoldenBud || b.hasDew)) {
+            const isGold = b.hasGoldenBud;
+            b.hasGoldenBud = false;
+            b.hasDew = false;
+            const pts = (isGold ? 95 : 50) * w.combo * (this.suddenDeath ? 2 : 1);
             w.score += pts;
             w.combo = Math.min(4, w.combo + 1);
-            this.showCallout(w, pk.kind === 'golden_nectar' ? `GOLDEN DEW +${pts}!` : `DEW DROP +${pts}`);
+            this.showCallout(w, isGold ? `GOLDEN BUD +${pts}!` : `DEW DROP +${pts}`);
             this.audio.playScore();
-            this.particles.spawnSparks(pk.x, pk.y, '#38bdf8', 10);
+            this.particles.spawnSparks(mid, b.y, '#fbbf24', 10);
+            const randB = this.branches[Math.floor(Math.random() * this.branches.length)];
+            if (randB) {
+              if (Math.random() < 0.45) randB.hasGoldenBud = true;
+              else randB.hasDew = true;
+            }
           }
-          this.pickups[i] = this.spawnPickup(width, height, pk.id);
+          break;
         }
+      }
+
+      if (w.y > height * 0.88) {
+        w.y = height * 0.78;
+        w.x = width * (w.x < width * 0.5 ? 0.25 : 0.75);
+        w.vy = 0;
+        w.grounded = true;
       }
     }
 
@@ -275,11 +300,8 @@ export class CaterpillarInchwormGame extends BaseGame {
         const dist = Math.hypot(dx, dy);
         if (dist > 0 && dist < 36) {
           const nx = dx / dist;
-          const ny = dy / dist;
           a.vx -= nx * 280;
-          a.vy -= ny * 280;
           b.vx += nx * 280;
-          b.vy += ny * 280;
           this.audio.playBounce();
         }
       }
@@ -290,7 +312,7 @@ export class CaterpillarInchwormGame extends BaseGame {
     dt: number,
     botId: PlayerId,
     difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
-    _width: number,
+    width: number,
     _height: number
   ): void {
     const bot = this.worms.find((w) => w.id === botId);
@@ -302,14 +324,9 @@ export class CaterpillarInchwormGame extends BaseGame {
       bot.botChargeGoal = 0.76 + Math.random() * 0.18;
     }
 
-    const best = this.pickups.find((p) => p.kind !== 'thorn') ?? this.pickups[0];
-    if (best) {
-      const dx = best.x - bot.x;
-      const dy = best.y - bot.y;
-      const d = Math.max(1, Math.hypot(dx, dy));
-      bot.vx += (dx / d) * 1100 * dt;
-      bot.vy += (dy / d) * 1100 * dt;
-    }
+    const targetBranch = this.branches.find((b) => b.hasGoldenBud || b.hasDew) ?? this.branches[2];
+    const tx = targetBranch ? (targetBranch.x1 + targetBranch.x2) * 0.5 : width * 0.5;
+    bot.vx += Math.sign(tx - bot.x) * 850 * dt;
 
     const hold = !bot.holding || bot.charge < bot.botChargeGoal;
     this.input.setBotState(botId, hold);
@@ -330,19 +347,29 @@ export class CaterpillarInchwormGame extends BaseGame {
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, width, height);
 
-    // Pickups
-    for (const pk of this.pickups) {
-      ctx.fillStyle =
-        pk.kind === 'golden_nectar' ? '#fbbf24' : pk.kind === 'dew_drop' ? pal.dewColor : '#ef4444';
+    // Render Multi-Tiered Rose Branches
+    for (const b of this.branches) {
+      ctx.strokeStyle = pal.branchColor;
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.arc(pk.x, pk.y, pk.kind === 'golden_nectar' ? 16 : 12, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.moveTo(b.x1, b.y);
+      ctx.lineTo(b.x2, b.y);
+      ctx.stroke();
+
+      const mid = (b.x1 + b.x2) * 0.5;
+      if (b.hasGoldenBud || b.hasDew) {
+        ctx.fillStyle = b.hasGoldenBud ? '#fbbf24' : pal.dewColor;
+        ctx.beginPath();
+        ctx.arc(mid, b.y - 16, b.hasGoldenBud ? 15 : 11, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
-    // Inchworms
+    // Render Accordion Inchworms
     for (const w of this.worms) {
       ctx.save();
-      ctx.translate(w.x, w.y);
+      ctx.translate(w.x, w.y - 12);
       if (w.holding && w.charge > 0.05) {
         const sweet = w.charge >= 0.72 && w.charge <= 0.98;
         ctx.strokeStyle = sweet ? '#4ade80' : '#fbbf24';
@@ -351,15 +378,17 @@ export class CaterpillarInchwormGame extends BaseGame {
         ctx.arc(0, 0, 26, -Math.PI / 2, -Math.PI / 2 + w.charge * Math.PI * 2);
         ctx.stroke();
       }
-      // Segmented caterpillar body
+
+      // 3-segment U-arch inchworm body
+      const arch = Math.sin(w.scrunchPhase) * 8 + w.charge * 14;
       ctx.fillStyle = w.color;
       ctx.beginPath();
-      ctx.arc(-14, 4 - w.charge * 10, 10, 0, Math.PI * 2);
-      ctx.arc(-26, 6, 9, 0, Math.PI * 2);
+      ctx.arc(-14 + w.charge * 6, -arch, 10, 0, Math.PI * 2);
+      ctx.arc(-26 + w.charge * 12, 2, 9, 0, Math.PI * 2);
       ctx.fill();
 
       const mood = w.stunTimer > 0 ? 'shocked' : w.surgeBoostTimer > 0 ? 'triumph' : w.holding ? 'focused' : 'happy';
-      this.drawPlayerMascot(ctx, w.id, 0, 0, 16, mood, this.timeElapsed, w.vx * 0.0005);
+      this.drawPlayerMascot(ctx, w.id, 0, 0, 15, mood, this.timeElapsed, 0);
       if (w.calloutTimer > 0 && w.calloutText) {
         ctx.fillStyle = '#fef08a';
         ctx.font = 'bold 12px sans-serif';
@@ -377,7 +406,7 @@ export class CaterpillarInchwormGame extends BaseGame {
     ctx.font = 'bold 15px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(
-      `🐛 CATERPILLAR INCHWORM • ${pal.name} [T/1-3] • ${remaining}s ${this.suddenDeath ? '🔥 2X DEW' : ''}`,
+      `🐛 CATERPILLAR INCHWORM • ${pal.name} [T/1-3] • ${remaining}s ${this.suddenDeath ? '🔥 2X CANOPY' : ''}`,
       width * 0.5,
       19
     );
@@ -405,7 +434,7 @@ export class CaterpillarInchwormGame extends BaseGame {
         score: Math.round(w.score),
         place: i + 1,
       })),
-      mvpHighlight: `Dew Branch Champion ${Math.round(sorted[0]?.score ?? 0)} pts!`,
+      mvpHighlight: `Canopy Inchworm Champion ${Math.round(sorted[0]?.score ?? 0)} pts!`,
     };
   }
 

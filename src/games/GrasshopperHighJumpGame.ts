@@ -15,19 +15,19 @@ interface MeadowJumpPalette {
 
 const THEMES: Record<MeadowJumpTheme, MeadowJumpPalette> = {
   clover_meadow: {
-    name: 'Four-Leaf Clover Meadow',
+    name: 'Towering Clover Stalk Climb',
     bgTop: '#064e3b',
     bgBot: '#022c22',
     padColor: '#4ade80',
   },
   sunlit_pond: {
-    name: 'Golden Stepping Stone Pond',
+    name: 'Golden Sunflower Ascent',
     bgTop: '#0c4a6e',
     bgBot: '#082f49',
     padColor: '#38bdf8',
   },
   starlight_garden: {
-    name: 'Moonlit Fairy Stones',
+    name: 'Moonlit Beanstalk Leap',
     bgTop: '#1e1b4b',
     bgBot: '#090d16',
     padColor: '#a855f7',
@@ -36,14 +36,16 @@ const THEMES: Record<MeadowJumpTheme, MeadowJumpPalette> = {
 
 const THEME_KEYS: MeadowJumpTheme[] = ['clover_meadow', 'sunlit_pond', 'starlight_garden'];
 
-interface CloverPad {
+interface CloverLedge {
   id: number;
   x: number;
   y: number;
+  w: number;
+  vx: number;
   goldenClover: boolean;
 }
 
-interface GrasshopperPlayer {
+interface GrasshopperLeaper {
   id: PlayerId;
   color: string;
   isBot: boolean;
@@ -51,12 +53,12 @@ interface GrasshopperPlayer {
   y: number;
   vx: number;
   vy: number;
+  grounded: boolean;
+  aimAngle: number; // Parabolic launch angle
   score: number;
   combo: number;
   charge: number;
   holding: boolean;
-  springBoostTimer: number;
-  stunTimer: number;
   underdog: boolean;
   botTimer: number;
   botChargeGoal: number;
@@ -65,8 +67,8 @@ interface GrasshopperPlayer {
 }
 
 export class GrasshopperHighJumpGame extends BaseGame {
-  private hoppers: GrasshopperPlayer[] = [];
-  private pads: CloverPad[] = [];
+  private hoppers: GrasshopperLeaper[] = [];
+  private ledges: CloverLedge[] = [];
   private timeElapsed = 0;
   private roundTime = 45;
   private suddenDeath = false;
@@ -104,14 +106,16 @@ export class GrasshopperHighJumpGame extends BaseGame {
     this.shakeTimer = 0;
     this.shakeIntensity = 0;
     this.hoppers = [];
-    this.pads = [];
+    this.ledges = [];
 
-    for (let i = 0; i < 9; i++) {
-      this.pads.push({
+    for (let i = 0; i < 6; i++) {
+      this.ledges.push({
         id: i,
-        x: width * (0.16 + (i % 3) * 0.34),
-        y: height * (0.24 + Math.floor(i / 3) * 0.25),
-        goldenClover: i % 3 === 1,
+        x: width * (0.22 + (i % 3) * 0.28),
+        y: height * (0.82 - i * 0.12),
+        w: 110,
+        vx: (i % 2 === 0 ? 1 : -1) * (65 + i * 15),
+        goldenClover: i >= 4,
       });
     }
 
@@ -121,16 +125,16 @@ export class GrasshopperHighJumpGame extends BaseGame {
         id: p.id,
         color: p.color,
         isBot: p.type.startsWith('bot_'),
-        x: width * (0.3 + idx * 0.2),
-        y: height * 0.54,
+        x: width * (0.32 + idx * 0.18),
+        y: height * 0.84,
         vx: 0,
         vy: 0,
+        grounded: true,
+        aimAngle: -Math.PI * 0.5,
         score: 0,
         combo: 1,
         charge: 0,
         holding: false,
-        springBoostTimer: 0,
-        stunTimer: 0,
         underdog: false,
         botTimer: 0.22,
         botChargeGoal: 0.82,
@@ -146,7 +150,7 @@ export class GrasshopperHighJumpGame extends BaseGame {
     this.shakeIntensity = Math.min(18, Math.max(this.shakeIntensity, shake));
   }
 
-  private showCallout(h: GrasshopperPlayer, text: string): void {
+  private showCallout(h: GrasshopperLeaper, text: string): void {
     h.calloutText = text;
     h.calloutTimer = 1.15;
   }
@@ -165,12 +169,17 @@ export class GrasshopperHighJumpGame extends BaseGame {
     if (remaining <= 15 && !this.suddenDeath) {
       this.suddenDeath = true;
       this.audio.playBuzzer();
-      this.hoppers.forEach((h) => this.showCallout(h, 'GOLDEN CLOVER 2X!'));
+      this.hoppers.forEach((h) => this.showCallout(h, 'SKYWARD CLOVER 2X!'));
     }
     if (remaining <= 0) {
       this.isFinished = true;
       this.audio.playFanfare();
       return;
+    }
+
+    for (const lg of this.ledges) {
+      lg.x += lg.vx * dt;
+      if (lg.x < width * 0.15 || lg.x > width * 0.85) lg.vx *= -1;
     }
 
     this.updateBots(dt, width, height);
@@ -179,123 +188,98 @@ export class GrasshopperHighJumpGame extends BaseGame {
     for (const h of this.hoppers) {
       h.underdog = maxScore - h.score >= 150;
       if (h.calloutTimer > 0) h.calloutTimer = Math.max(0, h.calloutTimer - dt);
-      if (h.springBoostTimer > 0) h.springBoostTimer = Math.max(0, h.springBoostTimer - dt);
-      if (h.stunTimer > 0) {
-        h.stunTimer = Math.max(0, h.stunTimer - dt);
-        continue;
-      }
 
-      const sx = this.input.getSteer(h.id);
-      const sy = this.input.getThrottle(h.id);
+      const steer = this.input.getSteer(h.id);
       const isHold = this.input.isActionPressed(h.id) || this.input.isPressed(h.id);
 
-      const accel = 1350 * (h.underdog ? 1.15 : 1.0);
-      h.vx += sx * accel * dt;
-      h.vy += (sy !== 0 ? -sy : 0) * accel * dt;
-      h.vx *= Math.pow(0.05, dt);
-      h.vy *= Math.pow(0.05, dt);
+      // Aim parabolic trajectory arc with Left/Right steering
+      h.aimAngle = Math.max(-Math.PI * 0.78, Math.min(-Math.PI * 0.22, h.aimAngle + steer * 2.2 * dt));
 
-      // Hold-to-charge Hind-Leg Catapult Leap & Landing Shock Shunt (72%-98% Sweet Spot)
-      if (isHold) {
+      if (!h.grounded) {
+        h.vx += steer * 380 * dt;
+        h.vy += 740 * dt;
+      } else {
+        h.vx *= Math.pow(0.05, dt);
+      }
+
+      // Hold-to-charge Parabolic Hind-Leg Launch & Stomp Shunt (72%-98% Sweet Spot)
+      if (isHold && h.grounded) {
         h.holding = true;
-        h.charge = Math.min(1, h.charge + dt * 0.92);
+        h.charge = Math.min(1, h.charge + dt * 0.95);
       } else if (h.holding) {
         const sweet = h.charge >= 0.72 && h.charge <= 0.98;
+        const speed = 380 + h.charge * (sweet ? 420 : 290);
+        h.vx = Math.cos(h.aimAngle) * speed;
+        h.vy = Math.sin(h.aimAngle) * speed;
+        h.grounded = false;
+
         if (sweet) {
-          h.springBoostTimer = 2.0;
           h.score += 85;
           h.combo = Math.min(4, h.combo + 1);
-          this.showCallout(h, 'CLOVER LEAP +85!');
+          this.showCallout(h, 'APEX SPRING LEAP +85!');
           this.audio.playBoost();
           this.triggerHitStop(45, 11);
 
           for (const other of this.hoppers) {
-            if (other.id !== h.id && Math.hypot(other.x - h.x, other.y - h.y) < 170) {
-              const dx = other.x - h.x;
-              const dy = other.y - h.y;
-              const d = Math.max(1, Math.hypot(dx, dy));
-              other.vx += (dx / d) * 520;
-              other.vy += (dy / d) * 520;
+            if (other.id !== h.id && Math.hypot(other.x - h.x, other.y - h.y) < 165) {
+              other.vx += (other.x >= h.x ? 1 : -1) * 480;
+              other.vy = -220;
+              other.grounded = false;
               h.score += 70;
-              this.showCallout(h, 'MEADOW SHOCK SHUNT +70!');
+              this.showCallout(h, 'SPRING-LEG SHUNT +70!');
               this.audio.playBounce();
             }
           }
-        } else if (h.charge > 0.98) {
-          h.stunTimer = 0.9;
-          h.combo = 1;
-          this.showCallout(h, 'OVERSHOOT!');
-          this.audio.playStun();
+        } else {
+          this.audio.playTap();
         }
         h.holding = false;
         h.charge = 0;
       }
 
-      h.x = Math.max(width * 0.1, Math.min(width * 0.9, h.x + h.vx * dt));
-      h.y = Math.max(height * 0.16, Math.min(height * 0.88, h.y + h.vy * dt));
+      const prevY = h.y;
+      h.x = Math.max(width * 0.08, Math.min(width * 0.92, h.x + h.vx * dt));
+      h.y += h.vy * dt;
 
-      for (const pad of this.pads) {
-        if (Math.hypot(h.x - pad.x, h.y - pad.y) < 38 && pad.goldenClover) {
-          pad.goldenClover = false;
-          const pts = 95 * h.combo * (this.suddenDeath ? 2 : 1);
-          h.score += pts;
-          h.combo = Math.min(4, h.combo + 1);
-          this.showCallout(h, `GOLDEN CLOVER +${pts}!`);
-          this.audio.playScore();
-          this.particles.spawnSparks(pad.x, pad.y, '#fbbf24', 12);
-          const randomPad = this.pads[Math.floor(Math.random() * this.pads.length)];
-          if (randomPad) randomPad.goldenClover = true;
+      if (h.vy > 0) {
+        for (const lg of this.ledges) {
+          if (Math.abs(h.x - lg.x) < lg.w * 0.55 && prevY <= lg.y + 8 && h.y >= lg.y - 6) {
+            h.y = lg.y;
+            h.vy = 0;
+            h.grounded = true;
+            const pts = (lg.goldenClover ? 95 : 40) * h.combo * (this.suddenDeath ? 2 : 1);
+            h.score += pts;
+            this.showCallout(h, lg.goldenClover ? `GOLDEN CLOVER +${pts}!` : `CLOVER PAD +${pts}`);
+            this.audio.playScore();
+            break;
+          }
         }
       }
-    }
 
-    // Hopper-to-Hopper Bumping
-    for (let i = 0; i < this.hoppers.length; i++) {
-      for (let j = i + 1; j < this.hoppers.length; j++) {
-        const a = this.hoppers[i];
-        const b = this.hoppers[j];
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist > 0 && dist < 36) {
-          const nx = dx / dist;
-          const ny = dy / dist;
-          a.vx -= nx * 280;
-          a.vy -= ny * 280;
-          b.vx += nx * 280;
-          b.vy += ny * 280;
-          this.audio.playBounce();
-        }
+      if (h.y >= height * 0.86) {
+        h.y = height * 0.86;
+        h.vy = 0;
+        h.grounded = true;
       }
     }
   }
 
   protected updateBotAI(
-    dt: number,
+    _dt: number,
     botId: PlayerId,
-    difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
+    _difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
     _width: number,
     _height: number
   ): void {
     const bot = this.hoppers.find((h) => h.id === botId);
-    if (!bot || bot.stunTimer > 0) return;
+    if (!bot) return;
 
-    bot.botTimer -= dt;
-    if (bot.botTimer <= 0) {
-      bot.botTimer = difficulty === 'bot_hard' ? 0.18 : 0.26;
-      bot.botChargeGoal = 0.76 + Math.random() * 0.18;
+    const topLedge = this.ledges[4] ?? this.ledges[0];
+    if (topLedge) {
+      bot.aimAngle = -Math.PI * 0.5 + Math.sign(topLedge.x - bot.x) * 0.18;
     }
 
-    const best = this.pads.find((p) => p.goldenClover) ?? this.pads[0];
-    if (best) {
-      const dx = best.x - bot.x;
-      const dy = best.y - bot.y;
-      const d = Math.max(1, Math.hypot(dx, dy));
-      bot.vx += (dx / d) * 1100 * dt;
-      bot.vy += (dy / d) * 1100 * dt;
-    }
-
-    const hold = !bot.holding || bot.charge < bot.botChargeGoal;
+    const hold = bot.grounded && (!bot.holding || bot.charge < bot.botChargeGoal);
     this.input.setBotState(botId, hold);
   }
 
@@ -314,21 +298,34 @@ export class GrasshopperHighJumpGame extends BaseGame {
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, width, height);
 
-    // Clover Stepping Pads
-    for (const pad of this.pads) {
-      ctx.fillStyle = pad.goldenClover ? '#fbbf24' : pal.padColor;
+    // Moving Clover Ledges
+    for (const lg of this.ledges) {
+      ctx.fillStyle = lg.goldenClover ? '#fbbf24' : pal.padColor;
       ctx.beginPath();
-      ctx.arc(pad.x, pad.y, 36, 0, Math.PI * 2);
+      ctx.roundRect(lg.x - lg.w * 0.5, lg.y - 8, lg.w, 16, 8);
       ctx.fill();
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
       ctx.stroke();
     }
 
-    // Hoppers
+    // Hoppers + Dotted Parabolic Trajectory Preview
     for (const h of this.hoppers) {
       ctx.save();
-      ctx.translate(h.x, h.y);
+      ctx.translate(h.x, h.y - 12);
+
+      if (h.grounded) {
+        ctx.fillStyle = 'rgba(255,255,255,0.45)';
+        const spd = 380 + h.charge * 380;
+        for (let step = 1; step <= 6; step++) {
+          const t = step * 0.08;
+          const px = Math.cos(h.aimAngle) * spd * t;
+          const py = Math.sin(h.aimAngle) * spd * t + 0.5 * 740 * t * t;
+          ctx.beginPath();
+          ctx.arc(px, py, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
       if (h.holding && h.charge > 0.05) {
         const sweet = h.charge >= 0.72 && h.charge <= 0.98;
         ctx.strokeStyle = sweet ? '#4ade80' : '#fbbf24';
@@ -337,8 +334,9 @@ export class GrasshopperHighJumpGame extends BaseGame {
         ctx.arc(0, 0, 26, -Math.PI / 2, -Math.PI / 2 + h.charge * Math.PI * 2);
         ctx.stroke();
       }
-      const mood = h.stunTimer > 0 ? 'shocked' : h.springBoostTimer > 0 ? 'triumph' : h.holding ? 'focused' : 'happy';
-      this.drawPlayerMascot(ctx, h.id, 0, 0, 16, mood, this.timeElapsed, h.vx * 0.0005);
+
+      const mood = h.holding ? 'focused' : 'happy';
+      this.drawPlayerMascot(ctx, h.id, 0, 0, 16, mood, this.timeElapsed, 0);
       if (h.calloutTimer > 0 && h.calloutText) {
         ctx.fillStyle = '#fef08a';
         ctx.font = 'bold 12px sans-serif';
@@ -384,7 +382,7 @@ export class GrasshopperHighJumpGame extends BaseGame {
         score: Math.round(h.score),
         place: i + 1,
       })),
-      mvpHighlight: `Meadow Leap Champion ${Math.round(sorted[0]?.score ?? 0)} pts!`,
+      mvpHighlight: `Parabolic Leap Champion ${Math.round(sorted[0]?.score ?? 0)} pts!`,
     };
   }
 

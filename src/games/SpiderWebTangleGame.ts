@@ -36,26 +36,33 @@ const THEMES: Record<WebTheme, WebPalette> = {
 
 const THEME_KEYS: WebTheme[] = ['morning_dew_web', 'moonlit_silk', 'crystal_orb_weaver'];
 
-interface WebPrey {
-  id: number;
-  x: number;
-  y: number;
-  kind: 'gnat' | 'golden_scarab' | 'hornet';
+interface SilkStrand {
+  ownerId: PlayerId;
+  color: string;
+  spoke: number;
+  ring: number;
+  ttl: number;
 }
 
-interface SpiderPlayer {
+interface WebScarab {
+  spoke: number;
+  ring: number;
+  golden: boolean;
+}
+
+interface SpiderWeaver {
   id: PlayerId;
   color: string;
   isBot: boolean;
+  spoke: number; // 0..7 radial spokes
+  ring: number; // 1..4 concentric rings
   x: number;
   y: number;
-  vx: number;
-  vy: number;
+  moveCooldown: number;
   score: number;
   combo: number;
   charge: number;
   holding: boolean;
-  silkBoostTimer: number;
   stunTimer: number;
   underdog: boolean;
   botTimer: number;
@@ -65,8 +72,9 @@ interface SpiderPlayer {
 }
 
 export class SpiderWebTangleGame extends BaseGame {
-  private spiders: SpiderPlayer[] = [];
-  private prey: WebPrey[] = [];
+  private spiders: SpiderWeaver[] = [];
+  private strands: SilkStrand[] = [];
+  private scarabs: WebScarab[] = [];
   private timeElapsed = 0;
   private roundTime = 45;
   private suddenDeath = false;
@@ -95,6 +103,14 @@ export class SpiderWebTangleGame extends BaseGame {
     }
   }
 
+  private nodePos(width: number, height: number, spoke: number, ring: number): { x: number; y: number } {
+    const cx = width * 0.5;
+    const cy = height * 0.54;
+    const r = ring * 46;
+    const a = (spoke * Math.PI) / 4;
+    return { x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r };
+  }
+
   public reset(width: number, height: number): void {
     this.timeElapsed = 0;
     this.roundTime = 45;
@@ -104,48 +120,43 @@ export class SpiderWebTangleGame extends BaseGame {
     this.shakeTimer = 0;
     this.shakeIntensity = 0;
     this.spiders = [];
-    this.prey = [];
+    this.strands = [];
+    this.scarabs = [];
 
     const active = this.getActivePlayers();
     active.forEach((p, idx) => {
-      const a = (idx * Math.PI * 2) / Math.max(1, active.length);
+      const sp = (idx * 2) % 8;
+      const rg = 2;
+      const pos = this.nodePos(width, height, sp, rg);
       this.spiders.push({
         id: p.id,
         color: p.color,
         isBot: p.type.startsWith('bot_'),
-        x: width * 0.5 + Math.cos(a) * 110,
-        y: height * 0.54 + Math.sin(a) * 90,
-        vx: 0,
-        vy: 0,
+        spoke: sp,
+        ring: rg,
+        x: pos.x,
+        y: pos.y,
+        moveCooldown: 0,
         score: 0,
         combo: 1,
         charge: 0,
         holding: false,
-        silkBoostTimer: 0,
         stunTimer: 0,
         underdog: false,
-        botTimer: 0.22,
+        botTimer: 0.24,
         botChargeGoal: 0.82,
         calloutText: '',
         calloutTimer: 0,
       });
     });
 
-    for (let i = 0; i < 10; i++) {
-      this.prey.push(this.spawnPrey(width, height, i));
+    for (let i = 0; i < 6; i++) {
+      this.scarabs.push({
+        spoke: Math.floor(Math.random() * 8),
+        ring: 1 + Math.floor(Math.random() * 4),
+        golden: i % 2 === 0,
+      });
     }
-  }
-
-  private spawnPrey(width: number, height: number, id: number): WebPrey {
-    const a = Math.random() * Math.PI * 2;
-    const d = 40 + Math.random() * 175;
-    const r = Math.random();
-    return {
-      id,
-      x: width * 0.5 + Math.cos(a) * d,
-      y: height * 0.54 + Math.sin(a) * d * 0.78,
-      kind: r < 0.26 ? 'golden_scarab' : r < 0.82 ? 'gnat' : 'hornet',
-    };
   }
 
   private triggerHitStop(ms: number, shake: number): void {
@@ -154,7 +165,7 @@ export class SpiderWebTangleGame extends BaseGame {
     this.shakeIntensity = Math.min(18, Math.max(this.shakeIntensity, shake));
   }
 
-  private showCallout(s: SpiderPlayer, text: string): void {
+  private showCallout(s: SpiderWeaver, text: string): void {
     s.calloutText = text;
     s.calloutTimer = 1.15;
   }
@@ -173,7 +184,7 @@ export class SpiderWebTangleGame extends BaseGame {
     if (remaining <= 15 && !this.suddenDeath) {
       this.suddenDeath = true;
       this.audio.playBuzzer();
-      this.spiders.forEach((s) => this.showCallout(s, 'SILK FRENZY 2X!'));
+      this.spiders.forEach((s) => this.showCallout(s, 'SILK SNARE 2X!'));
     }
     if (remaining <= 0) {
       this.isFinished = true;
@@ -181,13 +192,16 @@ export class SpiderWebTangleGame extends BaseGame {
       return;
     }
 
+    for (const st of this.strands) st.ttl -= dt;
+    this.strands = this.strands.filter((st) => st.ttl > 0);
+
     this.updateBots(dt, width, height);
     const maxScore = Math.max(0, ...this.spiders.map((s) => s.score));
 
     for (const s of this.spiders) {
       s.underdog = maxScore - s.score >= 150;
       if (s.calloutTimer > 0) s.calloutTimer = Math.max(0, s.calloutTimer - dt);
-      if (s.silkBoostTimer > 0) s.silkBoostTimer = Math.max(0, s.silkBoostTimer - dt);
+      if (s.moveCooldown > 0) s.moveCooldown = Math.max(0, s.moveCooldown - dt);
       if (s.stunTimer > 0) {
         s.stunTimer = Math.max(0, s.stunTimer - dt);
         continue;
@@ -195,94 +209,89 @@ export class SpiderWebTangleGame extends BaseGame {
 
       const sx = this.input.getSteer(s.id);
       const sy = this.input.getThrottle(s.id);
+      const justTap = this.input.justPressed(s.id) || this.input.justAction(s.id);
       const isHold = this.input.isActionPressed(s.id) || this.input.isPressed(s.id);
 
-      const accel = 1350 * (s.underdog ? 1.15 : 1.0) * (s.silkBoostTimer > 0 ? 1.35 : 1.0);
-      s.vx += sx * accel * dt;
-      s.vy += (sy !== 0 ? -sy : 0) * accel * dt;
-      s.vx *= Math.pow(0.05, dt);
-      s.vy *= Math.pow(0.05, dt);
+      if (s.moveCooldown <= 0) {
+        if (Math.abs(sx) > 0.45) {
+          s.spoke = (s.spoke + (sx > 0 ? 1 : 7)) % 8;
+          s.moveCooldown = 0.16;
+          this.spinStrand(s);
+        } else if (Math.abs(sy) > 0.45 || justTap) {
+          s.ring = s.ring === 4 ? 1 : s.ring + 1;
+          s.moveCooldown = 0.16;
+          this.spinStrand(s);
+        }
+      }
 
-      // Hold-to-charge Silk Zipline Pounce & Web-Twang Shunt (72%-98% Sweet Spot)
+      const targetPos = this.nodePos(width, height, s.spoke, s.ring);
+      s.x += (targetPos.x - s.x) * Math.min(1, dt * 14);
+      s.y += (targetPos.y - s.y) * Math.min(1, dt * 14);
+
+      // Hold-to-charge Radial Web-Twang Pulse & Snare Shunt (72%-98% Sweet Spot)
       if (isHold) {
         s.holding = true;
         s.charge = Math.min(1, s.charge + dt * 0.92);
       } else if (s.holding) {
         const sweet = s.charge >= 0.72 && s.charge <= 0.98;
         if (sweet) {
-          s.silkBoostTimer = 2.2;
           s.score += 85;
           s.combo = Math.min(4, s.combo + 1);
-          this.showCallout(s, 'SILK ZIPLINE +85!');
+          this.showCallout(s, 'RADIAL SILK SNARE +85!');
           this.audio.playBoost();
           this.triggerHitStop(45, 11);
 
+          // Spin a full ring of silk strands!
+          for (let sp = 0; sp < 8; sp++) {
+            this.strands.push({ ownerId: s.id, color: s.color, spoke: sp, ring: s.ring, ttl: 5.0 });
+          }
+
           for (const other of this.spiders) {
-            if (other.id !== s.id && Math.hypot(other.x - s.x, other.y - s.y) < 170) {
-              const dx = other.x - s.x;
-              const dy = other.y - s.y;
-              const d = Math.max(1, Math.hypot(dx, dy));
-              other.vx += (dx / d) * 520;
-              other.vy += (dy / d) * 520;
+            if (other.id !== s.id && other.ring === s.ring) {
+              other.ring = 4;
               s.score += 70;
               this.showCallout(s, 'WEB-TWANG SHUNT +70!');
               this.audio.playBounce();
             }
           }
         } else if (s.charge > 0.98) {
-          s.stunTimer = 0.9;
+          s.stunTimer = 0.85;
           s.combo = 1;
-          this.showCallout(s, 'STICKY SNARE!');
+          this.showCallout(s, 'SILK TANGLE!');
           this.audio.playStun();
         }
         s.holding = false;
         s.charge = 0;
       }
 
-      s.x = Math.max(width * 0.1, Math.min(width * 0.9, s.x + s.vx * dt));
-      s.y = Math.max(height * 0.16, Math.min(height * 0.88, s.y + s.vy * dt));
-
-      for (let i = 0; i < this.prey.length; i++) {
-        const pr = this.prey[i];
-        if (Math.hypot(s.x - pr.x, s.y - pr.y) < 32) {
-          if (pr.kind === 'hornet' && s.silkBoostTimer <= 0 && !s.underdog) {
-            s.stunTimer = 1.0;
-            s.combo = 1;
-            this.showCallout(s, 'HORNET ZAP!');
-            this.audio.playStun();
-          } else {
-            const base = pr.kind === 'golden_scarab' ? 95 : 50;
-            const pts = base * s.combo * (this.suddenDeath ? 2 : 1);
-            s.score += pts;
-            s.combo = Math.min(4, s.combo + 1);
-            this.showCallout(s, pr.kind === 'golden_scarab' ? `GOLDEN SCARAB +${pts}!` : `SILK WRAP +${pts}`);
-            this.audio.playScore();
-            this.particles.spawnSparks(pr.x, pr.y, '#fbbf24', 10);
-          }
-          this.prey[i] = this.spawnPrey(width, height, pr.id);
+      // Check scarab captures on radial nodes
+      for (const sc of this.scarabs) {
+        if (sc.spoke === s.spoke && sc.ring === s.ring) {
+          const base = sc.golden ? 95 : 55;
+          const pts = base * s.combo * (this.suddenDeath ? 2 : 1);
+          s.score += pts;
+          s.combo = Math.min(4, s.combo + 1);
+          this.showCallout(s, sc.golden ? `GOLDEN SCARAB +${pts}!` : `SCARAB +${pts}`);
+          this.audio.playScore();
+          this.particles.spawnSparks(s.x, s.y, '#fbbf24', 10);
+          sc.spoke = Math.floor(Math.random() * 8);
+          sc.ring = 1 + Math.floor(Math.random() * 4);
+          sc.golden = Math.random() < 0.35;
         }
       }
     }
+  }
 
-    // Spider-to-Spider Bumping
-    for (let i = 0; i < this.spiders.length; i++) {
-      for (let j = i + 1; j < this.spiders.length; j++) {
-        const a = this.spiders[i];
-        const b = this.spiders[j];
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist > 0 && dist < 36) {
-          const nx = dx / dist;
-          const ny = dy / dist;
-          a.vx -= nx * 280;
-          a.vy -= ny * 280;
-          b.vx += nx * 280;
-          b.vy += ny * 280;
-          this.audio.playBounce();
-        }
-      }
-    }
+  private spinStrand(s: SpiderWeaver): void {
+    this.strands.push({
+      ownerId: s.id,
+      color: s.color,
+      spoke: s.spoke,
+      ring: s.ring,
+      ttl: 4.5,
+    });
+    s.score += 12;
+    this.audio.playTap();
   }
 
   protected updateBotAI(
@@ -297,17 +306,17 @@ export class SpiderWebTangleGame extends BaseGame {
 
     bot.botTimer -= dt;
     if (bot.botTimer <= 0) {
-      bot.botTimer = difficulty === 'bot_hard' ? 0.18 : 0.26;
+      bot.botTimer = difficulty === 'bot_hard' ? 0.22 : 0.32;
+      const target = this.scarabs[0];
+      if (target) {
+        if (bot.spoke !== target.spoke) {
+          bot.spoke = (bot.spoke + 1) % 8;
+        } else if (bot.ring !== target.ring) {
+          bot.ring = target.ring;
+        }
+        this.spinStrand(bot);
+      }
       bot.botChargeGoal = 0.76 + Math.random() * 0.18;
-    }
-
-    const best = this.prey.find((p) => p.kind !== 'hornet') ?? this.prey[0];
-    if (best) {
-      const dx = best.x - bot.x;
-      const dy = best.y - bot.y;
-      const d = Math.max(1, Math.hypot(dx, dy));
-      bot.vx += (dx / d) * 1100 * dt;
-      bot.vy += (dy / d) * 1100 * dt;
     }
 
     const hold = !bot.holding || bot.charge < bot.botChargeGoal;
@@ -329,7 +338,6 @@ export class SpiderWebTangleGame extends BaseGame {
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, width, height);
 
-    // Draw Shared Radial Spiderweb
     const cx = width * 0.5;
     const cy = height * 0.54;
     ctx.strokeStyle = pal.silkColor;
@@ -337,24 +345,36 @@ export class SpiderWebTangleGame extends BaseGame {
     ctx.lineWidth = 2;
     for (let ring = 1; ring <= 4; ring++) {
       ctx.beginPath();
-      ctx.arc(cx, cy, ring * 48, 0, Math.PI * 2);
+      ctx.arc(cx, cy, ring * 46, 0, Math.PI * 2);
       ctx.stroke();
     }
-    for (let s = 0; s < 8; s++) {
-      const a = (s * Math.PI) / 4;
+    for (let sp = 0; sp < 8; sp++) {
+      const a = (sp * Math.PI) / 4;
       ctx.beginPath();
       ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + Math.cos(a) * 200, cy + Math.sin(a) * 200);
+      ctx.lineTo(cx + Math.cos(a) * 195, cy + Math.sin(a) * 195);
       ctx.stroke();
     }
     ctx.globalAlpha = 1;
 
-    // Prey
-    for (const pr of this.prey) {
-      ctx.fillStyle =
-        pr.kind === 'golden_scarab' ? '#fbbf24' : pr.kind === 'gnat' ? '#38bdf8' : '#ef4444';
+    // Player-Spun Colored Silk Tripwires
+    for (const st of this.strands) {
+      const p1 = this.nodePos(width, height, st.spoke, st.ring);
+      const p2 = this.nodePos(width, height, (st.spoke + 1) % 8, st.ring);
+      ctx.strokeStyle = st.color;
+      ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.arc(pr.x, pr.y, pr.kind === 'golden_scarab' ? 16 : 12, 0, Math.PI * 2);
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+    }
+
+    // Scarabs on Web Nodes
+    for (const sc of this.scarabs) {
+      const p = this.nodePos(width, height, sc.spoke, sc.ring);
+      ctx.fillStyle = sc.golden ? '#fbbf24' : '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, sc.golden ? 15 : 11, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -370,8 +390,8 @@ export class SpiderWebTangleGame extends BaseGame {
         ctx.arc(0, 0, 26, -Math.PI / 2, -Math.PI / 2 + s.charge * Math.PI * 2);
         ctx.stroke();
       }
-      const mood = s.stunTimer > 0 ? 'shocked' : s.silkBoostTimer > 0 ? 'triumph' : s.holding ? 'focused' : 'happy';
-      this.drawPlayerMascot(ctx, s.id, 0, 0, 16, mood, this.timeElapsed, s.vx * 0.0005);
+      const mood = s.stunTimer > 0 ? 'shocked' : s.holding ? 'focused' : 'happy';
+      this.drawPlayerMascot(ctx, s.id, 0, 0, 16, mood, this.timeElapsed, 0);
       if (s.calloutTimer > 0 && s.calloutText) {
         ctx.fillStyle = '#fef08a';
         ctx.font = 'bold 12px sans-serif';
@@ -417,7 +437,7 @@ export class SpiderWebTangleGame extends BaseGame {
         score: Math.round(s.score),
         place: i + 1,
       })),
-      mvpHighlight: `Orb-Weaver Champion ${Math.round(sorted[0]?.score ?? 0)} pts!`,
+      mvpHighlight: `Radial Silk Weaver ${Math.round(sorted[0]?.score ?? 0)} pts!`,
     };
   }
 
