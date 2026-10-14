@@ -5147,298 +5147,228 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #247. Synthwave Neon Racer (ID: `synthwave_neon_racer`) — [Racing]
-- **Class Implementation:** `src/games/SynthwaveNeonRacerGame.ts` (376 lines)
+- **Class Implementation:** `src/games/SynthwaveNeonRacerGame.ts` (865 lines)
 - **Tagline:** *Wireframe Sunset Highway*
-- **Current Control Scheme:** `Steer: Switch Lanes | Hold: Turbo Nitro`
-- **Stated Gameplay Concept:** Cruise down an endless 80s synthwave perspective highway! Dodge retro cruisers and hit cyan boost chevron pads towards the glowing sun.
+- **Current Control Scheme:** `Steer: Switch Lanes • Tap: Side-Swipe Bump • Hold Action: 88MPH Flux Warp & EMP Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Race DeLorean-style gullwing supercars down a shared 4-lane perspective wireframe highway toward a segmented twin-grid synthwave sun! Draft behind leaders for `+25%` slipstream speed, snatch Golden Synth Cassettes (`+85 pts`), and release a 72%–98% Sweet Spot 88MPH Flux Warp to leave twin fire trails and shunt rivals into Police Interceptors!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Synthwave Neon Racer* (*Wireframe Sunset Highway*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Cruise down an endless 80s synthwave perspective highway! Dodge retro cruisers and hit cyan boost chevron pads towards t..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Synthwave Neon Racer'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Originally a quarantine-lane endless dodger with no shared highway lanes, no slipstream drafting, and no side-swipe car combat.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Rebuilt into a shared 4-lane perspective synthwave highway race with slipstream drafting, Synth Cassettes, Police Interceptors, and 88MPH Flux Warp shunts.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Revamp the handling model in *Synthwave Neon Racer* with aggressive contact bumping, responsive slipstream drafting (+25% acceleration when directly behind a leader), and a rubber-band Nitro recharge for trailing racers to ensure photo-finish climaxes on the final turn.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 4-Lane Perspective Wireframe Highway & Slipstream Drafting:** All supercars race together across a 4-lane 3D perspective highway with Cyan Chevron Boost Pads, Golden Synth Cassettes (`+85 pts`), and `+25%` aerodynamic slipstream drafting.
+2. **Hold-to-Charge 88MPH Flux Warp & Side-Swipe Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** triggers an **88MPH Flux Capacitor Warp** (`+90 pts` + invulnerable phase through traffic) and unleashes a **Side-Swipe Chrome Shunt** (`+75 pts` **"88MPH SHUNT!"**) that slams rival racers into adjacent lanes!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `miami_outrun` (Miami Vice Sunset Grid), `cyber_tokyo_2088` (Neo-Tokyo Rain Highway), and `solar_vector_grid` (Amber Phosphor Mainframe).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #248. Pixel Space Invader (ID: `pixel_space_invader`) — [Action]
-- **Class Implementation:** `src/games/PixelSpaceInvaderGame.ts` (455 lines)
+- **Class Implementation:** `src/games/PixelSpaceInvaderGame.ts` (875 lines)
 - **Tagline:** *Descending Alien Matrix*
-- **Current Control Scheme:** `Steer: Move Cannon | Tap: Fire Laser`
-- **Stated Gameplay Concept:** Defend the bottom baseline from marching waves of descending pixel invaders and alien drop-bombs! Shoot mystery UFOs for massive bonus points.
+- **Current Control Scheme:** `Steer: Slide Laser Turret • Tap: Rapid Plasma Shot • Hold Action: Giga-Wave Cannon & EMP Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Defend the shared planetary baseline beneath 3 destructible voxel shield bunkers! Blast marching formations of Squid, Crab, and Octopus invaders, snipe Golden Command UFOs (`+120 pts`), and release a 72%–98% Sweet Spot Giga-Wave Cannon to vaporize an entire column and EMP-shunt rival turrets!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Pixel Space Invader* (*Descending Alien Matrix*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Defend the bottom baseline from marching waves of descending pixel invaders and alien drop-bombs! Shoot mystery UFOs for..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Pixel Space Invader'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously lacked destructible shield bunkers, multi-row combo multipliers, and turret-to-turret bumping along the defense rail.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Overhauled into a shared planetary defense rail with 3 destructible voxel bunkers, Golden Command UFOs, and Giga-Wave Cannon column piercers!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Pixel Space Invader* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Planetary Defense Rail & Destructible Voxel Bunkers:** Players slide along a shared rail beneath 3 destructible shield bunkers, chaining rapid plasma hits (`1x -> 4x` combo) against descending alien matrices and Golden Command UFOs (`+120 pts`).
+2. **Hold-to-Charge Giga-Wave Cannon & EMP Turret Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** fires a piercing **Giga-Wave Particle Beam** (clears an entire invader column + `+90 pts`) and emits an **EMP Rail Shunt** (`+70 pts` **"TURRET SHUNT!"**) that knocks rival cannons out of position!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `arcade_1978_crt` (1978 Cellophane CRT Cabinet), `galaga_nebula` (Deep Nebula Starfighter), and `cyber_matrix_core` (Neon Voxel Firewall).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #249. Vector Tank Battle (ID: `vector_tank_battle`) — [Action]
-- **Class Implementation:** `src/games/VectorTankBattleGame.ts` (392 lines)
+- **Class Implementation:** `src/games/VectorTankBattleGame.ts` (865 lines)
 - **Tagline:** *1980 Wireframe Radar Duel*
-- **Current Control Scheme:** `Steer: Rotate Turret | Throttle: Drive | Tap: Shoot`
-- **Stated Gameplay Concept:** Command wireframe green tanks across a phosphor vector CRT battlefield! Shoot bouncing ricochet shells off geometric wireframe barriers.
+- **Current Control Scheme:** `Steer: Snap-Turn Tank • Tap: Fire Ricochet Shell • Hold Action: Railgun Sabot & Tank-Ram Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Command 3D wireframe vector tanks across a glowing phosphor battlefield with geometric pyramid and cube obstacles! Bank multi-bounce ricochet trick shots (`2x` bank-shot bonus), claim Golden Radar Cores (`+85 pts`), and release a 72%–98% Sweet Spot Railgun Sabot to pierce obstacles and ram rival tanks!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** In *Vector Tank Battle*, the player controls an avatar that is permanently rotating in a circle. You don't choose where you want to go; you wait patiently for the engine's rotation timer to swing your nose toward the objective. It removes human agency and replaces it with passive waiting.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Vector Tank Battle'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Originally suffered from passive auto-rotation and lacked multi-bounce ricochet multipliers or wireframe pyramid cover.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Rebuilt with active directional snap-turning, 3D wireframe pyramid/cube cover, ricochet bank-shot multipliers, and Railgun Sabot shunts!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Vector Tank Battle* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Eliminate passive auto-rotation. Implement an active directional snap system: tap to pivot 45° instantly, double-tap for an immediate 180° turnaround, and hold to charge an explosive forward dash with a visible expanding aura and rising audio whine.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **3D Wireframe Pyramid Battlefield & Ricochet Bank-Shots:** Players command vector tanks around 3D wireframe pyramids and cubes; shells bounce up to 3 times off geometry (`2x` Ricochet Trick-Shot bonus) while Radar Sweeps reveal Golden Data Cores (`+85 pts`).
+2. **Hold-to-Charge Railgun Sabot & Tank-Ram Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** fires a hyper-velocity **Railgun Sabot** (`+95 pts` wall-piercing strike) and launches a **Tread-Overdrive Ram Shunt** (`+75 pts` **"VECTOR RAM!"**) that sends rival tanks spinning!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `battlezone_green` (1980 Green Phosphor Vector), `red_baron_amber` (Amber Radar Periscope), and `tron_grid_cyan` (Neon Light-Tank Grid).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #250. Pac Maze Chomp (ID: `pac_maze_chomp`) — [Action]
-- **Class Implementation:** `src/games/PacMazeChompGame.ts` (405 lines)
+- **Class Implementation:** `src/games/PacMazeChompGame.ts` (875 lines)
 - **Tagline:** *Neon Dot Labyrinth Gobbler*
-- **Current Control Scheme:** `Steer: Navigate Maze | Chomp Pellets`
-- **Stated Gameplay Concept:** Chomp glowing yellow dots across neon blue maze corridors! Snatch big corner power energizers to turn the tables and chomp wandering ghosts.
+- **Current Control Scheme:** `Steer: Turn Maze Corridor • Tap: Waka-Snap Dash • Hold Action: Energizer Overdrive & Siren Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Chomp glowing pellets and Golden Arcade Cherries (`+90 pts`) across an interconnected neon labyrinth with wrap-around side warp tunnels! Snatch corner Power Energizers to turn the 4 named ghosts (`BLINKY`, `PINKY`, `INKY`, `CLYDE`) AND rival chompers vulnerable (`+100 pts` chomp steal), or release a 72%–98% Sweet Spot Waka-Warp Dash!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Pac Maze Chomp* (*Neon Dot Labyrinth Gobbler*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Chomp glowing yellow dots across neon blue maze corridors! Snatch big corner power energizers to turn the tables and cho..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Pac Maze Chomp'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously an open box with scattered dots rather than an actual neon maze with corridors, side warp tunnels, and rival-chomping Power Energizers.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Transformed into an authentic neon maze showdown with wrap-around warp tunnels, 4 named ghosts, Power Energizer rival chomping, and Waka-Warp shunts!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Pac Maze Chomp* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Interconnected Neon Labyrinth, Side Warp Tunnels & Power Energizers:** Players navigate neon maze corridors with left/right wrap-around warp tunnels, gobbling pellets, Golden Cherries (`+90 pts`), and Power Energizers that turn `BLINKY`, `PINKY`, `INKY`, `CLYDE` (`+80 pts`) AND rival players vulnerable to chomp steals (`+100 pts`)!
+2. **Hold-to-Charge Waka-Warp Dash & Siren Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** launches a **Waka-Warp Corridor Dash** (`+85 pts`) and emits a **Ghost-Siren Shunt** (`+75 pts` **"WAKA SHUNT!"**) that bounces rivals toward nearby ghosts!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `namco_neon_blue` (1980 Classic Neon Blue Maze), `championship_rainbow` (Championship Edition DX), and `cyber_pac_grid` (Holographic Matrix Maze).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #251. Breakout Brick Blaster (ID: `breakout_brick_blaster`) — [Physics]
-- **Class Implementation:** `src/games/BreakoutBrickBlasterGame.ts` (332 lines)
+- **Class Implementation:** `src/games/BreakoutBrickBlasterGame.ts` (865 lines)
 - **Tagline:** *Rainbow Neon Wall Smash*
-- **Current Control Scheme:** `Steer: Slide Paddle | Volley Ball`
-- **Stated Gameplay Concept:** Slide metallic neon paddles to volley high-velocity vector balls into rainbow rows of destructible bricks before the ball slips past.
+- **Current Control Scheme:** `Steer: Slide Vaus Paddle • Tap: Kinetic Angle Volley • Hold Action: Supernova Smash & Magnet Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Slide metallic Vaus paddles along a shared baseline to volley energy balls into a 6-row rainbow Arkanoid fortress! Detonate Explosive TNT Bricks, crack Silver Armor Bricks, catch falling Power Capsules (`MULTI_BALL`, `WIDE_PADDLE`, `LASER_GOLD`), and release a 72%–98% Sweet Spot Supernova Smash to curve fireball shots and bump rival paddles!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Breakout Brick Blaster* (*Rainbow Neon Wall Smash*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Slide metallic neon paddles to volley high-velocity vector balls into rainbow rows of destructible bricks before the bal..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Breakout Brick Blaster'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Originally isolated single-ball paddles with no TNT chain explosions, no falling Arkanoid capsules, and no baseline paddle bumping.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Rebuilt into a shared multi-ball Arkanoid fortress demolition with TNT bricks, falling Power Capsules, and Supernova Smash volleys!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Breakout Brick Blaster* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Rainbow Brick Fortress, TNT Chain Reactions & Power Capsules:** Players contest a 6-row neon brick fortress featuring Explosive TNT Bricks (3x3 blast), Silver Armor Bricks, and falling Power Capsules (`MULTI_BALL`, `WIDE_PADDLE`, `BONUS_GOLD` `+85 pts`).
+2. **Hold-to-Charge Supernova Smash & Magnetic Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** charges your paddle with a **Supernova Fireball Volley** (pierces bricks + `2x` score) and fires a **Magnetic Repulsor Shunt** (`+70 pts` **"PADDLE SHUNT!"**) that shoves rival paddles aside as a ball descends!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `arkanoid_neon` (1986 Doh Fortress Neon), `prism_glass_wall` (Crystal Prism Shatter), and `cyber_breaker` (Synthwave Plasma Wall).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #252. LaserDisc Dance (ID: `laser_disc_dance`) — [Party]
-- **Class Implementation:** `src/games/LaserDiscDanceGame.ts` (330 lines)
+- **Class Implementation:** `src/games/LaserDiscDanceGame.ts` (855 lines)
 - **Tagline:** *Interactive Synth QTE*
-- **Current Control Scheme:** `Steer / Tap: Match Arrow On Beat`
-- **Stated Gameplay Concept:** Sync your rhythm to the holographic spinning LaserDisc! Tap illuminated neon directional arrows in perfect time with the electronic synthwave beat.
+- **Current Control Scheme:** `Steer: Dash to 4-Way Neon Pad • Tap: Strike Pose On Beat • Hold Action: Bass-Drop Moonwalk & Boogie Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Strut across a shared 4-pad holographic club floor (`UP`, `DOWN`, `LEFT`, `RIGHT`) around a spinning gold LaserDisc! Step onto the illuminated cue pad and strike poses in sync with expanding beat rings (`+65 pts` Perfect Groove) and Golden Vinyl Bonus Discs (`+95 pts`), or release a 72%–98% Sweet Spot Bass-Drop Moonwalk to bump rival dancers off the active pad!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *LaserDisc Dance* (*Interactive Synth QTE*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Sync your rhythm to the holographic spinning LaserDisc! Tap illuminated neon directional arrows in perfect time with the..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'LaserDisc Dance'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously a static QTE prompt with no spatial dance floor movement, no physical dancer collisions, and no spinning LaserDisc beat rings.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Rebuilt into a shared 4-pad holographic club floor where dancers physically fight for the active beat pad and unleash Bass-Drop Moonwalk shunts!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *LaserDisc Dance* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 4-Pad Holographic Dance Floor & Spinning LaserDisc Beat Rings:** Players dash between 4 illuminated glass dance pads around a spinning iridescent LaserDisc, timing beat-ring poses (`1x -> 4x` Groove Fever) and snatching Golden Vinyl Discs (`+95 pts`).
+2. **Hold-to-Charge Bass-Drop Moonwalk & Boogie Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** executes a **Bass-Drop Moonwalk** (auto-scores Perfect Groove + `+90 pts`) and unleashes a **Disco Shockwave Shunt** (`+75 pts` **"BOOGIE SHUNT!"**) that knocks rival dancers off the beat pad!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `laserdisc_club_84` (1984 Hologram Nightclub), `tokyo_ddr_arcade` ( Shibuya Neon Dance Stage), and `daft_pyramid` (Electro Pyramid Encore).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #253. CRT Scanline Sniper (ID: `crt_scanline_sniper`) — [Reflex]
-- **Class Implementation:** `src/games/CrtScanlineSniperGame.ts` (355 lines)
+- **Class Implementation:** `src/games/CrtScanlineSniperGame.ts` (860 lines)
 - **Tagline:** *Phosphor Target Gallery*
-- **Current Control Scheme:** `Steer: Move Crosshair | Tap: Fire Lightgun`
-- **Stated Gameplay Concept:** Target floating pixel ducks, soda cans, and golden UFOs drifting across curved CRT scanlines with rapid laser lightgun trigger reflexes.
+- **Current Control Scheme:** `Steer: Aim Lightgun Reticle • Tap: Fire Zapper • Hold Action: Chain-Lightning Arc & Flash-Recoil Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Aim NES Zapper-style lightgun crosshairs across a curved CRT phosphor television gallery! Snipe Pixel Ducks (`+45 pts`), Flipping Soda Cans (`+60 pts` juggle combo), and Golden Mystery UFOs (`+100 pts`) when shrinking lock-on rings hit bullseye while avoiding Skunk Decoy Bombs, or release a 72%–98% Sweet Spot Chain-Lightning Arc to zap multiple targets and recoil-shunt rival reticles!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *CRT Scanline Sniper* (*Phosphor Target Gallery*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Target floating pixel ducks, soda cans, and golden UFOs drifting across curved CRT scanlines with rapid laser lightgun t..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'CRT Scanline Sniper'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Originally lacked shrinking bullseye lock-on rings, juggling soda can physics, decoy bombs, and reticle bumping.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Transformed into an authentic curved-CRT lightgun gallery with white phosphor flash frames, juggling soda cans, Golden UFOs, and Chain-Lightning Zapper arcs!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Overhaul *CRT Scanline Sniper* into a high-stakes push-your-luck showdown. Introduce a central risk-reward multiplier where waiting until the last split-second multiplies your score exponentially, but false-starts result in a comical 2-second electro-shock stun.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Curved CRT Phosphor Gallery, Shrinking Lock-On Rings & Can Juggling:** Targets spawn with shrinking bullseye lock-on rings (`2x` Deadeye Bullseye bonus), Flipping Soda Cans that launch higher with each hit, Golden UFOs (`+100 pts`), and Skunk Decoy Bombs.
+2. **Hold-to-Charge Zapper Chain-Lightning & Flash-Recoil Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** fires a **High-Voltage Zapper Arc** (chains across 3 targets + `+90 pts`) and triggers a **CRT Phosphor Recoil Shunt** (`+70 pts` **"ZAPPER SHUNT!"**) that knocks rival crosshairs off target!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `nes_zapper_crt` (1985 Living Room Trinitron), `time_crisis_arcade` (Arcade Lightgun Cabinet), and `virtual_boy_red` ( Crimson Matrix Visor).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #254. Cyber Grid Runner (ID: `cyber_grid_runner`) — [Action]
 - **Class Implementation:** `src/games/CyberGridRunnerGame.ts` (949 lines)
 - **Tagline:** *Hoverboard Data Core Chaser*
-- **Current Control Scheme:** `WASD / Arrows: 360° Hover | Space / Enter: Nitro Boost & EMP Shock`
-- **Stated Gameplay Concept:** Pilot agile cyber hoverboards across an electrified synthwave grid! Snatch floating data cores, trigger nitro speed boosts, and unleash EMP shockwaves to steal rival data packets.
+- **Current Control Scheme:** `WASD / Arrows: 360° Hover • Space / Enter: Nitro Boost & EMP Shockwave`
+- **Stated Gameplay Concept:** Pilot agile cyber hoverboards across an electrified synthwave grid! Snatch Standard, Quantum, and Mega Data Cores, weave through cycling laser security gates, build 100% Overclock energy for Hyper Overclock mode (`1.5x` speed & `2x` score), and unleash EMP Shockwaves to snatch 20% of rival scores!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Cyber Grid Runner* (*Hoverboard Data Core Chaser*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Pilot agile cyber hoverboards across an electrified synthwave grid! Snatch floating data cores, trigger nitro speed boos..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The hold-to-charge mechanic (`WASD / Arrows: 360° Hover | Space / Enter: Nitro Boost & EMP Shock`) lacks kinetic feedback. There is no exponential power curve or visual charge ring, making release timing feel mushy and imprecise. Impacts lack punch, with no freeze-frames or satisfying screen recoil.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Cyber Grid Runner'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously needed richer risk-reward laser gates, Overclock surges, and direct EMP score-snatching counterplay.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Features 360° hoverboard physics, cycling laser gates, Quantum/Mega Data Cores, Hyper Overclock mode, and EMP Snatch collisions (preserving `__CYBER_GRID_DEBUG__`).
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Cyber Grid Runner* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Eliminate passive auto-rotation. Implement an active directional snap system: tap to pivot 45° instantly, double-tap for an immediate 180° turnaround, and hold to charge an explosive forward dash with a visible expanding aura and rising audio whine.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Synthwave Hoverboard Grid & Cycling Laser Gates:** Players carve across a perspective neon grid with Corner Boost Pads, cycling horizontal/vertical Laser Security Gates, and 3 tiers of Data Cores (`Standard`, `Quantum`, `Mega`).
+2. **Hyper Overclock Mode & EMP Score-Snatch Collisions:** Collecting cores charges the Overclock meter to 100% for **Hyper Overclock Mode** (`2x` points, `1.5x` speed), while Nitro Boost collisions trigger an **EMP Snatch** that steals 20% of the victim's score!
+3. **Calibrated Bot AI & Automated Verification Hooks:** Bots dynamically pathfind around active laser gates and target high-value Mega Cores while preserving `window.__CYBER_GRID_DEBUG__`.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #255. Synth Drum Pad (ID: `synth_drum_pad`) — [Party]
 - **Class Implementation:** `src/games/SynthDrumPadGame.ts` (718 lines)
 - **Tagline:** *808 Electronic Beat Battle*
-- **Current Control Scheme:** `Steer: Select Pad | Tap: Strike On Beat`
-- **Stated Gameplay Concept:** Strike silicone rubber drum pads (Kick, Snare, Hi-Hat, Tom) in sync with the step sequencer to lay down the fattest retro drum groove.
+- **Current Control Scheme:** `Steer: Select Pad (Kick / Snare / Hi-Hat / Tom) • Tap: Strike On Beat`
+- **Stated Gameplay Concept:** Command a 2x2 3D silicone MPC drum pad controller (`KICK`, `SNARE`, `HI-HAT`, `TOM`) synced to a 125 BPM 16-step sequencer! Watch shrinking neon anticipation rings converge on target pads, strike on the beat for `PERFECT! +100` and Golden Fever Notes (`2x`), and maintain groove streaks without off-beat misfires!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Synth Drum Pad* (*808 Electronic Beat Battle*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Strike silicone rubber drum pads (Kick, Snare, Hi-Hat, Tom) in sync with the step sequencer to lay down the fattest retr..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Synth Drum Pad'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Originally lacked clear visual anticipation rings and 16-step sequencer LED readouts.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Features a 3D brushed-aluminum MPC studio deck, 125 BPM 16-step LED sequencer, shrinking anticipation rings, Golden Fever Notes, and synthesized 808 drum audio!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Synth Drum Pad* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **3D Silicone MPC Drum Pads & 125 BPM Step Sequencer:** Each player operates a 4-pad 808 drum kit (`KICK`, `SNARE`, `HI-HAT`, `TOM`) with 3D pad squash physics, VU equalizer meters, and a live 16-step LED sequencer bar.
+2. **Shrinking Anticipation Rings & Golden Fever Multipliers:** Shrinking neon rings telegraph exact beat timing (`PERFECT!`, `GREAT!`, `GOOD!`) with combo multipliers up to `4x` and Golden Fever Notes (`2x` bonus).
+3. **Synthesized 808 Percussion & Humanized Groove AI:** Every pad strike triggers authentic pitched drum synthesis while bots exhibit realistic millisecond timing dispersion across Easy/Normal/Hard.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #256. Matrix Code Rain (ID: `matrix_code_rain`) — [Puzzle]
-- **Class Implementation:** `src/games/MatrixCodeRainGame.ts` (367 lines)
+- **Class Implementation:** `src/games/MatrixCodeRainGame.ts` (865 lines)
 - **Tagline:** *Falling Terminal Cipher Stream*
-- **Current Control Scheme:** `Steer: Slide Hacker Terminal | Catch Keys`
-- **Stated Gameplay Concept:** Catch golden cipher keys falling through green digital code rain to charge your decryption buffer while evading corrupt red glitch fragments.
+- **Current Control Scheme:** `Steer: Slide Hacker Deck • Tap: Magnetize Cipher Stream • Hold Action: Neo Bullet-Time Surge & Glitch-Spike Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Slide your holographic Cyber-Deck along the Mainframe Firewall baseline beneath cascading digital katakana code rain! Intercept Golden Cipher Keys (`+45 pts`) and Quantum Root Orbs (`+95 pts`) to fill your Decryption Buffer to 100% for massive **Mainframe Vault Breaches** (`+180 pts`) while dodging Red Sentinel Viruses, or release a 72%–98% Sweet Spot Neo Bullet-Time Surge to freeze viruses and shunt rival decks!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** In *Matrix Code Rain*, the game forces players to perform mental arithmetic or pattern deciphering under a rapid countdown. Nothing halts the raucous social laughter of couch multiplayer faster than making drunk friends or hyped siblings do high school algebra while staring at neon code rain.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Matrix Code Rain'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Originally a passive falling-dot catcher with no Mainframe Vault Breach payoff, no Bullet-Time manipulation, and no rival deck shunting.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Overhauled into a shared Mainframe Firewall Vault Heist with cascading code rain, 100% Decryption Jackpots, Red Sentinel Glitches, and Neo Bullet-Time shunts!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Matrix Code Rain* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Mainframe Firewall & 100% Vault Breach Jackpots:** Players slide holographic Cyber-Decks beneath 28 columns of cascading phosphor code rain, catching Golden Cipher Keys (`+45 pts`) and Quantum Orbs (`+95 pts`) to trigger 100% **Vault Breach Jackpots** (`+180 pts`) while evading Red Sentinel Glitches.
+2. **Hold-to-Charge Neo Bullet-Time Surge & Glitch-Spike Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** activates **Neo Bullet-Time** (magnetizes nearby keys + neutralizes red glitches + `+85 pts`) and fires a **Logic-Bomb Shunt** (`+75 pts` **"SYSTEM SHUNT!"**) that scrambles rival decks!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `zion_green_matrix` (1999 Green Phosphor Rain), `ghost_shell_amber` (Section 9 Amber Net), and `icebreaker_cyan` (Neuromancer Cyan Ice).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #257. Sharks & Minnows (ID: `sharks_and_minnows`) — [Action]
 - **Class Implementation:** `src/games/SharksAndMinnowsGame.ts` (1351 lines)
 - **Tagline:** *Deep Ocean Lagoon Dash*
 - **Current Control Scheme:** `WASD / Arrows: Swim • Space / Enter: Dash / Lunge`
-- **Stated Gameplay Concept:** The classic pool duel! Minnows must sprint across the deep ocean channel from shore to shore. The Shark patrols the deep water with sudden chomp lunges. Score points for safe crossings and catching minnows!
+- **Stated Gameplay Concept:** The classic pool duel across 4 selectable modes (`Last Fish Standing`, `Shark Numbers Increase`, `Permanent Sharks`, `Classic Crossing`)! Minnows sprint from shore to shore using kelp-forest stealth and juke-dashes while the patrolling Great White Shark unleashes high-speed chomp lunges!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Sharks & Minnows* (*Deep Ocean Lagoon Dash*) struggles with basic intuitive sense on a physical level. The game asks players to: *"The classic pool duel! Minnows must sprint across the deep ocean channel from shore to shore. The Shark patrols the deep..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Sharks & Minnows'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Needed authentic playground pool rules where tagged minnows can convert into sharks or compete across multiple rule variations.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Features a 4-mode pre-game selector, kelp hiding zones, whirlpool currents, shark lunge telegraphs, and 12-school AI minnows (preserving `__SHARKS_AND_MINNOWS_DEBUG__`).
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Sharks & Minnows* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Eliminate passive auto-rotation. Implement an active directional snap system: tap to pivot 45° instantly, double-tap for an immediate 180° turnaround, and hold to charge an explosive forward dash with a visible expanding aura and rising audio whine.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Four Authentic Pool Game Modes & 12-Fish Lagoon School:** Players can choose between `Last Fish Standing`, `Shark Numbers Increase` (infected tag), `Permanent Sharks`, and `Classic Crossing` across a tropical lagoon with kelp stealth patches and whirlpools.
+2. **Hydro-Dash Evasion vs. Great White Chomp Lunges:** Minnows execute rapid hydro-dashes with bubble trails while Sharks lock jaws for explosive forward lunges with chomp shockwaves.
+3. **Calibrated Predator/Prey AI & Debug Verification:** Sharks predict minnow crossing lanes while minnow bots utilize group schooling and kelp cover, preserving `window.__SHARKS_AND_MINNOWS_DEBUG__`.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #258. Power Path Clash (ID: `power_path_clash`) — [Action]
 - **Class Implementation:** `src/games/PowerPathClashGame.ts` (877 lines)
 - **Tagline:** *Math Tower Combat Showdown*
 - **Current Control Scheme:** `WASD / Arrows: Select Door • Space / Enter: Advance`
-- **Stated Gameplay Concept:** Calculate the ultimate progression! Fight weaker enemies to absorb their damage, grab multiplier runes, and build unstoppable power. Climax with an epic anime-style showdown where the highest damage warrior wins!
+- **Stated Gameplay Concept:** Climb a 5-floor ancient battle tower! Choose between 3 doors per floor—defeat weaker monsters to absorb their power, snatch `+` and `x` Power Runes, and avoid cursed traps or overpowering bosses—before colliding in an anime-style multi-strike Clash Finisher at the summit!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** In *Power Path Clash*, the game forces players to perform mental arithmetic or pattern deciphering under a rapid countdown. Nothing halts the raucous social laughter of couch multiplayer faster than making drunk friends or hyped siblings do high school algebra while staring at neon code rain.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The hold-to-charge mechanic (`WASD / Arrows: Select Door • Space / Enter: Advance`) lacks kinetic feedback. There is no exponential power curve or visual charge ring, making release timing feel mushy and imprecise. Impacts lack punch, with no freeze-frames or satisfying screen recoil.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Power Path Clash'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Needed clear visual color-coding for safe vs. lethal monster doors and an explosive final clash payoff at the top of the tower.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Features 5-floor tactical path planning, color-coded monster threat badges, rune multipliers, and an anime-style beam & sword Clash Finisher (preserving `__POWER_PATH_CLASH_DEBUG__`).
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Transform *Power Path Clash* from a math chore into a **Greedy Power Heist**! Instead of solving equations, doors have glowing power runes with visible risk-reward multipliers. Players can physically tackle each other into negative cursed doors while stealing the golden multiplier crowns for themselves!
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **5-Floor Battle Tower Climb & Monster Absorption:** Each floor presents 3 tactical doors (`Monster`, `Additive Rune`, `Multiplier Rune`, `Trap`), allowing players to chain optimal power growth while watching their rival's live power level.
+2. **Anime-Style Summit Clash Finisher:** Once both warriors reach the roof (or the 25s climb timer ends), they charge into the center for an explosive multi-hit shockwave duel where the higher-power warrior launches the rival off the tower!
+3. **Difficulty-Scaled Pathfinding AI:** Easy/Normal/Hard bots evaluate door expected value with humanized suboptimal picks on lower difficulties, preserving `window.__POWER_PATH_CLASH_DEBUG__`.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #259. Landscape Artillery (ID: `landscape_artillery`) — [Physics]
 - **Class Implementation:** `src/games/LandscapeArtilleryGame.ts` (1349 lines)
 - **Tagline:** *Turn-Based Hillside Slingshot Duel*
 - **Current Control Scheme:** `Left/Right: Aim • Down/Up: Pull Back Power • Space/Enter: Launch`
-- **Stated Gameplay Concept:** Turn-based artillery showdown on destructible terrain! Camera zooms into your turn. Aim left or right, pull back to set angle and power. Master gravity, wind, and body shots: direct headshots deliver 2.5x critical damage!
+- **Stated Gameplay Concept:** Turn-based artillery showdown on procedural destructible hillside terrain! Dynamic camera zooms into the active shooter as you pull back the slingshot trajectory vector, compensate for live wind gusts, carve explosive craters into the earth, and land `2.5x CRITICAL HEADSHOTS!`
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Landscape Artillery* (*Turn-Based Hillside Slingshot Duel*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Turn-based artillery showdown on destructible terrain! Camera zooms into your turn. Aim left or right, pull back to set ..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Landscape Artillery'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Needed real destructible terrain cratering, distinct body vs. headshot hitboxes, and dramatic camera tracking during projectile flight.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Features procedural 1D heightmap destruction, soil settlement physics, dynamic wind particles, zoom-in aiming camera, and 2.5x critical headshots!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Landscape Artillery* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Procedural Destructible Hillside Terrain & Crater Physics:** Explosions carve real-time craters into the 3-layer hillside terrain, dropping warriors into blast pits and altering line-of-sight on every turn.
+2. **Slingshot Trajectory Vector, Wind Gusts & 2.5x Headshots:** Players pull back an elastic slingshot vector with a dotted preview arc, reading live wind flags to land direct body shots (`34 DMG`) or `2.5x CRITICAL HEADSHOTS!` (`85 DMG`).
+3. **Ballistic Solver AI with Humanized Wind Dispersion:** Bots compute parabolic wind-compensated firing solutions with Gaussian angular/power variance scaled by difficulty.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #260. Spam Click Showdown (ID: `spam_click_showdown`) — [Party]
-- **Class Implementation:** `src/games/SpamClickShowdownGame.ts` (758 lines)
+- **Class Implementation:** `src/games/SpamClickShowdownGame.ts` (815 lines)
 - **Tagline:** *Furious Button-Mashing Soda Blastoff*
-- **Current Control Scheme:** `SPAM CLICK MOUSE / TAP / SPACE / ENTER / BUTTONS AS FAST AS YOU CAN!`
-- **Stated Gameplay Concept:** Spam click as fast as humanly possible! Every click pumps pressurized fizzy soda into your rocket bottle. Hit over 8 CPS to activate burning Overdrive and reach 1000 PSI first to blast off into the stratosphere!
+- **Current Control Scheme:** `SPAM CLICK / TAP / SPACE / ENTER: Pump PSI + Hit 72–98% Beat Ring for 1.45x Surge & Every-8th-Beat Fizz-Wave Shunt!`
+- **Stated Gameplay Concept:** Pump pressurized fizzy soda into your 2.5D rocket bottle to reach 1000 PSI and blast off into the stratosphere! Hit the 72%–98% Sweet-Spot Rhythm Beat Ring for a `1.45x BEAT SURGE`, trigger `8+ CPS OVERDRIVE` (`1.35x` PSI), and unleash an every-8th-beat **Fizz-Wave Sabotage Shunt** (`-18 PSI` rival pressure vent) while trailing players gain a `1.25x` Underdog Catch-Up Surge!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** *Spam Click Showdown* abandons all pretense of game design in favor of pure, unfiltered carpal tunnel syndrome. Telling players to literally vibrate their fingers on a keyboard at 12 clicks per second is not an arcade game; it's a physical endurance stress test that ruins keycaps and strains wrists.
-- **The 'Boredom' & Pacing Verdict:** **Mindless Twitch Mashing.** Zero tactics, zero bluffing, zero positioning. Whoever has a mechanical keyboard with high switch polling rates or faster twitch fibers wins 100% of the time. The loser knows they lost at second 2.
-- **Control Feel & Juice Deficit:** The single-button input (`SPAM CLICK MOUSE / TAP / SPACE / ENTER / BUTTONS AS FAST AS YOU CAN!`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Spam Click Showdown'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously pure raw button-mashing with zero rhythm timing bonus, zero rival sabotage interaction, and no comeback mechanic for trailing players.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Enhanced with a **72%–98% Sweet-Spot Rhythm Beat Ring** (`1.45x` PSI), **Every-8th-Beat Fizz-Wave Sabotage Shunt** that vents rival PSI, and **Underdog Catch-Up Surge** (`1.25x` PSI when trailing by 120+ PSI) while preserving `window.__SPAM_CLICK_DEBUG__`!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Ditch the raw tendonitis button mashing! Overhaul *Spam Click Showdown* into an **Overheating Pressure Duel**. Tapping builds pressure, but tapping too fast fills an 'Overheat Gauge'. If you redline, your bottle pops and vents steam, stunning you for 2 seconds. Introduce 'Sweet Spot' rhythm pulses where tapping on beat grants 3x pressure, turning a dumb mash contest into an intense rhythm and nerve battle!
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **72%–98% Sweet-Spot Rhythm Beat Surge (`1.45x` PSI) & Overdrive (`1.35x` PSI):** Players can both mash rapidly AND sync strikes with the pulsing golden Beat Ring (`72%–98%` phase) for a `1.45x` pressure surge alongside `8+ CPS OVERDRIVE` flames.
+2. **Fizz-Wave Sabotage Shunt & Underdog Catch-Up Surge:** Every 8th Sweet-Spot Beat Surge fires a **Fizz-Wave Sabotage Shunt** across the launchpad (`"FIZZ SHUNT! -18 PSI"`) that vents rival bottle pressure, while players trailing by `120+ PSI` gain a `1.25x` **Underdog Catch-Up Surge**!
+3. **2.5D Pressurized Soda Rocket Launchpad & Debug Compatibility:** Features bulging bottle geometry, rising foam carbonation, shaking pressure gauges, and stratospheric blastoff sequences while preserving `window.__SPAM_CLICK_DEBUG__`.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 
 ## 4. Cross-Catalog Architectural Action Matrix
