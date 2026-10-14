@@ -7562,12 +7562,52 @@ export class GameManager {
       this.ctx.fillStyle = rarityColor;
       this.ctx.fill();
 
+      // Right-hand Mini Preview Swatch / Crest on each catalog row
+      const swatchX = listX + listW - 36;
+      const swatchY = rowY + 11;
+      this.ctx.save();
+      if (item.category === 'ARENA' && item.raw) {
+        this.drawRoundedRect(swatchX - 4, swatchY, 26, 24, 5, item.raw.previewColor, item.raw.borderColor, 1.5);
+        this.ctx.fillStyle = item.raw.borderColor;
+        this.ctx.globalAlpha = 0.55;
+        this.ctx.fillRect(swatchX, swatchY + 10, 18, 3);
+        this.ctx.globalAlpha = 1;
+      } else if (item.category === 'SKIN') {
+        this.ctx.beginPath();
+        this.ctx.arc(swatchX + 9, swatchY + 12, 11, 0, Math.PI * 2);
+        this.ctx.fillStyle = item.previewColor;
+        this.ctx.fill();
+        this.ctx.strokeStyle = rarityColor;
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
+        this.ctx.beginPath();
+        this.ctx.arc(swatchX + 6, swatchY + 9, 3, 0, Math.PI * 2);
+        this.ctx.fillStyle = 'rgba(255,255,255,0.65)';
+        this.ctx.fill();
+      } else if (item.category === 'BOOSTER' && item.raw) {
+        this.ctx.beginPath();
+        this.ctx.arc(swatchX + 9, swatchY + 12, 11, 0, Math.PI * 2);
+        this.ctx.fillStyle = item.previewColor;
+        this.ctx.fill();
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.font = '11px sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(item.raw.icon || '⚡', swatchX + 9, swatchY + 16);
+      } else if (item.category === 'PACK') {
+        this.drawRoundedRect(swatchX - 1, swatchY + 2, 20, 20, 4, item.previewColor, '#FDE68A', 1.5);
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.font = '10px sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('🎁', swatchX + 9, swatchY + 15.5);
+      }
+      this.ctx.restore();
+
       // Item Name
       this.ctx.fillStyle = isSelected ? '#1E3A8A' : '#0F172A';
       this.ctx.font = '900 11.5px Montserrat, sans-serif';
       this.ctx.textAlign = 'left';
       let displayName = item.name;
-      if (displayName.length > 20) displayName = displayName.substring(0, 18) + '...';
+      if (displayName.length > 18) displayName = displayName.substring(0, 16) + '...';
       this.ctx.fillText(displayName, listX + 63, rowY + 17);
 
       // Status / Price Subtext
@@ -7693,45 +7733,62 @@ export class GameManager {
         });
       }
 
-      // Spotlight Beam
+      // Spotlight Beam & Holographic Turntable Pedestal
       const spotlightX = centerX;
-      const spotlightY = stageY + 98;
-      const spotGrad = this.ctx.createRadialGradient(spotlightX, spotlightY, 15, spotlightX, spotlightY, 95);
-      spotGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-      spotGrad.addColorStop(0.7, 'rgba(241, 245, 249, 0.45)');
+      const spotlightY = stageY + 100;
+      const stageT = performance.now() * 0.001;
+      const rarityGlow = curItem.rarity === 'Legendary' ? '#F59E0B' : curItem.rarity === 'Epic' ? '#8B5CF6' : curItem.rarity === 'Rare' ? '#06B6D4' : '#64748B';
+
+      const spotGrad = this.ctx.createRadialGradient(spotlightX, spotlightY - 6, 12, spotlightX, spotlightY, 105);
+      spotGrad.addColorStop(0, 'rgba(255, 255, 255, 0.98)');
+      spotGrad.addColorStop(0.55, `${curItem.previewColor}28`);
       spotGrad.addColorStop(1, 'rgba(241, 245, 249, 0)');
       this.ctx.fillStyle = spotGrad;
-      this.ctx.fillRect(stageX + 5, stageY + 36, stageW - 10, 140);
+      this.ctx.fillRect(stageX + 5, stageY + 34, stageW - 10, 142);
 
-      // 3D Pedestal
+      // 3D Holographic Turntable Pedestal
       this.ctx.save();
-      this.ctx.shadowColor = 'rgba(0, 0, 0, 0.14)';
-      this.ctx.shadowBlur = 12;
-      this.ctx.shadowOffsetY = 5;
+      this.ctx.shadowColor = rarityGlow;
+      this.ctx.shadowBlur = 16;
+      this.ctx.shadowOffsetY = 4;
       this.ctx.beginPath();
-      this.ctx.ellipse(spotlightX, spotlightY + 28, 80, 22, 0, 0, Math.PI * 2);
-      this.ctx.fillStyle = '#CBD5E1';
+      this.ctx.ellipse(spotlightX, spotlightY + 29, 84, 23, 0, 0, Math.PI * 2);
+      this.ctx.fillStyle = '#1E293B';
       this.ctx.fill();
 
       this.ctx.beginPath();
-      this.ctx.ellipse(spotlightX, spotlightY + 24, 76, 20, 0, 0, Math.PI * 2);
-      this.ctx.fillStyle = '#FFFFFF';
+      this.ctx.ellipse(spotlightX, spotlightY + 24, 78, 20, 0, 0, Math.PI * 2);
+      const pedGrad = this.ctx.createRadialGradient(spotlightX, spotlightY + 22, 10, spotlightX, spotlightY + 24, 78);
+      pedGrad.addColorStop(0, '#FFFFFF');
+      pedGrad.addColorStop(0.75, '#F1F5F9');
+      pedGrad.addColorStop(1, '#CBD5E1');
+      this.ctx.fillStyle = pedGrad;
       this.ctx.fill();
-      this.ctx.strokeStyle = '#94A3B8';
-      this.ctx.lineWidth = 1.5;
+      this.ctx.strokeStyle = rarityGlow;
+      this.ctx.lineWidth = 2.2;
       this.ctx.stroke();
+
+      // Rotating holographic telemetry ring on turntable
+      this.ctx.strokeStyle = curItem.previewColor;
+      this.ctx.lineWidth = 1.6;
+      this.ctx.setLineDash([12, 8]);
+      this.ctx.lineDashOffset = -stageT * 28;
+      this.ctx.beginPath();
+      this.ctx.ellipse(spotlightX, spotlightY + 24, 62, 14, 0, 0, Math.PI * 2);
+      this.ctx.stroke();
+      this.ctx.setLineDash([]);
       this.ctx.restore();
 
-      // Mascot Character
+      // Mascot Character (Full 2.5D Custom Headgear + Back Rig + Animated Aura)
       drawCharacter(
         this.ctx,
         spotlightX,
-        spotlightY - 14,
+        spotlightY - 12,
         46,
         this.shopPreviewPlayerId,
         false,
         'triumph',
-        performance.now() * 0.001,
+        stageT,
         curItem.id
       );
 
@@ -7849,73 +7906,65 @@ export class GameManager {
 
     // === CASE 2: ARENA THEME ===
     else if (curItem.category === 'ARENA') {
-      const arenaBoxW = Math.min(260, stageW - 40);
-      const arenaBoxH = 115;
+      const arenaBoxW = Math.min(310, stageW - 28);
+      const arenaBoxH = 122;
       const arenaBoxX = centerX - arenaBoxW / 2;
-      const arenaBoxY = stageY + 24;
+      const arenaBoxY = stageY + 18;
+      const arenaAnimT = performance.now() * 0.001;
 
-      // Draw Mini Themed Arena Simulator
+      // Draw Live 2.5D Themed Arena Diorama
       this.ctx.save();
       this.ctx.shadowColor = curItem.raw.glowColor;
-      this.ctx.shadowBlur = 14;
+      this.ctx.shadowBlur = 16;
       this.drawRoundedRect(arenaBoxX, arenaBoxY, arenaBoxW, arenaBoxH, 12, curItem.raw.previewColor, curItem.raw.borderColor, 2.5);
+      this.ctx.restore();
 
-      // Floor decorative pattern simulation
-      this.ctx.strokeStyle = curItem.raw.borderColor;
-      this.ctx.lineWidth = 1;
-      this.ctx.globalAlpha = 0.35;
-      for (let gx = arenaBoxX + 16; gx < arenaBoxX + arenaBoxW; gx += 24) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(gx, arenaBoxY + 4);
-        this.ctx.lineTo(gx, arenaBoxY + arenaBoxH - 4);
-        this.ctx.stroke();
-      }
-      for (let gy = arenaBoxY + 16; gy < arenaBoxY + arenaBoxH; gy += 24) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(arenaBoxX + 4, gy);
-        this.ctx.lineTo(arenaBoxX + arenaBoxW - 4, gy);
-        this.ctx.stroke();
-      }
-      this.ctx.globalAlpha = 1.0;
+      // Render bespoke animated 2.5D environmental props & floor diorama
+      this.renderShopArenaDiorama(curItem.raw, arenaBoxX, arenaBoxY, arenaBoxW, arenaBoxH);
 
-      // Two mini masons facing off
-      drawCharacter(this.ctx, arenaBoxX + 48, arenaBoxY + arenaBoxH / 2, 22, 0, false, 'idle', 0, 'classic');
-      drawCharacter(this.ctx, arenaBoxX + arenaBoxW - 48, arenaBoxY + arenaBoxH / 2, 22, 1, false, 'idle', 0, 'classic');
+      // Frame border & dueling mascots inside the diorama
+      this.ctx.save();
+      this.drawRoundedRect(arenaBoxX, arenaBoxY, arenaBoxW, arenaBoxH, 12, 'rgba(0,0,0,0)', curItem.raw.borderColor, 2.5);
+      const p1Skin = EconomyManager.getInstance().getEquippedSkin(0);
+      const p2Skin = EconomyManager.getInstance().getEquippedSkin(1);
+      const duelOffset = Math.sin(arenaAnimT * 3.2) * 5;
+      drawCharacter(this.ctx, arenaBoxX + 54 + duelOffset, arenaBoxY + arenaBoxH * 0.56, 20, 0, false, 'happy', arenaAnimT, p1Skin);
+      drawCharacter(this.ctx, arenaBoxX + arenaBoxW - 54 - duelOffset, arenaBoxY + arenaBoxH * 0.56, 20, 1, false, 'happy', arenaAnimT, p2Skin);
 
       // Arena Simulation Pill Tag
-      this.drawRoundedRect(centerX - 65, arenaBoxY + arenaBoxH - 18, 130, 14, 4, 'rgba(15, 23, 42, 0.7)');
+      this.drawRoundedRect(centerX - 74, arenaBoxY + arenaBoxH - 19, 148, 15, 5, 'rgba(15, 23, 42, 0.82)', curItem.raw.borderColor, 1);
       this.ctx.fillStyle = '#FFFFFF';
       this.ctx.font = '900 8.5px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText('THEMED ARENA PREVIEW', centerX, arenaBoxY + arenaBoxH - 7);
+      this.ctx.fillText('LIVE 2.5D ARENA DIORAMA', centerX, arenaBoxY + arenaBoxH - 8.5);
       this.ctx.restore();
 
       // Rarity pill
       const rBadgeW = 90;
       const rBadgeH = 18;
-      this.drawRoundedRect(centerX - rBadgeW / 2, stageY + 155, rBadgeW, rBadgeH, 6, rc.bg, rc.border, 1);
+      this.drawRoundedRect(centerX - rBadgeW / 2, stageY + 152, rBadgeW, rBadgeH, 6, rc.bg, rc.border, 1);
       this.ctx.fillStyle = rc.text;
       this.ctx.font = '900 9.5px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText(curItem.rarity.toUpperCase(), centerX, stageY + 167.5);
+      this.ctx.fillText(curItem.rarity.toUpperCase(), centerX, stageY + 164.5);
 
       // Arena Title & Description
       this.ctx.fillStyle = '#0F172A';
       this.ctx.font = '900 18px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText(curItem.name, centerX, stageY + 195);
+      this.ctx.fillText(curItem.name, centerX, stageY + 192);
 
       this.ctx.fillStyle = '#475569';
       this.ctx.font = '600 11.5px sans-serif';
       this.ctx.textAlign = 'center';
-      this.wrapText(curItem.description, centerX, stageY + 215, stageW - 40, 16);
+      this.wrapText(curItem.description, centerX, stageY + 212, stageW - 40, 16);
 
       // Environment Spec Pill
-      this.drawRoundedRect(centerX - 130, stageY + 270, 260, 22, 6, '#F1F5F9', '#CBD5E1', 1);
+      this.drawRoundedRect(centerX - 135, stageY + 268, 270, 22, 6, '#F1F5F9', '#CBD5E1', 1);
       this.ctx.fillStyle = '#475569';
       this.ctx.font = 'bold 9.5px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText(`Border: ${curItem.raw.borderColor} | Floor: ${curItem.raw.floorPattern}`, centerX, stageY + 284);
+      this.ctx.fillText(`Trim: ${curItem.raw.borderColor}  •  Biome: ${curItem.raw.floorPattern.toUpperCase()}`, centerX, stageY + 282.5);
 
       // Action Area
       const actionAreaY = stageY + stageH - 56;
@@ -8467,19 +8516,32 @@ export class GameManager {
           this.drawRoundedRect(cardX, cardY + 4, cardW, cardH, 18, '#0F172A');
           this.drawRoundedRect(cardX, cardY, cardW, cardH, 18, '#FFFFFF', res.previewColor, 3);
 
-          // Crate / Reveal Icon
-          this.ctx.beginPath();
-          this.ctx.arc(cardCenterX, cardY + 54, 30, 0, Math.PI * 2);
-          this.ctx.fillStyle = res.previewColor;
-          this.ctx.fill();
-          this.ctx.strokeStyle = '#FFFFFF';
-          this.ctx.lineWidth = 2.5;
-          this.ctx.stroke();
+          // Live 2.5D Reward Showcase on Reveal Card
+          const revealT = performance.now() * 0.001;
+          if (res.itemType === 'skin') {
+            this.ctx.beginPath();
+            this.ctx.ellipse(cardCenterX, cardY + 76, 42, 11, 0, 0, Math.PI * 2);
+            this.ctx.fillStyle = '#E2E8F0';
+            this.ctx.fill();
+            drawCharacter(this.ctx, cardCenterX, cardY + 54, 28, 0, false, 'triumph', revealT, res.itemId);
+          } else if (res.itemType === 'arena') {
+            const arenaDef = ARENA_CATALOG.find(a => a.id === res.itemId) || ARENA_CATALOG[0];
+            this.renderShopArenaDiorama(arenaDef, cardCenterX - 95, cardY + 18, 190, 68);
+            this.drawRoundedRect(cardCenterX - 95, cardY + 18, 190, 68, 8, 'rgba(0,0,0,0)', arenaDef.borderColor, 2);
+          } else {
+            this.ctx.beginPath();
+            this.ctx.arc(cardCenterX, cardY + 54, 30, 0, Math.PI * 2);
+            this.ctx.fillStyle = res.previewColor;
+            this.ctx.fill();
+            this.ctx.strokeStyle = '#FFFFFF';
+            this.ctx.lineWidth = 2.5;
+            this.ctx.stroke();
 
-          this.ctx.fillStyle = '#FFFFFF';
-          this.ctx.font = '24px sans-serif';
-          this.ctx.textAlign = 'center';
-          this.ctx.fillText(res.itemType === 'skin' ? '🎭' : res.itemType === 'arena' ? '🏟️' : '⚡', cardCenterX, cardY + 62);
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.font = '24px sans-serif';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('⚡', cardCenterX, cardY + 62);
+          }
 
           // Title
           this.ctx.fillStyle = '#0F172A';
