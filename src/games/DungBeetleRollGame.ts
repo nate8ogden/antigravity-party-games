@@ -1,362 +1,405 @@
 import { BaseGame } from './BaseGame';
-import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
+import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
 
-interface SoilClump {
-  x: number;
-  y: number;
-  radius: number;
-  type: 'MOSS' | 'SOIL';
+type BeetleTheme = 'moss_meadow' | 'scarab_dunes' | 'crystal_garden';
+
+interface BeetlePalette {
+  name: string;
+  bgTop: string;
+  bgBot: string;
+  sphereColor: string;
 }
 
-interface BeetlePlayer {
+const THEMES: Record<BeetleTheme, BeetlePalette> = {
+  moss_meadow: {
+    name: 'Emerald Moss Garden',
+    bgTop: '#14532d',
+    bgBot: '#052e16',
+    sphereColor: '#4ade80',
+  },
+  scarab_dunes: {
+    name: 'Golden Scarab Dunes',
+    bgTop: '#78350f',
+    bgBot: '#451a03',
+    sphereColor: '#fbbf24',
+  },
+  crystal_garden: {
+    name: 'Starlight Geode Sphere',
+    bgTop: '#1e1b4b',
+    bgBot: '#090d16',
+    sphereColor: '#38bdf8',
+  },
+};
+
+const THEME_KEYS: BeetleTheme[] = ['moss_meadow', 'scarab_dunes', 'crystal_garden'];
+
+interface SoilClump {
+  id: number;
+  x: number;
+  y: number;
+  golden: boolean;
+}
+
+interface BeetleRoller {
   id: PlayerId;
+  color: string;
+  isBot: boolean;
   x: number;
   y: number;
   vx: number;
   vy: number;
-  angle: number;
-  ballRadius: number; // starts at 14, grows up to 36
+  ballRadius: number;
   score: number;
+  combo: number;
+  charge: number;
+  holding: boolean;
+  boulderBoostTimer: number;
+  stunTimer: number;
+  underdog: boolean;
+  botTimer: number;
+  botChargeGoal: number;
+  calloutText: string;
+  calloutTimer: number;
 }
 
 export class DungBeetleRollGame extends BaseGame {
-  private playersState: Map<PlayerId, BeetlePlayer> = new Map();
+  private beetles: BeetleRoller[] = [];
   private clumps: SoilClump[] = [];
-  private goalX: number = 0;
-  private goalY: number = 0;
+  private timeElapsed = 0;
+  private roundTime = 45;
+  private suddenDeath = false;
+  private hitStopTimer = 0;
+  private shakeTimer = 0;
+  private shakeIntensity = 0;
+  private themeIdx = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
 
-  constructor(
-    players: PlayerConfig[],
-    input: InputRouter,
-    audio: AudioEngine,
-    particles: ParticleSystem
-  ) {
+  constructor(players: PlayerConfig[], input: InputRouter, audio: AudioEngine, particles: ParticleSystem) {
     super(players, input, audio, particles);
   }
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+          this.audio.playTap();
+        } else if (e.key === '1') this.themeIdx = 0;
+        else if (e.key === '2') this.themeIdx = 1;
+        else if (e.key === '3') this.themeIdx = 2;
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
   }
 
   public reset(width: number, height: number): void {
+    this.timeElapsed = 0;
+    this.roundTime = 45;
     this.isFinished = false;
-    this.roundTimer = 30;
+    this.suddenDeath = false;
+    this.hitStopTimer = 0;
+    this.shakeTimer = 0;
+    this.shakeIntensity = 0;
+    this.beetles = [];
     this.clumps = [];
-    this.playersState.clear();
-
-    this.goalX = width / 2;
-    this.goalY = 60;
-
-    // Spawn 14 soil & moss clumps
-    this.spawnClumps(width, height);
 
     const active = this.getActivePlayers();
-    const count = active.length;
-    const spacing = width / (count + 1);
-
     active.forEach((p, idx) => {
-      this.playersState.set(p.id, {
+      this.beetles.push({
         id: p.id,
-        x: spacing * (idx + 1),
-        y: height - 60,
+        color: p.color,
+        isBot: p.type.startsWith('bot_'),
+        x: width * (0.3 + idx * 0.2),
+        y: height * 0.54,
         vx: 0,
         vy: 0,
-        angle: -Math.PI / 2,
-        ballRadius: 14,
-        score: 0
+        ballRadius: 20,
+        score: 0,
+        combo: 1,
+        charge: 0,
+        holding: false,
+        boulderBoostTimer: 0,
+        stunTimer: 0,
+        underdog: false,
+        botTimer: 0.22,
+        botChargeGoal: 0.82,
+        calloutText: '',
+        calloutTimer: 0,
       });
     });
+
+    for (let i = 0; i < 12; i++) {
+      this.clumps.push(this.spawnClump(width, height, i));
+    }
   }
 
-  private spawnClumps(width: number, height: number): void {
-    for (let i = 0; i < 14; i++) {
-      this.clumps.push({
-        x: 40 + Math.random() * (width - 80),
-        y: 110 + Math.random() * (height - 180),
-        radius: 8 + Math.random() * 6,
-        type: i % 2 === 0 ? 'MOSS' : 'SOIL'
-      });
-    }
+  private spawnClump(width: number, height: number, id: number): SoilClump {
+    return {
+      id,
+      x: width * (0.14 + Math.random() * 0.72),
+      y: height * (0.18 + Math.random() * 0.66),
+      golden: Math.random() < 0.28,
+    };
+  }
+
+  private triggerHitStop(ms: number, shake: number): void {
+    this.hitStopTimer = Math.max(this.hitStopTimer, ms / 1000);
+    this.shakeTimer = Math.max(this.shakeTimer, 0.22);
+    this.shakeIntensity = Math.min(18, Math.max(this.shakeIntensity, shake));
+  }
+
+  private showCallout(b: BeetleRoller, text: string): void {
+    b.calloutText = text;
+    b.calloutTimer = 1.15;
   }
 
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
-    this.roundTimer = Math.max(0, this.roundTimer - dt);
+
+    if (this.shakeTimer > 0) this.shakeTimer = Math.max(0, this.shakeTimer - dt);
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer = Math.max(0, this.hitStopTimer - dt);
+      return;
+    }
+
+    this.timeElapsed += dt;
+    const remaining = Math.max(0, this.roundTime - this.timeElapsed);
+    if (remaining <= 15 && !this.suddenDeath) {
+      this.suddenDeath = true;
+      this.audio.playBuzzer();
+      this.beetles.forEach((b) => this.showCallout(b, 'COLOSSAL SPHERE 2X!'));
+    }
+    if (remaining <= 0) {
+      this.isFinished = true;
+      this.audio.playFanfare();
+      return;
+    }
+
     this.updateBots(dt, width, height);
+    const maxScore = Math.max(0, ...this.beetles.map((b) => b.score));
+    const goalX = width * 0.5;
+    const goalY = height * 0.52;
 
-    const beetleList = Array.from(this.playersState.values());
-
-    for (const b of beetleList) {
-      const steerX = this.input.getSteer(b.id);
-      const steerY = -this.input.getThrottle(b.id);
-      const mag = Math.hypot(steerX, steerY);
-
-      if (mag > 0.2) {
-        b.angle = Math.atan2(steerY, steerX);
-        const maxSpd = Math.max(140, 240 - (b.ballRadius - 14) * 3);
-        b.vx += (steerX / mag) * maxSpd * dt * 4;
-        b.vy += (steerY / mag) * maxSpd * dt * 4;
+    for (const b of this.beetles) {
+      b.underdog = maxScore - b.score >= 150;
+      if (b.calloutTimer > 0) b.calloutTimer = Math.max(0, b.calloutTimer - dt);
+      if (b.boulderBoostTimer > 0) b.boulderBoostTimer = Math.max(0, b.boulderBoostTimer - dt);
+      if (b.stunTimer > 0) {
+        b.stunTimer = Math.max(0, b.stunTimer - dt);
+        continue;
       }
 
-      b.vx *= Math.pow(0.12, dt);
-      b.vy *= Math.pow(0.12, dt);
+      const sx = this.input.getSteer(b.id);
+      const sy = this.input.getThrottle(b.id);
+      const isHold = this.input.isActionPressed(b.id) || this.input.isPressed(b.id);
 
-      b.x += b.vx * dt;
-      b.y += b.vy * dt;
+      const accel = 1350 * (b.underdog ? 1.15 : 1.0) * (b.boulderBoostTimer > 0 ? 1.35 : 1.0);
+      b.vx += sx * accel * dt;
+      b.vy += (sy !== 0 ? -sy : 0) * accel * dt;
+      b.vx *= Math.pow(0.05, dt);
+      b.vy *= Math.pow(0.05, dt);
 
-      b.x = Math.max(b.ballRadius + 20, Math.min(width - b.ballRadius - 20, b.x));
-      b.y = Math.max(b.ballRadius + 20, Math.min(height - b.ballRadius - 20, b.y));
+      // Hold-to-charge Scarab Boulder Bowl & Smash Shunt (72%-98% Sweet Spot)
+      if (isHold) {
+        b.holding = true;
+        b.charge = Math.min(1, b.charge + dt * 0.92);
+      } else if (b.holding) {
+        const sweet = b.charge >= 0.72 && b.charge <= 0.98;
+        if (sweet) {
+          b.boulderBoostTimer = 2.2;
+          b.score += 85;
+          b.combo = Math.min(4, b.combo + 1);
+          this.showCallout(b, 'BOULDER BOWL +85!');
+          this.audio.playBoost();
+          this.triggerHitStop(45, 12);
 
-      // Gather soil clumps to grow ball
-      for (let i = this.clumps.length - 1; i >= 0; i--) {
+          for (const other of this.beetles) {
+            if (other.id !== b.id && Math.hypot(other.x - b.x, other.y - b.y) < 175) {
+              const dx = other.x - b.x;
+              const dy = other.y - b.y;
+              const d = Math.max(1, Math.hypot(dx, dy));
+              other.vx += (dx / d) * 560;
+              other.vy += (dy / d) * 560;
+              other.ballRadius = Math.max(18, other.ballRadius - 6);
+              b.score += 70;
+              this.showCallout(b, 'SPHERE SMASH SHUNT +70!');
+              this.audio.playBounce();
+            }
+          }
+        } else if (b.charge > 0.98) {
+          b.stunTimer = 0.9;
+          b.combo = 1;
+          this.showCallout(b, 'SPHERE SPINOUT!');
+          this.audio.playStun();
+        }
+        b.holding = false;
+        b.charge = 0;
+      }
+
+      b.x = Math.max(width * 0.1, Math.min(width * 0.9, b.x + b.vx * dt));
+      b.y = Math.max(height * 0.16, Math.min(height * 0.88, b.y + b.vy * dt));
+
+      for (let i = 0; i < this.clumps.length; i++) {
         const c = this.clumps[i];
-        if (Math.hypot(b.x - c.x, b.y - c.y) < b.ballRadius + c.radius) {
-          b.ballRadius = Math.min(36, b.ballRadius + 2.2);
-          b.score += c.type === 'MOSS' ? 15 : 10;
-          this.audio.playBounce();
-          this.particles.spawnDust(c.x, c.y, 4);
-          this.clumps.splice(i, 1);
+        if (Math.hypot(b.x - c.x, b.y - c.y) < b.ballRadius + 14) {
+          const base = c.golden ? 95 : 50;
+          const pts = base * b.combo * (this.suddenDeath ? 2 : 1);
+          b.score += pts;
+          b.ballRadius = Math.min(44, b.ballRadius + (c.golden ? 5 : 3));
+          b.combo = Math.min(4, b.combo + 1);
+          this.showCallout(b, c.golden ? `GOLDEN SCARAB +${pts}!` : `MOSS CLUMP +${pts}`);
+          this.audio.playScore();
+          this.particles.spawnSparks(c.x, c.y, '#4ade80', 10);
+          this.clumps[i] = this.spawnClump(width, height, c.id);
         }
       }
 
-      // Check deposit into compost goal
-      if (b.ballRadius > 18 && Math.hypot(b.x - this.goalX, b.y - this.goalY) < 48) {
-        const bonus = Math.floor((b.ballRadius - 14) * 4);
+      // Bank oversize sphere in center goal
+      if (b.ballRadius >= 30 && Math.hypot(b.x - goalX, b.y - goalY) < 48) {
+        const bonus = Math.round(b.ballRadius * 2.5) * (this.suddenDeath ? 2 : 1);
         b.score += bonus;
-        this.audio.playScore();
-        this.particles.showFloatingText(`COMPOST GOAL! +${bonus}`, this.goalX, this.goalY - 20, '#10B981', 24);
-        this.particles.spawnConfetti(this.goalX, this.goalY, 14);
-        b.ballRadius = 14;
+        b.ballRadius = 20;
+        this.showCallout(b, `SPHERE BANKED +${bonus}!`);
+        this.audio.playChime();
       }
     }
 
-    // Beetle vs Beetle collisions
-    for (let i = 0; i < beetleList.length; i++) {
-      for (let j = i + 1; j < beetleList.length; j++) {
-        const b1 = beetleList[i];
-        const b2 = beetleList[j];
-        const dx = b2.x - b1.x;
-        const dy = b2.y - b1.y;
+    // Elastic Sphere-to-Sphere Bumping
+    for (let i = 0; i < this.beetles.length; i++) {
+      for (let j = i + 1; j < this.beetles.length; j++) {
+        const a = this.beetles[i];
+        const b = this.beetles[j];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
         const dist = Math.hypot(dx, dy);
-        const minDist = b1.ballRadius + b2.ballRadius + 10;
-
-        if (dist < minDist && dist > 0.001) {
+        if (dist > 0 && dist < a.ballRadius + b.ballRadius) {
           const nx = dx / dist;
           const ny = dy / dist;
-          b1.x -= nx * 10;
-          b1.y -= ny * 10;
-          b2.x += nx * 10;
-          b2.y += ny * 10;
-
-          // Bigger ball knocks smaller ball
-          if (b1.ballRadius > b2.ballRadius + 4) {
-            b1.score += 20;
-            b2.ballRadius = Math.max(14, b2.ballRadius - 3);
-            this.audio.playExplosion();
-            this.particles.showFloatingText('BUMP! +20', b1.x, b1.y - 20, '#FBBF24', 20);
-          } else if (b2.ballRadius > b1.ballRadius + 4) {
-            b2.score += 20;
-            b1.ballRadius = Math.max(14, b1.ballRadius - 3);
-            this.audio.playExplosion();
-            this.particles.showFloatingText('BUMP! +20', b2.x, b2.y - 20, '#FBBF24', 20);
-          } else {
-            this.audio.playBounce();
-          }
+          a.vx -= nx * 320;
+          a.vy -= ny * 320;
+          b.vx += nx * 320;
+          b.vy += ny * 320;
+          this.audio.playBounce();
         }
       }
     }
-
-    // Respawn clumps if low
-    if (this.clumps.length < 5) {
-      this.spawnClumps(width, height);
-    }
-
-    if (this.roundTimer <= 0) {
-      this.isFinished = true;
-    }
-  }
-
-  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Garden Soil & Compost Yard
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#15803D'); // Top hedge
-    bgGrad.addColorStop(0.2, '#78350F'); // Soil
-    bgGrad.addColorStop(0.8, '#451A03'); // Soil
-    bgGrad.addColorStop(1, '#1C1917'); // Bottom border
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
-
-    // 2. Compost Bin Scoring Goal at Top
-    ctx.save();
-    ctx.fillStyle = '#166534';
-    ctx.beginPath();
-    ctx.arc(this.goalX, this.goalY, 44, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#22C55E';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '700 9px Montserrat, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('COMPOST GOAL', this.goalX, this.goalY + 4);
-    ctx.restore();
-
-    // 3. Draw Soil Clumps & Moss Balls
-    for (const c of this.clumps) {
-      ctx.save();
-      ctx.translate(c.x, c.y);
-      ctx.fillStyle = c.type === 'MOSS' ? '#65A30D' : '#92400E';
-      ctx.beginPath();
-      ctx.arc(0, 0, c.radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = c.type === 'MOSS' ? '#84CC16' : '#78350F';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // 4. Draw Dung Beetles & Their Rolling Mud Balls
-    for (const p of this.getActivePlayers()) {
-      const b = this.playersState.get(p.id);
-      if (!b) continue;
-
-      // Draw Rolling Spherical Soil Ball in front of beetle
-      ctx.save();
-      const ballX = b.x + Math.cos(b.angle) * (b.ballRadius + 8);
-      const ballY = b.y + Math.sin(b.angle) * (b.ballRadius + 8);
-
-      // Ball shadow
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-      ctx.beginPath();
-      ctx.ellipse(ballX, ballY + 4, b.ballRadius, b.ballRadius * 0.5, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Textured spherical soil ball
-      const ballGrad = ctx.createRadialGradient(ballX - 4, ballY - 4, 3, ballX, ballY, b.ballRadius);
-      ballGrad.addColorStop(0, '#B45309');
-      ballGrad.addColorStop(0.7, '#78350F');
-      ballGrad.addColorStop(1, '#451A03');
-      ctx.fillStyle = ballGrad;
-      ctx.beginPath();
-      ctx.arc(ballX, ballY, b.ballRadius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#292524';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Moss specks on ball
-      ctx.fillStyle = '#65A30D';
-      ctx.beginPath();
-      ctx.arc(ballX - b.ballRadius * 0.3, ballY - b.ballRadius * 0.2, 3, 0, Math.PI * 2);
-      ctx.arc(ballX + b.ballRadius * 0.4, ballY + b.ballRadius * 0.1, 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
-      // Draw Armored Scarab Beetle behind ball
-      ctx.save();
-      ctx.translate(b.x, b.y);
-      ctx.rotate(b.angle);
-
-      // Beetle Legs pushing forward
-      ctx.strokeStyle = '#0F172A';
-      ctx.lineWidth = 2;
-      for (let i = -1; i <= 1; i += 0.8) {
-        ctx.beginPath();
-        ctx.moveTo(0, i * 6);
-        ctx.lineTo(12, i * 11);
-        ctx.stroke();
-      }
-
-      // Armored Carapace Body
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.ellipse(-4, 0, 12, 9, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Horned Head
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.arc(10, 0, 5, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Pushing Horns
-      ctx.strokeStyle = '#94A3B8';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(12, -3);
-      ctx.lineTo(18, -6);
-      ctx.moveTo(12, 3);
-      ctx.lineTo(18, 6);
-      ctx.stroke();
-      ctx.restore();
-
-      // Score
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 11px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${p.name}: ${b.score}`, b.x, b.y - 24);
-    }
-
-    // 5. Header HUD
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 20px Montserrat, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`TIME: ${Math.ceil(this.roundTimer)}s`, width / 2, 28);
   }
 
   protected updateBotAI(
     dt: number,
     botId: PlayerId,
     difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
-    width: number,
-    height: number
+    _width: number,
+    _height: number
   ): void {
-    const b = this.playersState.get(botId);
-    if (!b) return;
+    const bot = this.beetles.find((b) => b.id === botId);
+    if (!bot || bot.stunTimer > 0) return;
 
-    // If ball is huge (> 28), steer towards compost goal!
-    let targetX = this.goalX;
-    let targetY = this.goalY;
-
-    if (b.ballRadius < 28) {
-      // Find nearest soil clump
-      let minDist = 9999;
-      let targetClump: SoilClump | null = null;
-      for (const c of this.clumps) {
-        const d = Math.hypot(c.x - b.x, c.y - b.y);
-        if (d < minDist) {
-          minDist = d;
-          targetClump = c;
-        }
-      }
-      if (targetClump) {
-        targetX = targetClump.x;
-        targetY = targetClump.y;
-      }
+    bot.botTimer -= dt;
+    if (bot.botTimer <= 0) {
+      bot.botTimer = difficulty === 'bot_hard' ? 0.18 : 0.26;
+      bot.botChargeGoal = 0.76 + Math.random() * 0.18;
     }
 
-    const dx = targetX - b.x;
-    const dy = targetY - b.y;
-    const dist = Math.hypot(dx, dy);
-
-    if (dist > 10) {
-      const err = difficulty === 'bot_hard' ? 0.05 : difficulty === 'bot_normal' ? 0.2 : 0.45;
-      const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * err;
-      this.input.setBotInput(botId, true, Math.cos(angle), -Math.sin(angle), true);
-    } else {
-      this.input.setBotInput(botId, false, 0, 0, false);
+    const best = this.clumps.find((c) => c.golden) ?? this.clumps[0];
+    if (best) {
+      const dx = best.x - bot.x;
+      const dy = best.y - bot.y;
+      const d = Math.max(1, Math.hypot(dx, dy));
+      bot.vx += (dx / d) * 1100 * dt;
+      bot.vy += (dy / d) * 1100 * dt;
     }
+
+    const hold = !bot.holding || bot.charge < bot.botChargeGoal;
+    this.input.setBotState(botId, hold);
   }
 
-  public getScore(playerId: PlayerId): number {
-    return this.playersState.get(playerId)?.score ?? 0;
+  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const pal = THEMES[THEME_KEYS[this.themeIdx]];
+    ctx.save();
+
+    if (this.shakeTimer > 0) {
+      const s = this.shakeIntensity * (this.shakeTimer / 0.22);
+      ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+    }
+
+    const bg = ctx.createLinearGradient(0, 0, 0, height);
+    bg.addColorStop(0, pal.bgTop);
+    bg.addColorStop(1, pal.bgBot);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    // Center Compost Goal
+    ctx.strokeStyle = '#fbbf24';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(width * 0.5, height * 0.52, 42, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Clumps
+    for (const c of this.clumps) {
+      ctx.fillStyle = c.golden ? '#fbbf24' : pal.sphereColor;
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, c.golden ? 16 : 12, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Beetles & Rolling Spheres
+    for (const b of this.beetles) {
+      ctx.save();
+      ctx.translate(b.x, b.y);
+      ctx.fillStyle = pal.sphereColor;
+      ctx.beginPath();
+      ctx.arc(0, 0, b.ballRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = b.color;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      if (b.holding && b.charge > 0.05) {
+        const sweet = b.charge >= 0.72 && b.charge <= 0.98;
+        ctx.strokeStyle = sweet ? '#4ade80' : '#fbbf24';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, b.ballRadius + 8, -Math.PI / 2, -Math.PI / 2 + b.charge * Math.PI * 2);
+        ctx.stroke();
+      }
+      const mood = b.stunTimer > 0 ? 'shocked' : b.boulderBoostTimer > 0 ? 'triumph' : b.holding ? 'focused' : 'happy';
+      this.drawPlayerMascot(ctx, b.id, 0, 0, 15, mood, this.timeElapsed, b.vx * 0.0005);
+      if (b.calloutTimer > 0 && b.calloutText) {
+        ctx.fillStyle = '#fef08a';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(b.calloutText, 0, -b.ballRadius - 12);
+      }
+      ctx.restore();
+    }
+
+    // HUD
+    const remaining = Math.max(0, Math.ceil(this.roundTime - this.timeElapsed));
+    ctx.fillStyle = 'rgba(15,23,42,0.82)';
+    ctx.fillRect(0, 0, width, 46);
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 15px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      `🪲 DUNG BEETLE ROLL • ${pal.name} [T/1-3] • ${remaining}s ${this.suddenDeath ? '🔥 2X SPHERE' : ''}`,
+      width * 0.5,
+      19
+    );
+
+    this.beetles.forEach((b, idx) => {
+      ctx.fillStyle = b.color;
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`P${b.id}: ${Math.round(b.score)} pts (${b.combo}x)`, 90 + idx * 170, 38);
+    });
+
+    ctx.restore();
   }
 
   public isRoundOver(): boolean {
@@ -364,19 +407,19 @@ export class DungBeetleRollGame extends BaseGame {
   }
 
   public getRoundResult(): RoundResult {
-    const rankings = Array.from(this.playersState.entries())
-      .map(([playerId, b]) => ({ playerId, score: b.score, place: 1 }))
-      .sort((a, b) => b.score - a.score);
-
-    rankings.forEach((entry, idx) => {
-      entry.place = idx + 1;
-    });
-
-    const winnerId = rankings.length > 0 && rankings[0].score > 0 ? rankings[0].playerId : null;
+    const sorted = [...this.beetles].sort((a, b) => b.score - a.score);
     return {
-      winnerId,
-      rankings,
-      mvpHighlight: winnerId ? `${winnerId} rolled the most colossal compost mud balls!` : 'Tied beetle rolling!'
+      winnerId: sorted[0]?.id ?? 1,
+      rankings: sorted.map((b, i) => ({
+        playerId: b.id,
+        score: Math.round(b.score),
+        place: i + 1,
+      })),
+      mvpHighlight: `Colossal Sphere Champion ${Math.round(sorted[0]?.score ?? 0)} pts!`,
     };
+  }
+
+  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+    return false;
   }
 }

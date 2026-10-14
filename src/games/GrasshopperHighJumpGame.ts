@@ -1,286 +1,374 @@
 import { BaseGame } from './BaseGame';
-import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
+import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
 
+type MeadowJumpTheme = 'clover_meadow' | 'sunlit_pond' | 'starlight_garden';
+
+interface MeadowJumpPalette {
+  name: string;
+  bgTop: string;
+  bgBot: string;
+  padColor: string;
+}
+
+const THEMES: Record<MeadowJumpTheme, MeadowJumpPalette> = {
+  clover_meadow: {
+    name: 'Four-Leaf Clover Meadow',
+    bgTop: '#064e3b',
+    bgBot: '#022c22',
+    padColor: '#4ade80',
+  },
+  sunlit_pond: {
+    name: 'Golden Stepping Stone Pond',
+    bgTop: '#0c4a6e',
+    bgBot: '#082f49',
+    padColor: '#38bdf8',
+  },
+  starlight_garden: {
+    name: 'Moonlit Fairy Stones',
+    bgTop: '#1e1b4b',
+    bgBot: '#090d16',
+    padColor: '#a855f7',
+  },
+};
+
+const THEME_KEYS: MeadowJumpTheme[] = ['clover_meadow', 'sunlit_pond', 'starlight_garden'];
+
 interface CloverPad {
+  id: number;
   x: number;
   y: number;
-  radius: number;
-  isGolden: boolean;
-  points: number;
+  goldenClover: boolean;
 }
 
 interface GrasshopperPlayer {
   id: PlayerId;
-  laneY: number;
+  color: string;
+  isBot: boolean;
   x: number;
   y: number;
   vx: number;
   vy: number;
-  charge: number; // 0 to 1
-  isCharging: boolean;
-  isAirborne: boolean;
   score: number;
+  combo: number;
+  charge: number;
+  holding: boolean;
+  springBoostTimer: number;
+  stunTimer: number;
+  underdog: boolean;
+  botTimer: number;
+  botChargeGoal: number;
+  calloutText: string;
+  calloutTimer: number;
 }
 
 export class GrasshopperHighJumpGame extends BaseGame {
-  private playersState: Map<PlayerId, GrasshopperPlayer> = new Map();
+  private hoppers: GrasshopperPlayer[] = [];
   private pads: CloverPad[] = [];
+  private timeElapsed = 0;
+  private roundTime = 45;
+  private suddenDeath = false;
+  private hitStopTimer = 0;
+  private shakeTimer = 0;
+  private shakeIntensity = 0;
+  private themeIdx = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
 
-  constructor(
-    players: PlayerConfig[],
-    input: InputRouter,
-    audio: AudioEngine,
-    particles: ParticleSystem
-  ) {
+  constructor(players: PlayerConfig[], input: InputRouter, audio: AudioEngine, particles: ParticleSystem) {
     super(players, input, audio, particles);
   }
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+          this.audio.playTap();
+        } else if (e.key === '1') this.themeIdx = 0;
+        else if (e.key === '2') this.themeIdx = 1;
+        else if (e.key === '3') this.themeIdx = 2;
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
   }
 
   public reset(width: number, height: number): void {
+    this.timeElapsed = 0;
+    this.roundTime = 45;
     this.isFinished = false;
-    this.roundTimer = 30;
+    this.suddenDeath = false;
+    this.hitStopTimer = 0;
+    this.shakeTimer = 0;
+    this.shakeIntensity = 0;
+    this.hoppers = [];
     this.pads = [];
-    this.playersState.clear();
+
+    for (let i = 0; i < 9; i++) {
+      this.pads.push({
+        id: i,
+        x: width * (0.16 + (i % 3) * 0.34),
+        y: height * (0.24 + Math.floor(i / 3) * 0.25),
+        goldenClover: i % 3 === 1,
+      });
+    }
 
     const active = this.getActivePlayers();
-    const count = active.length;
-    const laneH = (height - 80) / count;
-
     active.forEach((p, idx) => {
-      const laneY = 70 + idx * laneH + laneH / 2;
-      this.playersState.set(p.id, {
+      this.hoppers.push({
         id: p.id,
-        laneY,
-        x: 50,
-        y: laneY,
+        color: p.color,
+        isBot: p.type.startsWith('bot_'),
+        x: width * (0.3 + idx * 0.2),
+        y: height * 0.54,
         vx: 0,
         vy: 0,
+        score: 0,
+        combo: 1,
         charge: 0,
-        isCharging: false,
-        isAirborne: false,
-        score: 0
+        holding: false,
+        springBoostTimer: 0,
+        stunTimer: 0,
+        underdog: false,
+        botTimer: 0.22,
+        botChargeGoal: 0.82,
+        calloutText: '',
+        calloutTimer: 0,
       });
-
-      // Spawn clover pads along lane
-      for (let x = 160; x < width - 40; x += 110) {
-        const isGold = Math.random() < 0.3;
-        this.pads.push({
-          x,
-          y: laneY + 8,
-          radius: 20,
-          isGolden: isGold,
-          points: isGold ? 35 : 20
-        });
-      }
     });
+  }
+
+  private triggerHitStop(ms: number, shake: number): void {
+    this.hitStopTimer = Math.max(this.hitStopTimer, ms / 1000);
+    this.shakeTimer = Math.max(this.shakeTimer, 0.22);
+    this.shakeIntensity = Math.min(18, Math.max(this.shakeIntensity, shake));
+  }
+
+  private showCallout(h: GrasshopperPlayer, text: string): void {
+    h.calloutText = text;
+    h.calloutTimer = 1.15;
   }
 
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
-    this.roundTimer = Math.max(0, this.roundTimer - dt);
-    this.updateBots(dt, width, height);
 
-    for (const p of this.getActivePlayers()) {
-      const ps = this.playersState.get(p.id);
-      if (!ps) continue;
-
-      const isPressed = this.input.isPressed(p.id);
-      const justReleased = this.input.justReleased(p.id);
-
-      if (!ps.isAirborne) {
-        if (isPressed) {
-          ps.isCharging = true;
-          ps.charge = Math.min(1.0, ps.charge + dt * 2.2);
-        } else if (justReleased || (!isPressed && ps.isCharging)) {
-          // Launch High Jump!
-          ps.isCharging = false;
-          ps.isAirborne = true;
-          const power = 300 + ps.charge * 320;
-          ps.vx = power * 0.7;
-          ps.vy = -power * 0.8;
-          ps.charge = 0;
-          this.audio.playWhoosh();
-          this.particles.spawnDust(ps.x, ps.laneY, 5);
-        }
-      } else {
-        // Airborne trajectory
-        ps.vy += 800 * dt; // Gravity
-        ps.x += ps.vx * dt;
-        ps.y += ps.vy * dt;
-
-        // Check landing on lane ground
-        if (ps.y >= ps.laneY) {
-          ps.y = ps.laneY;
-          ps.vy = 0;
-          ps.vx = 0;
-          ps.isAirborne = false;
-
-          // Check if landed on or near a clover pad
-          const landedPad = this.pads.find(
-            (pad) => Math.abs(pad.y - (ps.laneY + 8)) < 15 && Math.abs(ps.x - pad.x) < pad.radius + 10
-          );
-
-          if (landedPad) {
-            ps.score += landedPad.points;
-            this.audio.playScore();
-            this.particles.showFloatingText(`+${landedPad.points} CLOVER!`, ps.x, ps.y - 20, landedPad.isGolden ? '#FBBF24' : '#10B981', 20);
-            this.particles.spawnConfetti(ps.x, ps.y, 8);
-          } else {
-            this.audio.playBounce();
-          }
-
-          // Reached track end -> reset position with bonus
-          if (ps.x > width - 50) {
-            ps.score += 40;
-            this.audio.playScore();
-            this.particles.showFloatingText('LAWN CLEARED! +40', width - 80, ps.laneY - 24, '#FBBF24', 22);
-            this.particles.spawnConfetti(width - 80, ps.laneY, 14);
-            ps.x = 50;
-          }
-        }
-      }
+    if (this.shakeTimer > 0) this.shakeTimer = Math.max(0, this.shakeTimer - dt);
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer = Math.max(0, this.hitStopTimer - dt);
+      return;
     }
 
-    if (this.roundTimer <= 0) {
+    this.timeElapsed += dt;
+    const remaining = Math.max(0, this.roundTime - this.timeElapsed);
+    if (remaining <= 15 && !this.suddenDeath) {
+      this.suddenDeath = true;
+      this.audio.playBuzzer();
+      this.hoppers.forEach((h) => this.showCallout(h, 'GOLDEN CLOVER 2X!'));
+    }
+    if (remaining <= 0) {
       this.isFinished = true;
+      this.audio.playFanfare();
+      return;
     }
-  }
 
-  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Sunny Summer Garden Lawn
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#064E3B');
-    bgGrad.addColorStop(0.6, '#065F46');
-    bgGrad.addColorStop(1, '#022C22');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
+    this.updateBots(dt, width, height);
+    const maxScore = Math.max(0, ...this.hoppers.map((h) => h.score));
 
-    const active = this.getActivePlayers();
-    const count = active.length;
-    const laneH = (height - 80) / count;
-
-    active.forEach((p, idx) => {
-      const ps = this.playersState.get(p.id);
-      if (!ps) return;
-      const laneY = 70 + idx * laneH + laneH / 2;
-
-      // Divider line
-      if (idx > 0) {
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(0, 70 + idx * laneH);
-        ctx.lineTo(width, 70 + idx * laneH);
-        ctx.stroke();
+    for (const h of this.hoppers) {
+      h.underdog = maxScore - h.score >= 150;
+      if (h.calloutTimer > 0) h.calloutTimer = Math.max(0, h.calloutTimer - dt);
+      if (h.springBoostTimer > 0) h.springBoostTimer = Math.max(0, h.springBoostTimer - dt);
+      if (h.stunTimer > 0) {
+        h.stunTimer = Math.max(0, h.stunTimer - dt);
+        continue;
       }
 
-      // Lawn Grass Ground line
-      ctx.fillStyle = '#166534';
-      ctx.fillRect(0, laneY + 6, width, 12);
-      ctx.fillStyle = '#22C55E';
-      ctx.fillRect(0, laneY + 4, width, 2);
+      const sx = this.input.getSteer(h.id);
+      const sy = this.input.getThrottle(h.id);
+      const isHold = this.input.isActionPressed(h.id) || this.input.isPressed(h.id);
 
-      // Draw Clover Pads
-      for (const pad of this.pads) {
-        if (Math.abs(pad.y - (laneY + 8)) > 15) continue;
-        ctx.save();
-        ctx.translate(pad.x, pad.y);
+      const accel = 1350 * (h.underdog ? 1.15 : 1.0);
+      h.vx += sx * accel * dt;
+      h.vy += (sy !== 0 ? -sy : 0) * accel * dt;
+      h.vx *= Math.pow(0.05, dt);
+      h.vy *= Math.pow(0.05, dt);
 
-        // 3-leaf clover
-        ctx.fillStyle = pad.isGolden ? '#FBBF24' : '#10B981';
-        for (let a = 0; a < Math.PI * 2; a += (Math.PI * 2) / 3) {
-          ctx.beginPath();
-          ctx.ellipse(Math.cos(a) * 8, Math.sin(a) * 8, 7, 5, a, 0, Math.PI * 2);
-          ctx.fill();
+      // Hold-to-charge Hind-Leg Catapult Leap & Landing Shock Shunt (72%-98% Sweet Spot)
+      if (isHold) {
+        h.holding = true;
+        h.charge = Math.min(1, h.charge + dt * 0.92);
+      } else if (h.holding) {
+        const sweet = h.charge >= 0.72 && h.charge <= 0.98;
+        if (sweet) {
+          h.springBoostTimer = 2.0;
+          h.score += 85;
+          h.combo = Math.min(4, h.combo + 1);
+          this.showCallout(h, 'CLOVER LEAP +85!');
+          this.audio.playBoost();
+          this.triggerHitStop(45, 11);
+
+          for (const other of this.hoppers) {
+            if (other.id !== h.id && Math.hypot(other.x - h.x, other.y - h.y) < 170) {
+              const dx = other.x - h.x;
+              const dy = other.y - h.y;
+              const d = Math.max(1, Math.hypot(dx, dy));
+              other.vx += (dx / d) * 520;
+              other.vy += (dy / d) * 520;
+              h.score += 70;
+              this.showCallout(h, 'MEADOW SHOCK SHUNT +70!');
+              this.audio.playBounce();
+            }
+          }
+        } else if (h.charge > 0.98) {
+          h.stunTimer = 0.9;
+          h.combo = 1;
+          this.showCallout(h, 'OVERSHOOT!');
+          this.audio.playStun();
         }
-        ctx.restore();
+        h.holding = false;
+        h.charge = 0;
       }
 
-      // Draw Grasshopper
-      ctx.save();
-      ctx.translate(ps.x, ps.y);
+      h.x = Math.max(width * 0.1, Math.min(width * 0.9, h.x + h.vx * dt));
+      h.y = Math.max(height * 0.16, Math.min(height * 0.88, h.y + h.vy * dt));
 
-      // Charge power spring coil indicator
-      if (ps.isCharging) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-        ctx.fillRect(-18, -30, 36, 6);
-        ctx.fillStyle = '#F59E0B';
-        ctx.fillRect(-18, -30, 36 * ps.charge, 6);
+      for (const pad of this.pads) {
+        if (Math.hypot(h.x - pad.x, h.y - pad.y) < 38 && pad.goldenClover) {
+          pad.goldenClover = false;
+          const pts = 95 * h.combo * (this.suddenDeath ? 2 : 1);
+          h.score += pts;
+          h.combo = Math.min(4, h.combo + 1);
+          this.showCallout(h, `GOLDEN CLOVER +${pts}!`);
+          this.audio.playScore();
+          this.particles.spawnSparks(pad.x, pad.y, '#fbbf24', 12);
+          const randomPad = this.pads[Math.floor(Math.random() * this.pads.length)];
+          if (randomPad) randomPad.goldenClover = true;
+        }
       }
+    }
 
-      // Grasshopper Body
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.ellipse(0, -2, 14, 6, -0.2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      // Powerful Hind Legs
-      ctx.strokeStyle = '#84CC16';
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(-6, 0);
-      ctx.lineTo(-14, -12 + (ps.isCharging ? 6 : 0));
-      ctx.lineTo(-6, 6);
-      ctx.stroke();
-
-      // Antennae
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(12, -4);
-      ctx.lineTo(20, -12);
-      ctx.stroke();
-      ctx.restore();
-
-      // Score
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 11px Montserrat, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(`${p.name}: ${ps.score}`, 16, laneY - 18);
-    });
-
-    // Header HUD
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 20px Montserrat, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`TIME: ${Math.ceil(this.roundTimer)}s`, width / 2, 28);
+    // Hopper-to-Hopper Bumping
+    for (let i = 0; i < this.hoppers.length; i++) {
+      for (let j = i + 1; j < this.hoppers.length; j++) {
+        const a = this.hoppers[i];
+        const b = this.hoppers[j];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 0 && dist < 36) {
+          const nx = dx / dist;
+          const ny = dy / dist;
+          a.vx -= nx * 280;
+          a.vy -= ny * 280;
+          b.vx += nx * 280;
+          b.vy += ny * 280;
+          this.audio.playBounce();
+        }
+      }
+    }
   }
 
   protected updateBotAI(
     dt: number,
     botId: PlayerId,
     difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
-    width: number,
-    height: number
+    _width: number,
+    _height: number
   ): void {
-    const ps = this.playersState.get(botId);
-    if (!ps || ps.isAirborne) return;
+    const bot = this.hoppers.find((h) => h.id === botId);
+    if (!bot || bot.stunTimer > 0) return;
 
-    if (ps.isCharging) {
-      const idealCharge = difficulty === 'bot_hard' ? 0.75 : difficulty === 'bot_normal' ? 0.6 : 0.45;
-      if (ps.charge >= idealCharge) {
-        // Release to jump!
-        this.input.setBotInput(botId, false, 0, 0, false);
-      } else {
-        this.input.setBotInput(botId, true, 0, 0, false);
-      }
-    } else {
-      // Begin charge
-      this.input.setBotInput(botId, true, 0, 0, false);
+    bot.botTimer -= dt;
+    if (bot.botTimer <= 0) {
+      bot.botTimer = difficulty === 'bot_hard' ? 0.18 : 0.26;
+      bot.botChargeGoal = 0.76 + Math.random() * 0.18;
     }
+
+    const best = this.pads.find((p) => p.goldenClover) ?? this.pads[0];
+    if (best) {
+      const dx = best.x - bot.x;
+      const dy = best.y - bot.y;
+      const d = Math.max(1, Math.hypot(dx, dy));
+      bot.vx += (dx / d) * 1100 * dt;
+      bot.vy += (dy / d) * 1100 * dt;
+    }
+
+    const hold = !bot.holding || bot.charge < bot.botChargeGoal;
+    this.input.setBotState(botId, hold);
   }
 
-  public getScore(playerId: PlayerId): number {
-    return this.playersState.get(playerId)?.score ?? 0;
+  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const pal = THEMES[THEME_KEYS[this.themeIdx]];
+    ctx.save();
+
+    if (this.shakeTimer > 0) {
+      const s = this.shakeIntensity * (this.shakeTimer / 0.22);
+      ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+    }
+
+    const bg = ctx.createLinearGradient(0, 0, 0, height);
+    bg.addColorStop(0, pal.bgTop);
+    bg.addColorStop(1, pal.bgBot);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    // Clover Stepping Pads
+    for (const pad of this.pads) {
+      ctx.fillStyle = pad.goldenClover ? '#fbbf24' : pal.padColor;
+      ctx.beginPath();
+      ctx.arc(pad.x, pad.y, 36, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Hoppers
+    for (const h of this.hoppers) {
+      ctx.save();
+      ctx.translate(h.x, h.y);
+      if (h.holding && h.charge > 0.05) {
+        const sweet = h.charge >= 0.72 && h.charge <= 0.98;
+        ctx.strokeStyle = sweet ? '#4ade80' : '#fbbf24';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, 26, -Math.PI / 2, -Math.PI / 2 + h.charge * Math.PI * 2);
+        ctx.stroke();
+      }
+      const mood = h.stunTimer > 0 ? 'shocked' : h.springBoostTimer > 0 ? 'triumph' : h.holding ? 'focused' : 'happy';
+      this.drawPlayerMascot(ctx, h.id, 0, 0, 16, mood, this.timeElapsed, h.vx * 0.0005);
+      if (h.calloutTimer > 0 && h.calloutText) {
+        ctx.fillStyle = '#fef08a';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(h.calloutText, 0, -28);
+      }
+      ctx.restore();
+    }
+
+    // HUD
+    const remaining = Math.max(0, Math.ceil(this.roundTime - this.timeElapsed));
+    ctx.fillStyle = 'rgba(15,23,42,0.82)';
+    ctx.fillRect(0, 0, width, 46);
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 15px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      `🦗 GRASSHOPPER HIGH JUMP • ${pal.name} [T/1-3] • ${remaining}s ${this.suddenDeath ? '🔥 2X CLOVER' : ''}`,
+      width * 0.5,
+      19
+    );
+
+    this.hoppers.forEach((h, idx) => {
+      ctx.fillStyle = h.color;
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`P${h.id}: ${Math.round(h.score)} pts (${h.combo}x)`, 90 + idx * 170, 38);
+    });
+
+    ctx.restore();
   }
 
   public isRoundOver(): boolean {
@@ -288,19 +376,19 @@ export class GrasshopperHighJumpGame extends BaseGame {
   }
 
   public getRoundResult(): RoundResult {
-    const rankings = Array.from(this.playersState.entries())
-      .map(([playerId, ps]) => ({ playerId, score: ps.score, place: 1 }))
-      .sort((a, b) => b.score - a.score);
-
-    rankings.forEach((entry, idx) => {
-      entry.place = idx + 1;
-    });
-
-    const winnerId = rankings.length > 0 && rankings[0].score > 0 ? rankings[0].playerId : null;
+    const sorted = [...this.hoppers].sort((a, b) => b.score - a.score);
     return {
-      winnerId,
-      rankings,
-      mvpHighlight: winnerId ? `${winnerId} launched towering grasshopper leaps across the garden clover!` : 'Tied high jumps!'
+      winnerId: sorted[0]?.id ?? 1,
+      rankings: sorted.map((h, i) => ({
+        playerId: h.id,
+        score: Math.round(h.score),
+        place: i + 1,
+      })),
+      mvpHighlight: `Meadow Leap Champion ${Math.round(sorted[0]?.score ?? 0)} pts!`,
     };
+  }
+
+  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+    return false;
   }
 }

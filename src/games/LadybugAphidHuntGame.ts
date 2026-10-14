@@ -1,308 +1,386 @@
 import { BaseGame } from './BaseGame';
-import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
+import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
 
-interface GardenAphid {
+type LeafTheme = 'emerald_rose_leaf' | 'autumn_maple' | 'neon_botanical';
+
+interface LeafPalette {
+  name: string;
+  bgTop: string;
+  bgBot: string;
+  leafColor: string;
+}
+
+const THEMES: Record<LeafTheme, LeafPalette> = {
+  emerald_rose_leaf: {
+    name: 'Emerald Rose Canopy',
+    bgTop: '#064e3b',
+    bgBot: '#022c22',
+    leafColor: '#16a34a',
+  },
+  autumn_maple: {
+    name: 'Crimson Maple Leaf',
+    bgTop: '#451a03',
+    bgBot: '#1c1917',
+    leafColor: '#ea580c',
+  },
+  neon_botanical: {
+    name: 'Cyber Botanical Dome',
+    bgTop: '#090d16',
+    bgBot: '#1e1b4b',
+    leafColor: '#10b981',
+  },
+};
+
+const THEME_KEYS: LeafTheme[] = ['emerald_rose_leaf', 'autumn_maple', 'neon_botanical'];
+
+interface AphidPrey {
+  id: number;
   x: number;
   y: number;
-  isGolden: boolean;
-  points: number;
-  eaten: boolean;
+  vx: number;
+  vy: number;
+  royalGolden: boolean;
 }
 
 interface LadybugPlayer {
   id: PlayerId;
+  color: string;
+  isBot: boolean;
   x: number;
   y: number;
-  angle: number;
-  wingSpread: number; // 0 to 1
-  dashCooldown: number;
+  vx: number;
+  vy: number;
   score: number;
+  combo: number;
+  charge: number;
+  holding: boolean;
+  flutterTimer: number;
+  stunTimer: number;
+  underdog: boolean;
+  botTimer: number;
+  botChargeGoal: number;
+  calloutText: string;
+  calloutTimer: number;
 }
 
 export class LadybugAphidHuntGame extends BaseGame {
-  private aphids: GardenAphid[] = [];
-  private playersState: Map<PlayerId, LadybugPlayer> = new Map();
+  private ladybugs: LadybugPlayer[] = [];
+  private aphids: AphidPrey[] = [];
+  private timeElapsed = 0;
+  private roundTime = 45;
+  private suddenDeath = false;
+  private hitStopTimer = 0;
+  private shakeTimer = 0;
+  private shakeIntensity = 0;
+  private themeIdx = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
 
-  constructor(
-    players: PlayerConfig[],
-    input: InputRouter,
-    audio: AudioEngine,
-    particles: ParticleSystem
-  ) {
+  constructor(players: PlayerConfig[], input: InputRouter, audio: AudioEngine, particles: ParticleSystem) {
     super(players, input, audio, particles);
   }
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+          this.audio.playTap();
+        } else if (e.key === '1') this.themeIdx = 0;
+        else if (e.key === '2') this.themeIdx = 1;
+        else if (e.key === '3') this.themeIdx = 2;
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
   }
 
   public reset(width: number, height: number): void {
+    this.timeElapsed = 0;
+    this.roundTime = 45;
     this.isFinished = false;
-    this.roundTimer = 30;
+    this.suddenDeath = false;
+    this.hitStopTimer = 0;
+    this.shakeTimer = 0;
+    this.shakeIntensity = 0;
+    this.ladybugs = [];
     this.aphids = [];
-    this.playersState.clear();
-
-    this.spawnAphids(width, height);
 
     const active = this.getActivePlayers();
-    const count = active.length;
-    const cx = width / 2;
-    const cy = height * 0.52;
-
     active.forEach((p, idx) => {
-      const a = (idx / count) * Math.PI * 2;
-      this.playersState.set(p.id, {
+      this.ladybugs.push({
         id: p.id,
-        x: cx + Math.cos(a) * 80,
-        y: cy + Math.sin(a) * 80,
-        angle: a,
-        wingSpread: 0,
-        dashCooldown: 0,
-        score: 0
+        color: p.color,
+        isBot: p.type.startsWith('bot_'),
+        x: width * (0.3 + idx * 0.2),
+        y: height * 0.54,
+        vx: 0,
+        vy: 0,
+        score: 0,
+        combo: 1,
+        charge: 0,
+        holding: false,
+        flutterTimer: 0,
+        stunTimer: 0,
+        underdog: false,
+        botTimer: 0.22,
+        botChargeGoal: 0.82,
+        calloutText: '',
+        calloutTimer: 0,
       });
     });
+
+    for (let i = 0; i < 12; i++) {
+      this.aphids.push(this.spawnAphid(width, height, i));
+    }
   }
 
-  private spawnAphids(width: number, height: number): void {
-    for (let i = 0; i < 16; i++) {
-      const isGold = i % 5 === 0;
-      this.aphids.push({
-        x: 60 + Math.random() * (width - 120),
-        y: 80 + Math.random() * (height - 140),
-        isGolden: isGold,
-        points: isGold ? 35 : 15,
-        eaten: false
-      });
-    }
+  private spawnAphid(width: number, height: number, id: number): AphidPrey {
+    return {
+      id,
+      x: width * (0.14 + Math.random() * 0.72),
+      y: height * (0.18 + Math.random() * 0.66),
+      vx: (Math.random() - 0.5) * 110,
+      vy: (Math.random() - 0.5) * 110,
+      royalGolden: Math.random() < 0.28,
+    };
+  }
+
+  private triggerHitStop(ms: number, shake: number): void {
+    this.hitStopTimer = Math.max(this.hitStopTimer, ms / 1000);
+    this.shakeTimer = Math.max(this.shakeTimer, 0.22);
+    this.shakeIntensity = Math.min(18, Math.max(this.shakeIntensity, shake));
+  }
+
+  private showCallout(l: LadybugPlayer, text: string): void {
+    l.calloutText = text;
+    l.calloutTimer = 1.15;
   }
 
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
-    this.roundTimer = Math.max(0, this.roundTimer - dt);
+
+    if (this.shakeTimer > 0) this.shakeTimer = Math.max(0, this.shakeTimer - dt);
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer = Math.max(0, this.hitStopTimer - dt);
+      return;
+    }
+
+    this.timeElapsed += dt;
+    const remaining = Math.max(0, this.roundTime - this.timeElapsed);
+    if (remaining <= 15 && !this.suddenDeath) {
+      this.suddenDeath = true;
+      this.audio.playBuzzer();
+      this.ladybugs.forEach((l) => this.showCallout(l, 'ROYAL APHID SWARM 2X!'));
+    }
+    if (remaining <= 0) {
+      this.isFinished = true;
+      this.audio.playFanfare();
+      return;
+    }
+
+    for (const ap of this.aphids) {
+      ap.x += ap.vx * dt;
+      ap.y += ap.vy * dt;
+      if (ap.x < width * 0.12 || ap.x > width * 0.88) ap.vx *= -1;
+      if (ap.y < height * 0.16 || ap.y > height * 0.86) ap.vy *= -1;
+    }
+
     this.updateBots(dt, width, height);
+    const maxScore = Math.max(0, ...this.ladybugs.map((l) => l.score));
 
-    for (const p of this.getActivePlayers()) {
-      const ps = this.playersState.get(p.id);
-      if (!ps) continue;
-
-      if (ps.dashCooldown > 0) ps.dashCooldown -= dt;
-      if (ps.wingSpread > 0) ps.wingSpread = Math.max(0, ps.wingSpread - dt * 2);
-
-      const steerX = this.input.getSteer(p.id);
-      const steerY = -this.input.getThrottle(p.id);
-      const mag = Math.hypot(steerX, steerY);
-
-      if (mag > 0.2) {
-        ps.angle = Math.atan2(steerY, steerX);
-        const speed = 210;
-        ps.x += (steerX / mag) * speed * dt;
-        ps.y += (steerY / mag) * speed * dt;
+    for (const l of this.ladybugs) {
+      l.underdog = maxScore - l.score >= 150;
+      if (l.calloutTimer > 0) l.calloutTimer = Math.max(0, l.calloutTimer - dt);
+      if (l.flutterTimer > 0) l.flutterTimer = Math.max(0, l.flutterTimer - dt);
+      if (l.stunTimer > 0) {
+        l.stunTimer = Math.max(0, l.stunTimer - dt);
+        continue;
       }
 
-      // Tap to Wing Flutter Dash
-      const tap = this.input.justPressed(p.id);
-      if (tap && ps.dashCooldown <= 0) {
-        ps.dashCooldown = 0.75;
-        ps.wingSpread = 1.0;
-        ps.x += Math.cos(ps.angle) * 55;
-        ps.y += Math.sin(ps.angle) * 55;
-        this.audio.playBounce();
-        this.particles.spawnDust(ps.x, ps.y, 4);
+      const sx = this.input.getSteer(l.id);
+      const sy = this.input.getThrottle(l.id);
+      const isHold = this.input.isActionPressed(l.id) || this.input.isPressed(l.id);
+
+      const accel = 1380 * (l.underdog ? 1.15 : 1.0) * (l.flutterTimer > 0 ? 1.35 : 1.0);
+      l.vx += sx * accel * dt;
+      l.vy += (sy !== 0 ? -sy : 0) * accel * dt;
+      l.vx *= Math.pow(0.05, dt);
+      l.vy *= Math.pow(0.05, dt);
+
+      // Hold-to-charge Wing-Flutter Blitz & Shell Bump Shunt (72%-98% Sweet Spot)
+      if (isHold) {
+        l.holding = true;
+        l.charge = Math.min(1, l.charge + dt * 0.92);
+      } else if (l.holding) {
+        const sweet = l.charge >= 0.72 && l.charge <= 0.98;
+        if (sweet) {
+          l.flutterTimer = 2.2;
+          l.score += 85;
+          l.combo = Math.min(4, l.combo + 1);
+          this.showCallout(l, 'FLUTTER BLITZ +85!');
+          this.audio.playBoost();
+          this.triggerHitStop(45, 11);
+
+          for (const other of this.ladybugs) {
+            if (other.id !== l.id && Math.hypot(other.x - l.x, other.y - l.y) < 170) {
+              const dx = other.x - l.x;
+              const dy = other.y - l.y;
+              const d = Math.max(1, Math.hypot(dx, dy));
+              other.vx += (dx / d) * 520;
+              other.vy += (dy / d) * 520;
+              l.score += 70;
+              this.showCallout(l, 'SHELL BUMP SHUNT +70!');
+              this.audio.playBounce();
+            }
+          }
+        } else if (l.charge > 0.98) {
+          l.stunTimer = 0.9;
+          l.combo = 1;
+          this.showCallout(l, 'SHELL FLIP!');
+          this.audio.playStun();
+        }
+        l.holding = false;
+        l.charge = 0;
       }
 
-      ps.x = Math.max(30, Math.min(width - 30, ps.x));
-      ps.y = Math.max(60, Math.min(height - 40, ps.y));
+      l.x = Math.max(width * 0.1, Math.min(width * 0.9, l.x + l.vx * dt));
+      l.y = Math.max(height * 0.16, Math.min(height * 0.88, l.y + l.vy * dt));
 
-      // Eat aphids
-      for (const a of this.aphids) {
-        if (!a.eaten && Math.hypot(ps.x - a.x, ps.y - a.y) < 22) {
-          a.eaten = true;
-          ps.score += a.points;
-          this.audio.playChomp();
-          this.particles.showFloatingText(`+${a.points}`, a.x, a.y - 14, a.isGolden ? '#FBBF24' : '#84CC16', 18);
-          this.particles.spawnConfetti(a.x, a.y, 6);
+      for (let i = 0; i < this.aphids.length; i++) {
+        const ap = this.aphids[i];
+        if (Math.hypot(l.x - ap.x, l.y - ap.y) < 32) {
+          const base = ap.royalGolden ? 95 : 50;
+          const pts = base * l.combo * (this.suddenDeath ? 2 : 1);
+          l.score += pts;
+          l.combo = Math.min(4, l.combo + 1);
+          this.showCallout(l, ap.royalGolden ? `ROYAL APHID +${pts}!` : `APHID +${pts}`);
+          this.audio.playScore();
+          this.particles.spawnSparks(ap.x, ap.y, '#4ade80', 10);
+          this.aphids[i] = this.spawnAphid(width, height, ap.id);
         }
       }
     }
 
-    // Respawn aphids if depleted
-    if (this.aphids.filter((a) => !a.eaten).length < 4) {
-      this.spawnAphids(width, height);
+    // Ladybug-to-Ladybug Bumping
+    for (let i = 0; i < this.ladybugs.length; i++) {
+      for (let j = i + 1; j < this.ladybugs.length; j++) {
+        const a = this.ladybugs[i];
+        const b = this.ladybugs[j];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 0 && dist < 36) {
+          const nx = dx / dist;
+          const ny = dy / dist;
+          a.vx -= nx * 280;
+          a.vy -= ny * 280;
+          b.vx += nx * 280;
+          b.vy += ny * 280;
+          this.audio.playBounce();
+        }
+      }
     }
-
-    if (this.roundTimer <= 0) {
-      this.isFinished = true;
-    }
-  }
-
-  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Giant Green Rose Leaf Backdrop
-    const bgGrad = ctx.createRadialGradient(width / 2, height / 2, 40, width / 2, height / 2, width * 0.7);
-    bgGrad.addColorStop(0, '#15803D');
-    bgGrad.addColorStop(0.7, '#166534');
-    bgGrad.addColorStop(1, '#064E3B');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
-
-    // Leaf Rib Veins
-    ctx.strokeStyle = '#22C55E';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(width / 2, 40);
-    ctx.lineTo(width / 2, height - 30);
-    ctx.stroke();
-
-    ctx.lineWidth = 1.5;
-    for (let y = 80; y < height - 50; y += 45) {
-      ctx.beginPath();
-      ctx.moveTo(width / 2, y);
-      ctx.lineTo(width * 0.15, y - 25);
-      ctx.moveTo(width / 2, y);
-      ctx.lineTo(width * 0.85, y - 25);
-      ctx.stroke();
-    }
-
-    // 2. Draw Tiny Aphids
-    for (const a of this.aphids) {
-      if (a.eaten) continue;
-      ctx.save();
-      ctx.translate(a.x, a.y);
-      ctx.fillStyle = a.isGolden ? '#FBBF24' : '#A3E635';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 5, 4, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = a.isGolden ? '#D97706' : '#65A30D';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // 3. Draw Ladybugs
-    for (const p of this.getActivePlayers()) {
-      const ps = this.playersState.get(p.id);
-      if (!ps) continue;
-
-      ctx.save();
-      ctx.translate(ps.x, ps.y);
-      ctx.rotate(ps.angle);
-
-      // Black Head
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.arc(10, 0, 6, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Antennae
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(14, -2);
-      ctx.lineTo(20, -5);
-      ctx.moveTo(14, 2);
-      ctx.lineTo(20, 5);
-      ctx.stroke();
-
-      // Red Elytra Shell (splits open when flutter dashing!)
-      const wingSpread = ps.wingSpread * 0.35;
-
-      // Left wing
-      ctx.save();
-      ctx.rotate(-wingSpread);
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(-2, -6, 12, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#0F172A';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      // Black spots
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.arc(-4, -8, 2.5, 0, Math.PI * 2);
-      ctx.arc(2, -4, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
-      // Right wing
-      ctx.save();
-      ctx.rotate(wingSpread);
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(-2, 6, 12, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#0F172A';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      // Black spots
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.arc(-4, 8, 2.5, 0, Math.PI * 2);
-      ctx.arc(2, 4, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
-      ctx.restore();
-
-      // Score
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 11px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${p.name}: ${ps.score}`, ps.x, ps.y - 24);
-    }
-
-    // 4. Header HUD
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 20px Montserrat, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`TIME: ${Math.ceil(this.roundTimer)}s`, width / 2, 28);
   }
 
   protected updateBotAI(
     dt: number,
     botId: PlayerId,
     difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
-    width: number,
-    height: number
+    _width: number,
+    _height: number
   ): void {
-    const ps = this.playersState.get(botId);
-    if (!ps) return;
+    const bot = this.ladybugs.find((l) => l.id === botId);
+    if (!bot || bot.stunTimer > 0) return;
 
-    // Find nearest uneaten aphid
-    let nearestAphid: GardenAphid | null = null;
-    let minDist = 9999;
-    for (const a of this.aphids) {
-      if (!a.eaten) {
-        const d = Math.hypot(a.x - ps.x, a.y - ps.y);
-        if (d < minDist) {
-          minDist = d;
-          nearestAphid = a;
-        }
-      }
+    bot.botTimer -= dt;
+    if (bot.botTimer <= 0) {
+      bot.botTimer = difficulty === 'bot_hard' ? 0.18 : 0.26;
+      bot.botChargeGoal = 0.76 + Math.random() * 0.18;
     }
 
-    if (nearestAphid) {
-      const dx = nearestAphid.x - ps.x;
-      const dy = nearestAphid.y - ps.y;
-      const dist = Math.hypot(dx, dy);
-
-      if (dist > 8) {
-        const err = difficulty === 'bot_hard' ? 0.05 : difficulty === 'bot_normal' ? 0.2 : 0.45;
-        const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * err;
-        const wantDash = (difficulty === 'bot_hard' || difficulty === 'bot_normal') && dist > 50 && Math.random() < 0.1;
-        this.input.setBotInput(botId, true, Math.cos(angle), -Math.sin(angle), wantDash);
-      } else {
-        this.input.setBotInput(botId, false, 0, 0, false);
-      }
-    } else {
-      this.input.setBotInput(botId, false, 0, 0, false);
+    const best = this.aphids.find((a) => a.royalGolden) ?? this.aphids[0];
+    if (best) {
+      const dx = best.x - bot.x;
+      const dy = best.y - bot.y;
+      const d = Math.max(1, Math.hypot(dx, dy));
+      bot.vx += (dx / d) * 1100 * dt;
+      bot.vy += (dy / d) * 1100 * dt;
     }
+
+    const hold = !bot.holding || bot.charge < bot.botChargeGoal;
+    this.input.setBotState(botId, hold);
   }
 
-  public getScore(playerId: PlayerId): number {
-    return this.playersState.get(playerId)?.score ?? 0;
+  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const pal = THEMES[THEME_KEYS[this.themeIdx]];
+    ctx.save();
+
+    if (this.shakeTimer > 0) {
+      const s = this.shakeIntensity * (this.shakeTimer / 0.22);
+      ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+    }
+
+    const bg = ctx.createLinearGradient(0, 0, 0, height);
+    bg.addColorStop(0, pal.bgTop);
+    bg.addColorStop(1, pal.bgBot);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    // Aphids
+    for (const ap of this.aphids) {
+      ctx.fillStyle = ap.royalGolden ? '#fbbf24' : '#4ade80';
+      ctx.beginPath();
+      ctx.arc(ap.x, ap.y, ap.royalGolden ? 15 : 11, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Ladybugs
+    for (const l of this.ladybugs) {
+      ctx.save();
+      ctx.translate(l.x, l.y);
+      if (l.holding && l.charge > 0.05) {
+        const sweet = l.charge >= 0.72 && l.charge <= 0.98;
+        ctx.strokeStyle = sweet ? '#4ade80' : '#fbbf24';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, 26, -Math.PI / 2, -Math.PI / 2 + l.charge * Math.PI * 2);
+        ctx.stroke();
+      }
+      const mood = l.stunTimer > 0 ? 'shocked' : l.flutterTimer > 0 ? 'triumph' : l.holding ? 'focused' : 'happy';
+      this.drawPlayerMascot(ctx, l.id, 0, 0, 16, mood, this.timeElapsed, l.vx * 0.0005);
+      if (l.calloutTimer > 0 && l.calloutText) {
+        ctx.fillStyle = '#fef08a';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(l.calloutText, 0, -28);
+      }
+      ctx.restore();
+    }
+
+    // HUD
+    const remaining = Math.max(0, Math.ceil(this.roundTime - this.timeElapsed));
+    ctx.fillStyle = 'rgba(15,23,42,0.82)';
+    ctx.fillRect(0, 0, width, 46);
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 15px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      `🐞 LADYBUG APHID HUNT • ${pal.name} [T/1-3] • ${remaining}s ${this.suddenDeath ? '🔥 2X APHIDS' : ''}`,
+      width * 0.5,
+      19
+    );
+
+    this.ladybugs.forEach((l, idx) => {
+      ctx.fillStyle = l.color;
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`P${l.id}: ${Math.round(l.score)} pts (${l.combo}x)`, 90 + idx * 170, 38);
+    });
+
+    ctx.restore();
   }
 
   public isRoundOver(): boolean {
@@ -310,19 +388,19 @@ export class LadybugAphidHuntGame extends BaseGame {
   }
 
   public getRoundResult(): RoundResult {
-    const rankings = Array.from(this.playersState.entries())
-      .map(([playerId, ps]) => ({ playerId, score: ps.score, place: 1 }))
-      .sort((a, b) => b.score - a.score);
-
-    rankings.forEach((entry, idx) => {
-      entry.place = idx + 1;
-    });
-
-    const winnerId = rankings.length > 0 && rankings[0].score > 0 ? rankings[0].playerId : null;
+    const sorted = [...this.ladybugs].sort((a, b) => b.score - a.score);
     return {
-      winnerId,
-      rankings,
-      mvpHighlight: winnerId ? `${winnerId} devoured garden aphids with ladybug precision!` : 'Tied ladybug hunt!'
+      winnerId: sorted[0]?.id ?? 1,
+      rankings: sorted.map((l, i) => ({
+        playerId: l.id,
+        score: Math.round(l.score),
+        place: i + 1,
+      })),
+      mvpHighlight: `Rose Leaf Champion ${Math.round(sorted[0]?.score ?? 0)} pts!`,
     };
+  }
+
+  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+    return false;
   }
 }

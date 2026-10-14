@@ -1,326 +1,386 @@
 import { BaseGame } from './BaseGame';
-import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
+import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
 
-interface PondMosquito {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  points: number;
-  alive: boolean;
+type PondTheme = 'lily_pond' | 'koi_sanctuary' | 'neon_wetlands';
+
+interface PondPalette {
+  name: string;
+  bgTop: string;
+  bgBot: string;
+  lilyColor: string;
 }
 
-interface DragonflyPlayer {
-  id: PlayerId;
+const THEMES: Record<PondTheme, PondPalette> = {
+  lily_pond: {
+    name: 'Tranquil Lily Pond',
+    bgTop: '#0369a1',
+    bgBot: '#0c4a6e',
+    lilyColor: '#4ade80',
+  },
+  koi_sanctuary: {
+    name: 'Imperial Koi Sanctuary',
+    bgTop: '#115e59',
+    bgBot: '#042f2e',
+    lilyColor: '#34d399',
+  },
+  neon_wetlands: {
+    name: 'Cyber Dragonfly Lagoon',
+    bgTop: '#1e1b4b',
+    bgBot: '#090d16',
+    lilyColor: '#22d3ee',
+  },
+};
+
+const THEME_KEYS: PondTheme[] = ['lily_pond', 'koi_sanctuary', 'neon_wetlands'];
+
+interface AerialTarget {
+  id: number;
   x: number;
   y: number;
   vx: number;
   vy: number;
-  angle: number;
-  dashCooldown: number;
+  goldenDamselfly: boolean;
+}
+
+interface DragonflyAce {
+  id: PlayerId;
+  color: string;
+  isBot: boolean;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
   score: number;
+  combo: number;
+  charge: number;
+  holding: boolean;
+  machTimer: number;
+  stunTimer: number;
+  underdog: boolean;
+  botTimer: number;
+  botChargeGoal: number;
+  calloutText: string;
+  calloutTimer: number;
 }
 
 export class DragonflyDogfightGame extends BaseGame {
-  private mosquitoes: PondMosquito[] = [];
-  private playersState: Map<PlayerId, DragonflyPlayer> = new Map();
-  private wingTimer: number = 0;
+  private aces: DragonflyAce[] = [];
+  private targets: AerialTarget[] = [];
+  private timeElapsed = 0;
+  private roundTime = 45;
+  private suddenDeath = false;
+  private hitStopTimer = 0;
+  private shakeTimer = 0;
+  private shakeIntensity = 0;
+  private themeIdx = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
 
-  constructor(
-    players: PlayerConfig[],
-    input: InputRouter,
-    audio: AudioEngine,
-    particles: ParticleSystem
-  ) {
+  constructor(players: PlayerConfig[], input: InputRouter, audio: AudioEngine, particles: ParticleSystem) {
     super(players, input, audio, particles);
   }
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+          this.audio.playTap();
+        } else if (e.key === '1') this.themeIdx = 0;
+        else if (e.key === '2') this.themeIdx = 1;
+        else if (e.key === '3') this.themeIdx = 2;
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
   }
 
   public reset(width: number, height: number): void {
+    this.timeElapsed = 0;
+    this.roundTime = 45;
     this.isFinished = false;
-    this.roundTimer = 30;
-    this.wingTimer = 0;
-    this.mosquitoes = [];
-    this.playersState.clear();
-
-    this.spawnMosquitoes(width, height);
+    this.suddenDeath = false;
+    this.hitStopTimer = 0;
+    this.shakeTimer = 0;
+    this.shakeIntensity = 0;
+    this.aces = [];
+    this.targets = [];
 
     const active = this.getActivePlayers();
-    const count = active.length;
-    const cx = width / 2;
-    const cy = height * 0.52;
-
     active.forEach((p, idx) => {
-      const a = (idx / count) * Math.PI * 2;
-      this.playersState.set(p.id, {
+      this.aces.push({
         id: p.id,
-        x: cx + Math.cos(a) * 90,
-        y: cy + Math.sin(a) * 90,
+        color: p.color,
+        isBot: p.type.startsWith('bot_'),
+        x: width * (0.3 + idx * 0.2),
+        y: height * 0.54,
         vx: 0,
         vy: 0,
-        angle: a,
-        dashCooldown: 0,
-        score: 0
+        score: 0,
+        combo: 1,
+        charge: 0,
+        holding: false,
+        machTimer: 0,
+        stunTimer: 0,
+        underdog: false,
+        botTimer: 0.22,
+        botChargeGoal: 0.82,
+        calloutText: '',
+        calloutTimer: 0,
       });
     });
+
+    for (let i = 0; i < 12; i++) {
+      this.targets.push(this.spawnTarget(width, height, i));
+    }
   }
 
-  private spawnMosquitoes(width: number, height: number): void {
-    for (let i = 0; i < 10; i++) {
-      this.mosquitoes.push({
-        x: 60 + Math.random() * (width - 120),
-        y: 80 + Math.random() * (height - 140),
-        vx: (Math.random() - 0.5) * 80,
-        vy: (Math.random() - 0.5) * 80,
-        points: 20,
-        alive: true
-      });
-    }
+  private spawnTarget(width: number, height: number, id: number): AerialTarget {
+    return {
+      id,
+      x: width * (0.14 + Math.random() * 0.72),
+      y: height * (0.18 + Math.random() * 0.66),
+      vx: (Math.random() - 0.5) * 140,
+      vy: (Math.random() - 0.5) * 140,
+      goldenDamselfly: Math.random() < 0.28,
+    };
+  }
+
+  private triggerHitStop(ms: number, shake: number): void {
+    this.hitStopTimer = Math.max(this.hitStopTimer, ms / 1000);
+    this.shakeTimer = Math.max(this.shakeTimer, 0.22);
+    this.shakeIntensity = Math.min(18, Math.max(this.shakeIntensity, shake));
+  }
+
+  private showCallout(a: DragonflyAce, text: string): void {
+    a.calloutText = text;
+    a.calloutTimer = 1.15;
   }
 
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
-    this.roundTimer = Math.max(0, this.roundTimer - dt);
-    this.wingTimer += dt * 45;
-    this.updateBots(dt, width, height);
 
-    // Update Mosquitoes
-    for (const m of this.mosquitoes) {
-      if (!m.alive) continue;
-      m.x += m.vx * dt;
-      m.y += m.vy * dt;
-      if (m.x < 40 || m.x > width - 40) m.vx *= -1;
-      if (m.y < 60 || m.y > height - 60) m.vy *= -1;
+    if (this.shakeTimer > 0) this.shakeTimer = Math.max(0, this.shakeTimer - dt);
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer = Math.max(0, this.hitStopTimer - dt);
+      return;
     }
 
-    const dragonflies = Array.from(this.playersState.values());
-
-    for (const df of dragonflies) {
-      if (df.dashCooldown > 0) df.dashCooldown -= dt;
-
-      const steerX = this.input.getSteer(df.id);
-      const steerY = -this.input.getThrottle(df.id);
-      const mag = Math.hypot(steerX, steerY);
-
-      if (mag > 0.2) {
-        df.angle = Math.atan2(steerY, steerX);
-        const speed = 250;
-        df.vx += (steerX / mag) * speed * dt * 5;
-        df.vy += (steerY / mag) * speed * dt * 5;
-      }
-
-      // Tap to Supersonic Dash
-      if (this.input.justPressed(df.id) && df.dashCooldown <= 0) {
-        df.dashCooldown = 0.85;
-        df.vx = Math.cos(df.angle) * 440;
-        df.vy = Math.sin(df.angle) * 440;
-        this.audio.playWhoosh();
-        this.particles.spawnDust(df.x, df.y, 4);
-      }
-
-      df.vx *= Math.pow(0.1, dt);
-      df.vy *= Math.pow(0.1, dt);
-
-      df.x += df.vx * dt;
-      df.y += df.vy * dt;
-
-      df.x = Math.max(30, Math.min(width - 30, df.x));
-      df.y = Math.max(50, Math.min(height - 40, df.y));
-
-      // Catch mosquitoes
-      for (const m of this.mosquitoes) {
-        if (m.alive && Math.hypot(df.x - m.x, df.y - m.y) < 26) {
-          m.alive = false;
-          df.score += m.points;
-          this.audio.playChomp();
-          this.particles.showFloatingText(`+${m.points} SNAP!`, m.x, m.y - 14, '#38BDF8', 18);
-          this.particles.spawnConfetti(m.x, m.y, 6);
-        }
-      }
+    this.timeElapsed += dt;
+    const remaining = Math.max(0, this.roundTime - this.timeElapsed);
+    if (remaining <= 15 && !this.suddenDeath) {
+      this.suddenDeath = true;
+      this.audio.playBuzzer();
+      this.aces.forEach((a) => this.showCallout(a, 'SUPERSONIC DOGFIGHT 2X!'));
     }
-
-    // Dragonfly vs Dragonfly tail duel
-    for (let i = 0; i < dragonflies.length; i++) {
-      for (let j = i + 1; j < dragonflies.length; j++) {
-        const d1 = dragonflies[i];
-        const d2 = dragonflies[j];
-        if (Math.hypot(d1.x - d2.x, d1.y - d2.y) < 28) {
-          this.audio.playBounce();
-          d1.vx *= -1;
-          d1.vy *= -1;
-          d2.vx *= -1;
-          d2.vy *= -1;
-        }
-      }
-    }
-
-    // Respawn mosquitoes
-    if (this.mosquitoes.filter((m) => m.alive).length < 3) {
-      this.spawnMosquitoes(width, height);
-    }
-
-    if (this.roundTimer <= 0) {
+    if (remaining <= 0) {
       this.isFinished = true;
-    }
-  }
-
-  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Garden Lily Pad Pond
-    const bgGrad = ctx.createRadialGradient(width / 2, height / 2, 40, width / 2, height / 2, width * 0.7);
-    bgGrad.addColorStop(0, '#0284C7');
-    bgGrad.addColorStop(0.7, '#0369A1');
-    bgGrad.addColorStop(1, '#0C4A6E');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
-
-    // Floating Giant Lily Pads in background
-    ctx.fillStyle = '#059669';
-    const pads = [
-      { x: width * 0.25, y: height * 0.35, r: 42 },
-      { x: width * 0.75, y: height * 0.4, r: 48 },
-      { x: width * 0.5, y: height * 0.75, r: 40 }
-    ];
-    for (const p of pads) {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0.2, Math.PI * 1.8);
-      ctx.lineTo(p.x, p.y);
-      ctx.closePath();
-      ctx.fill();
+      this.audio.playFanfare();
+      return;
     }
 
-    // 2. Draw Flying Mosquitoes
-    for (const m of this.mosquitoes) {
-      if (!m.alive) continue;
-      ctx.save();
-      ctx.translate(m.x, m.y);
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.arc(0, 0, 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.fillRect(-6, -6, 12, 3);
-      ctx.restore();
+    for (const t of this.targets) {
+      t.x += t.vx * dt;
+      t.y += t.vy * dt;
+      if (t.x < width * 0.12 || t.x > width * 0.88) t.vx *= -1;
+      if (t.y < height * 0.16 || t.y > height * 0.86) t.vy *= -1;
     }
 
-    // 3. Draw Dragonflies
-    for (const p of this.getActivePlayers()) {
-      const df = this.playersState.get(p.id);
-      if (!df) continue;
+    this.updateBots(dt, width, height);
+    const maxScore = Math.max(0, ...this.aces.map((a) => a.score));
 
-      ctx.save();
-      ctx.translate(df.x, df.y);
-      ctx.rotate(df.angle);
+    for (const a of this.aces) {
+      a.underdog = maxScore - a.score >= 150;
+      if (a.calloutTimer > 0) a.calloutTimer = Math.max(0, a.calloutTimer - dt);
+      if (a.machTimer > 0) a.machTimer = Math.max(0, a.machTimer - dt);
+      if (a.stunTimer > 0) {
+        a.stunTimer = Math.max(0, a.stunTimer - dt);
+        continue;
+      }
 
-      // Long Segmented Needle Abdomen
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(-4, 0);
-      ctx.lineTo(-24, 0);
-      ctx.stroke();
+      const sx = this.input.getSteer(a.id);
+      const sy = this.input.getThrottle(a.id);
+      const isHold = this.input.isActionPressed(a.id) || this.input.isPressed(a.id);
 
-      // Thorax & Big Compound Eyes
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 7, 5, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#38BDF8';
-      ctx.beginPath();
-      ctx.arc(6, -3, 3, 0, Math.PI * 2);
-      ctx.arc(6, 3, 3, 0, Math.PI * 2);
-      ctx.fill();
+      const accel = 1420 * (a.underdog ? 1.15 : 1.0) * (a.machTimer > 0 ? 1.38 : 1.0);
+      a.vx += sx * accel * dt;
+      a.vy += (sy !== 0 ? -sy : 0) * accel * dt;
+      a.vx *= Math.pow(0.05, dt);
+      a.vy *= Math.pow(0.05, dt);
 
-      // 4 Translucent Double Wings
-      const wingWobble = Math.sin(this.wingTimer) * 3;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 1;
+      // Hold-to-charge Supersonic Hover-Dash & Sonic Boom Shunt (72%-98% Sweet Spot)
+      if (isHold) {
+        a.holding = true;
+        a.charge = Math.min(1, a.charge + dt * 0.92);
+      } else if (a.holding) {
+        const sweet = a.charge >= 0.72 && a.charge <= 0.98;
+        if (sweet) {
+          a.machTimer = 2.2;
+          a.score += 85;
+          a.combo = Math.min(4, a.combo + 1);
+          this.showCallout(a, 'SUPERSONIC DASH +85!');
+          this.audio.playBoost();
+          this.triggerHitStop(45, 11);
 
-      // Forewings
-      ctx.beginPath();
-      ctx.ellipse(-2, -12 + wingWobble, 14, 4, -0.2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.ellipse(-2, 12 - wingWobble, 14, 4, 0.2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
+          for (const other of this.aces) {
+            if (other.id !== a.id && Math.hypot(other.x - a.x, other.y - a.y) < 170) {
+              const dx = other.x - a.x;
+              const dy = other.y - a.y;
+              const d = Math.max(1, Math.hypot(dx, dy));
+              other.vx += (dx / d) * 540;
+              other.vy += (dy / d) * 540;
+              a.score += 70;
+              this.showCallout(a, 'SONIC BOOM SHUNT +70!');
+              this.audio.playBounce();
+            }
+          }
+        } else if (a.charge > 0.98) {
+          a.stunTimer = 0.9;
+          a.combo = 1;
+          this.showCallout(a, 'WING STALL!');
+          this.audio.playStun();
+        }
+        a.holding = false;
+        a.charge = 0;
+      }
 
-      // Hindwings
-      ctx.beginPath();
-      ctx.ellipse(-8, -10 + wingWobble, 12, 3.5, -0.3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.ellipse(-8, 10 - wingWobble, 12, 3.5, 0.3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
+      a.x = Math.max(width * 0.1, Math.min(width * 0.9, a.x + a.vx * dt));
+      a.y = Math.max(height * 0.16, Math.min(height * 0.88, a.y + a.vy * dt));
 
-      ctx.restore();
-
-      // Score
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 11px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${p.name}: ${df.score}`, df.x, df.y - 24);
+      for (let i = 0; i < this.targets.length; i++) {
+        const t = this.targets[i];
+        if (Math.hypot(a.x - t.x, a.y - t.y) < 32) {
+          const base = t.goldenDamselfly ? 95 : 50;
+          const pts = base * a.combo * (this.suddenDeath ? 2 : 1);
+          a.score += pts;
+          a.combo = Math.min(4, a.combo + 1);
+          this.showCallout(a, t.goldenDamselfly ? `GOLDEN FLY +${pts}!` : `INTERCEPT +${pts}`);
+          this.audio.playScore();
+          this.particles.spawnSparks(t.x, t.y, '#38bdf8', 10);
+          this.targets[i] = this.spawnTarget(width, height, t.id);
+        }
+      }
     }
 
-    // 4. Header HUD
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 20px Montserrat, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`TIME: ${Math.ceil(this.roundTimer)}s`, width / 2, 28);
+    // Ace-to-Ace Dogfight Bumping
+    for (let i = 0; i < this.aces.length; i++) {
+      for (let j = i + 1; j < this.aces.length; j++) {
+        const a = this.aces[i];
+        const b = this.aces[j];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 0 && dist < 36) {
+          const nx = dx / dist;
+          const ny = dy / dist;
+          a.vx -= nx * 280;
+          a.vy -= ny * 280;
+          b.vx += nx * 280;
+          b.vy += ny * 280;
+          this.audio.playBounce();
+        }
+      }
+    }
   }
 
   protected updateBotAI(
     dt: number,
     botId: PlayerId,
     difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
-    width: number,
-    height: number
+    _width: number,
+    _height: number
   ): void {
-    const df = this.playersState.get(botId);
-    if (!df) return;
+    const bot = this.aces.find((a) => a.id === botId);
+    if (!bot || bot.stunTimer > 0) return;
 
-    // Find nearest alive mosquito
-    let targetM: PondMosquito | null = null;
-    let minDist = 9999;
-    for (const m of this.mosquitoes) {
-      if (m.alive) {
-        const d = Math.hypot(m.x - df.x, m.y - df.y);
-        if (d < minDist) {
-          minDist = d;
-          targetM = m;
-        }
-      }
+    bot.botTimer -= dt;
+    if (bot.botTimer <= 0) {
+      bot.botTimer = difficulty === 'bot_hard' ? 0.18 : 0.26;
+      bot.botChargeGoal = 0.76 + Math.random() * 0.18;
     }
 
-    if (targetM) {
-      const dx = targetM.x - df.x;
-      const dy = targetM.y - df.y;
-      const dist = Math.hypot(dx, dy);
-
-      if (dist > 10) {
-        const err = difficulty === 'bot_hard' ? 0.05 : difficulty === 'bot_normal' ? 0.2 : 0.45;
-        const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * err;
-        const wantDash = (difficulty === 'bot_hard' || difficulty === 'bot_normal') && dist > 70 && Math.random() < 0.1;
-        this.input.setBotInput(botId, true, Math.cos(angle), -Math.sin(angle), wantDash);
-      } else {
-        this.input.setBotInput(botId, false, 0, 0, false);
-      }
-    } else {
-      this.input.setBotInput(botId, false, 0, 0, false);
+    const best = this.targets.find((t) => t.goldenDamselfly) ?? this.targets[0];
+    if (best) {
+      const dx = best.x - bot.x;
+      const dy = best.y - bot.y;
+      const d = Math.max(1, Math.hypot(dx, dy));
+      bot.vx += (dx / d) * 1150 * dt;
+      bot.vy += (dy / d) * 1150 * dt;
     }
+
+    const hold = !bot.holding || bot.charge < bot.botChargeGoal;
+    this.input.setBotState(botId, hold);
   }
 
-  public getScore(playerId: PlayerId): number {
-    return this.playersState.get(playerId)?.score ?? 0;
+  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const pal = THEMES[THEME_KEYS[this.themeIdx]];
+    ctx.save();
+
+    if (this.shakeTimer > 0) {
+      const s = this.shakeIntensity * (this.shakeTimer / 0.22);
+      ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+    }
+
+    const bg = ctx.createLinearGradient(0, 0, 0, height);
+    bg.addColorStop(0, pal.bgTop);
+    bg.addColorStop(1, pal.bgBot);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    // Targets
+    for (const t of this.targets) {
+      ctx.fillStyle = t.goldenDamselfly ? '#fbbf24' : '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, t.goldenDamselfly ? 16 : 11, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Dragonfly Aces
+    for (const a of this.aces) {
+      ctx.save();
+      ctx.translate(a.x, a.y);
+      if (a.holding && a.charge > 0.05) {
+        const sweet = a.charge >= 0.72 && a.charge <= 0.98;
+        ctx.strokeStyle = sweet ? '#4ade80' : '#fbbf24';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, 26, -Math.PI / 2, -Math.PI / 2 + a.charge * Math.PI * 2);
+        ctx.stroke();
+      }
+      const mood = a.stunTimer > 0 ? 'shocked' : a.machTimer > 0 ? 'triumph' : a.holding ? 'focused' : 'happy';
+      this.drawPlayerMascot(ctx, a.id, 0, 0, 16, mood, this.timeElapsed, a.vx * 0.0005);
+      if (a.calloutTimer > 0 && a.calloutText) {
+        ctx.fillStyle = '#fef08a';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(a.calloutText, 0, -28);
+      }
+      ctx.restore();
+    }
+
+    // HUD
+    const remaining = Math.max(0, Math.ceil(this.roundTime - this.timeElapsed));
+    ctx.fillStyle = 'rgba(15,23,42,0.82)';
+    ctx.fillRect(0, 0, width, 46);
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 15px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      `蜻 DRAGONFLY DOGFIGHT • ${pal.name} [T/1-3] • ${remaining}s ${this.suddenDeath ? '🔥 2X MACH' : ''}`,
+      width * 0.5,
+      19
+    );
+
+    this.aces.forEach((a, idx) => {
+      ctx.fillStyle = a.color;
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`P${a.id}: ${Math.round(a.score)} pts (${a.combo}x)`, 90 + idx * 170, 38);
+    });
+
+    ctx.restore();
   }
 
   public isRoundOver(): boolean {
@@ -328,19 +388,19 @@ export class DragonflyDogfightGame extends BaseGame {
   }
 
   public getRoundResult(): RoundResult {
-    const rankings = Array.from(this.playersState.entries())
-      .map(([playerId, df]) => ({ playerId, score: df.score, place: 1 }))
-      .sort((a, b) => b.score - a.score);
-
-    rankings.forEach((entry, idx) => {
-      entry.place = idx + 1;
-    });
-
-    const winnerId = rankings.length > 0 && rankings[0].score > 0 ? rankings[0].playerId : null;
+    const sorted = [...this.aces].sort((a, b) => b.score - a.score);
     return {
-      winnerId,
-      rankings,
-      mvpHighlight: winnerId ? `${winnerId} dominated the garden pond in high-speed dragonfly dogfights!` : 'Tied dragonfly dogfight!'
+      winnerId: sorted[0]?.id ?? 1,
+      rankings: sorted.map((a, i) => ({
+        playerId: a.id,
+        score: Math.round(a.score),
+        place: i + 1,
+      })),
+      mvpHighlight: `Lily Pond Aerial Ace ${Math.round(sorted[0]?.score ?? 0)} pts!`,
     };
+  }
+
+  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+    return false;
   }
 }
