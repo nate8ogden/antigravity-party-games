@@ -3728,88 +3728,64 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #164. Anubis Scales of Truth (ID: `anubis_scales`) — [Puzzle]
-- **Class Implementation:** `src/games/AnubisScalesGame.ts` (316 lines)
+- **Class Implementation:** `src/games/AnubisScalesGame.ts` (911 lines)
 - **Tagline:** *Maat Feather Soul Balance*
-- **Current Control Scheme:** `Tap: Drop Offering`
-- **Stated Gameplay Concept:** Stand trial in the Hall of Two Truths! Tap to drop soul offerings and balance your scale pan level with the Feather of Truth.
+- **Current Control Scheme:** `Steer: Roam Hall of Two Truths • Tap: Drop Offering • Hold Action: Ma'at Judgment & Scale-Tip Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Stand trial in the shared Hall of Two Truths! Catch falling Sacred Offerings (`+10`/`-10`/`+20`/`-20` wt) and Feathers of Ma'at (`±5` wt), tap Action to drop Offerings onto your Brass Scale Pan, or hold & release in the 72%–98% Sweet Spot to invoke Ma'at's Judgment (1.65x points) and tip a rival's scale pan off-balance!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Anubis Scales of Truth* (*Maat Feather Soul Balance*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Stand trial in the Hall of Two Truths! Tap to drop soul offerings and balance your scale pan level with the Feather of T..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Drop Offering`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Anubis Scales of Truth'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, bots had a dedicated `judgeScales` action for weights within `±15` while humans had no input to judge scales outside `±5` without also dropping an item and ruining their balance (causing a human soft-lock), and players stood in isolated lanes with zero shared interaction.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Anubis Scales of Truth* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Hall of Two Truths & Fixed Human Judgment Soft-Lock:** Built a shared Hall of Two Truths where 2.5D Scribe Mascots roam and bodycheck each other to catch falling Sacred Offerings and Feathers of Ma'at, while separating `Tap: Drop Offering` from `Hold & Release: Invoke Ma'at Judgment` so humans and bots share identical fair rules.
+2. **Hold-to-Charge Ma'at Judgment & Scale-Tip Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** invokes a **1.65x Ma'at Judgment** (up to `+198 pts` on exact balance) and unleashes a `110px` **Scale-Tip Shunt** (`+65 pts` **"SCALE-TIP SHUNT!"**) that knocks nearby rivals back and tips their scale pan by `±15 wt`!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `duat` (Hall of Two Truths), `karnak` (Solar Temple of Ra), and `cyber_anubis` (Neural Osiris Matrix).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #165. Gorgon Mirror Deflection (ID: `gorgon_gaze`) — [Action]
-- **Class Implementation:** `src/games/GorgonGazeGame.ts` (334 lines)
+- **Class Implementation:** `src/games/GorgonGazeGame.ts` (858 lines)
 - **Tagline:** *Petrifying Gaze Mirror Counter*
-- **Current Control Scheme:** `Hold: Mirror Shield`
-- **Stated Gameplay Concept:** Medusa emerges from dark stone ruins! Hold your polished bronze mirror shield right as her emerald eyes glow to reflect the deadly beam.
+- **Current Control Scheme:** `Steer: Orbit Medusa's Sanctum • Hold Action: Polished Bronze Mirror & Ricochet Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Orbit the central Medusa Boss inside her Cursed Sanctum! Snag glowing Athena Owl Relics (`+45 pts`) and time your Polished Bronze Mirror when her emerald eyes lock on — release in the 72%–98% Sweet Spot to fire a Dual Ricochet Beam (`+165 pts`) that blasts Medusa and petrifies rival heroes!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Gorgon Mirror Deflection* (*Petrifying Gaze Mirror Counter*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Medusa emerges from dark stone ruins! Hold your polished bronze mirror shield right as her emerald eyes glow to reflect ..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Hold: Mirror Shield`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Gorgon Mirror Deflection'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, holding the button down (`shieldRaised = true`) had zero stamina drain or overheat limit — players could hold the button down for all 35 seconds and auto-reflect every single beam without ever releasing or moving!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Gorgon Mirror Deflection* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Eliminated Infinite Shield Exploit & Active Orbital Sanctum:** Replaced the infinite passive shield-hold with an active orbital sanctum around a 2.5D Medusa Boss with writhing snakes, where holding the Bronze Mirror charges a precision reflection capacitor that shatters (`100%`) if held indefinitely.
+2. **Hold-to-Charge Mirror Ricochet & Gaze Petrify Shunt (72%–98% Sweet Spot):** Reflecting or releasing in the **72%–98% Sweet Spot** triggers a **1.65x Perseus Mirror Counter** (`+165 pts`) and fires a reflected emerald gaze beam toward the nearest rival (`+70 pts` **"GAZE SHUNT!"**), stunning and knocking them along the ring!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `sanctum` (Medusa's Stone Sanctum), `stygian` (Stygian Blood Temple), and `cyber_gorgon` (Medusa.EXE Optic Core).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #166. Viking Fjord Raid (ID: `viking_longship`) — [Racing]
-- **Class Implementation:** `src/games/VikingLongshipGame.ts` (336 lines)
+- **Class Implementation:** `src/games/VikingLongshipGame.ts` (857 lines)
 - **Tagline:** *War Drum Cadence & Ice Ram*
-- **Current Control Scheme:** `Tap: Drum Beat`
-- **Stated Gameplay Concept:** Strike the war drum in perfect rhythm! Catch the thumping beat for a Valhalla surge and ram clean through frozen icebergs.
+- **Current Control Scheme:** `Up/Down: Steer Fjord Lanes • Tap: War Drum Cadence • Hold Action: Berserker Ice-Ram & Tidal Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Race Dragon-Prow Longships through a shared 3-lane glacial fjord! Tap on the War Drum Cadence beat for rhythmic oar surges, draft in rival wakes (+25% slipstream), collect Golden Odin Runes, or hold & release in the 72%–98% Sweet Spot to unleash a Berserker Ice-Ram that shatters glacial icebergs and shunts rival longships into ice floes!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Viking Fjord Raid* (*War Drum Cadence & Ice Ram*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Strike the war drum in perfect rhythm! Catch the thumping beat for a Valhalla surge and ram clean through frozen iceberg..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Drum Beat`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Viking Fjord Raid'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, ships were trapped in isolated horizontal lanes where hitting an iceberg was 100% unavoidable unless `speed > 130`, creating a vicious snowball loop where slow ships took mandatory stuns while players couldn't steer or interact.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Revamp the handling model in *Viking Fjord Raid* with aggressive contact bumping, responsive slipstream drafting (+25% acceleration when directly behind a leader), and a rubber-band Nitro recharge for trailing racers to ensure photo-finish climaxes on the final turn.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 3-Lane Glacial Fjord, Slipstream Drafting, & Lane-Weaving:** Merged all longships into a shared 3-lane fjord where captains weave between lanes (`Up`/`Down` or double-tap lane toggle) to dodge or ram icebergs, collect **Golden Odin Runes** (`+55 pts`), and draft behind leading ships (`+25%` slipstream surge).
+2. **Hold-to-Charge Berserker Ice-Ram & Tidal Wake Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** triggers a **2.2s Berserker Ice-Ram** (`+70 pts` + `+95 pts` per shattered iceberg) and unleashes a **Tidal Wake Shunt** (`+65 pts` **"TIDAL SHUNT!"**) that knocks nearby rival longships into adjacent lanes!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `valhalla` (Glacial Valhalla Fjord), `ragnarok` (Ragnarok Ash Sea), and `cyber_viking` (Valkyrie Neon Grid).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #167. Antimatter Containment (ID: `antimatter_containment`) — [Reflex]
-- **Class Implementation:** `src/games/AntimatterContainmentGame.ts` (332 lines)
+- **Class Implementation:** `src/games/AntimatterContainmentGame.ts` (764 lines)
 - **Tagline:** *Magnetic Coils & Singularity Pulse*
-- **Current Control Scheme:** `Tap: Magnetic Pulse`
-- **Stated Gameplay Concept:** Stabilize the fluctuating antimatter core! Tap when the fluctuating energy enters the green sweet zone to fire magnetic stabilization pulses.
+- **Current Control Scheme:** `Steer: Orbit Tokamak Ring • Tap: Magnetic Pulse • Hold Action: Graviton Pulse & EMP Flux Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Orbit the central Antimatter Singularity inside a shared Tokamak Reactor! Collect drifting Positron Orbs (`+45 pts`), tap when your core enters the 60%–92% green stability window, or hold & release in the 72%–98% Sweet Spot to fire a Graviton Stabilization Beam (`1.65x` points) and an EMP Flux Wave that destabilizes rival coils!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Antimatter Containment* (*Magnetic Coils & Singularity Pulse*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Stabilize the fluctuating antimatter core! Tap when the fluctuating energy enters the green sweet zone to fire magnetic ..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Magnetic Pulse`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Antimatter Containment'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players stared at isolated horizontal progress bars with zero movement, zero spatial gameplay, and zero interaction with the central antimatter core or rival engineers.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Overhaul *Antimatter Containment* into a high-stakes push-your-luck showdown. Introduce a central risk-reward multiplier where waiting until the last split-second multiplies your score exponentially, but false-starts result in a comical 2-second electro-shock stun.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Tokamak Singularity Ring & Positron Orb Harvesting:** Placed all 2.5D Quantum Engineer Mascots on a shared Tokamak orbital ring around a pulsing 2.5D Antimatter Singularity Core, where players orbit, body-check each other, and harvest drifting **Positron Orbs** (`+45 pts`).
+2. **Hold-to-Charge Graviton Stabilization & EMP Flux Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** fires a **1.65x Graviton Stabilization Beam** (`+198 pts` at `3x` harmonic multiplier) and unleashes an **EMP Flux Wave** (`+70 pts` **"EMP FLUX SHUNT!"**) that knocks rivals along the ring and spikes their core instability by `+26%`!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `cern` (CERN Tokamak Sector), `supernova` (Stellar Singularity Forge), and `cyber_core` (Quantum Neural Grid).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #168. Warp Gate Hyperdrive (ID: `warp_gate_jump`) — [Action]
 - **Class Implementation:** `src/games/WarpGateJumpGame.ts` (355 lines)
