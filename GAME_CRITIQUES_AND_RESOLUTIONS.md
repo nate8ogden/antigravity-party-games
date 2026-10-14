@@ -3908,88 +3908,64 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #176. Dyson Swarm Collector (ID: `dyson_sphere_collector`) — [Action]
-- **Class Implementation:** `src/games/DysonSphereCollectorGame.ts` (341 lines)
+- **Class Implementation:** `src/games/DysonSphereCollectorGame.ts` (835 lines)
 - **Tagline:** *Solar Flare Mega-Capacitor*
-- **Current Control Scheme:** `Hold: Deploy Panels`
-- **Stated Gameplay Concept:** Orbit inside the Dyson megastructure! Hold to deploy solar collector panels and absorb plasma flares into your capacitor while dodging coronal spikes.
+- **Current Control Scheme:** `Steer: Orbit Solar Ring • Tap: Deploy Collector Sails • Hold Action: Magnetic Flare Siphon & EMP Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Orbit inside a shared Dyson megastructure around a blazing star! Steer along the inner/outer orbital track to intercept Solar Plasma Orbs (`+35 pts`) and Golden Fusion Cores (`+75 pts`), dodge Coronal Mass Ejection Spikes, or hold & release in the 72%–98% Sweet Spot to fire a Magnetic Flare Siphon that pulls nearby plasma and EMP-shunts rival collector satellites!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Dyson Swarm Collector* (*Solar Flare Mega-Capacitor*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Orbit inside the Dyson megastructure! Hold to deploy solar collector panels and absorb plasma flares into your capacitor..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The hold-to-charge mechanic (`Hold: Deploy Panels`) lacks kinetic feedback. There is no exponential power curve or visual charge ring, making release timing feel mushy and imprecise. Impacts lack punch, with no freeze-frames or satisfying screen recoil.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Dyson Swarm Collector'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, satellites were locked on isolated rings with no free orbital steering, passive flare absorption, and zero player-to-player interaction.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Dyson Swarm Collector* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Orbital Megastructure, Fusion Cores, & Coronal Spikes:** Merged all 2.5D Dyson Satellites into a shared multi-altitude orbital ring around a pulsing star with elastic satellite collisions, **Solar Plasma Orbs**, **Golden Fusion Cores**, and **Coronal Spikes**.
+2. **Hold-to-Charge Magnetic Flare Siphon & EMP Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** triggers a **Magnetic Flare Siphon** (`+85 pts` + vacuums nearby plasma orbs) and unleashes an **EMP Orbital Shunt** (`+70 pts` **"EMP ORBITAL SHUNT!"**) that blasts rival satellites off their trajectory!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `helios_prime` (Helios Prime Swarm), `blue_hypergiant` (Rigel Blue Hypergiant), and `neutron_pulsar` (Magnetar Pulsar Ring).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #177. Penguin Glacier Slide (ID: `penguin_slide`) — [Racing]
-- **Class Implementation:** `src/games/PenguinSlideGame.ts` (370 lines)
+- **Class Implementation:** `src/games/PenguinSlideGame.ts` (828 lines)
 - **Tagline:** *High-Speed Bobsled Slalom*
-- **Current Control Scheme:** `Tap: Steer / Bank`
-- **Stated Gameplay Concept:** Tuck and belly-slide down the glacier! Steer left/right to weave through slalom flags and boost over ice ramps while dodging jagged crevasses.
+- **Current Control Scheme:** `Steer: Carve Halfpipe • Tap: Flipper Belly-Boost • Hold Action: Hydro-Torpedo Carve & Snow-Spray Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Tuck and belly-slide down a shared glacial halfpipe! Carve left/right through Slalom Flags (`+45 pts`), snag Golden Sardine Trophies (`+70 pts`), launch off Ice Ramps over jagged crevasses, or hold & release in the 72%–98% Sweet Spot to unleash a Hydro-Torpedo Carve that body-checks rival penguins into snowbanks!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Penguin Glacier Slide* (*High-Speed Bobsled Slalom*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Tuck and belly-slide down the glacier! Steer left/right to weave through slalom flags and boost over ice ramps while dod..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Steer / Bank`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Penguin Glacier Slide'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, penguins slid in quarantined vertical strips with tap-to-toggle direction, no shared slalom gates, and zero penguin-to-penguin bumping.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Revamp the handling model in *Penguin Glacier Slide* with aggressive contact bumping, responsive slipstream drafting (+25% acceleration when directly behind a leader), and a rubber-band Nitro recharge for trailing racers to ensure photo-finish climaxes on the final turn.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Glacial Halfpipe, Slalom Gates, Sardine Trophies, & Ice Ramps:** Merged all 2.5D Penguins onto a shared glacial bobsled chute with full carving physics, slipstream drafting, **Slalom Gates**, **Golden Sardine Trophies**, **Ice Jump Ramps**, and **Crevasse Hazards**.
+2. **Hold-to-Charge Hydro-Torpedo Carve & Snow-Spray Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** launches a **Hydro-Torpedo Carve** (`+80 pts` + airborne ramp boost) and triggers a **Belly-Slam Shunt** (`+70 pts` **"BELLY SLAM SHUNT!"**) that knocks rival penguins wide of slalom gates!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `antarctic_chute` (Antarctic Bobsled Chute), `aurora_glacier` (Aurora Night Glacier), and `crystal_canyon` (Sapphire Ice Canyon).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #178. Icebreaker Ram (ID: `iceberg_breaker`) — [Action]
-- **Class Implementation:** `src/games/IcebergBreakerGame.ts` (362 lines)
+- **Class Implementation:** `src/games/IcebergBreakerGame.ts` (842 lines)
 - **Tagline:** *Arctic Pack Ice Demolition*
-- **Current Control Scheme:** `Hold: Charge Ram`
-- **Stated Gameplay Concept:** Pilot a heavy arctic icebreaker cutter! Hold to charge steam turbines and ram dense ice floes to harvest frozen core diamonds before rivals.
+- **Current Control Scheme:** `Steer: Pilot Icebreaker • Tap: Steam Bow-Chopper • Hold Action: Turbine Overdrive Ram & Wake-Wave Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Pilot a heavy 2.5D Arctic Icebreaker Cutter across a shared frozen sea! Steer and ram through Turquoise Ice Floes (`+40 pts`) and Golden Mammoth Frozen Cores (`+80 pts`), dodge Naval Sea Mines, or hold & release in the 72%–98% Sweet Spot to unleash a Turbine Overdrive Ram that shatters multi-floe clusters and wake-shunts rival cutters!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Icebreaker Ram* (*Arctic Pack Ice Demolition*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Pilot a heavy arctic icebreaker cutter! Hold to charge steam turbines and ram dense ice floes to harvest frozen core dia..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Hold: Charge Ram`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Icebreaker Ram'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, icebreakers were restricted to separate vertical lanes with auto-scrolling floes and zero ship-to-ship ramming.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Icebreaker Ram* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Arctic Pack-Ice Arena, Frozen Cores, & Naval Mines:** Merged all 2.5D Icebreaker Cutters into a shared pack-ice demolition basin with full 2D steering, heavy hull collisions, **Turquoise Ice Floes**, **Golden Mammoth Cores**, and **Naval Sea Mines**.
+2. **Hold-to-Charge Turbine Overdrive Ram & Wake-Wave Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** fires a **Turbine Overdrive Ram** (`+85 pts` + instant multi-floe shatter) and unleashes a **Wake-Wave Shunt** (`+70 pts` **"WAKE WAVE SHUNT!"**) that slams rival cutters away from diamond cores!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `barents_sea` (Barents Pack Ice), `polar_sunset` (Crimson Polar Dusk), and `abyssal_trench` (Bioluminescent Trench).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #179. Blizzard Lighthouse (ID: `blizzard_beacon`) — [Puzzle]
-- **Class Implementation:** `src/games/BlizzardBeaconGame.ts` (313 lines)
+- **Class Implementation:** `src/games/BlizzardBeaconGame.ts` (836 lines)
 - **Tagline:** *Zero-Visibility Fog Guide*
-- **Current Control Scheme:** `Tap: Lock Beam Angle`
-- **Stated Gameplay Concept:** A blinding whiteout blizzard engulfs the coast! Align your rotating searchlight beacon to illuminate stranded expedition ships and guide them safely to port.
+- **Current Control Scheme:** `Steer: Pilot Rescue Cutter / Aim Fresnel Beam • Tap: Flare Pulse • Hold Action: Super-Halogen Sweep & Foghorn Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Command a 2.5D Searchlight Rescue Cutter in a shared stormy harbor! Steer across the bay and sweep your high-intensity Fresnel beam over Stranded Expedition Ships (`+55 pts`) and Golden Royal Galleons (`+95 pts`) to escort them to port while avoiding Jagged Sea Rocks, or release a 72%–98% Sweet Spot Super-Halogen Sweep & Foghorn Blast to hijack rival rescues!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Blizzard Lighthouse* (*Zero-Visibility Fog Guide*) struggles with basic intuitive sense on a physical level. The game asks players to: *"A blinding whiteout blizzard engulfs the coast! Align your rotating searchlight beacon to illuminate stranded expedition..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Lock Beam Angle`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Blizzard Lighthouse'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players sat inside static circles waiting for an auto-rotating beam angle to cross dots, with zero movement and zero interaction.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Blizzard Lighthouse* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Stormy Harbor, Stranded Ships, Royal Galleons, & Sea Rocks:** Transformed the game into an active 2.5D Searchlight Rescue Cutter showdown in a shared blizzard bay where players steer and aim beams to illuminate **Stranded Ships** and **Golden Royal Galleons** while dodging **Jagged Sea Rocks**.
+2. **Hold-to-Charge Super-Halogen Sweep & Foghorn Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** triggers a **Super-Halogen Wide Sweep** (`+80 pts` + rapid ship lock-on) and blasts a **Foghorn Sonic Shunt** (`+70 pts` **"FOGHORN BLAST!"**) that knocks rival cutters off-course!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `cape_horn` (Cape Horn Whiteout), `arctic_aurora` (Northern Lights Harbor), and `emerald_squall` (Emerald Tempest).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #180. Walrus Iceberg King (ID: `walrus_bask`) — [Physics]
 - **Class Implementation:** `src/games/WalrusBaskGame.ts` (333 lines)
@@ -5188,215 +5164,155 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
-### #237. Poltergeist Possession (ID: `poltergeist_possession`) — [Action]
-- **Class Implementation:** `src/games/PoltergeistPossessionGame.ts` (375 lines)
-- **Tagline:** *Haunted Furniture Hover*
-- **Current Control Scheme:** `Steer: Move Ghost | Tap: Possess & Hurl`
-- **Stated Gameplay Concept:** Hurl and hover antique chairs and grandfather clocks across the haunted ballroom to crush spectral manifestations.
+### #237. Telekinetic Toyroom (ID: `poltergeist_possession`) — [Action]
+- **Class Implementation:** `src/games/PoltergeistPossessionGame.ts` (845 lines)
+- **Tagline:** *Gravity Wand Levitation*
+- **Current Control Scheme:** `Steer: Fly Hover-Mage • Tap: Levitate / Hurl Prop • Hold Action: Telekinetic Vortex & Gravity Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Soar across a shared Magical Toy Workshop! Levitate enchanted Rocking Horses, Cuckoo Clocks, and Golden Music Boxes (`+90 pts`) with your Gravity Wand and hurl them into Floating Target Bullseyes while dodging Fizzing Jack-in-the-Box Bombs, or release a 72%–98% Sweet Spot Telekinetic Vortex to fling props and rival mages!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Poltergeist Possession* (*Haunted Furniture Hover*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Hurl and hover antique chairs and grandfather clocks across the haunted ballroom to crush spectral manifestations...."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Poltergeist Possession'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, the game had an uncomfortable "poltergeist possession" theme and isolated players with awkward tap-only mechanics and no shared prop physics.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Poltergeist Possession* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Wholesome Re-Theme (`Telekinetic Toyroom`) & Shared Levitation Arena:** Re-themed into an upbeat **Magical Toyroom Gravity-Wand** showdown where players levitate and launch **Rocking Horses**, **Cuckoo Clocks**, and **Golden Music Boxes** into moving **Target Bullseyes** while avoiding **Fizzing Jack-in-the-Box Bombs**.
+2. **Hold-to-Charge Telekinetic Vortex & Gravity Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** unleashes a **Telekinetic Vortex** (`+85 pts` + launches nearby props directly at bullseyes) and triggers a **Gravity Wave Shunt** (`+70 pts` **"GRAVITY WAVE SHUNT!"**) that steals carried toys from rivals!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `enchanted_nursery` (Starlight Toyroom), `wizard_study` (Grand Astral Study), and `arcade_gravity` (Neon Zero-G Lounge).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
-### #238. Graveyard Zombie Bash (ID: `graveyard_zombie_bash`) — [Action]
-- **Class Implementation:** `src/games/GraveyardZombieBashGame.ts` (367 lines)
-- **Tagline:** *Midnight Tombstone Whack*
-- **Current Control Scheme:** `Steer: Run Graveyard | Tap: Shovel Bash`
-- **Stated Gameplay Concept:** Smash spooky green zombies rising from open mossy graves! Avoid striking consecrated angelic statues that stun you.
+### #238. Midnight Courtyard Bash (ID: `graveyard_zombie_bash`) — [Action]
+- **Class Implementation:** `src/games/GraveyardZombieBashGame.ts` (832 lines)
+- **Tagline:** *Pumpkin & Skeleton Whack*
+- **Current Control Scheme:** `Steer: Run Courtyard • Tap: Mallet Whack • Hold Action: Seismic Hammer Slam & Shockwave Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Sprint across a shared moonlit Festival Courtyard! Swing your oversized Carnival Mallet to whack popping Jack-O'-Lanterns (`+40 pts`), Rattle-Bones (`+55 pts`), and Golden Skeleton Kings (`+95 pts`) while sparing Guardian Angel Statues, or release a 72%–98% Sweet Spot Seismic Hammer Slam to whack every target in radius and bounce rivals!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Graveyard Zombie Bash* (*Midnight Tombstone Whack*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Smash spooky green zombies rising from open mossy graves! Avoid striking consecrated angelic statues that stun you...."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Graveyard Zombie Bash'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players had no shared interaction and loose movement with unrewarding tap strikes.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Graveyard Zombie Bash* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Moonlit Courtyard, Golden Skeleton Kings, & Guardian Statues:** Merged all players into a shared 12-mound courtyard with responsive 2D movement, elastic body-bumping, **Jack-O'-Lanterns**, **Golden Skeleton Kings**, and **Guardian Statues**.
+2. **Hold-to-Charge Seismic Hammer Slam & Shockwave Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** triggers a **Seismic Hammer Slam** (`+85 pts` + wide-radius multi-whack) and unleashes a **Courtyard Shockwave Shunt** (`+70 pts` **"SEISMIC SLAM SHUNT!"**) that knocks rival bashers away from Golden Kings!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `harvest_courtyard` (Harvest Moon Courtyard), `crystal_catacombs` (Crystal Lantern Crypt), and `neon_carnival` (Spooky Arcade Midway).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #239. Phantom Mirror Gaze (ID: `phantom_mirror_gaze`) — [Puzzle]
-- **Class Implementation:** `src/games/PhantomMirrorGazeGame.ts` (344 lines)
-- **Tagline:** *True Reflection Reflex*
-- **Current Control Scheme:** `Steer: Select Mirror | Tap: Shatter Mirror`
-- **Stated Gameplay Concept:** Gaze into ornate spectral mirrors! Spot the one mirror where the ghostly reflection blinks or raises the wrong hand and strike it.
+- **Class Implementation:** `src/games/PhantomMirrorGazeGame.ts` (862 lines)
+- **Tagline:** *Hall of Illusions Shatter*
+- **Current Control Scheme:** `Steer: Run Hallway & Aim • Tap: Sonic Hammer Strike • Hold Action: Prismatic Resonance Wave & Mirror-Flash Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Dash across a shared 2.5D Hall of Illusions! A giant Master Pose Hologram displays the true stance in the center — spot the Impostor Mirrors waving the wrong arms, glowing red, or spinning upside down (`+55 pts`) and Golden Prismatic Mirrors (`+95 pts`), and smash them with your Sonic Hammer! Hold & release in the 72%–98% Sweet Spot to fire a Prismatic Resonance Wave that auto-shatters nearby impostors and flash-stuns rivals!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Phantom Mirror Gaze* (*True Reflection Reflex*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Gaze into ornate spectral mirrors! Spot the one mirror where the ghostly reflection blinks or raises the wrong hand and ..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Steer: Select Mirror | Tap: Shatter Mirror`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Phantom Mirror Gaze'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Explicitly called out by the user (*"the game Phantom mirror gaze is so boring the controls don't make sense"*). Previously, players couldn't move freely, mirrors barely looked different, and controls were baffling.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Phantom Mirror Gaze* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Full 2D Hallway Movement, Obvious Master Pose Hologram, & Clear Visual Tells:** Players now physically sprint around a shared 8-mirror **Hall of Illusions** with a central **Master Pose Reference Hologram**. Impostor mirrors have unmistakable visual tells (glowing crimson/gold silhouettes, waving arms, exclamation indicators) so players immediately understand which mirror to smash!
+2. **Hold-to-Charge Prismatic Resonance Wave & Mirror-Flash Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** fires a **Prismatic Resonance Wave** (`+85 pts` + shatters all impostor mirrors in range without breaking true mirrors) and triggers a **Mirror-Flash Shunt** (`+70 pts` **"MIRROR FLASH SHUNT!"**) that knocks rivals back!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `versailles_hall` (Grand Hall of Mirrors), `cyber_prism` (Holo-Matrix Gallery), and `carnival_funhouse` (Wonderland Funhouse).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
-### #240. Cauldron Witch Brew (ID: `cauldron_witch_brew`) — [Puzzle]
-- **Class Implementation:** `src/games/CauldronWitchBrewGame.ts` (342 lines)
-- **Tagline:** *Bioluminescent Potion Craft*
-- **Current Control Scheme:** `Steer: Select Ingredient | Tap: Drop In Cauldron`
-- **Stated Gameplay Concept:** Stir boiling green witch cauldrons and toss in eye-of-newt and toadstools in exact recipe sequences before the brew boils over.
+### #240. Cauldron Alchemy Brew (ID: `cauldron_witch_brew`) — [Puzzle]
+- **Class Implementation:** `src/games/CauldronWitchBrewGame.ts` (848 lines)
+- **Tagline:** *Royal Apothecary Cauldron Toss*
+- **Current Control Scheme:** `Steer: Run Apothecary • Tap: Grab / Toss Reagent • Hold Action: Philosopher's Transmutation & Steam-Blast Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Sprint around a shared Royal Alchemical Apothecary! Grab glowing Star-Herbs, Phoenix Feathers, Moon-Crystals, and Golden Philosopher's Stones (`+95 pts`) and toss them into the bubbling Master Cauldron matching its current recipe order while dodging Volatile Puff-Shrooms, or release a 72%–98% Sweet Spot Transmutation Surge to brew any reagent for double points and steam-blast rivals!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Cauldron Witch Brew* (*Bioluminescent Potion Craft*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Stir boiling green witch cauldrons and toss in eye-of-newt and toadstools in exact recipe sequences before the brew boil..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Steer: Select Ingredient | Tap: Drop In Cauldron`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Cauldron Witch Brew'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players selected ingredients from a static menu bar in parallel solitaire with zero movement or cauldron physics.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Cauldron Witch Brew* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Royal Apothecary Arena, Physical Reagent Carrying, & Master Cauldron:** Re-imagined as a vibrant **Royal Apothecary** arena where alchemists physically pick up and throw reagents into a central bubbling cauldron while body-checking rivals.
+2. **Hold-to-Charge Philosopher's Transmutation & Steam-Blast Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** triggers a **Philosopher's Transmutation** (`+90 pts` + auto-matches the cauldron recipe) and unleashes a **Cauldron Steam Shunt** (`+70 pts` **"STEAM BLAST SHUNT!"**) that makes rivals drop their carried reagents!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `royal_apothecary` (Royal Alchemy Guild), `crystal_conservatory` (Botanical Elixir Lab), and `cyber_chem` (Neon Synth-Brewery).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #241. Gargoyle Stone Stare (ID: `gargoyle_stone_stare`) — [Reflex]
-- **Class Implementation:** `src/games/GargoyleStoneStareGame.ts` (344 lines)
-- **Tagline:** *Cathedral Belfry Freeze*
-- **Current Control Scheme:** `Steer: Creep Forward | Release: Freeze Solid`
-- **Stated Gameplay Concept:** Creep across cathedral rooftop tiles towards the bell! When the stone gargoyle opens its glowing red eyes, freeze solid.
+- **Class Implementation:** `src/games/GargoyleStoneStareGame.ts` (840 lines)
+- **Tagline:** *Cathedral Belfry Freeze & Vault*
+- **Current Control Scheme:** `Steer: Sprint Rooftop (Release to Stone-Freeze!) • Tap: Grapple-Dash • Hold Action: Aegis Stone-Cloak & Belfry Bell Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Race across a shared moonlit Cathedral Rooftop to snatch Belfry Relics (`+45 pts`) and Golden Crown Bells (`+90 pts`)! When the Watcher Gargoyle's eyes flare amber -> crimson, release steering to instantly transform into an invulnerable Stone Statue (and reflect the gaze for `+35 pts`!), or charge a 72%–98% Sweet Spot Aegis Stone-Cloak to sprint right through the spotlight and shove rivals out of their freeze!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Gargoyle Stone Stare* (*Cathedral Belfry Freeze*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Creep across cathedral rooftop tiles towards the bell! When the stone gargoyle opens its glowing red eyes, freeze solid...."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Gargoyle Stone Stare'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players crept along isolated 1D lines with no lateral dodging, no relic collection, and no ability to shove rivals into the spotlight.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Overhaul *Gargoyle Stone Stare* into a high-stakes push-your-luck showdown. Introduce a central risk-reward multiplier where waiting until the last split-second multiplies your score exponentially, but false-starts result in a comical 2-second electro-shock stun.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 2D Cathedral Rooftop, Stone-Statue Transformation, & Spotlight Shoving:** Merged all players onto a shared gothic rooftop with **Belfry Relics**, **Golden Crown Bells**, and a sweeping **Watcher Gaze**. Players can body-bump frozen rivals to make them flinch during the crimson stare!
+2. **Hold-to-Charge Aegis Stone-Cloak & Belfry Bell Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** grants an **Aegis Mirror-Shield** (`+80 pts` + immunity to the Watcher's gaze) and rings a **Belfry Sonic Shunt** (`+70 pts` **"BELFRY BELL SHUNT!"**) that blasts rivals into the open!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `notre_dame` (Moonlit Belfry), `clockwork_citadel` (Brass Spire Citadel), and `obsidian_keep` (Starlight Keep).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #242. Ghost Vacuum Buster (ID: `ghost_vacuum_buster`) — [Action]
-- **Class Implementation:** `src/games/GhostVacuumBusterGame.ts` (398 lines)
+- **Class Implementation:** `src/games/GhostVacuumBusterGame.ts` (854 lines)
 - **Tagline:** *Proton Ecto-Canister Trap*
-- **Current Control Scheme:** `Steer: Aim Nozzle | Hold: Vacuum Suction`
-- **Stated Gameplay Concept:** Engage high-powered proton suction beams to pull floating ectoplasmic ghosts into your vacuum canister before time expires.
+- **Current Control Scheme:** `Steer: Move & Aim Proton Nozzle • Tap: Deploy Capture Trap • Hold Action: Cyclotron Overdrive Suction & Proton Cross-Stream Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Patrol a shared Grand Hotel Ballroom with your Proton Vacuum Pack! Steer freely in 2D to aim your suction cone at mischievous Ectoplasm Sprites (`+50 pts`) and Golden King Specters (`+95 pts`) while dodging Slime Mines, or hold & release in the 72%–98% Sweet Spot to fire a Cyclotron Overdrive Beam that reels in ghosts instantly and cross-stream shunts rival busters!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** In *Ghost Vacuum Buster*, the player controls an avatar that is permanently rotating in a circle. You don't choose where you want to go; you wait patiently for the engine's rotation timer to swing your nose toward the objective. It removes human agency and replaces it with passive waiting.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Ghost Vacuum Buster'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, the player's nozzle rotated automatically in a circle, removing aiming agency and trapping players in parallel solitaire.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Ghost Vacuum Buster* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Eliminate passive auto-rotation. Implement an active directional snap system: tap to pivot 45° instantly, double-tap for an immediate 180° turnaround, and hold to charge an explosive forward dash with a visible expanding aura and rising audio whine.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Full 2D Movement & Direct Nozzle Aiming in a Shared Ballroom:** Eliminated passive auto-rotation! Players steer freely across the shared ballroom, aiming their proton suction cones directly at **Blue/Green Sprites** and **Golden King Specters**, including tug-of-war beam battles over the same ghost!
+2. **Hold-to-Charge Cyclotron Overdrive & Cross-Stream Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** fires a **Cyclotron Overdrive Capture** (`+85 pts` + instant ghost reel-in) and triggers a **Proton Cross-Stream Shunt** (`+70 pts` **"CROSS-STREAM SHUNT!"**) that breaks rival suction beams!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `sedgewick_ballroom` (Grand Hotel Ballroom), `library_stacks` (Haunted City Library), and `neon_arcade` (Cyber Ectoplasm Lab).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
-### #243. Tombstone Crypt Slider (ID: `tombstone_crypt_slider`) — [Physics]
-- **Class Implementation:** `src/games/TombstoneCryptSliderGame.ts` (414 lines)
-- **Tagline:** *Ancient Sarcophagus Shove*
-- **Current Control Scheme:** `Steer: Approach Tomb | Hold: Slide Slab`
-- **Stated Gameplay Concept:** Slide heavy carved stone sarcophagus lids across the crypt floor to loot golden relics and scarabs while dodging cursed mummy traps.
+### #243. Pharaoh Relic Slider (ID: `tombstone_crypt_slider`) — [Physics]
+- **Class Implementation:** `src/games/TombstoneCryptSliderGame.ts` (846 lines)
+- **Tagline:** *Ancient Treasure Vault Shove*
+- **Current Control Scheme:** `Steer: Run Vault • Tap: Shove Sandstone Block • Hold Action: Scarab Repulsor Slam & Sandstorm Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Explore a shared Sunlit Pharaoh's Treasure Vault! Shove heavy carved Sandstone Relic Blocks across the polished floor to uncover Sapphire Scarabs (`+50 pts`) and Golden Sun Ankhs (`+95 pts`) while sliding blocks into rivals or dodging Rolling Boulder Traps! Hold & release in the 72%–98% Sweet Spot to unleash a Scarab Repulsor Slam that slides every nearby block and knocks rivals back!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Tombstone Crypt Slider* (*Ancient Sarcophagus Shove*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Slide heavy carved stone sarcophagus lids across the crypt floor to loot golden relics and scarabs while dodging cursed ..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Tombstone Crypt Slider'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously themed around dark tombstones with isolated lanes and sluggish block pushing.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Tombstone Crypt Slider* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Wholesome Re-Theme (`Pharaoh Relic Slider`) & Shared Sliding-Block Physics Arena:** Re-themed as an Indiana-Jones-style **Pharaoh's Treasure Vault** where explorers shove physical **Sandstone Relic Blocks** across a shared tile grid to reveal **Sapphire Scarabs** and **Golden Sun Ankhs** — and can slide heavy blocks directly into rival explorers!
+2. **Hold-to-Charge Scarab Repulsor Slam & Sandstorm Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** triggers a **Scarab Repulsor Slam** (`+85 pts` + blasts nearby blocks open) and unleashes a **Pharaoh Sandstorm Shunt** (`+70 pts` **"SANDSTORM SHUNT!"**)!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `luxor_vault` (Luxor Golden Vault), `emerald_temple` (Mayan Jade Chamber), and `atlantis_sanctum` (Sunken Orichalcum Hall).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
-### #244. Creepy Doll Crawl (ID: `creepy_doll_crawl`) — [Racing]
-- **Class Implementation:** `src/games/CreepyDollCrawlGame.ts` (386 lines)
-- **Tagline:** *Victorian Wind-Up Race*
-- **Current Control Scheme:** `Hold: Wind Spring | Release: Crawl Sprint`
-- **Stated Gameplay Concept:** Wind up the porcelain doll back-key spring to the sweet spot and release to crawl across the attic floor, avoiding cobwebs.
+### #244. Clockwork Toy Derby (ID: `creepy_doll_crawl`) — [Racing]
+- **Class Implementation:** `src/games/CreepyDollCrawlGame.ts` (838 lines)
+- **Tagline:** *Grand Toymaker Wind-Up Sprint*
+- **Current Control Scheme:** `Steer: Carve Track • Tap: Mainspring Ratchet Crank • Hold Action: Golden Key Overdrive & Gear-Bump Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Race adorable 2.5D brass wind-up tin robots and clockwork racers across the Grand Toymaker's Workshop table! Steer through Brass Gear Tokens (`+45 pts`) and Golden Wind-Up Keys (`+85 pts`), dodge spilled Marbles & Glue Puddles, tap to crank your mainspring, or hold & release in the 72%–98% Sweet Spot for a Golden Key Overdrive Dash that bumps rival toys off course!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Creepy Doll Crawl* (*Victorian Wind-Up Race*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Wind up the porcelain doll back-key spring to the sweet spot and release to crawl across the attic floor, avoiding cobwe..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Creepy Doll Crawl'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Replaced the unsettling "Creepy Doll Crawl" theme with a cheerful, tactile **Clockwork Toy Derby** featuring colorful tin robots, brass wind-up keys, and shared tabletop racing physics.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Revamp the handling model in *Creepy Doll Crawl* with aggressive contact bumping, responsive slipstream drafting (+25% acceleration when directly behind a leader), and a rubber-band Nitro recharge for trailing racers to ensure photo-finish climaxes on the final turn.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Wholesome Re-Theme (`Clockwork Toy Derby`) & Shared Workshop Tabletop Track:** Completely re-themed into a bright **Grand Toymaker's Workshop** race with 2.5D tin-robot racers, spinning **Brass Key Handles**, **Brass Gear Pickups**, **Golden Keys**, and **Marble Hazards** (plus updated SVG thumbnail in `GameThumbnails.ts`).
+2. **Hold-to-Charge Golden Key Overdrive & Gear-Bump Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** winds the mainspring to max torque for a **Golden Key Overdrive Dash** (`+85 pts`) and triggers a **Clockwork Gear Shunt** (`+70 pts` **"CLOCKWORK SHUNT!"**) that spins rival tin racers!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `toymaker_bench` (Geppetto's Workbench), `candy_speedway` (Sugarplum Toy Track), and `neon_mecha` (Cyber-Bot Circuit).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
-### #245. Ouija Spirit Board (ID: `ouija_spirit_board`) — [Party]
-- **Class Implementation:** `src/games/OuijaSpiritBoardGame.ts` (365 lines)
-- **Tagline:** *Occult Planchette Spelling*
-- **Current Control Scheme:** `Steer: Slide Planchette | Tap: Lock Letter`
-- **Stated Gameplay Concept:** Guide your wooden planchette across the antique Ouija board to spell out mystic words whispered from beyond the grave.
+### #245. Celestial Star Compass (ID: `ouija_spirit_board`) — [Party]
+- **Class Implementation:** `src/games/OuijaSpiritBoardGame.ts` (852 lines)
+- **Tagline:** *Galactic Constellation Decoder*
+- **Current Control Scheme:** `Steer: Pilot Astrolabe Lens • Tap: Lock Star Rune • Hold Action: Supernova Warp & Gravity-Lens Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Pilot a gleaming brass & crystal Astrolabe Lens across a shared Royal Observatory Star-Chart! Race rivals to align over the illuminated Target Constellation Rune (`+65 pts`) and Golden Shooting Comets (`+90 pts`) while dodging Dark-Matter Anomalies, or hold & release in the 72%–98% Sweet Spot to unleash a Supernova Warp that locks constellations from afar and shunts rival lenses!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** Occult divination is about slow, eerie, atmospheric tension in the dark. *Ouija Spirit Board* takes this premise and turns it into a frantic cursor-sliding race across a board. The mystical theme is completely destroyed by the frenetic mechanical scrambling, leaving players confused rather than creeped out.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Ouija Spirit Board'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Explicitly requested by the user (*"Also change the ouija one because it is like weird if you know what i'm saying"*). Eliminated the occult Ouija board theme completely and replaced it with a dazzling **Celestial Star Compass** (*Galactic Constellation Decoder*).
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Make *Ouija Spirit Board* a true **Possession Wrestling Duel**! Both players grip the *same* planchette. You have to physically wrestle the planchette toward your secret letters while fighting your opponent's magnetic pull. At any moment, the ghost can possess the planchette, violently hurling both players across the room!
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Complete Wholesome Re-Theme (`Celestial Star Compass`) & Shared Observatory Astrolabe Duel:** Replaced every trace of the Ouija board (including title, tagline, mechanics, and `GameThumbnails.ts` SVG) with a luminous **Galactic Observatory Star-Chart** where players pilot 2.5D **Brass Astrolabe Lenses** to chart constellations (`ORION`, `LYRA`, `CYGNUS`, `PEGASUS`, `DRACO`, `NOVA`, `ASTRAL`, `COMET`).
+2. **Hold-to-Charge Supernova Warp & Gravity-Lens Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** triggers a **Supernova Warp** (`+85 pts` + instant constellation lock-on) and unleashes a **Gravity-Lens Shunt** (`+70 pts` **"GRAVITY LENS SHUNT!"**) that repels rival astrolabes!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `royal_observatory` (Greenwich Brass Astrolabe), `nebula_horizon` (Andromeda Nebula Map), and `solaris_gold` (Imperial Sun Dial).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
-### #246. Cursed Clocktower Pendulum (ID: `cursed_clocktower_pendulum`) — [Action]
-- **Class Implementation:** `src/games/CursedClocktowerPendulumGame.ts` (401 lines)
-- **Tagline:** *Razor Scythe Rafter Leap*
-- **Current Control Scheme:** `Steer: Run Rafters | Hold: Duck / Crouch`
-- **Stated Gameplay Concept:** Dodge a gigantic swinging razor-sharp clock pendulum slicing across cathedral rafters while gathering golden clockwork gears.
+### #246. Grand Clocktower Pendulum (ID: `cursed_clocktower_pendulum`) — [Action]
+- **Class Implementation:** `src/games/CursedClocktowerPendulumGame.ts` (844 lines)
+- **Tagline:** *Chronos Gear & Pendulum Dodge*
+- **Current Control Scheme:** `Steer: Run Clockwork Rafters • Tap: Phase-Duck / Leap • Hold Action: Chronos Time-Warp Dash & Mainspring Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Scramble across the giant rotating rafters of the Grand Chronos Clocktower! Collect Brass Escapement Gears (`+45 pts`) and Golden Tourbillon Cores (`+90 pts`) while ducking or leaping over the sweeping twin Brass Pendulums, or hold & release in the 72%–98% Sweet Spot to trigger a Chronos Time-Warp Dash that phases through pendulums and shunts rivals into the sweep!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Cursed Clocktower Pendulum* (*Razor Scythe Rafter Leap*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Dodge a gigantic swinging razor-sharp clock pendulum slicing across cathedral rafters while gathering golden clockwork g..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Cursed Clocktower Pendulum'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players were isolated with sluggish crouch mechanics and no ability to bump rivals into the pendulum's path.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Cursed Clocktower Pendulum* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Clockwork Rafters, Twin Sweeping Pendulums, & Tourbillon Cores:** Merged all players onto a shared 2.5D **Grand Clocktower** arena with rotating background gears, sweeping **Brass Pendulums**, **Escapement Gears**, and **Golden Tourbillon Cores**.
+2. **Hold-to-Charge Chronos Time-Warp Dash & Mainspring Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** launches a **Chronos Time-Warp Dash** (`+85 pts` + invulnerable phase through pendulum swings) and triggers a **Mainspring Shockwave Shunt** (`+70 pts` **"MAINSPRING SHUNT!"**) that knocks rivals into the pendulum sweep!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `big_ben_brass` (Westminster Brass Belfry), `celestial_horology` (Astronomical Clocktower), and `cyber_chronos` (Quantum Sync Tower).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #247. Synthwave Neon Racer (ID: `synthwave_neon_racer`) — [Racing]
 - **Class Implementation:** `src/games/SynthwaveNeonRacerGame.ts` (376 lines)
