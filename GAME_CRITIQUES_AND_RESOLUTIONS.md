@@ -80,6 +80,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #2. Neon Bumper Derby (ID: `hovercraft`) — [Action]
 - **Class Implementation:** `src/games/BumperHovercraftGame.ts` (756 lines)
@@ -101,9 +102,10 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #3. Laser Grid Reflex (ID: `laser_grid`) — [Reflex]
-- **Class Implementation:** `src/games/LaserGridReflexGame.ts` (580 lines)
+- **Class Implementation:** `src/games/LaserGridReflexGame.ts` (751 lines)
 - **Tagline:** *Tile Overcharge Dodge*
 - **Current Control Scheme:** `Tap: Dash Step | Hold: Reverse Direction`
 - **Stated Gameplay Concept:** Watch telegraphed tile flashes! Tap to dash around the grid; hold to reverse direction. Grab golden overcharge batteries!
@@ -122,6 +124,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #4. Orbital Slingshot (ID: `orbital`) — [Physics]
 - **Class Implementation:** `src/games/OrbitalSlingshotGame.ts` (722 lines)
@@ -143,6 +146,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #5. Micro Turbo GP (ID: `micro_gp`) — [Racing]
 - **Class Implementation:** `src/games/MicroTurboGPGame.ts` (1001 lines)
@@ -164,6 +168,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #6. Ghost Flashlight (ID: `ghost_flashlight`) — [Action]
 - **Class Implementation:** `src/games/GhostFlashlightGame.ts` (870 lines)
@@ -185,6 +190,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #7. Kitchen Chaos (ID: `kitchen_chaos`) — [Party]
 - **Class Implementation:** `src/games/KitchenChaosGame.ts` (925 lines)
@@ -206,6 +212,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #8. Skyline Sumo (ID: `skyline_sumo`) — [Action]
 - **Class Implementation:** `src/games/SkylineSumoGame.ts` (1298 lines)
@@ -238,6 +245,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #10. Sumo Iceberg (ID: `sumo_iceberg`) — [Physics]
 - **Class Implementation:** `src/games/SumoIcebergGame.ts` (527 lines)
@@ -270,6 +278,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #12. Anvil Rain (ID: `anvil_rain`) — [Reflex]
 - **Class Implementation:** `src/games/AnvilRainGame.ts` (1256 lines)
@@ -291,6 +300,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #13. Bomb Relay (ID: `bomb_relay`) — [Action]
 - **Class Implementation:** `src/games/BombRelayGame.ts` (921 lines)
@@ -312,6 +322,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #14. Micro Hockey (ID: `micro_hockey`) — [Action]
 - **Class Implementation:** `src/games/MicroHockeyGame.ts` (860 lines)
@@ -333,6 +344,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #15. Quick Draw Western (ID: `quick_draw`) — [Reflex]
 - **Class Implementation:** `src/games/QuickDrawWesternGame.ts` (940 lines)
@@ -354,9 +366,10 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #16. Balloon Burst (ID: `balloon_burst`) — [Party]
-- **Class Implementation:** `src/games/BalloonBurstGame.ts` (554 lines)
+- **Class Implementation:** `src/games/BalloonBurstGame.ts` (636 lines)
 - **Tagline:** *Pressure Inflation Showdown*
 - **Current Control Scheme:** `Hold: Pump Air | Release: Bank Score`
 - **Stated Gameplay Concept:** Hold your pump valve to inflate your balloon for score. If you pump past maximum capacity, it POPs and loses points!
@@ -375,6 +388,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #17. Swat the Fly (ID: `swat_fly`) — [Reflex]
 - **Class Implementation:** `src/games/SwatFlyGame.ts` (800 lines)
@@ -396,6 +410,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #18. Stop at Zero (ID: `stop_at_zero`) — [Reflex]
 - **Class Implementation:** `src/games/StopAtZeroGame.ts` (899 lines)
@@ -417,6 +432,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #19. Turf Whack (ID: `turf_whack`) — [Party]
 - **Class Implementation:** `src/games/TurfWhackGame.ts` (989 lines)
@@ -438,6 +454,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #20. Neon Lightcycles (ID: `neon_lightcycles`) — [Racing]
 - **Class Implementation:** `src/games/NeonLightcyclesGame.ts` (955 lines)
@@ -459,6 +476,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #21. Blade Parry (ID: `blade_parry`) — [Action]
 - **Class Implementation:** `src/games/BladeParryGame.ts` (1286 lines)
@@ -480,6 +498,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #22. Safe Dial Lock (ID: `safe_dial`) — [Puzzle]
 - **Class Implementation:** `src/games/SafeDialGame.ts` (707 lines)
@@ -501,6 +520,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #23. Coin Apex (ID: `coin_apex`) — [Reflex]
 - **Class Implementation:** `src/games/CoinApexGame.ts` (694 lines)
@@ -522,6 +542,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #24. Red Light Sentry (ID: `red_light_sentry`) — [Party]
 - **Class Implementation:** `src/games/RedLightSentryGame.ts` (876 lines)
@@ -543,6 +564,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #25. Laser Leap (ID: `laser_leap`) — [Reflex]
 - **Class Implementation:** `src/games/LaserLeapGame.ts` (951 lines)
@@ -564,6 +586,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #26. Color Clash (ID: `color_clash`) — [Action]
 - **Class Implementation:** `src/games/ColorClashGame.ts` (975 lines)
@@ -585,6 +608,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #27. Meteor Shield (ID: `meteor_shield`) — [Physics]
 - **Class Implementation:** `src/games/MeteorShieldGame.ts` (782 lines)
@@ -606,6 +630,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #28. Sequence Clash (ID: `sequence_clash`) — [Puzzle]
 - **Class Implementation:** `src/games/SequenceClashGame.ts` (816 lines)
@@ -627,6 +652,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #29. Bubble Soccer (ID: `bubble_soccer`) — [Action]
 - **Class Implementation:** `src/games/BubbleSoccerGame.ts` (971 lines)
@@ -648,6 +674,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #30. Wire Cutter (ID: `wire_cutter`) — [Puzzle]
 - **Class Implementation:** `src/games/WireCutterGame.ts` (994 lines)
@@ -669,6 +696,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #31. Magma Hop (ID: `magma_hop`) — [Reflex]
 - **Class Implementation:** `src/games/MagmaHopGame.ts` (1148 lines)
@@ -690,6 +718,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #32. Rhythm Duel (ID: `rhythm_duel`) — [Reflex]
 - **Class Implementation:** `src/games/RhythmDuelGame.ts` (982 lines)
@@ -711,6 +740,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #33. Cosmic Vortex (ID: `cosmic_vortex`) — [Physics]
 - **Class Implementation:** `src/games/CosmicVortexGame.ts` (1087 lines)
@@ -732,6 +762,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #34. Pixel Paintball (ID: `pixel_paintball`) — [Action]
 - **Class Implementation:** `src/games/PixelPaintballGame.ts` (1086 lines)
@@ -753,6 +784,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #35. Minefield Dash (ID: `minefield_dash`) — [Puzzle]
 - **Class Implementation:** `src/games/MinefieldDashGame.ts` (1121 lines)
@@ -774,6 +806,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #36. Asteroid Miner (ID: `asteroid_miner`) — [Physics]
 - **Class Implementation:** `src/games/AsteroidMinerGame.ts` (1244 lines)
@@ -795,6 +828,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #37. Don (ID: `dont_look_down`) — [Physics]
 - **Class Implementation:** `src/games/DontLookDownGame.ts` (1383 lines)
@@ -816,6 +850,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #38. Snowball Fight (ID: `snowball_fight`) — [Action]
 - **Class Implementation:** `src/games/SnowballFightGame.ts` (1699 lines)
@@ -837,6 +872,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #39. Highway Hop (ID: `highway_hop`) — [Action]
 - **Class Implementation:** `src/games/HighwayHopGame.ts` (1548 lines)
@@ -858,6 +894,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #40. Gold Rush Miner (ID: `gold_miner`) — [Physics]
 - **Class Implementation:** `src/games/GoldMinerGame.ts` (727 lines)
@@ -890,6 +927,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #42. Tug of War (ID: `tug_of_war`) — [Action]
 - **Class Implementation:** `src/games/TugOfWarGame.ts` (889 lines)
@@ -911,6 +949,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #43. Volley Spike (ID: `volley_spike`) — [Physics]
 - **Class Implementation:** `src/games/VolleySpikeGame.ts` (1033 lines)
@@ -932,6 +971,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #44. Maze Escape (ID: `maze_escape`) — [Puzzle]
 - **Class Implementation:** `src/games/MazeEscapeGame.ts` (1520 lines)
@@ -953,6 +993,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #45. Pinball Battle (ID: `pinball_battle`) — [Action]
 - **Class Implementation:** `src/games/PinballBattleGame.ts` (1446 lines)
@@ -974,6 +1015,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #46. Mole Panic (ID: `mole_panic`) — [Reflex]
 - **Class Implementation:** `src/games/MolePanicGame.ts` (1103 lines)
@@ -995,6 +1037,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #47. Color Flood (ID: `color_flood`) — [Puzzle]
 - **Class Implementation:** `src/games/ColorFloodGame.ts` (1062 lines)
@@ -1016,6 +1059,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #48. Memory Matrix (ID: `memory_matrix`) — [Reflex]
 - **Class Implementation:** `src/games/MemoryMatrixGame.ts` (966 lines)
@@ -1037,6 +1081,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #49. Snake Arena (ID: `snake_arena`) — [Action]
 - **Class Implementation:** `src/games/SnakeArenaGame.ts` (1094 lines)
@@ -1058,6 +1103,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #50. Mirror Laser (ID: `mirror_laser`) — [Reflex]
 - **Class Implementation:** `src/games/MirrorLaserGame.ts` (1035 lines)
@@ -1079,6 +1125,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #51. Domino Cascade (ID: `domino_cascade`) — [Reflex]
 - **Class Implementation:** `src/games/DominoCascadeGame.ts` (780 lines)
@@ -1100,6 +1147,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #52. Water Balloon Barrage (ID: `water_balloon`) — [Action]
 - **Class Implementation:** `src/games/WaterBalloonBarrageGame.ts` (910 lines)
@@ -1121,6 +1169,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #53. Sheep Dog Corrals (ID: `sheep_dog`) — [Party]
 - **Class Implementation:** `src/games/SheepDogCorralsGame.ts` (1165 lines)
@@ -1142,6 +1191,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #54. Chest Snatch (ID: `chest_snatch`) — [Reflex]
 - **Class Implementation:** `src/games/ChestSnatchGame.ts` (944 lines)
@@ -1163,6 +1213,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #55. Rapid Drop 4 (ID: `rapid_drop4`) — [Puzzle]
 - **Class Implementation:** `src/games/RapidDrop4Game.ts` (943 lines)
@@ -1184,6 +1235,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #56. Floor Painter (ID: `floor_painter`) — [Action]
 - **Class Implementation:** `src/games/FloorPainterGame.ts` (819 lines)
@@ -1205,6 +1257,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #57. Dodgeball Blitz (ID: `dodgeball_blitz`) — [Action]
 - **Class Implementation:** `src/games/DodgeballBlitzGame.ts` (1267 lines)
@@ -1226,6 +1279,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #58. Gravity Golf (ID: `gravity_golf`) — [Physics]
 - **Class Implementation:** `src/games/GravityGolfGame.ts` (899 lines)
@@ -1247,6 +1301,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #59. Cyber Disc (ID: `cyber_disc`) — [Action]
 - **Class Implementation:** `src/games/CyberDiscGame.ts` (807 lines)
@@ -1268,6 +1323,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #60. Sumo Spheres (ID: `sumo_spheres`) — [Physics]
 - **Class Implementation:** `src/games/SumoSpheresGame.ts` (937 lines)
@@ -1289,6 +1345,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #61. Sky Gliders (ID: `sky_gliders`) — [Action]
 - **Class Implementation:** `src/games/SkyGlidersGame.ts` (919 lines)
@@ -1310,6 +1367,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #62. Whack-A-Thief (ID: `whack_a_thief`) — [Reflex]
 - **Class Implementation:** `src/games/WhackAThiefGame.ts` (873 lines)
@@ -1331,6 +1389,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #63. Pixel Curling (ID: `pixel_curling`) — [Sports]
 - **Class Implementation:** `src/games/PixelCurlingGame.ts` (1377 lines)
@@ -1352,6 +1411,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #64. Bumper Boats (ID: `bumper_boats`) — [Action]
 - **Class Implementation:** `src/games/BumperBoatsGame.ts` (921 lines)
@@ -1373,6 +1433,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #65. Target Sniper (ID: `target_sniper`) — [Reflex]
 - **Class Implementation:** `src/games/TargetSniperGame.ts` (890 lines)
@@ -1394,6 +1455,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #66. Fruit Chopper (ID: `fruit_chopper`) — [Reflex]
 - **Class Implementation:** `src/games/FruitChopperGame.ts` (935 lines)
@@ -1415,6 +1477,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #67. Catapult Clash (ID: `catapult_clash`) — [Physics]
 - **Class Implementation:** `src/games/CatapultClashGame.ts` (856 lines)
@@ -1436,6 +1499,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #68. Jousting Knights (ID: `jousting_knights`) — [Action]
 - **Class Implementation:** `src/games/JoustingKnightsGame.ts` (1043 lines)
@@ -1457,6 +1521,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #69. Dragon Tamer (ID: `dragon_tamer`) — [Party]
 - **Class Implementation:** `src/games/DragonTamerGame.ts` (904 lines)
@@ -1478,6 +1543,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #70. Castle Archer (ID: `castle_archer`) — [Reflex]
 - **Class Implementation:** `src/games/CastleArcherGame.ts` (900 lines)
@@ -1499,6 +1565,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #71. Drawbridge Panic (ID: `drawbridge_panic`) — [Reflex]
 - **Class Implementation:** `src/games/DrawbridgePanicGame.ts` (822 lines)
@@ -1520,6 +1587,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #72. Blacksmith Forge (ID: `blacksmith_forge`) — [Reflex]
 - **Class Implementation:** `src/games/BlacksmithForgeGame.ts` (698 lines)
@@ -1541,6 +1609,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #73. Potion Alchemist (ID: `potion_alchemist`) — [Reflex]
 - **Class Implementation:** `src/games/PotionAlchemistGame.ts` (769 lines)
@@ -1562,6 +1631,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #74. Royal Feast (ID: `royal_feast`) — [Party]
 - **Class Implementation:** `src/games/RoyalFeastGame.ts` (841 lines)
@@ -1583,6 +1653,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #75. Sword in the Stone (ID: `sword_in_stone`) — [Reflex]
 - **Class Implementation:** `src/games/SwordInStoneGame.ts` (716 lines)
@@ -1604,6 +1675,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #76. Dungeon Maze Runner (ID: `dungeon_escape`) — [Action]
 - **Class Implementation:** `src/games/DungeonEscapeGame.ts` (1556 lines)
@@ -1625,6 +1697,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #77. Neon Drifters (ID: `neon_drifters`) — [Racing]
 - **Class Implementation:** `src/games/NeonDriftersGame.ts` (1085 lines)
@@ -1646,6 +1719,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #78. Hoverboard Rail (ID: `hoverboard_rail`) — [Action]
 - **Class Implementation:** `src/games/HoverboardRailGame.ts` (1103 lines)
@@ -1667,6 +1741,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #79. Traffic Jam Fury (ID: `traffic_jam`) — [Racing]
 - **Class Implementation:** `src/games/TrafficJamGame.ts` (1137 lines)
@@ -1688,6 +1763,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #80. Nitro Kart Arena (ID: `nitro_kart`) — [Action]
 - **Class Implementation:** `src/games/NitroKartGame.ts` (1215 lines)
@@ -1709,6 +1785,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #81. Monorail Hijack (ID: `monorail_hijack`) — [Action]
 - **Class Implementation:** `src/games/MonorailHijackGame.ts` (1157 lines)
@@ -1730,6 +1807,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #82. Drone Delivery (ID: `drone_delivery`) — [Physics]
 - **Class Implementation:** `src/games/DroneDeliveryGame.ts` (1140 lines)
@@ -1751,6 +1829,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #83. Rocket Skates (ID: `rocket_skates`) — [Racing]
 - **Class Implementation:** `src/games/RocketSkatesGame.ts` (1387 lines)
@@ -1772,6 +1851,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #84. Cyber Demolition (ID: `cyber_demolition`) — [Physics]
 - **Class Implementation:** `src/games/CyberDemolitionGame.ts` (1419 lines)
@@ -1793,6 +1873,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #85. Laser Speedway (ID: `laser_speedway`) — [Racing]
 - **Class Implementation:** `src/games/LaserSpeedwayGame.ts` (1241 lines)
@@ -1814,6 +1895,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #86. Gravity Pods (ID: `gravity_pods`) — [Action]
 - **Class Implementation:** `src/games/GravityPodsGame.ts` (1172 lines)
@@ -1835,6 +1917,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #87. Pancake Flipper (ID: `pancake_flipper`) — [Reflex]
 - **Class Implementation:** `src/games/PancakeFlipperGame.ts` (1045 lines)
@@ -1856,6 +1939,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #88. Sushi Express (ID: `sushi_express`) — [Reflex]
 - **Class Implementation:** `src/games/SushiExpressGame.ts` (1044 lines)
@@ -1877,6 +1961,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #89. Pizza Toss (ID: `pizza_toss`) — [Reflex]
 - **Class Implementation:** `src/games/PizzaTossGame.ts` (1140 lines)
@@ -1898,6 +1983,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #90. Burger Stack (ID: `burger_stack`) — [Action]
 - **Class Implementation:** `src/games/BurgerStackGame.ts` (1091 lines)
@@ -1919,6 +2005,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #91. Ice Cream Scoop (ID: `ice_cream_scoop`) — [Action]
 - **Class Implementation:** `src/games/IceCreamScoopGame.ts` (1130 lines)
@@ -1940,6 +2027,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #92. Wok Stir Fry (ID: `wok_stir_fry`) — [Reflex]
 - **Class Implementation:** `src/games/WokStirFryGame.ts` (1151 lines)
@@ -1961,6 +2049,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #93. Donut Glazer (ID: `donut_glazer`) — [Reflex]
 - **Class Implementation:** `src/games/DonutGlazerGame.ts` (1102 lines)
@@ -1982,6 +2071,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #94. Fruit Blender (ID: `fruit_blender`) — [Action]
 - **Class Implementation:** `src/games/FruitBlenderGame.ts` (1045 lines)
@@ -2003,6 +2093,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #95. Teppanyaki Catch (ID: `teppanyaki_catch`) — [Action]
 - **Class Implementation:** `src/games/TeppanyakiCatchGame.ts` (1039 lines)
@@ -2024,6 +2115,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #96. Popcorn Popper (ID: `popcorn_popper`) — [Action]
 - **Class Implementation:** `src/games/PopcornPopperGame.ts` (1028 lines)
@@ -2045,6 +2137,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #97. Submarine Torpedo (ID: `submarine_torpedo`) — [Action]
 - **Class Implementation:** `src/games/SubmarineTorpedoGame.ts` (1084 lines)
@@ -2066,6 +2159,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #98. Jellyfish Jump (ID: `jellyfish_jump`) — [Action]
 - **Class Implementation:** `src/games/JellyfishJumpGame.ts` (932 lines)
@@ -2087,6 +2181,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #99. Pearl Divers (ID: `pearl_divers`) — [Reflex]
 - **Class Implementation:** `src/games/PearlDiversGame.ts` (1049 lines)
@@ -2108,6 +2203,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #100. Shark Bait (ID: `shark_bait`) — [Action]
 - **Class Implementation:** `src/games/SharkBaitGame.ts` (1160 lines)
@@ -2129,6 +2225,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #101. Sunken Treasure (ID: `sunken_treasure`) — [Reflex]
 - **Class Implementation:** `src/games/SunkenTreasureGame.ts` (1025 lines)
@@ -2150,9 +2247,10 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #102. Octopus Ink (ID: `octopus_ink`) — [Action]
-- **Class Implementation:** `src/games/OctopusInkGame.ts` (425 lines)
+- **Class Implementation:** `src/games/OctopusInkGame.ts` (1023 lines)
 - **Tagline:** *Kraken Whirlpool Vortex*
 - **Current Control Scheme:** `Steer: Orbit / Radial | Tap / Space: Turbo Thrust`
 - **Stated Gameplay Concept:** Ride the swirling currents of a kraken whirlpool! Dodge giant sweeping tentacles and blinding ink clouds while collecting glowing plankton canisters.
@@ -2181,7 +2279,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 
 
 ### #103. Crab Walk (ID: `crab_walk`) — [Action]
-- **Class Implementation:** `src/games/CrabWalkGame.ts` (364 lines)
+- **Class Implementation:** `src/games/CrabWalkGame.ts` (893 lines)
 - **Tagline:** *Lateral Beach Scuttle*
 - **Current Control Scheme:** `Steer: Scuttle Left / Right`
 - **Stated Gameplay Concept:** Scuttle left and right along the sandy beach tide line! Catch falling seashells and starfish with your claws while dodging heavy falling coconuts.
@@ -2210,7 +2308,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 
 
 ### #104. Electric Eel (ID: `electric_eel`) — [Action]
-- **Class Implementation:** `src/games/ElectricEelGame.ts` (353 lines)
+- **Class Implementation:** `src/games/ElectricEelGame.ts` (1058 lines)
 - **Tagline:** *Cavern High-Voltage Slalom*
 - **Current Control Scheme:** `Steer: Pilot Submersible`
 - **Stated Gameplay Concept:** Navigate tight underwater cavern circuits! Time your passage through electric eel pylon gates when the high-voltage arcs cycle off to avoid paralysis.
@@ -2239,7 +2337,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 
 
 ### #105. Water Scooter (ID: `water_scooter`) — [Racing]
-- **Class Implementation:** `src/games/WaterScooterGame.ts` (303 lines)
+- **Class Implementation:** `src/games/WaterScooterGame.ts` (1053 lines)
 - **Tagline:** *Jet-Ski Slalom Sprint*
 - **Current Control Scheme:** `Steer: Carve Turns | Hold: Accelerate`
 - **Stated Gameplay Concept:** High-speed jet-ski slalom through floating maritime buoys! Carve tight turns around green and red channel markers to build maximum lap speed.
@@ -2267,7 +2365,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #106. Deep Sea Harpoon (ID: `deep_sea_harpoon`) — [Reflex]
-- **Class Implementation:** `src/games/DeepSeaHarpoonGame.ts` (375 lines)
+- **Class Implementation:** `src/games/DeepSeaHarpoonGame.ts` (1084 lines)
 - **Tagline:** *Midnight Trench Sniping*
 - **Current Control Scheme:** `Tap / Space: Fire Harpoon`
 - **Stated Gameplay Concept:** Rotate your flashlight-mounted harpoon turret in the pitch-black abyss! Snipe luminous anglerfish, neon squids, and the legendary golden nautilus.
@@ -2295,7 +2393,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #107. Moon Lander (ID: `moon_lander`) — [Physics]
-- **Class Implementation:** `src/games/MoonLanderGame.ts` (416 lines)
+- **Class Implementation:** `src/games/MoonLanderGame.ts` (1031 lines)
 - **Tagline:** *Lunar Crater Touchdown*
 - **Current Control Scheme:** `Steer: Tilt Lander | Hold: Fire Thrusters`
 - **Stated Gameplay Concept:** Control thrusters and tilt angle for safe touchdown on lunar landing pads! Soft landings earn score multipliers. Avoid hard surface crashes.
@@ -2323,7 +2421,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #108. Space Junk Salvage (ID: `space_junk_salvage`) — [Action]
-- **Class Implementation:** `src/games/SpaceJunkSalvageGame.ts` (572 lines)
+- **Class Implementation:** `src/games/SpaceJunkSalvageGame.ts` (1168 lines)
 - **Tagline:** *Orbital Debris Tractor*
 - **Current Control Scheme:** `Steer: Pilot Tug | Action: Magnetic Tractor Beam`
 - **Stated Gameplay Concept:** Fire magnetic tractor beams to pull orbital scrap into your cargo bay! Return scrap to the recycling depot while dodging communication satellites.
@@ -2351,7 +2449,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #109. Alien Probe (ID: `alien_probe`) — [Action]
-- **Class Implementation:** `src/games/AlienProbeGame.ts` (425 lines)
+- **Class Implementation:** `src/games/AlienProbeGame.ts` (984 lines)
 - **Tagline:** *Mothership Core Recon*
 - **Current Control Scheme:** `Steer: Fly Saucer | Action: Stealth Cloaking`
 - **Stated Gameplay Concept:** Pilot scout saucers through alien defense grids! Collect transmission crystals and activate stealth cloaking to pass through sweeping laser beams.
@@ -2379,7 +2477,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #110. Solar Flare (ID: `solar_flare`) — [Action]
-- **Class Implementation:** `src/games/SolarFlareGame.ts` (357 lines)
+- **Class Implementation:** `src/games/SolarFlareGame.ts` (977 lines)
 - **Tagline:** *Coronal Wave Glider*
 - **Current Control Scheme:** `Steer: Navigate | Action / Up: Unfurl Solar Sail`
 - **Stated Gameplay Concept:** Unfurl your diamond solar sail to ride high-speed coronal plasma winds! Watch your temperature gauge and furl sails during peak flares to avoid burning.
@@ -2407,7 +2505,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #111. Wormhole Leap (ID: `wormhole_leap`) — [Action]
-- **Class Implementation:** `src/games/WormholeLeapGame.ts` (431 lines)
+- **Class Implementation:** `src/games/WormholeLeapGame.ts` (1024 lines)
 - **Tagline:** *Quantum Portal Chaining*
 - **Current Control Scheme:** `Steer: Navigate | Action: Quantum Warp Burst`
 - **Stated Gameplay Concept:** Fly into paired color-coded singularity wormholes to warp across sectors! Collect quantum crystals and build portal combo streaks.
@@ -2435,7 +2533,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #112. Astro Miner (ID: `astro_miner`) — [Action]
-- **Class Implementation:** `src/games/AstroMinerGame.ts` (451 lines)
+- **Class Implementation:** `src/games/AstroMinerGame.ts` (1040 lines)
 - **Tagline:** *Asteroid Geode Blaster*
 - **Current Control Scheme:** `Steer: Pilot Miner | Action / Space: Fire Mining Laser`
 - **Stated Gameplay Concept:** Blast drifting asteroid geodes with mining lasers! Shatter mineral crusts to release and vacuum up rubies, sapphires, and emeralds.
@@ -2463,7 +2561,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #113. Nebula Drift (ID: `nebula_drift`) — [Racing]
-- **Class Implementation:** `src/games/NebulaDriftGame.ts` (296 lines)
+- **Class Implementation:** `src/games/NebulaDriftGame.ts` (867 lines)
 - **Tagline:** *Cosmic Dust Circuit*
 - **Current Control Scheme:** `Steer: Drift Craft | Action: Turbo Nitro Boost`
 - **Stated Gameplay Concept:** Zero-drag inertial drifting race through cosmic nebula dust clouds! Pass through waypoint rings and unleash turbo nitro boosts.
@@ -2491,7 +2589,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #114. Satellite Laser (ID: `satellite_laser`) — [Puzzle]
-- **Class Implementation:** `src/games/SatelliteLaserGame.ts` (368 lines)
+- **Class Implementation:** `src/games/SatelliteLaserGame.ts` (1186 lines)
 - **Tagline:** *Solar Reflector Grid*
 - **Current Control Scheme:** `Steer: Position Satellite | Action: Rotate Mirror`
 - **Stated Gameplay Concept:** Position satellite mirrors to reflect high-power solar laser beams directly into your home base receiver capacitor!
@@ -2519,7 +2617,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #115. Mars Rover (ID: `mars_rover`) — [Action]
-- **Class Implementation:** `src/games/MarsRoverGame.ts` (439 lines)
+- **Class Implementation:** `src/games/MarsRoverGame.ts` (1097 lines)
 - **Tagline:** *Red Planet Sample Drill*
 - **Current Control Scheme:** `Steer: Drive Rover | Action: Deploy Soil Drill`
 - **Stated Gameplay Concept:** Drive 6-wheel rovers across Martian dunes! Drill precious soil samples and deliver them back to the habitat rocket while dodging dust devils.
@@ -2547,7 +2645,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #116. Zero-G Tether (ID: `zero_g_tether`) — [Physics]
-- **Class Implementation:** `src/games/ZeroGTetherGame.ts` (387 lines)
+- **Class Implementation:** `src/games/ZeroGTetherGame.ts` (1038 lines)
 - **Tagline:** *Orbital Spacewalk Duels*
 - **Current Control Scheme:** `Steer: Thrusters | Action: Reel / Latch Tether`
 - **Stated Gameplay Concept:** Reel in elastic quantum cables to slingshot around station anchor pylons! Snatch drifting cargo capsules in zero gravity.
@@ -2575,7 +2673,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #117. Saloon Brawler (ID: `saloon_brawler`) — [Action]
-- **Class Implementation:** `src/games/SaloonBrawlerGame.ts` (328 lines)
+- **Class Implementation:** `src/games/SaloonBrawlerGame.ts` (1006 lines)
 - **Tagline:** *Mug Slide & Barstool Duck*
 - **Current Control Scheme:** `Tap: Slide Mug | Hold: Duck Counter`
 - **Stated Gameplay Concept:** Slide foamy beer mugs down the mahogany counter to thirsty outlaws! Hold to duck flying barstools and shattered bottles.
@@ -2603,7 +2701,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #118. Train Heist (ID: `train_heist`) — [Action]
-- **Class Implementation:** `src/games/TrainHeistGame.ts` (363 lines)
+- **Class Implementation:** `src/games/TrainHeistGame.ts` (1078 lines)
 - **Tagline:** *Locomotive Rooftop Dash*
 - **Current Control Scheme:** `Tap: Jump Gap | Hold: Duck Low`
 - **Stated Gameplay Concept:** Sprint atop runaway train cars! Tap to jump chimney gaps and hold to duck under water tower beams while snagging gold loot sacks.
@@ -2631,7 +2729,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #119. Gold Panning (ID: `gold_panning`) — [Puzzle]
-- **Class Implementation:** `src/games/GoldPanningGame.ts` (268 lines)
+- **Class Implementation:** `src/games/GoldPanningGame.ts` (930 lines)
 - **Tagline:** *Resonant River Silt Swirl*
 - **Current Control Scheme:** `Hold: Swirl Pan | Tap: Scoop Center Nugget`
 - **Stated Gameplay Concept:** Swirl river silt at resonance frequency to wash away mud! Once shiny gold nuggets drift into the center ring, tap to scoop!
@@ -2659,7 +2757,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #120. Rodeo Bull (ID: `rodeo_bull`) — [Physics]
-- **Class Implementation:** `src/games/RodeoBullGame.ts` (252 lines)
+- **Class Implementation:** `src/games/RodeoBullGame.ts` (953 lines)
 - **Tagline:** *Mechanical Bronco Balance*
 - **Current Control Scheme:** `Tap / Hold: Counter-Lean Balance`
 - **Stated Gameplay Concept:** Hang on tight! Counter-lean against unpredictable mechanical bucking kicks. Stay in the green balance sweet spot to survive.
@@ -2687,7 +2785,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #121. Horseshoe Toss (ID: `horseshoe_toss`) — [Sports]
-- **Class Implementation:** `src/games/HorseshoeTossGame.ts` (344 lines)
+- **Class Implementation:** `src/games/HorseshoeTossGame.ts` (892 lines)
 - **Tagline:** *Iron Stake Ringers*
 - **Current Control Scheme:** `Tap 1: Lock Aim | Tap 2: Pitch Power`
 - **Stated Gameplay Concept:** Tap to lock pitch angle, then tap again to gauge throw power! Ring iron stakes for 10 points or score 5 for leaners.
@@ -2715,7 +2813,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #122. Dynamite Tumble (ID: `dynamite_tumble`) — [Action]
-- **Class Implementation:** `src/games/DynamiteTumbleGame.ts` (277 lines)
+- **Class Implementation:** `src/games/DynamiteTumbleGame.ts` (1017 lines)
 - **Tagline:** *TNT Sizzle Boot*
 - **Current Control Scheme:** `Tap: Kick Dynamite Away`
 - **Stated Gameplay Concept:** Sizzling sticks of dynamite tumble toward your bunker! Tap when TNT enters your perimeter to boot it toward rivals before the fuse blows.
@@ -2743,7 +2841,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #123. Cactus Slalom (ID: `cactus_slalom`) — [Racing]
-- **Class Implementation:** `src/games/CactusSlalomGame.ts` (284 lines)
+- **Class Implementation:** `src/games/CactusSlalomGame.ts` (1399 lines)
 - **Tagline:** *Desert Gallop Weave*
 - **Current Control Scheme:** `Tap: Slalom Turn`
 - **Stated Gameplay Concept:** Gallop at top speed across desert canyons! Tap to switch slalom direction, weaving around prickly saguaro cacti and snatching horseshoes.
@@ -2771,7 +2869,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #124. Bandit Chase (ID: `bandit_chase`) — [Action]
-- **Class Implementation:** `src/games/BanditChaseGame.ts` (298 lines)
+- **Class Implementation:** `src/games/BanditChaseGame.ts` (1332 lines)
 - **Tagline:** *Stagecoach Quadrant Defense*
 - **Current Control Scheme:** `Tap: Fire Shotgun Blast`
 - **Stated Gameplay Concept:** Outlaws on horseback are ambushing the stagecoach! Time your sweeping reticle and tap to blast bandits before they plunder cargo.
@@ -2799,7 +2897,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #125. Rattlesnake Reflex (ID: `rattlesnake_reflex`) — [Reflex]
-- **Class Implementation:** `src/games/RattlesnakeReflexGame.ts` (291 lines)
+- **Class Implementation:** `src/games/RattlesnakeReflexGame.ts` (1290 lines)
 - **Tagline:** *High-Noon Snake Strike Duel*
 - **Current Control Scheme:** `Wait for Strike... Tap Instant!`
 - **Stated Gameplay Concept:** Listen to the ominous rattle buildup! Tap the instant the snake lunges to snatch golden eggs. False starts get bitten!
@@ -2827,7 +2925,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #126. Western Poker Showdown (ID: `western_poker`) — [Party]
-- **Class Implementation:** `src/games/WesternPokerGame.ts` (306 lines)
+- **Class Implementation:** `src/games/WesternPokerGame.ts` (1186 lines)
 - **Tagline:** *Rapid Card River Draft*
 - **Current Control Scheme:** `Tap: Draft Card in River`
 - **Stated Gameplay Concept:** Cards slide down the saloon river! Tap to draft high-value cards and form pairs, three of a kind, or flushes for maximum points.
@@ -2855,7 +2953,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #127. Laser Tripwire (ID: `laser_tripwire`) — [Reflex]
-- **Class Implementation:** `src/games/LaserTripwireGame.ts` (332 lines)
+- **Class Implementation:** `src/games/LaserTripwireGame.ts` (1159 lines)
 - **Tagline:** *Vault Corridor Infiltration*
 - **Current Control Scheme:** `Tap: Jump | Hold: Crawl Low`
 - **Stated Gameplay Concept:** Contort and crawl beneath oscillating security lasers! Hold to crawl, tap to jump, and snatch classified intel.
@@ -2883,7 +2981,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #128. Vault Safe Stethoscope (ID: `vault_safe`) — [Puzzle]
-- **Class Implementation:** `src/games/VaultSafeGame.ts` (638 lines)
+- **Class Implementation:** `src/games/VaultSafeGame.ts` (1050 lines)
 - **Tagline:** *Titanium Combination Crack*
 - **Current Control Scheme:** `Tap: Lock Tumbler Gate`
 - **Stated Gameplay Concept:** Listen to the mechanical click resonance! Tap when the combination dial passes the high-frequency gate to pop all 3 tumblers.
@@ -2911,7 +3009,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #129. Security Camera Freeze (ID: `security_camera`) — [Action]
-- **Class Implementation:** `src/games/SecurityCameraGame.ts` (268 lines)
+- **Class Implementation:** `src/games/SecurityCameraGame.ts` (1164 lines)
 - **Tagline:** *CCTV Vision Cone Sneak*
 - **Current Control Scheme:** `Hold: Sneak | Release: Freeze Still`
 - **Stated Gameplay Concept:** Sweeping CCTV cameras scan the museum! Hold to advance forward, but freeze completely still when the red spotlight sweeps overhead.
@@ -2939,7 +3037,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #130. Briefcase Snatch (ID: `briefcase_snatch`) — [Action]
-- **Class Implementation:** `src/games/BriefcaseSnatchGame.ts` (281 lines)
+- **Class Implementation:** `src/games/BriefcaseSnatchGame.ts` (1037 lines)
 - **Tagline:** *Subway Station Turnstile Dash*
 - **Current Control Scheme:** `Hold: Turn / Steer`
 - **Stated Gameplay Concept:** Grab classified briefcases and dash through open subway turnstiles to bank points! Tag rivals to steal their briefcase.
@@ -2967,7 +3065,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #131. Hack The Terminal (ID: `hack_terminal`) — [Puzzle]
-- **Class Implementation:** `src/games/HackTerminalGame.ts` (250 lines)
+- **Class Implementation:** `src/games/HackTerminalGame.ts` (1281 lines)
 - **Tagline:** *Cyber Mainframe ICE Decrypt*
 - **Current Control Scheme:** `Tap: Decrypt Node`
 - **Stated Gameplay Concept:** Match the target hexadecimal cipher code as packets scroll! Tap when your cursor aligns with the key node before ICE locks you out.
@@ -2995,7 +3093,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #132. Smoke Bomb Escape (ID: `smoke_bomb_escape`) — [Action]
-- **Class Implementation:** `src/games/SmokeBombEscapeGame.ts` (264 lines)
+- **Class Implementation:** `src/games/SmokeBombEscapeGame.ts` (1273 lines)
 - **Tagline:** *Shipyard Searchlight Evasion*
 - **Current Control Scheme:** `Tap: Deploy Smoke Canister`
 - **Stated Gameplay Concept:** Sneak past shipyard searchlights to reach the extraction chopper! Tap to deploy thick smoke canisters that block beam detection.
@@ -3023,7 +3121,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #133. Micro Wiretap (ID: `micro_wiretap`) — [Reflex]
-- **Class Implementation:** `src/games/MicroWiretapGame.ts` (221 lines)
+- **Class Implementation:** `src/games/MicroWiretapGame.ts` (1137 lines)
 - **Tagline:** *Silent Embassy Bug Plant*
 - **Current Control Scheme:** `Tap in Green: Tighten Screw`
 - **Stated Gameplay Concept:** Screw listening bugs under the ambassador desk! Tap only when the decibel needle is in the green silent zone.
@@ -3051,7 +3149,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #134. Rooftop Zipline (ID: `rooftop_zipline`) — [Racing]
-- **Class Implementation:** `src/games/RooftopZiplineGame.ts` (278 lines)
+- **Class Implementation:** `src/games/RooftopZiplineGame.ts` (1158 lines)
 - **Tagline:** *Skyscraper Antenna Glider*
 - **Current Control Scheme:** `Tap: Switch Cable Line`
 - **Stated Gameplay Concept:** Zipline between skyscraper radio towers! Tap to switch between upper and lower cables, snagging data chips and dodging voltage sparks.
@@ -3079,7 +3177,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #135. Drone Intercept (ID: `drone_intercept`) — [Action]
-- **Class Implementation:** `src/games/DroneInterceptGame.ts` (308 lines)
+- **Class Implementation:** `src/games/DroneInterceptGame.ts` (1088 lines)
 - **Tagline:** *EMP Surveillance Jammer*
 - **Current Control Scheme:** `Tap: Discharge EMP Shockwave`
 - **Stated Gameplay Concept:** Surveillance drones swarm overhead! Align your aiming reticle and tap to fire electromagnetic pulses to fry hostile drones.
@@ -3107,7 +3205,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #136. Disguise Shuffle (ID: `disguise_shuffle`) — [Party]
-- **Class Implementation:** `src/games/DisguiseShuffleGame.ts` (250 lines)
+- **Class Implementation:** `src/games/DisguiseShuffleGame.ts` (1069 lines)
 - **Tagline:** *Masquerade Ball Double Agent*
 - **Current Control Scheme:** `Tap: Unmask Rogue Agent`
 - **Stated Gameplay Concept:** Spot the rogue double agent wearing the Golden Mask in the masquerade ballroom! Tap when your spotlight sweeps over the agent.
@@ -3135,7 +3233,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #137. Synthwave Highway (ID: `synthwave_highway`) — [Action]
-- **Class Implementation:** `src/games/SynthwaveHighwayGame.ts` (263 lines)
+- **Class Implementation:** `src/games/SynthwaveHighwayGame.ts` (1094 lines)
 - **Tagline:** *Neon Outrun Drifter*
 - **Current Control Scheme:** `Tap: Switch Lane`
 - **Stated Gameplay Concept:** Cruise down an endless neon synthwave highway! Tap to shift lanes, avoiding grid roadblocks while collecting digital audio cassettes.
@@ -3163,7 +3261,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #138. Drum Solo (ID: `drum_solo`) — [Party]
-- **Class Implementation:** `src/games/DrumSoloGame.ts` (223 lines)
+- **Class Implementation:** `src/games/DrumSoloGame.ts` (1076 lines)
 - **Tagline:** *Percussion Precision Clash*
 - **Current Control Scheme:** `Tap: Strike Snare`
 - **Stated Gameplay Concept:** Follow the pulsating drum fills! Tap exactly as the rhythmic strike marker aligns with the snare drum target.
@@ -3191,7 +3289,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #139. Turntable Scratch (ID: `turntable_scratch`) — [Party]
-- **Class Implementation:** `src/games/TurntableScratchGame.ts` (233 lines)
+- **Class Implementation:** `src/games/TurntableScratchGame.ts` (1234 lines)
 - **Tagline:** *Vinyl DJ Beat Match*
 - **Current Control Scheme:** `Tap: Scratch Record`
 - **Stated Gameplay Concept:** Spin the vinyl platter! Tap to scratch back and forth right as the needle passes over beat cue zones.
@@ -3219,7 +3317,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #140. Bass Drop (ID: `bass_drop`) — [Action]
-- **Class Implementation:** `src/games/BassDropGame.ts` (229 lines)
+- **Class Implementation:** `src/games/BassDropGame.ts` (1112 lines)
 - **Tagline:** *Subwoofer Soundwave Jump*
 - **Current Control Scheme:** `Tap: Shockwave Leap`
 - **Stated Gameplay Concept:** Giant subwoofers emit crushing low-frequency shockwaves! Tap to jump and hover above shockwave rings before they knock you off the stage.
@@ -3247,7 +3345,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #141. Vocal Pitch (ID: `vocal_pitch`) — [Party]
-- **Class Implementation:** `src/games/VocalPitchGame.ts` (186 lines)
+- **Class Implementation:** `src/games/VocalPitchGame.ts` (1071 lines)
 - **Tagline:** *Autotune Frequency Lock*
 - **Current Control Scheme:** `Tap: Modulate Pitch`
 - **Stated Gameplay Concept:** A dynamic vocal melody curve scrolls across the screen. Tap to modulate your pitch frequency to stay inside the golden harmony window.
@@ -3275,7 +3373,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #142. Breakdance Battle (ID: `breakdance_battle`) — [Party]
-- **Class Implementation:** `src/games/BreakdanceBattleGame.ts` (228 lines)
+- **Class Implementation:** `src/games/BreakdanceBattleGame.ts` (1102 lines)
 - **Tagline:** *Neon B-Boy Freeze Clash*
 - **Current Control Scheme:** `Tap: Freeze Pose`
 - **Stated Gameplay Concept:** Show off your best power moves! Tap during the peak freeze window to score crowd hype points without wiping out.
@@ -3303,7 +3401,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #143. Neon Metronome (ID: `neon_metronome`) — [Party]
-- **Class Implementation:** `src/games/NeonMetronomeGame.ts` (223 lines)
+- **Class Implementation:** `src/games/NeonMetronomeGame.ts` (1126 lines)
 - **Tagline:** *Pendulum Tempo Match*
 - **Current Control Scheme:** `Tap: Hit Downbeat`
 - **Stated Gameplay Concept:** A glowing tempo needle swings across the arc. Tap precisely when the needle hits the center tick for maximum combo multipliers.
@@ -3331,7 +3429,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #144. Equalizer Bounce (ID: `equalizer_bounce`) — [Action]
-- **Class Implementation:** `src/games/EqualizerBounceGame.ts` (211 lines)
+- **Class Implementation:** `src/games/EqualizerBounceGame.ts` (1073 lines)
 - **Tagline:** *Audio Spectrum Trampoline*
 - **Current Control Scheme:** `Tap: Surge Bounce`
 - **Stated Gameplay Concept:** Ride the frequency bars of a booming audio equalizer! Tap to bounce from peak to peak as sound levels surge and crash.
@@ -3359,7 +3457,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #145. Retro Chiptune (ID: `retro_chiptune`) — [Party]
-- **Class Implementation:** `src/games/RetroChiptuneGame.ts` (188 lines)
+- **Class Implementation:** `src/games/RetroChiptuneGame.ts` (1066 lines)
 - **Tagline:** *8-Bit Arpeggio Step Sequencer*
 - **Current Control Scheme:** `Tap: Trigger Step Note`
 - **Stated Gameplay Concept:** The 4-step sequencer sweeps rapidly across the synthesizer! Tap to trigger notes in time with the master lead melody.
@@ -3387,7 +3485,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #146. Disco Tile (ID: `disco_tile`) — [Action]
-- **Class Implementation:** `src/games/DiscoTileGame.ts` (443 lines)
+- **Class Implementation:** `src/games/DiscoTileGame.ts` (1443 lines)
 - **Tagline:** *Neon Dance Floor Drop*
 - **Current Control Scheme:** `Tap: Rotate 90°`
 - **Stated Gameplay Concept:** The disco dance floor flashes to the beat! Stand on the announced safe color before unlit tiles drop out beneath you.
@@ -3415,7 +3513,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #147. Neon Ring Pitch (ID: `ring_toss`) — [Reflex]
-- **Class Implementation:** `src/games/RingTossGame.ts` (624 lines)
+- **Class Implementation:** `src/games/RingTossGame.ts` (1282 lines)
 - **Tagline:** *Rotating Bottle Tray Toss*
 - **Current Control Scheme:** `Steer: Aim Angle | Tap/Space: Pitch Hoop | 1-3: Switch Theme`
 - **Stated Gameplay Concept:** Pitch glowing neon hoops onto 3 rotating concentric trays of glass bottles! Land consecutive ringers for combo multipliers, and aim for the center Golden Decanter for 300 bonus points!
@@ -3443,7 +3541,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #148. Rollercoaster Thrill (ID: `rollercoaster_thrill`) — [Action]
-- **Class Implementation:** `src/games/RollercoasterThrillGame.ts` (304 lines)
+- **Class Implementation:** `src/games/RollercoasterThrillGame.ts` (1070 lines)
 - **Tagline:** *Runaway Coaster Banking*
 - **Current Control Scheme:** `Tap: Lean Into Curve`
 - **Stated Gameplay Concept:** Speed along high-speed wooden coaster tracks! Tap to lean into sharp hairpin turns and 360-degree loops.
@@ -3471,7 +3569,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #149. Balloon Dart Gallery (ID: `balloon_dart`) — [Action]
-- **Class Implementation:** `src/games/BalloonDartGame.ts` (704 lines)
+- **Class Implementation:** `src/games/BalloonDartGame.ts` (1260 lines)
 - **Tagline:** *Multi-Tier Conveyor Pop Gallery*
 - **Current Control Scheme:** `Steer: Aim Angle | Tap/Space: Pitch Dart | 1-3: Switch Gallery`
 - **Stated Gameplay Concept:** Aim your dart catapult and pop balloons along 3 moving conveyor tiers! Snipe golden star balloons for bonus points and trigger chain-reaction bomb balloons to wipe entire rows. Watch out for crosswinds!
@@ -3499,7 +3597,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #150. Plunger Dunk Splashdown (ID: `dunk_tank`) — [Action]
-- **Class Implementation:** `src/games/DunkTankGame.ts` (605 lines)
+- **Class Implementation:** `src/games/DunkTankGame.ts` (1326 lines)
 - **Tagline:** *4-Player Trapdoor Water Duel*
 - **Current Control Scheme:** `Steer: Aim Cannon | Tap/Space: Fire Plunger | Mash Tap: Climb Ladder | 1-3: Switch Tank`
 - **Stated Gameplay Concept:** Perched high above individual water tanks, fire rubber plunger cannons at rival bullseye levers! Land 3 hits to trigger their trapdoor and plunge them into the water. Mash your button to climb back up!
@@ -3527,7 +3625,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #151. Sky Wheel Balance (ID: `ferris_wheel`) — [Physics]
-- **Class Implementation:** `src/games/FerrisWheelGame.ts` (585 lines)
+- **Class Implementation:** `src/games/FerrisWheelGame.ts` (1093 lines)
 - **Tagline:** *High-Altitude Spoke Tilt*
 - **Current Control Scheme:** `Up/Down: Climb Spoke | Left/Right/Space: Jump Adjacent Spoke | 1-3: Switch Theme`
 - **Stated Gameplay Concept:** Traverse the rotating structural iron spokes of the giant carnival ferris wheel 100 feet in the air! Gather golden star tokens and crystal gems while fighting slope gravity and high-altitude wind gusts. Don\'t slip off the outer rim!
@@ -3547,7 +3645,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #152. Funhouse Mirrors (ID: `funhouse_mirrors`) — [Party]
-- **Class Implementation:** `src/games/FunhouseMirrorsGame.ts` (715 lines)
+- **Class Implementation:** `src/games/FunhouseMirrorsGame.ts` (973 lines)
 - **Tagline:** *Hall of Illusions Maze*
 - **Current Control Scheme:** `Steer: Move • Hold Action: Prismatic Phase Dash & Flashbang Shunt | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Navigate dynamic rotating funhouse mirrors! Charge your Prismatic Phase Dash (72%–98% Sweet Spot) to phase straight through mirror glass, dazzle rivals, and escape through the shifting Golden Portal.
@@ -3562,7 +3660,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #153. Sugar Cloud Stacker (ID: `cotton_candy`) — [Party]
-- **Class Implementation:** `src/games/CottonCandyGame.ts` (690 lines)
+- **Class Implementation:** `src/games/CottonCandyGame.ts` (921 lines)
 - **Tagline:** *Candy Tower Balance Rush*
 - **Current Control Scheme:** `Steer: Slide Cone • Hold Action: Centrifugal Vortex & Caramelize Bank | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Catch spun sugar clouds from 3 overhead oscillating floss kettles! Hold Action to spin a stabilizing Centrifugal Vortex and release in the 72%–98% Sweet Spot for a Caramelized Cash-In & Sugar Shockwave Shunt!
@@ -3577,7 +3675,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #154. Test Your Strength (ID: `test_strength`) — [Action]
-- **Class Implementation:** `src/games/TestStrengthGame.ts` (645 lines)
+- **Class Implementation:** `src/games/TestStrengthGame.ts` (868 lines)
 - **Tagline:** *High-Striker Sledgehammer*
 - **Current Control Scheme:** `Steer: Move Across Stage • Hold Action: Sledgehammer Bell Slam & Shockwave | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Roam the shared Carnival Strongman Stage between 3 High-Striker Towers (including the 1.65x Center Golden Titan)! Charge your Sledgehammer Slam (72%–98% Sweet Spot) to ring the brass bell, shower the stage with bonus stars, and blast rivals off the anvil!
@@ -3592,7 +3690,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #155. Haunted Mansion (ID: `haunted_mansion`) — [Action]
-- **Class Implementation:** `src/games/HauntedMansionGame.ts` (685 lines)
+- **Class Implementation:** `src/games/HauntedMansionGame.ts` (883 lines)
 - **Tagline:** *UV Strobe Specter Hunt*
 - **Current Control Scheme:** `Steer: Roam & Aim UV Beam • Hold Action: Proton Vacuum & Supernova UV Strobe | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Roam the Haunted Ballroom with your UV Poltergeist Beam to reveal cloaked ghosts! Hold Action to reel ghosts inward with your Proton Vacuum, then release in the 72%–98% Sweet Spot to unleash a Supernova UV Strobe!
@@ -3608,7 +3706,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 
 
 ### #156. Fireworks Grand Finale (ID: `fireworks_finale`) — [Party]
-- **Class Implementation:** `src/games/FireworksFinaleGame.ts` (645 lines)
+- **Class Implementation:** `src/games/FireworksFinaleGame.ts` (847 lines)
 - **Tagline:** *Pyrotechnic Sky Spectacular*
 - **Current Control Scheme:** `Steer: Roll Mortar Cart • Hold Action: Chrysanthemum Shell & Sky Hijack | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Roll your Pyrotechnic Mortar Cart across the shared harbor barge beneath drifting Sky Multiplier Rings (`1.5x`, `1.8x`, `2.5x`)! Charge your Chrysanthemum Shell (`72%–98%` Sweet Spot) to detonate inside the rings, hijack rival shells in mid-air, and shower the deck with Golden Sparkler Stars!
@@ -3623,7 +3721,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #157. Hydra Swamp Slayer (ID: `hydra_slayer`) — [Action]
-- **Class Implementation:** `src/games/HydraSlayerGame.ts` (670 lines)
+- **Class Implementation:** `src/games/HydraSlayerGame.ts` (820 lines)
 - **Tagline:** *Multi-Headed Mythic Duel*
 - **Current Control Scheme:** `Steer: Move Along Causeway • Hold Action: Flame-Cauterize Slash & Blade Shunt | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Battle the colossal 5-headed Lernaean Hydra on a shared marble causeway! Dodge telegraphed Acid-Venom Pools, collect Golden Fleece Orbs, and release your Searing Flame-Cauterize Slash in the 72%–98% Sweet Spot to sever lunging heads and shunt rivals!
@@ -3638,7 +3736,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #158. Pharaoh Tomb Escape (ID: `pharaoh_tomb`) — [Reflex]
-- **Class Implementation:** `src/games/PharaohTombGame.ts` (660 lines)
+- **Class Implementation:** `src/games/PharaohTombGame.ts` (758 lines)
 - **Tagline:** *Rolling Boulder & Spike Vault*
 - **Current Control Scheme:** `Steer: Strafe & Switch Lanes • Hold Action: Bullwhip Grapple Vault & Whip Shunt | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Outrun the colossal Cursed Skull Boulder in a shared 3-lane pyramid corridor! Switch lanes, vault spike traps, snatch Golden Scarabs & Ankh Relics, and release your Bullwhip Grapple in the 72%–98% Sweet Spot to surge ahead and whip-shunt rivals toward the boulder!
@@ -3653,7 +3751,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #159. Spartan Phalanx Wall (ID: `spartan_shield`) — [Action]
-- **Class Implementation:** `src/games/SpartanShieldGame.ts` (665 lines)
+- **Class Implementation:** `src/games/SpartanShieldGame.ts` (1241 lines)
 - **Tagline:** *Shield Wall & Spear Counter*
 - **Current Control Scheme:** `Steer: March Pass • Hold Action: Bronze Aspis Block & Spear Counter (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Hold the Hot Gates of Thermopylae! March across the shared cliff pass, hold Action to raise your Bronze Lambda Aspis Shield against raining Persian fire arrows, and release in the 72%–98% Sweet Spot to unleash a 300 Spear Counter & Spartan Kick Shunt!
@@ -3668,7 +3766,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #160. Kraken Maelstrom Vortex (ID: `kraken_whirlpool`) — [Reflex]
-- **Class Implementation:** `src/games/KrakenWhirlpoolGame.ts` (635 lines)
+- **Class Implementation:** `src/games/KrakenWhirlpoolGame.ts` (1025 lines)
 - **Tagline:** *Tentacle Dodge & Harpoon Broadside*
 - **Current Control Scheme:** `Steer/Tap: Tack In/Out • Hold Action: Harpoon Broadside & Tentacle Sever (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Navigate the swirling Kraken Maelstrom! Tack your 2.5D Longship between the outer rim and the 1.5x Inner Vortex Ring, ram rival ships, and release your Harpoon Broadside in the 72%–98% Sweet Spot to sever Kraken tentacles into Golden Pearls!
@@ -3683,7 +3781,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #161. Flight of Icarus (ID: `icarus_wings`) — [Physics]
-- **Class Implementation:** `src/games/IcarusWingsGame.ts` (630 lines)
+- **Class Implementation:** `src/games/IcarusWingsGame.ts` (943 lines)
 - **Tagline:** *Thermal Updrafts & Solar Blaze*
 - **Current Control Scheme:** `Tap: Flap • Steer: Fly • Hold Action: Daedalus Sunburst Glide & Gale Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Soar across the Aegean Archipelago on articulated feathered wax wings! Ride Golden Thermal Updrafts, cool your wax inside Cumulus Clouds, and release your Daedalus Sunburst Glide in the 72%–98% Sweet Spot to vacuum sky rings and blast rivals into the scorching Solar Corona!
@@ -3698,7 +3796,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #162. Knossos Labyrinth (ID: `minotaur_labyrinth`) — [Puzzle]
-- **Class Implementation:** `src/games/MinotaurLabyrinthGame.ts` (640 lines)
+- **Class Implementation:** `src/games/MinotaurLabyrinthGame.ts` (976 lines)
 - **Tagline:** *Ariadne Thread & Beast Escape*
 - **Current Control Scheme:** `Steer/Tap: Aim Next Junction Turn • Hold Action: Theseus Thread Dash & Bull Lure (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Navigate the torchlit Palace of Knossos! Aim your glowing Ariadne Thread preview arrow for the upcoming junction, collect Golden Skeins & Aegis Shields, and release your Theseus Thread Dash in the 72%–98% Sweet Spot to vault the Minotaur and ring the Bronze Bull-Bell to lure the beast onto your rivals!
@@ -3713,7 +3811,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #163. Olympus Lightning Conduit (ID: `olympus_lightning`) — [Reflex]
-- **Class Implementation:** `src/games/OlympusLightningGame.ts` (635 lines)
+- **Class Implementation:** `src/games/OlympusLightningGame.ts` (925 lines)
 - **Tagline:** *Divine Bolt Catch & Discharge*
 - **Current Control Scheme:** `Steer: Roam Pantheon Plaza • Hold Action: Astrape Conduit Catch & Chain Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Sprint across the shared Mount Olympus Pantheon Plaza beneath descending Cyan, Royal (`1.6x`), and Overlord (`2.4x`) Thunderbolts! Hold Action to magnetize bolts toward your Golden Astrape Rod, and release in the 72%–98% Sweet Spot to channel a Sky-Pillar and zap rivals with Chain-Lightning!
@@ -3848,7 +3946,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #172. Kuiper Asteroid Catcher (ID: `asteroid_catcher`) — [Action]
-- **Class Implementation:** `src/games/AsteroidCatcherGame.ts` (889 lines)
+- **Class Implementation:** `src/games/AsteroidCatcherGame.ts` (948 lines)
 - **Tagline:** *Magnetic Harpoon & Refinery Mining*
 - **Current Control Scheme:** `Steer: Move Refinery Tug on Gantry • Tap: Fire Harpoon • Hold Action: Super-Mag & Mine Slingshot Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Pilot mobile 2.5D Orbital Refinery Tugs along a shared Kuiper Belt Gantry Rail! Body-check rival tugs, fire your Magnetic Harpoon to haul drifting Gold (`+40`), Platinum (`+60`), and streaking Halley Comet Cores (`+85`), hijack asteroids off rival cables mid-reel (`+50`), or release a 72%–98% Sweet Spot Super-Mag Shot to slingshot Plasma Mines directly into rival tugs!
@@ -3863,7 +3961,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #173. UFO Alien Abduction (ID: `alien_abduction`) — [Party]
-- **Class Implementation:** `src/games/AlienAbductionGame.ts` (822 lines)
+- **Class Implementation:** `src/games/AlienAbductionGame.ts` (815 lines)
 - **Tagline:** *Tractor Beam Specimen Hoist*
 - **Current Control Scheme:** `Steer: Pilot Flying Saucer • Hold: Tractor Beam • Release (72–98%): Warp-Hoist & UFO EMP Shunt | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Pilot 2.5D Flying Saucers across a shared Area 51 Midnight Ranch! Steer and ram rival UFOs, hold your Tractor Beam to levitate roaming Dairy Cows (`+40 pts`) and Prize Golden Bulls (`+75 pts`), rustle levitating cows out of rival beams mid-air (`+35 pts`), or release in the 72%–98% Sweet Spot to Warp-Hoist livestock (`1.65x`) and EMP-shunt rival saucers!
@@ -3878,7 +3976,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #174. Space Elevator Tether (ID: `space_elevator`) — [Racing]
-- **Class Implementation:** `src/games/SpaceElevatorGame.ts` (832 lines)
+- **Class Implementation:** `src/games/SpaceElevatorGame.ts` (830 lines)
 - **Tagline:** *Orbital Climber & Mag-Surge*
 - **Current Control Scheme:** `Steer: Switch Tether Ribbons • Tap: Induction Pulse • Hold Action: Mag-Rail Overdrive & Cable-Shock Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Ascend a shared 3-ribbon Carbon-Nanotube Orbital Tether toward Geosynchronous Orbit! Switch ribbons to dodge Electrostatic Lightning Arcs, tap inside Cyan Induction Boost Rings (`+70 pts`) and Golden Super-Cells (`+65 pts`), or hold & release in the 72%–98% Sweet Spot to unleash a Mag-Rail Overdrive that shatters lightning arcs and zaps rival climbers onto adjacent ribbons!
@@ -3893,7 +3991,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #175. Orbital Drop Pod (ID: `orbital_drop_pod`) — [Physics]
-- **Class Implementation:** `src/games/OrbitalDropPodGame.ts` (844 lines)
+- **Class Implementation:** `src/games/OrbitalDropPodGame.ts` (823 lines)
 - **Tagline:** *Atmospheric Re-entry Burn*
 - **Current Control Scheme:** `Steer: Maneuver Drop Pod • Tap: Retro-Cool Shield • Hold Action: Cryo-Purge & Sonic Boom Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Plummet through a shared fiery atmospheric insertion corridor! Steer your 2.5D Armored Drop Pod through Azure Cryo-Clouds (`+45 pts`) and Golden Telemetry Rings (`+70 pts`) while dodging Flak Debris, tap Retro-Thrusters to regulate your Ablative Heat Shield inside the 40%–78% green window, or release a 72%–98% Sweet Spot Cryo-Purge Burn to sonic-shunt rival pods!
@@ -3908,7 +4006,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #176. Dyson Swarm Collector (ID: `dyson_sphere_collector`) — [Action]
-- **Class Implementation:** `src/games/DysonSphereCollectorGame.ts` (835 lines)
+- **Class Implementation:** `src/games/DysonSphereCollectorGame.ts` (929 lines)
 - **Tagline:** *Solar Flare Mega-Capacitor*
 - **Current Control Scheme:** `Steer: Orbit Solar Ring • Tap: Deploy Collector Sails • Hold Action: Magnetic Flare Siphon & EMP Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Orbit inside a shared Dyson megastructure around a blazing star! Steer along the inner/outer orbital track to intercept Solar Plasma Orbs (`+35 pts`) and Golden Fusion Cores (`+75 pts`), dodge Coronal Mass Ejection Spikes, or hold & release in the 72%–98% Sweet Spot to fire a Magnetic Flare Siphon that pulls nearby plasma and EMP-shunts rival collector satellites!
@@ -3923,7 +4021,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #177. Penguin Glacier Slide (ID: `penguin_slide`) — [Racing]
-- **Class Implementation:** `src/games/PenguinSlideGame.ts` (828 lines)
+- **Class Implementation:** `src/games/PenguinSlideGame.ts` (898 lines)
 - **Tagline:** *High-Speed Bobsled Slalom*
 - **Current Control Scheme:** `Steer: Carve Halfpipe • Tap: Flipper Belly-Boost • Hold Action: Hydro-Torpedo Carve & Snow-Spray Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Tuck and belly-slide down a shared glacial halfpipe! Carve left/right through Slalom Flags (`+45 pts`), snag Golden Sardine Trophies (`+70 pts`), launch off Ice Ramps over jagged crevasses, or hold & release in the 72%–98% Sweet Spot to unleash a Hydro-Torpedo Carve that body-checks rival penguins into snowbanks!
@@ -3938,7 +4036,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #178. Icebreaker Ram (ID: `iceberg_breaker`) — [Action]
-- **Class Implementation:** `src/games/IcebergBreakerGame.ts` (842 lines)
+- **Class Implementation:** `src/games/IcebergBreakerGame.ts` (767 lines)
 - **Tagline:** *Arctic Pack Ice Demolition*
 - **Current Control Scheme:** `Steer: Pilot Icebreaker • Tap: Steam Bow-Chopper • Hold Action: Turbine Overdrive Ram & Wake-Wave Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Pilot a heavy 2.5D Arctic Icebreaker Cutter across a shared frozen sea! Steer and ram through Turquoise Ice Floes (`+40 pts`) and Golden Mammoth Frozen Cores (`+80 pts`), dodge Naval Sea Mines, or hold & release in the 72%–98% Sweet Spot to unleash a Turbine Overdrive Ram that shatters multi-floe clusters and wake-shunts rival cutters!
@@ -3953,7 +4051,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #179. Blizzard Lighthouse (ID: `blizzard_beacon`) — [Puzzle]
-- **Class Implementation:** `src/games/BlizzardBeaconGame.ts` (836 lines)
+- **Class Implementation:** `src/games/BlizzardBeaconGame.ts` (824 lines)
 - **Tagline:** *Zero-Visibility Fog Guide*
 - **Current Control Scheme:** `Steer: Pilot Rescue Cutter / Aim Fresnel Beam • Tap: Flare Pulse • Hold Action: Super-Halogen Sweep & Foghorn Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Command a 2.5D Searchlight Rescue Cutter in a shared stormy harbor! Steer across the bay and sweep your high-intensity Fresnel beam over Stranded Expedition Ships (`+55 pts`) and Golden Royal Galleons (`+95 pts`) to escort them to port while avoiding Jagged Sea Rocks, or release a 72%–98% Sweet Spot Super-Halogen Sweep & Foghorn Blast to hijack rival rescues!
@@ -3968,7 +4066,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #180. Walrus Iceberg King (ID: `walrus_bask`) — [Physics]
-- **Class Implementation:** `src/games/WalrusBaskGame.ts` (845 lines)
+- **Class Implementation:** `src/games/WalrusBaskGame.ts` (1215 lines)
 - **Tagline:** *Sumo Tusk King of the Hill*
 - **Current Control Scheme:** `Steer: Slide Walrus • Tap: Tusk Lunge • Hold Action: Belly-Quake Sumo Slam & Tidal Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Bask on the prime sunlit Svalbard iceberg! Slide freely in 2D across the icy shelf to hold the wandering Sunbeam Crown Zone (`+18 pts/sec`), snatch Arctic Salmon (`+45 pts`) and Golden King Crabs (`+85 pts`), dodge Sea Urchin Bombs and Orca Splash Waves, or hold & release in the 72%–98% Sweet Spot for a Belly-Quake Sumo Slam that knocks rival walruses into the freezing sea (`+85 pts` Ring-Out)!
@@ -3983,7 +4081,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #181. Polar Ice Fishing (ID: `polar_ice_fishing`) — [Reflex]
-- **Class Implementation:** `src/games/PolarIceFishingGame.ts` (832 lines)
+- **Class Implementation:** `src/games/PolarIceFishingGame.ts` (1018 lines)
 - **Tagline:** *Deep Trench Frost Angler*
 - **Current Control Scheme:** `Steer: Skate to Ice Holes • Tap: Strike Fish • Hold Action: Master Trench Haul & Ice-Crack Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Skate across a shared translucent frozen bay with 6 augered ice holes! Spot underwater Arctic Char (`+45 pts`), Ruby King Crabs (`+70 pts`), and Golden Narwhals (`+95 pts`) swimming beneath the holes and tap to reel them in while avoiding Electric Eels, or hold & release in the 72%–98% Sweet Spot for a Master Trench Haul that shunts rival anglers across the ice!
@@ -3998,7 +4096,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #182. Aurora Borealis Weaver (ID: `aurora_collector`) — [Party]
-- **Class Implementation:** `src/games/AuroraCollectorGame.ts` (826 lines)
+- **Class Implementation:** `src/games/AuroraCollectorGame.ts` (965 lines)
 - **Tagline:** *Geomagnetic Light Prism*
 - **Current Control Scheme:** `Steer: Surf Aurora Ribbons • Tap: Wing Gust • Hold Action: Prism Nova Surge & Aurora Wave Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Soar across the Arctic night sky in a 2.5D Celestial Prism Glider! Steer freely in 2D to surf inside flowing Aurora Borealis Ribbons (`+18 pts/sec` + Harmony Burst), catch Starlight Motes (`+45 pts`) and Golden Solar Prisms (`+90 pts`), dodge Storm Bolts, or hold & release in the 72%–98% Sweet Spot to unleash a Prism Nova Surge that vacuums nearby motes and shunts rival gliders!
@@ -4013,7 +4111,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #183. Husky Dog Sled Sprint (ID: `dog_sled_dash`) — [Racing]
-- **Class Implementation:** `src/games/DogSledDashGame.ts` (834 lines)
+- **Class Implementation:** `src/games/DogSledDashGame.ts` (969 lines)
 - **Tagline:** *Great Northern Mushers*
 - **Current Control Scheme:** `Steer: Carve Snow Trail • Tap: Mush Leap • Hold Action: Lead-Husky Blizz-Charge & Snow-Wake Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Mush your 2.5D Husky Dog Sled Team across a shared Iditarod snowfield! Carve freely across lanes, draft behind rival sleds (`+24% speed`), tap to Mush Leap over Glacial Crevasses & Spruce Logs (`+40 pts`), snatch Serum Crates (`+45 pts`) and Golden Iditarod Trophies (`+90 pts`), or release a 72%–98% Sweet Spot Lead-Husky Blizz-Charge to shunt rival teams!
@@ -4028,7 +4126,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #184. Mammoth Stampede (ID: `mammoth_stampede`) — [Action]
-- **Class Implementation:** `src/games/MammothStampedeGame.ts` (836 lines)
+- **Class Implementation:** `src/games/MammothStampedeGame.ts` (1036 lines)
 - **Tagline:** *Tundra Ice Age Survival*
 - **Current Control Scheme:** `Steer: Run Gorge • Tap: Vault Mammoth • Hold Action: War-Horn Stampede Call & Tundra Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Survive a shared Pleistocene Glacier Gorge as giant 2.5D Woolly Mammoths charge from both sides! Steer in 2D to dodge stampede warning corridors, tap to Spear-Vault over charging mammoths (`+55 pts`), collect Ivory Relics (`+50 pts`) and Golden Amber Fossils (`+95 pts`), or hold & release in the 72%–98% Sweet Spot to blow the War-Horn and shunt rivals into the stampede!
@@ -4043,7 +4141,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #185. Frostbite Stalactite Cavern (ID: `frostbite_cavern`) — [Reflex]
-- **Class Implementation:** `src/games/FrostbiteCavernGame.ts` (824 lines)
+- **Class Implementation:** `src/games/FrostbiteCavernGame.ts` (910 lines)
 - **Tagline:** *Glacial Drop Hazard Reflex*
 - **Current Control Scheme:** `Steer: Skate Cavern • Tap: Thermal Pickaxe • Hold Action: Thermal Shockwave Smash & Frost-Wave Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Skate across a shared Sub-Glacial Crystal Cavern on your 2.5D Miner Sled! Dodge shadow-targeted Falling Ceiling Stalactites (which shatter into mineable gems on impact!) and swing your Thermal Pickaxe to harvest Sapphire Frost Gems (`+50 pts`) and Golden Permafrost Diamonds (`+95 pts`), or release a 72%–98% Sweet Spot Thermal Shockwave Smash to mine every crystal in radius and shunt rivals!
@@ -4058,7 +4156,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #186. Geothermal Geyser Leap (ID: `geyser_leap`) — [Action]
-- **Class Implementation:** `src/games/GeyserLeapGame.ts` (832 lines)
+- **Class Implementation:** `src/games/GeyserLeapGame.ts` (935 lines)
 - **Tagline:** *Icelandic Volcanic Hot Springs*
 - **Current Control Scheme:** `Steer: Hop Thermal Stones • Tap: Vault Geyser • Hold Action: Geyser-Surf Super Leap & Steam-Vent Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Hop across 15 shared 2.5D Thermal Stepping Stones in a bubbling Icelandic volcanic lagoon! Claim Golden Crown Stones (`+24 pts/sec`), snatch Silica Gems (`+45 pts`) and Golden Geyser Opals (`+90 pts`), vault over erupting steam vents, or hold & release in the 72%–98% Sweet Spot for a Geyser-Surf Super Leap that blasts rival foxes into scalding geysers!
@@ -4073,7 +4171,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #187. Clockwork Cog Synchrony (ID: `clockwork_cogs`) — [Reflex]
-- **Class Implementation:** `src/games/ClockworkCogsGame.ts` (828 lines)
+- **Class Implementation:** `src/games/ClockworkCogsGame.ts` (898 lines)
 - **Tagline:** *Precision Escapement Mesh*
 - **Current Control Scheme:** `Steer: Run Planetary Gears • Tap: Mesh Junction • Hold Action: Escapement Overdrive & Torque-Wave Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Scramble across 5 giant interlocking 2.5D Planetary Brass Gears inside Big Ben! Ride the rotational torque of the spinning gears to reach the 4 Mesh Junctions — tap your Chrono-Spanner on Aligned Cogs (`+55 pts`) and Golden Tourbillon Nodes (`+95 pts`) while avoiding Red Gear Jams, or release a 72%–98% Sweet Spot Escapement Overdrive to shunt rival horologists!
@@ -4088,7 +4186,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #188. Steam Boiler Relief (ID: `steam_boiler_relief`) — [Physics] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/SteamBoilerReliefGame.ts` (338 lines)
+- **Class Implementation:** `src/games/SteamBoilerReliefGame.ts` (1052 lines)
 - **Tagline:** *High-Pressure Safety Regulator*
 - **Current Control Scheme:** `Hold: Vent Steam Valve`
 - **Stated Gameplay Concept:** The locomotive furnace is raging! Hold to vent steam safety valves and sustain maximum horsepower in the gold 80-95 PSI sweet spot without triggering a catastrophic blowout.
@@ -4109,7 +4207,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #189. Zeppelin Sky Duel (ID: `zeppelin_dogfight`) — [Action] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/ZeppelinDogfightGame.ts` (378 lines)
+- **Class Implementation:** `src/games/ZeppelinDogfightGame.ts` (887 lines)
 - **Tagline:** *Victorian Dirigible Aerial Combat*
 - **Current Control Scheme:** `Tap: Rotate & Shoot | Hold: Thrust`
 - **Stated Gameplay Concept:** Pilot an armored steam dirigible over London smog! Rotate to aim steam cannons and hold to burst forward while puncturing rival airship gasbags.
@@ -4130,7 +4228,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #190. Tesla Coil Lightning Net (ID: `tesla_coil_arc`) — [Reflex] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/TeslaCoilArcGame.ts` (355 lines)
+- **Class Implementation:** `src/games/TeslaCoilArcGame.ts` (826 lines)
 - **Tagline:** *Wardenclyffe High-Voltage Harvester*
 - **Current Control Scheme:** `Hold: Ground Rod`
 - **Stated Gameplay Concept:** Nikola Tesla high-voltage discharges whip around the perimeter! Hold your grounding rod to channel lightning arcs into your Leyden capacitor jars.
@@ -4151,7 +4249,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #191. Automaton Clockwork Assembly (ID: `automator_assembly`) — [Action] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/AutomatorAssemblyGame.ts` (323 lines)
+- **Class Implementation:** `src/games/AutomatorAssemblyGame.ts` (838 lines)
 - **Tagline:** *Hydraulic Toy Stamp Factory*
 - **Current Control Scheme:** `Tap: Stamp Gear`
 - **Stated Gameplay Concept:** Conveyor belts carry unfinished brass automatons! Tap the steam press to stamp heart gears and windup keys into moving automatons with perfect rhythm.
@@ -4172,7 +4270,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #192. Pneumatic Tube Dispatch (ID: `pneumatic_tube_rush`) — [Puzzle] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/PneumaticTubeRushGame.ts` (332 lines)
+- **Class Implementation:** `src/games/PneumaticTubeRushGame.ts` (773 lines)
 - **Tagline:** *Underground Brass Capsule Sorter*
 - **Current Control Scheme:** `Tap: Toggle Gate`
 - **Stated Gameplay Concept:** Pressurized brass capsules speed through the city tube grid! Tap to toggle your suction diverter gate: collect gold and silver dispatches while avoiding volatile nitro bombs.
@@ -4193,7 +4291,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #193. Ornithopter Wing Flight (ID: `ornithopter_flock`) — [Racing] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/OrnithopterFlockGame.ts` (357 lines)
+- **Class Implementation:** `src/games/OrnithopterFlockGame.ts` (749 lines)
 - **Tagline:** *Da Vinci Flapping Air Spire*
 - **Current Control Scheme:** `Tap: Flap Wings`
 - **Stated Gameplay Concept:** Soar through clock spires on leather mechanical wings! Tap in steady avian cadence to flap for lift and catch rising thermal updrafts.
@@ -4214,7 +4312,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #194. Pressure Gauge Safe Cracker (ID: `pressure_gauge_lock`) — [Puzzle] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/PressureGaugeLockGame.ts` (305 lines)
+- **Class Implementation:** `src/games/PressureGaugeLockGame.ts` (834 lines)
 - **Tagline:** *Clockwork Tumbler Lock Duel*
 - **Current Control Scheme:** `Tap: Lock Tumbler Pin`
 - **Stated Gameplay Concept:** Crack the Bank of England brass safe! Time needle clicks to lock concentric tumblers into the golden resonance sweet spots.
@@ -4235,7 +4333,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #195. Copper Conduit Smelter (ID: `copper_conduit`) — [Action] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/CopperConduitGame.ts` (334 lines)
+- **Class Implementation:** `src/games/CopperConduitGame.ts` (789 lines)
 - **Tagline:** *Foundry Molten Flow Manifold*
 - **Current Control Scheme:** `Tap: Rotate Valve`
 - **Stated Gameplay Concept:** Molten copper drips from overhead crucibles! Tap to rotate elbow valves and align the conduit pipe network so molten metal pours safely into ingot molds.
@@ -4256,7 +4354,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #196. Velodrome Monocycle Derby (ID: `monocycle_derby`) — [Racing] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/MonocycleDerbyGame.ts` (298 lines)
+- **Class Implementation:** `src/games/MonocycleDerbyGame.ts` (700 lines)
 - **Tagline:** *Giant Gyroscopic Single-Wheel Sprint*
 - **Current Control Scheme:** `Hold: Pedal & Lean`
 - **Stated Gameplay Concept:** Race giant 6-foot monocycles inside the wooden velodrome! Hold to pedal and lean into the curve, but release before you over-torque into a faceplant wipeout.
@@ -4277,7 +4375,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #197. Cyber Samurai Katana Duel (ID: `cyber_samurai_slash`) — [Action] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/CyberSamuraiSlashGame.ts` (373 lines)
+- **Class Implementation:** `src/games/CyberSamuraiSlashGame.ts` (825 lines)
 - **Tagline:** *High-Speed Neon Energy Parry*
 - **Current Control Scheme:** `Tap: Slash | Hold: Parry Shield`
 - **Stated Gameplay Concept:** Clash atop rainy cyber-skyscrapers! Tap for swift katana slashes; hold to raise an energy parry shield to deflect and stun incoming blade strikes.
@@ -4298,7 +4396,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #198. Mainframe ICE Core Breach (ID: `mainframe_breach`) — [Puzzle] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/MainframeBreachGame.ts` (350 lines)
+- **Class Implementation:** `src/games/MainframeBreachGame.ts` (755 lines)
 - **Tagline:** *Quantum Data Packet Injection*
 - **Current Control Scheme:** `Tap: Fire Data Packet`
 - **Stated Gameplay Concept:** Concentric ICE firewalls protect the quantum mainframe! Time your data packet injection beams through rotating firewall gaps to breach the core.
@@ -4319,7 +4417,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #199. Hovercar Skyline Highway (ID: `hovercar_skyline`) — [Racing] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/HovercarSkylineGame.ts` (659 lines)
+- **Class Implementation:** `src/games/HovercarSkylineGame.ts` (677 lines)
 - **Tagline:** *Neo-Tokyo Cyberway Traffic Weave*
 - **Current Control Scheme:** `Tap: Switch Lane`
 - **Stated Gameplay Concept:** Speed down multi-tier neon skyways! Tap to switch cyber-lanes, dodging heavy autonomous cargo haulers while grabbing turbo battery orbs.
@@ -4340,7 +4438,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #200. Hologram Glitch Purge (ID: `hologram_glitch`) — [Reflex] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/HologramGlitchGame.ts` (294 lines)
+- **Class Implementation:** `src/games/HologramGlitchGame.ts` (735 lines)
 - **Tagline:** *Android Replica Perception Reflex*
 - **Current Control Scheme:** `Tap: Purge Glitch`
 - **Stated Gameplay Concept:** Holographic android avatars stand on inspection pedestals! The moment an avatar displays chromatic scanline glitching, tap first to purge the imposter.
@@ -4361,7 +4459,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #201. Laser Grapple Swing (ID: `laser_grapple`) — [Physics] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/LaserGrappleGame.ts` (329 lines)
+- **Class Implementation:** `src/games/LaserGrappleGame.ts` (652 lines)
 - **Tagline:** *Skyline Tether Kinetic Physics*
 - **Current Control Scheme:** `Hold: Grapple | Release: Leap`
 - **Stated Gameplay Concept:** Swing across neon anchor spires in the night sky! Hold to tether onto ahead anchor nodes; release at the forward apex to fling in soaring parabolic leaps.
@@ -4382,7 +4480,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #202. Neural Synapse Bridge (ID: `neural_synapse`) — [Party] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/NeuralSynapseGame.ts` (293 lines)
+- **Class Implementation:** `src/games/NeuralSynapseGame.ts` (575 lines)
 - **Tagline:** *AI Cortex Impulses & Ion Channels*
 - **Current Control Scheme:** `Tap: Toggle Synapse`
 - **Stated Gameplay Concept:** Consciousness surges across synthetic brain axons! Tap to toggle synaptic gates open to conduct harmonic thoughts while blocking corrupt virus packets.
@@ -4403,7 +4501,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #203. Drone Swarm EMP Bastion (ID: `drone_swarm_defense`) — [Action] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/DroneSwarmDefenseGame.ts` (297 lines)
+- **Class Implementation:** `src/games/DroneSwarmDefenseGame.ts` (610 lines)
 - **Tagline:** *Data Vault Shockwave Annihilation*
 - **Current Control Scheme:** `Tap: EMP Shockwave`
 - **Stated Gameplay Concept:** Swarms of hostile micro-drones dive toward your data terminal! Time resonant EMP shockwave bursts to vaporize clusters before they breach your core.
@@ -4424,7 +4522,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #204. Synthwave Keytar Solo (ID: `synth_keytar_solo`) — [Reflex] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/SynthKeytarSoloGame.ts` (288 lines)
+- **Class Implementation:** `src/games/SynthKeytarSoloGame.ts` (553 lines)
 - **Tagline:** *Neon Outrun Rhythm Rocker*
 - **Current Control Scheme:** `Tap: Strike Note`
 - **Stated Gameplay Concept:** Rock the stadium with searing synthesizer power chords! Tap when neon synth notes cross the keytar strike line to unleash massive crowd hype.
@@ -4445,7 +4543,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #205. Quantum Tunneling Accelerator (ID: `quantum_tunneling`) — [Reflex] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/QuantumTunnelingGame.ts` (295 lines)
+- **Class Implementation:** `src/games/QuantumTunnelingGame.ts` (497 lines)
 - **Tagline:** *Subatomic Wave-Particle Duality*
 - **Current Control Scheme:** `Hold: Phase Shift`
 - **Stated Gameplay Concept:** Race along subatomic magnetic rails! Hold to phase-shift into an intangible wave to tunnel through solid particle barriers without shattering.
@@ -4466,7 +4564,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #206. Maglev Hyperloop Velocity (ID: `hyperloop_racer`) — [Racing] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/HyperloopRacerGame.ts` (274 lines)
+- **Class Implementation:** `src/games/HyperloopRacerGame.ts` (441 lines)
 - **Tagline:** *Vacuum Tube 360-Degree Helical Sprint*
 - **Current Control Scheme:** `Hold: Maglev Thrust`
 - **Stated Gameplay Concept:** Blast through vacuum maglev tubes at Mach 1! Hold to engage linear magnetic induction thrust, but release to cool coils before thermal burnout.
@@ -4487,7 +4585,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #207. Ring Toss Frenzy (ID: `ring_toss_frenzy`) — [Reflex] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/RingTossFrenzyGame.ts` (488 lines)
+- **Class Implementation:** `src/games/RingTossFrenzyGame.ts` (606 lines)
 - **Tagline:** *Midway Bottle Ringer Duel*
 - **Current Control Scheme:** `Hold: Charge Throw | Release: Pitch Ring`
 - **Stated Gameplay Concept:** Time your sweeping aim guide and charge power to heave rings onto spinning carnival glass bottles! Score golden bottles for massive points.
@@ -4508,7 +4606,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #208. Balloon Dart Clown (ID: `balloon_dart_clown`) — [Action] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/BalloonDartClownGame.ts` (481 lines)
+- **Class Implementation:** `src/games/BalloonDartClownGame.ts` (549 lines)
 - **Tagline:** *Rotating Clown Wheel Shootout*
 - **Current Control Scheme:** `Tap / Action: Fire Dart`
 - **Stated Gameplay Concept:** Aim your sweeping dart reticle and pop colorful balloons on the rotating clown wheel! Hit the laughing clown nose for a loud honk and jackpot points!
@@ -4529,7 +4627,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #209. Duck Pond Derby (ID: `duck_pond_derby`) — [Physics] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/DuckPondDerbyGame.ts` (427 lines)
+- **Class Implementation:** `src/games/DuckPondDerbyGame.ts` (490 lines)
 - **Tagline:** *Magnetic Rubber Duck Winch*
 - **Current Control Scheme:** `Tap / Action: Drop & Reel Hook`
 - **Stated Gameplay Concept:** Launch your magnetic fishing hook into the swirling current pond to snag bobbing rubber ducks! Golden star ducks award maximum prize points.
@@ -4550,7 +4648,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #210. Milk Bottle Knockdown (ID: `milk_bottle_knockdown`) — [Action] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/MilkBottleKnockdownGame.ts` (461 lines)
+- **Class Implementation:** `src/games/MilkBottleKnockdownGame.ts` (532 lines)
 - **Tagline:** *Carnival Baseball Strikeout*
 - **Current Control Scheme:** `Hold: Charge Pitch | Release: Throw Baseball`
 - **Stated Gameplay Concept:** Hurl heavy weighted baseballs at tiered pyramids of porcelain milk bottles! Hit the base for full strike collapses and score multiplier bonuses.
@@ -4571,7 +4669,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #211. Bumper Car Derby (ID: `bumper_car_derby`) — [Action] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/BumperCarDerbyGame.ts` (516 lines)
+- **Class Implementation:** `src/games/BumperCarDerbyGame.ts` (514 lines)
 - **Tagline:** *Electric Arena Smash*
 - **Current Control Scheme:** `Steer: Drive | Tap: Nitro Ram`
 - **Stated Gameplay Concept:** Ram opponents with heavy rubber bumpers! Drive through spark zones to recharge boost and slam rivals into bouncing electrified walls.
@@ -4592,7 +4690,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #212. Cotton Candy Spin (ID: `cotton_candy_spin`) — [Party] — ✅ STATUS: FULLY RESOLVED & VERIFIED
-- **Class Implementation:** `src/games/CottonCandySpinGame.ts` (332 lines)
+- **Class Implementation:** `src/games/CottonCandySpinGame.ts` (512 lines)
 - **Tagline:** *Centrifugal Sugar Cloud Maker*
 - **Current Control Scheme:** `Tap / Steer: Reverse Cone Spin`
 - **Stated Gameplay Concept:** Spin your paper cone along the perimeter of the giant spinning sugar drum to catch flying cotton candy strands! Build huge fluffy clouds for giant bonus payouts.
@@ -4613,7 +4711,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
 ### #213. Roller Coaster Brake (ID: `roller_coaster_brake`) — [Racing]
-- **Class Implementation:** `src/games/RollerCoasterBrakeGame.ts` (845 lines)
+- **Class Implementation:** `src/games/RollerCoasterBrakeGame.ts` (695 lines)
 - **Tagline:** *Wooden Trestle Thrill Braker*
 - **Current Control Scheme:** `Tap: Brake Pulse • Hold Action: Spark-Rail Drift & Track-Switch Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Race side-by-side wooden coaster carts down a shared dual-rail trestle! Feather your brakes on extreme hairpin danger curves to prevent derailment while snatching Golden Thrill Tickets (`+85 pts`), or release a 72%–98% Sweet Spot Spark-Rail Drift to shunt rivals onto the outer danger rail!
@@ -4629,7 +4727,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #214. Ferris Wheel Hop (ID: `ferris_wheel_hop`) — [Physics]
-- **Class Implementation:** `src/games/FerrisWheelHopGame.ts` (860 lines)
+- **Class Implementation:** `src/games/FerrisWheelHopGame.ts` (599 lines)
 - **Tagline:** *Counter-Rotating Gondola Leap*
 - **Current Control Scheme:** `Steer: Swing Gondola • Tap: Leap Gondola • Hold Action: Apex Sky-Vault & Gondola Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Leap across two giant counter-rotating carnival Ferris wheels! Swing your gondola to build momentum, snatch Golden Star Ribbons (`+90 pts`), and release a 72%–98% Sweet Spot Apex Sky-Vault to rock rival gondolas and knock opponents into the safety net!
@@ -4645,7 +4743,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #215. Dunk Clown Tank (ID: `dunk_clown_tank`) — [Reflex]
-- **Class Implementation:** `src/games/DunkClownTankGame.ts` (850 lines)
+- **Class Implementation:** `src/games/DunkClownTankGame.ts` (496 lines)
 - **Tagline:** *Bullseye Heckler Splashdown*
 - **Current Control Scheme:** `Steer: Aim Crosshair • Tap: Pitch Fastball • Hold Action: Fireball Heater & Ricochet Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Step up to the shared Carnival Dunk Tank! Aim your crosshair at the oscillating bullseye levers, Golden Mega-Levers (`+95 pts`), and heckling clowns while bumping rival crosshairs, or release a 72%–98% Sweet Spot Fireball Heater to dunk the clown and splash-stun nearby rivals!
@@ -4661,7 +4759,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #216. Fortune Teller Tarot (ID: `fortune_teller_tarot`) — [Party]
-- **Class Implementation:** `src/games/FortuneTellerTarotGame.ts` (845 lines)
+- **Class Implementation:** `src/games/FortuneTellerTarotGame.ts` (537 lines)
 - **Tagline:** *Mystic Arcana Crystal Match*
 - **Current Control Scheme:** `Steer: Glide Mystic Hand • Tap: Claim Arcana Card • Hold Action: Astral Clairvoyance & Hex Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Glide your velvet-gloved Mystic Hand across a shared parlor table! Watch the central Crystal Ball reveal the target Major Arcana rune (`THE SUN`, `THE MOON`, `THE STAR`, `WHEEL OF FORTUNE`, `THE WORLD`), snatch matching gilded tarot cards (`+85 pts`) while dodging Cursed Skull cards, or release a 72%–98% Sweet Spot Astral Surge to hex rivals and shuffle their hand!
@@ -4677,7 +4775,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #217. Vine Swing Canopy (ID: `vine_swing_canopy`) — [Physics]
-- **Class Implementation:** `src/games/VineSwingCanopyGame.ts` (865 lines)
+- **Class Implementation:** `src/games/VineSwingCanopyGame.ts` (520 lines)
 - **Tagline:** *Jungle Pendulum Liana Rush*
 - **Current Control Scheme:** `Steer: Pump Swing • Tap: Release / Grapple Vine • Hold Action: Tarzan Canopy Whip & Vine Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Swing across a shared multi-vine rainforest waterfall! Pump your momentum, release at the apex to fly through Golden Dragonfruits (`+85 pts`) and grapple the next liana, or release a 72%–98% Sweet Spot Tarzan Canopy Whip to body-check mid-air rivals!
@@ -4693,7 +4791,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #218. T-Rex Egg Scramble (ID: `trex_egg_scramble`) — [Action]
-- **Class Implementation:** `src/games/TrexEggScrambleGame.ts` (880 lines)
+- **Class Implementation:** `src/games/TrexEggScrambleGame.ts` (513 lines)
 - **Tagline:** *Prehistoric Nest Heist*
 - **Current Control Scheme:** `Steer: Scurry Thief • Tap: Bush Stealth Freeze • Hold Action: Raptor Sprint & Tail-Whip Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Sneak into the central T-Rex crater nest to steal Spotted Dino Eggs (`+45 pts`) and Golden Rex Eggs (`+95 pts`) back to your cavern! When Mama T-Rex's amber eye opens (`STIRRING` -> `ROARING`), duck into fern bushes or freeze—or release a 72%–98% Sweet Spot Raptor Sprint to shove rivals into the T-Rex's gaze!
@@ -4709,7 +4807,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #219. Piranha River Hop (ID: `piranha_river_hop`) — [Reflex]
-- **Class Implementation:** `src/games/PiranhaRiverHopGame.ts` (865 lines)
+- **Class Implementation:** `src/games/PiranhaRiverHopGame.ts` (513 lines)
 - **Tagline:** *Rapids Log Frog Crossing*
 - **Current Control Scheme:** `Steer: Aim Frog • Tap: Hop Log/Lilypad • Hold Action: Bullfrog Super-Bound & Log-Sink Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Hop across 5 counter-flowing lanes of drifting cedar logs, mossy turtles, and lilypads in a piranha-infested jungle river! Snatch Golden Dragonflies (`+85 pts`), dodge leaping red piranhas, and release a 72%–98% Sweet Spot Bullfrog Super-Bound to dunk rival frogs into the rapids!
@@ -4725,7 +4823,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #220. Pterodactyl Glide (ID: `pterodactyl_glide`) — [Racing]
-- **Class Implementation:** `src/games/PterodactylGlideGame.ts` (855 lines)
+- **Class Implementation:** `src/games/PterodactylGlideGame.ts` (454 lines)
 - **Tagline:** *Volcanic Thermal Flight*
 - **Current Control Scheme:** `Steer: Pitch Dive/Climb • Tap: Wing Flap • Hold Action: Supersonic Stoop & Sonic-Screech Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Soar across a shared volcanic canyon sky on leathery pterosaur wings! Dive to build airspeed, ride rising volcanic thermal updrafts, swoop through Golden Sky Rings (`+85 pts`), and release a 72%–98% Sweet Spot Supersonic Stoop to buffet rival flyers into ash clouds!
@@ -4741,7 +4839,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #221. Quicksand Escape (ID: `quicksand_escape`) — [Party]
-- **Class Implementation:** `src/games/QuicksandEscapeGame.ts` (845 lines)
+- **Class Implementation:** `src/games/QuicksandEscapeGame.ts` (404 lines)
 - **Tagline:** *Bubbling Mud Pit Rescue*
 - **Current Control Scheme:** `Steer: Wiggle Lateral • Tap: Rhythmic Mud-Kick • Hold Action: Vine-Whip Hoist & Mud-Sinker Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Battle to stay afloat in a shared bubbling prehistoric quicksand pit! Kick rhythmically to climb, latch onto overhead swinging rescue vines to hoist out and bank Golden Relics (`+90 pts`), or release a 72%–98% Sweet Spot Mud-Sinker Shunt to stomp rivals deeper into the mire!
@@ -4757,7 +4855,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #222. Blowpipe Target (ID: `blowpipe_target`) — [Reflex]
-- **Class Implementation:** `src/games/BlowpipeTargetGame.ts` (850 lines)
+- **Class Implementation:** `src/games/BlowpipeTargetGame.ts` (453 lines)
 - **Tagline:** *Ancient Ruins Dart Aim*
 - **Current Control Scheme:** `Steer: Aim Blowpipe • Tap: Quick Dart • Hold Action: Golden Sun-Dart & Poison-Cloud Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Aim your bamboo blowpipe across a shared Aztec Temple Gallery! Track swinging Jade Masks, Golden Sun Discs (`+95 pts`), and Totem Spinner stacks while avoiding Cursed Voodoo Skulls, or release a 72%–98% Sweet Spot Golden Sun-Dart that pierces targets and blinds rival crosshairs!
@@ -4773,7 +4871,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #223. Amber Fossil Excavate (ID: `amber_fossil_excavate`) — [Puzzle]
-- **Class Implementation:** `src/games/AmberFossilExcavateGame.ts` (865 lines)
+- **Class Implementation:** `src/games/AmberFossilExcavateGame.ts` (433 lines)
 - **Tagline:** *Paleontology Quarry Chisel*
 - **Current Control Scheme:** `Steer: Move Geologist • Tap: Chisel Strike • Hold Action: Seismic Jackhammer & Rockslide Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Traverse a shared 7x5 sedimentary shale quarry! Use your radar scanner to pinpoint buried Mosquito Amber Gems (`+95 pts`), Golden Ammonites (`+75 pts`), and T-Rex Skulls (`+120 pts`), chisel through rock layers without detonating Volatile Gas Pockets, or release a 72%–98% Sweet Spot Seismic Jackhammer to unearth fossils and stun rivals!
@@ -4789,7 +4887,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #224. Raptor Pounce Dodge (ID: `raptor_pounce_dodge`) — [Action]
-- **Class Implementation:** `src/games/RaptorPounceDodgeGame.ts` (860 lines)
+- **Class Implementation:** `src/games/RaptorPounceDodgeGame.ts` (469 lines)
 - **Tagline:** *Velociraptor Ambush Evasion*
 - **Current Control Scheme:** `Steer: Run Explorer • Tap: Dive-Roll Dodge • Hold Action: Bola Counter-Snare & Decoy Lure Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Survive inside a shared tall-grass Velociraptor enclosure! Read laser-red pounce telegraph lines to execute split-second Dive-Roll Dodges (`+55 pts` Graze Bonus), snatch Golden Dino Teeth (`+85 pts`), or release a 72%–98% Sweet Spot Bola Counter-Snare to capture lunging raptors and tag rivals with a Meat Lure!
@@ -4805,7 +4903,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #225. Bamboo Pole Vault (ID: `bamboo_pole_vault`) — [Sports]
-- **Class Implementation:** `src/games/BambooPoleVaultGame.ts` (850 lines)
+- **Class Implementation:** `src/games/BambooPoleVaultGame.ts` (395 lines)
 - **Tagline:** *Jungle Ravine Spring Leap*
 - **Current Control Scheme:** `Tap: Sprint Stride • Hold Action: Bend Bamboo Pole & Whip-Snap Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Sprint down the shared jungle ravine runway and plant your flexible green bamboo pole into the stone vault box! Bend the pole into the 72%–98% Sweet Spot and release to launch a Sky-High Vault over the crossbar, snatching Golden Idol Rings (`+95 pts`) and whipping rivals off their stride!
@@ -4821,7 +4919,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #226. Volcano Lava Leap (ID: `volcano_lava_leap`) — [Action]
-- **Class Implementation:** `src/games/VolcanoLavaLeapGame.ts` (865 lines)
+- **Class Implementation:** `src/games/VolcanoLavaLeapGame.ts` (445 lines)
 - **Tagline:** *Caldera Basalt Pillar Hop*
 - **Current Control Scheme:** `Steer: Aim Leap • Tap: Hop Basalt Pillar • Hold Action: Magma Slam & Pillar-Sink Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Survive inside the boiling crater of an active supervolcano! Hop across 19 hexagonal obsidian basalt pillars, evacuate rumbling pillars before they submerge into molten magma, snatch Fire Rubies (`+85 pts`), and release a 72%–98% Sweet Spot Magma Slam to sink rival pillars!
@@ -4837,7 +4935,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #227. Caterpillar Inchworm (ID: `caterpillar_inchworm`) — [Reflex]
-- **Class Implementation:** `src/games/CaterpillarInchwormGame.ts` (850 lines)
+- **Class Implementation:** `src/games/CaterpillarInchwormGame.ts` (445 lines)
 - **Tagline:** *Dewy Twig Scrunch & Surge*
 - **Current Control Scheme:** `Steer: Switch Rose Branch • Hold Action: Scrunch Tail & Spring-Lunge Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Inchworm along 3 intertwined garden rose branches! Hold to scrunch your segmented body into a coiled U-arch and release in the 72%–98% Sweet Spot to surge forward, gobbling Morning Dew Drops (`+45 pts`) and Golden Monarch Chrysalis orbs (`+90 pts`) while vaulting over Rose Thorns and bumping rivals!
@@ -4853,7 +4951,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #228. Honeybee Nectar Relay (ID: `honeybee_nectar_relay`) — [Racing]
-- **Class Implementation:** `src/games/HoneybeeNectarRelayGame.ts` (884 lines)
+- **Class Implementation:** `src/games/HoneybeeNectarRelayGame.ts` (466 lines)
 - **Tagline:** *Wildflower Harvest Rush*
 - **Current Control Scheme:** `Steer: Fly Bee • Tap: Sip / Deposit Nectar • Hold Action: Royal Jelly Turbo & Stinger-Bump Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Buzz across a blooming wildflower meadow! Sip nectar from Clover, Lavender, and Golden Sunflowers (carrying up to 5 loads at a time), evade patrolling Hornet Guards, and bank multi-load combos into the central Golden Honeycomb Hive—or release a 72%–98% Sweet Spot Royal Jelly Turbo to bump rivals and spill their nectar!
@@ -4869,7 +4967,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #229. Spider Web Tangle (ID: `spider_web_tangle`) — [Puzzle]
-- **Class Implementation:** `src/games/SpiderWebTangleGame.ts` (855 lines)
+- **Class Implementation:** `src/games/SpiderWebTangleGame.ts` (448 lines)
 - **Tagline:** *Radial Dew Web Trapper*
 - **Current Control Scheme:** `Steer: Crawl Spoke / Ring • Tap: Spin Silk Cocoon • Hold Action: Zip-Line Pounce & Web-Pluck Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Skitter across a shared 12-spoke, 4-ring geometric morning spiderweb! Follow vibrating spoke threads to wrap struggling Golden Beetles (`+90 pts`) and Emerald Flies (`+55 pts`) in silk cocoons before Angry Wasps tear the web, or release a 72%–98% Sweet Spot Web-Pluck Shunt to bounce rival spiders off their spoke!
@@ -4885,7 +4983,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #230. Ant Colony Haul (ID: `ant_colony_haul`) — [Action]
-- **Class Implementation:** `src/games/AntColonyHaulGame.ts` (860 lines)
+- **Class Implementation:** `src/games/AntColonyHaulGame.ts` (431 lines)
 - **Tagline:** *Subterranean Picnic Pantry*
 - **Current Control Scheme:** `Steer: Scurry Ant • Tap: Mandible Grab / Toss • Hold Action: Titan-Ant Heave & Pheromone Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Raid the surface gingham picnic blanket and haul Sugar Cubes (`+45 pts`), Watermelon Slices (`+70 pts`), and Golden Gummy Bears (`+110 pts`) down subterranean tunnels into the Queen's Pantry! Dodge Magnifying Glass Sunbeams, or release a 72%–98% Sweet Spot Titan-Ant Heave to steal crumbs right out of rival mandibles!
@@ -4901,7 +4999,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #231. Firefly Night Beacon (ID: `firefly_night_beacon`) — [Party]
-- **Class Implementation:** `src/games/FireflyNightBeaconGame.ts` (850 lines)
+- **Class Implementation:** `src/games/FireflyNightBeaconGame.ts` (432 lines)
 - **Tagline:** *Midnight Meadow Glow Harmony*
 - **Current Control Scheme:** `Steer: Hover Firefly • Tap: Pulse Bioluminescence • Hold Action: Solar-Flare Nova & Bat-Lure Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Hover across a moonlit pond meadow! Pulse your bioluminescent lantern in rhythm with the Mother Lantern's expanding harmonic rings (`+60 pts`) and illuminate hidden Starlight Orchids (`+85 pts`), go dark when Swooping Night Bats scan the sky, or release a 72%–98% Sweet Spot Solar-Flare Nova to blind rivals and attract bats to their position!
@@ -4917,7 +5015,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #232. Dung Beetle Roll (ID: `dung_beetle_roll`) — [Physics]
-- **Class Implementation:** `src/games/DungBeetleRollGame.ts` (865 lines)
+- **Class Implementation:** `src/games/DungBeetleRollGame.ts` (426 lines)
 - **Tagline:** *Colossal Soil Sphere Smash*
 - **Current Control Scheme:** `Steer: Roll Sphere • Tap: Bank into Burrow • Hold Action: Boulder Bulldoze & Mud-Splatter Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Roll an expanding sphere of rich garden moss, clay, and Golden Acorn nuggets across a shared terraced hillside! Grow your sphere into a colossal boulder to crush smaller rivals and bank massive size multipliers into the central Royal Burrow, or release a 72%–98% Sweet Spot Boulder Bulldoze to shatter rival spheres!
@@ -4933,7 +5031,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #233. Ladybug Aphid Hunt (ID: `ladybug_aphid_hunt`) — [Action]
-- **Class Implementation:** `src/games/LadybugAphidHuntGame.ts` (850 lines)
+- **Class Implementation:** `src/games/LadybugAphidHuntGame.ts` (446 lines)
 - **Tagline:** *Rose Leaf Pest Gobbler*
 - **Current Control Scheme:** `Steer: Skitter Leaf • Tap: Wing-Flutter Dash • Hold Action: Polka-Dot Cyclone & Shell-Bump Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Skitter across a shared canopy of 5 overlapping dewy rose leaves! Herd and gobble fleeing Green Aphids (`+35 pts`) and Golden Royal Aphids (`+90 pts`), evade snapping Venus Flytraps, and release a 72%–98% Sweet Spot Polka-Dot Cyclone to shell-bump rival ladybugs off the leaf edge!
@@ -4949,7 +5047,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #234. Grasshopper High Jump (ID: `grasshopper_high_jump`) — [Sports]
-- **Class Implementation:** `src/games/GrasshopperHighJumpGame.ts` (855 lines)
+- **Class Implementation:** `src/games/GrasshopperHighJumpGame.ts` (393 lines)
 - **Tagline:** *Spring Leg Meadow Leap*
 - **Current Control Scheme:** `Steer: Aim Trajectory • Hold Action: Coil Hind-Legs & Meteor-Stomp Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Coil your powerful grasshopper hind-legs and launch soaring parabolic leaps across swaying meadow stalks and Golden 4-Leaf Clover pads (`+95 pts`)! Land dead-center for bullseye multipliers, or release in the 72%–98% Sweet Spot to execute a Goomba-style Meteor-Stomp on rival grasshoppers' heads!
@@ -4965,7 +5063,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #235. Dragonfly Dogfight (ID: `dragonfly_dogfight`) — [Action]
-- **Class Implementation:** `src/games/DragonflyDogfightGame.ts` (865 lines)
+- **Class Implementation:** `src/games/DragonflyDogfightGame.ts` (444 lines)
 - **Tagline:** *Lily Pond Aerial Ace Duel*
 - **Current Control Scheme:** `Steer: 360° Vector Flight • Tap: Wing-Snap Dash • Hold Action: Supersonic Tail-Chase & Sonic-Boom Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Directly addressing the user's feedback (*"a game that has you collect flies and a game that has you collect dragonflies"*), *Dragonfly Dogfight* is NO LONGER a bug-collecting clone! It is now a 360° Top-Gun Aerial Dogfight & Tail-Lock Tag Duel over a koi pond where dragonflies lock radar crosshairs onto rival tails, fire Dewdrop Water-Cannons, thread Bamboo Hoop Rings (`+75 pts`), and unleash Supersonic Sonic-Boom Shunts!
@@ -4981,7 +5079,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #236. Centipede Slalom (ID: `centipede_slalom`) — [Racing]
-- **Class Implementation:** `src/games/CentipedeSlalomGame.ts` (855 lines)
+- **Class Implementation:** `src/games/CentipedeSlalomGame.ts` (418 lines)
 - **Tagline:** *Wiggling Pebble Gate Weave*
 - **Current Control Scheme:** `Steer: Carve Slalom • Tap: Tail-Whip Flick • Hold Action: Millipede Overdrive & Body-Block Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Carve a 10-segmented articulated centipede down a shared mossy creek slalom course! Thread red-and-blue slalom flag gates (`+50 pts` + combo speed boost) and Golden Arch Gates (`+95 pts`) without clipping your trailing body segments on river stones, or release a 72%–98% Sweet Spot Tail-Whip Overdrive to whip rivals into gate posts!
@@ -4997,7 +5095,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #237. Telekinetic Toyroom (ID: `poltergeist_possession`) — [Action]
-- **Class Implementation:** `src/games/PoltergeistPossessionGame.ts` (845 lines)
+- **Class Implementation:** `src/games/PoltergeistPossessionGame.ts` (1107 lines)
 - **Tagline:** *Gravity Wand Levitation*
 - **Current Control Scheme:** `Steer: Fly Hover-Mage • Tap: Levitate / Hurl Prop • Hold Action: Telekinetic Vortex & Gravity Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Soar across a shared Magical Toy Workshop! Levitate enchanted Rocking Horses, Cuckoo Clocks, and Golden Music Boxes (`+90 pts`) with your Gravity Wand and hurl them into Floating Target Bullseyes while dodging Fizzing Jack-in-the-Box Bombs, or release a 72%–98% Sweet Spot Telekinetic Vortex to fling props and rival mages!
@@ -5012,7 +5110,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #238. Midnight Courtyard Bash (ID: `graveyard_zombie_bash`) — [Action]
-- **Class Implementation:** `src/games/GraveyardZombieBashGame.ts` (832 lines)
+- **Class Implementation:** `src/games/GraveyardZombieBashGame.ts` (974 lines)
 - **Tagline:** *Pumpkin & Skeleton Whack*
 - **Current Control Scheme:** `Steer: Run Courtyard • Tap: Mallet Whack • Hold Action: Seismic Hammer Slam & Shockwave Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Sprint across a shared moonlit Festival Courtyard! Swing your oversized Carnival Mallet to whack popping Jack-O'-Lanterns (`+40 pts`), Rattle-Bones (`+55 pts`), and Golden Skeleton Kings (`+95 pts`) while sparing Guardian Angel Statues, or release a 72%–98% Sweet Spot Seismic Hammer Slam to whack every target in radius and bounce rivals!
@@ -5027,7 +5125,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #239. Phantom Mirror Gaze (ID: `phantom_mirror_gaze`) — [Puzzle]
-- **Class Implementation:** `src/games/PhantomMirrorGazeGame.ts` (862 lines)
+- **Class Implementation:** `src/games/PhantomMirrorGazeGame.ts` (1051 lines)
 - **Tagline:** *Hall of Illusions Shatter*
 - **Current Control Scheme:** `Steer: Run Hallway & Aim • Tap: Sonic Hammer Strike • Hold Action: Prismatic Resonance Wave & Mirror-Flash Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Dash across a shared 2.5D Hall of Illusions! A giant Master Pose Hologram displays the true stance in the center — spot the Impostor Mirrors waving the wrong arms, glowing red, or spinning upside down (`+55 pts`) and Golden Prismatic Mirrors (`+95 pts`), and smash them with your Sonic Hammer! Hold & release in the 72%–98% Sweet Spot to fire a Prismatic Resonance Wave that auto-shatters nearby impostors and flash-stuns rivals!
@@ -5042,7 +5140,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #240. Cauldron Alchemy Brew (ID: `cauldron_witch_brew`) — [Puzzle]
-- **Class Implementation:** `src/games/CauldronWitchBrewGame.ts` (848 lines)
+- **Class Implementation:** `src/games/CauldronWitchBrewGame.ts` (1315 lines)
 - **Tagline:** *Royal Apothecary Cauldron Toss*
 - **Current Control Scheme:** `Steer: Run Apothecary • Tap: Grab / Toss Reagent • Hold Action: Philosopher's Transmutation & Steam-Blast Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Sprint around a shared Royal Alchemical Apothecary! Grab glowing Star-Herbs, Phoenix Feathers, Moon-Crystals, and Golden Philosopher's Stones (`+95 pts`) and toss them into the bubbling Master Cauldron matching its current recipe order while dodging Volatile Puff-Shrooms, or release a 72%–98% Sweet Spot Transmutation Surge to brew any reagent for double points and steam-blast rivals!
@@ -5057,7 +5155,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #241. Gargoyle Stone Stare (ID: `gargoyle_stone_stare`) — [Reflex]
-- **Class Implementation:** `src/games/GargoyleStoneStareGame.ts` (840 lines)
+- **Class Implementation:** `src/games/GargoyleStoneStareGame.ts` (1056 lines)
 - **Tagline:** *Cathedral Belfry Freeze & Vault*
 - **Current Control Scheme:** `Steer: Sprint Rooftop (Release to Stone-Freeze!) • Tap: Grapple-Dash • Hold Action: Aegis Stone-Cloak & Belfry Bell Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Race across a shared moonlit Cathedral Rooftop to snatch Belfry Relics (`+45 pts`) and Golden Crown Bells (`+90 pts`)! When the Watcher Gargoyle's eyes flare amber -> crimson, release steering to instantly transform into an invulnerable Stone Statue (and reflect the gaze for `+35 pts`!), or charge a 72%–98% Sweet Spot Aegis Stone-Cloak to sprint right through the spotlight and shove rivals out of their freeze!
@@ -5072,7 +5170,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #242. Ghost Vacuum Buster (ID: `ghost_vacuum_buster`) — [Action]
-- **Class Implementation:** `src/games/GhostVacuumBusterGame.ts` (854 lines)
+- **Class Implementation:** `src/games/GhostVacuumBusterGame.ts` (923 lines)
 - **Tagline:** *Proton Ecto-Canister Trap*
 - **Current Control Scheme:** `Steer: Move & Aim Proton Nozzle • Tap: Deploy Capture Trap • Hold Action: Cyclotron Overdrive Suction & Proton Cross-Stream Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Patrol a shared Grand Hotel Ballroom with your Proton Vacuum Pack! Steer freely in 2D to aim your suction cone at mischievous Ectoplasm Sprites (`+50 pts`) and Golden King Specters (`+95 pts`) while dodging Slime Mines, or hold & release in the 72%–98% Sweet Spot to fire a Cyclotron Overdrive Beam that reels in ghosts instantly and cross-stream shunts rival busters!
@@ -5087,7 +5185,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #243. Pharaoh Relic Slider (ID: `tombstone_crypt_slider`) — [Physics]
-- **Class Implementation:** `src/games/TombstoneCryptSliderGame.ts` (846 lines)
+- **Class Implementation:** `src/games/TombstoneCryptSliderGame.ts` (925 lines)
 - **Tagline:** *Ancient Treasure Vault Shove*
 - **Current Control Scheme:** `Steer: Run Vault • Tap: Shove Sandstone Block • Hold Action: Scarab Repulsor Slam & Sandstorm Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Explore a shared Sunlit Pharaoh's Treasure Vault! Shove heavy carved Sandstone Relic Blocks across the polished floor to uncover Sapphire Scarabs (`+50 pts`) and Golden Sun Ankhs (`+95 pts`) while sliding blocks into rivals or dodging Rolling Boulder Traps! Hold & release in the 72%–98% Sweet Spot to unleash a Scarab Repulsor Slam that slides every nearby block and knocks rivals back!
@@ -5102,7 +5200,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #244. Clockwork Toy Derby (ID: `creepy_doll_crawl`) — [Racing]
-- **Class Implementation:** `src/games/CreepyDollCrawlGame.ts` (838 lines)
+- **Class Implementation:** `src/games/CreepyDollCrawlGame.ts` (830 lines)
 - **Tagline:** *Grand Toymaker Wind-Up Sprint*
 - **Current Control Scheme:** `Steer: Carve Track • Tap: Mainspring Ratchet Crank • Hold Action: Golden Key Overdrive & Gear-Bump Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Race adorable 2.5D brass wind-up tin robots and clockwork racers across the Grand Toymaker's Workshop table! Steer through Brass Gear Tokens (`+45 pts`) and Golden Wind-Up Keys (`+85 pts`), dodge spilled Marbles & Glue Puddles, tap to crank your mainspring, or hold & release in the 72%–98% Sweet Spot for a Golden Key Overdrive Dash that bumps rival toys off course!
@@ -5117,7 +5215,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #245. Celestial Star Compass (ID: `ouija_spirit_board`) — [Party]
-- **Class Implementation:** `src/games/OuijaSpiritBoardGame.ts` (852 lines)
+- **Class Implementation:** `src/games/OuijaSpiritBoardGame.ts` (891 lines)
 - **Tagline:** *Galactic Constellation Decoder*
 - **Current Control Scheme:** `Steer: Pilot Astrolabe Lens • Tap: Lock Star Rune • Hold Action: Supernova Warp & Gravity-Lens Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Pilot a gleaming brass & crystal Astrolabe Lens across a shared Royal Observatory Star-Chart! Race rivals to align over the illuminated Target Constellation Rune (`+65 pts`) and Golden Shooting Comets (`+90 pts`) while dodging Dark-Matter Anomalies, or hold & release in the 72%–98% Sweet Spot to unleash a Supernova Warp that locks constellations from afar and shunts rival lenses!
@@ -5132,7 +5230,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #246. Grand Clocktower Pendulum (ID: `cursed_clocktower_pendulum`) — [Action]
-- **Class Implementation:** `src/games/CursedClocktowerPendulumGame.ts` (844 lines)
+- **Class Implementation:** `src/games/CursedClocktowerPendulumGame.ts` (898 lines)
 - **Tagline:** *Chronos Gear & Pendulum Dodge*
 - **Current Control Scheme:** `Steer: Run Clockwork Rafters • Tap: Phase-Duck / Leap • Hold Action: Chronos Time-Warp Dash & Mainspring Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Scramble across the giant rotating rafters of the Grand Chronos Clocktower! Collect Brass Escapement Gears (`+45 pts`) and Golden Tourbillon Cores (`+90 pts`) while ducking or leaping over the sweeping twin Brass Pendulums, or hold & release in the 72%–98% Sweet Spot to trigger a Chronos Time-Warp Dash that phases through pendulums and shunts rivals into the sweep!
@@ -5147,7 +5245,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #247. Synthwave Neon Racer (ID: `synthwave_neon_racer`) — [Racing]
-- **Class Implementation:** `src/games/SynthwaveNeonRacerGame.ts` (865 lines)
+- **Class Implementation:** `src/games/SynthwaveNeonRacerGame.ts` (803 lines)
 - **Tagline:** *Wireframe Sunset Highway*
 - **Current Control Scheme:** `Steer: Switch Lanes • Tap: Side-Swipe Bump • Hold Action: 88MPH Flux Warp & EMP Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Race DeLorean-style gullwing supercars down a shared 4-lane perspective wireframe highway toward a segmented twin-grid synthwave sun! Draft behind leaders for `+25%` slipstream speed, snatch Golden Synth Cassettes (`+85 pts`), and release a 72%–98% Sweet Spot 88MPH Flux Warp to leave twin fire trails and shunt rivals into Police Interceptors!
@@ -5163,7 +5261,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #248. Pixel Space Invader (ID: `pixel_space_invader`) — [Action]
-- **Class Implementation:** `src/games/PixelSpaceInvaderGame.ts` (875 lines)
+- **Class Implementation:** `src/games/PixelSpaceInvaderGame.ts` (713 lines)
 - **Tagline:** *Descending Alien Matrix*
 - **Current Control Scheme:** `Steer: Slide Laser Turret • Tap: Rapid Plasma Shot • Hold Action: Giga-Wave Cannon & EMP Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Defend the shared planetary baseline beneath 3 destructible voxel shield bunkers! Blast marching formations of Squid, Crab, and Octopus invaders, snipe Golden Command UFOs (`+120 pts`), and release a 72%–98% Sweet Spot Giga-Wave Cannon to vaporize an entire column and EMP-shunt rival turrets!
@@ -5179,7 +5277,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #249. Vector Tank Battle (ID: `vector_tank_battle`) — [Action]
-- **Class Implementation:** `src/games/VectorTankBattleGame.ts` (865 lines)
+- **Class Implementation:** `src/games/VectorTankBattleGame.ts` (627 lines)
 - **Tagline:** *1980 Wireframe Radar Duel*
 - **Current Control Scheme:** `Steer: Snap-Turn Tank • Tap: Fire Ricochet Shell • Hold Action: Railgun Sabot & Tank-Ram Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Command 3D wireframe vector tanks across a glowing phosphor battlefield with geometric pyramid and cube obstacles! Bank multi-bounce ricochet trick shots (`2x` bank-shot bonus), claim Golden Radar Cores (`+85 pts`), and release a 72%–98% Sweet Spot Railgun Sabot to pierce obstacles and ram rival tanks!
@@ -5195,7 +5293,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #250. Pac Maze Chomp (ID: `pac_maze_chomp`) — [Action]
-- **Class Implementation:** `src/games/PacMazeChompGame.ts` (875 lines)
+- **Class Implementation:** `src/games/PacMazeChompGame.ts` (621 lines)
 - **Tagline:** *Neon Dot Labyrinth Gobbler*
 - **Current Control Scheme:** `Steer: Turn Maze Corridor • Tap: Waka-Snap Dash • Hold Action: Energizer Overdrive & Siren Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Chomp glowing pellets and Golden Arcade Cherries (`+90 pts`) across an interconnected neon labyrinth with wrap-around side warp tunnels! Snatch corner Power Energizers to turn the 4 named ghosts (`BLINKY`, `PINKY`, `INKY`, `CLYDE`) AND rival chompers vulnerable (`+100 pts` chomp steal), or release a 72%–98% Sweet Spot Waka-Warp Dash!
@@ -5211,7 +5309,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #251. Breakout Brick Blaster (ID: `breakout_brick_blaster`) — [Physics]
-- **Class Implementation:** `src/games/BreakoutBrickBlasterGame.ts` (865 lines)
+- **Class Implementation:** `src/games/BreakoutBrickBlasterGame.ts` (650 lines)
 - **Tagline:** *Rainbow Neon Wall Smash*
 - **Current Control Scheme:** `Steer: Slide Vaus Paddle • Tap: Kinetic Angle Volley • Hold Action: Supernova Smash & Magnet Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Slide metallic Vaus paddles along a shared baseline to volley energy balls into a 6-row rainbow Arkanoid fortress! Detonate Explosive TNT Bricks, crack Silver Armor Bricks, catch falling Power Capsules (`MULTI_BALL`, `WIDE_PADDLE`, `LASER_GOLD`), and release a 72%–98% Sweet Spot Supernova Smash to curve fireball shots and bump rival paddles!
@@ -5227,7 +5325,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #252. LaserDisc Dance (ID: `laser_disc_dance`) — [Party]
-- **Class Implementation:** `src/games/LaserDiscDanceGame.ts` (855 lines)
+- **Class Implementation:** `src/games/LaserDiscDanceGame.ts` (518 lines)
 - **Tagline:** *Interactive Synth QTE*
 - **Current Control Scheme:** `Steer: Dash to 4-Way Neon Pad • Tap: Strike Pose On Beat • Hold Action: Bass-Drop Moonwalk & Boogie Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Strut across a shared 4-pad holographic club floor (`UP`, `DOWN`, `LEFT`, `RIGHT`) around a spinning gold LaserDisc! Step onto the illuminated cue pad and strike poses in sync with expanding beat rings (`+65 pts` Perfect Groove) and Golden Vinyl Bonus Discs (`+95 pts`), or release a 72%–98% Sweet Spot Bass-Drop Moonwalk to bump rival dancers off the active pad!
@@ -5243,7 +5341,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #253. CRT Scanline Sniper (ID: `crt_scanline_sniper`) — [Reflex]
-- **Class Implementation:** `src/games/CrtScanlineSniperGame.ts` (860 lines)
+- **Class Implementation:** `src/games/CrtScanlineSniperGame.ts` (537 lines)
 - **Tagline:** *Phosphor Target Gallery*
 - **Current Control Scheme:** `Steer: Aim Lightgun Reticle • Tap: Fire Zapper • Hold Action: Chain-Lightning Arc & Flash-Recoil Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Aim NES Zapper-style lightgun crosshairs across a curved CRT phosphor television gallery! Snipe Pixel Ducks (`+45 pts`), Flipping Soda Cans (`+60 pts` juggle combo), and Golden Mystery UFOs (`+100 pts`) when shrinking lock-on rings hit bullseye while avoiding Skunk Decoy Bombs, or release a 72%–98% Sweet Spot Chain-Lightning Arc to zap multiple targets and recoil-shunt rival reticles!
@@ -5291,7 +5389,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #256. Matrix Code Rain (ID: `matrix_code_rain`) — [Puzzle]
-- **Class Implementation:** `src/games/MatrixCodeRainGame.ts` (865 lines)
+- **Class Implementation:** `src/games/MatrixCodeRainGame.ts` (571 lines)
 - **Tagline:** *Falling Terminal Cipher Stream*
 - **Current Control Scheme:** `Steer: Slide Hacker Deck • Tap: Magnetize Cipher Stream • Hold Action: Neo Bullet-Time Surge & Glitch-Spike Shunt (72–98%) | T / 1-3: Theme`
 - **Stated Gameplay Concept:** Slide your holographic Cyber-Deck along the Mainframe Firewall baseline beneath cascading digital katakana code rain! Intercept Golden Cipher Keys (`+45 pts`) and Quantum Root Orbs (`+95 pts`) to fill your Decryption Buffer to 100% for massive **Mainframe Vault Breaches** (`+180 pts`) while dodging Red Sentinel Viruses, or release a 72%–98% Sweet Spot Neo Bullet-Time Surge to freeze viruses and shunt rival decks!
@@ -5355,7 +5453,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #260. Spam Click Showdown (ID: `spam_click_showdown`) — [Party]
-- **Class Implementation:** `src/games/SpamClickShowdownGame.ts` (815 lines)
+- **Class Implementation:** `src/games/SpamClickShowdownGame.ts` (780 lines)
 - **Tagline:** *Furious Button-Mashing Soda Blastoff*
 - **Current Control Scheme:** `SPAM CLICK / TAP / SPACE / ENTER: Pump PSI + Hit 72–98% Beat Ring for 1.45x Surge & Every-8th-Beat Fizz-Wave Shunt!`
 - **Stated Gameplay Concept:** Pump pressurized fizzy soda into your 2.5D rocket bottle to reach 1000 PSI and blast off into the stratosphere! Hit the 72%–98% Sweet-Spot Rhythm Beat Ring for a `1.45x BEAT SURGE`, trigger `8+ CPS OVERDRIVE` (`1.35x` PSI), and unleash an every-8th-beat **Fizz-Wave Sabotage Shunt** (`-18 PSI` rival pressure vent) while trailing players gain a `1.25x` Underdog Catch-Up Surge!
