@@ -3968,172 +3968,124 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #180. Walrus Iceberg King (ID: `walrus_bask`) — [Physics]
-- **Class Implementation:** `src/games/WalrusBaskGame.ts` (333 lines)
+- **Class Implementation:** `src/games/WalrusBaskGame.ts` (845 lines)
 - **Tagline:** *Sumo Tusk King of the Hill*
-- **Current Control Scheme:** `Hold: Belly Charge`
-- **Stated Gameplay Concept:** Bask on the prime sunlit iceberg! Belly-slam and nudge rival walruses into the freezing sea to claim sole ownership of the ice shelf.
+- **Current Control Scheme:** `Steer: Slide Walrus • Tap: Tusk Lunge • Hold Action: Belly-Quake Sumo Slam & Tidal Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Bask on the prime sunlit Svalbard iceberg! Slide freely in 2D across the icy shelf to hold the wandering Sunbeam Crown Zone (`+18 pts/sec`), snatch Arctic Salmon (`+45 pts`) and Golden King Crabs (`+85 pts`), dodge Sea Urchin Bombs and Orca Splash Waves, or hold & release in the 72%–98% Sweet Spot for a Belly-Quake Sumo Slam that knocks rival walruses into the freezing sea (`+85 pts` Ring-Out)!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Walrus Iceberg King* (*Sumo Tusk King of the Hill*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Bask on the prime sunlit iceberg! Belly-slam and nudge rival walruses into the freezing sea to claim sole ownership of t..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Hold: Belly Charge`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Walrus Iceberg King'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, walruses could not move at all — they just rotated in place at fixed positions unless bumped.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Walrus Iceberg King* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Full 2D Icy Sumo Physics, Wandering Sunbeam Crown, & Sea Treats:** Gave every 2.5D Walrus full 2D icy steering, elastic blubber-and-tusk collisions, a wandering **Sunbeam Crown Zone**, **Arctic Salmon**, **Golden King Crabs**, and **Orca Splash Waves**.
+2. **Hold-to-Charge Belly-Quake Sumo Slam & Tidal Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** triggers a **Belly-Quake Sumo Slam** (`+80 pts`) and unleashes a **Tidal Tusk Shunt** (`+70 pts` **"TIDAL TUSK SHUNT!"**) that blasts rival walruses off the iceberg!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `svalbard_floe` (Svalbard Sun Floe), `aurora_shelf` (Aurora Borealis Shelf), and `volcanic_glacier` (Icelandic Thermal Berg).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #181. Polar Ice Fishing (ID: `polar_ice_fishing`) — [Reflex]
-- **Class Implementation:** `src/games/PolarIceFishingGame.ts` (331 lines)
+- **Class Implementation:** `src/games/PolarIceFishingGame.ts` (832 lines)
 - **Tagline:** *Deep Trench Frost Angler*
-- **Current Control Scheme:** `Tap: Cast & Strike`
-- **Stated Gameplay Concept:** Drill an ice hole over deep trenches! Cast your glowing lure and jerk the line the microsecond an abyssal arctic trout strikes.
+- **Current Control Scheme:** `Steer: Skate to Ice Holes • Tap: Strike Fish • Hold Action: Master Trench Haul & Ice-Crack Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Skate across a shared translucent frozen bay with 6 augered ice holes! Spot underwater Arctic Char (`+45 pts`), Ruby King Crabs (`+70 pts`), and Golden Narwhals (`+95 pts`) swimming beneath the holes and tap to reel them in while avoiding Electric Eels, or hold & release in the 72%–98% Sweet Spot for a Master Trench Haul that shunts rival anglers across the ice!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Polar Ice Fishing* (*Deep Trench Frost Angler*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Drill an ice hole over deep trenches! Cast your glowing lure and jerk the line the microsecond an abyssal arctic trout s..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Cast & Strike`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Polar Ice Fishing'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players sat immobile in separate vertical strips waiting for a random timer to say "BITE!" with zero movement or interaction.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Overhaul *Polar Ice Fishing* into a high-stakes push-your-luck showdown. Introduce a central risk-reward multiplier where waiting until the last split-second multiplies your score exponentially, but false-starts result in a comical 2-second electro-shock stun.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 6-Hole Translucent Ice Rink & Visible Underwater Sea Life:** Transformed into a shared 2D skating arena where players race between **6 Augered Ice Holes** teeming with visible underwater **Arctic Char**, **Ruby King Crabs**, **Golden Narwhals**, and **Electric Eels**.
+2. **Hold-to-Charge Master Trench Haul & Ice-Crack Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** executes a **Master Trench Haul** (`+55 bonus pts` + safe eel insulation) and triggers an **Ice-Crack Shunt** (`+70 pts` **"ICE-CRACK SHUNT!"**) that slides rivals away from Golden Narwhal holes!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `inuit_bay` (Inuit Sapphire Bay), `emerald_fjord` (Aurora Fjord Lagoon), and `twilight_trench` (Polar Twilight Trench).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #182. Aurora Borealis Weaver (ID: `aurora_collector`) — [Party]
-- **Class Implementation:** `src/games/AuroraCollectorGame.ts` (336 lines)
+- **Class Implementation:** `src/games/AuroraCollectorGame.ts` (826 lines)
 - **Tagline:** *Geomagnetic Light Prism*
-- **Current Control Scheme:** `Tap: Shift Polarity`
-- **Stated Gameplay Concept:** The sky dances with northern lights! Adjust your magnetic polar crystal to absorb flowing ribbon waves of green, magenta, and solar violet.
+- **Current Control Scheme:** `Steer: Surf Aurora Ribbons • Tap: Wing Gust • Hold Action: Prism Nova Surge & Aurora Wave Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Soar across the Arctic night sky in a 2.5D Celestial Prism Glider! Steer freely in 2D to surf inside flowing Aurora Borealis Ribbons (`+18 pts/sec` + Harmony Burst), catch Starlight Motes (`+45 pts`) and Golden Solar Prisms (`+90 pts`), dodge Storm Bolts, or hold & release in the 72%–98% Sweet Spot to unleash a Prism Nova Surge that vacuums nearby motes and shunts rival gliders!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Aurora Borealis Weaver* (*Geomagnetic Light Prism*) struggles with basic intuitive sense on a physical level. The game asks players to: *"The sky dances with northern lights! Adjust your magnetic polar crystal to absorb flowing ribbon waves of green, magenta..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The hold-to-charge mechanic (`Tap: Shift Polarity`) lacks kinetic feedback. There is no exponential power curve or visual charge ring, making release timing feel mushy and imprecise. Impacts lack punch, with no freeze-frames or satisfying screen recoil.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Aurora Borealis Weaver'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, gliders were locked at fixed X coordinates doing a basic 1D vertical flap with zero horizontal steering or player interaction.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Aurora Borealis Weaver* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Full 2D Aerial Gliding, Dual Aurora Ribbons, & Solar Prisms:** Freed all 2.5D **Celestial Prism Gliders** to maneuver across the entire starry sky, surfing dual **Aurora Ribbons** and collecting **Star Motes** and **Golden Solar Prisms** while dodging **Storm Clouds**.
+2. **Hold-to-Charge Prism Nova Surge & Aurora Wave Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** triggers a **Prism Nova Surge** (`+85 pts` + magnetically pulls nearby Star Motes & Prisms) and unleashes an **Aurora Wave Shunt** (`+70 pts` **"AURORA WAVE SHUNT!"**)!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `tromso_aurora` (Tromso Emerald Sky), `solar_magenta` (Solar Flare Magenta), and `celestial_gold` (Hyperborea Crown).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #183. Husky Dog Sled Sprint (ID: `dog_sled_dash`) — [Racing]
-- **Class Implementation:** `src/games/DogSledDashGame.ts` (375 lines)
+- **Class Implementation:** `src/games/DogSledDashGame.ts` (834 lines)
 - **Tagline:** *Great Northern Mushers*
-- **Current Control Scheme:** `Tap: Leap Obstacle`
-- **Stated Gameplay Concept:** Mush through howling snowy winds! Tap in rhythm with your lead huskies to leap fallen pine logs and leap across gaping crevasse gaps.
+- **Current Control Scheme:** `Steer: Carve Snow Trail • Tap: Mush Leap • Hold Action: Lead-Husky Blizz-Charge & Snow-Wake Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Mush your 2.5D Husky Dog Sled Team across a shared Iditarod snowfield! Carve freely across lanes, draft behind rival sleds (`+24% speed`), tap to Mush Leap over Glacial Crevasses & Spruce Logs (`+40 pts`), snatch Serum Crates (`+45 pts`) and Golden Iditarod Trophies (`+90 pts`), or release a 72%–98% Sweet Spot Lead-Husky Blizz-Charge to shunt rival teams!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Husky Dog Sled Sprint* (*Great Northern Mushers*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Mush through howling snowy winds! Tap in rhythm with your lead huskies to leap fallen pine logs and leap across gaping c..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Leap Obstacle`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Husky Dog Sled Sprint'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, sleds were quarantined in separate 1D horizontal strips with zero steering and zero sled-to-sled interaction.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Revamp the handling model in *Husky Dog Sled Sprint* with aggressive contact bumping, responsive slipstream drafting (+25% acceleration when directly behind a leader), and a rubber-band Nitro recharge for trailing racers to ensure photo-finish climaxes on the final turn.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Iditarod Snowfield, Slipstream Drafting, & Serum Crates:** Merged all 2.5D **Husky Sled Teams** onto a wide shared snow trail with full 2D steering, slipstream drafting, **Mush Leaps**, **Serum Crates**, and **Golden Iditarod Trophies**.
+2. **Hold-to-Charge Lead-Husky Blizz-Charge & Snow-Wake Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** launches a **Lead-Husky Blizz-Charge** (`+85 pts` + airborne obstacle clear) and triggers a **Snow-Wake Shunt** (`+70 pts` **"SNOW-WAKE SHUNT!"**)!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `iditarod_tundra` (Iditarod Tundra Trail), `yukon_gold` (Yukon Sunset Pass), and `aurora_pine` (Northern Pine Run).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #184. Mammoth Stampede (ID: `mammoth_stampede`) — [Action]
-- **Class Implementation:** `src/games/MammothStampedeGame.ts` (390 lines)
+- **Class Implementation:** `src/games/MammothStampedeGame.ts` (836 lines)
 - **Tagline:** *Tundra Ice Age Survival*
-- **Current Control Scheme:** `Hold: Move / Dodge`
-- **Stated Gameplay Concept:** A thundering herd of woolly mammoths stampedes across the permafrost! Dodge massive tusk sweeps and giant stomps to remain the last hunter standing.
+- **Current Control Scheme:** `Steer: Run Gorge • Tap: Vault Mammoth • Hold Action: War-Horn Stampede Call & Tundra Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Survive a shared Pleistocene Glacier Gorge as giant 2.5D Woolly Mammoths charge from both sides! Steer in 2D to dodge stampede warning corridors, tap to Spear-Vault over charging mammoths (`+55 pts`), collect Ivory Relics (`+50 pts`) and Golden Amber Fossils (`+95 pts`), or hold & release in the 72%–98% Sweet Spot to blow the War-Horn and shunt rivals into the stampede!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Mammoth Stampede* (*Tundra Ice Age Survival*) struggles with basic intuitive sense on a physical level. The game asks players to: *"A thundering herd of woolly mammoths stampedes across the permafrost! Dodge massive tusk sweeps and giant stomps to rema..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Hold: Move / Dodge`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Mammoth Stampede'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players were locked in separate lanes at fixed X coordinates jumping in place while a tiny brown oval sat on the left.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Mammoth Stampede* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Pleistocene Gorge, Bidirectional Mammoth Stampedes, & Amber Fossils:** Merged all hunters into a shared 2.5D gorge with bidirectional **Woolly Mammoth Stampedes**, **Spear Vaults**, **Ivory Relics**, **Golden Amber Fossils**, and **Permafrost Bogs**.
+2. **Hold-to-Charge War-Horn Stampede Call & Tundra Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** sounds the **War-Horn Stampede Call** (`+85 pts` + high vault) and unleashes a **Tundra Horn Shunt** (`+70 pts` **"TUNDRA HORN SHUNT!"**) that knocks rivals into charging mammoths!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `pleistocene_gorge` (Pleistocene Glacier Gorge), `siberia_permafrost` (Siberian Permafrost Basin), and `volcanic_tundra` (Obsidian Steppe).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #185. Frostbite Stalactite Cavern (ID: `frostbite_cavern`) — [Reflex]
-- **Class Implementation:** `src/games/FrostbiteCavernGame.ts` (343 lines)
+- **Class Implementation:** `src/games/FrostbiteCavernGame.ts` (824 lines)
 - **Tagline:** *Glacial Drop Hazard Reflex*
-- **Current Control Scheme:** `Tap: Direction Dash`
-- **Stated Gameplay Concept:** The ancient cavern roof is collapsing under heavy frost! Dash under falling razor-sharp ice stalactites to gather frozen prehistoric relics.
+- **Current Control Scheme:** `Steer: Skate Cavern • Tap: Thermal Pickaxe • Hold Action: Thermal Shockwave Smash & Frost-Wave Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Skate across a shared Sub-Glacial Crystal Cavern on your 2.5D Miner Sled! Dodge shadow-targeted Falling Ceiling Stalactites (which shatter into mineable gems on impact!) and swing your Thermal Pickaxe to harvest Sapphire Frost Gems (`+50 pts`) and Golden Permafrost Diamonds (`+95 pts`), or release a 72%–98% Sweet Spot Thermal Shockwave Smash to mine every crystal in radius and shunt rivals!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Frostbite Stalactite Cavern* (*Glacial Drop Hazard Reflex*) struggles with basic intuitive sense on a physical level. The game asks players to: *"The ancient cavern roof is collapsing under heavy frost! Dash under falling razor-sharp ice stalactites to gather frozen..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Direction Dash`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Frostbite Stalactite Cavern'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players were locked in separate 1D lanes at `sledX = 110` with zero movement and zero cavern hazards.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Overhaul *Frostbite Stalactite Cavern* into a high-stakes push-your-luck showdown. Introduce a central risk-reward multiplier where waiting until the last split-second multiplies your score exponentially, but false-starts result in a comical 2-second electro-shock stun.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Crystal Grotto, Falling Ceiling Stalactites, & Permafrost Diamonds:** Transformed into a shared 2D cavern arena where falling **Ceiling Stalactites** crash down and turn into mineable **Sapphire Frost Gems** alongside **Golden Permafrost Diamonds**.
+2. **Hold-to-Charge Thermal Shockwave Smash & Frost-Wave Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** triggers a **Thermal Shockwave Smash** (`+85 pts` + shatters all crystals in a `165px` radius) and blasts a **Frost-Wave Shunt** (`+70 pts` **"FROST-WAVE SHUNT!"**)!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `sapphire_grotto` (Sapphire Frost Grotto), `amethyst_geode` (Amethyst Ice Geode), and `emerald_glacier` (Sub-Glacial Emerald Cave).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #186. Geothermal Geyser Leap (ID: `geyser_leap`) — [Action]
-- **Class Implementation:** `src/games/GeyserLeapGame.ts` (532 lines)
+- **Class Implementation:** `src/games/GeyserLeapGame.ts` (832 lines)
 - **Tagline:** *Icelandic Volcanic Hot Springs*
-- **Current Control Scheme:** `Tap: Leap Next Stone`
-- **Stated Gameplay Concept:** Leap across arctic thermal stepping stones! Time your jumps between boiling steam vents so you do not get blasted into the sky by scalding geysers.
+- **Current Control Scheme:** `Steer: Hop Thermal Stones • Tap: Vault Geyser • Hold Action: Geyser-Surf Super Leap & Steam-Vent Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Hop across 15 shared 2.5D Thermal Stepping Stones in a bubbling Icelandic volcanic lagoon! Claim Golden Crown Stones (`+24 pts/sec`), snatch Silica Gems (`+45 pts`) and Golden Geyser Opals (`+90 pts`), vault over erupting steam vents, or hold & release in the 72%–98% Sweet Spot for a Geyser-Surf Super Leap that blasts rival foxes into scalding geysers!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Geothermal Geyser Leap* (*Icelandic Volcanic Hot Springs*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Leap across arctic thermal stepping stones! Time your jumps between boiling steam vents so you do not get blasted into t..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Leap Next Stone`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Geothermal Geyser Leap'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players were quarantined in separate 1D stone rows with tap-only forward hops and zero multiplayer interaction.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Geothermal Geyser Leap* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 15-Stone Geothermal Lagoon, Golden Crown Stones, & Fire Opals:** Merged all players onto a shared 15-stone volcanic hot spring with full 2D movement, **Golden Crown Stones**, **Silica Gems**, **Golden Geyser Opals**, and erupting **Steam Plumes**.
+2. **Hold-to-Charge Geyser-Surf Super Leap & Steam-Vent Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** launches a **Geyser-Surf Super Leap** (`+85 pts` + thermal immunity) and unleashes a **Steam-Vent Shunt** (`+70 pts` **"STEAM-VENT SHUNT!"**)!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `blue_lagoon` (Icelandic Blue Lagoon), `yellowstone_prism` (Grand Prismatic Spring), and `rotorua_emerald` (Rotorua Sulphur Basin).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #187. Clockwork Cog Synchrony (ID: `clockwork_cogs`) — [Reflex]
-- **Class Implementation:** `src/games/ClockworkCogsGame.ts` (344 lines)
+- **Class Implementation:** `src/games/ClockworkCogsGame.ts` (828 lines)
 - **Tagline:** *Precision Escapement Mesh*
-- **Current Control Scheme:** `Tap: Mesh Gears`
-- **Stated Gameplay Concept:** Big Ben gears are uncoupled! Tap when the golden drive teeth align with the driven escapement gear to mesh the gear train and generate kinetic torque.
+- **Current Control Scheme:** `Steer: Run Planetary Gears • Tap: Mesh Junction • Hold Action: Escapement Overdrive & Torque-Wave Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Scramble across 5 giant interlocking 2.5D Planetary Brass Gears inside Big Ben! Ride the rotational torque of the spinning gears to reach the 4 Mesh Junctions — tap your Chrono-Spanner on Aligned Cogs (`+55 pts`) and Golden Tourbillon Nodes (`+95 pts`) while avoiding Red Gear Jams, or release a 72%–98% Sweet Spot Escapement Overdrive to shunt rival horologists!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Clockwork Cog Synchrony* (*Precision Escapement Mesh*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Big Ben gears are uncoupled! Tap when the golden drive teeth align with the driven escapement gear to mesh the gear trai..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Mesh Gears`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Clockwork Cog Synchrony'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players had no character or movement at all — just 4 static boxes with two spinning circles.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Overhaul *Clockwork Cog Synchrony* into a high-stakes push-your-luck showdown. Introduce a central risk-reward multiplier where waiting until the last split-second multiplies your score exponentially, but false-starts result in a comical 2-second electro-shock stun.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 5-Gear Planetary Movement Arena & Tourbillon Junctions:** Created a shared 2.5D **Planetary Gear Train** where players physically run across rotating brass cogs (feeling real rotational torque!) to synchronize **4 Mesh Junctions** and **Golden Tourbillon Nodes**.
+2. **Hold-to-Charge Escapement Overdrive & Torque-Wave Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** fires an **Escapement Overdrive** (`+45 bonus pts` + clears gear jams safely) and triggers a **Torque-Wave Shunt** (`+70 pts` **"TORQUE-WAVE SHUNT!"**)!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `big_ben_brass` (Big Ben Brass Works), `swiss_tourbillon` (Geneva Sapphire Movement), and `aether_foundry` (Copper Aether Foundry).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #188. Steam Boiler Relief (ID: `steam_boiler_relief`) — [Physics]
 - **Class Implementation:** `src/games/SteamBoilerReliefGame.ts` (338 lines)
