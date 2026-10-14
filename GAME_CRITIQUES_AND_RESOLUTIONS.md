@@ -3788,172 +3788,124 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #168. Warp Gate Hyperdrive (ID: `warp_gate_jump`) — [Action]
-- **Class Implementation:** `src/games/WarpGateJumpGame.ts` (355 lines)
+- **Class Implementation:** `src/games/WarpGateJumpGame.ts` (1041 lines)
 - **Tagline:** *Chromatic Gate Trajectory Alignment*
-- **Current Control Scheme:** `Tap: Warp Jump`
-- **Stated Gameplay Concept:** Approach lightspeed warp gates! Tap right when your trajectory alignment needle points directly through the rotating green gate opening.
+- **Current Control Scheme:** `Steer: Orbit Hyperspace Tunnel • Tap: Micro-Warp • Hold Action: Hyper-Jump & Gravity Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Pilot 2.5D Hyperdrive Interceptors inside a shared pseudo-3D Hyperspace Tunnel! Steer around the tunnel perimeter to align with approaching Emerald Gate Apertures (`+55 pts`) and Golden Overdrive Slots (`+95 pts`), scoop up Tachyon Hyper-Cells, or hold & release in the 72%–98% Sweet Spot for a 1.65x Hyper-Phase Jump and Gravity-Wake Shunt!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Warp Gate Hyperdrive* (*Chromatic Gate Trajectory Alignment*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Approach lightspeed warp gates! Tap right when your trajectory alignment needle points directly through the rotating gre..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Warp Jump`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Warp Gate Hyperdrive'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players sat in isolated vertical lanes watching a spinning clock hand (`pointerAngle`) on a static triangle with zero steering, zero shared warp gates, and zero multiplayer interaction.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Warp Gate Hyperdrive* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Eliminate passive auto-rotation. Implement an active directional snap system: tap to pivot 45° instantly, double-tap for an immediate 180° turnaround, and hold to charge an explosive forward dash with a visible expanding aura and rising audio whine.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 3D Hyperspace Conduit & Chromatic Gate Rings:** Merged all interceptors onto a shared elliptical hyperspace tunnel where rotating 3D Chromatic Warp Gates (with Emerald Apertures, Golden Overdrive Slots, and Red Plasma Barriers) and Tachyon Hyper-Cells rush outward from the central vanishing point.
+2. **Hold-to-Charge Hyper-Phase Jump & Gravity-Wake Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** triggers a **1.65x Lightspeed Hyper-Jump** and unleashes a **Gravity-Wake Shunt** (`+70 pts` **"GRAVITY SHUNT!"**) that blasts rival interceptors out of the open gate slot into the plasma barrier!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `andromeda` (Andromeda Conduit), `bifrost` (Asgard Bifrost), and `cyber_grid` (Synthwave Vector).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #169. Solar Sail Corona Rider (ID: `solar_sail_rider`) — [Racing]
-- **Class Implementation:** `src/games/SolarSailRiderGame.ts` (361 lines)
+- **Class Implementation:** `src/games/SolarSailRiderGame.ts` (896 lines)
 - **Tagline:** *Photon Gale & Ion Storm Tack*
-- **Current Control Scheme:** `Tap: Deploy / Furl Sail`
-- **Stated Gameplay Concept:** Ride the photon winds of a blazing star! Tap to deploy sails during golden solar flares, and furl sails to slip through purple ion storms.
+- **Current Control Scheme:** `Steer: Weave Corona Lanes • Tap: Open / Furl Sail • Hold Action: Photon Prism Surge & Beam Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Race 2.5D Diamond-Mylar Solar Sail Clippers across a shared 3-lane Helios Corona Regatta! Draft in rival photon wakes (`+25%` slipstream), open sails to ride Golden CME Solar Flares (`+55 pts`), furl sails to slip cleanly through Purple Magnetar Ion Storms (`+40 pts`), or release a 72%–98% Sweet Spot Photon Prism Surge to vaporize storms and shunt rivals!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Solar Sail Corona Rider* (*Photon Gale & Ion Storm Tack*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Ride the photon winds of a blazing star! Tap to deploy sails during golden solar flares, and furl sails to slip through ..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Deploy / Furl Sail`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Solar Sail Corona Rider'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, crafts were pinned at fixed `craftX = 110` in isolated lanes toggling a boolean when circles scrolled by, with zero lane-switching, zero horizontal racing progress, and zero collision.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Revamp the handling model in *Solar Sail Corona Rider* with aggressive contact bumping, responsive slipstream drafting (+25% acceleration when directly behind a leader), and a rubber-band Nitro recharge for trailing racers to ensure photo-finish climaxes on the final turn.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 3-Lane Helios Corona Regatta & Slipstream Drafting:** Placed all 2.5D Solar Sail Clippers into a shared 3-lane corona corridor with active lane-weaving, horizontal photon gale surging, **Photon Pearl** pickups (`+45 pts`), and `+25%` **Slipstream Drafting**.
+2. **Hold-to-Charge Photon Prism Surge & Solar Beam Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** activates **Photon Prism Armor** (`+65 pts`, converts upcoming Ion Storms into CME Flares) and fires a **Focused Solar Beam Shunt** (`+70 pts` **"SOLAR BEAM SHUNT!"**) that blasts nearby rivals into adjacent lanes!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `helios` (Helios Corona), `pulsar_nebula` (Cyan Supergiant), and `red_giant` (Betelgeuse Nova).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #170. Martian Planetary Rover (ID: `planetary_rover`) — [Physics]
-- **Class Implementation:** `src/games/PlanetaryRoverGame.ts` (356 lines)
+- **Class Implementation:** `src/games/PlanetaryRoverGame.ts` (907 lines)
 - **Tagline:** *Low-Gravity Crater Hop*
-- **Current Control Scheme:** `Tap: Low-G Hop`
-- **Stated Gameplay Concept:** Traverse the craggy Martian surface! Tap to hop your 6-wheeled rover over deep impact craters and snag floating green xenocrystals.
+- **Current Control Scheme:** `Steer: Switch Canyon Tracks • Tap: Low-G Hop • Hold Action: Super-G Laser Vault & Seismic Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Drive 2.5D 6-Wheeled Rocker-Bogie Rovers across a shared 3-track Martian canyon! Switch tracks to collect Golden Mars Meteorites (`+65 pts`), tap to Low-G Hop over deep impact craters and snag aerial Emerald Xenocrystals (`+50 pts`), or release a 72%–98% Sweet Spot Super-G Sky Vault to auto-harvest crystals with your Mining Laser and seismic-shunt rivals!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Martian Planetary Rover* (*Low-Gravity Crater Hop*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Traverse the craggy Martian surface! Tap to hop your 6-wheeled rover over deep impact craters and snag floating green xe..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Low-G Hop`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Martian Planetary Rover'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, rovers sat in isolated lanes at fixed `roverX` and suffered from a collision bug where aerial `xenocrystal` pickups never checked `r.yOffset` — meaning rovers driving flat on the ground (`yOffset === 0`) automatically collected mid-air crystals without jumping!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Martian Planetary Rover* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 3-Track Planetary Canyon & Fixed Aerial Xenocrystal Check:** Merged all 6-wheeled rovers onto a shared 3-track canyon with lane-switching and elastic rover-to-rover bumping, and enforced `r.yOffset <= -16` so aerial **Xenocrystals** genuinely require a Low-G Hop or Laser Harvest.
+2. **Hold-to-Charge Super-G Laser Vault & Seismic Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** launches a **Super-G Sky Vault** (`+55 pts`), fires the rover's **Mining Laser Mast** to zap nearby Xenocrystals (`+75 pts`), and triggers a **Seismic Slam Shunt** (`+70 pts` **"SEISMIC SHUNT!"**) that bumps rival rovers into adjacent crater tracks!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `olympus_mars` (Olympus Mons Mars), `europa_ice` (Europa Cryo-Ridge), and `titan_methane` (Titan Amber Dunes).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #171. Pulsar Radio Signal (ID: `pulsar_signal`) — [Reflex]
-- **Class Implementation:** `src/games/PulsarSignalGame.ts` (270 lines)
+- **Class Implementation:** `src/games/PulsarSignalGame.ts` (811 lines)
 - **Tagline:** *Frequency Lock & Cosmic Wave Sync*
-- **Current Control Scheme:** `Tap: Lock Frequency`
-- **Stated Gameplay Concept:** Tune into the rotating neutron star! Tap as the radio telescope dish sweeps into direct alignment with the pulsar lighthouse beam.
+- **Current Control Scheme:** `Steer: Orbit VLA Dish Track • Tap: Lock Pulsar Signal • Hold Action: Quasar Overclock & Jam Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Pilot 2.5D Mobile VLA Dish Crawlers on a shared circular rail track around a live rotating twin-beam Magnetar Pulsar! Chase the sweeping Golden and Cyan Lighthouse Cones, scoop up Cosmic Data Packets (`+45 pts`), tap inside the beam to lock frequencies, or release in the 72%–98% Sweet Spot for a 1.65x Quasar Overclock and Signal-Jam Shunt!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Pulsar Radio Signal* (*Frequency Lock & Cosmic Wave Sync*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Tune into the rotating neutron star! Tap as the radio telescope dish sweeps into direct alignment with the pulsar lighth..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Lock Frequency`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Pulsar Radio Signal'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players sat on isolated static circles watching a spinning clock hand with zero movement, zero shared pulsar star, and zero interaction.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Overhaul *Pulsar Radio Signal* into a high-stakes push-your-luck showdown. Introduce a central risk-reward multiplier where waiting until the last split-second multiplies your score exponentially, but false-starts result in a comical 2-second electro-shock stun.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared VLA Dish Array around a Live Twin-Beam Magnetar Pulsar:** Built a shared circular rail array around a central rotating 2.5D Neutron Star emitting twin sweeping lighthouse cones and expanding radio wavefronts, where Mascot Dish Crawlers orbit, collide, and collect **Cosmic Data Packets**.
+2. **Hold-to-Charge Quasar Harmonic Overclock & Signal-Jam Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** locks the pulsar signal for **1.65x points** across a wider cone and fires an **EMP Dish-Jammer Shunt** (`+70 pts` **"SIGNAL JAM SHUNT!"**) that blasts rival crawlers out of the pulsar beam!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `crab_nebula` (Crab Nebula VLA), `arecibo_array` (SETI Dish Array), and `cyber_quasar` (Subspace Quasar).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #172. Kuiper Asteroid Catcher (ID: `asteroid_catcher`) — [Action]
-- **Class Implementation:** `src/games/AsteroidCatcherGame.ts` (374 lines)
+- **Class Implementation:** `src/games/AsteroidCatcherGame.ts` (889 lines)
 - **Tagline:** *Magnetic Harpoon & Refinery Mining*
-- **Current Control Scheme:** `Tap: Fire Harpoon`
-- **Stated Gameplay Concept:** Fire the mining tractor harpoon! Time the swinging pendulum to spear rich gold and platinum asteroids while avoiding explosive red mines.
+- **Current Control Scheme:** `Steer: Move Refinery Tug on Gantry • Tap: Fire Harpoon • Hold Action: Super-Mag & Mine Slingshot Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Pilot mobile 2.5D Orbital Refinery Tugs along a shared Kuiper Belt Gantry Rail! Body-check rival tugs, fire your Magnetic Harpoon to haul drifting Gold (`+40`), Platinum (`+60`), and streaking Halley Comet Cores (`+85`), hijack asteroids off rival cables mid-reel (`+50`), or release a 72%–98% Sweet Spot Super-Mag Shot to slingshot Plasma Mines directly into rival tugs!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Kuiper Asteroid Catcher* (*Magnetic Harpoon & Refinery Mining*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Fire the mining tractor harpoon! Time the swinging pendulum to spear rich gold and platinum asteroids while avoiding exp..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Fire Harpoon`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Kuiper Asteroid Catcher'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players were pinned at stationary `x` positions at the top of the screen firing pendulum lines at non-moving circles — making it a stripped-down, static clone of Gold Miner without movement, asteroid drift, or sabotage.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Kuiper Asteroid Catcher* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Eliminate passive auto-rotation. Implement an active directional snap system: tap to pivot 45° instantly, double-tap for an immediate 180° turnaround, and hold to charge an explosive forward dash with a visible expanding aura and rising audio whine.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Mobile Gantry Refinery Tugs, Drifting Comets, & Mid-Reel Harpoon Hijacks:** Differentiated the game into an active orbital gantry showdown where tugs move laterally and body-check each other ($m_1 v_1 + m_2 v_2$), asteroids and **Halley Comets** drift across the belt, and players can **hijack caught asteroids right off a rival's retracting cable** (`+50 pts` **"HARPOON HIJACK!"**).
+2. **Hold-to-Charge Super-Mag Harpoon & Plasma Mine Slingshot Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** fires a **1.65x Super-Mag Harpoon** with `1.8x` reel speed that **slingshots any hit Proximity Plasma Mine directly at the nearest rival tug** (`+70 pts` **"MINE SLINGSHOT SHUNT!"**)!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `kuiper_belt` (Kuiper Belt Refinery), `ceres_station` (Ceres Foundry), and `cyber_belt` (Neon Kuiper Grid).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #173. UFO Alien Abduction (ID: `alien_abduction`) — [Party]
-- **Class Implementation:** `src/games/AlienAbductionGame.ts` (370 lines)
+- **Class Implementation:** `src/games/AlienAbductionGame.ts` (822 lines)
 - **Tagline:** *Tractor Beam Specimen Hoist*
-- **Current Control Scheme:** `Hold: Tractor Beam`
-- **Stated Gameplay Concept:** Hover above nighttime farm pastures! Hold your tractor beam to hoist prized cows into your flying saucer, but beware of explosive dynamite tractors.
+- **Current Control Scheme:** `Steer: Pilot Flying Saucer • Hold: Tractor Beam • Release (72–98%): Warp-Hoist & UFO EMP Shunt | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Pilot 2.5D Flying Saucers across a shared Area 51 Midnight Ranch! Steer and ram rival UFOs, hold your Tractor Beam to levitate roaming Dairy Cows (`+40 pts`) and Prize Golden Bulls (`+75 pts`), rustle levitating cows out of rival beams mid-air (`+35 pts`), or release in the 72%–98% Sweet Spot to Warp-Hoist livestock (`1.65x`) and EMP-shunt rival saucers!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *UFO Alien Abduction* (*Tractor Beam Specimen Hoist*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Hover above nighttime farm pastures! Hold your tractor beam to hoist prized cows into your flying saucer, but beware of ..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Hold: Tractor Beam`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'UFO Alien Abduction'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, saucers were fenced into private vertical lanes and auto-bounced left and right (`s.saucerX += s.dir * s.speed * dt`) so human players couldn't even steer their own UFO!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *UFO Alien Abduction* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Area 51 Ranch, Full UFO Steering, & Mid-Air Cow Rustling:** Merged all Flying Saucers into a single shared pasture with full horizontal steering, elastic saucer-to-saucer ramming, roaming **Dairy Cows** and **Golden Bulls**, and **Mid-Air Cow Rustling** (`+35 pts` **"MID-AIR RUSTLE!"**).
+2. **Hold-to-Charge Warp-Hoist & UFO EMP Shunt (72%–98% Sweet Spot):** Releasing your Tractor Beam in the **72%–98% Sweet Spot** instantly **Warp-Hoists** any cow or bull inside a wide `64px` cone for **1.65x points** and unleashes a **UFO EMP Shunt** (`+70 pts` **"UFO EMP SHUNT!"**) that stuns and knocks rival saucers off their targets!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `area_51` (Area 51 Ranch), `roswell_desert` (Roswell Mesa 1947), and `cyber_farm` (Synth-Pasture 3099).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #174. Space Elevator Tether (ID: `space_elevator`) — [Racing]
-- **Class Implementation:** `src/games/SpaceElevatorGame.ts` (340 lines)
+- **Class Implementation:** `src/games/SpaceElevatorGame.ts` (832 lines)
 - **Tagline:** *Orbital Climber & Mag-Surge*
-- **Current Control Scheme:** `Tap: Magnetic Surge`
-- **Stated Gameplay Concept:** Ascend the 36,000 km carbon nanotube tether! Tap at magnetic induction boost rings for acceleration surges, avoiding electrostatic lightning.
+- **Current Control Scheme:** `Steer: Switch Tether Ribbons • Tap: Induction Pulse • Hold Action: Mag-Rail Overdrive & Cable-Shock Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Ascend a shared 3-ribbon Carbon-Nanotube Orbital Tether toward Geosynchronous Orbit! Switch ribbons to dodge Electrostatic Lightning Arcs, tap inside Cyan Induction Boost Rings (`+70 pts`) and Golden Super-Cells (`+65 pts`), or hold & release in the 72%–98% Sweet Spot to unleash a Mag-Rail Overdrive that shatters lightning arcs and zaps rival climbers onto adjacent ribbons!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Space Elevator Tether* (*Orbital Climber & Mag-Surge*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Ascend the 36,000 km carbon nanotube tether! Tap at magnetic induction boost rings for acceleration surges, avoiding ele..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Magnetic Surge`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Space Elevator Tether'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, climbers were isolated on separate grey lines with no steering, and `pulseClimber` awarded `+10 score` and `+35 speed` even when no ring was nearby with zero cooldown — allowing players to spam tap 20 times per second for infinite free points!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Revamp the handling model in *Space Elevator Tether* with aggressive contact bumping, responsive slipstream drafting (+25% acceleration when directly behind a leader), and a rubber-band Nitro recharge for trailing racers to ensure photo-finish climaxes on the final turn.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 3-Ribbon Orbital Megastructure & Fixed Tap-Spam Exploit:** Merged all 2.5D Climber Pods onto a shared 3-ribbon orbital tether where astronauts switch ribbons to dodge lightning and collect **Boost Rings** & **Super-Cells**, and replaced the free spam points with a `0.35s` Eddy-Current cooldown when pulsing outside a ring.
+2. **Hold-to-Charge Mag-Rail Overdrive & Cable-Shock Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** launches a **Mag-Rail Overdrive** (`+85 pts` + shatters Lightning Arcs for `+75 pts`) and triggers a **Cable-Shock Shunt** (`+70 pts` **"CABLE SHOCK SHUNT!"**) that zaps nearby rivals onto adjacent tether ribbons!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `terran_tether` (New Mombasa Tether), `lunar_skyhook` (Luna Skyhook), and `cyber_spire` (Neo-Babel Spire).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #175. Orbital Drop Pod (ID: `orbital_drop_pod`) — [Physics]
-- **Class Implementation:** `src/games/OrbitalDropPodGame.ts` (297 lines)
+- **Class Implementation:** `src/games/OrbitalDropPodGame.ts` (844 lines)
 - **Tagline:** *Atmospheric Re-entry Burn*
-- **Current Control Scheme:** `Tap: Retro-Thruster`
-- **Stated Gameplay Concept:** Plummet through the fiery atmospheric insertion! Tap retro-thrusters to cool your ablative heat shield within the green thermal threshold.
+- **Current Control Scheme:** `Steer: Maneuver Drop Pod • Tap: Retro-Cool Shield • Hold Action: Cryo-Purge & Sonic Boom Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Plummet through a shared fiery atmospheric insertion corridor! Steer your 2.5D Armored Drop Pod through Azure Cryo-Clouds (`+45 pts`) and Golden Telemetry Rings (`+70 pts`) while dodging Flak Debris, tap Retro-Thrusters to regulate your Ablative Heat Shield inside the 40%–78% green window, or release a 72%–98% Sweet Spot Cryo-Purge Burn to sonic-shunt rival pods!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Orbital Drop Pod* (*Atmospheric Re-entry Burn*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Plummet through the fiery atmospheric insertion! Tap retro-thrusters to cool your ablative heat shield within the green ..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Retro-Thruster`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Orbital Drop Pod'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, pods were locked at fixed `laneX` positions with zero lateral steering, zero atmospheric clouds/rings/debris, and zero multiplayer interaction.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Orbital Drop Pod* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Re-Entry Corridor, Cryo-Clouds, Telemetry Rings, & Flak Debris:** Merged all 2.5D Drop Pods into a shared atmospheric dive with full lateral steering, mid-air pod ramming, cooling **Azure Cryo-Clouds**, **Golden Telemetry Rings**, and **Burning Flak Debris**.
+2. **Hold-to-Charge Cryo-Purge Burn & Sonic Boom Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** fires a **Cryo-Purge Burn** (`+80 pts`, resets shield heat to optimal `50%`) and unleashes a **Sonic Boom Shunt** (`+70 pts` **"SONIC BOOM SHUNT!"**) that blasts rival pods sideways and spikes their heat by `+24%`!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `helljumper` (Scorched Re-Entry), `venus_acid` (Venusian Cloud Dive), and `cyber_drop` (Neo-Tokyo Insertion).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #176. Dyson Swarm Collector (ID: `dyson_sphere_collector`) — [Action]
 - **Class Implementation:** `src/games/DysonSphereCollectorGame.ts` (341 lines)
