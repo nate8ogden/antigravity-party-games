@@ -78,8 +78,37 @@ export class GhostFlashlightGame extends BaseGame {
     }
   ];
 
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
+
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.mansionThemeIndex = (this.mansionThemeIndex + 1) % this.themes.length;
+          this.currentMapName = this.themes[this.mansionThemeIndex].name;
+          this.audio.playTap();
+        } else if (e.key === '1') {
+          this.mansionThemeIndex = 0;
+          this.currentMapName = this.themes[0].name;
+        } else if (e.key === '2') {
+          this.mansionThemeIndex = 1;
+          this.currentMapName = this.themes[1].name;
+        } else if (e.key === '3') {
+          this.mansionThemeIndex = 2;
+          this.currentMapName = this.themes[2].name;
+        }
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
+  }
+
+  public destroy(): void {
+    if (typeof window !== 'undefined' && this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
+    super.destroy();
   }
 
   public reset(width: number, height: number): void {
@@ -823,7 +852,7 @@ export class GhostFlashlightGame extends BaseGame {
     ctx.font = '900 11px Montserrat, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText(
-      `🏰 [${this.mansionThemeIndex + 1}/3] ${curTheme.name} | Move / Hold Forward`,
+      `🏰 [T] [${this.mansionThemeIndex + 1}/3] ${curTheme.name} | Move / Hold Forward`,
       34,
       height - 24
     );

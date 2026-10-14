@@ -101,8 +101,37 @@ export class KitchenChaosGame extends BaseGame {
     }
   ];
 
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
+
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.kitchenThemeIndex = (this.kitchenThemeIndex + 1) % this.themes.length;
+          this.currentMapName = this.themes[this.kitchenThemeIndex].name;
+          this.audio.playTap();
+        } else if (e.key === '1') {
+          this.kitchenThemeIndex = 0;
+          this.currentMapName = this.themes[0].name;
+        } else if (e.key === '2') {
+          this.kitchenThemeIndex = 1;
+          this.currentMapName = this.themes[1].name;
+        } else if (e.key === '3') {
+          this.kitchenThemeIndex = 2;
+          this.currentMapName = this.themes[2].name;
+        }
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
+  }
+
+  public destroy(): void {
+    if (typeof window !== 'undefined' && this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
+    super.destroy();
   }
 
   public reset(width: number, height: number): void {
@@ -882,7 +911,7 @@ export class KitchenChaosGame extends BaseGame {
     ctx.font = '900 11px Montserrat, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText(
-      `🍳 [${this.kitchenThemeIndex + 1}/3] ${curTheme.name} | Bump & Steal!`,
+      `🍳 [T] [${this.kitchenThemeIndex + 1}/3] ${curTheme.name} | Bump & Steal!`,
       34,
       height - 24
     );

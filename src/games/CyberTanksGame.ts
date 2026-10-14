@@ -86,9 +86,67 @@ export class CyberTanksGame extends BaseGame {
   public roundState: 'PLAYING' | 'ROUND_END' | 'MATCH_OVER' = 'PLAYING';
   public roundEndTimer: number = 0;
   public roundWinnerId: PlayerId | null = null;
+  private themeIndex: number = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
+
+  private themes = [
+    {
+      name: 'Neon Cyber Grid',
+      floorColor: '#111827',
+      gridColor: 'rgba(55, 65, 81, 0.45)',
+      borderColor: '#38BDF8',
+      wallFill: '#374151',
+      wallStroke: '#6B7280',
+      crateFill: '#D97706',
+      crateStroke: '#FDE68A'
+    },
+    {
+      name: 'Scorched Desert Outpost',
+      floorColor: '#291D12',
+      gridColor: 'rgba(180, 83, 9, 0.28)',
+      borderColor: '#F59E0B',
+      wallFill: '#57534E',
+      wallStroke: '#A8A29E',
+      crateFill: '#B45309',
+      crateStroke: '#FCD34D'
+    },
+    {
+      name: 'Cryo Foundry Bunker',
+      floorColor: '#082F49',
+      gridColor: 'rgba(56, 189, 248, 0.25)',
+      borderColor: '#22D3EE',
+      wallFill: '#1E3A8A',
+      wallStroke: '#60A5FA',
+      crateFill: '#0284C7',
+      crateStroke: '#BAE6FD'
+    }
+  ];
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIndex = (this.themeIndex + 1) % this.themes.length;
+          this.audio.playTap();
+        } else if (e.key === '1') {
+          this.themeIndex = 0;
+        } else if (e.key === '2') {
+          this.themeIndex = 1;
+        } else if (e.key === '3') {
+          this.themeIndex = 2;
+        }
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
+  }
+
+  public destroy(): void {
+    if (typeof window !== 'undefined' && this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
+    super.destroy();
   }
 
   public reset(width: number, height: number): void {
