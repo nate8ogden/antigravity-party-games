@@ -3326,8 +3326,16 @@ export class GameManager {
       this.ctx.restore();
     } else if (arenaId === 'arena_sakura_temple') {
       this.ctx.save();
+      // Vermillion Torii Shrine Pillars in top corners
+      for (const tx of [28, w - 28]) {
+        this.ctx.fillStyle = '#DC2626';
+        this.ctx.fillRect(tx - 10, 12, 3, 22);
+        this.ctx.fillRect(tx + 7, 12, 3, 22);
+        this.ctx.fillRect(tx - 15, 10, 30, 4);
+        this.ctx.fillRect(tx - 12, 17, 24, 3);
+      }
       // Floating pink cherry blossom petals tumbling across the wind
-      for (let i = 0; i < 12; i++) {
+      for (let i = 0; i < 14; i++) {
         const px = (w + ((t * 30 + i * 67) % w) + Math.sin(t * 2 + i) * 35) % w;
         const py = ((t * 35 + i * 53) % h);
         this.ctx.save();
@@ -3414,6 +3422,15 @@ export class GameManager {
         }
         this.ctx.stroke();
       }
+      // Swaying bioluminescent sea kelp in bottom corners
+      this.ctx.strokeStyle = '#14B8A6';
+      this.ctx.lineWidth = 3;
+      for (const kx of [22, 34, w - 22, w - 34]) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(kx, h - 6);
+        this.ctx.quadraticCurveTo(kx + Math.sin(t * 3 + kx) * 10, h - 22, kx + Math.cos(t * 2 + kx) * 8, h - 38);
+        this.ctx.stroke();
+      }
       // Rising bioluminescent oxygen bubbles
       for (let i = 0; i < 10; i++) {
         const bx = (i * (w / 10) + Math.sin(t * 2 + i) * 25 + 40) % (w - 40);
@@ -3432,6 +3449,7 @@ export class GameManager {
       this.ctx.lineWidth = 1.5;
       this.ctx.setLineDash([8, 6]);
       this.ctx.strokeRect(14, 14, w - 28, h - 28);
+      this.ctx.setLineDash([]);
       // Twinkling golden starlight glints along borders
       for (let i = 0; i < 6; i++) {
         const sx = 40 + ((t * 80 + i * 140) % (w - 80));
@@ -3576,9 +3594,511 @@ export class GameManager {
         this.ctx.fill();
       }
       this.ctx.restore();
+    } else if (arenaId === 'arena_pinball_matrix') {
+      this.ctx.save();
+      // Flashing 1000-PT Arcade Pinball Pop Bumpers in corners
+      const bumpers = [
+        { x: 24, y: 24, c: '#EC4899' },
+        { x: w - 24, y: 24, c: '#06B6D4' },
+        { x: 24, y: h - 24, c: '#F59E0B' },
+        { x: w - 24, y: h - 24, c: '#10B981' }
+      ];
+      for (const bp of bumpers) {
+        const bScale = 1 + Math.max(0, Math.sin(t * 8 + bp.x)) * 0.22;
+        this.ctx.fillStyle = bp.c;
+        this.ctx.strokeStyle = '#FFFFFF';
+        this.ctx.lineWidth = 2;
+        this.ctx.shadowColor = bp.c;
+        this.ctx.shadowBlur = 12;
+        this.ctx.beginPath();
+        this.ctx.arc(bp.x, bp.y, 12 * bScale, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.stroke();
+      }
+      this.ctx.restore();
+    } else if (arenaId === 'arena_biolum_jungle') {
+      this.ctx.save();
+      // Glowing Cyan/Violet Bioluminescent Mushrooms in corners & Drifting Spores
+      for (const mx of [24, w - 24]) {
+        this.ctx.fillStyle = '#CCFBF1';
+        this.ctx.fillRect(mx - 2.5, h - 22, 5, 14);
+        this.ctx.fillStyle = '#2DD4BF';
+        this.ctx.shadowColor = '#2DD4BF';
+        this.ctx.shadowBlur = 10;
+        this.ctx.beginPath();
+        this.ctx.arc(mx, h - 22, 11, Math.PI, 0);
+        this.ctx.fill();
+      }
+      for (let i = 0; i < 10; i++) {
+        const sx = (i * (w / 10) + Math.sin(t * 2 + i) * 30 + 30) % (w - 30);
+        const sy = h - ((t * 25 + i * 47) % (h - 40)) - 20;
+        this.ctx.fillStyle = i % 2 === 0 ? '#2DD4BF' : '#C084FC';
+        this.ctx.beginPath();
+        this.ctx.arc(sx, sy, 2.2, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      this.ctx.restore();
+    } else if (arenaId === 'arena_pirate_galleon') {
+      this.ctx.save();
+      // Broadside Brass Cannons & Swaying Ship Lanterns
+      for (const cxPos of [20, w - 20]) {
+        const dir = cxPos < w / 2 ? 1 : -1;
+        this.ctx.fillStyle = '#78350F';
+        this.ctx.fillRect(cxPos - 8, h / 2 - 8, 16, 16);
+        this.ctx.fillStyle = '#334155';
+        this.ctx.strokeStyle = '#F59E0B';
+        this.ctx.lineWidth = 1.5;
+        this.ctx.fillRect(cxPos, h / 2 - 5, dir * 18, 10);
+        this.ctx.strokeRect(cxPos, h / 2 - 5, dir * 18, 10);
+      }
+      this.ctx.restore();
+    } else if (arenaId === 'arena_cyber_tokyo') {
+      this.ctx.save();
+      // Holographic Neon Kanji Signs & Rain Streaks
+      this.ctx.strokeStyle = 'rgba(6, 182, 212, 0.25)';
+      this.ctx.lineWidth = 1.2;
+      for (let i = 0; i < 14; i++) {
+        const rx = ((i * 79 + t * 40) % (w - 20)) + 10;
+        const ry = ((i * 53 + t * 180) % (h - 30)) + 10;
+        this.ctx.beginPath();
+        this.ctx.moveTo(rx, ry);
+        this.ctx.lineTo(rx - 3, ry + 14);
+        this.ctx.stroke();
+      }
+      for (const bx of [22, w - 22]) {
+        this.ctx.strokeStyle = bx < w / 2 ? '#EC4899' : '#06B6D4';
+        this.ctx.shadowColor = this.ctx.strokeStyle;
+        this.ctx.shadowBlur = 10;
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(bx - 10, 48, 20, 48);
+      }
+      this.ctx.restore();
+    } else if (arenaId === 'arena_black_hole') {
+      this.ctx.save();
+      // Relativistic Gravitational Lensing Orbit Rings along perimeter
+      this.ctx.strokeStyle = 'rgba(168, 85, 247, 0.35)';
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.ellipse(w / 2, h / 2, w * 0.48, h * 0.46, 0, t, t + Math.PI * 1.4);
+      this.ctx.stroke();
+      this.ctx.strokeStyle = 'rgba(244, 63, 94, 0.3)';
+      this.ctx.beginPath();
+      this.ctx.ellipse(w / 2, h / 2, w * 0.47, h * 0.45, 0, -t * 1.2, -t * 1.2 + Math.PI * 1.2);
+      this.ctx.stroke();
+      this.ctx.restore();
+    } else if (arenaId === 'arena_dragons_hoard') {
+      this.ctx.save();
+      // Glittering Golden Dubloon Mounds & Ruby Gems in bottom corners
+      for (const gx of [26, w - 26]) {
+        this.ctx.fillStyle = '#F59E0B';
+        this.ctx.shadowColor = '#FBBF24';
+        this.ctx.shadowBlur = 10;
+        this.ctx.beginPath();
+        this.ctx.arc(gx, h - 10, 16, Math.PI, 0);
+        this.ctx.fill();
+        this.ctx.fillStyle = '#EF4444';
+        this.ctx.beginPath();
+        this.ctx.arc(gx, h - 18, 4, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      this.ctx.restore();
+    } else if (arenaId === 'arena_olympus_pantheon') {
+      this.ctx.save();
+      // Fluted White Marble Corinthian Corner Pillars & Golden Lightning Braziers
+      for (const px of [16, w - 16]) {
+        this.ctx.fillStyle = 'rgba(248, 250, 252, 0.85)';
+        this.ctx.strokeStyle = '#F59E0B';
+        this.ctx.lineWidth = 1.5;
+        this.ctx.fillRect(px - 6, 16, 12, 36);
+        this.ctx.strokeRect(px - 6, 16, 12, 36);
+        this.ctx.fillRect(px - 9, 12, 18, 5);
+        this.ctx.fillRect(px - 9, 50, 18, 5);
+      }
+      this.ctx.restore();
     }
 
     this.ctx.restore();
+  }
+
+  private renderShopArenaDiorama(arena: any, x: number, y: number, w: number, h: number) {
+    const ctx = this.ctx;
+    const t = performance.now() * 0.0025;
+    const cx = x + w / 2;
+    const cy = y + h / 2;
+    const pat = arena.floorPattern;
+
+    ctx.save();
+    // Clip inside rounded arena preview box
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(x + 2, y + 2, w - 4, h - 4, 10);
+    } else {
+      ctx.rect(x + 2, y + 2, w - 4, h - 4);
+    }
+    ctx.clip();
+
+    // Rich 2.5D radial depth floor shading
+    const bgGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, w * 0.65);
+    bgGrad.addColorStop(0, arena.previewColor);
+    bgGrad.addColorStop(1, '#020617');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(x, y, w, h);
+
+    // Bespoke Animated 2.5D Diorama Scenery per Arena Theme
+    if (pat === 'synth_grid' || pat === 'synthwave_highway') {
+      // Glowing Retro 80s Sunset & Perspective Neon Grid + Palm Silhouettes
+      const sunR = pat === 'synthwave_highway' ? 28 : 20;
+      const sunY = y + 36;
+      const sunGrad = ctx.createLinearGradient(cx, sunY - sunR, cx, sunY + sunR);
+      sunGrad.addColorStop(0, '#FDE047');
+      sunGrad.addColorStop(0.5, '#EC4899');
+      sunGrad.addColorStop(1, '#7E22CE');
+      ctx.fillStyle = sunGrad;
+      ctx.beginPath();
+      ctx.arc(cx, sunY, sunR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = arena.previewColor;
+      for (let sy = sunY - 2; sy < sunY + sunR; sy += 5) {
+        ctx.fillRect(cx - sunR, sy, sunR * 2, 2);
+      }
+      // Horizon & moving perspective lines
+      const horY = y + 54;
+      ctx.strokeStyle = '#EC4899';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x, horY);
+      ctx.lineTo(x + w, horY);
+      ctx.stroke();
+      for (let i = -5; i <= 5; i++) {
+        ctx.beginPath();
+        ctx.moveTo(cx + i * 14, horY);
+        ctx.lineTo(cx + i * 52, y + h);
+        ctx.stroke();
+      }
+      for (let r = 0; r < 4; r++) {
+        const ry = horY + ((t * 22 + r * 15) % (h - 54));
+        ctx.beginPath();
+        ctx.moveTo(x, ry);
+        ctx.lineTo(x + w, ry);
+        ctx.stroke();
+      }
+      if (pat === 'synthwave_highway') {
+        // Neon cyan palm trees on sides
+        ctx.fillStyle = '#06B6D4';
+        for (const px of [x + 22, x + w - 22]) {
+          ctx.fillRect(px - 1.5, horY - 18, 3, 22);
+          ctx.beginPath();
+          ctx.arc(px, horY - 18, 9, Math.PI, 0);
+          ctx.fill();
+        }
+      }
+    } else if (pat === 'matrix_rain') {
+      // Cascading Cyberpunk Digital Code Rain & Glowing Circuit Nodes
+      ctx.fillStyle = '#10B981';
+      ctx.font = 'bold 9px monospace';
+      const chars = '01<>#/$%&*';
+      for (let c = 0; c < 12; c++) {
+        const mx = x + 12 + c * 20;
+        const my = y + ((t * 45 + c * 29) % (h - 16));
+        ctx.globalAlpha = 0.85;
+        ctx.fillText(chars[(c + Math.floor(t * 5)) % chars.length], mx, my + 12);
+        ctx.globalAlpha = 0.35;
+        ctx.fillText(chars[(c + 3) % chars.length], mx, my);
+      }
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.35)';
+      ctx.strokeRect(x + 14, y + 14, w - 28, h - 28);
+    } else if (pat === 'arcade_cabinet') {
+      // Retro 8-Bit Marquee Bulbs, Pac-Maze Walls & Pixel Stars
+      ctx.strokeStyle = '#3B82F6';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x + 18, y + 20, 42, 22);
+      ctx.strokeRect(x + w - 60, y + 20, 42, 22);
+      const bCols = ['#EF4444', '#FBBF24', '#22C55E', '#38BDF8', '#EC4899'];
+      for (let i = 0; i < 10; i++) {
+        ctx.fillStyle = bCols[(i + Math.floor(t * 4)) % bCols.length];
+        ctx.beginPath();
+        ctx.arc(x + 16 + i * 25, y + 8, 3, 0, Math.PI * 2);
+        ctx.arc(x + 16 + i * 25, y + h - 8, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (pat === 'candy_land') {
+      // Striped Peppermint Pillars, Gumdrop Towers & Confection Sparkles
+      const gCols = ['#EC4899', '#38BDF8', '#FBBF24', '#4ADE80'];
+      for (let i = 0; i < 6; i++) {
+        ctx.fillStyle = gCols[i % gCols.length];
+        ctx.beginPath();
+        ctx.arc(x + 28 + i * 40, y + 18, 8, Math.PI, 0);
+        ctx.fill();
+      }
+      ctx.strokeStyle = 'rgba(244, 114, 182, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 26, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (pat === 'ice_crystals') {
+      // Jagged Glacial Ice Spikes, Frozen Lake Cracks & Swirling Snowflakes
+      ctx.fillStyle = '#38BDF8';
+      for (let i = 0; i < 9; i++) {
+        const ix = x + 16 + i * 28;
+        ctx.beginPath();
+        ctx.moveTo(ix - 8, y);
+        ctx.lineTo(ix, y + 16 + (i % 2) * 8);
+        ctx.lineTo(ix + 8, y);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.strokeStyle = 'rgba(186, 230, 253, 0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(cx - 40, cy - 10);
+      ctx.lineTo(cx, cy + 5);
+      ctx.lineTo(cx + 45, cy - 8);
+      ctx.moveTo(cx, cy + 5);
+      ctx.lineTo(cx + 12, cy + 32);
+      ctx.stroke();
+      ctx.fillStyle = '#FFFFFF';
+      for (let i = 0; i < 10; i++) {
+        ctx.beginPath();
+        ctx.arc(x + ((i * 37 + t * 25) % w), y + ((i * 23 + t * 35) % h), 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (pat === 'sakura_petals') {
+      // Vermillion Japanese Torii Gate in Center & Tumbling Pink Sakura Petals
+      ctx.fillStyle = '#E11D48';
+      ctx.fillRect(cx - 22, y + 16, 5, 36);
+      ctx.fillRect(cx + 17, y + 16, 5, 36);
+      ctx.fillRect(cx - 32, y + 12, 64, 5);
+      ctx.fillRect(cx - 26, y + 22, 52, 4);
+      ctx.fillStyle = '#F472B6';
+      for (let i = 0; i < 10; i++) {
+        const px = x + ((i * 33 + t * 28) % w);
+        const py = y + ((i * 19 + t * 22) % h);
+        ctx.beginPath();
+        ctx.ellipse(px, py, 4, 2, t + i, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (pat === 'volcanic_fissures') {
+      // Glowing Tectonic Lava Rivers, Basalt Rocks & Rising Fire Embers
+      ctx.strokeStyle = '#F97316';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#EF4444';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(x + 10, y + 25);
+      ctx.lineTo(cx - 15, cy);
+      ctx.lineTo(cx + 20, cy + 12);
+      ctx.lineTo(x + w - 10, y + h - 20);
+      ctx.moveTo(cx - 15, cy);
+      ctx.lineTo(cx - 40, y + h - 15);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      for (let i = 0; i < 8; i++) {
+        ctx.fillStyle = i % 2 === 0 ? '#FBBF24' : '#EF4444';
+        ctx.beginPath();
+        ctx.arc(x + 25 + i * 28, y + h - ((t * 35 + i * 19) % h), 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (pat === 'haunted_dungeon') {
+      // Gothic Iron Fence, Glowing Green Gargoyle Torches & Rolling Ectoplasm Mist
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.22)';
+      ctx.fillRect(x, y + h - 26, w, 26);
+      for (const tx of [x + 24, cx, x + w - 24]) {
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(tx - 3, y + 22, 6, 16);
+        ctx.fillStyle = '#10B981';
+        ctx.shadowColor = '#34D399';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(tx, y + 18 + Math.sin(t * 10 + tx) * 1.5, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    } else if (pat === 'atlantis_deep') {
+      // Sunken Greek Temple Ruins, Swaying Sea Kelp & Rising Bubbles
+      ctx.strokeStyle = 'rgba(103, 232, 249, 0.25)';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(x, y + 25 + i * 28);
+        ctx.quadraticCurveTo(cx, y + 15 + i * 28 + Math.sin(t * 2 + i) * 10, x + w, y + 25 + i * 28);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = '#10B981';
+      ctx.lineWidth = 3.5;
+      for (let k = 0; k < 5; k++) {
+        const kx = x + 24 + k * 52;
+        ctx.beginPath();
+        ctx.moveTo(kx, y + h);
+        ctx.quadraticCurveTo(kx + Math.sin(t * 3 + k) * 10, y + h - 22, kx, y + h - 42);
+        ctx.stroke();
+      }
+    } else if (pat === 'gilded_inlays') {
+      // Imperial Marble Colosseum Floor, 24K Gold Laurel Ring & Pillars
+      ctx.strokeStyle = '#F59E0B';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x + 12, y + 12, w - 24, h - 24);
+      ctx.beginPath();
+      ctx.arc(cx, cy, 32, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = '#FEF08A';
+      for (const px of [x + 20, x + w - 20]) {
+        ctx.fillRect(px - 5, y + 16, 10, h - 32);
+      }
+    } else if (pat === 'space_hull') {
+      // Orbital Star Cruiser Airlock Viewport, Starfield & Hazard Beacons
+      ctx.fillStyle = '#FFFFFF';
+      for (let i = 0; i < 14; i++) {
+        ctx.fillRect(x + ((i * 43) % w), y + ((i * 29) % h), 2, 2);
+      }
+      ctx.strokeStyle = '#38BDF8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 30, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (pat === 'steampunk_forge') {
+      // Rotating Interlocking Brass Clockwork Gears & Steam Plumes
+      for (const g of [{ gx: cx - 32, gy: cy, r: 22, d: 1 }, { gx: cx + 26, gy: cy + 8, r: 16, d: -1.4 }]) {
+        ctx.save();
+        ctx.translate(g.gx, g.gy);
+        ctx.rotate(t * g.d);
+        ctx.fillStyle = '#B45309';
+        ctx.strokeStyle = '#FBBF24';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, g.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+          ctx.fillStyle = '#FBBF24';
+          ctx.fillRect(Math.cos(a) * g.r - 3, Math.sin(a) * g.r - 3, 6, 6);
+        }
+        ctx.restore();
+      }
+    } else if (pat === 'jade_dragon') {
+      // Swirling Ethereal Emerald Dragon & Glowing Jade Lanterns
+      ctx.strokeStyle = '#10B981';
+      ctx.lineWidth = 4;
+      ctx.shadowColor = '#34D399';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      for (let xPos = x + 20; xPos <= x + w - 20; xPos += 12) {
+        const yPos = cy + Math.sin(xPos * 0.05 + t * 3) * 18;
+        if (xPos === x + 20) ctx.moveTo(xPos, yPos);
+        else ctx.lineTo(xPos, yPos);
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    } else if (pat === 'pinball_matrix') {
+      // Flashing Arcade Pinball Pop Bumpers & Flipper Lanes
+      for (const b of [{ bx: cx - 35, by: cy - 16, c: '#EC4899' }, { bx: cx + 35, by: cy - 16, c: '#06B6D4' }, { bx: cx, by: cy + 18, c: '#F59E0B' }]) {
+        const pulse = 1 + Math.max(0, Math.sin(t * 7 + b.bx)) * 0.2;
+        ctx.fillStyle = b.c;
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(b.bx, b.by, 13 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+    } else if (pat === 'biolum_jungle') {
+      // Glowing Avatar Bioluminescent Giant Mushrooms & Spores
+      for (const m of [{ mx: cx - 40, my: y + h - 12, c: '#2DD4BF', r: 16 }, { mx: cx, my: y + h - 8, c: '#C084FC', r: 22 }, { mx: cx + 42, my: y + h - 12, c: '#38BDF8', r: 15 }]) {
+        ctx.fillStyle = '#E2E8F0';
+        ctx.fillRect(m.mx - 3, m.my - 18, 6, 18);
+        ctx.fillStyle = m.c;
+        ctx.shadowColor = m.c;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(m.mx, m.my - 18, m.r, Math.PI, 0);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    } else if (pat === 'pirate_galleon') {
+      // Wood Plank Deck, Broadside Cannons & Kraken Tentacles
+      ctx.strokeStyle = 'rgba(120, 53, 15, 0.5)';
+      ctx.lineWidth = 1.5;
+      for (let py = y + 18; py < y + h; py += 16) {
+        ctx.beginPath();
+        ctx.moveTo(x, py);
+        ctx.lineTo(x + w, py);
+        ctx.stroke();
+      }
+      ctx.fillStyle = '#F59E0B';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (pat === 'cyber_tokyo') {
+      // Neo-Tokyo Skyscraper Skyline, Neon Billboards & Rain
+      ctx.fillStyle = '#0F172A';
+      const bWidths = [28, 36, 24, 42, 30, 34, 28];
+      let curBx = x + 8;
+      bWidths.forEach((bw, idx) => {
+        const bh = 35 + (idx % 3) * 18;
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(curBx, y + h - bh, bw - 3, bh);
+        ctx.strokeStyle = idx % 2 === 0 ? '#06B6D4' : '#EC4899';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(curBx + 4, y + h - bh + 6, bw - 11, 14);
+        curBx += bw;
+      });
+    } else if (pat === 'black_hole') {
+      // Swirling Supermassive Black Hole Singularity & Accretion Disk
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(t * 1.5);
+      ctx.strokeStyle = '#A855F7';
+      ctx.lineWidth = 4;
+      ctx.shadowColor = '#EC4899';
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 48, 18, 0.3, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = '#000000';
+      ctx.strokeStyle = '#FDE047';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, 15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    } else if (pat === 'dragons_hoard') {
+      // Glittering Mountains of Gold Coins & Ruby Treasure Chest
+      ctx.fillStyle = '#D97706';
+      ctx.beginPath();
+      ctx.arc(cx - 50, y + h + 10, 48, Math.PI, 0);
+      ctx.arc(cx + 55, y + h + 10, 52, Math.PI, 0);
+      ctx.arc(cx, y + h + 15, 56, Math.PI, 0);
+      ctx.fill();
+      // Center Treasure Chest
+      ctx.fillStyle = '#78350F';
+      ctx.strokeStyle = '#FDE047';
+      ctx.lineWidth = 2;
+      ctx.fillRect(cx - 16, cy - 4, 32, 22);
+      ctx.strokeRect(cx - 16, cy - 4, 32, 22);
+    } else if (pat === 'olympus_pantheon') {
+      // Fluted White Marble Temple Columns, Golden Lightning & Clouds
+      ctx.fillStyle = '#F8FAFC';
+      for (const colX of [x + 22, x + 52, x + w - 52, x + w - 22]) {
+        ctx.fillRect(colX - 5, y + 14, 10, h - 28);
+        ctx.fillStyle = '#FDE047';
+        ctx.fillRect(colX - 7, y + 12, 14, 4);
+        ctx.fillRect(colX - 7, y + h - 16, 14, 4);
+        ctx.fillStyle = '#F8FAFC';
+      }
+    } else {
+      // Clean Modern Competition Slate
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.28)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x + 14, y + 14, w - 28, h - 28);
+      ctx.beginPath();
+      ctx.arc(cx, cy, 24, 0, Math.PI * 2);
+      ctx.moveTo(cx, y + 14);
+      ctx.lineTo(cx, y + h - 14);
+      ctx.stroke();
+    }
+
+    ctx.restore();
   }
 
   public openGameModal(index: number) {
