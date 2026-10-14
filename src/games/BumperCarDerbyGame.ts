@@ -1,34 +1,77 @@
 import { BaseGame } from './BaseGame';
-import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
+import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
 
+interface SparkPad {
+  x: number;
+  y: number;
+  isGolden: boolean;
+  active: boolean;
+}
+
 interface BumperCar {
   id: PlayerId;
+  color: string;
   x: number;
   y: number;
   vx: number;
   vy: number;
   angle: number;
-  speed: number;
-  boostTimer: number;
-  spinTimer: number;
+  charge: number;
+  wasHolding: boolean;
+  ramTimer: number;
   score: number;
+  streak: number;
+  multiplier: number;
+  stunTimer: number;
+  underdog: boolean;
+  lastTapTime: number;
+  botTimer: number;
 }
 
-interface SparkPickup {
-  x: number;
-  y: number;
-  radius: number;
-  pulse: number;
+type ThemeId = 'electric_pavilion' | 'cyber_bumper_dome' | 'retro_boardwalk';
+
+interface ThemeSpec {
+  name: string;
+  floorInner: string;
+  floorOuter: string;
+  wallColor: string;
 }
+
+const THEMES: Record<ThemeId, ThemeSpec> = {
+  electric_pavilion: {
+    name: 'High-Voltage Pavilion',
+    floorInner: '#1e1b4b',
+    floorOuter: '#09071a',
+    wallColor: '#00f5d4',
+  },
+  cyber_bumper_dome: {
+    name: 'Cyber Bumper Thunderdome',
+    floorInner: '#3b0764',
+    floorOuter: '#140326',
+    wallColor: '#f472b6',
+  },
+  retro_boardwalk: {
+    name: 'Boardwalk Smash Ring',
+    floorInner: '#0f2942',
+    floorOuter: '#040b14',
+    wallColor: '#facc15',
+  },
+};
+
+const THEME_ORDER: ThemeId[] = ['electric_pavilion', 'cyber_bumper_dome', 'retro_boardwalk'];
 
 export class BumperCarDerbyGame extends BaseGame {
   private cars: Map<PlayerId, BumperCar> = new Map();
-  private pickups: SparkPickup[] = [];
-  private spawnPickupTimer: number = 0;
-  private arenaMargin: number = 40;
+  private pads: SparkPad[] = [];
+  private timeElapsed = 0;
+  private suddenDeath = false;
+  private hitStopTimer = 0;
+  private themeIndex = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
+  private floatingTexts: { x: number; y: number; text: string; color: string; alpha: number; vy: number; size: number }[] = [];
 
   constructor(
     players: PlayerConfig[],
@@ -37,392 +80,287 @@ export class BumperCarDerbyGame extends BaseGame {
     particles: ParticleSystem
   ) {
     super(players, input, audio, particles);
+    this.roundTimer = 38.0;
   }
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIndex = (this.themeIndex + 1) % THEME_ORDER.length;
+          this.audio.playTap();
+        } else if (e.key >= '1' && e.key <= '3') {
+          this.themeIndex = parseInt(e.key, 10) - 1;
+          this.audio.playTap();
+        }
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
   }
 
   public reset(width: number, height: number): void {
     this.isFinished = false;
-    this.roundTimer = 30;
+    this.roundTimer = 38.0;
+    this.timeElapsed = 0;
+    this.suddenDeath = false;
+    this.hitStopTimer = 0;
+    this.pads = [];
     this.cars.clear();
-    this.pickups = [];
-    this.spawnPickupTimer = 2.0;
+    this.floatingTexts = [];
+    this.themeIndex = Math.floor(Math.random() * THEME_ORDER.length);
+
+    const w = width || 1280;
+    const h = height || 720;
+    const cx = w / 2;
+    const cy = h / 2 + 15;
+
+    for (let i = 0; i < 6; i++) {
+      this.spawnSparkPad(w, h);
+    }
 
     const active = this.getActivePlayers();
-    const count = active.length;
-    const cx = width / 2;
-    const cy = height / 2;
-    const spawnRadius = Math.min(width, height) * 0.32;
-
-    active.forEach((p, idx) => {
-      const angle = (idx / count) * Math.PI * 2;
-      this.cars.set(p.id, {
-        id: p.id,
-        x: cx + Math.cos(angle) * spawnRadius,
-        y: cy + Math.sin(angle) * spawnRadius,
+    active.forEach((cfg, idx) => {
+      const a = (idx / Math.max(1, active.length)) * Math.PI * 2;
+      this.cars.set(cfg.id, {
+        id: cfg.id,
+        color: cfg.color,
+        x: cx + Math.cos(a) * 140,
+        y: cy + Math.sin(a) * 140,
         vx: 0,
         vy: 0,
-        angle: angle + Math.PI,
-        speed: 0,
-        boostTimer: 0,
-        spinTimer: 0,
-        score: 0
+        angle: a + Math.PI,
+        charge: 0,
+        wasHolding: false,
+        ramTimer: 0,
+        score: 0,
+        streak: 0,
+        multiplier: 1,
+        stunTimer: 0,
+        underdog: false,
+        lastTapTime: -1,
+        botTimer: 0.16,
       });
     });
+  }
 
-    // Initial center spark battery
-    this.pickups.push({ x: cx, y: cy, radius: 14, pulse: 0 });
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    void height;
+    if (y < 60 && x > width - 220) {
+      this.themeIndex = (this.themeIndex + 1) % THEME_ORDER.length;
+      this.audio.playTap();
+      return true;
+    }
+    return false;
+  }
+
+  private addFloatingText(x: number, y: number, text: string, color: string, size = 18): void {
+    this.floatingTexts.push({ x, y, text, color, alpha: 1, vy: -52, size });
+  }
+
+  private renderFloatingTexts(ctx: CanvasRenderingContext2D): void {
+    for (const ft of this.floatingTexts) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, ft.alpha);
+      ctx.font = `900 ${ft.size}px "Outfit", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+      ctx.lineWidth = 4;
+      ctx.strokeText(ft.text, ft.x, ft.y);
+      ctx.fillStyle = ft.color;
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.restore();
+    }
+  }
+
+  private spawnSparkPad(w: number, h: number): void {
+    const cx = w / 2;
+    const cy = h / 2 + 15;
+    const a = Math.random() * Math.PI * 2;
+    const r = 65 + Math.random() * (Math.min(w, h) * 0.28);
+    this.pads.push({
+      x: cx + Math.cos(a) * r,
+      y: cy + Math.sin(a) * r,
+      isGolden: Math.random() < (this.suddenDeath ? 0.45 : 0.25),
+      active: true,
+    });
   }
 
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
-    this.roundTimer = Math.max(0, this.roundTimer - dt);
+
+    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+      const ft = this.floatingTexts[i];
+      ft.y += ft.vy * dt;
+      ft.alpha -= dt * 1.1;
+      if (ft.alpha <= 0) this.floatingTexts.splice(i, 1);
+    }
+
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer -= dt;
+      return;
+    }
+
+    this.timeElapsed += dt;
+    this.roundTimer -= dt;
+    if (this.roundTimer <= 0) {
+      this.roundTimer = 0;
+      this.isFinished = true;
+      return;
+    }
+
+    if (this.roundTimer <= 15 && !this.suddenDeath) {
+      this.suddenDeath = true;
+      this.audio.playFanfare();
+      this.addFloatingText(width / 2, 100, '⚡ SHRINKING HIGH-VOLTAGE RING! 2X SMASH! ⚡', '#facc15', 24);
+    }
+
+    const cx = width / 2;
+    const cy = height / 2 + 15;
+    const maxRadius = Math.min(width, height) * (this.suddenDeath ? 0.35 : 0.43);
+
+    let activePads = 0;
+    for (const p of this.pads) if (p.active) activePads++;
+    while (activePads < 6) {
+      this.spawnSparkPad(width, height);
+      activePads++;
+    }
+
+    let maxScore = 0;
+    this.cars.forEach((c) => {
+      if (c.score > maxScore) maxScore = c.score;
+    });
+
     this.updateBots(dt, width, height);
 
-    // Spawn battery pickups
-    this.spawnPickupTimer -= dt;
-    if (this.spawnPickupTimer <= 0 && this.pickups.length < 3) {
-      this.spawnPickupTimer = 4.0;
-      const margin = 80;
-      this.pickups.push({
-        x: margin + Math.random() * (width - margin * 2),
-        y: margin + Math.random() * (height - margin * 2),
-        radius: 14,
-        pulse: 0
-      });
-    }
+    this.cars.forEach((c) => {
+      c.underdog = maxScore - c.score >= 120;
+      if (c.stunTimer > 0) c.stunTimer -= dt;
+      if (c.ramTimer > 0) c.ramTimer -= dt;
 
-    // Update pickups pulse
-    for (const pu of this.pickups) {
-      pu.pulse += dt * 4;
-    }
+      const cfg = this.getPlayer(c.id);
+      const isBot = cfg ? cfg.type.startsWith('bot_') : false;
 
-    const carList = Array.from(this.cars.values());
-
-    for (const car of carList) {
-      if (car.spinTimer > 0) {
-        car.spinTimer -= dt;
-        car.angle += dt * 10;
-      } else {
-        // Handle input
-        const steerX = this.input.getSteer(car.id);
-        const steerY = -this.input.getThrottle(car.id);
-        const hasDirection = Math.hypot(steerX, steerY) > 0.2;
-
-        if (hasDirection) {
-          const targetAngle = Math.atan2(steerY, steerX);
-          // Smooth rotation
-          let diff = targetAngle - car.angle;
-          while (diff < -Math.PI) diff += Math.PI * 2;
-          while (diff > Math.PI) diff -= Math.PI * 2;
-          car.angle += diff * Math.min(1, dt * 7);
-
-          const maxSpd = car.boostTimer > 0 ? 320 : 190;
-          car.speed = Math.min(maxSpd, car.speed + 420 * dt);
-        } else {
-          car.speed = Math.max(0, car.speed - 300 * dt);
+      if (!isBot && c.stunTimer <= 0) {
+        const move = { x: this.input.getSteer(c.id), y: -this.input.getThrottle(c.id) };
+        const mag = Math.hypot(move.x, move.y);
+        if (mag > 0.1) {
+          c.angle = Math.atan2(move.y, move.x);
+          const accel = c.underdog ? 720 : 620;
+          c.vx += (move.x / mag) * accel * dt;
+          c.vy += (move.y / mag) * accel * dt;
+        } else if (this.input.justPressed(c.id) || this.input.justAction(c.id)) {
+          // Active directional snap: tap to pivot 45 deg, double-tap for 180 turnaround!
+          if (this.timeElapsed - c.lastTapTime < 0.28) {
+            c.angle += Math.PI;
+          } else {
+            c.angle += Math.PI / 4;
+          }
+          c.lastTapTime = this.timeElapsed;
+          c.vx += Math.cos(c.angle) * 160;
+          c.vy += Math.sin(c.angle) * 160;
+          this.audio.playTap();
         }
+      }
 
-        // Nitro Ram button tap
-        if (this.input.justPressed(car.id) && car.boostTimer <= 0) {
-          car.boostTimer = 0.8;
-          car.speed = 360;
+      const holding = c.stunTimer <= 0 && (this.input.isActionPressed(c.id) || this.input.isPressed(c.id));
+      if (holding) {
+        c.charge = Math.min(1.2, c.charge + dt * 1.15);
+        c.wasHolding = true;
+      } else if (c.wasHolding) {
+        c.wasHolding = false;
+        if (c.charge > 0.16) {
+          const ramImpulse = (420 + c.charge * 420) * (c.underdog ? 1.25 : 1.0);
+          c.vx += Math.cos(c.angle) * ramImpulse;
+          c.vy += Math.sin(c.angle) * ramImpulse;
+          c.ramTimer = 0.5;
           this.audio.playBoost();
-          this.particles.spawnConfetti(car.x, car.y, 6);
+          this.particles.emit(c.x, c.y, 14, c.color);
         }
+        c.charge = 0;
       }
 
-      if (car.boostTimer > 0) {
-        car.boostTimer -= dt;
-      }
+      c.x += c.vx * dt;
+      c.y += c.vy * dt;
+      c.vx *= 0.92;
+      c.vy *= 0.92;
 
-      // Compute velocities from angle and speed + external rebound
-      const forwardVx = Math.cos(car.angle) * car.speed;
-      const forwardVy = Math.sin(car.angle) * car.speed;
-
-      car.vx = car.vx * Math.pow(0.08, dt) + forwardVx * 0.4;
-      car.vy = car.vy * Math.pow(0.08, dt) + forwardVy * 0.4;
-
-      car.x += (forwardVx + car.vx) * dt;
-      car.y += (forwardVy + car.vy) * dt;
-
-      // Arena wall bounce with rubber bumper
-      const minX = this.arenaMargin + 20;
-      const maxX = width - this.arenaMargin - 20;
-      const minY = this.arenaMargin + 20;
-      const maxY = height - this.arenaMargin - 20;
-
-      if (car.x < minX) {
-        car.x = minX;
-        car.vx = Math.abs(car.vx) + 120;
-        this.audio.playBounce();
-        this.particles.spawnDust(car.x, car.y, 5);
-      } else if (car.x > maxX) {
-        car.x = maxX;
-        car.vx = -Math.abs(car.vx) - 120;
-        this.audio.playBounce();
-        this.particles.spawnDust(car.x, car.y, 5);
-      }
-
-      if (car.y < minY) {
-        car.y = minY;
-        car.vy = Math.abs(car.vy) + 120;
-        this.audio.playBounce();
-        this.particles.spawnDust(car.x, car.y, 5);
-      } else if (car.y > maxY) {
-        car.y = maxY;
-        car.vy = -Math.abs(car.vy) - 120;
-        this.audio.playBounce();
-        this.particles.spawnDust(car.x, car.y, 5);
-      }
-
-      // Check battery pickup collisions
-      for (let i = this.pickups.length - 1; i >= 0; i--) {
-        const pu = this.pickups[i];
-        if (Math.hypot(car.x - pu.x, car.y - pu.y) < 28) {
-          car.score += 25;
-          car.boostTimer = 1.2;
+      // Spark Pad collection
+      for (const pad of this.pads) {
+        if (!pad.active) continue;
+        if (Math.hypot(c.x - pad.x, c.y - pad.y) < 34) {
+          pad.active = false;
+          c.streak++;
+          c.multiplier = c.streak >= 4 ? 4 : c.streak >= 2 ? 2 : 1;
+          const pts = (pad.isGolden ? 60 : 25) * c.multiplier * (this.suddenDeath ? 2 : 1);
+          c.score += pts;
           this.audio.playScore();
-          this.particles.showFloatingText('+25 SPARK!', pu.x, pu.y - 18, '#FBBF24', 20);
-          this.particles.spawnConfetti(pu.x, pu.y, 10);
-          this.pickups.splice(i, 1);
+          this.particles.emit(pad.x, pad.y, 14, pad.isGolden ? '#facc15' : '#00f5d4');
+          this.addFloatingText(pad.x, pad.y - 20, `+${pts} (${c.multiplier}x)`, pad.isGolden ? '#facc15' : '#00f5d4', 18);
         }
       }
-    }
 
-    // Car vs Car Bumper Collisions
-    for (let i = 0; i < carList.length; i++) {
-      for (let j = i + 1; j < carList.length; j++) {
-        const a = carList[i];
-        const b = carList[j];
+      // Electrified Perimeter Wall bounce + zap
+      const distC = Math.hypot(c.x - cx, c.y - cy);
+      if (distC > maxRadius - 26) {
+        const nx = (c.x - cx) / distC;
+        const ny = (c.y - cy) / distC;
+        c.x = cx + nx * (maxRadius - 26);
+        c.y = cy + ny * (maxRadius - 26);
+        c.vx = -nx * 360;
+        c.vy = -ny * 360;
+        c.streak = 0;
+        c.multiplier = 1;
+        this.audio.playStun();
+        this.particles.emit(c.x, c.y, 16, '#ff2a85');
+        this.addFloatingText(c.x, c.y - 22, 'WALL ZAP!', '#ff2a85', 17);
+      }
+    });
+
+    // Elastic High-Impulse Bumper Car Collisions!
+    const list = Array.from(this.cars.values());
+    for (let i = 0; i < list.length; i++) {
+      for (let j = i + 1; j < list.length; j++) {
+        const a = list[i];
+        const b = list[j];
         const dx = b.x - a.x;
         const dy = b.y - a.y;
         const dist = Math.hypot(dx, dy);
-        const minDist = 38;
-
-        if (dist < minDist && dist > 0.001) {
-          // Normal vector
+        const minDist = 48;
+        if (dist > 0 && dist < minDist) {
           const nx = dx / dist;
           const ny = dy / dist;
-
-          // Separate cars
           const overlap = minDist - dist;
           a.x -= nx * overlap * 0.5;
           a.y -= ny * overlap * 0.5;
           b.x += nx * overlap * 0.5;
           b.y += ny * overlap * 0.5;
 
-          // Rebound impulse
-          const reboundForce = 280;
-          a.vx -= nx * reboundForce;
-          a.vy -= ny * reboundForce;
-          b.vx += nx * reboundForce;
-          b.vy += ny * reboundForce;
+          const speedA = Math.hypot(a.vx, a.vy);
+          const speedB = Math.hypot(b.vx, b.vy);
+          const impulse = Math.max(340, (speedA + speedB) * 0.85);
 
-          // Score determination: the car moving faster into the collision gets points
-          const vA = a.speed + (a.boostTimer > 0 ? 100 : 0);
-          const vB = b.speed + (b.boostTimer > 0 ? 100 : 0);
+          a.vx = -nx * impulse * (b.underdog ? 1.35 : 1);
+          a.vy = -ny * impulse * (b.underdog ? 1.35 : 1);
+          b.vx = nx * impulse * (a.underdog ? 1.35 : 1);
+          b.vy = ny * impulse * (a.underdog ? 1.35 : 1);
 
-          if (vA > vB + 20) {
-            a.score += 20;
-            b.spinTimer = 0.4;
-            this.audio.playExplosion();
-            this.particles.showFloatingText('BAM! +20', a.x, a.y - 20, '#F59E0B', 20);
-            this.particles.spawnExplosion(b.x, b.y, '#EF4444', 8);
-          } else if (vB > vA + 20) {
-            b.score += 20;
-            a.spinTimer = 0.4;
-            this.audio.playExplosion();
-            this.particles.showFloatingText('BAM! +20', b.x, b.y - 20, '#38BDF8', 20);
-            this.particles.spawnExplosion(a.x, a.y, '#EF4444', 8);
-          } else {
-            // Mutual bump
-            a.score += 10;
-            b.score += 10;
-            this.audio.playBounce();
-            this.particles.spawnDust((a.x + b.x) / 2, (a.y + b.y) / 2, 8);
+          if (speedA > speedB + 50) {
+            const pts = 45 * a.multiplier * (this.suddenDeath ? 2 : 1);
+            a.score += pts;
+            this.addFloatingText(b.x, b.y - 24, `RAM SMASH! +${pts}`, '#facc15', 20);
+          } else if (speedB > speedA + 50) {
+            const pts = 45 * b.multiplier * (this.suddenDeath ? 2 : 1);
+            b.score += pts;
+            this.addFloatingText(a.x, a.y - 24, `RAM SMASH! +${pts}`, '#facc15', 20);
           }
+
+          this.hitStopTimer = 0.045;
+          this.audio.playExplosion();
+          this.particles.emit((a.x + b.x) / 2, (a.y + b.y) / 2, 18, '#facc15');
         }
       }
     }
-
-    if (this.roundTimer <= 0) {
-      this.isFinished = true;
-    }
-  }
-
-  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Electrified Steel Mesh Arena Floor
-    const bgGrad = ctx.createRadialGradient(width / 2, height / 2, 40, width / 2, height / 2, width * 0.6);
-    bgGrad.addColorStop(0, '#1E1B4B');
-    bgGrad.addColorStop(0.7, '#0F172A');
-    bgGrad.addColorStop(1, '#020617');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
-
-    // Metallic grid lines
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
-    ctx.lineWidth = 1;
-    const gridStep = 40;
-    for (let x = 0; x < width; x += gridStep) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
-      ctx.stroke();
-    }
-    for (let y = 0; y < height; y += gridStep) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
-      ctx.stroke();
-    }
-
-    // 2. Rubber Perimeter Bumper Walls
-    const m = this.arenaMargin;
-    ctx.save();
-    // Yellow & Black hazard warning strip behind bumper
-    ctx.lineWidth = 12;
-    ctx.strokeStyle = '#F59E0B';
-    ctx.strokeRect(m, m, width - m * 2, height - m * 2);
-
-    // Thick Rubber Bumper Cushion
-    ctx.lineWidth = 8;
-    ctx.strokeStyle = '#334155';
-    ctx.strokeRect(m + 4, m + 4, width - (m + 4) * 2, height - (m + 4) * 2);
-
-    // Neon Guide line
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#38BDF8';
-    ctx.strokeRect(m + 8, m + 8, width - (m + 8) * 2, height - (m + 8) * 2);
-    ctx.restore();
-
-    // 3. Draw Spark Battery Pickups
-    for (const pu of this.pickups) {
-      ctx.save();
-      ctx.translate(pu.x, pu.y);
-      const scale = 1 + Math.sin(pu.pulse) * 0.15;
-      ctx.scale(scale, scale);
-
-      ctx.fillStyle = 'rgba(251, 191, 36, 0.25)';
-      ctx.beginPath();
-      ctx.arc(0, 0, pu.radius * 1.8, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#FBBF24';
-      ctx.beginPath();
-      ctx.arc(0, 0, pu.radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Battery Lightning Bolt Glyph
-      ctx.fillStyle = '#78350F';
-      ctx.beginPath();
-      ctx.moveTo(2, -7);
-      ctx.lineTo(-4, 0);
-      ctx.lineTo(0, 0);
-      ctx.lineTo(-2, 7);
-      ctx.lineTo(4, -1);
-      ctx.lineTo(0, -1);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    }
-
-    // 4. Draw Bumper Cars
-    const active = this.getActivePlayers();
-    for (const p of active) {
-      const car = this.cars.get(p.id);
-      if (!car) continue;
-
-      ctx.save();
-      ctx.translate(car.x, car.y);
-      ctx.rotate(car.angle);
-
-      // Heavy Rubber Bumper Rim
-      ctx.fillStyle = '#1E293B';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 22, 17, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#0F172A';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      // Car Body
-      ctx.fillStyle = p.color;
-      ctx.shadowColor = p.color;
-      ctx.shadowBlur = car.boostTimer > 0 ? 16 : 6;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 18, 13, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-
-      // Headlights
-      ctx.fillStyle = '#FEF08A';
-      ctx.beginPath();
-      ctx.arc(14, -6, 3, 0, Math.PI * 2);
-      ctx.arc(14, 6, 3, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Cockpit / Driver Helmet
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.ellipse(-2, 0, 8, 7, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(-2, 0, 5, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Electric Pole Base
-      ctx.fillStyle = '#94A3B8';
-      ctx.beginPath();
-      ctx.arc(-11, 0, 3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
-      // Ceiling contact rod spark line
-      ctx.save();
-      const poleBaseX = car.x - Math.cos(car.angle) * 11;
-      const poleBaseY = car.y - Math.sin(car.angle) * 11;
-      ctx.strokeStyle = '#64748B';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(poleBaseX, poleBaseY);
-      ctx.lineTo(poleBaseX, poleBaseY - 26);
-      ctx.stroke();
-
-      // Ceiling contact antenna shoe
-      ctx.fillStyle = '#F59E0B';
-      ctx.fillRect(poleBaseX - 5, poleBaseY - 29, 10, 4);
-
-      // Random electric sparks
-      if (Math.random() < 0.4 || car.boostTimer > 0) {
-        ctx.strokeStyle = '#38BDF8';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(poleBaseX, poleBaseY - 28);
-        ctx.lineTo(poleBaseX + (Math.random() - 0.5) * 12, poleBaseY - 34);
-        ctx.stroke();
-      }
-      ctx.restore();
-
-      // Player Score tag above car
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 11px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${p.name}: ${car.score}`, car.x, car.y - 36);
-    }
-
-    // 5. Header HUD
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 20px Montserrat, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`TIME: ${Math.ceil(this.roundTimer)}s`, width / 2, 30);
   }
 
   protected updateBotAI(
@@ -432,64 +370,118 @@ export class BumperCarDerbyGame extends BaseGame {
     width: number,
     height: number
   ): void {
-    const car = this.cars.get(botId);
-    if (!car) return;
+    const c = this.cars.get(botId);
+    if (!c || c.stunTimer > 0) {
+      this.input.setBotState(botId, false);
+      return;
+    }
 
-    // Find nearest opponent
-    let nearestOpponent: BumperCar | null = null;
-    let minOppDist = 9999;
-    for (const [id, other] of this.cars.entries()) {
-      if (id !== botId) {
-        const d = Math.hypot(other.x - car.x, other.y - car.y);
-        if (d < minOppDist) {
-          minOppDist = d;
-          nearestOpponent = other;
+    const cx = width / 2;
+    const cy = height / 2 + 15;
+
+    c.botTimer -= dt;
+    if (c.botTimer <= 0) {
+      c.botTimer = difficulty === 'bot_hard' ? 0.14 : difficulty === 'bot_normal' ? 0.24 : 0.36;
+
+      let bestPad: SparkPad | null = null;
+      let bestD = Infinity;
+      for (const p of this.pads) {
+        if (!p.active) continue;
+        const d = Math.hypot(p.x - c.x, p.y - c.y) - (p.isGolden ? 80 : 0);
+        if (d < bestD) {
+          bestD = d;
+          bestPad = p;
         }
+      }
+
+      if (bestPad) {
+        c.angle = Math.atan2(bestPad.y - c.y, bestPad.x - c.x) + (Math.random() - 0.5) * 0.24;
+      } else {
+        c.angle = Math.atan2(cy - c.y, cx - c.x);
       }
     }
 
-    // Prioritize spark pickup if nearby
-    let targetX = width / 2;
-    let targetY = height / 2;
-    let minPuDist = 9999;
-    for (const pu of this.pickups) {
-      const d = Math.hypot(pu.x - car.x, pu.y - car.y);
-      if (d < minPuDist) {
-        minPuDist = d;
-        if (minPuDist < 200) {
-          targetX = pu.x;
-          targetY = pu.y;
-        }
-      }
-    }
-
-    if (minPuDist >= 200 && nearestOpponent) {
-      targetX = nearestOpponent.x;
-      targetY = nearestOpponent.y;
-    }
-
-    const dx = targetX - car.x;
-    const dy = targetY - car.y;
-    const dist = Math.hypot(dx, dy);
-
-    if (dist > 15) {
-      const normX = dx / dist;
-      const normY = dy / dist;
-      const err = difficulty === 'bot_hard' ? 0.05 : difficulty === 'bot_normal' ? 0.2 : 0.45;
-      const angle = Math.atan2(normY, normX) + (Math.random() - 0.5) * err;
-      const steerX = Math.cos(angle);
-      const steerY = Math.sin(angle);
-
-      // Boost if lined up with opponent on normal/hard
-      const wantBoost = (difficulty === 'bot_hard' || difficulty === 'bot_normal') && dist < 120 && Math.random() < 0.08;
-      this.input.setBotInput(botId, true, steerX, -steerY, wantBoost);
-    } else {
-      this.input.setBotInput(botId, false, 0, 0, false);
-    }
+    const accel = difficulty === 'bot_hard' ? 460 : difficulty === 'bot_normal' ? 370 : 280;
+    c.vx += Math.cos(c.angle) * accel * dt;
+    c.vy += Math.sin(c.angle) * accel * dt;
+    this.input.setBotState(botId, c.charge < 0.55 && Math.random() < 0.65);
   }
 
-  public getScore(playerId: PlayerId): number {
-    return this.cars.get(playerId)?.score ?? 0;
+  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const cx = width / 2;
+    const cy = height / 2 + 15;
+    const maxRadius = Math.min(width, height) * (this.suddenDeath ? 0.35 : 0.43);
+    const theme = THEMES[THEME_ORDER[this.themeIndex]];
+
+    const bg = ctx.createRadialGradient(cx, cy, 30, cx, cy, Math.max(width, height) * 0.65);
+    bg.addColorStop(0, theme.floorInner);
+    bg.addColorStop(1, theme.floorOuter);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    // Electrified Bumper Ring
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, maxRadius, 0, Math.PI * 2);
+    ctx.strokeStyle = theme.wallColor;
+    ctx.lineWidth = 8;
+    ctx.stroke();
+    ctx.restore();
+
+    // Draw Spark Pads
+    for (const p of this.pads) {
+      if (!p.active) continue;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.isGolden ? 20 : 16, 0, Math.PI * 2);
+      ctx.fillStyle = p.isGolden ? '#facc15' : '#00f5d4';
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+      ctx.fillStyle = '#0f172a';
+      ctx.font = '900 11px "Outfit", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(p.isGolden ? '⚡60' : '+25', p.x, p.y);
+      ctx.restore();
+    }
+
+    // Draw Bumper Cars
+    this.cars.forEach((c) => {
+      ctx.save();
+      // Heavy rubber bumper ring around avatar
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, 26, 0, Math.PI * 2);
+      ctx.fillStyle = '#1e293b';
+      ctx.fill();
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = c.ramTimer > 0 ? '#facc15' : c.color;
+      ctx.stroke();
+
+      if (c.charge > 0.05) {
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, 28 + c.charge * 14, 0, Math.PI * 2);
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      const mood = c.stunTimer > 0 ? 'shocked' : c.ramTimer > 0 ? 'triumph' : 'focused';
+      this.drawPlayerMascot(ctx, c.id, c.x, c.y, 20, mood, this.timeElapsed, 0);
+    });
+
+    this.renderFloatingTexts(ctx);
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(width - 215, 14, 200, 32);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '700 13px "Outfit", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`🎨 ${theme.name} [T]`, width - 24, 35);
+    ctx.restore();
   }
 
   public isRoundOver(): boolean {
@@ -497,19 +489,25 @@ export class BumperCarDerbyGame extends BaseGame {
   }
 
   public getRoundResult(): RoundResult {
-    const rankings = Array.from(this.cars.entries())
-      .map(([playerId, car]) => ({ playerId, score: car.score, place: 1 }))
+    const rankings = Array.from(this.cars.values())
+      .map((c) => ({ playerId: c.id, score: Math.floor(c.score), place: 1 }))
       .sort((a, b) => b.score - a.score);
-
-    rankings.forEach((entry, idx) => {
-      entry.place = idx + 1;
+    rankings.forEach((r, idx) => {
+      r.place = idx + 1;
     });
-
-    const winnerId = rankings.length > 0 && rankings[0].score > 0 ? rankings[0].playerId : null;
+    const winnerId = rankings.length > 0 ? rankings[0].playerId : null;
     return {
       winnerId,
       rankings,
-      mvpHighlight: winnerId ? `${winnerId} dominated the bumper car derby arena!` : 'Tied derby crashes!'
+      mvpHighlight: winnerId ? `Player ${winnerId} dominated the Bumper Car Thunderdome!` : 'Bumper derby complete!',
     };
+  }
+
+  public destroy(): void {
+    if (typeof window !== 'undefined' && this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
+    super.destroy();
   }
 }

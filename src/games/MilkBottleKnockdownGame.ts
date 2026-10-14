@@ -1,48 +1,92 @@
 import { BaseGame } from './BaseGame';
-import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
+import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
 
-interface MilkBottle {
+interface BottlePyramid {
+  x: number;
+  y: number;
+  vx: number;
+  bottlesLeft: number;
+  isGolden: boolean;
+  respawnTimer: number;
+}
+
+interface ThrownBaseball {
+  ownerId: PlayerId;
+  color: string;
   x: number;
   y: number;
   vx: number;
   vy: number;
-  rotation: number;
-  vRot: number;
-  knocked: boolean;
-  scoreAwarded: boolean;
+  isHeater: boolean;
+  active: boolean;
 }
 
-interface Baseball {
-  playerId: PlayerId;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  radius: number;
-  alive: boolean;
-}
-
-interface PlayerPitcher {
+interface PitcherPlayer {
   id: PlayerId;
+  color: string;
+  x: number;
+  vx: number;
   aimAngle: number;
   aimDir: number;
-  power: number;
-  charging: boolean;
-  ballsLeft: number;
-  reloadTimer: number;
+  charge: number;
+  wasHolding: boolean;
   score: number;
+  streak: number;
+  multiplier: number;
+  stunTimer: number;
+  underdog: boolean;
+  botTimer: number;
 }
 
+type ThemeId = 'sandlot_midway' | 'neon_strike_zone' | 'county_fair_night';
+
+interface ThemeSpec {
+  name: string;
+  bgTop: string;
+  bgBot: string;
+  shelfColor: string;
+  accent: string;
+}
+
+const THEMES: Record<ThemeId, ThemeSpec> = {
+  sandlot_midway: {
+    name: 'Midway Strikeout Booth',
+    bgTop: '#1e1b4b',
+    bgBot: '#3b0764',
+    shelfColor: '#78350f',
+    accent: '#facc15',
+  },
+  neon_strike_zone: {
+    name: 'Neon Fastball Cage',
+    bgTop: '#041022',
+    bgBot: '#0f2942',
+    shelfColor: '#1e293b',
+    accent: '#38bdf8',
+  },
+  county_fair_night: {
+    name: 'County Fair Grandstand',
+    bgTop: '#31102f',
+    bgBot: '#140517',
+    shelfColor: '#451a03',
+    accent: '#fb7185',
+  },
+};
+
+const THEME_ORDER: ThemeId[] = ['sandlot_midway', 'neon_strike_zone', 'county_fair_night'];
+
 export class MilkBottleKnockdownGame extends BaseGame {
-  private bottles: MilkBottle[] = [];
-  private balls: Baseball[] = [];
-  private playersState: Map<PlayerId, PlayerPitcher> = new Map();
-  private shelfY: number = 0;
-  private shelfX: number = 0;
-  private shelfW: number = 0;
+  private pitchers: Map<PlayerId, PitcherPlayer> = new Map();
+  private pyramids: BottlePyramid[] = [];
+  private baseballs: ThrownBaseball[] = [];
+  private timeElapsed = 0;
+  private suddenDeath = false;
+  private hitStopTimer = 0;
+  private themeIndex = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
+  private floatingTexts: { x: number; y: number; text: string; color: string; alpha: number; vy: number; size: number }[] = [];
 
   constructor(
     players: PlayerConfig[],
@@ -51,348 +95,291 @@ export class MilkBottleKnockdownGame extends BaseGame {
     particles: ParticleSystem
   ) {
     super(players, input, audio, particles);
+    this.roundTimer = 38.0;
   }
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIndex = (this.themeIndex + 1) % THEME_ORDER.length;
+          this.audio.playTap();
+        } else if (e.key >= '1' && e.key <= '3') {
+          this.themeIndex = parseInt(e.key, 10) - 1;
+          this.audio.playTap();
+        }
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
   }
 
   public reset(width: number, height: number): void {
     this.isFinished = false;
-    this.roundTimer = 30;
-    this.balls = [];
-    this.bottles = [];
-    this.playersState.clear();
+    this.roundTimer = 38.0;
+    this.timeElapsed = 0;
+    this.suddenDeath = false;
+    this.hitStopTimer = 0;
+    this.pyramids = [];
+    this.baseballs = [];
+    this.pitchers.clear();
+    this.floatingTexts = [];
+    this.themeIndex = Math.floor(Math.random() * THEME_ORDER.length);
 
-    this.shelfX = width * 0.22;
-    this.shelfW = width * 0.56;
-    this.shelfY = height * 0.38;
+    const w = width || 1280;
+    const h = height || 720;
 
-    this.spawnPyramidRacks(width);
+    for (let i = 0; i < 5; i++) {
+      this.pyramids.push({
+        x: w * (0.18 + i * 0.16),
+        y: i % 2 === 0 ? h * 0.27 : h * 0.38,
+        vx: (i % 2 === 0 ? 1 : -1) * 75,
+        bottlesLeft: 6,
+        isGolden: i === 2,
+        respawnTimer: 0,
+      });
+    }
 
     const active = this.getActivePlayers();
-    const count = active.length;
-    active.forEach((p, idx) => {
-      this.playersState.set(p.id, {
-        id: p.id,
+    active.forEach((cfg, idx) => {
+      const startX = w * (0.25 + (idx / Math.max(1, active.length - 1)) * 0.5);
+      this.pitchers.set(cfg.id, {
+        id: cfg.id,
+        color: cfg.color,
+        x: startX,
+        vx: 0,
         aimAngle: -Math.PI / 2,
-        aimDir: idx % 2 === 0 ? 1 : -1,
-        power: 0.3,
-        charging: false,
-        ballsLeft: 3,
-        reloadTimer: 0,
-        score: 0
+        aimDir: 1,
+        charge: 0,
+        wasHolding: false,
+        score: 0,
+        streak: 0,
+        multiplier: 1,
+        stunTimer: 0,
+        underdog: false,
+        botTimer: 0.18,
       });
     });
   }
 
-  private spawnPyramidRacks(width: number): void {
-    this.bottles = [];
-    // Spawn 3 pyramid stacks along shelf
-    const racks = [width * 0.32, width * 0.5, width * 0.68];
-    const bW = 18;
-    const bH = 34;
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    void height;
+    if (y < 60 && x > width - 220) {
+      this.themeIndex = (this.themeIndex + 1) % THEME_ORDER.length;
+      this.audio.playTap();
+      return true;
+    }
+    return false;
+  }
 
-    for (const rx of racks) {
-      // Row 1 (3 bottles)
-      for (let i = -1; i <= 1; i++) {
-        this.bottles.push({
-          x: rx + i * (bW + 4),
-          y: this.shelfY - bH / 2,
-          vx: 0,
-          vy: 0,
-          rotation: 0,
-          vRot: 0,
-          knocked: false,
-          scoreAwarded: false
-        });
-      }
-      // Row 2 (2 bottles)
-      for (let i = -0.5; i <= 0.5; i += 1) {
-        this.bottles.push({
-          x: rx + i * (bW + 4),
-          y: this.shelfY - bH * 1.5 - 2,
-          vx: 0,
-          vy: 0,
-          rotation: 0,
-          vRot: 0,
-          knocked: false,
-          scoreAwarded: false
-        });
-      }
-      // Row 3 (1 bottle apex)
-      this.bottles.push({
-        x: rx,
-        y: this.shelfY - bH * 2.5 - 4,
-        vx: 0,
-        vy: 0,
-        rotation: 0,
-        vRot: 0,
-        knocked: false,
-        scoreAwarded: false
-      });
+  private addFloatingText(x: number, y: number, text: string, color: string, size = 18): void {
+    this.floatingTexts.push({ x, y, text, color, alpha: 1, vy: -52, size });
+  }
+
+  private renderFloatingTexts(ctx: CanvasRenderingContext2D): void {
+    for (const ft of this.floatingTexts) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, ft.alpha);
+      ctx.font = `900 ${ft.size}px "Outfit", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+      ctx.lineWidth = 4;
+      ctx.strokeText(ft.text, ft.x, ft.y);
+      ctx.fillStyle = ft.color;
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.restore();
     }
   }
 
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
-    this.roundTimer = Math.max(0, this.roundTimer - dt);
+
+    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+      const ft = this.floatingTexts[i];
+      ft.y += ft.vy * dt;
+      ft.alpha -= dt * 1.1;
+      if (ft.alpha <= 0) this.floatingTexts.splice(i, 1);
+    }
+
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer -= dt;
+      return;
+    }
+
+    this.timeElapsed += dt;
+    this.roundTimer -= dt;
+    if (this.roundTimer <= 0) {
+      this.roundTimer = 0;
+      this.isFinished = true;
+      return;
+    }
+
+    if (this.roundTimer <= 15 && !this.suddenDeath) {
+      this.suddenDeath = true;
+      this.audio.playFanfare();
+      this.addFloatingText(width / 2, 100, '⚡ FASTBALL FRENZY! 2X STRIKEOUTS! ⚡', '#facc15', 24);
+    }
+
+    for (const pyr of this.pyramids) {
+      pyr.x += pyr.vx * (this.suddenDeath ? 1.35 : 1.0) * dt;
+      if (pyr.x < 130 || pyr.x > width - 130) {
+        pyr.vx *= -1;
+      }
+      if (pyr.respawnTimer > 0) {
+        pyr.respawnTimer -= dt;
+        if (pyr.respawnTimer <= 0) {
+          pyr.bottlesLeft = 6;
+          pyr.isGolden = Math.random() < (this.suddenDeath ? 0.45 : 0.28);
+        }
+      }
+    }
+
+    const moundY = height - 74;
+
+    let maxScore = 0;
+    this.pitchers.forEach((p) => {
+      if (p.score > maxScore) maxScore = p.score;
+    });
+
     this.updateBots(dt, width, height);
 
-    const active = this.getActivePlayers();
-    const count = active.length;
+    this.pitchers.forEach((p) => {
+      p.underdog = maxScore - p.score >= 120;
+      if (p.stunTimer > 0) p.stunTimer -= dt;
 
-    for (let idx = 0; idx < count; idx++) {
-      const p = active[idx];
-      const ps = this.playersState.get(p.id);
-      if (!ps) continue;
+      const steer = this.input.getSteer(p.id);
+      if (Math.abs(steer) > 0.1 && p.stunTimer <= 0) {
+        p.vx += steer * (p.underdog ? 680 : 560) * dt;
+      }
 
-      if (ps.reloadTimer > 0) {
-        ps.reloadTimer -= dt;
-        if (ps.reloadTimer <= 0) {
-          ps.ballsLeft = 3;
+      p.aimAngle += p.aimDir * 1.45 * dt;
+      if (p.aimAngle > -Math.PI / 2 + 0.5) {
+        p.aimAngle = -Math.PI / 2 + 0.5;
+        p.aimDir = -1;
+      } else if (p.aimAngle < -Math.PI / 2 - 0.5) {
+        p.aimAngle = -Math.PI / 2 - 0.5;
+        p.aimDir = 1;
+      }
+
+      const holding = p.stunTimer <= 0 && (this.input.isActionPressed(p.id) || this.input.isPressed(p.id));
+      if (holding) {
+        p.charge += dt * 1.1;
+        p.wasHolding = true;
+        if (p.charge >= 1.2) {
+          p.charge = 0;
+          p.wasHolding = false;
+          p.stunTimer = 0.85;
+          p.streak = 0;
+          p.multiplier = 1;
+          this.audio.playBuzzer();
+          this.addFloatingText(p.x, moundY - 36, 'WILD PITCH OVERCHARGE!', '#ff2a85', 17);
         }
+      } else if (p.wasHolding) {
+        p.wasHolding = false;
+        const isHeater = p.charge >= 0.72 && p.charge <= 1.05;
+        const speed = (isHeater ? 680 : 480) * (p.underdog ? 1.15 : 1.0);
+        this.baseballs.push({
+          ownerId: p.id,
+          color: p.color,
+          x: p.x,
+          y: moundY - 22,
+          vx: Math.cos(p.aimAngle) * speed,
+          vy: Math.sin(p.aimAngle) * speed,
+          isHeater,
+          active: true,
+        });
+        p.charge = 0;
+        this.audio.playWhoosh();
       }
 
-      // Sweep aim angle
-      ps.aimAngle += ps.aimDir * dt * 2.0;
-      const minAngle = -Math.PI * 0.78;
-      const maxAngle = -Math.PI * 0.22;
-      if (ps.aimAngle > maxAngle) {
-        ps.aimAngle = maxAngle;
-        ps.aimDir = -1;
-      } else if (ps.aimAngle < minAngle) {
-        ps.aimAngle = minAngle;
-        ps.aimDir = 1;
-      }
+      p.x += p.vx * dt;
+      p.vx *= 0.88;
+      p.x = Math.max(110, Math.min(width - 110, p.x));
+    });
 
-      const isDown = this.input.isPressed(p.id);
-      const justReleased = this.input.justReleased(p.id);
-
-      if (isDown && ps.ballsLeft > 0 && ps.reloadTimer <= 0) {
-        ps.charging = true;
-        ps.power = Math.min(1.0, ps.power + dt * 1.8);
-      } else if (ps.charging && (justReleased || !isDown)) {
-        // Pitch baseball
-        this.pitchBall(p.id, idx, count, width, height, ps);
-        ps.charging = false;
-        ps.power = 0.25;
-        ps.ballsLeft--;
-        if (ps.ballsLeft <= 0) {
-          ps.reloadTimer = 0.8;
+    // Mound player-to-player collisions
+    const list = Array.from(this.pitchers.values());
+    for (let i = 0; i < list.length; i++) {
+      for (let j = i + 1; j < list.length; j++) {
+        const a = list[i];
+        const b = list[j];
+        if (Math.abs(b.x - a.x) < 48) {
+          const sign = b.x >= a.x ? 1 : -1;
+          const overlap = 48 - Math.abs(b.x - a.x);
+          a.x -= sign * overlap * 0.5;
+          b.x += sign * overlap * 0.5;
+          a.vx = -sign * 290;
+          b.vx = sign * 290;
+          this.audio.playBounce();
         }
       }
     }
 
-    // Update flying baseballs
-    for (let i = this.balls.length - 1; i >= 0; i--) {
-      const b = this.balls[i];
-      b.x += b.vx * dt;
-      b.y += b.vy * dt;
-      b.vy += 220 * dt; // gravity
+    // Mid-air baseball-to-baseball deflections!
+    for (let i = 0; i < this.baseballs.length; i++) {
+      for (let j = i + 1; j < this.baseballs.length; j++) {
+        const b1 = this.baseballs[i];
+        const b2 = this.baseballs[j];
+        if (!b1.active || !b2.active) continue;
+        const dx = b2.x - b1.x;
+        const dy = b2.y - b1.y;
+        const d = Math.hypot(dx, dy);
+        if (d > 0 && d < 28) {
+          const nx = dx / d;
+          const ny = dy / d;
+          b1.vx -= nx * 240;
+          b2.vx += nx * 240;
+          this.audio.playBounce();
+          this.particles.emit((b1.x + b2.x) / 2, (b1.y + b2.y) / 2, 10, '#ffffff');
+        }
+      }
+    }
 
-      // Check collision with milk bottles
-      for (const bottle of this.bottles) {
-        if (!bottle.knocked) {
-          const dist = Math.hypot(b.x - bottle.x, b.y - bottle.y);
-          if (dist < b.radius + 14) {
-            bottle.knocked = true;
-            bottle.vx = b.vx * 0.45 + (Math.random() - 0.5) * 120;
-            bottle.vy = b.vy * 0.35 - 90;
-            bottle.vRot = (Math.random() - 0.5) * 12;
+    // Update baseballs & check pyramid strikes
+    for (const ball of this.baseballs) {
+      if (!ball.active) continue;
+      ball.x += ball.vx * dt;
+      ball.y += ball.vy * dt;
 
-            if (!bottle.scoreAwarded) {
-              bottle.scoreAwarded = true;
-              const ps = this.playersState.get(b.playerId);
-              if (ps) ps.score += 20;
+      if (ball.y < 30 || ball.x < 20 || ball.x > width - 20) {
+        ball.active = false;
+        continue;
+      }
 
-              this.audio.playExplosion();
-              this.particles.showFloatingText('+20', bottle.x, bottle.y - 18, '#F59E0B', 20);
-              this.particles.spawnConfetti(bottle.x, bottle.y, 10);
-            }
+      for (const pyr of this.pyramids) {
+        if (pyr.bottlesLeft <= 0) continue;
+        if (Math.hypot(ball.x - pyr.x, ball.y - pyr.y) < 44) {
+          ball.active = false;
+          const owner = this.pitchers.get(ball.ownerId);
+          const knocked = ball.isHeater ? pyr.bottlesLeft : Math.min(pyr.bottlesLeft, 3);
+          pyr.bottlesLeft -= knocked;
+          if (pyr.bottlesLeft <= 0) {
+            pyr.respawnTimer = 1.6;
           }
+
+          if (owner) {
+            owner.streak++;
+            owner.multiplier = owner.streak >= 4 ? 4 : owner.streak >= 2 ? 2 : 1;
+            const pts =
+              (knocked * (pyr.isGolden ? 25 : 12) + (pyr.bottlesLeft <= 0 ? 35 : 0)) *
+              owner.multiplier *
+              (this.suddenDeath ? 2 : 1);
+            owner.score += pts;
+            this.audio.playExplosion();
+            this.hitStopTimer = 0.04;
+            this.particles.emit(pyr.x, pyr.y, 18, pyr.isGolden ? '#facc15' : '#ffffff');
+            this.addFloatingText(
+              pyr.x,
+              pyr.y - 26,
+              `${pyr.bottlesLeft <= 0 ? 'FULL STRIKE! ' : ''}+${pts} (${owner.multiplier}x)`,
+              pyr.isGolden || ball.isHeater ? '#facc15' : '#38bdf8',
+              pyr.bottlesLeft <= 0 ? 21 : 18
+            );
+          }
+          break;
         }
       }
-
-      if (b.y < -40 || b.y > height + 40 || b.x < -40 || b.x > width + 40) {
-        this.balls.splice(i, 1);
-      }
     }
-
-    // Update tumbling physics bottles
-    for (const bottle of this.bottles) {
-      if (bottle.knocked) {
-        bottle.x += bottle.vx * dt;
-        bottle.y += bottle.vy * dt;
-        bottle.vy += 420 * dt; // strong gravity
-        bottle.rotation += bottle.vRot * dt;
-
-        // Shelf / floor bounce
-        if (bottle.y > height - 40) {
-          bottle.y = height - 40;
-          bottle.vy *= -0.3;
-          bottle.vx *= 0.7;
-          bottle.vRot *= 0.5;
-        }
-      }
-    }
-
-    // If all bottles knocked, respawn fresh pyramids!
-    if (this.bottles.every((b) => b.knocked)) {
-      this.spawnPyramidRacks(width);
-      this.particles.shake(0.3);
-      this.particles.showFloatingText('STRIKE!! +50 BONUS', width / 2, this.shelfY - 40, '#10B981', 28);
-      this.audio.playFanfare();
-    }
-
-    if (this.roundTimer <= 0) {
-      this.isFinished = true;
-    }
-  }
-
-  private pitchBall(
-    pid: PlayerId,
-    idx: number,
-    count: number,
-    width: number,
-    height: number,
-    ps: PlayerPitcher
-  ): void {
-    const startX = (width / (count + 1)) * (idx + 1);
-    const startY = height - 50;
-    const speed = 480 + ps.power * 520;
-
-    this.balls.push({
-      playerId: pid,
-      x: startX,
-      y: startY,
-      vx: Math.cos(ps.aimAngle) * speed,
-      vy: Math.sin(ps.aimAngle) * speed,
-      radius: 12,
-      alive: true
-    });
-
-    this.audio.playLaser();
-  }
-
-  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Carnival Booth Wooden Plank Backdrop
-    ctx.fillStyle = '#1E1B4B';
-    ctx.fillRect(0, 0, width, height);
-
-    // Shelf background curtain
-    ctx.fillStyle = '#7F1D1D';
-    ctx.fillRect(this.shelfX - 20, 40, this.shelfW + 40, this.shelfY - 30);
-
-    // Thick wooden bottle shelf
-    ctx.fillStyle = '#78350F';
-    ctx.fillRect(this.shelfX, this.shelfY, this.shelfW, 18);
-    ctx.strokeStyle = '#B45309';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(this.shelfX, this.shelfY, this.shelfW, 18);
-
-    // 2. Draw Milk Bottles
-    for (const b of this.bottles) {
-      ctx.save();
-      ctx.translate(b.x, b.y);
-      ctx.rotate(b.rotation);
-
-      // Porcelain White Bottle Shape with red band
-      ctx.fillStyle = '#F8FAFC';
-      ctx.beginPath();
-      ctx.moveTo(-7, -16);
-      ctx.lineTo(7, -16);
-      ctx.lineTo(7, -6);
-      ctx.lineTo(9, 14);
-      ctx.lineTo(-9, 14);
-      ctx.lineTo(-7, -6);
-      ctx.closePath();
-      ctx.fill();
-
-      // Red carnival label band
-      ctx.fillStyle = '#EF4444';
-      ctx.fillRect(-8.5, -2, 17, 7);
-
-      // Rim
-      ctx.strokeStyle = '#CBD5E1';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      ctx.restore();
-    }
-
-    // 3. Draw Baseballs
-    for (const b of this.balls) {
-      ctx.save();
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-      ctx.fill();
-      // Red baseball seams
-      ctx.strokeStyle = '#DC2626';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(b.x - 3, b.y, b.radius * 0.7, -0.6 * Math.PI, 0.6 * Math.PI);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(b.x + 3, b.y, b.radius * 0.7, 0.4 * Math.PI, 1.6 * Math.PI);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // 4. Draw Player Pitching Stations
-    const active = this.getActivePlayers();
-    const count = active.length;
-    active.forEach((p, idx) => {
-      const ps = this.playersState.get(p.id);
-      if (!ps) return;
-      const startX = (width / (count + 1)) * (idx + 1);
-      const startY = height - 50;
-
-      // Platform
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(startX - 44, startY + 10, 88, 40);
-      ctx.fillStyle = p.color;
-      ctx.fillRect(startX - 40, startY + 12, 80, 4);
-
-      // Score & Balls
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 12px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      const bInfo = ps.reloadTimer > 0 ? 'RELOADING' : `BALLS: ${'⚾'.repeat(ps.ballsLeft)}`;
-      ctx.fillText(`${p.name}: ${ps.score}`, startX, startY + 28);
-      ctx.font = '700 9px monospace';
-      ctx.fillStyle = ps.reloadTimer > 0 ? '#F59E0B' : '#94A3B8';
-      ctx.fillText(bInfo, startX, startY + 42);
-
-      // Trajectory Arrow
-      const arrowLen = 50 + ps.power * 45;
-      const arrowX = startX + Math.cos(ps.aimAngle) * arrowLen;
-      const arrowY = startY + Math.sin(ps.aimAngle) * arrowLen;
-
-      ctx.save();
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = ps.charging ? 3.5 : 2;
-      ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      ctx.lineTo(arrowX, arrowY);
-      ctx.stroke();
-
-      // Power meter
-      if (ps.charging) {
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.fillRect(startX - 26, startY - 22, 52, 6);
-        ctx.fillStyle = '#22C55E';
-        ctx.fillRect(startX - 26, startY - 22, 52 * ps.power, 6);
-      }
-      ctx.restore();
-    });
-
-    // 5. Header HUD
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 20px Montserrat, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`TIME: ${Math.ceil(this.roundTimer)}s`, width / 2, 30);
   }
 
   protected updateBotAI(
@@ -402,39 +389,117 @@ export class MilkBottleKnockdownGame extends BaseGame {
     width: number,
     height: number
   ): void {
-    const ps = this.playersState.get(botId);
-    if (!ps || ps.ballsLeft <= 0 || ps.reloadTimer > 0) return;
+    void width;
+    const p = this.pitchers.get(botId);
+    if (!p || p.stunTimer > 0) {
+      this.input.setBotState(botId, false);
+      return;
+    }
 
-    const standingBottle = this.bottles.find((b) => !b.knocked);
-    if (!standingBottle) return;
+    p.botTimer -= dt;
+    const moundY = height - 74;
 
-    const active = this.getActivePlayers();
-    const count = active.length;
-    const idx = active.findIndex((p) => p.id === botId);
-    const startX = (width / (count + 1)) * (idx + 1);
-    const startY = height - 50;
-
-    const idealAngle = Math.atan2(standingBottle.y - startY, standingBottle.x - startX);
-    const diff = Math.abs(ps.aimAngle - idealAngle);
-    const tol = difficulty === 'bot_hard' ? 0.08 : difficulty === 'bot_normal' ? 0.16 : 0.34;
-
-    if (!ps.charging) {
-      if (diff < tol) {
-        this.input.setBotInput(botId, true, 0, 0, true);
-      } else {
-        this.input.setBotInput(botId, false, 0, 0, false);
+    let aligned = false;
+    for (const pyr of this.pyramids) {
+      if (pyr.bottlesLeft <= 0) continue;
+      const ang = Math.atan2(pyr.y - (moundY - 22), pyr.x - p.x);
+      if (Math.abs(ang - p.aimAngle) < 0.24) {
+        aligned = true;
+        break;
       }
+    }
+
+    const releaseCharge = difficulty === 'bot_hard' ? 0.82 : difficulty === 'bot_normal' ? 0.76 : 0.58;
+    if (p.charge >= releaseCharge || (aligned && p.charge > 0.45)) {
+      this.input.setBotState(botId, false);
     } else {
-      if (ps.power >= 0.75) {
-        this.input.setBotInput(botId, false, 0, 0, false);
-      } else {
-        this.input.setBotInput(botId, true, 0, 0, true);
-      }
+      this.input.setBotState(botId, true);
     }
   }
 
-  public getScore(playerId: PlayerId): number {
-    return this.playersState.get(playerId)?.score ?? 0;
+  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const moundY = height - 74;
+    const theme = THEMES[THEME_ORDER[this.themeIndex]];
+
+    const bg = ctx.createLinearGradient(0, 0, 0, height);
+    bg.addColorStop(0, theme.bgTop);
+    bg.addColorStop(1, theme.bgBot);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    // Draw Bottle Pyramids on Pedestal Shelves
+    for (const pyr of this.pyramids) {
+      ctx.save();
+      ctx.fillStyle = theme.shelfColor;
+      ctx.fillRect(pyr.x - 46, pyr.y + 18, 92, 12);
+      ctx.strokeStyle = theme.accent;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(pyr.x - 46, pyr.y + 18, 92, 12);
+
+      if (pyr.bottlesLeft > 0) {
+        const positions = [
+          { dx: -22, dy: 6 },
+          { dx: 0, dy: 6 },
+          { dx: 22, dy: 6 },
+          { dx: -11, dy: -14 },
+          { dx: 11, dy: -14 },
+          { dx: 0, dy: -34 },
+        ];
+        for (let i = 0; i < pyr.bottlesLeft; i++) {
+          const b = positions[i];
+          ctx.fillStyle = pyr.isGolden ? '#facc15' : '#f8fafc';
+          ctx.fillRect(pyr.x + b.dx - 7, pyr.y + b.dy - 10, 14, 22);
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(pyr.x + b.dx - 7, pyr.y + b.dy - 10, 14, 22);
+        }
+      }
+      ctx.restore();
+    }
+
+    // Draw Flying Baseballs
+    for (const ball of this.baseballs) {
+      if (!ball.active) continue;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.isHeater ? 12 : 9, 0, Math.PI * 2);
+      ctx.fillStyle = ball.isHeater ? '#facc15' : '#ffffff';
+      ctx.fill();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#ef4444';
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Draw Pitchers & Aim Guides
+    this.pitchers.forEach((p) => {
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(p.x, moundY - 22);
+      ctx.lineTo(
+        p.x + Math.cos(p.aimAngle) * (90 + p.charge * 120),
+        moundY - 22 + Math.sin(p.aimAngle) * (90 + p.charge * 120)
+      );
+      ctx.strokeStyle = p.charge >= 0.72 ? '#facc15' : p.color;
+      ctx.lineWidth = 3;
+      ctx.setLineDash([6, 6]);
+      ctx.stroke();
+      ctx.restore();
+
+      const mood = p.stunTimer > 0 ? 'shocked' : p.charge >= 0.72 ? 'triumph' : 'focused';
+      this.drawPlayerMascot(ctx, p.id, p.x, moundY, 22, mood, this.timeElapsed, 0);
+    });
+
+    this.renderFloatingTexts(ctx);
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(width - 215, 14, 200, 32);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '700 13px "Outfit", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`🎨 ${theme.name} [T]`, width - 24, 35);
+    ctx.restore();
   }
 
   public isRoundOver(): boolean {
@@ -442,19 +507,25 @@ export class MilkBottleKnockdownGame extends BaseGame {
   }
 
   public getRoundResult(): RoundResult {
-    const rankings = Array.from(this.playersState.entries())
-      .map(([playerId, ps]) => ({ playerId, score: ps.score, place: 1 }))
+    const rankings = Array.from(this.pitchers.values())
+      .map((p) => ({ playerId: p.id, score: Math.floor(p.score), place: 1 }))
       .sort((a, b) => b.score - a.score);
-
-    rankings.forEach((entry, idx) => {
-      entry.place = idx + 1;
+    rankings.forEach((r, idx) => {
+      r.place = idx + 1;
     });
-
-    const winnerId = rankings.length > 0 && rankings[0].score > 0 ? rankings[0].playerId : null;
+    const winnerId = rankings.length > 0 ? rankings[0].playerId : null;
     return {
       winnerId,
       rankings,
-      mvpHighlight: winnerId ? `${winnerId} toppled the milk bottle pyramids!` : 'No milk bottles knocked!'
+      mvpHighlight: winnerId ? `Player ${winnerId} shattered the Milk Bottle Pyramids!` : 'Strikeout showdown complete!',
     };
+  }
+
+  public destroy(): void {
+    if (typeof window !== 'undefined' && this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
+    super.destroy();
   }
 }
