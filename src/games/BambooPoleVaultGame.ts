@@ -1,300 +1,272 @@
 import { BaseGame } from './BaseGame';
-import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
+import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
 
-interface VaultIdol {
-  x: number;
-  y: number;
-  points: number;
-  collected: boolean;
+type VaultTheme = 'emerald_ravine' | 'sunset_gorge' | 'sacred_bamboo';
+
+interface VaultPalette {
+  name: string;
+  skyTop: string;
+  skyBot: string;
+  cliffColor: string;
+  poleColor: string;
 }
 
-interface VaulterPlayer {
+const THEMES: Record<VaultTheme, VaultPalette> = {
+  emerald_ravine: {
+    name: 'Emerald Bamboo Gorge',
+    skyTop: '#064e3b',
+    skyBot: '#022c22',
+    cliffColor: '#3f6212',
+    poleColor: '#84cc16',
+  },
+  sunset_gorge: {
+    name: 'Golden Sunset Canyon',
+    skyTop: '#451a03',
+    skyBot: '#1c1917',
+    cliffColor: '#92400e',
+    poleColor: '#fbbf24',
+  },
+  sacred_bamboo: {
+    name: 'Arashiyama Moonlit Grove',
+    skyTop: '#1e1b4b',
+    skyBot: '#090d16',
+    cliffColor: '#334155',
+    poleColor: '#22d3ee',
+  },
+};
+
+const THEME_KEYS: VaultTheme[] = ['emerald_ravine', 'sunset_gorge', 'sacred_bamboo'];
+
+interface Vaulter {
   id: PlayerId;
-  state: 'RUNNING' | 'BENDING' | 'AIRBORNE' | 'LANDED' | 'FAILED';
-  runProgress: number; // 0 to 1
-  poleBend: number; // 0 to 1
+  color: string;
+  isBot: boolean;
   x: number;
   y: number;
   vx: number;
   vy: number;
-  timer: number;
+  phase: 'runway' | 'airborne';
   score: number;
+  combo: number;
+  charge: number;
+  holding: boolean;
+  catapultBoost: boolean;
+  stunTimer: number;
+  underdog: boolean;
+  botTimer: number;
+  botChargeGoal: number;
+  calloutText: string;
+  calloutTimer: number;
 }
 
 export class BambooPoleVaultGame extends BaseGame {
-  private playersState: Map<PlayerId, VaulterPlayer> = new Map();
-  private idols: VaultIdol[] = [];
+  private vaulters: Vaulter[] = [];
+  private timeElapsed = 0;
+  private roundTime = 45;
+  private suddenDeath = false;
+  private hitStopTimer = 0;
+  private shakeTimer = 0;
+  private shakeIntensity = 0;
+  private themeIdx = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
 
-  constructor(
-    players: PlayerConfig[],
-    input: InputRouter,
-    audio: AudioEngine,
-    particles: ParticleSystem
-  ) {
+  constructor(players: PlayerConfig[], input: InputRouter, audio: AudioEngine, particles: ParticleSystem) {
     super(players, input, audio, particles);
   }
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+          this.audio.playTap();
+        } else if (e.key === '1') this.themeIdx = 0;
+        else if (e.key === '2') this.themeIdx = 1;
+        else if (e.key === '3') this.themeIdx = 2;
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
   }
 
-  public reset(width: number, height: number): void {
+  public reset(_width: number, height: number): void {
+    this.timeElapsed = 0;
+    this.roundTime = 45;
     this.isFinished = false;
-    this.roundTimer = 30;
-    this.idols = [];
-    this.playersState.clear();
+    this.suddenDeath = false;
+    this.hitStopTimer = 0;
+    this.shakeTimer = 0;
+    this.shakeIntensity = 0;
+    this.vaulters = [];
 
     const active = this.getActivePlayers();
-    const count = active.length;
-    const laneH = (height - 80) / count;
-
     active.forEach((p, idx) => {
-      const laneY = 70 + idx * laneH + laneH / 2;
-      this.playersState.set(p.id, {
+      this.vaulters.push({
         id: p.id,
-        state: 'RUNNING',
-        runProgress: 0,
-        poleBend: 0,
-        x: 40,
-        y: laneY,
+        color: p.color,
+        isBot: p.type.startsWith('bot_'),
+        x: 90 + idx * 24,
+        y: height * 0.68,
         vx: 0,
         vy: 0,
-        timer: 0,
-        score: 0
-      });
-
-      // Suspended golden idol over chasm
-      this.idols.push({
-        x: width * 0.58,
-        y: laneY - 45,
-        points: 30,
-        collected: false
+        phase: 'runway',
+        score: 0,
+        combo: 1,
+        charge: 0,
+        holding: false,
+        catapultBoost: false,
+        stunTimer: 0,
+        underdog: false,
+        botTimer: 0.22,
+        botChargeGoal: 0.84,
+        calloutText: '',
+        calloutTimer: 0,
       });
     });
+  }
+
+  private triggerHitStop(ms: number, shake: number): void {
+    this.hitStopTimer = Math.max(this.hitStopTimer, ms / 1000);
+    this.shakeTimer = Math.max(this.shakeTimer, 0.22);
+    this.shakeIntensity = Math.min(18, Math.max(this.shakeIntensity, shake));
+  }
+
+  private showCallout(v: Vaulter, text: string): void {
+    v.calloutText = text;
+    v.calloutTimer = 1.15;
   }
 
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
-    this.roundTimer = Math.max(0, this.roundTimer - dt);
-    this.updateBots(dt, width, height);
 
-    const active = this.getActivePlayers();
-    const count = active.length;
-    const laneH = (height - 80) / count;
-
-    active.forEach((p, idx) => {
-      const ps = this.playersState.get(p.id);
-      if (!ps) return;
-      const laneY = 70 + idx * laneH + laneH / 2;
-      const plantX = width * 0.38;
-      const landingX = width * 0.76;
-
-      const tap = this.input.justPressed(p.id);
-      const isHolding = this.input.isPressed(p.id);
-
-      switch (ps.state) {
-        case 'RUNNING':
-          // Automatic forward run
-          ps.x += 160 * dt;
-
-          // Plant pole at planting zone
-          if (tap || ps.x >= plantX) {
-            if (Math.abs(ps.x - plantX) < 45) {
-              ps.state = 'BENDING';
-              ps.poleBend = 0.2;
-              this.audio.playBounce();
-            } else if (ps.x > plantX + 30) {
-              // Missed plant into chasm
-              ps.state = 'FAILED';
-              ps.timer = 1.0;
-              this.audio.playStun();
-            }
-          }
-          break;
-
-        case 'BENDING':
-          // Hold to bend bamboo pole
-          ps.poleBend = Math.min(1.0, ps.poleBend + dt * 2.2);
-
-          // Release to launch!
-          if (!isHolding || ps.poleBend >= 1.0) {
-            ps.state = 'AIRBORNE';
-            const launchPower = 340 + ps.poleBend * 240;
-            ps.vx = launchPower * 0.75;
-            ps.vy = -launchPower * 0.85;
-            this.audio.playWhoosh();
-            this.particles.spawnDust(ps.x, laneY, 6);
-          }
-          break;
-
-        case 'AIRBORNE':
-          ps.vy += 680 * dt; // Gravity
-          ps.x += ps.vx * dt;
-          ps.y += ps.vy * dt;
-
-          // Check collecting suspended idol
-          const idol = this.idols[idx];
-          if (idol && !idol.collected && Math.hypot(ps.x - idol.x, ps.y - idol.y) < 24) {
-            idol.collected = true;
-            ps.score += idol.points;
-            this.audio.playScore();
-            this.particles.showFloatingText(`+${idol.points} IDOL!`, idol.x, idol.y - 18, '#FBBF24', 20);
-            this.particles.spawnConfetti(idol.x, idol.y, 8);
-          }
-
-          // Check landing on far cliff
-          if (ps.y >= laneY) {
-            if (ps.x >= landingX - 25) {
-              // Perfect vault landing!
-              ps.state = 'LANDED';
-              ps.timer = 1.2;
-              ps.y = laneY;
-              ps.score += 35;
-              this.audio.playScore();
-              this.particles.showFloatingText('CLEARED! +35', ps.x, laneY - 20, '#10B981', 22);
-              this.particles.spawnConfetti(ps.x, laneY, 12);
-            } else {
-              // Fell into ravine
-              ps.state = 'FAILED';
-              ps.timer = 1.2;
-              this.audio.playStun();
-              this.particles.showFloatingText('FELL!', ps.x, laneY + 20, '#EF4444', 18);
-            }
-          }
-          break;
-
-        case 'LANDED':
-        case 'FAILED':
-          ps.timer -= dt;
-          if (ps.timer <= 0) {
-            // Reset for next attempt
-            ps.state = 'RUNNING';
-            ps.x = 40;
-            ps.y = laneY;
-            ps.vx = 0;
-            ps.vy = 0;
-            ps.poleBend = 0;
-            if (this.idols[idx]) this.idols[idx].collected = false;
-          }
-          break;
-      }
-    });
-
-    if (this.roundTimer <= 0) {
-      this.isFinished = true;
+    if (this.shakeTimer > 0) this.shakeTimer = Math.max(0, this.shakeTimer - dt);
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer = Math.max(0, this.hitStopTimer - dt);
+      return;
     }
-  }
 
-  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Jungle Chasm & Mist Backdrop
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#064E3B');
-    bgGrad.addColorStop(0.6, '#065F46');
-    bgGrad.addColorStop(1, '#022C22');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
+    this.timeElapsed += dt;
+    const remaining = Math.max(0, this.roundTime - this.timeElapsed);
+    if (remaining <= 15 && !this.suddenDeath) {
+      this.suddenDeath = true;
+      this.audio.playBuzzer();
+      this.vaulters.forEach((v) => this.showCallout(v, 'CHASM VAULT 2X!'));
+    }
+    if (remaining <= 0) {
+      this.isFinished = true;
+      this.audio.playFanfare();
+      return;
+    }
 
-    const active = this.getActivePlayers();
-    const count = active.length;
-    const laneH = (height - 80) / count;
+    this.updateBots(dt, width, height);
+    const maxScore = Math.max(0, ...this.vaulters.map((v) => v.score));
+    const groundY = height * 0.68;
+    const plantBoxX = width * 0.42;
 
-    active.forEach((p, idx) => {
-      const ps = this.playersState.get(p.id);
-      if (!ps) return;
-      const laneY = 70 + idx * laneH + laneH / 2;
-      const plantX = width * 0.38;
-      const landingX = width * 0.76;
-
-      // Divider line between tracks
-      if (idx > 0) {
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(0, 70 + idx * laneH);
-        ctx.lineTo(width, 70 + idx * laneH);
-        ctx.stroke();
+    for (const v of this.vaulters) {
+      v.underdog = maxScore - v.score >= 150;
+      if (v.calloutTimer > 0) v.calloutTimer = Math.max(0, v.calloutTimer - dt);
+      if (v.stunTimer > 0) {
+        v.stunTimer = Math.max(0, v.stunTimer - dt);
+        continue;
       }
 
-      // Runway Track
-      ctx.fillStyle = '#78350F';
-      ctx.fillRect(0, laneY + 12, plantX, 14);
+      const steer = this.input.getSteer(v.id);
+      const justTap = this.input.justPressed(v.id) || this.input.justAction(v.id);
+      const isHold = this.input.isActionPressed(v.id) || this.input.isPressed(v.id);
 
-      // Stone Plant Box
-      ctx.fillStyle = '#64748B';
-      ctx.fillRect(plantX - 12, laneY + 10, 24, 18);
-      ctx.strokeStyle = '#CBD5E1';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(plantX - 12, laneY + 10, 24, 18);
+      if (v.phase === 'runway') {
+        v.vx = Math.min(340, v.vx + (260 + Math.max(0, steer) * 140) * (v.underdog ? 1.15 : 1.0) * dt);
+        if (justTap) v.vx = Math.min(380, v.vx + 55);
+        v.x += v.vx * dt;
+        v.y = groundY;
 
-      // Chasm Gap
-      ctx.fillStyle = '#020617';
-      ctx.fillRect(plantX + 12, laneY + 12, landingX - (plantX + 12), 40);
+        if (isHold) {
+          v.holding = true;
+          v.charge = Math.min(1, v.charge + dt * 0.98);
+        } else if (v.holding || v.x >= plantBoxX) {
+          const sweet = v.charge >= 0.72 && v.charge <= 0.98;
+          v.phase = 'airborne';
+          v.catapultBoost = sweet;
+          v.vx = sweet ? 430 : 320;
+          v.vy = sweet ? -560 : -430;
+          if (sweet) {
+            v.score += 85;
+            v.combo = Math.min(4, v.combo + 1);
+            this.showCallout(v, 'BAMBOO CATAPULT +85!');
+            this.audio.playBoost();
+            this.triggerHitStop(45, 11);
 
-      // Far Landing Cliff Platform
-      ctx.fillStyle = '#059669';
-      ctx.fillRect(landingX, laneY + 12, width - landingX, 14);
-      ctx.fillStyle = '#10B981';
-      ctx.fillRect(landingX, laneY + 10, width - landingX, 4);
+            for (const other of this.vaulters) {
+              if (other.id !== v.id && Math.abs(other.x - v.x) < 150) {
+                other.vx -= 180;
+                v.score += 70;
+                this.showCallout(v, 'POLE SNAP SHUNT +70!');
+                this.audio.playBounce();
+              }
+            }
+          } else if (v.charge > 0.98) {
+            v.vx = 210;
+            v.vy = -290;
+            v.combo = 1;
+            this.showCallout(v, 'POLE OVERBEND!');
+            this.audio.playStun();
+          } else {
+            this.audio.playTap();
+          }
+          v.holding = false;
+          v.charge = 0;
+        }
+      } else {
+        v.vx += steer * 240 * dt;
+        v.vy += 620 * dt;
+        v.x += v.vx * dt;
+        v.y += v.vy * dt;
 
-      // Suspended Golden Idol
-      const idol = this.idols[idx];
-      if (idol && !idol.collected) {
-        ctx.fillStyle = '#FBBF24';
-        ctx.beginPath();
-        ctx.arc(idol.x, idol.y, 9, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#D97706';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        // Land on target pads on right cliff
+        if (v.y >= groundY) {
+          if (v.x >= width * 0.58) {
+            const bullseyeDist = Math.abs(v.x - width * 0.76);
+            const base = bullseyeDist < 55 ? 95 : 55;
+            const pts = base * v.combo * (this.suddenDeath ? 2 : 1);
+            v.score += pts;
+            v.combo = Math.min(4, v.combo + 1);
+            this.showCallout(v, bullseyeDist < 55 ? `GOLDEN PAD +${pts}!` : `SAFE VAULT +${pts}`);
+            this.audio.playScore();
+            this.particles.spawnSparks(v.x, groundY, '#fbbf24', 12);
+          } else {
+            v.combo = 1;
+            this.showCallout(v, 'RAVINE SPLASH!');
+            this.audio.playStun();
+          }
+          v.phase = 'runway';
+          v.x = 85;
+          v.y = groundY;
+          v.vx = 120;
+          v.vy = 0;
+        }
       }
+    }
 
-      // Draw Flexible Bamboo Pole
-      if (ps.state === 'BENDING') {
-        ctx.strokeStyle = '#84CC16';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.moveTo(plantX, laneY + 12);
-        const ctrlX = plantX - 25 * ps.poleBend;
-        const ctrlY = laneY - 20;
-        ctx.quadraticCurveTo(ctrlX, ctrlY, ps.x, ps.y);
-        ctx.stroke();
-      } else if (ps.state === 'RUNNING') {
-        // Holding pole horizontally
-        ctx.strokeStyle = '#84CC16';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(ps.x - 14, ps.y + 4);
-        ctx.lineTo(ps.x + 24, ps.y - 12);
-        ctx.stroke();
+    // Elastic Mid-Air & Runway Bumping
+    for (let i = 0; i < this.vaulters.length; i++) {
+      for (let j = i + 1; j < this.vaulters.length; j++) {
+        const a = this.vaulters[i];
+        const b = this.vaulters[j];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 0 && dist < 34) {
+          const nx = dx / dist;
+          a.vx -= nx * 160;
+          b.vx += nx * 160;
+          this.audio.playBounce();
+        }
       }
-
-      // Draw Player
-      ctx.save();
-      ctx.translate(ps.x, ps.y);
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(0, 0, 12, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.restore();
-
-      // Score
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 11px Montserrat, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(`${p.name}: ${ps.score}`, 16, laneY - 18);
-    });
-
-    // Header HUD
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 20px Montserrat, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`TIME: ${Math.ceil(this.roundTimer)}s`, width / 2, 28);
+    }
   }
 
   protected updateBotAI(
@@ -302,35 +274,101 @@ export class BambooPoleVaultGame extends BaseGame {
     botId: PlayerId,
     difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
     width: number,
-    height: number
+    _height: number
   ): void {
-    const ps = this.playersState.get(botId);
-    if (!ps) return;
-    const plantX = width * 0.38;
+    const bot = this.vaulters.find((v) => v.id === botId);
+    if (!bot) return;
 
-    if (ps.state === 'RUNNING') {
-      const tol = difficulty === 'bot_hard' ? 12 : difficulty === 'bot_normal' ? 24 : 38;
-      if (Math.abs(ps.x - plantX) < tol) {
-        this.input.setBotInput(botId, true, 0, 0, true);
-      } else {
-        this.input.setBotInput(botId, false, 0, 0, false);
-      }
-    } else if (ps.state === 'BENDING') {
-      const idealBend = difficulty === 'bot_hard' ? 0.85 : difficulty === 'bot_normal' ? 0.7 : 0.55;
-      if (ps.poleBend >= idealBend) {
-        // Release to launch!
-        this.input.setBotInput(botId, false, 0, 0, false);
-      } else {
-        // Hold to bend
-        this.input.setBotInput(botId, true, 0, 0, false);
-      }
-    } else {
-      this.input.setBotInput(botId, false, 0, 0, false);
+    bot.botTimer -= dt;
+    if (bot.botTimer <= 0) {
+      bot.botTimer = difficulty === 'bot_hard' ? 0.18 : 0.26;
+      bot.botChargeGoal = 0.76 + Math.random() * 0.18;
     }
+
+    const shouldHold =
+      bot.phase === 'runway' &&
+      bot.x > width * 0.22 &&
+      (!bot.holding || bot.charge < bot.botChargeGoal);
+    this.input.setBotState(botId, shouldHold);
   }
 
-  public getScore(playerId: PlayerId): number {
-    return this.playersState.get(playerId)?.score ?? 0;
+  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const pal = THEMES[THEME_KEYS[this.themeIdx]];
+    ctx.save();
+
+    if (this.shakeTimer > 0) {
+      const s = this.shakeIntensity * (this.shakeTimer / 0.22);
+      ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+    }
+
+    const sky = ctx.createLinearGradient(0, 0, 0, height);
+    sky.addColorStop(0, pal.skyTop);
+    sky.addColorStop(1, pal.skyBot);
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, height);
+
+    const groundY = height * 0.68;
+    // Left Runway Cliff & Right Landing Cliff
+    ctx.fillStyle = pal.cliffColor;
+    ctx.fillRect(0, groundY, width * 0.44, height - groundY);
+    ctx.fillRect(width * 0.58, groundY, width * 0.42, height - groundY);
+
+    // Golden Bullseye Landing Pad
+    ctx.fillStyle = '#fbbf24';
+    ctx.fillRect(width * 0.76 - 48, groundY - 6, 96, 12);
+
+    // Vaulters
+    for (const v of this.vaulters) {
+      ctx.save();
+      ctx.translate(v.x, v.y - 16);
+      if (v.holding && v.charge > 0.05) {
+        const sweet = v.charge >= 0.72 && v.charge <= 0.98;
+        ctx.strokeStyle = sweet ? '#4ade80' : '#fbbf24';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, 26, -Math.PI / 2, -Math.PI / 2 + v.charge * Math.PI * 2);
+        ctx.stroke();
+      }
+      // Bamboo Pole
+      ctx.strokeStyle = pal.poleColor;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(-16, 6);
+      ctx.lineTo(24, -18 + v.charge * 18);
+      ctx.stroke();
+
+      const mood = v.stunTimer > 0 ? 'shocked' : v.catapultBoost ? 'triumph' : v.holding ? 'focused' : 'happy';
+      this.drawPlayerMascot(ctx, v.id, 0, 0, 16, mood, this.timeElapsed, 0);
+      if (v.calloutTimer > 0 && v.calloutText) {
+        ctx.fillStyle = '#fef08a';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(v.calloutText, 0, -28);
+      }
+      ctx.restore();
+    }
+
+    // HUD
+    const remaining = Math.max(0, Math.ceil(this.roundTime - this.timeElapsed));
+    ctx.fillStyle = 'rgba(15,23,42,0.82)';
+    ctx.fillRect(0, 0, width, 46);
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 15px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      `🎋 BAMBOO POLE VAULT • ${pal.name} [T/1-3] • ${remaining}s ${this.suddenDeath ? '🔥 2X VAULT' : ''}`,
+      width * 0.5,
+      19
+    );
+
+    this.vaulters.forEach((v, idx) => {
+      ctx.fillStyle = v.color;
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`P${v.id}: ${Math.round(v.score)} pts (${v.combo}x)`, 90 + idx * 170, 38);
+    });
+
+    ctx.restore();
   }
 
   public isRoundOver(): boolean {
@@ -338,19 +376,19 @@ export class BambooPoleVaultGame extends BaseGame {
   }
 
   public getRoundResult(): RoundResult {
-    const rankings = Array.from(this.playersState.entries())
-      .map(([playerId, ps]) => ({ playerId, score: ps.score, place: 1 }))
-      .sort((a, b) => b.score - a.score);
-
-    rankings.forEach((entry, idx) => {
-      entry.place = idx + 1;
-    });
-
-    const winnerId = rankings.length > 0 && rankings[0].score > 0 ? rankings[0].playerId : null;
+    const sorted = [...this.vaulters].sort((a, b) => b.score - a.score);
     return {
-      winnerId,
-      rankings,
-      mvpHighlight: winnerId ? `${winnerId} launched daring high-altitude bamboo vaults over the chasm!` : 'Tied pole vaults!'
+      winnerId: sorted[0]?.id ?? 1,
+      rankings: sorted.map((v, i) => ({
+        playerId: v.id,
+        score: Math.round(v.score),
+        place: i + 1,
+      })),
+      mvpHighlight: `Bamboo Vault Champion ${Math.round(sorted[0]?.score ?? 0)} pts!`,
     };
+  }
+
+  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+    return false;
   }
 }

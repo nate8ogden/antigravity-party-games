@@ -1,291 +1,395 @@
 import { BaseGame } from './BaseGame';
-import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
+import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
 
-interface DewDrop {
-  x: number;
-  y: number;
-  type: 'DEW' | 'SPROUT';
-  points: number;
-  collected: boolean;
+type TwigTheme = 'rose_garden' | 'cherry_blossom' | 'neon_terrarium';
+
+interface TwigPalette {
+  name: string;
+  bgTop: string;
+  bgBot: string;
+  branchColor: string;
+  dewColor: string;
 }
 
-interface InchwormPlayer {
+const THEMES: Record<TwigTheme, TwigPalette> = {
+  rose_garden: {
+    name: 'Morning Dew Rose Branch',
+    bgTop: '#064e3b',
+    bgBot: '#022c22',
+    branchColor: '#78350f',
+    dewColor: '#38bdf8',
+  },
+  cherry_blossom: {
+    name: 'Sakura Blossom Canopy',
+    bgTop: '#4c1d95',
+    bgBot: '#1e1b4b',
+    branchColor: '#581c87',
+    dewColor: '#f472b6',
+  },
+  neon_terrarium: {
+    name: 'Bioluminescent Terrarium',
+    bgTop: '#090d16',
+    bgBot: '#0f172a',
+    branchColor: '#10b981',
+    dewColor: '#22d3ee',
+  },
+};
+
+const THEME_KEYS: TwigTheme[] = ['rose_garden', 'cherry_blossom', 'neon_terrarium'];
+
+interface DewPickup {
+  id: number;
+  x: number;
+  y: number;
+  kind: 'dew_drop' | 'golden_nectar' | 'thorn';
+}
+
+interface Inchworm {
   id: PlayerId;
-  laneY: number;
-  headX: number;
-  tailX: number;
-  archHeight: number; // 0 (flat) to 22 (arched)
-  isContracting: boolean;
+  color: string;
+  isBot: boolean;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
   score: number;
+  combo: number;
+  charge: number;
+  holding: boolean;
+  surgeBoostTimer: number;
+  stunTimer: number;
+  underdog: boolean;
+  botTimer: number;
+  botChargeGoal: number;
+  calloutText: string;
+  calloutTimer: number;
 }
 
 export class CaterpillarInchwormGame extends BaseGame {
-  private playersState: Map<PlayerId, InchwormPlayer> = new Map();
-  private drops: DewDrop[] = [];
+  private worms: Inchworm[] = [];
+  private pickups: DewPickup[] = [];
+  private timeElapsed = 0;
+  private roundTime = 45;
+  private suddenDeath = false;
+  private hitStopTimer = 0;
+  private shakeTimer = 0;
+  private shakeIntensity = 0;
+  private themeIdx = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
 
-  constructor(
-    players: PlayerConfig[],
-    input: InputRouter,
-    audio: AudioEngine,
-    particles: ParticleSystem
-  ) {
+  constructor(players: PlayerConfig[], input: InputRouter, audio: AudioEngine, particles: ParticleSystem) {
     super(players, input, audio, particles);
   }
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+          this.audio.playTap();
+        } else if (e.key === '1') this.themeIdx = 0;
+        else if (e.key === '2') this.themeIdx = 1;
+        else if (e.key === '3') this.themeIdx = 2;
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
   }
 
   public reset(width: number, height: number): void {
+    this.timeElapsed = 0;
+    this.roundTime = 45;
     this.isFinished = false;
-    this.roundTimer = 30;
-    this.drops = [];
-    this.playersState.clear();
+    this.suddenDeath = false;
+    this.hitStopTimer = 0;
+    this.shakeTimer = 0;
+    this.shakeIntensity = 0;
+    this.worms = [];
+    this.pickups = [];
 
     const active = this.getActivePlayers();
-    const count = active.length;
-    const laneH = (height - 80) / count;
-
     active.forEach((p, idx) => {
-      const laneY = 70 + idx * laneH + laneH / 2;
-      this.playersState.set(p.id, {
+      this.worms.push({
         id: p.id,
-        laneY,
-        headX: 70,
-        tailX: 35,
-        archHeight: 0,
-        isContracting: false,
-        score: 0
+        color: p.color,
+        isBot: p.type.startsWith('bot_'),
+        x: width * (0.28 + idx * 0.2),
+        y: height * 0.54,
+        vx: 0,
+        vy: 0,
+        score: 0,
+        combo: 1,
+        charge: 0,
+        holding: false,
+        surgeBoostTimer: 0,
+        stunTimer: 0,
+        underdog: false,
+        botTimer: 0.22,
+        botChargeGoal: 0.82,
+        calloutText: '',
+        calloutTimer: 0,
       });
     });
 
-    this.spawnDewDrops(width, height);
+    for (let i = 0; i < 12; i++) {
+      this.pickups.push(this.spawnPickup(width, height, i));
+    }
   }
 
-  private spawnDewDrops(width: number, height: number): void {
-    const active = this.getActivePlayers();
-    const count = active.length;
-    const laneH = (height - 80) / count;
+  private spawnPickup(width: number, height: number, id: number): DewPickup {
+    const r = Math.random();
+    return {
+      id,
+      x: width * (0.14 + Math.random() * 0.72),
+      y: height * (0.18 + Math.random() * 0.66),
+      kind: r < 0.25 ? 'golden_nectar' : r < 0.82 ? 'dew_drop' : 'thorn',
+    };
+  }
 
-    this.drops = [];
-    active.forEach((_, idx) => {
-      const laneY = 70 + idx * laneH + laneH / 2;
-      for (let x = 120; x < width - 40; x += 85) {
-        const isSprout = Math.random() < 0.3;
-        this.drops.push({
-          x,
-          y: laneY - 14,
-          type: isSprout ? 'SPROUT' : 'DEW',
-          points: isSprout ? 30 : 15,
-          collected: false
-        });
-      }
-    });
+  private triggerHitStop(ms: number, shake: number): void {
+    this.hitStopTimer = Math.max(this.hitStopTimer, ms / 1000);
+    this.shakeTimer = Math.max(this.shakeTimer, 0.22);
+    this.shakeIntensity = Math.min(18, Math.max(this.shakeIntensity, shake));
+  }
+
+  private showCallout(w: Inchworm, text: string): void {
+    w.calloutText = text;
+    w.calloutTimer = 1.15;
   }
 
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
-    this.roundTimer = Math.max(0, this.roundTimer - dt);
-    this.updateBots(dt, width, height);
 
-    for (const p of this.getActivePlayers()) {
-      const ps = this.playersState.get(p.id);
-      if (!ps) continue;
-
-      const isPressed = this.input.isPressed(p.id);
-      const justReleased = this.input.justReleased(p.id);
-
-      if (isPressed) {
-        // Phase 1: Contract tail forward, building body arch
-        if (!ps.isContracting) {
-          ps.isContracting = true;
-          this.audio.playSqueak();
-        }
-        ps.archHeight = Math.min(24, ps.archHeight + dt * 140);
-        // Pull tail towards head
-        const idealGap = 16;
-        if (ps.headX - ps.tailX > idealGap) {
-          ps.tailX += (ps.headX - ps.tailX - idealGap) * dt * 12;
-        }
-      } else if (justReleased || (!isPressed && ps.isContracting)) {
-        // Phase 2: Extend head forward vigorously!
-        ps.isContracting = false;
-        const extensionPower = (ps.archHeight / 24) * 48 + 15;
-        ps.headX += extensionPower;
-        ps.archHeight = 0;
-        this.audio.playBounce();
-        this.particles.spawnDust(ps.tailX, ps.laneY + 4, 3);
-      }
-
-      // Check collecting dew drops
-      for (const d of this.drops) {
-        if (!d.collected && Math.abs(d.y - (ps.laneY - 14)) < 20 && Math.abs(ps.headX - d.x) < 20) {
-          d.collected = true;
-          ps.score += d.points;
-          this.audio.playScore();
-          this.particles.showFloatingText(`+${d.points}`, d.x, d.y - 14, d.type === 'SPROUT' ? '#10B981' : '#38BDF8', 18);
-          this.particles.spawnConfetti(d.x, d.y, 6);
-        }
-      }
-
-      // Reached branch end -> wrap back with lap bonus
-      if (ps.headX > width - 30) {
-        ps.score += 40;
-        this.audio.playScore();
-        this.particles.showFloatingText('BRANCH CROSSED! +40', width - 60, ps.laneY - 24, '#FBBF24', 22);
-        this.particles.spawnConfetti(width - 60, ps.laneY, 12);
-        ps.headX = 70;
-        ps.tailX = 35;
-        ps.archHeight = 0;
-      }
+    if (this.shakeTimer > 0) this.shakeTimer = Math.max(0, this.shakeTimer - dt);
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer = Math.max(0, this.hitStopTimer - dt);
+      return;
     }
 
-    if (this.roundTimer <= 0) {
+    this.timeElapsed += dt;
+    const remaining = Math.max(0, this.roundTime - this.timeElapsed);
+    if (remaining <= 15 && !this.suddenDeath) {
+      this.suddenDeath = true;
+      this.audio.playBuzzer();
+      this.worms.forEach((w) => this.showCallout(w, 'BUTTERFLY SURGE 2X!'));
+    }
+    if (remaining <= 0) {
       this.isFinished = true;
+      this.audio.playFanfare();
+      return;
     }
-  }
 
-  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Garden Morning Dawn
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#064E3B');
-    bgGrad.addColorStop(0.6, '#065F46');
-    bgGrad.addColorStop(1, '#022C22');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
+    this.updateBots(dt, width, height);
+    const maxScore = Math.max(0, ...this.worms.map((w) => w.score));
 
-    const active = this.getActivePlayers();
-    const count = active.length;
-    const laneH = (height - 80) / count;
-
-    active.forEach((p, idx) => {
-      const ps = this.playersState.get(p.id);
-      if (!ps) return;
-      const laneY = 70 + idx * laneH + laneH / 2;
-
-      // Wooden garden twig branch
-      ctx.fillStyle = '#78350F';
-      ctx.fillRect(0, laneY + 6, width, 12);
-      ctx.strokeStyle = '#451A03';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(0, laneY + 6, width, 12);
-
-      // Little green rose leaves growing along branch
-      ctx.fillStyle = '#10B981';
-      for (let x = 60; x < width; x += 110) {
-        ctx.beginPath();
-        ctx.ellipse(x, laneY + 16, 12, 6, 0.4, 0, Math.PI * 2);
-        ctx.fill();
+    for (const w of this.worms) {
+      w.underdog = maxScore - w.score >= 150;
+      if (w.calloutTimer > 0) w.calloutTimer = Math.max(0, w.calloutTimer - dt);
+      if (w.surgeBoostTimer > 0) w.surgeBoostTimer = Math.max(0, w.surgeBoostTimer - dt);
+      if (w.stunTimer > 0) {
+        w.stunTimer = Math.max(0, w.stunTimer - dt);
+        continue;
       }
 
-      // Draw Dew Drops & Sprouts in this lane
-      for (const d of this.drops) {
-        if (d.collected || Math.abs(d.y - (laneY - 14)) > 20) continue;
-        ctx.save();
-        ctx.translate(d.x, d.y);
+      const sx = this.input.getSteer(w.id);
+      const sy = this.input.getThrottle(w.id);
+      const isHold = this.input.isActionPressed(w.id) || this.input.isPressed(w.id);
 
-        if (d.type === 'DEW') {
-          // Glistening morning water droplet
-          ctx.fillStyle = '#38BDF8';
-          ctx.beginPath();
-          ctx.arc(0, 4, 6, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#FFFFFF';
-          ctx.beginPath();
-          ctx.arc(-2, 2, 2, 0, Math.PI * 2);
-          ctx.fill();
-        } else {
-          // Tender green leaf sprout
-          ctx.fillStyle = '#84CC16';
-          ctx.beginPath();
-          ctx.ellipse(0, 2, 8, 4, -0.3, 0, Math.PI * 2);
-          ctx.fill();
+      const accel = 1300 * (w.underdog ? 1.15 : 1.0) * (w.surgeBoostTimer > 0 ? 1.35 : 1.0);
+      w.vx += sx * accel * dt;
+      w.vy += (sy !== 0 ? -sy : 0) * accel * dt;
+      w.vx *= Math.pow(0.05, dt);
+      w.vy *= Math.pow(0.05, dt);
+
+      // Hold-to-contract Scrunch & Spring-Lunge Shunt (72%-98% Sweet Spot)
+      if (isHold) {
+        w.holding = true;
+        w.charge = Math.min(1, w.charge + dt * 0.92);
+      } else if (w.holding) {
+        const sweet = w.charge >= 0.72 && w.charge <= 0.98;
+        if (sweet) {
+          w.surgeBoostTimer = 2.2;
+          w.score += 85;
+          w.combo = Math.min(4, w.combo + 1);
+          this.showCallout(w, 'SPRING LUNGE +85!');
+          this.audio.playBoost();
+          this.triggerHitStop(45, 11);
+
+          for (const other of this.worms) {
+            if (other.id !== w.id && Math.hypot(other.x - w.x, other.y - w.y) < 165) {
+              const dx = other.x - w.x;
+              const dy = other.y - w.y;
+              const d = Math.max(1, Math.hypot(dx, dy));
+              other.vx += (dx / d) * 520;
+              other.vy += (dy / d) * 520;
+              w.score += 70;
+              this.showCallout(w, 'TWIG BOUNCE SHUNT +70!');
+              this.audio.playBounce();
+            }
+          }
+        } else if (w.charge > 0.98) {
+          w.stunTimer = 0.9;
+          w.combo = 1;
+          this.showCallout(w, 'TANGLED!');
+          this.audio.playStun();
         }
-        ctx.restore();
+        w.holding = false;
+        w.charge = 0;
       }
 
-      // Draw Caterpillar
-      ctx.save();
-      const midX = (ps.headX + ps.tailX) / 2;
-      const archY = laneY + 6 - ps.archHeight;
+      w.x = Math.max(width * 0.1, Math.min(width * 0.9, w.x + w.vx * dt));
+      w.y = Math.max(height * 0.16, Math.min(height * 0.88, w.y + w.vy * dt));
 
-      // Arched green segmented body
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 10;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(ps.tailX, laneY + 4);
-      ctx.quadraticCurveTo(midX, archY, ps.headX, laneY + 4);
-      ctx.stroke();
+      for (let i = 0; i < this.pickups.length; i++) {
+        const pk = this.pickups[i];
+        if (Math.hypot(w.x - pk.x, w.y - pk.y) < 32) {
+          if (pk.kind === 'thorn' && w.surgeBoostTimer <= 0 && !w.underdog) {
+            w.stunTimer = 1.0;
+            w.combo = 1;
+            this.showCallout(w, 'ROSE THORN!');
+            this.audio.playStun();
+          } else {
+            const base = pk.kind === 'golden_nectar' ? 95 : 50;
+            const pts = base * w.combo * (this.suddenDeath ? 2 : 1);
+            w.score += pts;
+            w.combo = Math.min(4, w.combo + 1);
+            this.showCallout(w, pk.kind === 'golden_nectar' ? `GOLDEN DEW +${pts}!` : `DEW DROP +${pts}`);
+            this.audio.playScore();
+            this.particles.spawnSparks(pk.x, pk.y, '#38bdf8', 10);
+          }
+          this.pickups[i] = this.spawnPickup(width, height, pk.id);
+        }
+      }
+    }
 
-      // Caterpillar Head
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(ps.headX + 4, laneY + 2, 8, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      // Antennae
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(ps.headX + 4, laneY - 4);
-      ctx.lineTo(ps.headX + 10, laneY - 12);
-      ctx.stroke();
-
-      // Little eye
-      ctx.fillStyle = '#000000';
-      ctx.beginPath();
-      ctx.arc(ps.headX + 6, laneY, 2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
-      // Score
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 11px Montserrat, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(`${p.name}: ${ps.score}`, 16, laneY - 18);
-    });
-
-    // Header HUD
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 20px Montserrat, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`TIME: ${Math.ceil(this.roundTimer)}s`, width / 2, 28);
+    // Worm-to-Worm Bumping
+    for (let i = 0; i < this.worms.length; i++) {
+      for (let j = i + 1; j < this.worms.length; j++) {
+        const a = this.worms[i];
+        const b = this.worms[j];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 0 && dist < 36) {
+          const nx = dx / dist;
+          const ny = dy / dist;
+          a.vx -= nx * 280;
+          a.vy -= ny * 280;
+          b.vx += nx * 280;
+          b.vy += ny * 280;
+          this.audio.playBounce();
+        }
+      }
+    }
   }
 
   protected updateBotAI(
     dt: number,
     botId: PlayerId,
     difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
-    width: number,
-    height: number
+    _width: number,
+    _height: number
   ): void {
-    const ps = this.playersState.get(botId);
-    if (!ps) return;
+    const bot = this.worms.find((w) => w.id === botId);
+    if (!bot || bot.stunTimer > 0) return;
 
-    // Rhythmic contraction and extension loop
-    if (ps.isContracting) {
-      const idealArch = difficulty === 'bot_hard' ? 22 : difficulty === 'bot_normal' ? 18 : 12;
-      if (ps.archHeight >= idealArch) {
-        // Release to spring forward!
-        this.input.setBotInput(botId, false, 0, 0, false);
-      } else {
-        this.input.setBotInput(botId, true, 0, 0, false);
-      }
-    } else {
-      // Begin contract
-      this.input.setBotInput(botId, true, 0, 0, false);
+    bot.botTimer -= dt;
+    if (bot.botTimer <= 0) {
+      bot.botTimer = difficulty === 'bot_hard' ? 0.18 : 0.26;
+      bot.botChargeGoal = 0.76 + Math.random() * 0.18;
     }
+
+    const best = this.pickups.find((p) => p.kind !== 'thorn') ?? this.pickups[0];
+    if (best) {
+      const dx = best.x - bot.x;
+      const dy = best.y - bot.y;
+      const d = Math.max(1, Math.hypot(dx, dy));
+      bot.vx += (dx / d) * 1100 * dt;
+      bot.vy += (dy / d) * 1100 * dt;
+    }
+
+    const hold = !bot.holding || bot.charge < bot.botChargeGoal;
+    this.input.setBotState(botId, hold);
   }
 
-  public getScore(playerId: PlayerId): number {
-    return this.playersState.get(playerId)?.score ?? 0;
+  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const pal = THEMES[THEME_KEYS[this.themeIdx]];
+    ctx.save();
+
+    if (this.shakeTimer > 0) {
+      const s = this.shakeIntensity * (this.shakeTimer / 0.22);
+      ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+    }
+
+    const bg = ctx.createLinearGradient(0, 0, 0, height);
+    bg.addColorStop(0, pal.bgTop);
+    bg.addColorStop(1, pal.bgBot);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    // Pickups
+    for (const pk of this.pickups) {
+      ctx.fillStyle =
+        pk.kind === 'golden_nectar' ? '#fbbf24' : pk.kind === 'dew_drop' ? pal.dewColor : '#ef4444';
+      ctx.beginPath();
+      ctx.arc(pk.x, pk.y, pk.kind === 'golden_nectar' ? 16 : 12, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Inchworms
+    for (const w of this.worms) {
+      ctx.save();
+      ctx.translate(w.x, w.y);
+      if (w.holding && w.charge > 0.05) {
+        const sweet = w.charge >= 0.72 && w.charge <= 0.98;
+        ctx.strokeStyle = sweet ? '#4ade80' : '#fbbf24';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, 26, -Math.PI / 2, -Math.PI / 2 + w.charge * Math.PI * 2);
+        ctx.stroke();
+      }
+      // Segmented caterpillar body
+      ctx.fillStyle = w.color;
+      ctx.beginPath();
+      ctx.arc(-14, 4 - w.charge * 10, 10, 0, Math.PI * 2);
+      ctx.arc(-26, 6, 9, 0, Math.PI * 2);
+      ctx.fill();
+
+      const mood = w.stunTimer > 0 ? 'shocked' : w.surgeBoostTimer > 0 ? 'triumph' : w.holding ? 'focused' : 'happy';
+      this.drawPlayerMascot(ctx, w.id, 0, 0, 16, mood, this.timeElapsed, w.vx * 0.0005);
+      if (w.calloutTimer > 0 && w.calloutText) {
+        ctx.fillStyle = '#fef08a';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(w.calloutText, 0, -28);
+      }
+      ctx.restore();
+    }
+
+    // HUD
+    const remaining = Math.max(0, Math.ceil(this.roundTime - this.timeElapsed));
+    ctx.fillStyle = 'rgba(15,23,42,0.82)';
+    ctx.fillRect(0, 0, width, 46);
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 15px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      `🐛 CATERPILLAR INCHWORM • ${pal.name} [T/1-3] • ${remaining}s ${this.suddenDeath ? '🔥 2X DEW' : ''}`,
+      width * 0.5,
+      19
+    );
+
+    this.worms.forEach((w, idx) => {
+      ctx.fillStyle = w.color;
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`P${w.id}: ${Math.round(w.score)} pts (${w.combo}x)`, 90 + idx * 170, 38);
+    });
+
+    ctx.restore();
   }
 
   public isRoundOver(): boolean {
@@ -293,19 +397,19 @@ export class CaterpillarInchwormGame extends BaseGame {
   }
 
   public getRoundResult(): RoundResult {
-    const rankings = Array.from(this.playersState.entries())
-      .map(([playerId, ps]) => ({ playerId, score: ps.score, place: 1 }))
-      .sort((a, b) => b.score - a.score);
-
-    rankings.forEach((entry, idx) => {
-      entry.place = idx + 1;
-    });
-
-    const winnerId = rankings.length > 0 && rankings[0].score > 0 ? rankings[0].playerId : null;
+    const sorted = [...this.worms].sort((a, b) => b.score - a.score);
     return {
-      winnerId,
-      rankings,
-      mvpHighlight: winnerId ? `${winnerId} inched smoothly down the garden twigs!` : 'Tied caterpillar inching!'
+      winnerId: sorted[0]?.id ?? 1,
+      rankings: sorted.map((w, i) => ({
+        playerId: w.id,
+        score: Math.round(w.score),
+        place: i + 1,
+      })),
+      mvpHighlight: `Dew Branch Champion ${Math.round(sorted[0]?.score ?? 0)} pts!`,
     };
+  }
+
+  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+    return false;
   }
 }
