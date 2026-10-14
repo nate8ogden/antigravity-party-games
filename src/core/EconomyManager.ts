@@ -40,7 +40,17 @@ export interface MascotSkin {
     | 'pirate_cannon'
     | 'viking_frost'
     | 'kitsune_wisps'
-    | 'astro_thruster';
+    | 'astro_thruster'
+    | 'kaiju_atomic'
+    | 'pharaoh_ankh'
+    | 'netrunner_glitch'
+    | 'seraphim_halo'
+    | 'reaper_souls'
+    | 'chrono_gears'
+    | 'shogun_mecha'
+    | 'mello_beats'
+    | 'alchemist_elixirs'
+    | 'phoenix_supernova';
 }
 
 export const SKIN_CATALOG: MascotSkin[] = [
