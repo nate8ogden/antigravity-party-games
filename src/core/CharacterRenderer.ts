@@ -299,6 +299,110 @@ export function getSkinMascotTheme(skinId: string, playerId: PlayerId): MascotTh
       visorGlow: '#FBBF24',
       accent: '#38BDF8'
     };
+  } else if (skinId === 'cyber_samurai_ronin') {
+    return {
+      primary: '#0F172A',
+      light: '#38BDF8',
+      dark: '#020617',
+      visorGlow: '#06B6D4',
+      accent: '#EC4899'
+    };
+  } else if (skinId === 'space_pirate_corsair') {
+    return {
+      primary: '#1E1B4B',
+      light: '#818CF8',
+      dark: '#090D16',
+      visorGlow: '#EF4444',
+      accent: '#F59E0B'
+    };
+  } else if (skinId === 'retro_gameboy_classic') {
+    return {
+      primary: '#CBD5E1',
+      light: '#F8FAFC',
+      dark: '#64748B',
+      visorGlow: '#84CC16',
+      accent: '#BE123C'
+    };
+  } else if (skinId === 'mecha_kaiju') {
+    return {
+      primary: '#1E293B',
+      light: '#6EE7B7',
+      dark: '#064E3B',
+      visorGlow: '#10B981',
+      accent: '#34D399'
+    };
+  } else if (skinId === 'pharaoh_anubis') {
+    return {
+      primary: '#1E3A8A',
+      light: '#FEF08A',
+      dark: '#0F172A',
+      visorGlow: '#FBBF24',
+      accent: '#F59E0B'
+    };
+  } else if (skinId === 'cyber_netrunner') {
+    return {
+      primary: '#831843',
+      light: '#F472B6',
+      dark: '#1F091D',
+      visorGlow: '#06B6D4',
+      accent: '#FDE047'
+    };
+  } else if (skinId === 'celestial_seraphim') {
+    return {
+      primary: '#FEF3C7',
+      light: '#FFFFFF',
+      dark: '#B45309',
+      visorGlow: '#38BDF8',
+      accent: '#F59E0B'
+    };
+  } else if (skinId === 'neon_reaper') {
+    return {
+      primary: '#1E1B4B',
+      light: '#C084FC',
+      dark: '#090514',
+      visorGlow: '#A855F7',
+      accent: '#22D3EE'
+    };
+  } else if (skinId === 'chrono_timelord') {
+    return {
+      primary: '#0C4A6E',
+      light: '#BAE6FD',
+      dark: '#082F49',
+      visorGlow: '#38BDF8',
+      accent: '#FBBF24'
+    };
+  } else if (skinId === 'shogun_mech') {
+    return {
+      primary: '#DC2626',
+      light: '#FCA5A5',
+      dark: '#450A0A',
+      visorGlow: '#34D399',
+      accent: '#FBBF24'
+    };
+  } else if (skinId === 'marshmallow_dj') {
+    return {
+      primary: '#F8FAFC',
+      light: '#FFFFFF',
+      dark: '#94A3B8',
+      visorGlow: '#EC4899',
+      accent: '#06B6D4'
+    };
+  } else if (skinId === 'plague_alchemist') {
+    return {
+      primary: '#064E3B',
+      light: '#6EE7B7',
+      dark: '#022C22',
+      visorGlow: '#10B981',
+      accent: '#A855F7'
+    };
+  } else if (skinId === 'supernova_phoenix') {
+    return {
+      primary: '#EA580C',
+      light: '#FEF08A',
+      dark: '#7C2D12',
+      visorGlow: '#FFFFFF',
+      accent: '#F59E0B'
+    };
   }
   return MASCOT_THEMES[playerId] || MASCOT_THEMES[0];
 }
@@ -355,22 +459,29 @@ export function drawCharacter(
     ctx.fill();
     ctx.stroke();
     ctx.restore();
-  } else if (activeSkin === 'samurai_ronin') {
-    // Crossed Katana blades on back
+  } else if (activeSkin === 'samurai_ronin' || activeSkin === 'cyber_samurai_ronin') {
+    // Crossed Katana blades on back (Plasma glowing for Cyber Ronin)
     ctx.save();
-    ctx.strokeStyle = '#CBD5E1';
-    ctx.lineWidth = 2.5 * scale;
+    const isCyber = activeSkin === 'cyber_samurai_ronin';
+    ctx.strokeStyle = isCyber ? '#06B6D4' : '#CBD5E1';
+    if (isCyber) {
+      ctx.shadowColor = '#06B6D4';
+      ctx.shadowBlur = 8 * scale;
+    }
+    ctx.lineWidth = 2.8 * scale;
     ctx.beginPath();
-    ctx.moveTo(cx - 24 * scale, drawY - 28 * scale);
+    ctx.moveTo(cx - 26 * scale, drawY - 30 * scale);
     ctx.lineTo(cx + 24 * scale, drawY + 24 * scale);
     ctx.stroke();
+    ctx.strokeStyle = isCyber ? '#EC4899' : '#CBD5E1';
+    if (isCyber) ctx.shadowColor = '#EC4899';
     ctx.beginPath();
-    ctx.moveTo(cx + 24 * scale, drawY - 28 * scale);
+    ctx.moveTo(cx + 26 * scale, drawY - 30 * scale);
     ctx.lineTo(cx - 24 * scale, drawY + 24 * scale);
     ctx.stroke();
-    ctx.fillStyle = '#F59E0B';
-    ctx.fillRect(cx - 16 * scale, drawY - 18 * scale, 5 * scale, 5 * scale);
-    ctx.fillRect(cx + 11 * scale, drawY - 18 * scale, 5 * scale, 5 * scale);
+    ctx.fillStyle = isCyber ? '#FDE047' : '#F59E0B';
+    ctx.fillRect(cx - 17 * scale, drawY - 19 * scale, 5 * scale, 5 * scale);
+    ctx.fillRect(cx + 12 * scale, drawY - 19 * scale, 5 * scale, 5 * scale);
     ctx.restore();
   } else if (activeSkin === 'viking_berserker') {
     // Crossed Battle Axes on back
@@ -421,59 +532,222 @@ export function drawCharacter(
     ctx.fillRect(cx + 15 * scale, drawY - 14 * scale, 9 * scale, 26 * scale);
     ctx.strokeRect(cx + 15 * scale, drawY - 14 * scale, 9 * scale, 26 * scale);
     ctx.restore();
-  } else if (playerId === 0) {
-    // P1: Winged Crest (Behind)
+  } else if (activeSkin === 'retro_gameboy_classic') {
+    // 1989 DMG-01 Handheld Cartridge Shell housing behind mascot
     ctx.save();
-    ctx.fillStyle = theme.dark;
+    const gw = radius * 2.15;
+    const gh = radius * 2.35;
+    ctx.fillStyle = '#CBD5E1';
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2 * scale;
     ctx.beginPath();
-    ctx.moveTo(cx - 20 * scale, drawY - 10 * scale);
-    ctx.lineTo(cx - 28 * scale, drawY - 32 * scale);
-    ctx.lineTo(cx - 12 * scale, drawY - 22 * scale);
+    if (ctx.roundRect) {
+      ctx.roundRect(cx - gw / 2, drawY - gh * 0.48, gw, gh, [6 * scale, 6 * scale, 14 * scale, 6 * scale]);
+    } else {
+      ctx.rect(cx - gw / 2, drawY - gh * 0.48, gw, gh);
+    }
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'mecha_kaiju') {
+    // Radioactive Cherenkov Dorsal Fins & Armored Tail behind mascot
+    ctx.save();
+    ctx.fillStyle = '#10B981';
+    ctx.strokeStyle = '#A7F3D0';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.shadowColor = '#10B981';
+    ctx.shadowBlur = 10 * scale;
+    for (let i = -2; i <= 2; i++) {
+      if (i === 0) continue;
+      const sx = cx + i * 11 * scale;
+      const sy = drawY - radius * 0.6 + Math.abs(i) * 6 * scale;
+      ctx.beginPath();
+      ctx.moveTo(sx - 5 * scale, sy + 8 * scale);
+      ctx.lineTo(sx + i * 4 * scale, sy - 12 * scale);
+      ctx.lineTo(sx + 5 * scale, sy + 8 * scale);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'pharaoh_anubis') {
+    // Royal Lapis & 24K Gold Striped Nemes Headdress Flaps behind head
+    ctx.save();
+    ctx.fillStyle = '#1E3A8A';
+    ctx.strokeStyle = '#F59E0B';
+    ctx.lineWidth = 2 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.85, drawY - radius * 0.6);
+    ctx.lineTo(cx - radius * 1.35, drawY + radius * 0.35);
+    ctx.lineTo(cx - radius * 0.9, drawY + radius * 0.95);
+    ctx.lineTo(cx + radius * 0.9, drawY + radius * 0.95);
+    ctx.lineTo(cx + radius * 1.35, drawY + radius * 0.35);
+    ctx.lineTo(cx + radius * 0.85, drawY - radius * 0.6);
     ctx.closePath();
     ctx.fill();
+    ctx.stroke();
+    // Gold Nemes horizontal stripes
+    ctx.strokeStyle = '#FBBF24';
+    ctx.lineWidth = 2.2 * scale;
+    for (let sy = -0.3; sy <= 0.7; sy += 0.25) {
+      ctx.beginPath();
+      ctx.moveTo(cx - radius * 1.2, drawY + radius * sy);
+      ctx.lineTo(cx + radius * 1.2, drawY + radius * sy);
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'celestial_seraphim') {
+    // Six Fluttering Radiant Angel Wings (3 pairs)
+    ctx.save();
+    ctx.fillStyle = 'rgba(254, 249, 195, 0.85)';
+    ctx.strokeStyle = '#F59E0B';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.shadowColor = '#FDE047';
+    ctx.shadowBlur = 10 * scale;
+    for (let wTier = -1; wTier <= 1; wTier++) {
+      const flap = Math.sin(animTime * 5 + wTier) * 4 * scale;
+      const wy = drawY + wTier * 10 * scale;
+      const span = (1.65 - Math.abs(wTier) * 0.18) * radius;
+      // Left Wing
+      ctx.beginPath();
+      ctx.moveTo(cx - radius * 0.5, wy);
+      ctx.quadraticCurveTo(cx - span, wy - 14 * scale - flap, cx - span * 1.05, wy + 2 * scale);
+      ctx.quadraticCurveTo(cx - span * 0.7, wy + 10 * scale, cx - radius * 0.5, wy + 5 * scale);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // Right Wing
+      ctx.beginPath();
+      ctx.moveTo(cx + radius * 0.5, wy);
+      ctx.quadraticCurveTo(cx + span, wy - 14 * scale - flap, cx + span * 1.05, wy + 2 * scale);
+      ctx.quadraticCurveTo(cx + span * 0.7, wy + 10 * scale, cx + radius * 0.5, wy + 5 * scale);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'neon_reaper') {
+    // Twin Crossed Glowing Violet Plasma Scythes on back
+    ctx.save();
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2.8 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - 22 * scale, drawY - 26 * scale);
+    ctx.lineTo(cx + 20 * scale, drawY + 24 * scale);
+    ctx.moveTo(cx + 22 * scale, drawY - 26 * scale);
+    ctx.lineTo(cx - 20 * scale, drawY + 24 * scale);
+    ctx.stroke();
+    // Curved plasma scythe blades
+    ctx.fillStyle = '#A855F7';
+    ctx.strokeStyle = '#E9D5FF';
+    ctx.lineWidth = 1.2 * scale;
+    ctx.shadowColor = '#A855F7';
+    ctx.shadowBlur = 10 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - 22 * scale, drawY - 26 * scale);
+    ctx.quadraticCurveTo(cx - 38 * scale, drawY - 32 * scale, cx - 36 * scale, drawY - 12 * scale);
+    ctx.quadraticCurveTo(cx - 28 * scale, drawY - 20 * scale, cx - 18 * scale, drawY - 21 * scale);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + 22 * scale, drawY - 26 * scale);
+    ctx.quadraticCurveTo(cx + 38 * scale, drawY - 32 * scale, cx + 36 * scale, drawY - 12 * scale);
+    ctx.quadraticCurveTo(cx + 28 * scale, drawY - 20 * scale, cx + 18 * scale, drawY - 21 * scale);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'shogun_mech') {
+    // Twin Shoulder Micro-Missile Pods & Vernier Thruster Wings
+    ctx.save();
+    ctx.fillStyle = '#991B1B';
+    ctx.strokeStyle = '#FBBF24';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.fillRect(cx - radius * 1.35, drawY - radius * 0.45, 11 * scale, 22 * scale);
+    ctx.strokeRect(cx - radius * 1.35, drawY - radius * 0.45, 11 * scale, 22 * scale);
+    ctx.fillRect(cx + radius * 1.35 - 11 * scale, drawY - radius * 0.45, 11 * scale, 22 * scale);
+    ctx.strokeRect(cx + radius * 1.35 - 11 * scale, drawY - radius * 0.45, 11 * scale, 22 * scale);
+    ctx.restore();
+  } else if (activeSkin === 'supernova_phoenix') {
+    // Blazing Solar Firebird Wings behind mascot
+    ctx.save();
+    const flap = Math.sin(animTime * 6) * 5 * scale;
+    const wGrad = ctx.createLinearGradient(cx - radius * 1.7, drawY - radius, cx + radius * 1.7, drawY + radius);
+    wGrad.addColorStop(0, '#FEF08A');
+    wGrad.addColorStop(0.5, '#F97316');
+    wGrad.addColorStop(1, '#DC2626');
+    ctx.fillStyle = wGrad;
+    ctx.shadowColor = '#F97316';
+    ctx.shadowBlur = 12 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.5, drawY);
+    ctx.quadraticCurveTo(cx - radius * 1.7, drawY - radius * 1.1 - flap, cx - radius * 1.75, drawY - radius * 0.1);
+    ctx.quadraticCurveTo(cx - radius * 1.3, drawY + radius * 0.5, cx - radius * 0.5, drawY + radius * 0.3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(cx + radius * 0.5, drawY);
+    ctx.quadraticCurveTo(cx + radius * 1.7, drawY - radius * 1.1 - flap, cx + radius * 1.75, drawY - radius * 0.1);
+    ctx.quadraticCurveTo(cx + radius * 1.3, drawY + radius * 0.5, cx + radius * 0.5, drawY + radius * 0.3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'classic') {
+    if (playerId === 0) {
+      // P1: Winged Crest (Behind)
+      ctx.save();
+      ctx.fillStyle = theme.dark;
+      ctx.beginPath();
+      ctx.moveTo(cx - 20 * scale, drawY - 10 * scale);
+      ctx.lineTo(cx - 28 * scale, drawY - 32 * scale);
+      ctx.lineTo(cx - 12 * scale, drawY - 22 * scale);
+      ctx.closePath();
+      ctx.fill();
 
-    ctx.beginPath();
-    ctx.moveTo(cx + 20 * scale, drawY - 10 * scale);
-    ctx.lineTo(cx + 28 * scale, drawY - 32 * scale);
-    ctx.lineTo(cx + 12 * scale, drawY - 22 * scale);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  } else if (playerId === 1) {
-    // P2: Cyber Tech Ears / Jet Fins
-    ctx.save();
-    ctx.fillStyle = theme.dark;
-    ctx.beginPath();
-    ctx.roundRect
-      ? ctx.roundRect(cx - 33 * scale, drawY - 12 * scale, 8 * scale, 24 * scale, 4 * scale)
-      : ctx.rect(cx - 33 * scale, drawY - 12 * scale, 8 * scale, 24 * scale);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.roundRect
-      ? ctx.roundRect(cx + 25 * scale, drawY - 12 * scale, 8 * scale, 24 * scale, 4 * scale)
-      : ctx.rect(cx + 25 * scale, drawY - 12 * scale, 8 * scale, 24 * scale);
-    ctx.fill();
-    ctx.restore();
-  } else if (playerId === 2) {
-    // P3: Scout Sprout / Antenna Fins
-    ctx.save();
-    ctx.fillStyle = theme.accent;
-    ctx.beginPath();
-    ctx.arc(cx - 16 * scale, drawY - 24 * scale, 6 * scale, 0, Math.PI * 2);
-    ctx.arc(cx + 16 * scale, drawY - 24 * scale, 6 * scale, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  } else if (playerId === 3) {
-    // P4: Solar Star Crest Trim
-    ctx.save();
-    ctx.fillStyle = theme.dark;
-    ctx.beginPath();
-    ctx.moveTo(cx, drawY - 36 * scale);
-    ctx.lineTo(cx - 10 * scale, drawY - 24 * scale);
-    ctx.lineTo(cx + 10 * scale, drawY - 24 * scale);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
+      ctx.beginPath();
+      ctx.moveTo(cx + 20 * scale, drawY - 10 * scale);
+      ctx.lineTo(cx + 28 * scale, drawY - 32 * scale);
+      ctx.lineTo(cx + 12 * scale, drawY - 22 * scale);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    } else if (playerId === 1) {
+      // P2: Cyber Tech Ears / Jet Fins
+      ctx.save();
+      ctx.fillStyle = theme.dark;
+      ctx.beginPath();
+      ctx.roundRect
+        ? ctx.roundRect(cx - 33 * scale, drawY - 12 * scale, 8 * scale, 24 * scale, 4 * scale)
+        : ctx.rect(cx - 33 * scale, drawY - 12 * scale, 8 * scale, 24 * scale);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.roundRect
+        ? ctx.roundRect(cx + 25 * scale, drawY - 12 * scale, 8 * scale, 24 * scale, 4 * scale)
+        : ctx.rect(cx + 25 * scale, drawY - 12 * scale, 8 * scale, 24 * scale);
+      ctx.fill();
+      ctx.restore();
+    } else if (playerId === 2) {
+      // P3: Scout Sprout / Antenna Fins
+      ctx.save();
+      ctx.fillStyle = theme.accent;
+      ctx.beginPath();
+      ctx.arc(cx - 16 * scale, drawY - 24 * scale, 6 * scale, 0, Math.PI * 2);
+      ctx.arc(cx + 16 * scale, drawY - 24 * scale, 6 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else if (playerId === 3) {
+      // P4: Solar Star Crest Trim
+      ctx.save();
+      ctx.fillStyle = theme.dark;
+      ctx.beginPath();
+      ctx.moveTo(cx, drawY - 36 * scale);
+      ctx.lineTo(cx - 10 * scale, drawY - 24 * scale);
+      ctx.lineTo(cx + 10 * scale, drawY - 24 * scale);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
   }
 
   // 3. Main Spherical Chassis Body (Rich 2.5D Lighting Gradient)
