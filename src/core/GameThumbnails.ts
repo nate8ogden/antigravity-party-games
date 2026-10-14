@@ -13787,74 +13787,54 @@ function drawTombstoneCryptSliderArt(ctx: CanvasRenderingContext2D, x: number, y
 }
 
 function drawCreepyDollCrawlArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  // Spooky nursery shadows
-  ctx.fillStyle = '#1c1015';
+  // Warm Toymaker Workbench backdrop
+  ctx.fillStyle = '#24140e';
   ctx.fillRect(x, y, w, h);
   const cx = x + w * 0.5;
   const cy = y + h * 0.5;
 
-  // Antique Winding Brass Key in Doll's back
-  ctx.strokeStyle = '#d97706';
+  // Golden Clockwork Gear in background
+  ctx.strokeStyle = 'rgba(250, 204, 21, 0.35)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx + 14, cy - 10, 9, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Brass Winding Key on back of Toy Racer
+  ctx.strokeStyle = '#facc15';
   ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.moveTo(cx - 16, cy + 2);
-  ctx.lineTo(cx - 6, cy + 2);
+  ctx.moveTo(cx - 18, cy + 1);
+  ctx.lineTo(cx - 8, cy + 1);
   ctx.stroke();
-  // Key wings
   ctx.beginPath();
-  ctx.arc(cx - 16, cy - 3, 4, 0, Math.PI * 2);
-  ctx.arc(cx - 16, cy + 7, 4, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // Porcelain Doll Body in Victorian Frilled Dress
-  ctx.fillStyle = '#4c0519';
-  ctx.beginPath();
-  ctx.ellipse(cx - 2, cy + 6, 12, 7, 0.15, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Lace frill collar
-  ctx.fillStyle = '#f8fafc';
-  ctx.beginPath();
-  ctx.ellipse(cx + 4, cy + 2, 5, 8, 0.2, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Pale Porcelain Doll Head
-  ctx.fillStyle = '#fdf4ff';
-  ctx.shadowColor = '#f5d0fe';
-  ctx.shadowBlur = 4;
-  ctx.beginPath();
-  ctx.arc(cx + 10, cy - 4, 11, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-
-  // Ceramic hairline fracture / crack
-  ctx.strokeStyle = '#1e1b4b';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(cx + 10, cy - 14);
-  ctx.lineTo(cx + 12, cy - 8);
-  ctx.lineTo(cx + 8, cy - 4);
+  ctx.arc(cx - 19, cy - 4, 4, 0, Math.PI * 2);
+  ctx.arc(cx - 19, cy + 6, 4, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Glassy Jet-Black Button Eyes with Glint
-  ctx.fillStyle = '#09090b';
-  ctx.beginPath();
-  ctx.arc(cx + 7, cy - 4, 2.5, 0, Math.PI * 2);
-  ctx.arc(cx + 15, cy - 4, 2.5, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Red specular eye glint
+  // Cheerful Red & Brass Wind-Up Toy Kart Body
   ctx.fillStyle = '#ef4444';
   ctx.beginPath();
-  ctx.arc(cx + 7.5, cy - 4.5, 1, 0, Math.PI * 2);
-  ctx.arc(cx + 15.5, cy - 4.5, 1, 0, Math.PI * 2);
+  if (ctx.roundRect) ctx.roundRect(cx - 10, cy - 5, 24, 13, 6);
+  else ctx.rect(cx - 10, cy - 5, 24, 13);
   ctx.fill();
+  ctx.strokeStyle = '#fde047';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
 
-  // Rosy round cheeks & doll lips
-  ctx.fillStyle = '#f43f5e';
+  // Cute Mascot Pilot Head with Racing Goggles
+  ctx.fillStyle = '#38bdf8';
   ctx.beginPath();
-  ctx.arc(cx + 6, cy + 1, 2, 0, Math.PI * 2);
-  ctx.arc(cx + 16, cy + 1, 2, 0, Math.PI * 2);
+  ctx.arc(cx + 2, cy - 9, 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fef08a';
+  ctx.fillRect(cx - 1, cy - 11, 7, 3);
+
+  // Brass Toy Wheels
+  ctx.fillStyle = '#f59e0b';
+  ctx.beginPath();
+  ctx.arc(cx - 5, cy + 10, 5, 0, Math.PI * 2);
+  ctx.arc(cx + 9, cy + 10, 5, 0, Math.PI * 2);
   ctx.fill();
 }
 

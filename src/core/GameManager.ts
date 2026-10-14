@@ -2411,21 +2411,21 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   },
   {
     id: 'poltergeist_possession',
-    title: 'Poltergeist Possession',
-    tagline: 'Haunted Furniture Hover',
+    title: 'Telekinetic Toyroom',
+    tagline: 'Gravity Wand Levitation',
     category: 'Action',
     icon: '[G-237]',
-    instructions: 'Hurl and hover antique chairs and grandfather clocks across the haunted ballroom to crush spectral manifestations.',
-    controlPrompt: 'Steer: Move Ghost | Tap: Possess & Hurl'
+    instructions: 'Glide across the Arcane Toyroom and tether floating rockets, globes, and Golden Music Boxes with your Gravity Wand! Hurl props into the Starlight Portal, Holo-Targets, or rival mages!',
+    controlPrompt: 'Steer: Glide & Tether | Tap: Hurl Prop | Hold (72-98%): Repulsor Wave'
   },
   {
     id: 'graveyard_zombie_bash',
-    title: 'Graveyard Zombie Bash',
-    tagline: 'Midnight Tombstone Whack',
+    title: 'Midnight Courtyard Bash',
+    tagline: 'Pumpkin & Skeleton Whack',
     category: 'Action',
     icon: '[G-238]',
-    instructions: 'Smash spooky green zombies rising from open mossy graves! Avoid striking consecrated angelic statues that stun you.',
-    controlPrompt: 'Steer: Run Graveyard | Tap: Shovel Bash'
+    instructions: 'Sprint across the moonlit courtyard to bash popping Skeletons, Jack-O-Lanterns, and Golden Skeleton Kings! Avoid striking Marble Angel Statues and unleash Seismic Shovel Slams!',
+    controlPrompt: 'Steer: Run Courtyard | Tap: Shovel Bash | Hold (72-98%): Seismic Slam'
   },
   {
     id: 'phantom_mirror_gaze',
@@ -2438,21 +2438,21 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   },
   {
     id: 'cauldron_witch_brew',
-    title: 'Cauldron Witch Brew',
-    tagline: 'Bioluminescent Potion Craft',
+    title: 'Cauldron Alchemy Brew',
+    tagline: 'Royal Apothecary Cauldron Toss',
     category: 'Puzzle',
     icon: '[G-240]',
-    instructions: 'Stir boiling green witch cauldrons and toss in eye-of-newt and toadstools in exact recipe sequences before the brew boils over.',
-    controlPrompt: 'Steer: Select Ingredient | Tap: Drop In Cauldron'
+    instructions: 'Sprint around the shared Royal Apothecary Lab, grab Moon Shrooms, Dragon Scales, and Golden Feathers, and dunk them into the central Cauldron in recipe order for 2x Master Brew jackpots!',
+    controlPrompt: 'Steer: Run Lab & Grab | Tap: Toss in Cauldron | Hold (72-98%): Vortex Shunt'
   },
   {
     id: 'gargoyle_stone_stare',
     title: 'Gargoyle Stone Stare',
-    tagline: 'Cathedral Belfry Freeze',
+    tagline: 'Cathedral Belfry Freeze & Vault',
     category: 'Reflex',
     icon: '[G-241]',
-    instructions: 'Creep across cathedral rooftop tiles towards the bell! When the stone gargoyle opens its glowing red eyes, freeze solid.',
-    controlPrompt: 'Steer: Creep Forward | Release: Freeze Solid'
+    instructions: 'Climb the Cathedral Belfry roof to collect Golden Chimes and ring the Summit Bell! Release all controls to freeze into an indestructible Stone Statue whenever the Sentinel Gargoyle stares!',
+    controlPrompt: 'Steer / Hold: Climb Roof | Release: Stone Statue Freeze | Hold (72-98%): Stone Vault'
   },
   {
     id: 'ghost_vacuum_buster',
@@ -2460,26 +2460,26 @@ export const GAME_CATALOG: MinigameMetadata[] = [
     tagline: 'Proton Ecto-Canister Trap',
     category: 'Action',
     icon: '[G-242]',
-    instructions: 'Engage high-powered proton suction beams to pull floating ectoplasmic ghosts into your vacuum canister before time expires.',
-    controlPrompt: 'Steer: Aim Nozzle | Hold: Vacuum Suction'
+    instructions: 'Roam the Grand Mansion Hall and aim your Proton Suction Cone to reel Slimer Sprites, Plasma Wisps, and Golden King Specters into your canister! Charge a Proton Overdrive to yank ghosts and shunt rivals.',
+    controlPrompt: 'Steer: Move & Aim Cone | Hold: Boost Suction | Release (72-98%): Proton Overdrive'
   },
   {
     id: 'tombstone_crypt_slider',
-    title: 'Tombstone Crypt Slider',
-    tagline: 'Ancient Sarcophagus Shove',
+    title: 'Pharaoh Relic Slider',
+    tagline: 'Ancient Treasure Vault Shove',
     category: 'Physics',
     icon: '[G-243]',
-    instructions: 'Slide heavy carved stone sarcophagus lids across the crypt floor to loot golden relics and scarabs while dodging cursed mummy traps.',
-    controlPrompt: 'Steer: Approach Tomb | Hold: Slide Slab'
+    instructions: 'Run across the Pharaoh Treasure Vault and shove heavy carved stone lids open to unearth Golden Scarabs, Emerald Ankhs, and Diamond Pharaoh Crowns!',
+    controlPrompt: 'Steer / Tap: Shove Vault Slab | Hold (72-98%): Seismic Slab Launch'
   },
   {
     id: 'creepy_doll_crawl',
-    title: 'Creepy Doll Crawl',
-    tagline: 'Victorian Wind-Up Race',
+    title: 'Clockwork Toy Derby',
+    tagline: 'Grand Toymaker Wind-Up Sprint',
     category: 'Racing',
     icon: '[G-244]',
-    instructions: 'Wind up the porcelain doll back-key spring to the sweet spot and release to crawl across the attic floor, avoiding cobwebs.',
-    controlPrompt: 'Hold: Wind Spring | Release: Crawl Sprint'
+    instructions: 'Pilot a Brass Wind-Up Toy Racer across the Grand Toymaker Workbench! Weave for Golden Gears and Star Keys, and wind your Mainspring Key to the 72-98% sweet-spot for an Overdrive Sprint!',
+    controlPrompt: 'Steer: Weave Lanes | Hold: Wind Mainspring | Release (72-98%): Overdrive Sprint'
   },
   {
     id: 'ouija_spirit_board',
@@ -2492,12 +2492,12 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   },
   {
     id: 'cursed_clocktower_pendulum',
-    title: 'Cursed Clocktower Pendulum',
-    tagline: 'Razor Scythe Rafter Leap',
+    title: 'Grand Clocktower Pendulum',
+    tagline: 'Chronos Gear & Pendulum Dodge',
     category: 'Action',
     icon: '[G-246]',
-    instructions: 'Dodge a gigantic swinging razor-sharp clock pendulum slicing across cathedral rafters while gathering golden clockwork gears.',
-    controlPrompt: 'Steer: Run Rafters | Hold: Duck / Crouch'
+    instructions: 'Sprint across the Grand Clocktower Beam gathering Brass Cogs and Golden Chronos Cores! Hold to crouch beneath the sweeping pendulum and release a charged Chronos Time-Vault!',
+    controlPrompt: 'Steer: Run Beam | Hold: Crouch & Charge | Release (72-98%): Chronos Vault'
   },
   {
     id: 'synthwave_neon_racer',
