@@ -4,22 +4,68 @@ import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
 
-interface HyperPod {
+interface HyperloopPod {
   id: PlayerId;
-  laneY: number;
-  x: number;
-  vx: number;
-  heat: number; // 0 to 100
-  laps: number;
+  color: string;
+  progress: number;
+  laneOffset: number;
+  laneVel: number;
+  speed: number;
+  heat: number;
   score: number;
-  overheated: boolean;
-  overheatTimer: number;
+  wasHolding: boolean;
+  burnoutTimer: number;
+  streak: number;
+  multiplier: number;
+  drafting: boolean;
+  underdog: boolean;
+  botTimer: number;
 }
 
+type ThemeId = 'neo_shinkansen' | 'mars_vacuum_tube' | 'orbital_ring';
+
+interface ThemeSpec {
+  name: string;
+  bgInner: string;
+  bgOuter: string;
+  trackColor: string;
+  coilGlow: string;
+}
+
+const THEMES: Record<ThemeId, ThemeSpec> = {
+  neo_shinkansen: {
+    name: 'Neo-Shinkansen Tube',
+    bgInner: '#0d2240',
+    bgOuter: '#030812',
+    trackColor: '#38bdf8',
+    coilGlow: '#00f5d4',
+  },
+  mars_vacuum_tube: {
+    name: 'Mars Colony Hyperloop',
+    bgInner: '#3b1510',
+    bgOuter: '#120403',
+    trackColor: '#f97316',
+    coilGlow: '#facc15',
+  },
+  orbital_ring: {
+    name: 'Orbital Maglev Ring',
+    bgInner: '#1e1040',
+    bgOuter: '#070312',
+    trackColor: '#c084fc',
+    coilGlow: '#f472b6',
+  },
+};
+
+const THEME_ORDER: ThemeId[] = ['neo_shinkansen', 'mars_vacuum_tube', 'orbital_ring'];
+
 export class HyperloopRacerGame extends BaseGame {
-  public pods: Map<PlayerId, HyperPod> = new Map();
-  public currentMapName: string = 'Trans-Pacific Maglev Hyperloop';
-  private botReactionTimers: Map<PlayerId, number> = new Map();
+  private pods: Map<PlayerId, HyperloopPod> = new Map();
+  private timeElapsed = 0;
+  private suddenDeath = false;
+  private hitStopTimer = 0;
+  private themeIndex = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
+  private floatingTexts: { x: number; y: number; text: string; color: string; alpha: number; vy: number; size: number }[] = [];
 
   constructor(
     players: PlayerConfig[],
@@ -28,246 +74,367 @@ export class HyperloopRacerGame extends BaseGame {
     particles: ParticleSystem
   ) {
     super(players, input, audio, particles);
-    this.roundTimer = 35.0;
+    this.roundTimer = 38.0;
   }
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIndex = (this.themeIndex + 1) % THEME_ORDER.length;
+          this.audio.playTap();
+        } else if (e.key >= '1' && e.key <= '3') {
+          this.themeIndex = parseInt(e.key, 10) - 1;
+          this.audio.playTap();
+        }
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
   }
 
   public reset(width: number, height: number): void {
+    void width;
+    void height;
     this.isFinished = false;
-    this.roundTimer = 35.0;
+    this.roundTimer = 38.0;
+    this.timeElapsed = 0;
+    this.suddenDeath = false;
+    this.hitStopTimer = 0;
     this.pods.clear();
-    this.botReactionTimers.clear();
+    this.floatingTexts = [];
+    this.themeIndex = Math.floor(Math.random() * THEME_ORDER.length);
 
     const active = this.getActivePlayers();
-    const count = active.length;
-    const laneHeight = (height - 90) / Math.max(count, 1);
-
-    active.forEach((p, idx) => {
-      const laneY = 70 + idx * laneHeight + laneHeight * 0.5;
-
-      this.pods.set(p.id, {
-        id: p.id,
-        laneY,
-        x: 60,
-        vx: 80,
+    active.forEach((cfg, idx) => {
+      this.pods.set(cfg.id, {
+        id: cfg.id,
+        color: cfg.color,
+        progress: idx * 0.12,
+        laneOffset: (idx - (active.length - 1) / 2) * 18,
+        laneVel: 0,
+        speed: 1.4,
         heat: 0,
-        laps: 0,
         score: 0,
-        overheated: false,
-        overheatTimer: 0
+        wasHolding: false,
+        burnoutTimer: 0,
+        streak: 0,
+        multiplier: 1,
+        drafting: false,
+        underdog: false,
+        botTimer: 0.2,
       });
-
-      this.botReactionTimers.set(p.id, 0.2 + Math.random() * 0.3);
     });
+  }
+
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    void height;
+    if (y < 60 && x > width - 220) {
+      this.themeIndex = (this.themeIndex + 1) % THEME_ORDER.length;
+      this.audio.playTap();
+      return true;
+    }
+    return false;
+  }
+
+  private addFloatingText(x: number, y: number, text: string, color: string, size = 18): void {
+    this.floatingTexts.push({ x, y, text, color, alpha: 1, vy: -52, size });
+  }
+
+  private renderFloatingTexts(ctx: CanvasRenderingContext2D): void {
+    for (const ft of this.floatingTexts) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, ft.alpha);
+      ctx.font = `900 ${ft.size}px "Outfit", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+      ctx.lineWidth = 4;
+      ctx.strokeText(ft.text, ft.x, ft.y);
+      ctx.fillStyle = ft.color;
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.restore();
+    }
+  }
+
+  private getPodScreenPos(pod: HyperloopPod, cx: number, cy: number, rx: number, ry: number): { x: number; y: number } {
+    const rFactor = 1 + pod.laneOffset / 240;
+    return {
+      x: cx + Math.cos(pod.progress) * rx * rFactor,
+      y: cy + Math.sin(pod.progress) * ry * rFactor,
+    };
   }
 
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
 
-    this.roundTimer -= dt;
-    if (this.roundTimer <= 0) {
-      this.roundTimer = 0;
-      this.finishRound();
+    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+      const ft = this.floatingTexts[i];
+      ft.y += ft.vy * dt;
+      ft.alpha -= dt * 1.1;
+      if (ft.alpha <= 0) this.floatingTexts.splice(i, 1);
+    }
+
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer -= dt;
       return;
     }
 
+    this.timeElapsed += dt;
+    this.roundTimer -= dt;
+    if (this.roundTimer <= 0) {
+      this.roundTimer = 0;
+      this.isFinished = true;
+      return;
+    }
+
+    if (this.roundTimer <= 15 && !this.suddenDeath) {
+      this.suddenDeath = true;
+      this.audio.playFanfare();
+      this.addFloatingText(width / 2, 105, '⚡ MACH-2 VACUUM OVERDRIVE! 2X LAPS! ⚡', '#facc15', 24);
+    }
+
+    const cx = width / 2;
+    const cy = height / 2 + 15;
+    const rx = width * 0.36;
+    const ry = height * 0.32;
+
+    let maxProg = 0;
+    this.pods.forEach((p) => {
+      if (p.progress > maxProg) maxProg = p.progress;
+    });
+
     this.updateBots(dt, width, height);
 
-    this.pods.forEach(pod => {
-      if (pod.overheatTimer > 0) {
-        pod.overheatTimer -= dt;
-        pod.vx *= 0.95;
-        pod.x += pod.vx * dt;
-        pod.heat = Math.max(0, pod.heat - dt * 40);
-        return;
-      }
+    this.pods.forEach((p) => {
+      p.underdog = maxProg - p.progress > Math.PI * 1.1;
 
-      const isThrusting = this.input.isPressed(pod.id);
-
-      if (isThrusting) {
-        // Accelerate
-        pod.vx += 320 * dt;
-        pod.heat += 45 * dt;
-
-        if (Math.random() < 0.3) {
-          this.particles.emit(pod.x - 20, pod.laneY, 2, 'rgba(0, 229, 255, 0.6)');
+      p.drafting = false;
+      this.pods.forEach((other) => {
+        if (other.id === p.id) return;
+        const diff = ((other.progress - p.progress) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+        if (diff > 0.08 && diff < 0.55 && Math.abs(other.laneOffset - p.laneOffset) < 28) {
+          p.drafting = true;
         }
+      });
 
-        if (pod.heat >= 100) {
-          // Coil Overheat Scrape!
-          pod.overheated = true;
-          pod.overheatTimer = 1.3;
-          pod.vx = 40;
-          this.audio.playTone(130, 0.3, 'sawtooth');
-          this.particles.emit(pod.x, pod.laneY, 15, '#ff0055');
+      if (p.burnoutTimer > 0) {
+        p.burnoutTimer -= dt;
+        p.speed = 0.7;
+        p.heat = Math.max(0, p.heat - dt * 65);
+      } else {
+        const holding = this.input.isActionPressed(p.id) || this.input.isPressed(p.id);
+        if (holding) {
+          p.heat += dt * 62;
+          p.wasHolding = true;
+          const draftBonus = p.drafting ? 1.25 : 1.0;
+          const underdogBonus = p.underdog ? 1.2 : 1.0;
+          p.speed = Math.min(4.6, p.speed + 2.8 * draftBonus * underdogBonus * dt);
+
+          if (p.heat >= 100) {
+            p.heat = 100;
+            p.wasHolding = false;
+            p.burnoutTimer = 1.05;
+            p.streak = 0;
+            p.multiplier = 1;
+            const pos = this.getPodScreenPos(p, cx, cy, rx, ry);
+            this.audio.playExplosion();
+            this.particles.emit(pos.x, pos.y, 18, '#ff2a85');
+            this.addFloatingText(pos.x, pos.y - 24, 'COIL BURNOUT! STREAK LOST', '#ff2a85', 18);
+          }
+        } else {
+          if (p.wasHolding) {
+            p.wasHolding = false;
+            const pos = this.getPodScreenPos(p, cx, cy, rx, ry);
+            if (p.heat >= 75 && p.heat <= 96) {
+              p.streak++;
+              p.multiplier = p.streak >= 4 ? 4 : p.streak >= 2 ? 2 : 1;
+              p.speed = 4.9;
+              const bonusPts = 50 * p.multiplier * (this.suddenDeath ? 2 : 1);
+              p.score += bonusPts;
+              this.audio.playBoost();
+              this.hitStopTimer = 0.04;
+              this.particles.emit(pos.x, pos.y, 18, '#facc15');
+              this.addFloatingText(
+                pos.x,
+                pos.y - 26,
+                `CRYO SONIC BOOM! +${bonusPts} (${p.multiplier}x)`,
+                '#facc15',
+                19
+              );
+
+              this.pods.forEach((other) => {
+                if (other.id === p.id) return;
+                const oPos = this.getPodScreenPos(other, cx, cy, rx, ry);
+                if (Math.hypot(oPos.x - pos.x, oPos.y - pos.y) < 120) {
+                  other.laneVel += (other.laneOffset >= p.laneOffset ? 1 : -1) * 140;
+                  other.speed *= 0.75;
+                }
+              });
+            }
+          }
+          p.heat = Math.max(0, p.heat - dt * 58);
+          p.speed = Math.max(1.35, p.speed - dt * 1.4);
         }
-      } else {
-        // Cooling
-        pod.heat = Math.max(0, pod.heat - dt * 50);
       }
 
-      // Natural drag
-      pod.vx *= 0.985;
-      pod.x += pod.vx * dt;
-
-      // Check lap completion
-      if (pod.x > width - 40) {
-        pod.x = 50;
-        pod.laps++;
-        pod.score = pod.laps * 120 + Math.round(pod.x);
-        this.audio.playTone(660, 0.1, 'sine');
-        this.particles.emit(50, pod.laneY, 10, '#00ffcc');
-      } else {
-        pod.score = pod.laps * 120 + Math.round(pod.x);
+      const prevLap = Math.floor(p.progress / (Math.PI * 2));
+      p.progress += p.speed * dt;
+      const newLap = Math.floor(p.progress / (Math.PI * 2));
+      if (newLap > prevLap) {
+        const lapPts = 80 * p.multiplier * (this.suddenDeath ? 2 : 1);
+        p.score += lapPts;
+        const pos = this.getPodScreenPos(p, cx, cy, rx, ry);
+        this.audio.playScore();
+        this.addFloatingText(pos.x, pos.y - 22, `LAP COMPLETE! +${lapPts}`, p.color, 18);
       }
+
+      p.laneOffset += p.laneVel * dt;
+      p.laneVel *= 0.88;
+      p.laneOffset = Math.max(-34, Math.min(34, p.laneOffset));
     });
+
+    const list = Array.from(this.pods.values());
+    for (let i = 0; i < list.length; i++) {
+      for (let j = i + 1; j < list.length; j++) {
+        const a = list[i];
+        const b = list[j];
+        const posA = this.getPodScreenPos(a, cx, cy, rx, ry);
+        const posB = this.getPodScreenPos(b, cx, cy, rx, ry);
+        const dist = Math.hypot(posB.x - posA.x, posB.y - posA.y);
+        if (dist > 0 && dist < 40) {
+          a.laneVel -= 95;
+          b.laneVel += 95;
+          this.audio.playBounce();
+          this.particles.emit((posA.x + posB.x) / 2, (posA.y + posB.y) / 2, 8, '#ffffff');
+        }
+      }
+    }
   }
 
   protected updateBotAI(
     dt: number,
     botId: PlayerId,
     difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
-    _w: number,
-    _h: number
+    width: number,
+    height: number
   ): void {
-    const pod = this.pods.get(botId);
-    if (!pod || pod.overheatTimer > 0) return;
+    void width;
+    void height;
+    const p = this.pods.get(botId);
+    if (!p) return;
 
-    let bTimer = (this.botReactionTimers.get(botId) || 0) - dt;
-    if (bTimer > 0) {
-      this.botReactionTimers.set(botId, bTimer);
+    p.botTimer -= dt;
+    if (p.botTimer > 0) return;
+
+    p.botTimer = difficulty === 'bot_hard' ? 0.12 : difficulty === 'bot_normal' ? 0.22 : 0.32;
+
+    const releaseThreshold = difficulty === 'bot_hard' ? 84 : difficulty === 'bot_normal' ? 80 : 72;
+    const blunder = difficulty === 'bot_easy' ? 0.16 : difficulty === 'bot_normal' ? 0.08 : 0.02;
+
+    if (Math.random() < blunder) {
+      this.input.setBotState(botId, true);
       return;
     }
 
-    const heatLimit = difficulty === 'bot_hard' ? 88 : difficulty === 'bot_normal' ? 76 : 60;
-
-    if (pod.heat < heatLimit) {
-      this.input.setBotState(botId, true);
-    } else {
+    if (p.heat >= releaseThreshold) {
       this.input.setBotState(botId, false);
+    } else {
+      this.input.setBotState(botId, true);
     }
-
-    const interval = difficulty === 'bot_hard' ? 0.05 : difficulty === 'bot_normal' ? 0.12 : 0.22;
-    this.botReactionTimers.set(botId, interval);
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // Vacuum Tube Hyperloop Background
-    const grad = ctx.createLinearGradient(0, 0, 0, height);
-    grad.addColorStop(0, '#050814');
-    grad.addColorStop(0.5, '#0d152e');
-    grad.addColorStop(1, '#060a17');
-    ctx.fillStyle = grad;
+    const cx = width / 2;
+    const cy = height / 2 + 15;
+    const rx = width * 0.36;
+    const ry = height * 0.32;
+    const theme = THEMES[THEME_ORDER[this.themeIndex]];
+
+    const bg = ctx.createRadialGradient(cx, cy, 40, cx, cy, Math.max(width, height) * 0.65);
+    bg.addColorStop(0, theme.bgInner);
+    bg.addColorStop(1, theme.bgOuter);
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, width, height);
 
-    // HUD Instructions
     ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     ctx.beginPath();
-    ctx.roundRect(width * 0.5 - 170, 56, 340, 26, 13);
-    ctx.fill();
-    ctx.fillStyle = '#00ffff';
-    ctx.font = 'bold 12px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('HOLD TO ENGAGE MAGLEV THRUST! RELEASE TO COOL COILS!', width * 0.5, 69);
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 84;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = theme.trackColor;
+    ctx.lineWidth = 4;
+    ctx.stroke();
     ctx.restore();
 
-    const active = this.getActivePlayers();
-    const count = active.length;
-    const laneHeight = (height - 90) / Math.max(count, 1);
+    this.pods.forEach((p) => {
+      const pos = this.getPodScreenPos(p, cx, cy, rx, ry);
 
-    // Render Hyperloop Vacuum Tubes
-    this.pods.forEach(pod => {
-      const cfg = this.players.find(p => p.id === pod.id);
-      const laneY = pod.laneY;
-
-      // Tube Cylinder
-      ctx.fillStyle = 'rgba(0, 229, 255, 0.05)';
-      ctx.fillRect(20, laneY - 14, width - 40, 28);
-      ctx.strokeStyle = 'rgba(0, 229, 255, 0.3)';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(20, laneY - 14, width - 40, 28);
-
-      // Maglev induction rings along tube
-      for (let rx = 60; rx < width - 40; rx += 70) {
-        ctx.strokeStyle = 'rgba(255, 0, 128, 0.25)';
-        ctx.lineWidth = 3;
+      if (p.drafting) {
+        ctx.save();
         ctx.beginPath();
-        ctx.ellipse(rx, laneY, 6, 13, 0, 0, Math.PI * 2);
+        ctx.arc(pos.x, pos.y, 28, 0, Math.PI * 2);
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 3;
         ctx.stroke();
+        ctx.restore();
       }
 
-      // Pod
+      const mood = p.burnoutTimer > 0 ? 'shocked' : p.heat >= 75 ? 'triumph' : 'focused';
+      this.drawPlayerMascot(ctx, p.id, pos.x, pos.y, 22, mood, this.timeElapsed, p.progress + Math.PI / 2);
+
       ctx.save();
-      ctx.translate(pod.x, laneY);
+      const bx = pos.x - 26;
+      const by = pos.y - 36;
+      ctx.fillStyle = 'rgba(0,0,0,0.75)';
+      ctx.fillRect(bx, by, 52, 7);
+      ctx.fillStyle = 'rgba(250, 204, 21, 0.45)';
+      ctx.fillRect(bx + 52 * 0.75, by, 52 * 0.2, 7);
 
-      // Magnetic levitation glow
-      ctx.fillStyle = 'rgba(0, 229, 255, 0.4)';
-      ctx.beginPath();
-      ctx.ellipse(0, 8, 16, 4, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Pod sleek body
-      ctx.fillStyle = pod.overheatTimer > 0 ? '#ff0055' : (cfg?.color || '#00e5ff');
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 20, 8, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Front nose cone
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.ellipse(14, 0, 6, 5, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Overheat Warning
-      if (pod.heat > 75) {
-        ctx.fillStyle = '#ff0055';
-        ctx.font = 'bold 11px sans-serif';
-        ctx.fillText('HEAT!', 0, -18);
-      }
-
+      ctx.fillStyle = p.heat >= 75 && p.heat <= 96 ? '#facc15' : p.heat > 96 ? '#ff2a85' : p.color;
+      ctx.fillRect(bx, by, 52 * (p.heat / 100), 7);
       ctx.restore();
-
-      // Heat Bar & Score
-      ctx.fillStyle = cfg?.color || '#ffffff';
-      ctx.font = 'bold 11px sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(`${cfg?.name || 'Player'}: Lap ${pod.laps} (${Math.round(pod.vx)} km/h) [Heat: ${Math.round(pod.heat)}%]`, 20, laneY - laneHeight * 0.32);
-    });
-  }
-
-  private finishRound(): void {
-    this.isFinished = true;
-  }
-
-  public getScores(): Map<PlayerId, number> {
-    const scores = new Map<PlayerId, number>();
-    this.pods.forEach((p, pId) => scores.set(pId, p.score));
-    return scores;
-  }
-
-  public getRoundResult(): RoundResult {
-    const rankings = Array.from(this.pods.entries())
-      .map(([playerId, p]) => ({ playerId, score: p.score, place: 1 }))
-      .sort((a, b) => b.score - a.score);
-
-    rankings.forEach((entry, idx) => {
-      entry.place = idx + 1;
     });
 
-    const winnerId = rankings.length > 0 && rankings[0].score > 0 ? rankings[0].playerId : null;
-    return {
-      winnerId,
-      rankings,
-      mvpHighlight: winnerId ? `${winnerId} blasted through the hyperloop at Mach 1!` : 'Hyperloop evacuated!'
-    };
+    this.renderFloatingTexts(ctx);
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(width - 215, 14, 200, 32);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '700 13px "Outfit", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`🎨 ${theme.name} [T]`, width - 24, 35);
+    ctx.restore();
   }
 
   public isRoundOver(): boolean {
     return this.isFinished;
+  }
+
+  public getRoundResult(): RoundResult {
+    const rankings = Array.from(this.pods.values())
+      .map((p) => ({ playerId: p.id, score: Math.floor(p.score), place: 1 }))
+      .sort((a, b) => b.score - a.score);
+    rankings.forEach((r, idx) => {
+      r.place = idx + 1;
+    });
+    const winnerId = rankings.length > 0 ? rankings[0].playerId : null;
+    return {
+      winnerId,
+      rankings,
+      mvpHighlight: winnerId ? `Player ${winnerId} broke the Mach-2 Hyperloop record!` : 'Hyperloop race complete!',
+    };
+  }
+
+  public destroy(): void {
+    if (typeof window !== 'undefined' && this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
+    super.destroy();
   }
 }
