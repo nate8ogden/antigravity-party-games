@@ -120,6 +120,14 @@ export class RollerCoasterBrakeGame extends BaseGame {
     }
   }
 
+  public destroy(): void {
+    if (typeof window !== 'undefined' && this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
+    super.destroy();
+  }
+
   public reset(_width: number, _height: number): void {
     this.timeElapsed = 0;
     this.roundTime = 45;

@@ -103,6 +103,14 @@ export class SpiderWebTangleGame extends BaseGame {
     }
   }
 
+  public destroy(): void {
+    if (typeof window !== 'undefined' && this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
+    super.destroy();
+  }
+
   private nodePos(width: number, height: number, spoke: number, ring: number): { x: number; y: number } {
     const cx = width * 0.5;
     const cy = height * 0.54;

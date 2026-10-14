@@ -137,6 +137,14 @@ export class BreakoutBrickBlasterGame extends BaseGame {
     window.addEventListener('keydown', this.keyHandler);
   }
 
+  public destroy(): void {
+    if (typeof window !== 'undefined' && this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
+    super.destroy();
+  }
+
   public reset(width: number, height: number): void {
     this.isFinished = false;
     this.roundTimer = 45;

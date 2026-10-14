@@ -109,6 +109,14 @@ export class BlowpipeTargetGame extends BaseGame {
     }
   }
 
+  public destroy(): void {
+    if (typeof window !== 'undefined' && this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
+    super.destroy();
+  }
+
   public reset(width: number, height: number): void {
     this.timeElapsed = 0;
     this.roundTime = 45;
