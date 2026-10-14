@@ -3608,172 +3608,124 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 
 
 ### #156. Fireworks Grand Finale (ID: `fireworks_finale`) — [Party]
-- **Class Implementation:** `src/games/FireworksFinaleGame.ts` (299 lines)
+- **Class Implementation:** `src/games/FireworksFinaleGame.ts` (645 lines)
 - **Tagline:** *Pyrotechnic Sky Spectacular*
-- **Current Control Scheme:** `Tap: Detonate Apex`
-- **Stated Gameplay Concept:** Launch rockets into the midnight sky! Tap right as fireworks reach their apex detonation rings to unleash brilliant starbursts.
+- **Current Control Scheme:** `Steer: Roll Mortar Cart • Hold Action: Chrysanthemum Shell & Sky Hijack | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Roll your Pyrotechnic Mortar Cart across the shared harbor barge beneath drifting Sky Multiplier Rings (`1.5x`, `1.8x`, `2.5x`)! Charge your Chrysanthemum Shell (`72%–98%` Sweet Spot) to detonate inside the rings, hijack rival shells in mid-air, and shower the deck with Golden Sparkler Stars!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Fireworks Grand Finale* (*Pyrotechnic Sky Spectacular*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Launch rockets into the midnight sky! Tap right as fireworks reach their apex detonation rings to unleash brilliant star..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Detonate Apex`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Fireworks Grand Finale'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players were invisible static columns with private vertical rockets (`Math.abs(fw.x - (idx * colWidth + colWidth / 2)) < colWidth / 2`), zero physical presence, zero movement, and `drawPlayerMascot` was completely unused.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Fireworks Grand Finale* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Harbor Pyrotechnic Barge & Drifting Sky Multiplier Rings:** Replaced isolated vertical lanes with a shared harbor barge where 2.5D Mascots roll Brass Mortar Carts (`vx`, elastic cart-to-cart collisions) beneath 3 drifting Sky Multiplier Rings (`1.5x`, `1.8x`, `2.5x`) and falling Golden Sparkler Stars.
+2. **Hold-to-Charge Grand Finale Chrysanthemum Shell & Sky Hijack (72%–98% Sweet Spot):** Holding Action primes the mortar's altitude fuse (`0% -> 100%`). Releasing in the **72%–98% Sweet Spot** fires a **Chrysanthemum Super-Shell** that detonates at the exact ring altitude (`1.6x` bonus), converts rival rising shells within `115px` (`+55 pts` **"SKY HIJACK!"**), and shunts nearby rival carts across the barge!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `harbor` (Sydney Midnight Harbor), `festival` (Kyoto Summer Matsuri), and `cyber` (Neo-Tokyo Drone Show).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #157. Hydra Swamp Slayer (ID: `hydra_slayer`) — [Action]
-- **Class Implementation:** `src/games/HydraSlayerGame.ts` (537 lines)
+- **Class Implementation:** `src/games/HydraSlayerGame.ts` (670 lines)
 - **Tagline:** *Multi-Headed Mythic Duel*
-- **Current Control Scheme:** `Tap: Blade Strike`
-- **Stated Gameplay Concept:** The serpent Hydra lashes from the swamp! Tap on apex crunch zones to sever heads, and dodge corrosive venom spit.
+- **Current Control Scheme:** `Steer: Move Along Causeway • Hold Action: Flame-Cauterize Slash & Blade Shunt | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Battle the colossal 5-headed Lernaean Hydra on a shared marble causeway! Dodge telegraphed Acid-Venom Pools, collect Golden Fleece Orbs, and release your Searing Flame-Cauterize Slash in the 72%–98% Sweet Spot to sever lunging heads and shunt rivals!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Hydra Swamp Slayer* (*Multi-Headed Mythic Duel*) struggles with basic intuitive sense on a physical level. The game asks players to: *"The serpent Hydra lashes from the swamp! Tap on apex crunch zones to sever heads, and dodge corrosive venom spit...."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Blade Strike`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Hydra Swamp Slayer'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, each player fought private floating green circles in isolated columns with a single-button tap (`strikeTimer`), no shared boss, no movement, and no cauterize mechanic.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Hydra Swamp Slayer* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 5-Headed Articulated 2.5D Hydra Boss & Marble Causeway:** Built a shared mythic boss arena where 5 articulated Hydra necks (`idle -> telegraph -> lunge -> vulnerable -> regrow`) target the causeway with ground warning reticles and venomous acid pools.
+2. **Hold-to-Charge Searing Flame-Cauterize Slash & Blade Shunt (72%–98% Sweet Spot):** Holding Action ignites your Bronze Falcata (`0% -> 100%`). Releasing in the **72%–98% Sweet Spot** unleashes a **Cauterizing Flame Arc** (`2x` damage, `+135 pts` **"HEAD CAUTERIZED!"**, spawning Golden Hydra Scales) and a `95px` **Heroic Blade Shunt** (`+60 pts`) that blasts rival slayers toward acid pools!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `lerna` (Swamp of Lerna), `styx` (River Styx Abyss), and `volcano` (Typhon Magma Caldera).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #158. Pharaoh Tomb Escape (ID: `pharaoh_tomb`) — [Reflex]
-- **Class Implementation:** `src/games/PharaohTombGame.ts` (395 lines)
+- **Class Implementation:** `src/games/PharaohTombGame.ts` (660 lines)
 - **Tagline:** *Rolling Boulder & Spike Vault*
-- **Current Control Scheme:** `Tap: Vault Jump`
-- **Stated Gameplay Concept:** Outrun the massive rolling skull boulder! Tap to vault over sharp spike pits and snatch golden scarab idols.
+- **Current Control Scheme:** `Steer: Strafe & Switch Lanes • Hold Action: Bullwhip Grapple Vault & Whip Shunt | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Outrun the colossal Cursed Skull Boulder in a shared 3-lane pyramid corridor! Switch lanes, vault spike traps, snatch Golden Scarabs & Ankh Relics, and release your Bullwhip Grapple in the 72%–98% Sweet Spot to surge ahead and whip-shunt rivals toward the boulder!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Pharaoh Tomb Escape* (*Rolling Boulder & Spike Vault*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Outrun the massive rolling skull boulder! Tap to vault over sharp spike pits and snatch golden scarab idols...."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Vault Jump`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Pharaoh Tomb Escape'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players were quarantined in horizontal rows with no horizontal movement, no lane-switching, no shared hazards, and stick-figure rectangles instead of 2.5D Explorer Mascots.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Overhaul *Pharaoh Tomb Escape* into a high-stakes push-your-luck showdown. Introduce a central risk-reward multiplier where waiting until the last split-second multiplies your score exponentially, but false-starts result in a comical 2-second electro-shock stun.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 3-Lane Pyramid Corridor & Colossal 2.5D Skull Boulder:** Unified all players into a shared 3-lane sandstone corridor (`targetLane: 0 | 1 | 2` + horizontal position `x`) pursued on the left by a screen-shaking Cursed Skull Boulder with elastic body-bumping between explorers.
+2. **Hold-to-Charge Bullwhip Grapple Vault & Whip Lash Shunt (72%–98% Sweet Spot):** Releasing Action vaults over spike traps and Cursed Mummy hands; releasing in the **72%–98% Sweet Spot** snaps a **Golden Bullwhip** overhead (`+210vx` forward surge, `110px` Scarab magnet, and `+65 pts` **"WHIP SHUNT!"** knocking rivals backward toward the boulder).
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `luxor` (Golden Tomb of Luxor), `anubis` (Obsidian Crypt of Anubis), and `cyber` (Neon Cyber-Pyramid).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #159. Spartan Phalanx Wall (ID: `spartan_shield`) — [Action]
-- **Class Implementation:** `src/games/SpartanShieldGame.ts` (419 lines)
+- **Class Implementation:** `src/games/SpartanShieldGame.ts` (665 lines)
 - **Tagline:** *Shield Wall & Spear Counter*
-- **Current Control Scheme:** `Hold: Shield • Release: Spear`
-- **Stated Gameplay Concept:** Persian fire arrows rain from above! Hold to raise your bronze Aspis shield, then release to thrust your spear at charging foes.
+- **Current Control Scheme:** `Steer: March Pass • Hold Action: Bronze Aspis Block & Spear Counter (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Hold the Hot Gates of Thermopylae! March across the shared cliff pass, hold Action to raise your Bronze Lambda Aspis Shield against raining Persian fire arrows, and release in the 72%–98% Sweet Spot to unleash a 300 Spear Counter & Spartan Kick Shunt!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Spartan Phalanx Wall* (*Shield Wall & Spear Counter*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Persian fire arrows rain from above! Hold to raise your bronze Aspis shield, then release to thrust your spear at chargi..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Hold: Shield • Release: Spear`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Spartan Phalanx Wall'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players were frozen in isolated columns (`x: cx`) with no horizontal movement, private enemy arrays, no charge meter, and stick-box graphics.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Spartan Phalanx Wall* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Hot Gates Pass, Fire Arrow Reticles & Advancing Persian Immortals:** All 2.5D Spartan Hoplite Mascots (with horsehair crests, crimson cloaks, and Lambda `Λ` Aspis shields) patrol the shared pass (`passLeft` to `passRight`) with elastic phalanx collisions, ground arrow target reticles, and Golden Spartan Laurel drops.
+2. **Hold-to-Charge Aspis Block & 300 Spear Counter + Spartan Kick Shunt (72%–98% Sweet Spot):** Holding Action raises your Bronze Aspis to deflect raining arrows (`+20–30 pts` + bonus charge) and brace against charging Immortals. Releasing in the **72%–98% Sweet Spot** unleashes a **Molon Labe Spear Shockwave** (`1.65x` score, double damage against Persian Captains, and `+65 pts` **"SPARTAN KICK!"** shunting rival Spartans).
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `thermopylae` (Hot Gates of Thermopylae), `marathon` (Plains of Marathon), and `hades` (Tartarus Obsidian Pass).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #160. Kraken Maelstrom Vortex (ID: `kraken_whirlpool`) — [Reflex]
-- **Class Implementation:** `src/games/KrakenWhirlpoolGame.ts` (398 lines)
-- **Tagline:** *Tentacle Dodge & Treasure Tacking*
-- **Current Control Scheme:** `Tap: Steer Rudder`
-- **Stated Gameplay Concept:** Navigate the stormy vortex! Tap to tack your longship in and out to dodge crashing colossal tentacles and collect floating chests.
+- **Class Implementation:** `src/games/KrakenWhirlpoolGame.ts` (635 lines)
+- **Tagline:** *Tentacle Dodge & Harpoon Broadside*
+- **Current Control Scheme:** `Steer/Tap: Tack In/Out • Hold Action: Harpoon Broadside & Tentacle Sever (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Navigate the swirling Kraken Maelstrom! Tack your 2.5D Longship between the outer rim and the 1.5x Inner Vortex Ring, ram rival ships, and release your Harpoon Broadside in the 72%–98% Sweet Spot to sever Kraken tentacles into Golden Pearls!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** In *Kraken Maelstrom Vortex*, the player controls an avatar that is permanently rotating in a circle. You don't choose where you want to go; you wait patiently for the engine's rotation timer to swing your nose toward the objective. It removes human agency and replaces it with passive waiting.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Steer Rudder`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Kraken Maelstrom Vortex'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, `s.angle` increased monotonically above $2\pi$ while treasure and tentacle angles stayed in $[0, 2\pi)$, causing `Math.abs(tr.angle - s.angle)` to exceed $2\pi$ after 3.5 seconds so **no treasure or tentacle collision ever worked again**!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Overhaul *Kraken Maelstrom Vortex* into a high-stakes push-your-luck showdown. Introduce a central risk-reward multiplier where waiting until the last split-second multiplies your score exponentially, but false-starts result in a comical 2-second electro-shock stun.
-2. **Controls & Tactility Overhaul:** Eliminate passive auto-rotation. Implement an active directional snap system: tap to pivot 45° instantly, double-tap for an immediate 180° turnaround, and hold to charge an explosive forward dash with a visible expanding aura and rising audio whine.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Angle Normalization & Shortest-Arc Collision Fix (`normalizeAngle` / `shortestAngleDiff`):** Fixed the fatal $>2\pi$ angle wrap bug and switched treasure/tentacle/ship collisions to exact 2D Euclidean pixel distance + shortest-arc angular lookahead for bots.
+2. **2.5D Kraken Boss Eye, Mascot Longships & Harpoon Broadside (72%–98% Sweet Spot):** Added the animated Kraken head in the vortex eye, 2.5D timber longships with Mascot Captains, and a **Hold-to-Charge Harpoon Broadside** (`72%–98%` Sweet Spot) that severs tentacles (`+95 pts` + drops a `+80 pt` **Golden Kraken Pearl**) and shunts rival ships inward toward the Kraken Maw (`+70 pts`).
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `maelstrom` (Abyssal Kraken Maelstrom), `caribbean` (Cursed Galleon Lagoon), and `cyber_sea` (Neon Leviathan Grid).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #161. Flight of Icarus (ID: `icarus_wings`) — [Physics]
-- **Class Implementation:** `src/games/IcarusWingsGame.ts` (356 lines)
+- **Class Implementation:** `src/games/IcarusWingsGame.ts` (630 lines)
 - **Tagline:** *Thermal Updrafts & Solar Blaze*
-- **Current Control Scheme:** `Tap: Flap Wings`
-- **Stated Gameplay Concept:** Flap feathered wax wings to ride golden thermals! Avoid flying too close to the scorching sun or crashing into Aegean sea waves.
+- **Current Control Scheme:** `Tap: Flap • Steer: Fly • Hold Action: Daedalus Sunburst Glide & Gale Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Soar across the Aegean Archipelago on articulated feathered wax wings! Ride Golden Thermal Updrafts, cool your wax inside Cumulus Clouds, and release your Daedalus Sunburst Glide in the 72%–98% Sweet Spot to vacuum sky rings and blast rivals into the scorching Solar Corona!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Flight of Icarus* (*Thermal Updrafts & Solar Blaze*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Flap feathered wax wings to ride golden thermals! Avoid flying too close to the scorching sun or crashing into Aegean se..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Flap Wings`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Flight of Icarus'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, flyers were locked at fixed `x` coordinates with zero horizontal movement, zero mid-air collision, and only a single-button flap.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Flight of Icarus* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Full 2D Aegean Sky Flight, Golden Thermal Updrafts & Elastic Wing-Checks:** Enabled full horizontal + vertical flight with drifting Golden Thermal Columns, cooling Cumulus Clouds, Ambrosia Feather rings, and elastic mid-air flyer collisions.
+2. **Hold-to-Charge Daedalus Sunburst Glide & Solar Gale Shunt (72%–98% Sweet Spot):** Holding Action folds wings into a cooling aerodynamic glide; releasing in the **72%–98% Sweet Spot** launches an **Apollo Sunburst Glide** (`-28%` wax heat, `105px` ring vacuum, and `+65 pts` **"GALE SHUNT!"** blasting rivals toward the scorching sun or sea waves).
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `aegean` (Aegean Sunlit Archipelago), `sunset` (Helios Crimson Dusk), and `astral` (Starlight Olympus Sky).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #162. Knossos Labyrinth (ID: `minotaur_labyrinth`) — [Puzzle]
-- **Class Implementation:** `src/games/MinotaurLabyrinthGame.ts` (422 lines)
+- **Class Implementation:** `src/games/MinotaurLabyrinthGame.ts` (640 lines)
 - **Tagline:** *Ariadne Thread & Beast Escape*
-- **Current Control Scheme:** `Tap: Switch Corridor`
-- **Stated Gameplay Concept:** The fearsome Minotaur stalks the stone maze! Tap to switch corridors, grab Ariadne golden skeins, and trap the beast.
+- **Current Control Scheme:** `Steer/Tap: Aim Next Junction Turn • Hold Action: Theseus Thread Dash & Bull Lure (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Navigate the torchlit Palace of Knossos! Aim your glowing Ariadne Thread preview arrow for the upcoming junction, collect Golden Skeins & Aegis Shields, and release your Theseus Thread Dash in the 72%–98% Sweet Spot to vault the Minotaur and ring the Bronze Bull-Bell to lure the beast onto your rivals!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Knossos Labyrinth* (*Ariadne Thread & Beast Escape*) struggles with basic intuitive sense on a physical level. The game asks players to: *"The fearsome Minotaur stalks the stone maze! Tap to switch corridors, grab Ariadne golden skeins, and trap the beast...."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The hold-to-charge mechanic (`Tap: Switch Corridor`) lacks kinetic feedback. There is no exponential power curve or visual charge ring, making release timing feel mushy and imprecise. Impacts lack punch, with no freeze-frames or satisfying screen recoil.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Knossos Labyrinth'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, `switchBranch` overwrote `r.targetNode` mid-corridor (`r.progress = 0.5`), causing runners to **teleport diagonally through solid stone walls** between unconnected nodes! Bots also called `switchBranch` at random without checking where loot or the Minotaur was.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Knossos Labyrinth* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Junction-Queued Turn System (`queuedNextNode`) & Graph-Utility Bot AI:** Fixed the mid-corridor wall-teleport bug by queuing turns for `r.targetNode` with a live glowing Ariadne Thread preview line, and equipped bots with neighbor-utility evaluation (loot proximity vs Minotaur danger).
+2. **Hold-to-Charge Theseus Thread Dash & Bull-Bell Lure Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** triggers a `2.15x` **Theseus Thread Dash** (allowing runners to **Bull-Vault** over the Minotaur's horns for `+45 pts`), reverses nearby rivals (`+70 pts` **"BULL LURE SHUNT!"**), and redirects the Minotaur's aggro onto the nearest rival!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `knossos` (Palace of Knossos), `underworld` (Tartarus Bone Maze), and `cyber_maze` (Daedalus Circuit Grid).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #163. Olympus Lightning Conduit (ID: `olympus_lightning`) — [Reflex]
-- **Class Implementation:** `src/games/OlympusLightningGame.ts` (339 lines)
+- **Class Implementation:** `src/games/OlympusLightningGame.ts` (635 lines)
 - **Tagline:** *Divine Bolt Catch & Discharge*
-- **Current Control Scheme:** `Tap: Catch Lightning`
-- **Stated Gameplay Concept:** Zeus hurls crackling thunderbolts from Mount Olympus! Tap precisely as bolts hit the gold sweet spot to channel divine fury.
+- **Current Control Scheme:** `Steer: Roam Pantheon Plaza • Hold Action: Astrape Conduit Catch & Chain Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Sprint across the shared Mount Olympus Pantheon Plaza beneath descending Cyan, Royal (`1.6x`), and Overlord (`2.4x`) Thunderbolts! Hold Action to magnetize bolts toward your Golden Astrape Rod, and release in the 72%–98% Sweet Spot to channel a Sky-Pillar and zap rivals with Chain-Lightning!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Olympus Lightning Conduit* (*Divine Bolt Catch & Discharge*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Zeus hurls crackling thunderbolts from Mount Olympus! Tap precisely as bolts hit the gold sweet spot to channel divine f..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The hold-to-charge mechanic (`Tap: Catch Lightning`) lacks kinetic feedback. There is no exponential power curve or visual charge ring, making release timing feel mushy and imprecise. Impacts lack punch, with no freeze-frames or satisfying screen recoil.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Olympus Lightning Conduit'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players stood frozen on isolated pedestals waiting for a private timer bar (`chargeProgress`) with zero movement, zero shared lightning bolts, and stick-box graphics.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Overhaul *Olympus Lightning Conduit* into a high-stakes push-your-luck showdown. Introduce a central risk-reward multiplier where waiting until the last split-second multiplies your score exponentially, but false-starts result in a comical 2-second electro-shock stun.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Pantheon Marble Plaza & Live Descending Thunderbolts:** Replaced private static pedestals with a shared marble plaza where 2.5D Demigod Mascots sprint and bodycheck each other to intercept live descending `cyan`, `royal`, and `overlord` storm bolts and bouncing **Ambrosia Sparks**.
+2. **Hold-to-Charge Astrape Conduit Rod & Chain-Lightning Shunt (72%–98% Sweet Spot):** Holding Action raises your Golden Astrape Rod to pull nearby descending bolts inward; releasing in the **72%–98% Sweet Spot** captures overhead bolts for **1.6x points** and fires a `115px` **Chain-Lightning Arc Shunt** (`+70 pts`) that shocks and knocks back rival demigods!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `olympus` (Mount Olympus Pantheon), `asgard` (Bifrost Thunder Bridge), and `tesla` (Wardenclyffe Plasma Lab).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #164. Anubis Scales of Truth (ID: `anubis_scales`) — [Puzzle]
 - **Class Implementation:** `src/games/AnubisScalesGame.ts` (316 lines)
