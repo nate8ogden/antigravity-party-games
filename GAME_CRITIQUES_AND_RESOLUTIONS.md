@@ -3541,95 +3541,71 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Sky Wheel Balance'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Sky Wheel Balance* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Core Overhaul & Shortest-Arc Spoke Wrap Fix:** Fixed the critical `7 -> 0` spoke wrap interpolation bug (`getShortestSpokeDelta`) that caused climbers to teleport backwards across the entire wheel. Added 8 gravity-stabilized **2.5D Swinging Gondola Cabins** at the rim (`r = 186`), active high-altitude wind gusts (`gustForce`), and expanding **Hub Voltage Rings** that climbers must jump over or shelter inside a Gondola Cabin to avoid.
+2. **Hold-to-Charge Grapple Vault & Shockwave Shunt (72%–98% Sweet Spot):** Separated spoke hopping (`Steer Left/Right`) from radial climbing (`Throttle Up/Down`) and added a **Hold-to-Charge Magnetic Grapple Vault** (`Space`/`Enter`). Releasing in the **72%–98% Sweet Spot** vaults across 2 spokes at once, magnet-vacuums nearby tokens (`54px` radius), and unleashes a **Girder Shockwave** (`+90 pts` Sabotage Bonus) that shunts rival climbers outward toward the slip rim!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `twilight` (Sunset Boardwalk Pier), `neon` (Cyberpunk Sky-Spire), and `stormy` (Tempest Thunder-Wheel). Fixed the `bestAdjacent !== -1` bot bug so bots jump both clockwise and counter-clockwise and use Sweet-Spot Super Vaults.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #152. Funhouse Mirrors (ID: `funhouse_mirrors`) — [Party]
-- **Class Implementation:** `src/games/FunhouseMirrorsGame.ts` (364 lines)
+- **Class Implementation:** `src/games/FunhouseMirrorsGame.ts` (715 lines)
 - **Tagline:** *Hall of Illusions Maze*
-- **Current Control Scheme:** `Tap: Turn 90°`
-- **Stated Gameplay Concept:** Navigate optical mirror reflections! Tap to turn and snatch golden prize tickets while dodging deceptive glass reflections.
+- **Current Control Scheme:** `Steer: Move • Hold Action: Prismatic Phase Dash & Flashbang Shunt | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Navigate dynamic rotating funhouse mirrors! Charge your Prismatic Phase Dash (72%–98% Sweet Spot) to phase straight through mirror glass, dazzle rivals, and escape through the shifting Golden Portal.
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Funhouse Mirrors* (*Hall of Illusions Maze*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Navigate optical mirror reflections! Tap to turn and snatch golden prize tickets while dodging deceptive glass reflectio..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Turn 90°`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Funhouse Mirrors'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, bots and players got permanently stuck bonking into horizontal mirror segments because collision only multiplied `vx *= -0.5` without normal-vector separation, and bots walked in a straight line ignoring all mirrors. Duplicate top timer text also overlapped `GameManager`'s HUD.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Funhouse Mirrors* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Normal-Vector Elastic Mirror Reflection & 12-Ray Obstacle-Avoiding AI:** Implemented exact segment-normal pushout and velocity reflection (`closestPointOnSegment`) so zero players or bots ever clip or get stuck. Upgraded Bot AI with a 12-ray lookahead clearance evaluator plus strategic Phase Dash usage when a mirror blocks the direct route.
+2. **Hold-to-Charge Prismatic Phase Dash & Flashbang Wave (72%–98% Sweet Spot):** Releasing Action in the **72%–98% Sweet Spot** triggers a **Prism Phase Dash** that phases right through mirror panes for `+15 pts` bonus and emits a **98px Dazzle Flashbang Wave** (`+45 pts` Shunt Bonus) that stuns and knocks back rivals.
+3. **2.5D Mascots, Distorted Mirror Clones & 3 Visual Themes (`[T]` / `[1-3]`):** Replaced plain circles with `drawPlayerMascot`, added squished/stretched funhouse optical reflections inside nearby mirrors, removed the duplicate timer HUD, and added `carnival`, `crystal`, and `cyber` themes.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #153. Sugar Cloud Stacker (ID: `cotton_candy`) — [Party]
-- **Class Implementation:** `src/games/CottonCandyGame.ts` (592 lines)
+- **Class Implementation:** `src/games/CottonCandyGame.ts` (690 lines)
 - **Tagline:** *Candy Tower Balance Rush*
-- **Current Control Scheme:** `Steer: Slide Stick | Tap/Space: Cash In Stack | 1-3: Switch Theme`
-- **Stated Gameplay Concept:** Slide your paper stick to catch falling pastel sugar drops and build towering, wobbly cotton candy clouds! Tap to cash in your stack for banked bonus multipliers before it tips over. Beware burnt crisps!
+- **Current Control Scheme:** `Steer: Slide Cone • Hold Action: Centrifugal Vortex & Caramelize Bank | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Catch spun sugar clouds from 3 overhead oscillating floss kettles! Hold Action to spin a stabilizing Centrifugal Vortex and release in the 72%–98% Sweet Spot for a Caramelized Cash-In & Sugar Shockwave Shunt!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Sugar Cloud Stacker* (*Candy Tower Balance Rush*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Slide your paper stick to catch falling pastel sugar drops and build towering, wobbly cotton candy clouds! Tap to cash i..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Repetitive Loop & Shallow Depth.** The gameplay loop exhausts its appeal within 10 seconds. There is no escalation, no dynamic hazards, and no strategic variety. After executing the primary action a few times, players are merely repeating the same rote motion until the timer expires.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** Inter-player collisions feel like bumper cars made of foam. Bumping another player imparts almost no momentum or rotational spin. There is no threat of knocking an opponent off a ledge or into a hazard.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Sugar Cloud Stacker'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, `justPressed` triggered an instant cash-in whenever a 1-button or keyboard player steered, preventing anyone from building a stack taller than 1 puff, while bots targeted `ps.x` instead of the tilted stack tip (`catchX`).
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Sugar Cloud Stacker* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Overhead 2.5D Sugar-Floss Kettles & Hold-to-Charge Centrifugal Vortex (72%–98% Sweet Spot):** Holding Action spins your cone at high RPM, gyroscopically stabilizing tower wobble and pulling nearby falling sugar clouds toward your cone tip. Releasing in the **72%–98% Sweet Spot** banks your stack with a **1.5x Caramelize Multiplier + Rainbow Flavor Combo** and unleashes a **Sugar Shockwave Shunt** (`+75 pts`) that wobbles rival towers!
+2. **Elastic Counter Bodychecks & Stack-Tip Bot AI:** Added elastic player-to-player collisions that transfer wobble velocity to rival towers, and upgraded Bot AI to track the true tilted cone tip (`getStackTipPosition`).
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `midway`, `pastel`, and `cyber`.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #154. Test Your Strength (ID: `test_strength`) — [Action]
-- **Class Implementation:** `src/games/TestStrengthGame.ts` (290 lines)
+- **Class Implementation:** `src/games/TestStrengthGame.ts` (645 lines)
 - **Tagline:** *High-Striker Sledgehammer*
-- **Current Control Scheme:** `Tap: Slam Hammer`
-- **Stated Gameplay Concept:** Swing the carnival sledgehammer with maximum torque! Time the surging power meter at 100% peak to shoot the puck and ring the brass bell.
+- **Current Control Scheme:** `Steer: Move Across Stage • Hold Action: Sledgehammer Bell Slam & Shockwave | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Roam the shared Carnival Strongman Stage between 3 High-Striker Towers (including the 1.65x Center Golden Titan)! Charge your Sledgehammer Slam (72%–98% Sweet Spot) to ring the brass bell, shower the stage with bonus stars, and blast rivals off the anvil!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Test Your Strength* (*High-Striker Sledgehammer*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Swing the carnival sledgehammer with maximum torque! Time the surging power meter at 100% peak to shoot the puck and rin..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Slam Hammer`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Test Your Strength'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, players had `swingsLeft: 4` in isolated static lanes with no avatars, no movement, and the match ended in 4 seconds. Duplicate top timer text also collided with the main HUD.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Test Your Strength* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 3-Tower Carnival Strongman Stage & 2.5D Mascots with Sledgehammers:** Replaced the 4-click static meter with a live 35-second arena featuring 3 distinct High-Striker Towers (`Iron Anvil 1.15x`, `Golden Titan 1.65x`, `Turbo Striker 1.25x`), 2.5D Mascots wielding animated sledgehammers, and falling **Golden Bell Stars** that pop out whenever a bell is rung.
+2. **Hold-to-Charge Titan Bell-Ringer Slam & Seismic Shockwave Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** launches the puck to the top bell (`+320 pts × Tower Multiplier`) and unleashes a `115px` **Seismic Anvil Shockwave** (`+85 pts` Hammer Shunt) that knocks rivals off the pad.
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `fairground`, `forge`, and `arcade`.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #155. Haunted Mansion (ID: `haunted_mansion`) — [Action]
-- **Class Implementation:** `src/games/HauntedMansionGame.ts` (345 lines)
+- **Class Implementation:** `src/games/HauntedMansionGame.ts` (685 lines)
 - **Tagline:** *UV Strobe Specter Hunt*
-- **Current Control Scheme:** `Tap: Fire UV Strobe`
-- **Stated Gameplay Concept:** Ghosts materialize in the darkened Victorian parlor! Sweep your flashlight cone and tap to flash high-voltage UV strobe pulses.
+- **Current Control Scheme:** `Steer: Roam & Aim UV Beam • Hold Action: Proton Vacuum & Supernova UV Strobe | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Roam the Haunted Ballroom with your UV Poltergeist Beam to reveal cloaked ghosts! Hold Action to reel ghosts inward with your Proton Vacuum, then release in the 72%–98% Sweet Spot to unleash a Supernova UV Strobe!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Haunted Mansion* (*UV Strobe Specter Hunt*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Ghosts materialize in the darkened Victorian parlor! Sweep your flashlight cone and tap to flash high-voltage UV strobe ..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Tap: Fire UV Strobe`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Haunted Mansion'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously, `render` rotated the flashlight cone by `-h.aimAngle` while `update` checked `Math.atan2(dx, dy)` with `+h.aimAngle`, causing the visual flashlight beam to point in the exact opposite horizontal direction of the actual hitboxes! Players were also immobile circles glued to the bottom edge.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Haunted Mansion* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Unified World-Angle UV Cone Geometry & Full 2D Ballroom Movement:** Fixed the inverted flashlight angle bug so the visual UV cone and capture hitboxes match 100% in world radians (`h.aimAngle`). Upgraded hunters to 2.5D Mascots with Proton Nozzles roaming the ballroom with elastic collisions.
+2. **Proton Vacuum Reel & Supernova UV Strobe (72%–98% Sweet Spot):** Illuminating ghosts with your UV beam reveals them and slows their escape; holding Action reels illuminated ghosts toward your trap while charging the capacitor. Releasing in the **72%–98% Sweet Spot** fires a **Supernova UV Strobe** (`1.5x` points + Ecto-Orb drops + `+75 pts` **UV Blind Shunt** against rival hunters in your cone).
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `victorian`, `crypt`, and `cyber`.
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
+
 
 ### #156. Fireworks Grand Finale (ID: `fireworks_finale`) — [Party]
 - **Class Implementation:** `src/games/FireworksFinaleGame.ts` (299 lines)
