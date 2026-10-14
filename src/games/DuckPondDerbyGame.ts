@@ -1,38 +1,81 @@
 import { BaseGame } from './BaseGame';
-import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
+import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
 
-interface Duck {
+interface PondDuck {
+  id: number;
+  angle: number;
+  ringRadius: number;
+  speed: number;
+  isGolden: boolean;
+  isElectricEel: boolean;
+  hookedBy: PlayerId | null;
   x: number;
   y: number;
-  angle: number;
-  speed: number;
-  radius: number;
-  orbitRadius: number;
-  isGolden: boolean;
-  points: number;
-  bobTimer: number;
-  hookedBy: PlayerId | null;
 }
 
-interface RodPlayer {
+interface DuckAngler {
   id: PlayerId;
-  angle: number; // sweeping angle of fishing rod
-  sweepDir: number;
-  hookDist: number; // distance extended from station
-  maxHookDist: number;
-  hookState: 'AIMING' | 'DROPPING' | 'REELING';
+  color: string;
+  baseX: number;
+  baseY: number;
+  aimAngle: number;
+  aimDir: number;
+  baseAim: number;
+  hookDist: number;
+  state: 'aiming' | 'extending' | 'reeling';
+  caughtDuck: PondDuck | null;
   score: number;
+  streak: number;
+  multiplier: number;
+  stunTimer: number;
+  underdog: boolean;
+  botTimer: number;
 }
+
+type ThemeId = 'carnival_lagoon' | 'rubber_duck_spa' | 'neon_fountain';
+
+interface ThemeSpec {
+  name: string;
+  pondInner: string;
+  pondOuter: string;
+  rimColor: string;
+}
+
+const THEMES: Record<ThemeId, ThemeSpec> = {
+  carnival_lagoon: {
+    name: 'Carnival Whirlpool Lagoon',
+    pondInner: '#0284c7',
+    pondOuter: '#0c4a6e',
+    rimColor: '#facc15',
+  },
+  rubber_duck_spa: {
+    name: 'Bubble Bath Duck Spa',
+    pondInner: '#2dd4bf',
+    pondOuter: '#115e59',
+    rimColor: '#f472b6',
+  },
+  neon_fountain: {
+    name: 'Neon Cyber Fountain',
+    pondInner: '#4f46e5',
+    pondOuter: '#1e1b4b',
+    rimColor: '#38bdf8',
+  },
+};
+
+const THEME_ORDER: ThemeId[] = ['carnival_lagoon', 'rubber_duck_spa', 'neon_fountain'];
 
 export class DuckPondDerbyGame extends BaseGame {
-  private ducks: Duck[] = [];
-  private playersState: Map<PlayerId, RodPlayer> = new Map();
-  private pondCenterX: number = 0;
-  private pondCenterY: number = 0;
-  private pondRadius: number = 140;
+  private anglers: Map<PlayerId, DuckAngler> = new Map();
+  private ducks: PondDuck[] = [];
+  private timeElapsed = 0;
+  private suddenDeath = false;
+  private hitStopTimer = 0;
+  private themeIndex = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
+  private floatingTexts: { x: number; y: number; text: string; color: string; alpha: number; vy: number; size: number }[] = [];
 
   constructor(
     players: PlayerConfig[],
@@ -41,329 +84,258 @@ export class DuckPondDerbyGame extends BaseGame {
     particles: ParticleSystem
   ) {
     super(players, input, audio, particles);
+    this.roundTimer = 38.0;
   }
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIndex = (this.themeIndex + 1) % THEME_ORDER.length;
+          this.audio.playTap();
+        } else if (e.key >= '1' && e.key <= '3') {
+          this.themeIndex = parseInt(e.key, 10) - 1;
+          this.audio.playTap();
+        }
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
   }
 
   public reset(width: number, height: number): void {
     this.isFinished = false;
-    this.roundTimer = 30;
-    this.pondCenterX = width / 2;
-    this.pondCenterY = height * 0.46;
-    this.pondRadius = Math.min(160, width * 0.28);
+    this.roundTimer = 38.0;
+    this.timeElapsed = 0;
+    this.suddenDeath = false;
+    this.hitStopTimer = 0;
     this.ducks = [];
-    this.playersState.clear();
+    this.anglers.clear();
+    this.floatingTexts = [];
+    this.themeIndex = Math.floor(Math.random() * THEME_ORDER.length);
 
-    // Populate concentric circulating rubber ducks
-    const duckCount = 14;
-    for (let i = 0; i < duckCount; i++) {
-      const isInner = i % 2 === 0;
-      const orbit = isInner ? this.pondRadius * 0.5 : this.pondRadius * 0.82;
-      const isGolden = i === 3 || i === 9;
+    const w = width || 1280;
+    const h = height || 720;
+    const cx = w / 2;
+    const cy = h / 2 + 15;
+
+    for (let i = 0; i < 14; i++) {
+      const ring = i < 6 ? 95 : 175;
+      const a = (i / (i < 6 ? 6 : 8)) * Math.PI * 2;
+      const isGolden = i % 4 === 0;
+      const isElectricEel = !isGolden && i % 6 === 2;
       this.ducks.push({
-        x: 0,
-        y: 0,
-        angle: (i / duckCount) * Math.PI * 2,
-        speed: isInner ? 1.4 : -0.9,
-        radius: isGolden ? 16 : 14,
-        orbitRadius: orbit,
+        id: i,
+        angle: a,
+        ringRadius: ring,
+        speed: (i < 6 ? 1.35 : -0.95) * (isGolden ? 1.25 : 1.0),
         isGolden,
-        points: isGolden ? 50 : (i % 3 === 0 ? 25 : 10),
-        bobTimer: Math.random() * Math.PI,
-        hookedBy: null
+        isElectricEel,
+        hookedBy: null,
+        x: cx + Math.cos(a) * ring,
+        y: cy + Math.sin(a) * ring,
       });
     }
 
     const active = this.getActivePlayers();
-    const count = active.length;
-    active.forEach((p, idx) => {
-      // 4 player corners or edge stations
-      this.playersState.set(p.id, {
-        id: p.id,
-        angle: (idx / count) * Math.PI * 2 - Math.PI / 2,
-        sweepDir: 1,
-        hookDist: 20,
-        maxHookDist: this.pondRadius * 1.05,
-        hookState: 'AIMING',
-        score: 0
+    active.forEach((cfg, idx) => {
+      const a = (idx / Math.max(1, active.length)) * Math.PI * 2 + Math.PI / 4;
+      const rimDist = Math.min(w, h) * 0.41;
+      const bx = cx + Math.cos(a) * rimDist;
+      const by = cy + Math.sin(a) * rimDist;
+      const toCenter = Math.atan2(cy - by, cx - bx);
+
+      this.anglers.set(cfg.id, {
+        id: cfg.id,
+        color: cfg.color,
+        baseX: bx,
+        baseY: by,
+        aimAngle: toCenter,
+        aimDir: 1,
+        baseAim: toCenter,
+        hookDist: 28,
+        state: 'aiming',
+        caughtDuck: null,
+        score: 0,
+        streak: 0,
+        multiplier: 1,
+        stunTimer: 0,
+        underdog: false,
+        botTimer: 0.18,
       });
     });
+  }
+
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    void height;
+    if (y < 60 && x > width - 220) {
+      this.themeIndex = (this.themeIndex + 1) % THEME_ORDER.length;
+      this.audio.playTap();
+      return true;
+    }
+    return false;
+  }
+
+  private addFloatingText(x: number, y: number, text: string, color: string, size = 18): void {
+    this.floatingTexts.push({ x, y, text, color, alpha: 1, vy: -52, size });
+  }
+
+  private renderFloatingTexts(ctx: CanvasRenderingContext2D): void {
+    for (const ft of this.floatingTexts) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, ft.alpha);
+      ctx.font = `900 ${ft.size}px "Outfit", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+      ctx.lineWidth = 4;
+      ctx.strokeText(ft.text, ft.x, ft.y);
+      ctx.fillStyle = ft.color;
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.restore();
+    }
   }
 
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
-    this.roundTimer = Math.max(0, this.roundTimer - dt);
-    this.updateBots(dt, width, height);
 
-    // Update ducks swimming in circular pond current
+    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+      const ft = this.floatingTexts[i];
+      ft.y += ft.vy * dt;
+      ft.alpha -= dt * 1.1;
+      if (ft.alpha <= 0) this.floatingTexts.splice(i, 1);
+    }
+
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer -= dt;
+      return;
+    }
+
+    this.timeElapsed += dt;
+    this.roundTimer -= dt;
+    if (this.roundTimer <= 0) {
+      this.roundTimer = 0;
+      this.isFinished = true;
+      return;
+    }
+
+    if (this.roundTimer <= 15 && !this.suddenDeath) {
+      this.suddenDeath = true;
+      this.audio.playFanfare();
+      this.addFloatingText(width / 2, 100, '⚡ GOLDEN FLOCK FRENZY! 2X DUCK VALUE! ⚡', '#facc15', 24);
+    }
+
+    const cx = width / 2;
+    const cy = height / 2 + 15;
+
     for (const d of this.ducks) {
       if (d.hookedBy === null) {
-        d.angle += d.speed * dt;
-        d.bobTimer += dt * 3;
-        d.x = this.pondCenterX + Math.cos(d.angle) * d.orbitRadius;
-        d.y = this.pondCenterY + Math.sin(d.angle) * d.orbitRadius + Math.sin(d.bobTimer) * 3;
+        d.angle += d.speed * (this.suddenDeath ? 1.3 : 1.0) * dt;
+        d.x = cx + Math.cos(d.angle) * d.ringRadius;
+        d.y = cy + Math.sin(d.angle) * d.ringRadius;
       }
     }
 
-    const active = this.getActivePlayers();
-    const count = active.length;
+    let maxScore = 0;
+    this.anglers.forEach((a) => {
+      if (a.score > maxScore) maxScore = a.score;
+    });
 
-    for (let idx = 0; idx < count; idx++) {
-      const p = active[idx];
-      const ps = this.playersState.get(p.id);
-      if (!ps) continue;
+    this.updateBots(dt, width, height);
 
-      const stationBaseAngle = (idx / count) * Math.PI * 2 - Math.PI / 2;
-      const stationX = this.pondCenterX + Math.cos(stationBaseAngle) * (this.pondRadius + 45);
-      const stationY = this.pondCenterY + Math.sin(stationBaseAngle) * (this.pondRadius + 45);
+    this.anglers.forEach((a) => {
+      a.underdog = maxScore - a.score >= 120;
+      if (a.stunTimer > 0) a.stunTimer -= dt;
 
-      if (ps.hookState === 'AIMING') {
-        // Sweep rod angle around inward cone
-        ps.angle += ps.sweepDir * dt * 1.6;
-        const inwardAngle = Math.atan2(this.pondCenterY - stationY, this.pondCenterX - stationX);
-        const minAngle = inwardAngle - 0.75;
-        const maxAngle = inwardAngle + 0.75;
-
-        if (ps.angle > maxAngle) {
-          ps.angle = maxAngle;
-          ps.sweepDir = -1;
-        } else if (ps.angle < minAngle) {
-          ps.angle = minAngle;
-          ps.sweepDir = 1;
+      if (a.state === 'aiming') {
+        a.aimAngle += a.aimDir * 1.55 * dt;
+        if (a.aimAngle > a.baseAim + 0.68) {
+          a.aimAngle = a.baseAim + 0.68;
+          a.aimDir = -1;
+        } else if (a.aimAngle < a.baseAim - 0.68) {
+          a.aimAngle = a.baseAim - 0.68;
+          a.aimDir = 1;
         }
 
-        // Tap to launch magnetic hook
-        const tap = this.input.justPressed(p.id) || this.input.justAction(p.id);
-        if (tap) {
-          ps.hookState = 'DROPPING';
-          this.audio.playLaser();
+        if (a.stunTimer <= 0 && (this.input.justPressed(a.id) || this.input.justAction(a.id) || this.input.isPressed(a.id))) {
+          a.state = 'extending';
+          this.audio.playWhoosh();
         }
-      } else if (ps.hookState === 'DROPPING') {
-        ps.hookDist += dt * 320;
-        const hookX = stationX + Math.cos(ps.angle) * ps.hookDist;
-        const hookY = stationY + Math.sin(ps.angle) * ps.hookDist;
+      } else if (a.state === 'extending') {
+        const extSpeed = a.underdog ? 540 : 450;
+        a.hookDist += extSpeed * dt;
+        const hx = a.baseX + Math.cos(a.aimAngle) * a.hookDist;
+        const hy = a.baseY + Math.sin(a.aimAngle) * a.hookDist;
 
-        // Check duck snag
         for (const d of this.ducks) {
-          if (d.hookedBy === null && Math.hypot(hookX - d.x, hookY - d.y) < d.radius + 10) {
-            d.hookedBy = p.id;
-            ps.hookState = 'REELING';
-            this.audio.playChime();
-            this.particles.spawnConfetti(d.x, d.y, 10);
+          if (Math.hypot(d.x - hx, d.y - hy) < 28) {
+            // Cutthroat Gold Miner-style Hook Steal! Even if another player hooked it, we can snatch it!
+            if (d.hookedBy !== null && d.hookedBy !== a.id) {
+              const victim = this.anglers.get(d.hookedBy);
+              if (victim) victim.caughtDuck = null;
+              this.addFloatingText(hx, hy - 22, 'DUCK STOLEN!', a.color, 20);
+            }
+            d.hookedBy = a.id;
+            a.caughtDuck = d;
+            a.state = 'reeling';
+            this.audio.playTap();
+            this.particles.emit(hx, hy, 12, d.isGolden ? '#facc15' : '#38bdf8');
             break;
           }
         }
 
-        // Max distance reached -> reel back
-        if (ps.hookDist >= ps.maxHookDist) {
-          ps.hookState = 'REELING';
-          this.audio.playBounce();
+        if (a.hookDist >= 340) {
+          a.state = 'reeling';
         }
-      } else if (ps.hookState === 'REELING') {
-        ps.hookDist = Math.max(20, ps.hookDist - dt * 260);
+      } else if (a.state === 'reeling') {
+        const reelSpeed = (a.caughtDuck?.isGolden ? 340 : 410) * (a.underdog ? 1.25 : 1.0);
+        a.hookDist -= reelSpeed * dt;
+        const hx = a.baseX + Math.cos(a.aimAngle) * a.hookDist;
+        const hy = a.baseY + Math.sin(a.aimAngle) * a.hookDist;
 
-        // Keep hooked duck attached to hook
-        const hookX = stationX + Math.cos(ps.angle) * ps.hookDist;
-        const hookY = stationY + Math.sin(ps.angle) * ps.hookDist;
-        for (const d of this.ducks) {
-          if (d.hookedBy === p.id) {
-            d.x = hookX;
-            d.y = hookY;
-          }
+        if (a.caughtDuck) {
+          a.caughtDuck.x = hx;
+          a.caughtDuck.y = hy;
         }
 
-        if (ps.hookDist <= 20) {
-          // Reeled in completely
-          for (const d of this.ducks) {
-            if (d.hookedBy === p.id) {
-              ps.score += d.points;
+        if (a.hookDist <= 28) {
+          a.hookDist = 28;
+          a.state = 'aiming';
+
+          if (a.caughtDuck) {
+            const duck = a.caughtDuck;
+            a.caughtDuck = null;
+            duck.hookedBy = null;
+            duck.angle = Math.random() * Math.PI * 2;
+            duck.isGolden = Math.random() < (this.suddenDeath ? 0.45 : 0.28);
+            duck.isElectricEel = !duck.isGolden && Math.random() < 0.16;
+
+            if (duck.isElectricEel && !a.underdog) {
+              a.streak = 0;
+              a.multiplier = 1;
+              a.stunTimer = 0.9;
+              this.audio.playStun();
+              this.particles.emit(a.baseX, a.baseY, 18, '#ff2a85');
+              this.addFloatingText(a.baseX, a.baseY - 24, 'ELECTRIC EEL SHOCK!', '#ff2a85', 18);
+            } else {
+              a.streak++;
+              a.multiplier = a.streak >= 4 ? 4 : a.streak >= 2 ? 2 : 1;
+              const pts = (duck.isGolden ? 75 : 25) * a.multiplier * (this.suddenDeath ? 2 : 1);
+              a.score += pts;
               this.audio.playScore();
-              this.particles.showFloatingText(`+${d.points}!`, stationX, stationY - 20, d.isGolden ? '#F59E0B' : '#38BDF8', 22);
-              // Respawn duck in pond
-              d.hookedBy = null;
-              d.angle += Math.PI;
-              d.x = this.pondCenterX + Math.cos(d.angle) * d.orbitRadius;
-              d.y = this.pondCenterY + Math.sin(d.angle) * d.orbitRadius;
+              this.hitStopTimer = 0.035;
+              this.particles.emit(a.baseX, a.baseY, 16, duck.isGolden ? '#facc15' : a.color);
+              this.addFloatingText(
+                a.baseX,
+                a.baseY - 26,
+                `+${pts} (${a.multiplier}x)`,
+                duck.isGolden ? '#facc15' : '#38bdf8',
+                19
+              );
             }
           }
-          ps.hookState = 'AIMING';
         }
       }
-    }
-
-    if (this.roundTimer <= 0) {
-      this.isFinished = true;
-    }
-  }
-
-  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Fairground Wooden Deck Floor
-    ctx.fillStyle = '#0F172A';
-    ctx.fillRect(0, 0, width, height);
-
-    // 2. Circular Carnival Duck Pond
-    ctx.save();
-    ctx.translate(this.pondCenterX, this.pondCenterY);
-
-    // Pond outer wooden tub rim
-    ctx.fillStyle = '#78350F';
-    ctx.beginPath();
-    ctx.arc(0, 0, this.pondRadius + 18, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#B45309';
-    ctx.lineWidth = 6;
-    ctx.stroke();
-
-    // Swirling blue water with radial depth gradient
-    const waterGrad = ctx.createRadialGradient(0, 0, 10, 0, 0, this.pondRadius);
-    waterGrad.addColorStop(0, '#38BDF8');
-    waterGrad.addColorStop(0.7, '#0284C7');
-    waterGrad.addColorStop(1, '#0369A1');
-    ctx.fillStyle = waterGrad;
-    ctx.beginPath();
-    ctx.arc(0, 0, this.pondRadius, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Water swirling whirlpool ripples
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-    ctx.lineWidth = 2;
-    for (let r = 35; r < this.pondRadius; r += 32) {
-      ctx.beginPath();
-      ctx.arc(0, 0, r, performance.now() * 0.001, performance.now() * 0.001 + Math.PI * 1.5);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // 3. Draw Rubber Ducks
-    for (const d of this.ducks) {
-      ctx.save();
-      ctx.translate(d.x, d.y);
-
-      // Water ripple beneath duck
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.ellipse(0, 4, d.radius + 4, (d.radius + 4) * 0.5, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Duck Body
-      ctx.fillStyle = d.isGolden ? '#FBBF24' : '#FDE047';
-      ctx.beginPath();
-      ctx.ellipse(0, 2, d.radius, d.radius * 0.75, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Duck Head
-      const headX = Math.sign(d.speed) * (d.radius * 0.55);
-      ctx.beginPath();
-      ctx.arc(headX, -6, d.radius * 0.55, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Duck Orange Beak
-      ctx.fillStyle = '#EA580C';
-      ctx.beginPath();
-      const beakDir = Math.sign(d.speed) || 1;
-      ctx.moveTo(headX + beakDir * 6, -8);
-      ctx.lineTo(headX + beakDir * 14, -5);
-      ctx.lineTo(headX + beakDir * 6, -2);
-      ctx.closePath();
-      ctx.fill();
-
-      // Duck Eye
-      ctx.fillStyle = '#0F172A';
-      ctx.beginPath();
-      ctx.arc(headX + beakDir * 2, -7, 1.8, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Golden Star Badge
-      if (d.isGolden) {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 10px Montserrat, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('★', 0, 4);
-      }
-      ctx.restore();
-    }
-
-    // 4. Draw Fishing Rod Stations, Lines, and Magnetic Hooks
-    const active = this.getActivePlayers();
-    const count = active.length;
-
-    active.forEach((p, idx) => {
-      const ps = this.playersState.get(p.id);
-      if (!ps) return;
-
-      const stationBaseAngle = (idx / count) * Math.PI * 2 - Math.PI / 2;
-      const stationX = this.pondCenterX + Math.cos(stationBaseAngle) * (this.pondRadius + 45);
-      const stationY = this.pondCenterY + Math.sin(stationBaseAngle) * (this.pondRadius + 45);
-
-      // Station Platform
-      ctx.save();
-      ctx.fillStyle = '#1E293B';
-      ctx.beginPath();
-      ctx.arc(stationX, stationY, 26, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 4;
-      ctx.stroke();
-
-      // Player Score
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 12px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${ps.score}`, stationX, stationY + 4);
-
-      // Fishing Rod
-      const rodTipX = stationX + Math.cos(ps.angle) * 36;
-      const rodTipY = stationY + Math.sin(ps.angle) * 36;
-      ctx.strokeStyle = '#D97706';
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.moveTo(stationX, stationY);
-      ctx.lineTo(rodTipX, rodTipY);
-      ctx.stroke();
-
-      // Fishing Line
-      const hookX = stationX + Math.cos(ps.angle) * ps.hookDist;
-      const hookY = stationY + Math.sin(ps.angle) * ps.hookDist;
-      ctx.strokeStyle = '#E2E8F0';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(rodTipX, rodTipY);
-      ctx.lineTo(hookX, hookY);
-      ctx.stroke();
-
-      // Magnetic Red/Silver Horseshoe Hook
-      ctx.save();
-      ctx.translate(hookX, hookY);
-      ctx.rotate(ps.angle + Math.PI / 2);
-      ctx.fillStyle = '#EF4444';
-      ctx.beginPath();
-      ctx.arc(0, 0, 7, Math.PI, 0);
-      ctx.lineTo(7, 8);
-      ctx.lineTo(4, 8);
-      ctx.lineTo(4, 0);
-      ctx.arc(0, 0, 4, 0, Math.PI, true);
-      ctx.lineTo(-4, 8);
-      ctx.lineTo(-7, 8);
-      ctx.closePath();
-      ctx.fill();
-
-      // Silver magnetic tips
-      ctx.fillStyle = '#E2E8F0';
-      ctx.fillRect(-7, 5, 3, 3);
-      ctx.fillRect(4, 5, 3, 3);
-      ctx.restore();
-
-      ctx.restore();
     });
-
-    // 5. Header HUD
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 20px Montserrat, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`TIME: ${Math.ceil(this.roundTimer)}s`, width / 2, 35);
   }
 
   protected updateBotAI(
@@ -373,34 +345,119 @@ export class DuckPondDerbyGame extends BaseGame {
     width: number,
     height: number
   ): void {
-    const ps = this.playersState.get(botId);
-    if (!ps || ps.hookState !== 'AIMING') return;
+    void width;
+    void height;
+    const a = this.anglers.get(botId);
+    if (!a || a.state !== 'aiming' || a.stunTimer > 0) {
+      this.input.setBotState(botId, false);
+      return;
+    }
 
-    const active = this.getActivePlayers();
-    const count = active.length;
-    const idx = active.findIndex((p) => p.id === botId);
-    const stationBaseAngle = (idx / count) * Math.PI * 2 - Math.PI / 2;
-    const stationX = this.pondCenterX + Math.cos(stationBaseAngle) * (this.pondRadius + 45);
-    const stationY = this.pondCenterY + Math.sin(stationBaseAngle) * (this.pondRadius + 45);
+    a.botTimer -= dt;
+    if (a.botTimer > 0) {
+      this.input.setBotState(botId, false);
+      return;
+    }
 
-    // Look for golden duck first
-    let target = this.ducks.find((d) => d.isGolden && d.hookedBy === null) || this.ducks.find((d) => d.hookedBy === null);
-    if (!target) return;
+    let aligned = false;
+    for (const d of this.ducks) {
+      if (d.isElectricEel) continue;
+      const angToDuck = Math.atan2(d.y - a.baseY, d.x - a.baseX);
+      const diff = Math.abs(Math.atan2(Math.sin(angToDuck - a.aimAngle), Math.cos(angToDuck - a.aimAngle)));
+      const tol = difficulty === 'bot_hard' ? 0.12 : difficulty === 'bot_normal' ? 0.18 : 0.26;
+      if (diff < tol) {
+        aligned = true;
+        break;
+      }
+    }
 
-    const idealAngle = Math.atan2(target.y - stationY, target.x - stationX);
-    const angleDiff = Math.abs(ps.angle - idealAngle);
-
-    const tolerance = difficulty === 'bot_hard' ? 0.09 : difficulty === 'bot_normal' ? 0.18 : 0.35;
-
-    if (angleDiff < tolerance) {
-      this.input.setBotInput(botId, true, 0, 0, true);
+    if (aligned) {
+      a.botTimer = difficulty === 'bot_hard' ? 0.16 : difficulty === 'bot_normal' ? 0.26 : 0.4;
+      this.input.setBotState(botId, true);
     } else {
-      this.input.setBotInput(botId, false, 0, 0, false);
+      this.input.setBotState(botId, false);
     }
   }
 
-  public getScore(playerId: PlayerId): number {
-    return this.playersState.get(playerId)?.score ?? 0;
+  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const cx = width / 2;
+    const cy = height / 2 + 15;
+    const pondR = Math.min(width, height) * 0.37;
+    const theme = THEMES[THEME_ORDER[this.themeIndex]];
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, width, height);
+
+    // Whirlpool Pond
+    const grad = ctx.createRadialGradient(cx, cy, 20, cx, cy, pondR);
+    grad.addColorStop(0, theme.pondInner);
+    grad.addColorStop(1, theme.pondOuter);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, pondR, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = theme.rimColor;
+    ctx.stroke();
+    ctx.restore();
+
+    // Draw Ducks
+    for (const d of this.ducks) {
+      ctx.save();
+      ctx.translate(d.x, d.y);
+      ctx.beginPath();
+      ctx.arc(0, 0, d.isGolden ? 19 : 15, 0, Math.PI * 2);
+      ctx.fillStyle = d.isElectricEel ? '#ff2a85' : d.isGolden ? '#facc15' : '#fde047';
+      ctx.fill();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+
+      ctx.fillStyle = '#0f172a';
+      ctx.font = '900 11px "Outfit", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(d.isElectricEel ? '⚡' : d.isGolden ? '👑75' : '🦆', 0, 0);
+      ctx.restore();
+    }
+
+    // Draw Anglers & Magnetic Winch Lines
+    this.anglers.forEach((a) => {
+      const hx = a.baseX + Math.cos(a.aimAngle) * a.hookDist;
+      const hy = a.baseY + Math.sin(a.aimAngle) * a.hookDist;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(a.baseX, a.baseY);
+      ctx.lineTo(hx, hy);
+      ctx.strokeStyle = a.color;
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(hx, hy, 10, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = a.color;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.restore();
+
+      const mood = a.stunTimer > 0 ? 'shocked' : a.caughtDuck ? 'triumph' : 'focused';
+      this.drawPlayerMascot(ctx, a.id, a.baseX, a.baseY, 22, mood, this.timeElapsed, 0);
+    });
+
+    this.renderFloatingTexts(ctx);
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(width - 215, 14, 200, 32);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '700 13px "Outfit", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`🎨 ${theme.name} [T]`, width - 24, 35);
+    ctx.restore();
   }
 
   public isRoundOver(): boolean {
@@ -408,19 +465,25 @@ export class DuckPondDerbyGame extends BaseGame {
   }
 
   public getRoundResult(): RoundResult {
-    const rankings = Array.from(this.playersState.entries())
-      .map(([playerId, ps]) => ({ playerId, score: ps.score, place: 1 }))
+    const rankings = Array.from(this.anglers.values())
+      .map((a) => ({ playerId: a.id, score: Math.floor(a.score), place: 1 }))
       .sort((a, b) => b.score - a.score);
-
-    rankings.forEach((entry, idx) => {
-      entry.place = idx + 1;
+    rankings.forEach((r, idx) => {
+      r.place = idx + 1;
     });
-
-    const winnerId = rankings.length > 0 && rankings[0].score > 0 ? rankings[0].playerId : null;
+    const winnerId = rankings.length > 0 ? rankings[0].playerId : null;
     return {
       winnerId,
       rankings,
-      mvpHighlight: winnerId ? `${winnerId} reeled in the golden derby ducks!` : 'No ducks reeled in!'
+      mvpHighlight: winnerId ? `Player ${winnerId} reeled in the Golden Duck Flock!` : 'Duck pond derby complete!',
     };
+  }
+
+  public destroy(): void {
+    if (typeof window !== 'undefined' && this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
+    super.destroy();
   }
 }

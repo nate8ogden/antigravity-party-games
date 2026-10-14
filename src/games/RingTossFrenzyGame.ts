@@ -1,49 +1,93 @@
 import { BaseGame } from './BaseGame';
-import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
+import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
 
-interface Bottle {
-  x: number;
-  y: number;
-  radius: number;
-  points: number;
-  color: string;
-  wobble: number;
-  ringRingCount: number;
+interface CarnivalBottle {
+  angle: number;
+  ringLayer: number;
+  isGolden: boolean;
+  ringedBy: PlayerId | null;
+  ringAnim: number;
 }
 
-interface Ring {
-  playerId: PlayerId;
+interface ThrownRing {
+  ownerId: PlayerId;
   color: string;
   x: number;
   y: number;
-  targetX: number;
-  targetY: number;
-  startX: number;
-  startY: number;
-  flightTimer: number;
-  totalFlightTime: number;
-  radius: number;
-  landed: boolean;
+  vx: number;
+  vy: number;
+  z: number;
+  vz: number;
+  active: boolean;
 }
 
-interface PlayerBooth {
+interface TosserPlayer {
   id: PlayerId;
-  angle: number; // aim angle in radians
+  color: string;
+  x: number;
+  vx: number;
+  aimAngle: number;
   aimDir: number;
-  charging: boolean;
-  power: number; // 0 to 1
-  cooldown: number;
+  charge: number;
+  wasHolding: boolean;
   score: number;
-  ringsThrown: number;
+  streak: number;
+  multiplier: number;
+  stunTimer: number;
+  underdog: boolean;
+  botTimer: number;
 }
+
+type ThemeId = 'boardwalk_neon' | 'county_fair_sunset' | 'tiki_pier';
+
+interface ThemeSpec {
+  name: string;
+  bgTop: string;
+  bgBot: string;
+  tableColor: string;
+  trimColor: string;
+}
+
+const THEMES: Record<ThemeId, ThemeSpec> = {
+  boardwalk_neon: {
+    name: 'Boardwalk Neon Midway',
+    bgTop: '#111827',
+    bgBot: '#311042',
+    tableColor: '#1e293b',
+    trimColor: '#38bdf8',
+  },
+  county_fair_sunset: {
+    name: 'County Fair Sunset',
+    bgTop: '#451a03',
+    bgBot: '#7c2d12',
+    tableColor: '#3f2305',
+    trimColor: '#facc15',
+  },
+  tiki_pier: {
+    name: 'Starlight Tiki Pier',
+    bgTop: '#042f2e',
+    bgBot: '#134e4a',
+    tableColor: '#0f172a',
+    trimColor: '#2dd4bf',
+  },
+};
+
+const THEME_ORDER: ThemeId[] = ['boardwalk_neon', 'county_fair_sunset', 'tiki_pier'];
 
 export class RingTossFrenzyGame extends BaseGame {
-  private bottles: Bottle[] = [];
-  private rings: Ring[] = [];
-  private booths: Map<PlayerId, PlayerBooth> = new Map();
+  private tossers: Map<PlayerId, TosserPlayer> = new Map();
+  private bottles: CarnivalBottle[] = [];
+  private rings: ThrownRing[] = [];
+  private turntableAngle = 0;
+  private timeElapsed = 0;
+  private suddenDeath = false;
+  private hitStopTimer = 0;
+  private themeIndex = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
+  private floatingTexts: { x: number; y: number; text: string; color: string; alpha: number; vy: number; size: number }[] = [];
 
   constructor(
     players: PlayerConfig[],
@@ -52,374 +96,322 @@ export class RingTossFrenzyGame extends BaseGame {
     particles: ParticleSystem
   ) {
     super(players, input, audio, particles);
+    this.roundTimer = 38.0;
   }
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIndex = (this.themeIndex + 1) % THEME_ORDER.length;
+          this.audio.playTap();
+        } else if (e.key >= '1' && e.key <= '3') {
+          this.themeIndex = parseInt(e.key, 10) - 1;
+          this.audio.playTap();
+        }
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
   }
 
   public reset(width: number, height: number): void {
+    void height;
     this.isFinished = false;
-    this.roundTimer = 30;
-    this.rings = [];
+    this.roundTimer = 38.0;
+    this.timeElapsed = 0;
+    this.suddenDeath = false;
+    this.hitStopTimer = 0;
+    this.turntableAngle = 0;
     this.bottles = [];
-    this.booths.clear();
+    this.rings = [];
+    this.tossers.clear();
+    this.floatingTexts = [];
+    this.themeIndex = Math.floor(Math.random() * THEME_ORDER.length);
 
-    // Create center cluster of carnival glass bottles
-    const centerX = width / 2;
-    const centerY = height * 0.45;
-    const rows = 4;
-    const cols = 5;
-    const spacingX = 42;
-    const spacingY = 36;
-    const startX = centerX - ((cols - 1) * spacingX) / 2;
-    const startY = centerY - ((rows - 1) * spacingY) / 2;
+    const w = width || 1280;
 
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const isGolden = (r === 1 || r === 2) && c === 2;
-        const isSilver = (r === 0 || r === 3) && (c === 1 || c === 3);
-        const pts = isGolden ? 50 : isSilver ? 25 : 10;
-        const color = isGolden ? '#F59E0B' : isSilver ? '#38BDF8' : '#EC4899';
-        this.bottles.push({
-          x: startX + c * spacingX + (r % 2 === 1 ? 10 : -10),
-          y: startY + r * spacingY,
-          radius: 14,
-          points: pts,
-          color,
-          wobble: 0,
-          ringRingCount: 0
-        });
-      }
+    // Center golden bottle + inner ring (6) + outer ring (10)
+    this.bottles.push({ angle: 0, ringLayer: 0, isGolden: true, ringedBy: null, ringAnim: 0 });
+    for (let i = 0; i < 6; i++) {
+      this.bottles.push({
+        angle: (i / 6) * Math.PI * 2,
+        ringLayer: 1,
+        isGolden: i % 3 === 0,
+        ringedBy: null,
+        ringAnim: 0,
+      });
+    }
+    for (let i = 0; i < 10; i++) {
+      this.bottles.push({
+        angle: (i / 10) * Math.PI * 2,
+        ringLayer: 2,
+        isGolden: i % 5 === 0,
+        ringedBy: null,
+        ringAnim: 0,
+      });
     }
 
     const active = this.getActivePlayers();
-    const count = active.length;
-    active.forEach((p, idx) => {
-      const slotX = (width / (count + 1)) * (idx + 1);
-      this.booths.set(p.id, {
-        id: p.id,
-        angle: -Math.PI / 2,
+    active.forEach((cfg, idx) => {
+      const startX = w * (0.25 + (idx / Math.max(1, active.length - 1)) * 0.5);
+      this.tossers.set(cfg.id, {
+        id: cfg.id,
+        color: cfg.color,
+        x: startX,
+        vx: 0,
+        aimAngle: -Math.PI / 2,
         aimDir: 1,
-        charging: false,
-        power: 0.2,
-        cooldown: 0,
+        charge: 0,
+        wasHolding: false,
         score: 0,
-        ringsThrown: 0
+        streak: 0,
+        multiplier: 1,
+        stunTimer: 0,
+        underdog: false,
+        botTimer: 0.18,
       });
     });
   }
 
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    void height;
+    if (y < 60 && x > width - 220) {
+      this.themeIndex = (this.themeIndex + 1) % THEME_ORDER.length;
+      this.audio.playTap();
+      return true;
+    }
+    return false;
+  }
+
+  private addFloatingText(x: number, y: number, text: string, color: string, size = 18): void {
+    this.floatingTexts.push({ x, y, text, color, alpha: 1, vy: -52, size });
+  }
+
+  private renderFloatingTexts(ctx: CanvasRenderingContext2D): void {
+    for (const ft of this.floatingTexts) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, ft.alpha);
+      ctx.font = `900 ${ft.size}px "Outfit", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+      ctx.lineWidth = 4;
+      ctx.strokeText(ft.text, ft.x, ft.y);
+      ctx.fillStyle = ft.color;
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.restore();
+    }
+  }
+
+  private getBottlePos(b: CarnivalBottle, cx: number, cy: number): { x: number; y: number } {
+    if (b.ringLayer === 0) return { x: cx, y: cy };
+    const radius = b.ringLayer === 1 ? 85 : 165;
+    const dir = b.ringLayer === 1 ? 1 : -0.7;
+    const a = b.angle + this.turntableAngle * dir;
+    return {
+      x: cx + Math.cos(a) * radius,
+      y: cy + Math.sin(a) * radius * 0.72,
+    };
+  }
+
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
-    this.roundTimer = Math.max(0, this.roundTimer - dt);
+
+    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+      const ft = this.floatingTexts[i];
+      ft.y += ft.vy * dt;
+      ft.alpha -= dt * 1.1;
+      if (ft.alpha <= 0) this.floatingTexts.splice(i, 1);
+    }
+
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer -= dt;
+      return;
+    }
+
+    this.timeElapsed += dt;
+    this.roundTimer -= dt;
+    if (this.roundTimer <= 0) {
+      this.roundTimer = 0;
+      this.isFinished = true;
+      return;
+    }
+
+    if (this.roundTimer <= 15 && !this.suddenDeath) {
+      this.suddenDeath = true;
+      this.audio.playFanfare();
+      this.addFloatingText(width / 2, 100, '⚡ GOLDEN BOTTLE FRENZY! 2X POINTS! ⚡', '#facc15', 24);
+    }
+
+    const cx = width / 2;
+    const cy = height * 0.39;
+    const counterY = height - 74;
+
+    this.turntableAngle += (this.suddenDeath ? 1.35 : 0.85) * dt;
+
+    for (const b of this.bottles) {
+      if (b.ringAnim > 0) {
+        b.ringAnim -= dt;
+        if (b.ringAnim <= 0) {
+          b.ringedBy = null;
+          b.isGolden = Math.random() < (this.suddenDeath ? 0.45 : 0.25);
+        }
+      }
+    }
+
+    let maxScore = 0;
+    this.tossers.forEach((t) => {
+      if (t.score > maxScore) maxScore = t.score;
+    });
+
     this.updateBots(dt, width, height);
 
-    const active = this.getActivePlayers();
-    const count = active.length;
+    this.tossers.forEach((t) => {
+      t.underdog = maxScore - t.score >= 120;
+      if (t.stunTimer > 0) t.stunTimer -= dt;
 
-    for (let idx = 0; idx < count; idx++) {
-      const p = active[idx];
-      const booth = this.booths.get(p.id);
-      if (!booth) continue;
-
-      if (booth.cooldown > 0) booth.cooldown -= dt;
-
-      // Oscillate aim angle
-      booth.angle += booth.aimDir * dt * 1.8;
-      const minAngle = -Math.PI * 0.78;
-      const maxAngle = -Math.PI * 0.22;
-      if (booth.angle > maxAngle) {
-        booth.angle = maxAngle;
-        booth.aimDir = -1;
-      } else if (booth.angle < minAngle) {
-        booth.angle = minAngle;
-        booth.aimDir = 1;
+      const steer = this.input.getSteer(t.id);
+      if (Math.abs(steer) > 0.1 && t.stunTimer <= 0) {
+        t.vx += steer * (t.underdog ? 680 : 560) * dt;
       }
 
-      // Check inputs
-      const isDown = this.input.isPressed(p.id);
-      const justReleased = this.input.justReleased(p.id);
-
-      if (isDown && booth.cooldown <= 0) {
-        booth.charging = true;
-        booth.power = Math.min(1.0, booth.power + dt * 1.5);
-      } else if (booth.charging && (justReleased || !isDown)) {
-        // Throw ring
-        this.throwRing(p.id, p.color, idx, count, width, height, booth);
-        booth.charging = false;
-        booth.power = 0.15;
-        booth.cooldown = 0.45; // Anti-spam delay
-      }
-    }
-
-    // Update airborne rings
-    for (let i = this.rings.length - 1; i >= 0; i--) {
-      const ring = this.rings[i];
-      ring.flightTimer += dt;
-      const progress = Math.min(1.0, ring.flightTimer / ring.totalFlightTime);
-
-      // Parabolic flight
-      const currentX = ring.startX + (ring.targetX - ring.startX) * progress;
-      const linearY = ring.startY + (ring.targetY - ring.startY) * progress;
-      const arcHeight = Math.sin(progress * Math.PI) * 90;
-      ring.x = currentX;
-      ring.y = linearY - arcHeight;
-      ring.radius = 16 - Math.sin(progress * Math.PI) * 4;
-
-      if (progress >= 1.0 && !ring.landed) {
-        ring.landed = true;
-        this.checkRingLanding(ring);
+      // Sweep aim reticle toward turntable
+      const baseAim = Math.atan2(cy - counterY, cx - t.x);
+      t.aimAngle += t.aimDir * 1.35 * dt;
+      if (t.aimAngle > baseAim + 0.48) {
+        t.aimAngle = baseAim + 0.48;
+        t.aimDir = -1;
+      } else if (t.aimAngle < baseAim - 0.48) {
+        t.aimAngle = baseAim - 0.48;
+        t.aimDir = 1;
       }
 
-      // Remove after lingering
-      if (ring.flightTimer > ring.totalFlightTime + 0.6) {
-        this.rings.splice(i, 1);
+      const holding = t.stunTimer <= 0 && (this.input.isActionPressed(t.id) || this.input.isPressed(t.id));
+      if (holding) {
+        t.charge += dt * 1.05;
+        t.wasHolding = true;
+        if (t.charge >= 1.25) {
+          // Overcharge fumble stun!
+          t.charge = 0;
+          t.wasHolding = false;
+          t.stunTimer = 0.85;
+          t.streak = 0;
+          t.multiplier = 1;
+          this.audio.playBuzzer();
+          this.addFloatingText(t.x, counterY - 36, 'OVERCHARGE FUMBLE!', '#ff2a85', 17);
+        }
+      } else if (t.wasHolding) {
+        t.wasHolding = false;
+        const speed = 260 + t.charge * 380;
+        this.rings.push({
+          ownerId: t.id,
+          color: t.color,
+          x: t.x,
+          y: counterY - 16,
+          vx: Math.cos(t.aimAngle) * speed,
+          vy: Math.sin(t.aimAngle) * speed,
+          z: 10,
+          vz: 190,
+          active: true,
+        });
+        t.charge = 0;
+        this.audio.playWhoosh();
       }
-    }
 
-    // Bottle wobble dampening
-    for (const b of this.bottles) {
-      if (b.wobble > 0) b.wobble = Math.max(0, b.wobble - dt * 4);
-    }
-
-    if (this.roundTimer <= 0) {
-      this.isFinished = true;
-    }
-  }
-
-  private throwRing(
-    pid: PlayerId,
-    pColor: string,
-    idx: number,
-    count: number,
-    width: number,
-    height: number,
-    booth: PlayerBooth
-  ): void {
-    const startX = (width / (count + 1)) * (idx + 1);
-    const startY = height - 55;
-    const throwDist = 120 + booth.power * (height * 0.52);
-    const targetX = startX + Math.cos(booth.angle) * throwDist;
-    const targetY = startY + Math.sin(booth.angle) * throwDist;
-
-    this.rings.push({
-      playerId: pid,
-      color: pColor,
-      x: startX,
-      y: startY,
-      startX,
-      startY,
-      targetX,
-      targetY,
-      flightTimer: 0,
-      totalFlightTime: 0.65,
-      radius: 16,
-      landed: false
+      t.x += t.vx * dt;
+      t.vx *= 0.88;
+      t.x = Math.max(120, Math.min(width - 120, t.x));
     });
 
-    booth.ringsThrown++;
-    this.audio.playLaser(); // Whistle whoosh
-  }
-
-  private checkRingLanding(ring: Ring): void {
-    let bestBottle: Bottle | null = null;
-    let minDist = 22;
-
-    for (const b of this.bottles) {
-      const d = Math.hypot(ring.x - b.x, ring.y - b.y);
-      if (d < minDist) {
-        minDist = d;
-        bestBottle = b;
+    // Player-to-player counter bumping!
+    const list = Array.from(this.tossers.values());
+    for (let i = 0; i < list.length; i++) {
+      for (let j = i + 1; j < list.length; j++) {
+        const a = list[i];
+        const b = list[j];
+        if (Math.abs(b.x - a.x) < 48) {
+          const sign = b.x >= a.x ? 1 : -1;
+          const overlap = 48 - Math.abs(b.x - a.x);
+          a.x -= sign * overlap * 0.5;
+          b.x += sign * overlap * 0.5;
+          a.vx = -sign * 280;
+          b.vx = sign * 280;
+          this.audio.playBounce();
+        }
       }
     }
 
-    if (bestBottle) {
-      bestBottle.wobble = 1.0;
-      bestBottle.ringRingCount++;
-      const booth = this.booths.get(ring.playerId);
-      if (booth) booth.score += bestBottle.points;
-
-      this.audio.playScore();
-      this.particles.showFloatingText(`+${bestBottle.points}`, bestBottle.x, bestBottle.y - 20, bestBottle.color, 20);
-      this.particles.spawnConfetti(bestBottle.x, bestBottle.y, 14);
-    } else {
-      this.audio.playBounce();
-      this.particles.spawnDust(ring.x, ring.y, 6);
-    }
-  }
-
-  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Carnival Midway Booth Tent Backdrop
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#1E1B4B');
-    bgGrad.addColorStop(0.4, '#312E81');
-    bgGrad.addColorStop(1, '#0F172A');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
-
-    // Striped carnival canopy overhead
-    const canopyHeight = 44;
-    const stripeW = 28;
-    for (let x = 0; x < width; x += stripeW) {
-      ctx.fillStyle = (Math.floor(x / stripeW) % 2 === 0) ? '#EF4444' : '#F8FAFC';
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x + stripeW, 0);
-      ctx.lineTo(x + stripeW / 2, canopyHeight);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    // Glowing string carnival fairy lights
-    ctx.strokeStyle = '#FDE047';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(0, canopyHeight);
-    for (let lx = 30; lx < width; lx += 36) {
-      const ly = canopyHeight + Math.sin(lx * 0.15) * 8 + 4;
-      ctx.lineTo(lx, ly);
-    }
-    ctx.stroke();
-
-    for (let lx = 30; lx < width; lx += 36) {
-      const ly = canopyHeight + Math.sin(lx * 0.15) * 8 + 4;
-      ctx.fillStyle = lx % 72 === 0 ? '#38BDF8' : '#FDE047';
-      ctx.beginPath();
-      ctx.arc(lx, ly, 4, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Wooden bottle shelf table
-    ctx.fillStyle = '#78350F';
-    const tableY = height * 0.35;
-    const tableH = height * 0.28;
-    ctx.fillRect(width * 0.18, tableY, width * 0.64, tableH);
-    ctx.strokeStyle = '#92400E';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(width * 0.18, tableY, width * 0.64, tableH);
-
-    // 2. Draw Bottles
-    for (const b of this.bottles) {
-      ctx.save();
-      const wobbleOffset = Math.sin(b.wobble * Math.PI * 8) * (b.wobble * 4);
-      ctx.translate(b.x + wobbleOffset, b.y);
-
-      // Bottle shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.35)';
-      ctx.beginPath();
-      ctx.ellipse(0, 10, b.radius, b.radius * 0.45, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Bottle body
-      const bottleGrad = ctx.createLinearGradient(-b.radius, -20, b.radius, 10);
-      bottleGrad.addColorStop(0, '#FFFFFF');
-      bottleGrad.addColorStop(0.3, b.color);
-      bottleGrad.addColorStop(1, '#0F172A');
-      ctx.fillStyle = bottleGrad;
-
-      // Draw glass bottle silhouette
-      ctx.beginPath();
-      ctx.moveTo(-b.radius * 0.4, -22);
-      ctx.lineTo(b.radius * 0.4, -22);
-      ctx.lineTo(b.radius * 0.4, -12);
-      ctx.lineTo(b.radius * 0.85, 0);
-      ctx.lineTo(b.radius * 0.85, 12);
-      ctx.lineTo(-b.radius * 0.85, 12);
-      ctx.lineTo(-b.radius * 0.85, 0);
-      ctx.lineTo(-b.radius * 0.4, -12);
-      ctx.closePath();
-      ctx.fill();
-
-      // Bottle rim
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-
-      // Crown points text
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 9px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${b.points}`, 0, 8);
-
-      ctx.restore();
-    }
-
-    // 3. Draw Rings
-    for (const ring of this.rings) {
-      ctx.save();
-      ctx.strokeStyle = ring.color;
-      ctx.lineWidth = 4;
-      ctx.shadowColor = ring.color;
-      ctx.shadowBlur = 6;
-      ctx.beginPath();
-      ctx.ellipse(ring.x, ring.y, ring.radius, ring.radius * 0.65, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // 4. Draw Player Throwing Stations & Aim Guides
-    const active = this.getActivePlayers();
-    const count = active.length;
-    active.forEach((p, idx) => {
-      const booth = this.booths.get(p.id);
-      if (!booth) return;
-      const startX = (width / (count + 1)) * (idx + 1);
-      const startY = height - 55;
-
-      // Booth rail
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(startX - 48, startY + 12, 96, 42);
-      ctx.fillStyle = p.color;
-      ctx.fillRect(startX - 44, startY + 14, 88, 5);
-
-      // Score display
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 13px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${p.name}: ${booth.score}`, startX, startY + 34);
-
-      // Aim trajectory arrow & charge arc
-      const guideDist = 55 + booth.power * 45;
-      const endX = startX + Math.cos(booth.angle) * guideDist;
-      const endY = startY + Math.sin(booth.angle) * guideDist;
-
-      ctx.save();
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = booth.charging ? 3.5 : 2;
-      ctx.setLineDash(booth.charging ? [] : [4, 4]);
-      ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      ctx.lineTo(endX, endY);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Ring ready in hand
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 3.5;
-      ctx.beginPath();
-      ctx.ellipse(startX, startY, 14, 9, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Power gauge meter
-      if (booth.charging) {
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.fillRect(startX - 30, startY - 26, 60, 8);
-        const pGrad = ctx.createLinearGradient(startX - 30, 0, startX + 30, 0);
-        pGrad.addColorStop(0, '#22C55E');
-        pGrad.addColorStop(0.7, '#EAB308');
-        pGrad.addColorStop(1, '#EF4444');
-        ctx.fillStyle = pGrad;
-        ctx.fillRect(startX - 30, startY - 26, 60 * booth.power, 8);
+    // Mid-air ring-to-ring collisions!
+    for (let i = 0; i < this.rings.length; i++) {
+      for (let j = i + 1; j < this.rings.length; j++) {
+        const r1 = this.rings[i];
+        const r2 = this.rings[j];
+        if (!r1.active || !r2.active) continue;
+        const dx = r2.x - r1.x;
+        const dy = r2.y - r1.y;
+        const d = Math.hypot(dx, dy);
+        if (d > 0 && d < 32 && Math.abs(r1.z - r2.z) < 25) {
+          const nx = dx / d;
+          const ny = dy / d;
+          r1.vx -= nx * 180;
+          r1.vy -= ny * 180;
+          r2.vx += nx * 180;
+          r2.vy += ny * 180;
+          this.audio.playBounce();
+          this.particles.emit((r1.x + r2.x) / 2, (r1.y + r2.y) / 2, 10, '#ffffff');
+          this.addFloatingText((r1.x + r2.x) / 2, (r1.y + r2.y) / 2, 'RING CLASH!', '#facc15', 16);
+        }
       }
-      ctx.restore();
-    });
+    }
 
-    // 5. Timer HUD
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 20px Montserrat, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`TIME: ${Math.ceil(this.roundTimer)}s`, width / 2, 85);
+    // Update thrown rings & check bottle landings
+    for (const r of this.rings) {
+      if (!r.active) continue;
+      r.x += r.vx * dt;
+      r.y += r.vy * dt;
+      r.z += r.vz * dt;
+      r.vz -= 360 * dt;
+
+      if (r.z <= 0) {
+        r.active = false;
+        const owner = this.tossers.get(r.ownerId);
+        let scored = false;
+
+        for (const b of this.bottles) {
+          if (b.ringedBy !== null) continue;
+          const bPos = this.getBottlePos(b, cx, cy);
+          const snapRadius = owner?.underdog ? 36 : 30;
+          if (Math.hypot(r.x - bPos.x, r.y - bPos.y) <= snapRadius) {
+            scored = true;
+            b.ringedBy = r.ownerId;
+            b.ringAnim = 1.6;
+            if (owner) {
+              owner.streak++;
+              owner.multiplier = owner.streak >= 4 ? 4 : owner.streak >= 2 ? 2 : 1;
+              const pts = (b.isGolden ? 80 : 30) * owner.multiplier * (this.suddenDeath ? 2 : 1);
+              owner.score += pts;
+              this.audio.playScore();
+              this.hitStopTimer = 0.04;
+              this.particles.emit(bPos.x, bPos.y, 18, b.isGolden ? '#facc15' : r.color);
+              this.addFloatingText(
+                bPos.x,
+                bPos.y - 22,
+                `RINGER! +${pts} (${owner.multiplier}x)`,
+                b.isGolden ? '#facc15' : '#38bdf8',
+                b.isGolden ? 21 : 18
+              );
+            }
+            break;
+          }
+        }
+
+        if (!scored && owner) {
+          owner.streak = 0;
+          owner.multiplier = 1;
+          this.audio.playTap();
+        }
+      }
+    }
   }
 
   protected updateBotAI(
@@ -429,39 +421,159 @@ export class RingTossFrenzyGame extends BaseGame {
     width: number,
     height: number
   ): void {
-    const booth = this.booths.get(botId);
-    if (!booth) return;
+    const t = this.tossers.get(botId);
+    if (!t || t.stunTimer > 0) {
+      this.input.setBotState(botId, false);
+      return;
+    }
 
-    // Pick high value bottles
-    const targetBottle = this.bottles[12] || this.bottles[0];
-    const active = this.getActivePlayers();
-    const count = active.length;
-    const idx = active.findIndex((p) => p.id === botId);
-    const startX = (width / (count + 1)) * (idx + 1);
-    const startY = height - 55;
-    const idealAngle = Math.atan2(targetBottle.y - startY, targetBottle.x - startX);
-    const angleDiff = Math.abs(booth.angle - idealAngle);
+    t.botTimer -= dt;
+    const cx = width / 2;
+    const cy = height * 0.39;
+    const counterY = height - 74;
 
-    const angleTol = difficulty === 'bot_hard' ? 0.08 : difficulty === 'bot_normal' ? 0.16 : 0.32;
-    const idealPower = Math.min(0.9, Math.max(0.3, Math.hypot(targetBottle.x - startX, targetBottle.y - startY) / (height * 0.6)));
+    // Pick a golden unringed bottle to aim for
+    let targetBottle: CarnivalBottle | null = null;
+    let bestScore = Infinity;
+    for (const b of this.bottles) {
+      if (b.ringedBy !== null) continue;
+      const pos = this.getBottlePos(b, cx, cy);
+      const dist = Math.hypot(pos.x - t.x, pos.y - (counterY - 16));
+      const score = dist - (b.isGolden ? 120 : 0);
+      if (score < bestScore) {
+        bestScore = score;
+        targetBottle = b;
+      }
+    }
 
-    if (!booth.charging) {
-      if (angleDiff < angleTol && booth.cooldown <= 0) {
-        this.input.setBotInput(botId, true, 0, 0, true);
+    if (targetBottle) {
+      const pos = this.getBottlePos(targetBottle, cx, cy);
+      const desiredDist = Math.hypot(pos.x - t.x, pos.y - (counterY - 16));
+      // Flight time is roughly 2 * 190 / 360 = 1.05s, so speed needed = desiredDist / 1.05
+      const neededSpeed = desiredDist / 1.05;
+      const idealCharge = Math.max(0.15, Math.min(0.95, (neededSpeed - 260) / 380));
+      const noise = difficulty === 'bot_hard' ? 0.05 : difficulty === 'bot_normal' ? 0.12 : 0.22;
+
+      if (t.charge >= idealCharge + (Math.random() - 0.5) * noise) {
+        this.input.setBotState(botId, false);
       } else {
-        this.input.setBotInput(botId, false, 0, 0, false);
+        this.input.setBotState(botId, true);
       }
     } else {
-      if (booth.power >= idealPower) {
-        this.input.setBotInput(botId, false, 0, 0, false);
-      } else {
-        this.input.setBotInput(botId, true, 0, 0, true);
-      }
+      this.input.setBotState(botId, false);
     }
   }
 
-  public getScore(playerId: PlayerId): number {
-    return this.booths.get(playerId)?.score ?? 0;
+  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const cx = width / 2;
+    const cy = height * 0.39;
+    const counterY = height - 74;
+    const theme = THEMES[THEME_ORDER[this.themeIndex]];
+
+    const bg = ctx.createLinearGradient(0, 0, 0, height);
+    bg.addColorStop(0, theme.bgTop);
+    bg.addColorStop(1, theme.bgBot);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    // 2.5D Rotating Bottle Turntable
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 210, 210 * 0.72, 0, 0, Math.PI * 2);
+    ctx.fillStyle = theme.tableColor;
+    ctx.fill();
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = theme.trimColor;
+    ctx.stroke();
+    ctx.restore();
+
+    // Draw Bottles
+    for (const b of this.bottles) {
+      const pos = this.getBottlePos(b, cx, cy);
+      ctx.save();
+      ctx.translate(pos.x, pos.y);
+
+      // Bottle base & neck
+      ctx.fillStyle = b.isGolden ? '#facc15' : '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(0, 0, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(0, -5, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (b.ringedBy !== null) {
+        ctx.beginPath();
+        ctx.arc(0, 0, 21, 0, Math.PI * 2);
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 5;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // Draw Preview Reticles & Tossers along Booth Counter
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.fillRect(80, counterY - 28, width - 160, 68);
+
+    this.tossers.forEach((t) => {
+      if (t.charge > 0.02) {
+        const speed = 260 + t.charge * 380;
+        const landX = t.x + Math.cos(t.aimAngle) * speed * 1.05;
+        const landY = counterY - 16 + Math.sin(t.aimAngle) * speed * 1.05;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(t.x, counterY - 16);
+        ctx.lineTo(landX, landY);
+        ctx.strokeStyle = t.color;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 6]);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(landX, landY, 22, 0, Math.PI * 2);
+        ctx.strokeStyle = t.charge > 1.05 ? '#ff2a85' : t.color;
+        ctx.lineWidth = 4;
+        ctx.setLineDash([]);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      const mood = t.stunTimer > 0 ? 'shocked' : t.charge > 0.1 ? 'focused' : 'happy';
+      this.drawPlayerMascot(ctx, t.id, t.x, counterY, 22, mood, this.timeElapsed, 0);
+    });
+
+    // Draw Flying Rings
+    for (const r of this.rings) {
+      if (!r.active) continue;
+      ctx.save();
+      const scale = 1 + r.z * 0.008;
+      ctx.translate(r.x, r.y - r.z * 0.6);
+      ctx.scale(scale, scale * 0.78);
+      ctx.beginPath();
+      ctx.arc(0, 0, 20, 0, Math.PI * 2);
+      ctx.strokeStyle = r.color;
+      ctx.lineWidth = 5;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    this.renderFloatingTexts(ctx);
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(width - 215, 14, 200, 32);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '700 13px "Outfit", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`🎨 ${theme.name} [T]`, width - 24, 35);
+    ctx.restore();
   }
 
   public isRoundOver(): boolean {
@@ -469,19 +581,25 @@ export class RingTossFrenzyGame extends BaseGame {
   }
 
   public getRoundResult(): RoundResult {
-    const rankings = Array.from(this.booths.entries())
-      .map(([playerId, b]) => ({ playerId, score: b.score, place: 1 }))
+    const rankings = Array.from(this.tossers.values())
+      .map((t) => ({ playerId: t.id, score: Math.floor(t.score), place: 1 }))
       .sort((a, b) => b.score - a.score);
-
-    rankings.forEach((entry, idx) => {
-      entry.place = idx + 1;
+    rankings.forEach((r, idx) => {
+      r.place = idx + 1;
     });
-
-    const winnerId = rankings.length > 0 && rankings[0].score > 0 ? rankings[0].playerId : null;
+    const winnerId = rankings.length > 0 ? rankings[0].playerId : null;
     return {
       winnerId,
       rankings,
-      mvpHighlight: winnerId ? `${winnerId} landed master bottle ringers!` : 'No ringers landed!'
+      mvpHighlight: winnerId ? `Player ${winnerId} ringed every Golden Bottle!` : 'Midway ring toss complete!',
     };
+  }
+
+  public destroy(): void {
+    if (typeof window !== 'undefined' && this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
+    super.destroy();
   }
 }

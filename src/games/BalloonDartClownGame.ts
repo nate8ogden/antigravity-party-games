@@ -1,49 +1,93 @@
 import { BaseGame } from './BaseGame';
-import { PlayerConfig, PlayerId, RoundResult } from '../core/Types';
+import { PlayerId, PlayerConfig, RoundResult } from '../core/Types';
 import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
 
-interface Balloon {
+interface WheelBalloon {
   angle: number;
-  dist: number;
-  radius: number;
+  ringDist: number;
   color: string;
-  points: number;
-  popped: boolean;
-  respawnTimer: number;
+  isGoldStar: boolean;
+  isWaterBomb: boolean;
+  poppedTimer: number;
 }
 
-interface Dart {
-  playerId: PlayerId;
+interface FlyingDart {
+  ownerId: PlayerId;
   color: string;
   x: number;
   y: number;
   vx: number;
   vy: number;
-  angle: number;
-  alive: boolean;
+  active: boolean;
 }
 
-interface DartPlayer {
+interface DartShooter {
   id: PlayerId;
-  aimX: number;
-  aimDir: number;
-  dartsLeft: number;
-  reloadTimer: number;
+  color: string;
+  reticleAngle: number;
+  reticleDist: number;
+  reticleDir: number;
+  charge: number;
+  wasHolding: boolean;
   score: number;
+  streak: number;
+  multiplier: number;
+  stunTimer: number;
+  underdog: boolean;
+  botTimer: number;
 }
+
+type ThemeId = 'midway_bigtop' | 'neon_boardwalk' | 'retro_arcade';
+
+interface ThemeSpec {
+  name: string;
+  bgTop: string;
+  bgBot: string;
+  wheelFill: string;
+  wheelStroke: string;
+}
+
+const THEMES: Record<ThemeId, ThemeSpec> = {
+  midway_bigtop: {
+    name: 'Big Top Carnival Wheel',
+    bgTop: '#3b0764',
+    bgBot: '#1e1b4b',
+    wheelFill: '#4c1d95',
+    wheelStroke: '#facc15',
+  },
+  neon_boardwalk: {
+    name: 'Neon Boardwalk Pier',
+    bgTop: '#082f49',
+    bgBot: '#020617',
+    wheelFill: '#0f172a',
+    wheelStroke: '#38bdf8',
+  },
+  retro_arcade: {
+    name: 'Retro Midway Gallery',
+    bgTop: '#450a0a',
+    bgBot: '#1c1917',
+    wheelFill: '#292524',
+    wheelStroke: '#fb7185',
+  },
+};
+
+const THEME_ORDER: ThemeId[] = ['midway_bigtop', 'neon_boardwalk', 'retro_arcade'];
 
 export class BalloonDartClownGame extends BaseGame {
-  private wheelAngle: number = 0;
-  private wheelSpeed: number = 1.2;
-  private balloons: Balloon[] = [];
-  private darts: Dart[] = [];
-  private playersState: Map<PlayerId, DartPlayer> = new Map();
-  private wheelCenterX: number = 0;
-  private wheelCenterY: number = 0;
-  private wheelRadius: number = 130;
-  private clownHornHonkTimer: number = 0;
+  private shooters: Map<PlayerId, DartShooter> = new Map();
+  private balloons: WheelBalloon[] = [];
+  private darts: FlyingDart[] = [];
+  private wheelAngle = 0;
+  private wheelSpeed = 1.15;
+  private noseFlashTimer = 0;
+  private timeElapsed = 0;
+  private suddenDeath = false;
+  private hitStopTimer = 0;
+  private themeIndex = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
+  private floatingTexts: { x: number; y: number; text: string; color: string; alpha: number; vy: number; size: number }[] = [];
 
   constructor(
     players: PlayerConfig[],
@@ -52,370 +96,277 @@ export class BalloonDartClownGame extends BaseGame {
     particles: ParticleSystem
   ) {
     super(players, input, audio, particles);
+    this.roundTimer = 38.0;
   }
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIndex = (this.themeIndex + 1) % THEME_ORDER.length;
+          this.audio.playTap();
+        } else if (e.key >= '1' && e.key <= '3') {
+          this.themeIndex = parseInt(e.key, 10) - 1;
+          this.audio.playTap();
+        }
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
   }
 
   public reset(width: number, height: number): void {
+    void width;
+    void height;
     this.isFinished = false;
-    this.roundTimer = 30;
+    this.roundTimer = 38.0;
+    this.timeElapsed = 0;
+    this.suddenDeath = false;
+    this.hitStopTimer = 0;
     this.wheelAngle = 0;
-    this.wheelSpeed = 1.3;
-    this.wheelCenterX = width / 2;
-    this.wheelCenterY = height * 0.38;
-    this.wheelRadius = Math.min(150, width * 0.25);
-    this.darts = [];
+    this.wheelSpeed = 1.15;
+    this.noseFlashTimer = 0;
     this.balloons = [];
-    this.playersState.clear();
-    this.clownHornHonkTimer = 0;
+    this.darts = [];
+    this.shooters.clear();
+    this.floatingTexts = [];
+    this.themeIndex = Math.floor(Math.random() * THEME_ORDER.length);
 
-    // Populate balloons in concentric circles on wheel
-    const balloonColors = ['#EF4444', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
-    const spokes = 12;
-    for (let i = 0; i < spokes; i++) {
-      const a = (i / spokes) * Math.PI * 2;
-      const isGold = i % 4 === 0;
+    const palette = ['#38bdf8', '#4ade80', '#f472b6', '#c084fc'];
+    for (let i = 0; i < 8; i++) {
       this.balloons.push({
-        angle: a,
-        dist: this.wheelRadius * 0.8,
-        radius: 16,
-        color: isGold ? '#FBBF24' : balloonColors[i % balloonColors.length],
-        points: isGold ? 30 : 10,
-        popped: false,
-        respawnTimer: 0
+        angle: (i / 8) * Math.PI * 2,
+        ringDist: 92,
+        color: palette[i % palette.length],
+        isGoldStar: i % 4 === 0,
+        isWaterBomb: i === 2,
+        poppedTimer: 0,
       });
-      // Inner ring
-      if (i % 2 === 0) {
-        this.balloons.push({
-          angle: a + 0.25,
-          dist: this.wheelRadius * 0.48,
-          radius: 14,
-          color: '#06B6D4',
-          points: 20,
-          popped: false,
-          respawnTimer: 0
-        });
-      }
+    }
+    for (let i = 0; i < 12; i++) {
+      this.balloons.push({
+        angle: (i / 12) * Math.PI * 2,
+        ringDist: 168,
+        color: palette[i % palette.length],
+        isGoldStar: i % 4 === 0,
+        isWaterBomb: i % 6 === 3,
+        poppedTimer: 0,
+      });
     }
 
     const active = this.getActivePlayers();
-    const count = active.length;
-    active.forEach((p, idx) => {
-      const zoneW = width / count;
-      this.playersState.set(p.id, {
-        id: p.id,
-        aimX: zoneW * idx + zoneW / 2,
-        aimDir: idx % 2 === 0 ? 1 : -1,
-        dartsLeft: 3,
-        reloadTimer: 0,
-        score: 0
+    active.forEach((cfg, idx) => {
+      this.shooters.set(cfg.id, {
+        id: cfg.id,
+        color: cfg.color,
+        reticleAngle: (idx / Math.max(1, active.length)) * Math.PI * 2,
+        reticleDist: 120,
+        reticleDir: 1,
+        charge: 0,
+        wasHolding: false,
+        score: 0,
+        streak: 0,
+        multiplier: 1,
+        stunTimer: 0,
+        underdog: false,
+        botTimer: 0.18,
       });
     });
+  }
+
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    void height;
+    if (y < 60 && x > width - 220) {
+      this.themeIndex = (this.themeIndex + 1) % THEME_ORDER.length;
+      this.audio.playTap();
+      return true;
+    }
+    return false;
+  }
+
+  private addFloatingText(x: number, y: number, text: string, color: string, size = 18): void {
+    this.floatingTexts.push({ x, y, text, color, alpha: 1, vy: -52, size });
+  }
+
+  private renderFloatingTexts(ctx: CanvasRenderingContext2D): void {
+    for (const ft of this.floatingTexts) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, ft.alpha);
+      ctx.font = `900 ${ft.size}px "Outfit", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+      ctx.lineWidth = 4;
+      ctx.strokeText(ft.text, ft.x, ft.y);
+      ctx.fillStyle = ft.color;
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.restore();
+    }
   }
 
   public update(dt: number, width: number, height: number): void {
     if (this.isFinished) return;
-    this.roundTimer = Math.max(0, this.roundTimer - dt);
+
+    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+      const ft = this.floatingTexts[i];
+      ft.y += ft.vy * dt;
+      ft.alpha -= dt * 1.1;
+      if (ft.alpha <= 0) this.floatingTexts.splice(i, 1);
+    }
+
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer -= dt;
+      return;
+    }
+
+    this.timeElapsed += dt;
+    this.roundTimer -= dt;
+    if (this.roundTimer <= 0) {
+      this.roundTimer = 0;
+      this.isFinished = true;
+      return;
+    }
+
+    if (this.roundTimer <= 15 && !this.suddenDeath) {
+      this.suddenDeath = true;
+      this.audio.playFanfare();
+      this.addFloatingText(width / 2, 100, '⚡ JACKPOT WHEEL OVERDRIVE! 2X POINTS! ⚡', '#facc15', 24);
+    }
+
+    if (this.noseFlashTimer > 0) this.noseFlashTimer -= dt;
+    this.wheelAngle += this.wheelSpeed * (this.suddenDeath ? 1.35 : 1.0) * dt;
+
+    for (const b of this.balloons) {
+      if (b.poppedTimer > 0) {
+        b.poppedTimer -= dt;
+        if (b.poppedTimer <= 0) {
+          b.isGoldStar = Math.random() < (this.suddenDeath ? 0.42 : 0.25);
+          b.isWaterBomb = !b.isGoldStar && Math.random() < 0.16;
+        }
+      }
+    }
+
+    const cx = width / 2;
+    const cy = height / 2 + 15;
+
+    let maxScore = 0;
+    this.shooters.forEach((s) => {
+      if (s.score > maxScore) maxScore = s.score;
+    });
+
     this.updateBots(dt, width, height);
 
-    // Spin carnival wheel
-    this.wheelAngle += this.wheelSpeed * dt;
-    if (this.clownHornHonkTimer > 0) this.clownHornHonkTimer -= dt;
+    this.shooters.forEach((s) => {
+      s.underdog = maxScore - s.score >= 120;
+      if (s.stunTimer > 0) s.stunTimer -= dt;
 
-    // Respawn balloons
-    for (const b of this.balloons) {
-      if (b.popped) {
-        b.respawnTimer -= dt;
-        if (b.respawnTimer <= 0) {
-          b.popped = false;
-        }
-      }
-    }
-
-    const active = this.getActivePlayers();
-    const count = active.length;
-    const zoneW = width / count;
-
-    for (let idx = 0; idx < count; idx++) {
-      const p = active[idx];
-      const ps = this.playersState.get(p.id);
-      if (!ps) continue;
-
-      if (ps.reloadTimer > 0) {
-        ps.reloadTimer -= dt;
-        if (ps.reloadTimer <= 0) {
-          ps.dartsLeft = 3;
-        }
+      // Reticle orbits and sweeps radially across the wheel
+      const steer = this.input.getSteer(s.id);
+      if (Math.abs(steer) > 0.1 && s.stunTimer <= 0) {
+        s.reticleAngle += steer * 3.2 * dt;
+      } else {
+        s.reticleAngle -= 1.35 * dt;
       }
 
-      // Sweep crosshair aim
-      const minX = zoneW * idx + 30;
-      const maxX = zoneW * (idx + 1) - 30;
-      ps.aimX += ps.aimDir * dt * 180;
-      if (ps.aimX > maxX) {
-        ps.aimX = maxX;
-        ps.aimDir = -1;
-      } else if (ps.aimX < minX) {
-        ps.aimX = minX;
-        ps.aimDir = 1;
+      s.reticleDist += s.reticleDir * 145 * dt;
+      if (s.reticleDist > 185) {
+        s.reticleDist = 185;
+        s.reticleDir = -1;
+      } else if (s.reticleDist < 0) {
+        s.reticleDist = 0;
+        s.reticleDir = 1;
       }
 
-      // Fire Dart
-      const justFired = this.input.justPressed(p.id) || this.input.justAction(p.id);
-      if (justFired && ps.dartsLeft > 0 && ps.reloadTimer <= 0) {
-        ps.dartsLeft--;
-        this.fireDart(p.id, p.color, ps.aimX, height - 50);
-        if (ps.dartsLeft <= 0) {
-          ps.reloadTimer = 0.75; // quiver restock delay
-        }
+      const holding = s.stunTimer <= 0 && (this.input.isActionPressed(s.id) || this.input.isPressed(s.id));
+      if (holding) {
+        s.charge = Math.min(1.0, s.charge + dt * 1.2);
+        s.wasHolding = true;
+      } else if (s.wasHolding) {
+        s.wasHolding = false;
+        this.fireDartAtReticle(s, cx, cy);
+        s.charge = 0;
       }
-    }
-
-    // Update flying darts
-    for (let i = this.darts.length - 1; i >= 0; i--) {
-      const d = this.darts[i];
-      d.x += d.vx * dt;
-      d.y += d.vy * dt;
-
-      // Check collision with balloons
-      let hit = false;
-      for (const b of this.balloons) {
-        if (b.popped) continue;
-        const bx = this.wheelCenterX + Math.cos(this.wheelAngle + b.angle) * b.dist;
-        const by = this.wheelCenterY + Math.sin(this.wheelAngle + b.angle) * b.dist;
-        if (Math.hypot(d.x - bx, d.y - by) < b.radius + 8) {
-          b.popped = true;
-          b.respawnTimer = 2.5;
-          hit = true;
-          const ps = this.playersState.get(d.playerId);
-          if (ps) ps.score += b.points;
-
-          this.audio.playLaser();
-          this.particles.showFloatingText(`+${b.points}`, bx, by - 15, b.color, 22);
-          this.particles.spawnConfetti(bx, by, 16);
-          break;
-        }
-      }
-
-      // Check clown nose bullseye (center honk)
-      if (!hit && Math.hypot(d.x - this.wheelCenterX, d.y - this.wheelCenterY) < 22) {
-        hit = true;
-        this.clownHornHonkTimer = 0.5;
-        this.wheelSpeed = Math.min(3.5, this.wheelSpeed + 0.4);
-        const ps = this.playersState.get(d.playerId);
-        if (ps) ps.score += 50;
-        this.audio.playBounce();
-        this.particles.shake(0.3);
-        this.particles.showFloatingText('HONK! +50', this.wheelCenterX, this.wheelCenterY - 30, '#EF4444', 26);
-        this.particles.spawnExplosion(this.wheelCenterX, this.wheelCenterY, '#F43F5E', 20);
-      }
-
-      // Off-screen or hit
-      if (hit || d.y < 30) {
-        this.darts.splice(i, 1);
-      }
-    }
-
-    if (this.roundTimer <= 0) {
-      this.isFinished = true;
-    }
+    });
   }
 
-  private fireDart(pid: PlayerId, color: string, startX: number, startY: number): void {
-    // Ballistic dart upward trajectory towards wheel
-    const targetY = this.wheelCenterY;
-    const dy = targetY - startY;
-    const dx = this.wheelCenterX + (startX - this.wheelCenterX) * 0.35 - startX;
-    const speed = 720;
-    const angle = Math.atan2(dy, dx);
+  private fireDartAtReticle(s: DartShooter, cx: number, cy: number): void {
+    const rx = cx + Math.cos(s.reticleAngle) * s.reticleDist;
+    const ry = cy + Math.sin(s.reticleAngle) * s.reticleDist;
+    const blastRadius = 30 + s.charge * 34 + (s.underdog ? 14 : 0);
 
-    this.darts.push({
-      playerId: pid,
-      color,
-      x: startX,
-      y: startY,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      angle,
-      alive: true
+    this.audio.playWhoosh();
+    this.particles.emit(rx, ry, 10, s.color);
+
+    // Check if hit the central Honking Clown Nose bullseye!
+    if (Math.hypot(rx - cx, ry - cy) < 34) {
+      this.wheelSpeed = -this.wheelSpeed; // Reverses wheel spin to mess up rivals!
+      this.noseFlashTimer = 0.45;
+      s.streak++;
+      s.multiplier = s.streak >= 4 ? 4 : s.streak >= 2 ? 2 : 1;
+      const pts = 75 * s.multiplier * (this.suddenDeath ? 2 : 1);
+      s.score += pts;
+      this.audio.playFanfare();
+      this.hitStopTimer = 0.045;
+      this.addFloatingText(cx, cy - 28, `HONK BULLSEYE! SPIN REVERSED! +${pts}`, '#facc15', 20);
+      return;
+    }
+
+    // Check if reticle bumped another shooter's reticle (sabotage shove!)
+    this.shooters.forEach((other) => {
+      if (other.id === s.id) return;
+      const ox = cx + Math.cos(other.reticleAngle) * other.reticleDist;
+      const oy = cy + Math.sin(other.reticleAngle) * other.reticleDist;
+      if (Math.hypot(ox - rx, oy - ry) < 48) {
+        other.reticleAngle += 0.85;
+        this.addFloatingText(ox, oy - 20, 'RETICLE JOSTLED!', s.color, 16);
+      }
     });
 
-    this.audio.playLaser();
-  }
+    let poppedCount = 0;
+    let ptsGained = 0;
+    let hitBomb = false;
 
-  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // 1. Festive Midway Carnival Booth
-    const bgGrad = ctx.createRadialGradient(width / 2, height / 2, 40, width / 2, height / 2, width);
-    bgGrad.addColorStop(0, '#1E293B');
-    bgGrad.addColorStop(1, '#0B0F19');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
-
-    // Festive bunting pennants
-    ctx.save();
-    const flagW = 24;
-    for (let fx = 0; fx < width; fx += flagW) {
-      ctx.fillStyle = fx % 48 === 0 ? '#EF4444' : '#EAB308';
-      ctx.beginPath();
-      ctx.moveTo(fx, 0);
-      ctx.lineTo(fx + flagW, 0);
-      ctx.lineTo(fx + flagW / 2, 22);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.restore();
-
-    // 2. Draw Giant Spinning Clown Wheel
-    ctx.save();
-    ctx.translate(this.wheelCenterX, this.wheelCenterY);
-
-    // Wheel outer rim & wooden spokes
-    ctx.fillStyle = '#1E1B4B';
-    ctx.beginPath();
-    ctx.arc(0, 0, this.wheelRadius + 14, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = '#F59E0B';
-    ctx.lineWidth = 8;
-    ctx.stroke();
-
-    // Spokes
-    ctx.strokeStyle = '#94A3B8';
-    ctx.lineWidth = 3;
-    for (let i = 0; i < 12; i++) {
-      const a = this.wheelAngle + (i / 12) * Math.PI * 2;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(Math.cos(a) * this.wheelRadius, Math.sin(a) * this.wheelRadius);
-      ctx.stroke();
-    }
-
-    // Draw Balloons
     for (const b of this.balloons) {
-      if (b.popped) continue;
-      const bx = Math.cos(this.wheelAngle + b.angle) * b.dist;
-      const by = Math.sin(this.wheelAngle + b.angle) * b.dist;
+      if (b.poppedTimer > 0) continue;
+      const ba = b.angle + this.wheelAngle;
+      const bx = cx + Math.cos(ba) * b.ringDist;
+      const by = cy + Math.sin(ba) * b.ringDist;
 
-      ctx.save();
-      ctx.translate(bx, by);
-      // Balloon body
-      const bGrad = ctx.createRadialGradient(-4, -6, 2, 0, 0, b.radius);
-      bGrad.addColorStop(0, '#FFFFFF');
-      bGrad.addColorStop(0.3, b.color);
-      bGrad.addColorStop(1, '#0F172A');
-      ctx.fillStyle = bGrad;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, b.radius, b.radius * 1.25, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Balloon knot
-      ctx.fillStyle = b.color;
-      ctx.beginPath();
-      ctx.moveTo(-3, b.radius * 1.25);
-      ctx.lineTo(3, b.radius * 1.25);
-      ctx.lineTo(0, b.radius * 1.25 + 4);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
+      if (Math.hypot(bx - rx, by - ry) <= blastRadius) {
+        b.poppedTimer = 2.4;
+        if (b.isWaterBomb && !s.underdog) {
+          hitBomb = true;
+        } else {
+          poppedCount++;
+          ptsGained += b.isGoldStar ? 65 : 25;
+          this.particles.emit(bx, by, 14, b.isGoldStar ? '#facc15' : b.color);
+        }
+      }
     }
 
-    // Clown Face Center Hub
-    ctx.fillStyle = '#FEF08A';
-    ctx.beginPath();
-    ctx.arc(0, 0, 36, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#CA8A04';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    // Clown Big Red Nose (Target)
-    const noseScale = this.clownHornHonkTimer > 0 ? 1.4 : 1.0;
-    ctx.fillStyle = '#EF4444';
-    ctx.beginPath();
-    ctx.arc(0, 4, 14 * noseScale, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Clown smiling mouth
-    ctx.strokeStyle = '#DC2626';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(0, 6, 22, 0.2 * Math.PI, 0.8 * Math.PI);
-    ctx.stroke();
-
-    // Clown Eyes
-    ctx.fillStyle = '#1E293B';
-    ctx.beginPath();
-    ctx.arc(-11, -12, 4, 0, Math.PI * 2);
-    ctx.arc(11, -12, 4, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
-
-    // 3. Draw Flying Darts
-    for (const d of this.darts) {
-      ctx.save();
-      ctx.translate(d.x, d.y);
-      ctx.rotate(d.angle + Math.PI / 2);
-
-      // Dart shaft & metallic needle
-      ctx.fillStyle = '#E2E8F0';
-      ctx.fillRect(-2, -18, 4, 28);
-      ctx.fillStyle = d.color;
-      ctx.fillRect(-6, 2, 12, 10); // flight feathers
-      ctx.restore();
+    if (hitBomb) {
+      s.streak = 0;
+      s.multiplier = 1;
+      s.stunTimer = 0.85;
+      this.audio.playStun();
+      this.addFloatingText(rx, ry - 20, 'WATER BOMB SPLASH! STUNNED', '#ff2a85', 17);
+    } else if (poppedCount > 0) {
+      s.streak += poppedCount;
+      s.multiplier = s.streak >= 5 ? 4 : s.streak >= 3 ? 2 : 1;
+      const total = ptsGained * s.multiplier * (this.suddenDeath ? 2 : 1);
+      s.score += total;
+      this.audio.playScore();
+      this.hitStopTimer = 0.035;
+      this.addFloatingText(
+        rx,
+        ry - 22,
+        `POP! +${total} (${s.multiplier}x)`,
+        poppedCount >= 2 ? '#facc15' : '#38bdf8',
+        19
+      );
+    } else {
+      s.streak = 0;
+      s.multiplier = 1;
     }
-
-    // 4. Draw Player Aim Stations
-    const active = this.getActivePlayers();
-    const count = active.length;
-    const zoneW = width / count;
-
-    active.forEach((p, idx) => {
-      const ps = this.playersState.get(p.id);
-      if (!ps) return;
-      const zoneCenterX = zoneW * idx + zoneW / 2;
-      const stationY = height - 48;
-
-      // Station counter
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(zoneCenterX - zoneW * 0.44, stationY, zoneW * 0.88, 44);
-      ctx.fillStyle = p.color;
-      ctx.fillRect(zoneCenterX - zoneW * 0.44, stationY, zoneW * 0.88, 4);
-
-      // Score & Darts Left
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '900 12px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      const status = ps.reloadTimer > 0 ? 'RELOADING...' : `DARTS: ${'🎯'.repeat(ps.dartsLeft)}`;
-      ctx.fillText(`${p.name}: ${ps.score}`, zoneCenterX, stationY + 20);
-      ctx.font = '700 10px monospace';
-      ctx.fillStyle = ps.reloadTimer > 0 ? '#F59E0B' : '#94A3B8';
-      ctx.fillText(status, zoneCenterX, stationY + 34);
-
-      // Aim Reticle
-      ctx.save();
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.arc(ps.aimX, stationY - 25, 12, 0, Math.PI * 2);
-      ctx.moveTo(ps.aimX - 18, stationY - 25);
-      ctx.lineTo(ps.aimX + 18, stationY - 25);
-      ctx.moveTo(ps.aimX, stationY - 43);
-      ctx.lineTo(ps.aimX, stationY - 7);
-      ctx.stroke();
-      ctx.restore();
-    });
-
-    // 5. Header HUD
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 20px Montserrat, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`TIME: ${Math.ceil(this.roundTimer)}s`, width / 2, 45);
   }
 
   protected updateBotAI(
@@ -425,36 +376,147 @@ export class BalloonDartClownGame extends BaseGame {
     width: number,
     height: number
   ): void {
-    const ps = this.playersState.get(botId);
-    if (!ps || ps.dartsLeft <= 0 || ps.reloadTimer > 0) return;
+    const s = this.shooters.get(botId);
+    if (!s || s.stunTimer > 0) {
+      this.input.setBotState(botId, false);
+      return;
+    }
 
-    // Check if any balloon lines up with aimX
-    const tolerance = difficulty === 'bot_hard' ? 14 : difficulty === 'bot_normal' ? 24 : 40;
-    let shouldFire = false;
+    s.botTimer -= dt;
+    if (s.botTimer > 0) return;
 
+    const cx = width / 2;
+    const cy = height / 2 + 15;
+    const rx = cx + Math.cos(s.reticleAngle) * s.reticleDist;
+    const ry = cy + Math.sin(s.reticleAngle) * s.reticleDist;
+
+    let overTarget = Math.hypot(rx - cx, ry - cy) < 28;
     for (const b of this.balloons) {
-      if (b.popped) continue;
-      const bx = this.wheelCenterX + Math.cos(this.wheelAngle + b.angle) * b.dist;
-      if (Math.abs(ps.aimX - bx) < tolerance) {
-        shouldFire = true;
+      if (b.poppedTimer > 0 || b.isWaterBomb) continue;
+      const ba = b.angle + this.wheelAngle;
+      const bx = cx + Math.cos(ba) * b.ringDist;
+      const by = cy + Math.sin(ba) * b.ringDist;
+      if (Math.hypot(bx - rx, by - ry) < 34) {
+        overTarget = true;
         break;
       }
     }
 
-    // Clown nose jackpot chance
-    if (Math.abs(ps.aimX - this.wheelCenterX) < 18) {
-      shouldFire = true;
-    }
-
-    if (shouldFire) {
-      this.input.setBotInput(botId, true, 0, 0, true);
+    if (overTarget) {
+      s.botTimer = difficulty === 'bot_hard' ? 0.14 : difficulty === 'bot_normal' ? 0.24 : 0.36;
+      this.input.setBotState(botId, false);
     } else {
-      this.input.setBotInput(botId, false, 0, 0, false);
+      this.input.setBotState(botId, true);
     }
   }
 
-  public getScore(playerId: PlayerId): number {
-    return this.playersState.get(playerId)?.score ?? 0;
+  public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const cx = width / 2;
+    const cy = height / 2 + 15;
+    const theme = THEMES[THEME_ORDER[this.themeIndex]];
+
+    const bg = ctx.createLinearGradient(0, 0, 0, height);
+    bg.addColorStop(0, theme.bgTop);
+    bg.addColorStop(1, theme.bgBot);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    // Rotating Carnival Wheel
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(this.wheelAngle);
+    ctx.beginPath();
+    ctx.arc(0, 0, 215, 0, Math.PI * 2);
+    ctx.fillStyle = theme.wheelFill;
+    ctx.fill();
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = theme.wheelStroke;
+    ctx.stroke();
+
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(a) * 215, Math.sin(a) * 215);
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Central Honking Clown Nose Bullseye
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, this.noseFlashTimer > 0 ? 34 : 26, 0, Math.PI * 2);
+    ctx.fillStyle = this.noseFlashTimer > 0 ? '#facc15' : '#ef4444';
+    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#ffffff';
+    ctx.stroke();
+    ctx.restore();
+
+    // Draw Balloons on Wheel
+    for (const b of this.balloons) {
+      if (b.poppedTimer > 0) continue;
+      const ba = b.angle + this.wheelAngle;
+      const bx = cx + Math.cos(ba) * b.ringDist;
+      const by = cy + Math.sin(ba) * b.ringDist;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(bx, by, b.isGoldStar ? 22 : 18, 0, Math.PI * 2);
+      ctx.fillStyle = b.isWaterBomb ? '#ff2a85' : b.isGoldStar ? '#facc15' : b.color;
+      ctx.fill();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+
+      ctx.fillStyle = '#0f172a';
+      ctx.font = '900 11px "Outfit", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(b.isWaterBomb ? '💣' : b.isGoldStar ? '★65' : '+25', bx, by);
+      ctx.restore();
+    }
+
+    // Draw Shooter Reticles & Mascots
+    let idx = 0;
+    this.shooters.forEach((s) => {
+      const rx = cx + Math.cos(s.reticleAngle) * s.reticleDist;
+      const ry = cy + Math.sin(s.reticleAngle) * s.reticleDist;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(rx, ry, 20 + s.charge * 22, 0, Math.PI * 2);
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 3.5;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(rx - 12, ry);
+      ctx.lineTo(rx + 12, ry);
+      ctx.moveTo(rx, ry - 12);
+      ctx.lineTo(rx, ry + 12);
+      ctx.stroke();
+      ctx.restore();
+
+      const px = width * (0.18 + idx * 0.21);
+      const py = height - 48;
+      const mood = s.stunTimer > 0 ? 'shocked' : s.multiplier >= 2 ? 'triumph' : 'focused';
+      this.drawPlayerMascot(ctx, s.id, px, py, 22, mood, this.timeElapsed, 0);
+      idx++;
+    });
+
+    this.renderFloatingTexts(ctx);
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(width - 215, 14, 200, 32);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '700 13px "Outfit", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`🎨 ${theme.name} [T]`, width - 24, 35);
+    ctx.restore();
   }
 
   public isRoundOver(): boolean {
@@ -462,19 +524,25 @@ export class BalloonDartClownGame extends BaseGame {
   }
 
   public getRoundResult(): RoundResult {
-    const rankings = Array.from(this.playersState.entries())
-      .map(([playerId, ps]) => ({ playerId, score: ps.score, place: 1 }))
+    const rankings = Array.from(this.shooters.values())
+      .map((s) => ({ playerId: s.id, score: Math.floor(s.score), place: 1 }))
       .sort((a, b) => b.score - a.score);
-
-    rankings.forEach((entry, idx) => {
-      entry.place = idx + 1;
+    rankings.forEach((r, idx) => {
+      r.place = idx + 1;
     });
-
-    const winnerId = rankings.length > 0 && rankings[0].score > 0 ? rankings[0].playerId : null;
+    const winnerId = rankings.length > 0 ? rankings[0].playerId : null;
     return {
       winnerId,
       rankings,
-      mvpHighlight: winnerId ? `${winnerId} popped the carnival clown wheel!` : 'No balloons popped!'
+      mvpHighlight: winnerId ? `Player ${winnerId} popped the Jackpot Wheel!` : 'Balloon dart shootout complete!',
     };
+  }
+
+  public destroy(): void {
+    if (typeof window !== 'undefined' && this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
+    super.destroy();
   }
 }
