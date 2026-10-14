@@ -800,6 +800,28 @@ export class BumperHovercraftGame extends BaseGame {
       ctx.restore();
     }
 
+    // Theme Pill at Bottom-Left (x: 20, y: height - 44)
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(20, height - 44, 380, 30, 15);
+    else ctx.fillRect(20, height - 44, 380, 30);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = curTheme.wallColor;
+    ctx.font = '900 11px Montserrat, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(
+      `🛸 [T] [${this.themeIndex + 1}/3] ${curTheme.name} • ${this.currentMapName}`,
+      34,
+      height - 29
+    );
+    ctx.restore();
+
     ctx.restore();
   }
 }

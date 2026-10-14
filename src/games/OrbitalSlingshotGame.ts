@@ -51,9 +51,58 @@ export class OrbitalSlingshotGame extends BaseGame {
   private targetCrystals: number = 20;
   private botTetherCooldowns: Map<PlayerId, number> = new Map();
   private botOrbitDuration: Map<PlayerId, number> = new Map();
+  private themeIndex: number = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
+
+  private themes = [
+    {
+      name: 'Violet Nebula',
+      coreColor: '#0F0E2A',
+      midColor: '#050716',
+      outerColor: '#020308',
+      accentColor: '#38BDF8'
+    },
+    {
+      name: 'Crimson Supernova',
+      coreColor: '#2A0A18',
+      midColor: '#16040D',
+      outerColor: '#080105',
+      accentColor: '#F43F5E'
+    },
+    {
+      name: 'Emerald Quasar',
+      coreColor: '#06281E',
+      midColor: '#031510',
+      outerColor: '#010806',
+      accentColor: '#10B981'
+    }
+  ];
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIndex = (this.themeIndex + 1) % this.themes.length;
+          this.audio.playTap();
+        } else if (e.key === '1') {
+          this.themeIndex = 0;
+        } else if (e.key === '2') {
+          this.themeIndex = 1;
+        } else if (e.key === '3') {
+          this.themeIndex = 2;
+        }
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
+  }
+
+  public destroy(): void {
+    if (typeof window !== 'undefined' && this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
+    super.destroy();
   }
 
   public reset(width: number, height: number): void {
@@ -466,13 +515,14 @@ export class OrbitalSlingshotGame extends BaseGame {
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const curTheme = this.themes[this.themeIndex] || this.themes[0];
     ctx.save();
 
     // 1. Deep Space Nebula & Cosmic Dust
     const spaceGrad = ctx.createRadialGradient(width / 2, height / 2, 50, width / 2, height / 2, Math.max(width, height) * 0.75);
-    spaceGrad.addColorStop(0, '#0F0E2A'); // Violet core
-    spaceGrad.addColorStop(0.5, '#050716');
-    spaceGrad.addColorStop(1, '#020308');
+    spaceGrad.addColorStop(0, curTheme.coreColor);
+    spaceGrad.addColorStop(0.5, curTheme.midColor);
+    spaceGrad.addColorStop(1, curTheme.outerColor);
     ctx.fillStyle = spaceGrad;
     ctx.fillRect(0, 0, width, height);
 
@@ -701,6 +751,28 @@ export class OrbitalSlingshotGame extends BaseGame {
       ctx.fillText(`💎 ${ship.crystals}`, ship.x, pillY);
       ctx.restore();
     }
+
+    // Theme Pill at Bottom-Left (x: 20, y: height - 44)
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(20, height - 44, 380, 30, 15);
+    else ctx.fillRect(20, height - 44, 380, 30);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = curTheme.accentColor;
+    ctx.font = '900 11px Montserrat, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(
+      `🪐 [T] [${this.themeIndex + 1}/3] ${curTheme.name} • ${this.currentMapName}`,
+      34,
+      height - 29
+    );
+    ctx.restore();
 
     ctx.restore();
   }
