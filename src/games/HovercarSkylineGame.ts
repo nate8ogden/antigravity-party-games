@@ -4,71 +4,91 @@ import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
 
-interface CyberObstacle {
+type ThemeId = 'neo_tokyo' | 'outrun_sunset' | 'matrix_acid';
+
+interface ThemePalette {
+  id: ThemeId;
+  name: string;
+  bgTop: string;
+  bgBot: string;
+  neonLine: string;
+  accent: string;
+}
+
+const THEMES: ThemePalette[] = [
+  {
+    id: 'neo_tokyo',
+    name: 'Neo-Tokyo Cyberway',
+    bgTop: '#070a14',
+    bgBot: '#0f172a',
+    neonLine: 'rgba(56, 189, 248, 0.2)',
+    accent: '#38bdf8',
+  },
+  {
+    id: 'outrun_sunset',
+    name: 'Outrun Sunset Strip',
+    bgTop: '#1e0538',
+    bgBot: '#3b0764',
+    neonLine: 'rgba(244, 114, 182, 0.22)',
+    accent: '#f472b6',
+  },
+  {
+    id: 'matrix_acid',
+    name: 'Matrix Acid Rainway',
+    bgTop: '#021810',
+    bgBot: '#052e16',
+    neonLine: 'rgba(52, 211, 153, 0.22)',
+    accent: '#34d399',
+  },
+];
+
+interface HighwayTraffic {
   id: number;
   x: number;
   y: number;
-  lane: number;
-  type: 'truck' | 'barrier' | 'battery' | 'nitro';
-  passed: boolean;
-  pulseAnim: number;
+  vx: number;
+  kind: 'cargo_truck' | 'battery_orb' | 'hyper_core';
+  value: number;
 }
 
 interface Hovercar {
   id: PlayerId;
-  laneIdx: number; // 0: Top, 1: Middle, 2: Bottom
-  targetY: number;
-  currentY: number;
-  speed: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
   score: number;
-  shield: number;
-  stumbleTimer: number;
-  nitroTimer: number;
-  obstacles: CyberObstacle[];
-  spawnTimer: number;
-  switchCooldown: number;
-  lastThrottle: number;
-  thrusterFlicker: number;
-  batteriesCollected: number;
+  charging: boolean;
+  charge: number;
+  warpTimer: number;
+  spinoutTimer: number;
+  drafting: boolean;
+  underdog: boolean;
+  botTimer: number;
+  botTargetX: number;
+  botTargetY: number;
+  botHoldTarget: number;
+}
+
+interface Shockwave {
+  x: number;
+  y: number;
+  r: number;
+  maxR: number;
+  alpha: number;
+  color: string;
 }
 
 export class HovercarSkylineGame extends BaseGame {
+  private floatingTexts: { x: number; y: number; text: string; color: string; alpha: number; vy: number; size: number }[] = [];
   public cars: Map<PlayerId, Hovercar> = new Map();
-  public currentMapName: string = 'Neo-Kyoto Skyline Highway';
-  private obsCounter: number = 0;
-  private botReactionTimers: Map<PlayerId, number> = new Map();
-  private animTimer: number = 0;
-  private skylineThemeIndex: number = 0;
-
-  private themes = [
-    {
-      name: 'Neo-Tokyo Cyberway',
-      bgTop: '#070a14',
-      bgBot: '#0f172a',
-      neonColor: '#00F2FE',
-      gridColor: 'rgba(0, 242, 254, 0.12)',
-      sunColor: '#EC4899',
-      pillarColor: '#1e293b'
-    },
-    {
-      name: 'Outrun Sunset Strip',
-      bgTop: '#1e0538',
-      bgBot: '#3b0764',
-      neonColor: '#F59E0B',
-      gridColor: 'rgba(245, 158, 11, 0.14)',
-      sunColor: '#F43F5E',
-      pillarColor: '#4a044e'
-    },
-    {
-      name: 'Matrix Acid Rainway',
-      bgTop: '#021810',
-      bgBot: '#052e16',
-      neonColor: '#10B981',
-      gridColor: 'rgba(16, 185, 129, 0.14)',
-      sunColor: '#34D399',
-      pillarColor: '#064e3b'
-    }
-  ];
+  private traffic: HighwayTraffic[] = [];
+  private shockwaves: Shockwave[] = [];
+  private nextTrafficId = 1;
+  private spawnTimer = 0.7;
+  private themeIndex = 0;
+  private suddenDeath = false;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
 
   constructor(
     players: PlayerConfig[],
@@ -77,53 +97,89 @@ export class HovercarSkylineGame extends BaseGame {
     particles: ParticleSystem
   ) {
     super(players, input, audio, particles);
-    this.roundTimer = 35.0;
+    this.roundTimer = 45.0;
   }
 
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+          this.audio.playTap();
+        } else if (e.key === '1') {
+          this.themeIndex = 0;
+          this.audio.playTap();
+        } else if (e.key === '2') {
+          this.themeIndex = 1;
+          this.audio.playTap();
+        } else if (e.key === '3') {
+          this.themeIndex = 2;
+          this.audio.playTap();
+        }
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
   }
 
   public reset(width: number, height: number): void {
     this.isFinished = false;
-    this.roundTimer = 35.0;
+    this.roundTimer = 45.0;
+    this.suddenDeath = false;
     this.cars.clear();
-    this.obsCounter = 0;
-    this.botReactionTimers.clear();
-    this.animTimer = 0;
-    this.skylineThemeIndex = Math.floor(Math.random() * this.themes.length);
-    this.currentMapName = this.themes[this.skylineThemeIndex].name;
+    this.traffic = [];
+    this.shockwaves = [];
+    this.floatingTexts = [];
+    this.spawnTimer = 0.55;
 
     const active = this.getActivePlayers();
-    const count = active.length;
-    // Highway spans from y = 60 to height - 48
-    const playerBlockH = (height - 108) / Math.max(count, 1);
-
     active.forEach((p, idx) => {
-      const baseY = 60 + idx * playerBlockH;
-      const subLaneH = playerBlockH / 3;
-      // Start in middle lane (1)
-      const initialY = baseY + subLaneH * 1.5;
-
       this.cars.set(p.id, {
         id: p.id,
-        laneIdx: 1, // EXACT middle lane
-        targetY: initialY,
-        currentY: initialY,
-        speed: 260,
+        x: 130 + idx * 55,
+        y: height * 0.34 + idx * 48,
+        vx: 0,
+        vy: 0,
         score: 0,
-        shield: 100,
-        stumbleTimer: 0,
-        nitroTimer: 0,
-        obstacles: [],
-        spawnTimer: 0.6 + Math.random() * 0.4,
-        switchCooldown: 0,
-        lastThrottle: 0,
-        thrusterFlicker: Math.random() * 10,
-        batteriesCollected: 0
+        charging: false,
+        charge: 0,
+        warpTimer: 0,
+        spinoutTimer: 0,
+        drafting: false,
+        underdog: false,
+        botTimer: 0.16 + Math.random() * 0.14,
+        botTargetX: width * 0.5,
+        botTargetY: height * 0.5,
+        botHoldTarget: 0,
       });
+    });
 
-      this.botReactionTimers.set(p.id, 0.25 + Math.random() * 0.2);
+    for (let i = 0; i < 6; i++) {
+      this.spawnTraffic(width, height, true);
+    }
+  }
+
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    void width;
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.audio.playTap();
+      return true;
+    }
+    return false;
+  }
+
+  private spawnTraffic(width: number, height: number, randomX = false): void {
+    if (this.traffic.length >= 15) return;
+    const roll = Math.random();
+    const kind = roll < 0.28 ? 'cargo_truck' : roll < 0.5 ? 'hyper_core' : 'battery_orb';
+    this.traffic.push({
+      id: this.nextTrafficId++,
+      x: randomX ? 170 + Math.random() * (width - 230) : width + 45,
+      y: 110 + Math.random() * (height - 195),
+      vx: -(210 + Math.random() * 65) * (this.suddenDeath ? 1.25 : 1.0),
+      kind,
+      value: kind === 'hyper_core' ? 95 : kind === 'battery_orb' ? 50 : -25,
     });
   }
 
@@ -131,140 +187,212 @@ export class HovercarSkylineGame extends BaseGame {
     if (this.isFinished) return;
 
     this.roundTimer -= dt;
-    this.animTimer += dt;
-
     if (this.roundTimer <= 0) {
       this.roundTimer = 0;
-      this.finishRound();
+      this.isFinished = true;
       return;
     }
 
+    if (!this.suddenDeath && this.roundTimer <= 15.0) {
+      this.suddenDeath = true;
+      this.audio.playFanfare();
+      this.addFloatingText(width * 0.5, 110, '⚡ SUDDEN DEATH: CYBERWAY OVERDRIVE 2X! ⚡', '#facc15', 20);
+    }
+
+    let maxScore = 0;
+    this.cars.forEach(c => {
+      if (c.score > maxScore) maxScore = c.score;
+    });
+    this.cars.forEach(c => {
+      c.underdog = maxScore - c.score >= 150;
+    });
+
     this.updateBots(dt, width, height);
 
-    const active = this.getActivePlayers();
-    const count = active.length;
-    const playerBlockH = (height - 108) / Math.max(count, 1);
-    const subLaneH = playerBlockH / 3;
+    this.spawnTimer -= dt;
+    if (this.spawnTimer <= 0) {
+      this.spawnTimer = this.suddenDeath ? 0.48 : 0.78;
+      this.spawnTraffic(width, height, false);
+    }
 
-    this.cars.forEach((car, pId) => {
-      const idx = active.findIndex(p => p.id === pId);
-      const baseY = 60 + idx * playerBlockH;
+    for (let i = this.traffic.length - 1; i >= 0; i--) {
+      const t = this.traffic[i];
+      t.x += t.vx * dt;
+      if (t.x < -50) this.traffic.splice(i, 1);
+    }
 
-      if (car.stumbleTimer > 0) {
-        car.stumbleTimer -= dt;
-        car.speed = 110;
-      } else if (car.nitroTimer > 0) {
-        car.nitroTimer -= dt;
-        car.speed = 460;
-      } else {
-        car.speed = Math.min(380, car.speed + dt * 12);
-      }
+    const list = Array.from(this.cars.values());
+    this.cars.forEach(c => {
+      if (c.warpTimer > 0) c.warpTimer = Math.max(0, c.warpTimer - dt);
 
-      car.score += Math.round(car.speed * dt * 0.12);
-      car.thrusterFlicker += dt * 30;
-
-      // Decrement switch debounce cooldown
-      if (car.switchCooldown > 0) {
-        car.switchCooldown -= dt;
-      }
-
-      // Read Inputs
-      const throttle = this.input.getThrottle(car.id);
-      const steer = this.input.getSteer(car.id);
-      const isUpEdge = this.input.justUp(car.id) || (throttle > 0.45 && car.lastThrottle <= 0.45) || this.input.justLeft(car.id);
-      const isDownEdge = this.input.justDown(car.id) || (throttle < -0.45 && car.lastThrottle >= -0.45) || this.input.justRight(car.id);
-      const isTap = this.input.justAction(car.id) || (this.input.justPressed(car.id) && !isUpEdge && !isDownEdge);
-
-      // CRITICAL FIX: Only change lane if switchCooldown <= 0!
-      // This prevents single key presses from skipping the middle lane (1)!
-      if (car.stumbleTimer <= 0 && car.switchCooldown <= 0) {
-        if (isUpEdge && car.laneIdx > 0) {
-          // Up moves from Bottom(2)->Mid(1) or Mid(1)->Top(0)
-          car.laneIdx--;
-          car.switchCooldown = 0.20; // 200ms lock prevents bouncing into outer lane
-          this.audio.playTone(480 + (2 - car.laneIdx) * 90, 0.06, 'triangle');
-          this.particles.spawnSparks(75, car.currentY, '#00F2FE', 6);
-        } else if (isDownEdge && car.laneIdx < 2) {
-          // Down moves from Top(0)->Mid(1) or Mid(1)->Bottom(2)
-          car.laneIdx++;
-          car.switchCooldown = 0.20;
-          this.audio.playTone(480 + (2 - car.laneIdx) * 90, 0.06, 'triangle');
-          this.particles.spawnSparks(75, car.currentY, '#00F2FE', 6);
-        } else if (isTap) {
-          // One-button tap mode: cycles smoothly Top(0) -> Mid(1) -> Bot(2) -> Top(0)
-          car.laneIdx = (car.laneIdx + 1) % 3;
-          car.switchCooldown = 0.20;
-          this.audio.playTone(520 + car.laneIdx * 70, 0.06, 'triangle');
-          this.particles.spawnSparks(75, car.currentY, '#00F2FE', 6);
+      c.drafting = false;
+      for (const other of list) {
+        if (other.id !== c.id && other.x > c.x + 24 && other.x < c.x + 150 && Math.abs(other.y - c.y) < 34) {
+          c.drafting = true;
+          c.score += Math.round(16 * dt);
+          break;
         }
       }
 
-      car.lastThrottle = throttle;
-
-      // Smooth vertical spring glide to target lane
-      car.targetY = baseY + car.laneIdx * subLaneH + subLaneH * 0.5;
-      car.currentY += (car.targetY - car.currentY) * Math.min(1, 14 * dt);
-
-      // Spawn obstacles along the 3 sub-lanes
-      car.spawnTimer -= dt;
-      if (car.spawnTimer <= 0) {
-        car.spawnTimer = 0.75 + Math.random() * 0.45;
-        const obsLane = Math.floor(Math.random() * 3);
-        const rand = Math.random();
-        const type: 'battery' | 'nitro' | 'truck' | 'barrier' =
-          rand < 0.25 ? 'battery' : rand < 0.40 ? 'nitro' : rand < 0.72 ? 'truck' : 'barrier';
-
-        car.obstacles.push({
-          id: this.obsCounter++,
-          x: width + 40,
-          y: baseY + obsLane * subLaneH + subLaneH * 0.5,
-          lane: obsLane,
-          type,
-          passed: false,
-          pulseAnim: Math.random() * Math.PI * 2
-        });
+      if (c.spinoutTimer > 0) {
+        c.spinoutTimer -= dt;
+        c.charging = false;
+        c.charge = 0;
+        c.vx *= 0.9;
+        c.vy *= 0.9;
+        c.x += c.vx * dt;
+        c.y += c.vy * dt;
+        this.clampCar(c, width, height);
+        return;
       }
 
-      // Move and check collisions with obstacles
-      for (let i = car.obstacles.length - 1; i >= 0; i--) {
-        const obs = car.obstacles[i];
-        obs.x -= car.speed * dt;
-        obs.pulseAnim += dt * 6;
+      const move = { x: this.input.getSteer(c.id), y: -this.input.getThrottle(c.id) };
+      const speedMult = (c.underdog ? 1.24 : 1.0) * (c.drafting ? 1.24 : 1.0) * (c.warpTimer > 0 ? 1.55 : 1.0);
+      const accel = 960 * speedMult;
 
-        // Collision detection with player hovercar at x = 75
-        if (!obs.passed && Math.abs(obs.x - 75) < 32) {
-          if (Math.abs(obs.y - car.currentY) < subLaneH * 0.42) {
-            obs.passed = true;
-            if (obs.type === 'battery') {
-              car.score += 45;
-              car.batteriesCollected++;
-              this.audio.playCoin();
-              this.particles.spawnSparks(75, car.currentY, '#00FFCC', 12);
-              this.particles.showFloatingText('+45 BATTERY ⚡', 85, car.currentY - 18, '#00FFCC', 18);
-            } else if (obs.type === 'nitro') {
-              car.nitroTimer = 2.4;
-              car.score += 75;
+      c.vx += move.x * accel * dt;
+      c.vy += move.y * accel * dt;
+      c.vx *= 0.87;
+      c.vy *= 0.87;
+      c.x += c.vx * dt;
+      c.y += c.vy * dt;
+      this.clampCar(c, width, height);
+
+      if (this.input.justPressed(c.id) || this.input.justAction(c.id)) {
+        c.vx += 180;
+        this.audio.playWhoosh();
+      }
+
+      const holding = this.input.isActionPressed(c.id) || this.input.isPressed(c.id);
+      if (holding) {
+        c.charging = true;
+        c.charge += dt * 0.84;
+        if (c.charge >= 1.0) {
+          c.charging = false;
+          c.charge = 0;
+          c.spinoutTimer = 0.75;
+          this.audio.playBuzzer();
+          this.addFloatingText(c.x, c.y - 28, '⚠️ TURBINE STALL!', '#ef4444', 15);
+        }
+      } else if (c.charging) {
+        const pct = c.charge;
+        c.charging = false;
+        c.charge = 0;
+        if (pct >= 0.72 && pct <= 0.98) {
+          this.triggerHyperNitroWarp(c);
+        }
+      }
+
+      for (let i = this.traffic.length - 1; i >= 0; i--) {
+        const t = this.traffic[i];
+        if (Math.hypot(t.x - c.x, t.y - c.y) < 32) {
+          if (t.kind === 'cargo_truck') {
+            if (c.warpTimer > 0 || c.underdog) {
+              c.score += 55;
               this.audio.playBoost();
-              this.particles.shake(4);
-              this.particles.spawnSparks(75, car.currentY, '#F59E0B', 16);
-              this.particles.showFloatingText('🚀 NITRO OVERDRIVE!', 85, car.currentY - 18, '#F59E0B', 22);
+              this.particles.emit(t.x, t.y, 16, '#facc15');
+              this.addFloatingText(t.x, t.y - 22, '🚀 HAULER SMASHED! +55', '#facc15', 16);
             } else {
-              // Crash with truck or barrier!
-              car.stumbleTimer = 0.95;
-              car.nitroTimer = 0;
-              car.shield = Math.max(0, car.shield - 25);
-              car.score = Math.max(0, car.score - 30);
+              c.spinoutTimer = 0.8;
+              c.score = Math.max(0, c.score - 25);
               this.audio.playExplosion();
-              this.particles.shake(6);
-              this.particles.spawnExplosion(75, car.currentY, '#EF4444', 20);
-              this.particles.showFloatingText('CRASH! -30', 85, car.currentY - 18, '#EF4444', 20);
+              this.particles.emit(t.x, t.y, 18, '#ef4444');
+              this.addFloatingText(t.x, t.y - 22, '💥 CARGO CRASH! -25', '#ef4444', 16);
             }
+          } else {
+            const pts = Math.round(t.value * (this.suddenDeath ? 2 : 1));
+            c.score += pts;
+            this.audio.playScore();
+            const col = t.kind === 'hyper_core' ? '#facc15' : '#38bdf8';
+            const label = t.kind === 'hyper_core' ? `👑 HYPER CORE! +${pts}` : `⚡ BATTERY ORB! +${pts}`;
+            this.particles.emit(t.x, t.y, 12, col);
+            this.addFloatingText(t.x, t.y - 22, label, col, 16);
           }
+          this.traffic.splice(i, 1);
         }
+      }
+    });
 
-        if (obs.x < -60) {
-          car.obstacles.splice(i, 1);
+    // Hovercar-to-Hovercar collisions
+    for (let i = 0; i < list.length; i++) {
+      for (let j = i + 1; j < list.length; j++) {
+        const a = list[i];
+        const b = list[j];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy);
+        const minDist = 42;
+        if (dist < minDist && dist > 0.001) {
+          const nx = dx / dist;
+          const ny = dy / dist;
+          const overlap = (minDist - dist) * 0.5;
+          a.x -= nx * overlap;
+          a.y -= ny * overlap;
+          b.x += nx * overlap;
+          b.y += ny * overlap;
+          const imp = 230;
+          a.vx -= nx * imp;
+          a.vy -= ny * imp;
+          b.vx += nx * imp;
+          b.vy += ny * imp;
+          this.audio.playBounce();
         }
+      }
+    }
+
+    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+      const s = this.shockwaves[i];
+      s.r += (s.maxR - s.r) * dt * 7;
+      s.alpha -= dt * 1.9;
+      if (s.alpha <= 0) this.shockwaves.splice(i, 1);
+    }
+
+    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+      const ft = this.floatingTexts[i];
+      ft.y += ft.vy * dt;
+      ft.alpha -= dt * 0.95;
+      if (ft.alpha <= 0) this.floatingTexts.splice(i, 1);
+    }
+  }
+
+  private clampCar(c: Hovercar, width: number, height: number): void {
+    const padX = 56;
+    const minY = 98;
+    const maxY = height - 62;
+    if (c.x < padX) { c.x = padX; c.vx = Math.abs(c.vx) * 0.5; }
+    if (c.x > width - padX) { c.x = width - padX; c.vx = -Math.abs(c.vx) * 0.5; }
+    if (c.y < minY) { c.y = minY; c.vy = Math.abs(c.vy) * 0.5; }
+    if (c.y > maxY) { c.y = maxY; c.vy = -Math.abs(c.vy) * 0.5; }
+  }
+
+  private triggerHyperNitroWarp(c: Hovercar): void {
+    c.warpTimer = 1.45;
+    c.vx += 380;
+    const pts = this.suddenDeath ? 170 : 85;
+    c.score += pts;
+    this.audio.playBoost();
+    this.shockwaves.push({
+      x: c.x,
+      y: c.y,
+      r: 20,
+      maxR: 155,
+      alpha: 1,
+      color: '#facc15',
+    });
+    this.particles.emit(c.x, c.y, 24, '#facc15');
+    this.addFloatingText(c.x, c.y - 34, `🚀 HYPER-NITRO WARP! +${pts}`, '#facc15', 18);
+
+    this.cars.forEach(other => {
+      if (other.id === c.id) return;
+      const dist = Math.hypot(other.x - c.x, other.y - c.y);
+      if (dist < 150) {
+        const nx = (other.x - c.x) / (dist || 1);
+        const ny = (other.y - c.y) / (dist || 1);
+        other.vx += nx * 420;
+        other.vy += ny * 420;
+        other.spinoutTimer = 0.7;
+        c.score += 70;
+        this.addFloatingText(other.x, other.y - 28, '💥 SKYWAY SHUNT! +70', '#38bdf8', 17);
       }
     });
   }
@@ -273,386 +401,276 @@ export class HovercarSkylineGame extends BaseGame {
     dt: number,
     botId: PlayerId,
     difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
-    _w: number,
+    width: number,
     height: number
   ): void {
-    const car = this.cars.get(botId);
-    if (!car || car.stumbleTimer > 0) return;
+    const bot = this.cars.get(botId);
+    if (!bot || bot.spinoutTimer > 0) return;
 
-    let bTimer = (this.botReactionTimers.get(botId) || 0) - dt;
-    if (bTimer > 0) {
-      this.botReactionTimers.set(botId, bTimer);
-      return;
-    }
+    bot.botTimer -= dt;
+    if (bot.botTimer <= 0) {
+      bot.botTimer = difficulty === 'bot_hard' ? 0.12 : difficulty === 'bot_normal' ? 0.22 : 0.35;
 
-    const active = this.getActivePlayers();
-    const count = active.length;
-    const playerBlockH = (height - 108) / Math.max(count, 1);
-    const subLaneH = playerBlockH / 3;
-
-    // Check if hazard exists in current lane
-    const hazard = car.obstacles.find(o => {
-      return (o.type === 'truck' || o.type === 'barrier') &&
-        !o.passed &&
-        o.x > 75 &&
-        o.x < (difficulty === 'bot_hard' ? 280 : difficulty === 'bot_normal' ? 220 : 170) &&
-        o.lane === car.laneIdx;
-    });
-
-    if (hazard) {
-      const dodgeChance = difficulty === 'bot_hard' ? 0.94 : difficulty === 'bot_normal' ? 0.75 : 0.48;
-      if (Math.random() < dodgeChance) {
-        // Decide whether to go up or down to avoid hazard
-        let targetLane = car.laneIdx;
-        if (car.laneIdx === 0) {
-          targetLane = 1;
-        } else if (car.laneIdx === 2) {
-          targetLane = 1;
-        } else {
-          // In middle lane, pick the lane with no hazard or with a battery
-          const topHazard = car.obstacles.some(o => o.lane === 0 && !o.passed && o.x > 75 && o.x < 240);
-          targetLane = topHazard ? 2 : 0;
+      let best: HighwayTraffic | null = null;
+      let bestScore = -999;
+      for (const t of this.traffic) {
+        if (t.kind === 'cargo_truck') continue;
+        const d = Math.hypot(t.x - bot.x, t.y - bot.y);
+        const val = t.value * 1.3 - d * 0.25;
+        if (val > bestScore) {
+          bestScore = val;
+          best = t;
         }
-
-        if (targetLane < car.laneIdx) {
-          this.input.setBotInput(botId, true, 0, 1, false); // Up
-        } else {
-          this.input.setBotInput(botId, true, 0, -1, false); // Down
-        }
-
-        const reactionDelay = difficulty === 'bot_hard' ? 0.22 : difficulty === 'bot_normal' ? 0.35 : 0.50;
-        this.botReactionTimers.set(botId, reactionDelay);
-        return;
       }
-    }
 
-    // Check for attractive collectible in adjacent lane
-    const bonus = car.obstacles.find(o => {
-      return (o.type === 'battery' || o.type === 'nitro') &&
-        !o.passed &&
-        o.x > 90 &&
-        o.x < 260 &&
-        o.lane !== car.laneIdx;
-    });
-
-    if (bonus && Math.random() < (difficulty === 'bot_hard' ? 0.8 : difficulty === 'bot_normal' ? 0.45 : 0.2)) {
-      if (bonus.lane < car.laneIdx) {
-        this.input.setBotInput(botId, true, 0, 1, false);
+      if (best) {
+        bot.botTargetX = Math.max(90, Math.min(width - 90, best.x));
+        bot.botTargetY = best.y;
       } else {
-        this.input.setBotInput(botId, true, 0, -1, false);
+        bot.botTargetX = width * 0.45;
+        bot.botTargetY = height * 0.5;
       }
-      this.botReactionTimers.set(botId, 0.4);
-      return;
+
+      if (!bot.charging && Math.random() < (difficulty === 'bot_hard' ? 0.28 : 0.14)) {
+        bot.botHoldTarget = difficulty === 'bot_hard' ? 0.84 : 0.78;
+      }
     }
 
-    this.botReactionTimers.set(botId, 0.1);
+    const dx = bot.botTargetX - bot.x;
+    const dy = bot.botTargetY - bot.y;
+    const dist = Math.hypot(dx, dy);
+    const steerX = dist > 8 ? dx / dist : 0;
+    const throttleY = dist > 8 ? -dy / dist : 0;
+    bot.vx += steerX * 620 * dt;
+    bot.vy += -throttleY * 620 * dt;
+
+    if (bot.botHoldTarget > 0) {
+      if (bot.charge < bot.botHoldTarget) {
+        this.input.setBotState(botId, true);
+      } else {
+        bot.botHoldTarget = 0;
+        this.input.setBotState(botId, false);
+      }
+    } else {
+      this.input.setBotState(botId, false);
+    }
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    const curTheme = this.themes[this.skylineThemeIndex];
+    const theme = THEMES[this.themeIndex % THEMES.length];
 
-    // Background Gradient: Cyber Skyline
-    const grad = ctx.createLinearGradient(0, 0, 0, height);
-    grad.addColorStop(0, curTheme.bgTop);
-    grad.addColorStop(0.5, curTheme.bgBot);
-    grad.addColorStop(1, '#05070e');
-    ctx.fillStyle = grad;
+    const bg = ctx.createLinearGradient(0, 0, 0, height);
+    bg.addColorStop(0, theme.bgTop);
+    bg.addColorStop(1, theme.bgBot);
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, width, height);
 
-    // Parallax Skyline Distant Cityscape
+    // 5 Shared Neon Skyway Lanes
     ctx.save();
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
-    for (let i = 0; i < 18; i++) {
-      const bx = ((i * 68 - this.animTimer * 25) % (width + 80)) - 40;
-      const bw = 48 + (i % 3) * 14;
-      const bh = 90 + ((i * 37) % 70);
-      ctx.fillRect(bx, height - bh, bw, bh);
-
-      // Skyscraper neon windows
-      ctx.fillStyle = (i % 2 === 0) ? curTheme.gridColor : 'rgba(255, 255, 255, 0.08)';
-      for (let w = 6; w < bw - 8; w += 10) {
-        for (let r = 8; r < bh - 10; r += 16) {
-          if ((i + w + r) % 3 !== 0) {
-            ctx.fillRect(bx + w, height - bh + r, 4, 6);
-          }
-        }
-      }
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+    ctx.strokeStyle = theme.neonLine;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([18, 14]);
+    for (let y = 115; y < height - 60; y += 64) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
     }
     ctx.restore();
 
-    const active = this.getActivePlayers();
-    const count = active.length;
-    const playerBlockH = (height - 108) / Math.max(count, 1);
-    const subLaneH = playerBlockH / 3;
-
-    // Render Player Highway Sectors
-    this.cars.forEach((car, pId) => {
-      const cfg = this.players.find(p => p.id === car.id);
-      const idx = active.findIndex(p => p.id === pId);
-      const baseY = 60 + idx * playerBlockH;
-
-      // Sector Backdrop
-      ctx.fillStyle = 'rgba(10, 15, 28, 0.85)';
-      ctx.fillRect(20, baseY, width - 40, playerBlockH);
-
-      // Glowing Cyber Rails (Top, Middle-1, Middle-2, Bottom)
-      ctx.strokeStyle = curTheme.gridColor;
-      ctx.lineWidth = 1.5;
-
-      // 3 Sub-lanes dividers with animated neon road markers
-      for (let l = 1; l <= 2; l++) {
-        const lineY = baseY + subLaneH * l;
-        ctx.save();
-        ctx.strokeStyle = 'rgba(0, 242, 254, 0.25)';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([16, 12]);
-        ctx.lineDashOffset = -this.animTimer * (car.speed * 0.8);
-        ctx.beginPath();
-        ctx.moveTo(20, lineY);
-        ctx.lineTo(width - 20, lineY);
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      // Outer Sector Border with Player Color Accent
-      ctx.strokeStyle = cfg?.color || '#3b82f6';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(20, baseY, width - 40, playerBlockH);
-
-      // Lane Guide Badges on the left edge: [TOP], [MID], [BOT]
-      const laneNames = ['TOP', 'MID', 'BOT'];
-      for (let l = 0; l < 3; l++) {
-        const ly = baseY + l * subLaneH + subLaneH * 0.5;
-        const isCurrent = car.laneIdx === l;
-        ctx.fillStyle = isCurrent ? (cfg?.color || '#00F2FE') : 'rgba(255, 255, 255, 0.15)';
-        ctx.font = '900 9px Montserrat, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(laneNames[l], 26, ly + 3);
-
-        if (isCurrent) {
-          // Arrow indicator pointing to current lane
-          ctx.beginPath();
-          ctx.moveTo(48, ly - 4);
-          ctx.lineTo(54, ly);
-          ctx.lineTo(48, ly + 4);
-          ctx.fill();
-        }
-      }
-
-      // Render Obstacles in this highway sector
-      car.obstacles.forEach(o => {
-        if (o.passed) return;
-
-        ctx.save();
-        ctx.translate(o.x, o.y);
-
-        if (o.type === 'battery') {
-          // Golden/Cyan Cyber Power Core
-          ctx.fillStyle = '#00FFCC';
-          ctx.shadowColor = '#00FFCC';
-          ctx.shadowBlur = 10;
-          ctx.beginPath();
-          ctx.arc(0, 0, 9 + Math.sin(o.pulseAnim) * 1.5, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.fillStyle = '#FFFFFF';
-          ctx.font = '900 11px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('⚡', 0, 0);
-        } else if (o.type === 'nitro') {
-          // Fiery Rocket Booster Core
-          ctx.fillStyle = '#F59E0B';
-          ctx.shadowColor = '#F59E0B';
-          ctx.shadowBlur = 12;
-          ctx.beginPath();
-          ctx.arc(0, 0, 10 + Math.sin(o.pulseAnim * 1.5) * 2, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.fillStyle = '#FFFFFF';
-          ctx.font = '900 12px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('🚀', 0, 0);
-        } else if (o.type === 'truck') {
-          // Heavy Cyber Container Hauler
-          ctx.shadowColor = '#EF4444';
-          ctx.shadowBlur = 8;
-          ctx.fillStyle = '#DC2626';
-          if (ctx.roundRect) ctx.roundRect(-22, -11, 44, 22, 5);
-          else ctx.fillRect(-22, -11, 44, 22);
-          ctx.fill();
-
-          // Container ribbed lines
-          ctx.fillStyle = '#7F1D1D';
-          ctx.fillRect(-16, -9, 5, 18);
-          ctx.fillRect(-6, -9, 5, 18);
-          ctx.fillRect(4, -9, 5, 18);
-
-          // Headlights
-          ctx.fillStyle = '#FEF08A';
-          ctx.fillRect(-22, -8, 3, 5);
-          ctx.fillRect(-22, 3, 3, 5);
-        } else {
-          // Electric Forcefield Barrier
-          ctx.strokeStyle = '#F59E0B';
-          ctx.lineWidth = 3.5;
-          ctx.shadowColor = '#F59E0B';
-          ctx.shadowBlur = 10;
-          ctx.beginPath();
-          ctx.moveTo(-12, -12);
-          ctx.lineTo(12, 12);
-          ctx.moveTo(12, -12);
-          ctx.lineTo(-12, 12);
-          ctx.stroke();
-
-          // Pulsing warning diamond
-          ctx.fillStyle = 'rgba(245, 158, 11, 0.4)';
-          ctx.beginPath();
-          ctx.moveTo(0, -14);
-          ctx.lineTo(14, 0);
-          ctx.lineTo(0, 14);
-          ctx.lineTo(-14, 0);
-          ctx.closePath();
-          ctx.fill();
-        }
-
-        ctx.restore();
-      });
-
-      // Render 2.5D Aerodynamic Hovercar
+    for (const s of this.shockwaves) {
       ctx.save();
-      ctx.translate(75, car.currentY);
-
-      // Blue plasma hover cushion underneath
-      const plasmaScale = 1 + Math.sin(car.thrusterFlicker) * 0.15;
-      const plasmaColor = car.nitroTimer > 0 ? 'rgba(245, 158, 11, 0.65)' : 'rgba(0, 242, 254, 0.55)';
-      ctx.fillStyle = plasmaColor;
-      ctx.shadowColor = car.nitroTimer > 0 ? '#F59E0B' : '#00F2FE';
-      ctx.shadowBlur = 14;
+      ctx.globalAlpha = Math.max(0, s.alpha);
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.ellipse(0, 10, 22 * plasmaScale, 6 * plasmaScale, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
 
-      // Rear Jet Exhaust Plume
-      const flameLen = (car.nitroTimer > 0 ? 35 : 18) + Math.sin(car.thrusterFlicker * 2) * 5;
-      const flameGrad = ctx.createLinearGradient(-18, 0, -18 - flameLen, 0);
-      flameGrad.addColorStop(0, '#FFFFFF');
-      flameGrad.addColorStop(0.3, car.nitroTimer > 0 ? '#F59E0B' : '#38BDF8');
-      flameGrad.addColorStop(1, 'rgba(0, 242, 254, 0)');
-      ctx.fillStyle = flameGrad;
-      ctx.beginPath();
-      ctx.moveTo(-18, -4);
-      ctx.lineTo(-18 - flameLen, 0);
-      ctx.lineTo(-18, 4);
-      ctx.closePath();
-      ctx.fill();
+    for (const t of this.traffic) {
+      ctx.save();
+      ctx.translate(t.x, t.y);
+      if (t.kind === 'cargo_truck') {
+        ctx.fillStyle = '#334155';
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.roundRect(-24, -13, 48, 26, 6);
+        ctx.fill();
+        ctx.stroke();
+      } else if (t.kind === 'hyper_core') {
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(0, 0, 13, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(0, 0, 10, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
 
-      // Car Sleek Chitin Body
-      const carColor = car.stumbleTimer > 0 ? '#64748B' : (cfg?.color || '#3B82F6');
-      ctx.fillStyle = carColor;
-      ctx.shadowColor = carColor;
-      ctx.shadowBlur = car.nitroTimer > 0 ? 16 : 8;
-      ctx.beginPath();
-      if (ctx.roundRect) ctx.roundRect(-18, -9, 36, 18, 6);
-      else ctx.fillRect(-18, -9, 36, 18);
-      ctx.fill();
+    // Render 2.5D Cyber-Hovercars
+    const sorted = Array.from(this.cars.values()).sort((a, b) => a.y - b.y);
+    for (const c of sorted) {
+      const cfg = this.players.find(p => p.id === c.id);
+      const color = cfg?.color || '#38bdf8';
 
-      // Cockpit Tinted Canopy Glass
-      ctx.fillStyle = '#0F172A';
+      ctx.save();
+      ctx.translate(c.x, c.y);
+
+      if (c.charging) {
+        const sweet = c.charge >= 0.72 && c.charge <= 0.98;
+        ctx.strokeStyle = sweet ? '#facc15' : '#38bdf8';
+        ctx.lineWidth = sweet ? 4 : 2.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, 30, -Math.PI * 0.5, -Math.PI * 0.5 + c.charge * Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Hovercar Chassis
+      ctx.fillStyle = color;
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.ellipse(2, 0, 9, 5, 0, 0, Math.PI * 2);
+      ctx.roundRect(-22, -12, 44, 24, 10);
       ctx.fill();
-      ctx.strokeStyle = '#38BDF8';
-      ctx.lineWidth = 1.2;
       ctx.stroke();
 
-      // Forward Twin Laser Headlight Beams
-      const beamGrad = ctx.createLinearGradient(18, 0, 50, 0);
-      beamGrad.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
-      beamGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      ctx.fillStyle = beamGrad;
-      ctx.beginPath();
-      ctx.moveTo(18, -5);
-      ctx.lineTo(48, -12);
-      ctx.lineTo(48, -2);
-      ctx.lineTo(18, -3);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.moveTo(18, 3);
-      ctx.lineTo(48, 2);
-      ctx.lineTo(48, 12);
-      ctx.lineTo(18, 5);
-      ctx.closePath();
-      ctx.fill();
-
+      const mood = c.spinoutTimer > 0 ? 'shocked' : c.charging ? 'focused' : 'happy';
+      this.drawPlayerMascot(ctx, cfg?.id || 1, 0, -2, 13, mood, 45 - this.roundTimer, 0);
       ctx.restore();
+    }
 
-      // Player Score & Status Header inside Sector
-      ctx.fillStyle = cfg?.color || '#FFFFFF';
-      ctx.font = '900 12px Montserrat, sans-serif';
+    this.renderFloatingTexts(ctx);
+
+    // Top Header Banner
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
+    ctx.beginPath();
+    ctx.roundRect(width * 0.5 - 260, 54, 520, 28, 14);
+    ctx.fill();
+    ctx.fillStyle = '#bae6fd';
+    ctx.font = '800 12px "Outfit", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('STEER: WEAVE SKYWAY 2D & DRAFT • TAP: JOLT • HOLD (72-98%): HYPER-NITRO WARP SHUNT', width * 0.5, 68);
+    ctx.restore();
+
+    // Corner Player Cards
+    const active = this.getActivePlayers();
+    active.forEach((p, idx) => {
+      const c = this.cars.get(p.id);
+      if (!c) return;
+      const isLeft = idx % 2 === 0;
+      const cardX = isLeft ? 18 : width - 148;
+      const cardY = height - 128 - Math.floor(idx / 2) * 56;
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.86)';
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(cardX, cardY, 130, 48, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = p.color;
+      ctx.font = '800 12px "Outfit", sans-serif';
       ctx.textAlign = 'left';
-      const statusText = car.nitroTimer > 0 ? '🚀 NITRO ACTIVE!' : car.stumbleTimer > 0 ? '💥 STUMBLED!' : '';
-      ctx.fillText(
-        `${cfg?.name || 'Player'}: ${car.score} pts  |  ${Math.round(car.speed)} km/h  ${statusText}`,
-        70,
-        baseY + 16
-      );
+      ctx.fillText(p.name, cardX + 10, cardY + 18);
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = '900 15px "Outfit", sans-serif';
+      ctx.fillText(`${c.score} PTS`, cardX + 10, cardY + 38);
+      ctx.restore();
     });
 
-    // Master Theme Pill at Bottom-Left (Rule compliant: x: 20, y: height - 44)
+    // Bottom-Left Theme Pill
     ctx.save();
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.strokeStyle = theme.accent;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(20, height - 44, 340, 32, 16);
-    else ctx.fillRect(20, height - 44, 340, 32);
+    ctx.roundRect(20, height - 44, 170, 32, 16);
     ctx.fill();
     ctx.stroke();
-
-    ctx.fillStyle = curTheme.neonColor;
-    ctx.font = '900 11px Montserrat, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(
-      `🛣️ [${this.skylineThemeIndex + 1}/3] ${curTheme.name} | Up/Down/Tap Switch`,
-      34,
-      height - 24
-    );
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = '700 11px "Outfit", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`🎨 ${theme.name} [T]`, 105, height - 28);
     ctx.restore();
-  }
-
-  private finishRound(): void {
-    this.isFinished = true;
-  }
-
-  public getScores(): Map<PlayerId, number> {
-    const scores = new Map<PlayerId, number>();
-    this.cars.forEach((c, pId) => scores.set(pId, c.score));
-    return scores;
-  }
-
-  public getRoundResult(): RoundResult {
-    const rankings = Array.from(this.cars.entries())
-      .map(([playerId, c]) => ({ playerId, score: c.score, place: 1 }))
-      .sort((a, b) => b.score - a.score);
-
-    rankings.forEach((entry, idx) => {
-      entry.place = idx + 1;
-    });
-
-    const winnerId = rankings.length > 0 && rankings[0].score > 0 ? rankings[0].playerId : null;
-    return {
-      winnerId,
-      rankings,
-      mvpHighlight: winnerId ? `${winnerId} dominated the cyberway skyline at top speed!` : 'Hovercars crashed in gridlock!'
-    };
   }
 
   public isRoundOver(): boolean {
     return this.isFinished;
+  }
+
+  public getRoundResult(): RoundResult {
+    const scores = this.getScores();
+    const rankings = Array.from(scores.entries())
+      .map(([playerId, score]) => ({ playerId, score: Math.floor(score), place: 1 }))
+      .sort((a, b) => b.score - a.score);
+    rankings.forEach((r, idx) => { r.place = idx + 1; });
+    const winnerId = rankings.length > 0 ? rankings[0].playerId : null;
+    return {
+      winnerId,
+      rankings,
+      mvpHighlight: winnerId ? `${winnerId} owned the Neo-Tokyo Cyberway!` : 'Photo finish!',
+    };
+  }
+
+  public getScores(): Map<PlayerId, number> {
+    const scores = new Map<PlayerId, number>();
+    this.cars.forEach((c, id) => scores.set(id, c.score));
+    return scores;
+  }
+
+  public getWinner(): PlayerId | null {
+    let bestId: PlayerId | null = null;
+    let bestScore = -1;
+    let tie = false;
+    this.cars.forEach(c => {
+      if (c.score > bestScore) {
+        bestScore = c.score;
+        bestId = c.id;
+        tie = false;
+      } else if (c.score === bestScore) {
+        tie = true;
+      }
+    });
+    return tie ? null : bestId;
+  }
+
+  public cleanup(): void {
+    if (typeof window !== 'undefined' && this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
+  }
+
+  private addFloatingText(x: number, y: number, text: string, color: string, size = 16): void {
+    this.floatingTexts.push({ x, y, text, color, alpha: 1, vy: -38, size });
+  }
+
+  private renderFloatingTexts(ctx: CanvasRenderingContext2D): void {
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const ft of this.floatingTexts) {
+      ctx.globalAlpha = Math.max(0, Math.min(1, ft.alpha));
+      ctx.font = `900 ${ft.size}px "Outfit", system-ui, sans-serif`;
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = 'rgba(2, 6, 23, 0.9)';
+      ctx.strokeText(ft.text, ft.x, ft.y);
+      ctx.fillStyle = ft.color;
+      ctx.fillText(ft.text, ft.x, ft.y);
+    }
+    ctx.restore();
   }
 }
