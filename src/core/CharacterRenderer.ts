@@ -1000,49 +1000,62 @@ export function drawCharacter(
 
   // 8. Champion Golden Crown (if mood === 'triumph')
   if (mood === 'triumph') {
-    ctx.save();
-    const crownW = radius * 1.25;
-    const crownH = radius * 0.72;
-    const crownX = cx - crownW / 2;
-    const crownY = drawY - radius * 1.15;
+    if (activeSkin === 'classic') {
+      ctx.save();
+      const crownW = radius * 1.25;
+      const crownH = radius * 0.72;
+      const crownX = cx - crownW / 2;
+      const crownY = drawY - radius * 1.15;
 
-    ctx.shadowColor = 'rgba(245, 158, 11, 0.65)';
-    ctx.shadowBlur = 12 * scale;
-    ctx.shadowOffsetY = 2 * scale;
+      ctx.shadowColor = 'rgba(245, 158, 11, 0.65)';
+      ctx.shadowBlur = 12 * scale;
+      ctx.shadowOffsetY = 2 * scale;
 
-    const crownGrad = ctx.createLinearGradient(crownX, crownY, crownX, crownY + crownH);
-    crownGrad.addColorStop(0, '#FEF08A');
-    crownGrad.addColorStop(0.5, '#F59E0B');
-    crownGrad.addColorStop(1, '#B45309');
+      const crownGrad = ctx.createLinearGradient(crownX, crownY, crownX, crownY + crownH);
+      crownGrad.addColorStop(0, '#FEF08A');
+      crownGrad.addColorStop(0.5, '#F59E0B');
+      crownGrad.addColorStop(1, '#B45309');
 
-    ctx.beginPath();
-    ctx.moveTo(crownX, crownY + crownH);
-    ctx.lineTo(crownX + crownW, crownY + crownH);
-    ctx.lineTo(crownX + crownW, crownY + crownH * 0.25);
-    ctx.lineTo(crownX + crownW * 0.75, crownY + crownH * 0.55);
-    ctx.lineTo(crownX + crownW * 0.5, crownY);
-    ctx.lineTo(crownX + crownW * 0.25, crownY + crownH * 0.55);
-    ctx.lineTo(crownX, crownY + crownH * 0.25);
-    ctx.closePath();
-    ctx.fillStyle = crownGrad;
-    ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(crownX, crownY + crownH);
+      ctx.lineTo(crownX + crownW, crownY + crownH);
+      ctx.lineTo(crownX + crownW, crownY + crownH * 0.25);
+      ctx.lineTo(crownX + crownW * 0.75, crownY + crownH * 0.55);
+      ctx.lineTo(crownX + crownW * 0.5, crownY);
+      ctx.lineTo(crownX + crownW * 0.25, crownY + crownH * 0.55);
+      ctx.lineTo(crownX, crownY + crownH * 0.25);
+      ctx.closePath();
+      ctx.fillStyle = crownGrad;
+      ctx.fill();
 
-    ctx.strokeStyle = '#FEF08A';
-    ctx.lineWidth = Math.max(1, 1.5 * scale);
-    ctx.stroke();
+      ctx.strokeStyle = '#FEF08A';
+      ctx.lineWidth = Math.max(1, 1.5 * scale);
+      ctx.stroke();
 
-    // Center Ruby Jewel in Crown
-    ctx.beginPath();
-    ctx.arc(cx, crownY + crownH * 0.65, 3.5 * scale, 0, Math.PI * 2);
-    ctx.fillStyle = '#EF4444';
-    ctx.fill();
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 1 * scale;
-    ctx.stroke();
-
-    // Gleaming Star Sparkle
-    const sparkleSize = (5 + Math.sin(animTime * 10) * 2) * scale;
-    ctx.restore();
+      // Center Ruby Jewel in Crown
+      ctx.beginPath();
+      ctx.arc(cx, crownY + crownH * 0.65, 3.5 * scale, 0, Math.PI * 2);
+      ctx.fillStyle = '#EF4444';
+      ctx.fill();
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 1 * scale;
+      ctx.stroke();
+      ctx.restore();
+    } else {
+      // Floating Victory Starlight Halo high above custom headgear so hats/helmets are never covered
+      ctx.save();
+      const haloY = drawY - radius * 1.65;
+      ctx.strokeStyle = 'rgba(254, 240, 138, 0.85)';
+      ctx.lineWidth = 2 * scale;
+      ctx.shadowColor = '#F59E0B';
+      ctx.shadowBlur = 10 * scale;
+      ctx.beginPath();
+      ctx.ellipse(cx, haloY, radius * 0.65, radius * 0.16, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      drawStarSparkle(ctx, cx - radius * 0.85, haloY + 4 * scale, 4 * scale);
+      drawStarSparkle(ctx, cx + radius * 0.85, haloY + 4 * scale, 4 * scale);
+      ctx.restore();
+    }
   }
 
   // 8.5 Unique Custom Headgear & Masks for Skins (Unmistakable Silhouettes)
@@ -1086,6 +1099,621 @@ export function drawCharacter(
     ctx.beginPath();
     ctx.arc(cx + radius * 0.95, drawY + 2 * scale, 4 * scale, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'space_pirate_corsair') {
+    // Void Corsair Cyber-Tricorne Hat with Holographic Skull & Laser Telescope Eye-Scope
+    ctx.save();
+    const hatW = radius * 2.35;
+    const hatH = radius * 1.05;
+    const hatX = cx - hatW / 2;
+    const hatY = drawY - radius * 1.45;
+    const hatGrad = ctx.createLinearGradient(hatX, hatY, hatX, hatY + hatH);
+    hatGrad.addColorStop(0, '#312E81');
+    hatGrad.addColorStop(1, '#090D16');
+    ctx.fillStyle = hatGrad;
+    ctx.strokeStyle = '#EF4444';
+    ctx.lineWidth = 2.2 * scale;
+    ctx.shadowColor = '#EF4444';
+    ctx.shadowBlur = 8 * scale;
+    ctx.beginPath();
+    ctx.moveTo(hatX, hatY + hatH);
+    ctx.quadraticCurveTo(cx - radius * 0.45, hatY + hatH * 0.05, cx, hatY - 2 * scale);
+    ctx.quadraticCurveTo(cx + radius * 0.45, hatY + hatH * 0.05, hatX + hatW, hatY + hatH);
+    ctx.quadraticCurveTo(cx, hatY + hatH * 0.65, hatX, hatY + hatH);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Glowing Neon Crimson Holographic Skull Emblem on Hat
+    ctx.fillStyle = '#EF4444';
+    ctx.beginPath();
+    ctx.arc(cx, hatY + hatH * 0.5, 4.5 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#FEF08A';
+    ctx.beginPath();
+    ctx.arc(cx - 1.5 * scale, hatY + hatH * 0.48, 1 * scale, 0, Math.PI * 2);
+    ctx.arc(cx + 1.5 * scale, hatY + hatH * 0.48, 1 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    // Brass & Neon Laser Telescope Bionic Eye-Scope over Right Eye
+    ctx.fillStyle = '#B45309';
+    ctx.strokeStyle = '#FDE047';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.beginPath();
+    ctx.arc(cx + eyeOffset, eyeY, 6.5 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#EF4444';
+    ctx.beginPath();
+    ctx.arc(cx + eyeOffset, eyeY, 3.5 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    // Crosshair reticle inside bionic eye
+    ctx.strokeStyle = '#FECACA';
+    ctx.lineWidth = 0.8 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx + eyeOffset - 5 * scale, eyeY);
+    ctx.lineTo(cx + eyeOffset + 5 * scale, eyeY);
+    ctx.moveTo(cx + eyeOffset, eyeY - 5 * scale);
+    ctx.lineTo(cx + eyeOffset, eyeY + 5 * scale);
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'cyber_samurai_ronin') {
+    // Holographic Conical Jingasa Straw Hat with Cyan/Magenta Neon Rim & Menpo Mask
+    ctx.save();
+    const hatY = drawY - radius * 0.72;
+    const hatW = radius * 2.55;
+    const hatH = radius * 0.68;
+    const jGrad = ctx.createLinearGradient(cx - hatW / 2, hatY - hatH, cx + hatW / 2, hatY);
+    jGrad.addColorStop(0, '#0F172A');
+    jGrad.addColorStop(0.5, '#1E293B');
+    jGrad.addColorStop(1, '#083344');
+    ctx.fillStyle = jGrad;
+    ctx.strokeStyle = '#06B6D4';
+    ctx.lineWidth = 2.2 * scale;
+    ctx.shadowColor = '#06B6D4';
+    ctx.shadowBlur = 10 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - hatW / 2, hatY);
+    ctx.quadraticCurveTo(cx - radius * 0.4, hatY - hatH * 0.85, cx, hatY - hatH);
+    ctx.quadraticCurveTo(cx + radius * 0.4, hatY - hatH * 0.85, cx + hatW / 2, hatY);
+    ctx.quadraticCurveTo(cx, hatY + 5 * scale, cx - hatW / 2, hatY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Holographic Magenta Lattice Ribs on Jingasa
+    ctx.strokeStyle = 'rgba(236, 72, 153, 0.75)';
+    ctx.lineWidth = 1.2 * scale;
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath();
+      ctx.moveTo(cx, hatY - hatH);
+      ctx.lineTo(cx + i * (hatW * 0.18), hatY + 1 * scale);
+      ctx.stroke();
+    }
+    // Cyber Menpo Jaw Guard below visor
+    ctx.fillStyle = '#020617';
+    ctx.strokeStyle = '#EC4899';
+    ctx.lineWidth = 1.4 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.55, drawY + radius * 0.28);
+    ctx.lineTo(cx, drawY + radius * 0.52);
+    ctx.lineTo(cx + radius * 0.55, drawY + radius * 0.28);
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'retro_gameboy_classic') {
+    // 1989 Chomp-Boy DMG-01 Screen Bezel, Red Battery LED, Tactile D-Pad & Crimson A/B Buttons
+    ctx.save();
+    // Top "DOT MATRIX" magenta/blue bezel accent lines above visor
+    ctx.strokeStyle = '#831843';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.72, visorY - 4 * scale);
+    ctx.lineTo(cx + radius * 0.72, visorY - 4 * scale);
+    ctx.stroke();
+    // Glowing Red Battery Indicator LED on left bezel
+    ctx.fillStyle = '#EF4444';
+    ctx.shadowColor = '#EF4444';
+    ctx.shadowBlur = 5 * scale;
+    ctx.beginPath();
+    ctx.arc(cx - radius * 0.78, visorY + visorH * 0.45, 2.2 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    // Directional Cross D-Pad on lower-left chest
+    const dpx = cx - radius * 0.42;
+    const dpy = drawY + radius * 0.54;
+    ctx.fillStyle = '#1E293B';
+    ctx.fillRect(dpx - 7 * scale, dpy - 2.5 * scale, 14 * scale, 5 * scale);
+    ctx.fillRect(dpx - 2.5 * scale, dpy - 7 * scale, 5 * scale, 14 * scale);
+    // Crimson A & B Tactile Buttons on lower-right chest
+    ctx.fillStyle = '#BE123C';
+    ctx.beginPath();
+    ctx.arc(cx + radius * 0.28, dpy + 2 * scale, 3.6 * scale, 0, Math.PI * 2);
+    ctx.arc(cx + radius * 0.54, dpy - 2 * scale, 3.6 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'mecha_kaiju') {
+    // Atomic Mecha-Kaiju Horned Snout Crest & Steel Fang Jawplate
+    ctx.save();
+    // Center Cherenkov Nasal Horn
+    ctx.fillStyle = '#10B981';
+    ctx.strokeStyle = '#A7F3D0';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.shadowColor = '#10B981';
+    ctx.shadowBlur = 10 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - 6 * scale, drawY - radius * 0.75);
+    ctx.lineTo(cx, drawY - radius * 1.45);
+    ctx.lineTo(cx + 6 * scale, drawY - radius * 0.75);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Steel Kaiju Fangs along bottom of visor
+    ctx.fillStyle = '#E2E8F0';
+    for (let f = -2; f <= 2; f++) {
+      const fx = cx + f * 7 * scale;
+      const fy = visorY + visorH;
+      ctx.beginPath();
+      ctx.moveTo(fx - 2.5 * scale, fy);
+      ctx.lineTo(fx, fy - 4.5 * scale);
+      ctx.lineTo(fx + 2.5 * scale, fy);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'pharaoh_anubis') {
+    // Tall Anubis Jackal Ears, Golden Nemes Browband & Royal Uraeus Cobra Crest
+    ctx.save();
+    // Tall Pointed Jackal Ears
+    ctx.fillStyle = '#0F172A';
+    ctx.strokeStyle = '#F59E0B';
+    ctx.lineWidth = 1.8 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.65, drawY - radius * 0.65);
+    ctx.lineTo(cx - radius * 0.55, drawY - radius * 1.55);
+    ctx.lineTo(cx - radius * 0.2, drawY - radius * 0.85);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + radius * 0.65, drawY - radius * 0.65);
+    ctx.lineTo(cx + radius * 0.55, drawY - radius * 1.55);
+    ctx.lineTo(cx + radius * 0.2, drawY - radius * 0.85);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Golden Uraeus Cobra on forehead
+    ctx.fillStyle = '#FBBF24';
+    ctx.shadowColor = '#F59E0B';
+    ctx.shadowBlur = 8 * scale;
+    ctx.beginPath();
+    ctx.ellipse(cx, drawY - radius * 0.92, 6 * scale, 9 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#EF4444';
+    ctx.beginPath();
+    ctx.arc(cx, drawY - radius * 0.95, 2.5 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'cyber_netrunner') {
+    // Quad-Optic Hologram Cyber-Goggles & High Neon Tech Collar
+    ctx.save();
+    const gogY = drawY - radius * 0.55;
+    ctx.fillStyle = '#1E293B';
+    ctx.strokeStyle = '#EC4899';
+    ctx.lineWidth = 1.6 * scale;
+    ctx.beginPath();
+    ctx.roundRect
+      ? ctx.roundRect(cx - radius * 0.82, gogY - 7 * scale, radius * 1.64, 13 * scale, 6 * scale)
+      : ctx.rect(cx - radius * 0.82, gogY - 7 * scale, radius * 1.64, 13 * scale);
+    ctx.fill();
+    ctx.stroke();
+    // 4 Glowing Cyan/Magenta Optic Lenses
+    for (let i = 0; i < 4; i++) {
+      const lx = cx - 15 * scale + i * 10 * scale;
+      ctx.fillStyle = i % 2 === 0 ? '#06B6D4' : '#EC4899';
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = 6 * scale;
+      ctx.beginPath();
+      ctx.arc(lx, gogY - 0.5 * scale, 3.2 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'celestial_seraphim') {
+    // Burning Golden Ophanim Wheel-of-Eyes Halo above head
+    ctx.save();
+    const haloY = drawY - radius * 1.25;
+    ctx.strokeStyle = '#F59E0B';
+    ctx.lineWidth = 3 * scale;
+    ctx.shadowColor = '#FDE047';
+    ctx.shadowBlur = 12 * scale;
+    ctx.beginPath();
+    ctx.ellipse(cx, haloY, radius * 0.95, radius * 0.28, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    // Glowing Seraph Eyes studded along the Ophanim Ring
+    for (let i = -2; i <= 2; i++) {
+      const ex = cx + i * 10 * scale;
+      const ey = haloY + Math.cos(i * 0.6) * 3 * scale;
+      ctx.fillStyle = '#38BDF8';
+      ctx.beginPath();
+      ctx.arc(ex, ey, 2.2 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'neon_reaper') {
+    // Cowled Obsidian Reaper Hood & Bone Skull Jawplate
+    ctx.save();
+    ctx.fillStyle = '#090514';
+    ctx.strokeStyle = '#A855F7';
+    ctx.lineWidth = 2 * scale;
+    ctx.shadowColor = '#A855F7';
+    ctx.shadowBlur = 8 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.98, drawY - radius * 0.1);
+    ctx.quadraticCurveTo(cx - radius * 0.85, drawY - radius * 1.25, cx, drawY - radius * 1.38);
+    ctx.quadraticCurveTo(cx + radius * 0.85, drawY - radius * 1.25, cx + radius * 0.98, drawY - radius * 0.1);
+    ctx.quadraticCurveTo(cx, drawY - radius * 0.55, cx - radius * 0.98, drawY - radius * 0.1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'chrono_timelord') {
+    // Celestial Brass & Cyan Astrolabe Clockwork Crown
+    ctx.save();
+    const clockY = drawY - radius * 1.05;
+    ctx.fillStyle = '#0F172A';
+    ctx.strokeStyle = '#FBBF24';
+    ctx.lineWidth = 2 * scale;
+    ctx.shadowColor = '#38BDF8';
+    ctx.shadowBlur = 10 * scale;
+    ctx.beginPath();
+    ctx.arc(cx, clockY, 11 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    // Rotating Astrolabe Clock Hands
+    ctx.strokeStyle = '#38BDF8';
+    ctx.lineWidth = 1.6 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx, clockY);
+    ctx.lineTo(cx + Math.cos(animTime * 4) * 8 * scale, clockY + Math.sin(animTime * 4) * 8 * scale);
+    ctx.moveTo(cx, clockY);
+    ctx.lineTo(cx + Math.cos(-animTime * 1.5) * 6 * scale, clockY + Math.sin(-animTime * 1.5) * 6 * scale);
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'shogun_mech') {
+    // Towering Golden Gundam V-Fin Kabuto Crest & Emerald Forehead Sensor
+    ctx.save();
+    const vY = drawY - radius * 0.68;
+    ctx.fillStyle = '#FBBF24';
+    ctx.strokeStyle = '#FEF08A';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.shadowColor = '#F59E0B';
+    ctx.shadowBlur = 10 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx, vY);
+    ctx.lineTo(cx - radius * 1.35, vY - radius * 0.85);
+    ctx.lineTo(cx - radius * 1.1, vY - radius * 0.95);
+    ctx.lineTo(cx, vY - 5 * scale);
+    ctx.lineTo(cx + radius * 1.1, vY - radius * 0.95);
+    ctx.lineTo(cx + radius * 1.35, vY - radius * 0.85);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Central Emerald Mecha Camera Sensor
+    ctx.fillStyle = '#10B981';
+    ctx.fillRect(cx - 3.5 * scale, vY - 7 * scale, 7 * scale, 7 * scale);
+    ctx.restore();
+  } else if (activeSkin === 'marshmallow_dj') {
+    // White Cylinder LED Bucket Top, Neon X-Eyes & RGB Equalizer Collar
+    ctx.save();
+    // Flat Cylinder Bucket Top Ridge
+    ctx.fillStyle = '#FFFFFF';
+    ctx.strokeStyle = '#CBD5E1';
+    ctx.lineWidth = 2 * scale;
+    ctx.beginPath();
+    ctx.ellipse(cx, drawY - radius * 0.82, radius * 0.92, radius * 0.25, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    // Glowing Neon X-Eyes over Visor
+    ctx.strokeStyle = '#EC4899';
+    ctx.lineWidth = 2.8 * scale;
+    ctx.shadowColor = '#EC4899';
+    ctx.shadowBlur = 8 * scale;
+    for (const ex of [cx - eyeOffset, cx + eyeOffset]) {
+      ctx.beginPath();
+      ctx.moveTo(ex - 5 * scale, eyeY - 5 * scale);
+      ctx.lineTo(ex + 5 * scale, eyeY + 5 * scale);
+      ctx.moveTo(ex + 5 * scale, eyeY - 5 * scale);
+      ctx.lineTo(ex - 5 * scale, eyeY + 5 * scale);
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'plague_alchemist') {
+    // Wide-Brim Alchemist Hat & Curved Beaked Mask with Glowing Emerald Lenses
+    ctx.save();
+    const hatY = drawY - radius * 0.78;
+    ctx.fillStyle = '#0F172A';
+    ctx.strokeStyle = '#10B981';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.fillRect(cx - radius * 0.58, hatY - 14 * scale, radius * 1.16, 14 * scale);
+    ctx.strokeRect(cx - radius * 0.58, hatY - 14 * scale, radius * 1.16, 14 * scale);
+    ctx.beginPath();
+    ctx.ellipse(cx, hatY, radius * 1.3, 5.5 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    // Curved Bird-Beak Nose Cone on Visor
+    ctx.fillStyle = '#1E293B';
+    ctx.strokeStyle = '#34D399';
+    ctx.beginPath();
+    ctx.moveTo(cx - 6 * scale, eyeY + 2 * scale);
+    ctx.quadraticCurveTo(cx + 12 * scale, eyeY + 8 * scale, cx + 4 * scale, eyeY + 18 * scale);
+    ctx.lineTo(cx - 6 * scale, eyeY + 10 * scale);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'supernova_phoenix') {
+    // Three-Plume Blazing Solar Phoenix Feather Crest
+    ctx.save();
+    const crestY = drawY - radius * 0.85;
+    for (let i = -1; i <= 1; i++) {
+      ctx.save();
+      ctx.translate(cx + i * 7 * scale, crestY);
+      ctx.rotate(i * 0.35 + Math.sin(animTime * 5 + i) * 0.08);
+      ctx.fillStyle = i === 0 ? '#FEF08A' : '#F97316';
+      ctx.shadowColor = '#EA580C';
+      ctx.shadowBlur = 10 * scale;
+      ctx.beginPath();
+      ctx.ellipse(0, -10 * scale, 4 * scale, 13 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'cyber_neon') {
+    // Cyberpunk Neon Mohawk Fin & Circuit Brow
+    ctx.save();
+    ctx.fillStyle = '#EC4899';
+    ctx.strokeStyle = '#67E8F9';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.shadowColor = '#EC4899';
+    ctx.shadowBlur = 8 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - 5 * scale, drawY - radius * 0.8);
+    ctx.lineTo(cx, drawY - radius * 1.45);
+    ctx.lineTo(cx + 5 * scale, drawY - radius * 0.8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'arcade_retro') {
+    // Classic Red Ball-Top Arcade Joystick mounted on head
+    ctx.save();
+    ctx.strokeStyle = '#94A3B8';
+    ctx.lineWidth = 3 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx, drawY - radius * 0.85);
+    ctx.lineTo(cx, drawY - radius * 1.3);
+    ctx.stroke();
+    ctx.fillStyle = '#EF4444';
+    ctx.shadowColor = '#EF4444';
+    ctx.shadowBlur = 8 * scale;
+    ctx.beginPath();
+    ctx.arc(cx, drawY - radius * 1.35, 7 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'toxic_ooze') {
+    // Biohazard Glass Containment Dome & Glowing Slime Brain
+    ctx.save();
+    ctx.fillStyle = 'rgba(163, 230, 53, 0.35)';
+    ctx.strokeStyle = '#84CC16';
+    ctx.lineWidth = 1.8 * scale;
+    ctx.beginPath();
+    ctx.arc(cx, drawY - radius * 0.55, radius * 0.78, Math.PI, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'shadow_ninja') {
+    // Shinobi Metal Forehead Protector Headband (Hachigane) & Trailing Scarf
+    ctx.save();
+    const hbY = drawY - radius * 0.58;
+    ctx.fillStyle = '#0F172A';
+    ctx.fillRect(cx - radius * 0.9, hbY, radius * 1.8, 7 * scale);
+    ctx.fillStyle = '#94A3B8';
+    ctx.strokeStyle = '#E2E8F0';
+    ctx.lineWidth = 1 * scale;
+    ctx.fillRect(cx - 10 * scale, hbY + 1 * scale, 20 * scale, 5 * scale);
+    ctx.strokeRect(cx - 10 * scale, hbY + 1 * scale, 20 * scale, 5 * scale);
+    ctx.restore();
+  } else if (activeSkin === 'neon_dj') {
+    // Over-Ear Studio DJ Headphones with Glowing RGB Earcups
+    ctx.save();
+    ctx.strokeStyle = '#0F172A';
+    ctx.lineWidth = 4 * scale;
+    ctx.beginPath();
+    ctx.arc(cx, drawY, radius * 1.05, Math.PI * 1.05, Math.PI * 1.95);
+    ctx.stroke();
+    ctx.fillStyle = '#EC4899';
+    ctx.shadowColor = '#EC4899';
+    ctx.shadowBlur = 8 * scale;
+    ctx.beginPath();
+    ctx.ellipse(cx - radius * 1.05, drawY, 5 * scale, 10 * scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx + radius * 1.05, drawY, 5 * scale, 10 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'steam_mechanic') {
+    // Victorian Brass Top Hat & Dual Aviator Goggles on Forehead
+    ctx.save();
+    const hatY = drawY - radius * 0.8;
+    ctx.fillStyle = '#451A03';
+    ctx.strokeStyle = '#D97706';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.fillRect(cx - radius * 0.55, hatY - 16 * scale, radius * 1.1, 16 * scale);
+    ctx.strokeRect(cx - radius * 0.55, hatY - 16 * scale, radius * 1.1, 16 * scale);
+    ctx.beginPath();
+    ctx.ellipse(cx, hatY, radius * 1.1, 4.5 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    // Brass Goggles on hat band
+    ctx.fillStyle = '#38BDF8';
+    ctx.strokeStyle = '#FBBF24';
+    ctx.lineWidth = 2 * scale;
+    ctx.beginPath();
+    ctx.arc(cx - 6 * scale, hatY - 5 * scale, 4.5 * scale, 0, Math.PI * 2);
+    ctx.arc(cx + 6 * scale, hatY - 5 * scale, 4.5 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'inferno_blaze' || activeSkin === 'magma_colossus') {
+    // Curved Molten Obsidian Demon/Golem Horns
+    ctx.save();
+    ctx.fillStyle = '#450A0A';
+    ctx.strokeStyle = '#F97316';
+    ctx.lineWidth = 1.8 * scale;
+    ctx.shadowColor = '#EF4444';
+    ctx.shadowBlur = 8 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.55, drawY - radius * 0.65);
+    ctx.quadraticCurveTo(cx - radius * 1.25, drawY - radius * 1.1, cx - radius * 0.95, drawY - radius * 1.45);
+    ctx.quadraticCurveTo(cx - radius * 0.7, drawY - radius * 0.95, cx - radius * 0.25, drawY - radius * 0.85);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + radius * 0.55, drawY - radius * 0.65);
+    ctx.quadraticCurveTo(cx + radius * 1.25, drawY - radius * 1.1, cx + radius * 0.95, drawY - radius * 1.45);
+    ctx.quadraticCurveTo(cx + radius * 0.7, drawY - radius * 0.95, cx + radius * 0.25, drawY - radius * 0.85);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'frost_titan') {
+    // Jagged Glacial Ice-Spike Crown
+    ctx.save();
+    ctx.fillStyle = '#BAE6FD';
+    ctx.strokeStyle = '#38BDF8';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.shadowColor = '#38BDF8';
+    ctx.shadowBlur = 8 * scale;
+    const baseC = drawY - radius * 0.8;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.65, baseC);
+    ctx.lineTo(cx - radius * 0.45, baseC - 14 * scale);
+    ctx.lineTo(cx - radius * 0.2, baseC - 5 * scale);
+    ctx.lineTo(cx, baseC - 20 * scale);
+    ctx.lineTo(cx + radius * 0.2, baseC - 5 * scale);
+    ctx.lineTo(cx + radius * 0.45, baseC - 14 * scale);
+    ctx.lineTo(cx + radius * 0.65, baseC);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'mecha_sentinel') {
+    // Titanium Mecha V-Crest & Tactical Ear Pods
+    ctx.save();
+    ctx.fillStyle = '#CBD5E1';
+    ctx.strokeStyle = '#38BDF8';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx, drawY - radius * 0.7);
+    ctx.lineTo(cx - radius * 0.95, drawY - radius * 1.25);
+    ctx.lineTo(cx - radius * 0.35, drawY - radius * 0.9);
+    ctx.lineTo(cx, drawY - radius * 1.35);
+    ctx.lineTo(cx + radius * 0.35, drawY - radius * 0.9);
+    ctx.lineTo(cx + radius * 0.95, drawY - radius * 1.25);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'deep_abyss') {
+    // Bioluminescent Anglerfish Lure Stalk & Fin Crest
+    ctx.save();
+    ctx.strokeStyle = '#0284C7';
+    ctx.lineWidth = 2.2 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx, drawY - radius * 0.85);
+    ctx.quadraticCurveTo(cx, drawY - radius * 1.55, cx + 12 * scale, drawY - radius * 1.2);
+    ctx.stroke();
+    ctx.fillStyle = '#67E8F9';
+    ctx.shadowColor = '#38BDF8';
+    ctx.shadowBlur = 10 * scale;
+    ctx.beginPath();
+    ctx.arc(cx + 12 * scale, drawY - radius * 1.2, 4.5 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'plasma_storm') {
+    // Dual Copper Tesla Coil Towers on Head
+    ctx.save();
+    ctx.fillStyle = '#B45309';
+    ctx.strokeStyle = '#67E8F9';
+    ctx.lineWidth = 1.5 * scale;
+    for (const dir of [-1, 1]) {
+      const tx = cx + dir * radius * 0.55;
+      const ty = drawY - radius * 1.15;
+      ctx.beginPath();
+      ctx.arc(tx, ty, 5 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'spectral_phantom') {
+    // Floating Ethereal Wisp Crown
+    ctx.save();
+    ctx.fillStyle = '#E9D5FF';
+    ctx.shadowColor = '#C084FC';
+    ctx.shadowBlur = 10 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.5, drawY - radius * 0.85);
+    ctx.quadraticCurveTo(cx, drawY - radius * 1.55 + Math.sin(animTime * 5) * 4 * scale, cx + radius * 0.5, drawY - radius * 0.85);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'valkyrie_aurora') {
+    // Winged Golden Valkyrie Diadem
+    ctx.save();
+    ctx.fillStyle = '#FBBF24';
+    ctx.strokeStyle = '#FEF08A';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.7, drawY - radius * 0.65);
+    ctx.lineTo(cx, drawY - radius * 1.05);
+    ctx.lineTo(cx + radius * 0.7, drawY - radius * 0.65);
+    ctx.lineTo(cx, drawY - radius * 0.8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'rainbow_aurora') {
+    // Prismatic Crystal Tiara
+    ctx.save();
+    const tCols = ['#EF4444', '#F59E0B', '#10B981', '#38BDF8', '#EC4899'];
+    for (let i = -2; i <= 2; i++) {
+      ctx.fillStyle = tCols[i + 2];
+      ctx.beginPath();
+      ctx.moveTo(cx + i * 6 * scale - 3 * scale, drawY - radius * 0.8);
+      ctx.lineTo(cx + i * 6 * scale, drawY - radius * (1.35 - Math.abs(i) * 0.12));
+      ctx.lineTo(cx + i * 6 * scale + 3 * scale, drawY - radius * 0.8);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'galaxy_cosmic' || activeSkin === 'void_stalker' || activeSkin === 'quantum_overlord') {
+    // Cosmic Singularity Third-Eye Gem on Forehead
+    ctx.save();
+    ctx.fillStyle = '#F472B6';
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 1.2 * scale;
+    ctx.shadowColor = '#C084FC';
+    ctx.shadowBlur = 8 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx, drawY - radius * 0.85);
+    ctx.lineTo(cx + 5 * scale, drawY - radius * 0.65);
+    ctx.lineTo(cx, drawY - radius * 0.45);
+    ctx.lineTo(cx - 5 * scale, drawY - radius * 0.65);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'hero_avenger') {
+    // Heroic Golden Lightning Ear-Wings & Chest Star
+    ctx.save();
+    ctx.fillStyle = '#FBBF24';
+    drawStarSparkle(ctx, cx, drawY + radius * 0.52, 6 * scale);
     ctx.restore();
   } else if (activeSkin === 'cactus_gunslinger') {
     // Western Stetson Cowboy Hat & Gold Sheriff Star
@@ -1322,7 +1950,7 @@ export function drawCharacter(
     ctx.closePath();
     ctx.fill();
     ctx.restore();
-  } else if (activeSkin === 'golden_champion' && mood !== 'triumph') {
+  } else if (activeSkin === 'golden_champion') {
     // Royal Golden Crown (always on for Golden Sovereign)
     ctx.save();
     const crownW = radius * 1.15;
@@ -1432,20 +2060,195 @@ export function drawCharacter(
       ctx.strokeRect(Math.cos(ga) * 6 * scale - 1, Math.sin(ga) * 6 * scale - 1, 3 * scale, 3 * scale);
     }
     ctx.restore();
-  } else if (activeSkin === 'samurai_ronin') {
-    // Floating sakura petals
+  } else if (activeSkin === 'samurai_ronin' || activeSkin === 'cyber_samurai_ronin') {
+    // Floating sakura petals & cyber slash arc
+    if (activeSkin === 'cyber_samurai_ronin') {
+      ctx.save();
+      ctx.strokeStyle = '#06B6D4';
+      ctx.lineWidth = 2 * scale;
+      ctx.shadowColor = '#06B6D4';
+      ctx.shadowBlur = 10 * scale;
+      ctx.beginPath();
+      ctx.arc(cx, drawY, radius * 1.28, animTime * 3, animTime * 3 + Math.PI * 0.65);
+      ctx.stroke();
+      ctx.restore();
+    }
     for (let i = 0; i < 3; i++) {
-      const px = cx + Math.sin(animTime * 1.5 + i * 2.1) * (radius * 1.2);
+      const px = cx + Math.sin(animTime * 1.5 + i * 2.1) * (radius * 1.25);
       const py = drawY - Math.cos(animTime * 1.8 + i) * (radius * 0.8);
       ctx.save();
       ctx.translate(px, py);
       ctx.rotate(animTime + i);
-      ctx.fillStyle = '#F472B6';
+      ctx.fillStyle = activeSkin === 'cyber_samurai_ronin' && i === 0 ? '#06B6D4' : '#F472B6';
       ctx.beginPath();
       ctx.ellipse(0, 0, 3.5 * scale, 2 * scale, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
+  } else if (activeSkin === 'space_pirate_corsair') {
+    // Orbiting Cyber-Parrot Drone & Void Dubloons
+    ctx.save();
+    const droneA = animTime * 2.2;
+    const dx = cx + Math.cos(droneA) * (radius * 1.38);
+    const dy = drawY - radius * 0.35 + Math.sin(droneA * 2) * (5 * scale);
+    ctx.fillStyle = '#EF4444';
+    ctx.strokeStyle = '#FBBF24';
+    ctx.lineWidth = 1.2 * scale;
+    ctx.shadowColor = '#EF4444';
+    ctx.shadowBlur = 8 * scale;
+    ctx.beginPath();
+    ctx.arc(dx, dy, 4.5 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    // Parrot Beak
+    ctx.fillStyle = '#FDE047';
+    ctx.beginPath();
+    ctx.moveTo(dx + 4 * scale, dy - 1 * scale);
+    ctx.lineTo(dx + 8 * scale, dy + 1 * scale);
+    ctx.lineTo(dx + 4 * scale, dy + 3 * scale);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'retro_gameboy_classic') {
+    // Floating 8-Bit Pixel Hearts & Chiptune Square Waves
+    ctx.save();
+    for (let i = 0; i < 3; i++) {
+      const a = animTime * 2 + i * 2.1;
+      const px = cx + Math.cos(a) * (radius * 1.32);
+      const py = drawY + Math.sin(a) * (radius * 0.65);
+      ctx.fillStyle = i % 2 === 0 ? '#84CC16' : '#BE123C';
+      ctx.fillRect(px - 2.5 * scale, py - 2.5 * scale, 5 * scale, 5 * scale);
+    }
+    ctx.restore();
+  } else if (activeSkin === 'mecha_kaiju') {
+    // Nuclear Cherenkov Atomic Breath Ring & Plasma Sparks
+    ctx.save();
+    ctx.strokeStyle = '#10B981';
+    ctx.lineWidth = 2 * scale;
+    ctx.shadowColor = '#10B981';
+    ctx.shadowBlur = 12 * scale;
+    const kPulse = 1 + Math.sin(animTime * 6) * 0.08;
+    ctx.beginPath();
+    ctx.arc(cx, drawY, radius * 1.26 * kPulse, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'pharaoh_anubis') {
+    // Orbiting Golden Ankh Hieroglyphs
+    ctx.save();
+    ctx.strokeStyle = '#FBBF24';
+    ctx.lineWidth = 1.6 * scale;
+    ctx.shadowColor = '#F59E0B';
+    ctx.shadowBlur = 8 * scale;
+    for (let i = 0; i < 2; i++) {
+      const a = animTime * 1.8 + i * Math.PI;
+      const ax = cx + Math.cos(a) * (radius * 1.35);
+      const ay = drawY + Math.sin(a) * (radius * 0.55);
+      ctx.beginPath();
+      ctx.arc(ax, ay - 3 * scale, 2.5 * scale, 0, Math.PI * 2);
+      ctx.moveTo(ax, ay - 0.5 * scale);
+      ctx.lineTo(ax, ay + 5 * scale);
+      ctx.moveTo(ax - 3 * scale, ay + 1.5 * scale);
+      ctx.lineTo(ax + 3 * scale, ay + 1.5 * scale);
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'cyber_netrunner') {
+    // Glitching Hologram Hex-Polygons
+    ctx.save();
+    ctx.strokeStyle = '#06B6D4';
+    ctx.lineWidth = 1.4 * scale;
+    for (let i = 0; i < 3; i++) {
+      const a = animTime * 2.5 + i * 2.1;
+      const hx = cx + Math.cos(a) * (radius * 1.28);
+      const hy = drawY + Math.sin(a) * (radius * 0.65);
+      ctx.strokeRect(hx - 3 * scale, hy - 3 * scale, 6 * scale, 6 * scale);
+    }
+    ctx.restore();
+  } else if (activeSkin === 'celestial_seraphim') {
+    // Divine Starlight Choir Sparkles
+    for (let i = 0; i < 4; i++) {
+      const a = animTime * 1.8 + (i * Math.PI) / 2;
+      drawStarSparkle(ctx, cx + Math.cos(a) * radius * 1.38, drawY + Math.sin(a) * radius * 0.75, 4 * scale);
+    }
+  } else if (activeSkin === 'neon_reaper') {
+    // Drifting Violet & Cyan Soul-Lantern Wisps
+    ctx.save();
+    for (let i = 0; i < 3; i++) {
+      const a = animTime * 2.1 + (i * Math.PI * 2) / 3;
+      const sx = cx + Math.cos(a) * (radius * 1.32);
+      const sy = drawY + Math.sin(a) * (radius * 0.68);
+      ctx.fillStyle = i === 0 ? '#22D3EE' : '#C084FC';
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = 10 * scale;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 3.2 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'chrono_timelord') {
+    // Counter-Rotating Golden Time-Dilation Rings
+    ctx.save();
+    ctx.strokeStyle = 'rgba(251, 191, 36, 0.7)';
+    ctx.lineWidth = 1.4 * scale;
+    ctx.setLineDash([4 * scale, 3 * scale]);
+    ctx.beginPath();
+    ctx.arc(cx, drawY, radius * 1.28, animTime, animTime + Math.PI * 1.5);
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'shogun_mech') {
+    // High-Thrust Emerald Vernier Particle Sparks
+    ctx.save();
+    for (let i = 0; i < 3; i++) {
+      const a = animTime * 3 + i * 2.1;
+      const sx = cx + Math.cos(a) * (radius * 1.3);
+      const sy = drawY + Math.sin(a) * (radius * 0.65);
+      ctx.fillStyle = '#34D399';
+      ctx.beginPath();
+      ctx.arc(sx, sy, 2.5 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'marshmallow_dj') {
+    // Pulsing Neon Soundwave Rings
+    ctx.save();
+    ctx.strokeStyle = '#EC4899';
+    ctx.lineWidth = 1.5 * scale;
+    const mR = radius * (1.15 + ((animTime * 1.5) % 0.3));
+    ctx.beginPath();
+    ctx.arc(cx, drawY, mR, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'plague_alchemist') {
+    // Orbiting Bubbling Emerald & Violet Elixir Flasks
+    ctx.save();
+    for (let i = 0; i < 2; i++) {
+      const a = animTime * 2 + i * Math.PI;
+      const fx = cx + Math.cos(a) * (radius * 1.32);
+      const fy = drawY + Math.sin(a) * (radius * 0.6);
+      ctx.fillStyle = i === 0 ? '#10B981' : '#A855F7';
+      ctx.strokeStyle = '#E2E8F0';
+      ctx.lineWidth = 1 * scale;
+      ctx.beginPath();
+      ctx.arc(fx, fy, 4 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'supernova_phoenix') {
+    // Swirling Solar Flare Embers & Reborn Fire Ring
+    ctx.save();
+    for (let i = 0; i < 4; i++) {
+      const a = animTime * 3.2 + (i * Math.PI) / 2;
+      const px = cx + Math.cos(a) * (radius * 1.35);
+      const py = drawY + Math.sin(a) * (radius * 0.7);
+      ctx.fillStyle = i % 2 === 0 ? '#FEF08A' : '#F97316';
+      ctx.shadowColor = '#EA580C';
+      ctx.shadowBlur = 8 * scale;
+      ctx.beginPath();
+      ctx.arc(px, py, 3 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
   } else if (activeSkin === 'deep_abyss') {
     // Bioluminescent rising sea bubbles
     for (let i = 0; i < 3; i++) {
