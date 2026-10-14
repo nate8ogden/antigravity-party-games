@@ -4087,7 +4087,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `big_ben_brass` (Big Ben Brass Works), `swiss_tourbillon` (Geneva Sapphire Movement), and `aether_foundry` (Copper Aether Foundry).
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
-### #188. Steam Boiler Relief (ID: `steam_boiler_relief`) — [Physics]
+### #188. Steam Boiler Relief (ID: `steam_boiler_relief`) — [Physics] — ✅ STATUS: FULLY RESOLVED & VERIFIED
 - **Class Implementation:** `src/games/SteamBoilerReliefGame.ts` (338 lines)
 - **Tagline:** *High-Pressure Safety Regulator*
 - **Current Control Scheme:** `Hold: Vent Steam Valve`
@@ -4108,7 +4108,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
-### #189. Zeppelin Sky Duel (ID: `zeppelin_dogfight`) — [Action]
+### #189. Zeppelin Sky Duel (ID: `zeppelin_dogfight`) — [Action] — ✅ STATUS: FULLY RESOLVED & VERIFIED
 - **Class Implementation:** `src/games/ZeppelinDogfightGame.ts` (378 lines)
 - **Tagline:** *Victorian Dirigible Aerial Combat*
 - **Current Control Scheme:** `Tap: Rotate & Shoot | Hold: Thrust`
@@ -4129,7 +4129,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
-### #190. Tesla Coil Lightning Net (ID: `tesla_coil_arc`) — [Reflex]
+### #190. Tesla Coil Lightning Net (ID: `tesla_coil_arc`) — [Reflex] — ✅ STATUS: FULLY RESOLVED & VERIFIED
 - **Class Implementation:** `src/games/TeslaCoilArcGame.ts` (355 lines)
 - **Tagline:** *Wardenclyffe High-Voltage Harvester*
 - **Current Control Scheme:** `Hold: Ground Rod`
@@ -4150,7 +4150,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
-### #191. Automaton Clockwork Assembly (ID: `automator_assembly`) — [Action]
+### #191. Automaton Clockwork Assembly (ID: `automator_assembly`) — [Action] — ✅ STATUS: FULLY RESOLVED & VERIFIED
 - **Class Implementation:** `src/games/AutomatorAssemblyGame.ts` (323 lines)
 - **Tagline:** *Hydraulic Toy Stamp Factory*
 - **Current Control Scheme:** `Tap: Stamp Gear`
@@ -4171,7 +4171,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
-### #192. Pneumatic Tube Dispatch (ID: `pneumatic_tube_rush`) — [Puzzle]
+### #192. Pneumatic Tube Dispatch (ID: `pneumatic_tube_rush`) — [Puzzle] — ✅ STATUS: FULLY RESOLVED & VERIFIED
 - **Class Implementation:** `src/games/PneumaticTubeRushGame.ts` (332 lines)
 - **Tagline:** *Underground Brass Capsule Sorter*
 - **Current Control Scheme:** `Tap: Toggle Gate`
@@ -4192,7 +4192,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
-### #193. Ornithopter Wing Flight (ID: `ornithopter_flock`) — [Racing]
+### #193. Ornithopter Wing Flight (ID: `ornithopter_flock`) — [Racing] — ✅ STATUS: FULLY RESOLVED & VERIFIED
 - **Class Implementation:** `src/games/OrnithopterFlockGame.ts` (357 lines)
 - **Tagline:** *Da Vinci Flapping Air Spire*
 - **Current Control Scheme:** `Tap: Flap Wings`
@@ -4213,7 +4213,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
-### #194. Pressure Gauge Safe Cracker (ID: `pressure_gauge_lock`) — [Puzzle]
+### #194. Pressure Gauge Safe Cracker (ID: `pressure_gauge_lock`) — [Puzzle] — ✅ STATUS: FULLY RESOLVED & VERIFIED
 - **Class Implementation:** `src/games/PressureGaugeLockGame.ts` (305 lines)
 - **Tagline:** *Clockwork Tumbler Lock Duel*
 - **Current Control Scheme:** `Tap: Lock Tumbler Pin`
@@ -4234,7 +4234,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
-### #195. Copper Conduit Smelter (ID: `copper_conduit`) — [Action]
+### #195. Copper Conduit Smelter (ID: `copper_conduit`) — [Action] — ✅ STATUS: FULLY RESOLVED & VERIFIED
 - **Class Implementation:** `src/games/CopperConduitGame.ts` (334 lines)
 - **Tagline:** *Foundry Molten Flow Manifold*
 - **Current Control Scheme:** `Tap: Rotate Valve`
@@ -4255,7 +4255,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
-### #196. Velodrome Monocycle Derby (ID: `monocycle_derby`) — [Racing]
+### #196. Velodrome Monocycle Derby (ID: `monocycle_derby`) — [Racing] — ✅ STATUS: FULLY RESOLVED & VERIFIED
 - **Class Implementation:** `src/games/MonocycleDerbyGame.ts` (298 lines)
 - **Tagline:** *Giant Gyroscopic Single-Wheel Sprint*
 - **Current Control Scheme:** `Hold: Pedal & Lean`
@@ -4276,7 +4276,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
-### #197. Cyber Samurai Katana Duel (ID: `cyber_samurai_slash`) — [Action]
+### #197. Cyber Samurai Katana Duel (ID: `cyber_samurai_slash`) — [Action] — ✅ STATUS: FULLY RESOLVED & VERIFIED
 - **Class Implementation:** `src/games/CyberSamuraiSlashGame.ts` (373 lines)
 - **Tagline:** *High-Speed Neon Energy Parry*
 - **Current Control Scheme:** `Tap: Slash | Hold: Parry Shield`
@@ -4297,7 +4297,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
-### #198. Mainframe ICE Core Breach (ID: `mainframe_breach`) — [Puzzle]
+### #198. Mainframe ICE Core Breach (ID: `mainframe_breach`) — [Puzzle] — ✅ STATUS: FULLY RESOLVED & VERIFIED
 - **Class Implementation:** `src/games/MainframeBreachGame.ts` (350 lines)
 - **Tagline:** *Quantum Data Packet Injection*
 - **Current Control Scheme:** `Tap: Fire Data Packet`
@@ -4318,7 +4318,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
-### #199. Hovercar Skyline Highway (ID: `hovercar_skyline`) — [Racing]
+### #199. Hovercar Skyline Highway (ID: `hovercar_skyline`) — [Racing] — ✅ STATUS: FULLY RESOLVED & VERIFIED
 - **Class Implementation:** `src/games/HovercarSkylineGame.ts` (659 lines)
 - **Tagline:** *Neo-Tokyo Cyberway Traffic Weave*
 - **Current Control Scheme:** `Tap: Switch Lane`
@@ -4339,7 +4339,7 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
 5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
 
-### #200. Hologram Glitch Purge (ID: `hologram_glitch`) — [Reflex]
+### #200. Hologram Glitch Purge (ID: `hologram_glitch`) — [Reflex] — ✅ STATUS: FULLY RESOLVED & VERIFIED
 - **Class Implementation:** `src/games/HologramGlitchGame.ts` (294 lines)
 - **Tagline:** *Android Replica Perception Reflex*
 - **Current Control Scheme:** `Tap: Purge Glitch`
