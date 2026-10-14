@@ -4805,256 +4805,196 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #225. Bamboo Pole Vault (ID: `bamboo_pole_vault`) — [Sports]
-- **Class Implementation:** `src/games/BambooPoleVaultGame.ts` (357 lines)
+- **Class Implementation:** `src/games/BambooPoleVaultGame.ts` (850 lines)
 - **Tagline:** *Jungle Ravine Spring Leap*
-- **Current Control Scheme:** `Tap: Plant Pole | Release: Launch Vault`
-- **Stated Gameplay Concept:** Sprint down the runway and plant your flexible green bamboo pole into the stone vault box! Hold to bend the pole and release at maximum spring tension to vault the chasm.
+- **Current Control Scheme:** `Tap: Sprint Stride • Hold Action: Bend Bamboo Pole & Whip-Snap Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Sprint down the shared jungle ravine runway and plant your flexible green bamboo pole into the stone vault box! Bend the pole into the 72%–98% Sweet Spot and release to launch a Sky-High Vault over the crossbar, snatching Golden Idol Rings (`+95 pts`) and whipping rivals off their stride!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Bamboo Pole Vault* (*Jungle Ravine Spring Leap*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Sprint down the runway and plant your flexible green bamboo pole into the stone vault box! Hold to bend the pole and rel..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The hold-to-charge mechanic (`Tap: Plant Pole | Release: Launch Vault`) lacks kinetic feedback. There is no exponential power curve or visual charge ring, making release timing feel mushy and imprecise. Impacts lack punch, with no freeze-frames or satisfying screen recoil.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Bamboo Pole Vault'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Originally a quarantine-lane vaulting bar with no crossbar height scaling, no mid-air ring pickups, and no pole-whipping collisions.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Rebuilt into a shared jungle ravine pole-vaulting showdown with elastic bamboo bending physics, rising crossbars, Golden Idol Rings, and Whip-Snap shunts.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Bamboo Pole Vault* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Jungle Runway & Elastic Bamboo Vault Physics:** Players build sprint velocity and bend their bamboo pole using Hooke's Law spring physics to clear progressively higher crossbars and snatch mid-air Golden Idol Rings (`+95 pts`).
+2. **Hold-to-Charge Sky-Vault & Bamboo Whip Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** launches a **Sky-High Apex Vault** (`+90 pts` + crossbar bonus) and triggers a **Bamboo Whip-Snap Shunt** (`+70 pts` **"POLE SHUNT!"**) that trips nearby rival vaulters!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `bamboo_ravine` (Emerald Bamboo Gorge), `olympic_stadium` (Golden Track Stadium), and `lava_chasm_vault` (Obsidian Caldera Vault).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #226. Volcano Lava Leap (ID: `volcano_lava_leap`) — [Action]
-- **Class Implementation:** `src/games/VolcanoLavaLeapGame.ts` (396 lines)
+- **Class Implementation:** `src/games/VolcanoLavaLeapGame.ts` (865 lines)
 - **Tagline:** *Caldera Basalt Pillar Hop*
-- **Current Control Scheme:** `Steer / Tap: Leap Basalt Pillar`
-- **Stated Gameplay Concept:** Survive in the boiling crater of an active supervolcano! Hop between obsidian basalt pillars, avoid rumbling pillars about to submerge in molten lava, and collect fire rubies.
+- **Current Control Scheme:** `Steer: Aim Leap • Tap: Hop Basalt Pillar • Hold Action: Magma Slam & Pillar-Sink Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Survive inside the boiling crater of an active supervolcano! Hop across 19 hexagonal obsidian basalt pillars, evacuate rumbling pillars before they submerge into molten magma, snatch Fire Rubies (`+85 pts`), and release a 72%–98% Sweet Spot Magma Slam to sink rival pillars!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Volcano Lava Leap* (*Caldera Basalt Pillar Hop*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Survive in the boiling crater of an active supervolcano! Hop between obsidian basalt pillars, avoid rumbling pillars abo..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Volcano Lava Leap'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously lacked hexagonal basalt pillar geometry and didn't let players intentionally sink the pillar a rival was standing on.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Transformed into a shared 19-hex basalt caldera survival brawl with sinking pillars, Fire Rubies, and Magma Slam pillar-sinking shunts.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Volcano Lava Leap* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 19-Hex Basalt Caldera & Submerging Pillars:** Players hop across hexagonal obsidian columns (`STABLE` -> `RUMBLING` -> `SUBMERGED`) over churning magma, collecting Fire Rubies (`+85 pts`) and Golden Phoenix Feathers (`+110 pts`).
+2. **Hold-to-Charge Magma Slam & Pillar-Sink Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** executes a **Magma Meteor Slam** (`+85 pts`) that immediately destabilizes adjacent basalt pillars and launches a **Caldera Shockwave Shunt** (`+75 pts` **"MAGMA SHUNT!"**) to knock rivals into the lava!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `kilauea_caldera` (Kilauea Basalt Crater), `obsidian_soul_forge` (Blue-Flame Soul Forge), and `dragon_lair_vault` (Golden Hoard Caldera).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #227. Caterpillar Inchworm (ID: `caterpillar_inchworm`) — [Reflex]
-- **Class Implementation:** `src/games/CaterpillarInchwormGame.ts` (312 lines)
+- **Class Implementation:** `src/games/CaterpillarInchwormGame.ts` (850 lines)
 - **Tagline:** *Dewy Twig Scrunch & Surge*
-- **Current Control Scheme:** `Hold: Contract Tail | Release: Extend Head`
-- **Stated Gameplay Concept:** Inchworm along garden rose branches! Hold to contract your tail forward into an arched U-shape, then release to surge your head forward and snatch morning dew drops.
+- **Current Control Scheme:** `Steer: Switch Rose Branch • Hold Action: Scrunch Tail & Spring-Lunge Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Inchworm along 3 intertwined garden rose branches! Hold to scrunch your segmented body into a coiled U-arch and release in the 72%–98% Sweet Spot to surge forward, gobbling Morning Dew Drops (`+45 pts`) and Golden Monarch Chrysalis orbs (`+90 pts`) while vaulting over Rose Thorns and bumping rivals!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Caterpillar Inchworm* (*Dewy Twig Scrunch & Surge*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Inchworm along garden rose branches! Hold to contract your tail forward into an arched U-shape, then release to surge yo..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The single-button input (`Hold: Contract Tail | Release: Extend Head`) feels limp and tactilely unrewarding. Misfires are common, and successful actions trigger faint audio chirps and tiny particle bursts that fail to deliver the dopamine hit of a real arcade hit.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Caterpillar Inchworm'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Originally a 1-lane scrunch bar with no branch switching, no Rose Thorn vaulting, and no caterpillar bumping.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Rebuilt into a shared 3-branch rose garden race with U-arch spring physics, Rose Thorn hazards, and Butterfly-Boost shunts.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Overhaul *Caterpillar Inchworm* into a high-stakes push-your-luck showdown. Introduce a central risk-reward multiplier where waiting until the last split-second multiplies your score exponentially, but false-starts result in a comical 2-second electro-shock stun.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 3-Branch Rose Garden & Segmented U-Arch Physics:** Players switch between 3 intertwined rose stems, coiling their 6-segment caterpillar body to lunge across Rose Thorns and snatch Morning Dew Drops (`+45 pts`) and Golden Royal Jelly (`+90 pts`).
+2. **Hold-to-Charge Spring-Lunge & Silk-Bump Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** triggers a **Monarch Spring-Lunge** (`+85 pts` thorn-clearing leap) and fires a **Silk-Recoil Shunt** (`+70 pts` **"INCHWORM SHUNT!"**) that bounces nearby caterpillars backward!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `rose_garden_dew` (Morning Rose Trellis), `cherry_blossom_bough` (Sakura Spring Branch), and `neon_terrarium` (Bioluminescent Fern Bough).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #228. Honeybee Nectar Relay (ID: `honeybee_nectar_relay`) — [Racing]
 - **Class Implementation:** `src/games/HoneybeeNectarRelayGame.ts` (884 lines)
 - **Tagline:** *Wildflower Harvest Rush*
-- **Current Control Scheme:** `Steer: Fly Bee | Hover: Sip Nectar`
-- **Stated Gameplay Concept:** Buzz across the blooming flower meadow! Sip nectar from clover and lavender blossoms, dodge patrolling garden wasps, and deposit sweet honey into your hive cell.
+- **Current Control Scheme:** `Steer: Fly Bee • Tap: Sip / Deposit Nectar • Hold Action: Royal Jelly Turbo & Stinger-Bump Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Buzz across a blooming wildflower meadow! Sip nectar from Clover, Lavender, and Golden Sunflowers (carrying up to 5 loads at a time), evade patrolling Hornet Guards, and bank multi-load combos into the central Golden Honeycomb Hive—or release a 72%–98% Sweet Spot Royal Jelly Turbo to bump rivals and spill their nectar!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** In *Honeybee Nectar Relay*, the player controls an avatar that is permanently rotating in a circle. You don't choose where you want to go; you wait patiently for the engine's rotation timer to swing your nose toward the objective. It removes human agency and replaces it with passive waiting.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The hold-to-charge mechanic (`Steer: Fly Bee | Hover: Sip Nectar`) lacks kinetic feedback. There is no exponential power curve or visual charge ring, making release timing feel mushy and imprecise. Impacts lack punch, with no freeze-frames or satisfying screen recoil.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Honeybee Nectar Relay'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously used awkward passive rotation and lacked multi-load nectar risk-reward or mid-air bee collisions.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Overhauled into a shared wildflower meadow harvest with 5-load combo banking, patrolling Hornets, and Stinger-Bump nectar steals.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Revamp the handling model in *Honeybee Nectar Relay* with aggressive contact bumping, responsive slipstream drafting (+25% acceleration when directly behind a leader), and a rubber-band Nitro recharge for trailing racers to ensure photo-finish climaxes on the final turn.
-2. **Controls & Tactility Overhaul:** Eliminate passive auto-rotation. Implement an active directional snap system: tap to pivot 45° instantly, double-tap for an immediate 180° turnaround, and hold to charge an explosive forward dash with a visible expanding aura and rising audio whine.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Wildflower Meadow & 5-Load Honeycomb Banking:** Players buzz between regenerating Clover, Lavender, and Golden Sunflowers (`2x` value), stacking up to 5 nectar loads for exponential Honeycomb Hive combo payouts (`+35` to `+260 pts`).
+2. **Hold-to-Charge Royal Jelly Turbo & Stinger-Bump Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** launches a **Royal Jelly Turbo Dash** (`+85 pts`) and triggers a **Stinger-Bump Shunt** (`+75 pts` **"BEE SHUNT!"**) that knocks rival bees back and scatters their carried nectar!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `clover_meadow` (Sunny Wildflower Meadow), `lavender_provence` (Provence Lavender Fields), and `golden_apiary` (Royal Amber Honeycomb).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #229. Spider Web Tangle (ID: `spider_web_tangle`) — [Puzzle]
-- **Class Implementation:** `src/games/SpiderWebTangleGame.ts` (351 lines)
+- **Class Implementation:** `src/games/SpiderWebTangleGame.ts` (855 lines)
 - **Tagline:** *Radial Dew Web Trapper*
-- **Current Control Scheme:** `Tap: Crawl Web | Steer: Radial Switch`
-- **Stated Gameplay Concept:** Traverse an 8-spoke morning spiderweb! Crawl across radial threads to wrap trapped fruit flies and gnats in sticky silk before the morning rain arrives.
+- **Current Control Scheme:** `Steer: Crawl Spoke / Ring • Tap: Spin Silk Cocoon • Hold Action: Zip-Line Pounce & Web-Pluck Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Skitter across a shared 12-spoke, 4-ring geometric morning spiderweb! Follow vibrating spoke threads to wrap struggling Golden Beetles (`+90 pts`) and Emerald Flies (`+55 pts`) in silk cocoons before Angry Wasps tear the web, or release a 72%–98% Sweet Spot Web-Pluck Shunt to bounce rival spiders off their spoke!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Spider Web Tangle* (*Radial Dew Web Trapper*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Traverse an 8-spoke morning spiderweb! Crawl across radial threads to wrap trapped fruit flies and gnats in sticky silk ..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Spider Web Tangle'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Originally spiders couldn't feel web vibrations or pluck radial threads to launch rivals across the web.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Rebuilt into a shared 12-spoke radial spiderweb arena with thread vibration telegraphs, Golden Beetles, Angry Wasps, and Web-Pluck shunts.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Spider Web Tangle* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 12-Spoke Radial Spiderweb & Vibration Physics:** Trapped Emerald Flies (`+55 pts`), Golden Scarabs (`+95 pts`), and Angry Wasps send harmonic ripples down their spoke; spiders race along spokes and rings to wrap prey in silk cocoons.
+2. **Hold-to-Charge Zip-Line Pounce & Web-Pluck Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** fires a **Silk Zip-Line Pounce** (`+85 pts` instant wrap) and snaps a **Harmonic Web-Pluck Shunt** (`+70 pts` **"WEB SHUNT!"**) that vibrates the web and bounces rivals off their ring!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `morning_dew_web` (Silver Dewdrop Orb-Web), `victorian_attic` (Moonlit Gables Cobweb), and `neon_laser_grid` (Cyber Silk Matrix).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #230. Ant Colony Haul (ID: `ant_colony_haul`) — [Action]
-- **Class Implementation:** `src/games/AntColonyHaulGame.ts` (333 lines)
+- **Class Implementation:** `src/games/AntColonyHaulGame.ts` (860 lines)
 - **Tagline:** *Subterranean Picnic Pantry*
-- **Current Control Scheme:** `Steer: Scurry Ant | Touch: Grab & Deliver`
-- **Stated Gameplay Concept:** Scurry to the surface picnic table and haul heavy sugar cubes, watermelon seeds, and berry crumbs deep into the underground colony queen pantry chamber.
+- **Current Control Scheme:** `Steer: Scurry Ant • Tap: Mandible Grab / Toss • Hold Action: Titan-Ant Heave & Pheromone Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Raid the surface gingham picnic blanket and haul Sugar Cubes (`+45 pts`), Watermelon Slices (`+70 pts`), and Golden Gummy Bears (`+110 pts`) down subterranean tunnels into the Queen's Pantry! Dodge Magnifying Glass Sunbeams, or release a 72%–98% Sweet Spot Titan-Ant Heave to steal crumbs right out of rival mandibles!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Ant Colony Haul* (*Subterranean Picnic Pantry*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Scurry to the surface picnic table and haul heavy sugar cubes, watermelon seeds, and berry crumbs deep into the undergro..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Ant Colony Haul'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously an isolated dot-fetcher with no subterranean tunnel cross-section, no heavy food weight physics, and no mandible tug-of-war steals.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Transformed into a shared surface-picnic-to-underground-colony heist with heavy food physics, Magnifying Glass Sunbeams, and Titan-Ant steals.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Ant Colony Haul* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Surface Picnic Blanket & Subterranean Tunnel Cross-Section:** Players scurry between the sunny gingham picnic surface and underground anthill chambers, hauling Sugar Cubes, Strawberries, and Golden Gummy Bears (`+110 pts`) while dodging sweeping Magnifying Glass Sunbeams.
+2. **Hold-to-Charge Titan-Ant Heave & Mandible Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** activates **Titan-Ant Strength** (zero weight penalty + `+85 pts`) and triggers a **Mandible Clash Shunt** (`+75 pts` **"MANDIBLE STEAL!"**) that knocks carried food out of rival jaws!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `gingham_picnic` (Sunny Gingham Picnic), `red_clay_canyon` (Fire-Ant Mesa Mound), and `kitchen_counter` (Midnight Sugar Heist).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #231. Firefly Night Beacon (ID: `firefly_night_beacon`) — [Party]
-- **Class Implementation:** `src/games/FireflyNightBeaconGame.ts` (370 lines)
+- **Class Implementation:** `src/games/FireflyNightBeaconGame.ts` (850 lines)
 - **Tagline:** *Midnight Meadow Glow Harmony*
-- **Current Control Scheme:** `Tap: Flash Lantern | Steer: Hover`
-- **Stated Gameplay Concept:** Synchronize your bioluminescent firefly lantern with the rhythmic flashes of the central meadow mother beacon! Go dark when predatory night bats swoop overhead.
+- **Current Control Scheme:** `Steer: Hover Firefly • Tap: Pulse Bioluminescence • Hold Action: Solar-Flare Nova & Bat-Lure Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Hover across a moonlit pond meadow! Pulse your bioluminescent lantern in rhythm with the Mother Lantern's expanding harmonic rings (`+60 pts`) and illuminate hidden Starlight Orchids (`+85 pts`), go dark when Swooping Night Bats scan the sky, or release a 72%–98% Sweet Spot Solar-Flare Nova to blind rivals and attract bats to their position!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Firefly Night Beacon* (*Midnight Meadow Glow Harmony*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Synchronize your bioluminescent firefly lantern with the rhythmic flashes of the central meadow mother beacon! Go dark w..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The hold-to-charge mechanic (`Tap: Flash Lantern | Steer: Hover`) lacks kinetic feedback. There is no exponential power curve or visual charge ring, making release timing feel mushy and imprecise. Impacts lack punch, with no freeze-frames or satisfying screen recoil.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Firefly Night Beacon'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Originally a static rhythm tap game where fireflies couldn't illuminate hidden flowers in the dark or lure swooping bats onto their rivals.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Rebuilt as a moonlit bioluminescent stealth-rhythm duel with hidden Starlight Orchids, Sonar Night Bats, and Solar-Flare Nova shunts.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Firefly Night Beacon* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Moonlit Bioluminescent Pond & Starlight Orchid Discovery:** Players hover across dark cattail reeds, pulsing their lantern on beat with the central Mother Beacon (`+60 pts` Perfect Sync) to reveal and claim hidden Starlight Orchids (`+85 pts`) while going dark during Night Bat sonar sweeps.
+2. **Hold-to-Charge Solar-Flare Nova & Bat-Lure Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** unleashes a **Solar-Flare Nova** (auto-claims nearby orchids + `+85 pts`) and tags rivals with a **Phosphor Bat-Lure Shunt** (`+70 pts` **"BAT LURE!"**) that draws swooping bats straight to them!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `moonlit_bayou` (Cypress Firefly Bayou), `enchanted_glade` (Fairy Lantern Woods), and `neon_cyber_marsh` (Synthwave Glow Reedbed).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #232. Dung Beetle Roll (ID: `dung_beetle_roll`) — [Physics]
-- **Class Implementation:** `src/games/DungBeetleRollGame.ts` (383 lines)
+- **Class Implementation:** `src/games/DungBeetleRollGame.ts` (865 lines)
 - **Tagline:** *Colossal Soil Sphere Smash*
-- **Current Control Scheme:** `Steer: Roll Mud Ball | Ram: Bump Rivals`
-- **Stated Gameplay Concept:** Roll an expanding sphere of rich garden moss and soil! Gather loose soil clumps to grow the ball into an unstoppable boulder and score into the compost goal.
+- **Current Control Scheme:** `Steer: Roll Sphere • Tap: Bank into Burrow • Hold Action: Boulder Bulldoze & Mud-Splatter Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Roll an expanding sphere of rich garden moss, clay, and Golden Acorn nuggets across a shared terraced hillside! Grow your sphere into a colossal boulder to crush smaller rivals and bank massive size multipliers into the central Royal Burrow, or release a 72%–98% Sweet Spot Boulder Bulldoze to shatter rival spheres!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Dung Beetle Roll* (*Colossal Soil Sphere Smash*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Roll an expanding sphere of rich garden moss and soil! Gather loose soil clumps to grow the ball into an unstoppable bou..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Dung Beetle Roll'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously lacked Katamari-style size-vs-momentum physics and didn't allow bigger spheres to smash and chip chunks off rival balls.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Overhauled into a shared Katamari-style boulder-rolling brawl where sphere radius determines momentum, banking payouts, and smash knockback!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Dung Beetle Roll* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Katamari-Style Sphere Growth & Royal Burrow Banking:** Players roll soil spheres over Moss Clumps, Clay Pebbles, and Golden Acorns (`+50 pts` + rapid radius growth); larger spheres gain exponential banking bonuses (`up to +240 pts`) at the central Royal Burrow.
+2. **Hold-to-Charge Boulder Bulldoze & Sphere-Shatter Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** launches a **Boulder Bulldoze Charge** (`+85 pts`) that smashes rival beetles (`+75 pts` **"BOULDER SMASH!"**), chipping loose soil clumps off their sphere for you to steal!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `savanna_terrace` (Serengeti Scarab Slope), `mossy_zen_garden` (Kyoto Moss Boulder Garden), and `scarab_gold_tomb` (Pharaoh Golden Sun Orb).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #233. Ladybug Aphid Hunt (ID: `ladybug_aphid_hunt`) — [Action]
-- **Class Implementation:** `src/games/LadybugAphidHuntGame.ts` (329 lines)
+- **Class Implementation:** `src/games/LadybugAphidHuntGame.ts` (850 lines)
 - **Tagline:** *Rose Leaf Pest Gobbler*
-- **Current Control Scheme:** `Steer: Skitter | Tap: Flutter Dash`
-- **Stated Gameplay Concept:** Skitter across broad green rose leaves hunting garden aphid pests! Gobble green and golden royal aphids, and tap to flutter your spotted wings in a rapid snap dash.
+- **Current Control Scheme:** `Steer: Skitter Leaf • Tap: Wing-Flutter Dash • Hold Action: Polka-Dot Cyclone & Shell-Bump Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Skitter across a shared canopy of 5 overlapping dewy rose leaves! Herd and gobble fleeing Green Aphids (`+35 pts`) and Golden Royal Aphids (`+90 pts`), evade snapping Venus Flytraps, and release a 72%–98% Sweet Spot Polka-Dot Cyclone to shell-bump rival ladybugs off the leaf edge!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Ladybug Aphid Hunt* (*Rose Leaf Pest Gobbler*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Skitter across broad green rose leaves hunting garden aphid pests! Gobble green and golden royal aphids, and tap to flut..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Ladybug Aphid Hunt'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Originally a generic flat box collector—one of the exact "replica bug collection" games the user called out—with no leaf-edge physics, no Venus Flytrap hazards, and no shell-bumping sumo knockoffs.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Transformed into an overlapping 5-leaf canopy sumo-hunter with fleeing aphid herds, snapping Venus Flytraps, and Shell-Bump leaf knockoffs!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Ladybug Aphid Hunt* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared 5-Leaf Rose Canopy & Fleeing Aphid Herds:** Players skitter across 5 dewy rose leaves suspended above a garden pond; Aphid herds scatter away from approaching movement while snapping Venus Flytraps guard the high-value Golden Royal Aphids (`+90 pts`).
+2. **Hold-to-Charge Polka-Dot Cyclone & Shell-Bump Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** triggers a **Polka-Dot Wing Cyclone** (vacuum-pulls nearby aphids + `+85 pts`) and delivers a **Hard-Shell Sumo Shunt** (`+75 pts` **"SHELL BUMP!"**) that knocks rivals off the leaf edge!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `crimson_rose_canopy` (Dewy Crimson Rose Bush), `sunflower_crown` (Giant Sunflower Petals), and `bonsai_sky_leaf` (Zen Maple Canopy).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #234. Grasshopper High Jump (ID: `grasshopper_high_jump`) — [Sports]
-- **Class Implementation:** `src/games/GrasshopperHighJumpGame.ts` (307 lines)
+- **Class Implementation:** `src/games/GrasshopperHighJumpGame.ts` (855 lines)
 - **Tagline:** *Spring Leg Meadow Leap*
-- **Current Control Scheme:** `Hold: Charge Jump | Release: Launch Leap`
-- **Stated Gameplay Concept:** Charge your powerful hind legs to launch soaring parabolic leaps across garden stepping stones! Time releases to land dead-center on 3-leaf golden clover landing pads.
+- **Current Control Scheme:** `Steer: Aim Trajectory • Hold Action: Coil Hind-Legs & Meteor-Stomp Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Coil your powerful grasshopper hind-legs and launch soaring parabolic leaps across swaying meadow stalks and Golden 4-Leaf Clover pads (`+95 pts`)! Land dead-center for bullseye multipliers, or release in the 72%–98% Sweet Spot to execute a Goomba-style Meteor-Stomp on rival grasshoppers' heads!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Grasshopper High Jump* (*Spring Leg Meadow Leap*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Charge your powerful hind legs to launch soaring parabolic leaps across garden stepping stones! Time releases to land de..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** The hold-to-charge mechanic (`Hold: Charge Jump | Release: Launch Leap`) lacks kinetic feedback. There is no exponential power curve or visual charge ring, making release timing feel mushy and imprecise. Impacts lack punch, with no freeze-frames or satisfying screen recoil.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Grasshopper High Jump'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously a static 1D jump-distance bar where grasshoppers couldn't aim trajectories across swaying stalks or stomp on rival heads mid-air.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Rebuilt into a shared 2.5D meadow platformer with live parabolic trajectory arcs, swaying clover stalks, and head-stomp dunking!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Grasshopper High Jump* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Swaying Meadow Stalks & Parabolic Trajectory Aiming:** Players aim live dotted jump arcs across 9 swaying clover stalks, toadstools, and Golden 4-Leaf Clover Bullseyes (`+95 pts` + `2x` center-pad multiplier) above a frog-patrolled stream.
+2. **Hold-to-Charge Hind-Leg Coil & Meteor-Stomp Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** launches a **Supersonic Locust Vault** (`+85 pts`) that triggers a **Meteor Head-Stomp Shunt** (`+75 pts` **"HEAD STOMP!"**) upon landing, bouncing rivals off their stalk!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `clover_stream` (Sunny Clover Brook), `autumn_wheatfield` (Golden Harvest Stalks), and `neon_cyber_reeds` (Bioluminescent Marsh Stalks).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #235. Dragonfly Dogfight (ID: `dragonfly_dogfight`) — [Action]
-- **Class Implementation:** `src/games/DragonflyDogfightGame.ts` (347 lines)
+- **Class Implementation:** `src/games/DragonflyDogfightGame.ts` (865 lines)
 - **Tagline:** *Lily Pond Aerial Ace Duel*
-- **Current Control Scheme:** `Steer: Fly Dragonfly | Tap: Supersonic Dash`
-- **Stated Gameplay Concept:** Dart across the tranquil garden lily pond at supersonic speeds! Hover-dash to snap flying mosquitoes out of the air and dive on rival dragonflies in mid-air duels.
+- **Current Control Scheme:** `Steer: 360° Vector Flight • Tap: Wing-Snap Dash • Hold Action: Supersonic Tail-Chase & Sonic-Boom Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Directly addressing the user's feedback (*"a game that has you collect flies and a game that has you collect dragonflies"*), *Dragonfly Dogfight* is NO LONGER a bug-collecting clone! It is now a 360° Top-Gun Aerial Dogfight & Tail-Lock Tag Duel over a koi pond where dragonflies lock radar crosshairs onto rival tails, fire Dewdrop Water-Cannons, thread Bamboo Hoop Rings (`+75 pts`), and unleash Supersonic Sonic-Boom Shunts!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** The premise of *Dragonfly Dogfight* (*Lily Pond Aerial Ace Duel*) struggles with basic intuitive sense on a physical level. The game asks players to: *"Dart across the tranquil garden lily pond at supersonic speeds! Hover-dash to snap flying mosquitoes out of the air and ..."*. Instead of intuitive physical actions that everyone understands (like shoving, jumping, or racing), players are forced to interpret abstract game rules that create ludonarrative dissonance.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Dragonfly Dogfight'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Explicitly called out by the user as a replica bug-collection game (*"basically replica games (e.x. a game that has you collect flies and a game that has you collect dragonflies or smthn)"*). Having players passively collect mosquito dots in a box was redundant with frog/spider/ladybug games.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Completely reinvented as an intense 360° **Aerial Ace Dogfight & Tail-Chase Lock-On Duel** with Dewdrop Water-Cannons, Aerial Hoop Rings, Leaping Koi hazards, and Sonic-Boom barrel rolls!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Dragonfly Dogfight* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Tune input responsiveness with zero dead-zones and snappy kinematic braking. Add exponential power scaling to hold actions with visual charging rings and crisp recoil kickback upon release.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Zero Bug-Collecting Clone — 360° Aerial Ace Dogfight & Tail-Lock Radar:** Players pilot 4-winged dragonfly aces in 360° vector flight; flying behind a rival builds a **Tail-Chase Radar Lock** that fires homing **Dewdrop Water-Cannon Volleys** (`+70 pts` aerial takedown) while threading Bamboo Sky Hoops (`+75 pts`) and dodging Leaping Giant Koi!
+2. **Hold-to-Charge Supersonic Afterburner & Sonic-Boom Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** triggers a **Mach-2 Dragonfly Afterburner** (`+90 pts` + barrel-roll evasion) and detonates a **Sonic-Boom Shockwave Shunt** (`+75 pts` **"SONIC DOGFIGHT!"**) that spins out rival flyers!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `koi_lotus_pond` (Imperial Koi Lotus Pond), `canyon_updraft` (Red Rock Dragonfly Gorge), and `mecha_ornithopter` (Dune Ornithopter Dogfight).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #236. Centipede Slalom (ID: `centipede_slalom`) — [Racing]
-- **Class Implementation:** `src/games/CentipedeSlalomGame.ts` (355 lines)
+- **Class Implementation:** `src/games/CentipedeSlalomGame.ts` (855 lines)
 - **Tagline:** *Wiggling Pebble Gate Weave*
-- **Current Control Scheme:** `Steer: Slalom Wiggle`
-- **Stated Gameplay Concept:** Guide a multi-segmented wriggling garden centipede through narrow red-and-white slalom gate pairs! Weave cleanly without crashing your trailing body into stone posts.
+- **Current Control Scheme:** `Steer: Carve Slalom • Tap: Tail-Whip Flick • Hold Action: Millipede Overdrive & Body-Block Shunt (72–98%) | T / 1-3: Theme`
+- **Stated Gameplay Concept:** Carve a 10-segmented articulated centipede down a shared mossy creek slalom course! Thread red-and-blue slalom flag gates (`+50 pts` + combo speed boost) and Golden Arch Gates (`+95 pts`) without clipping your trailing body segments on river stones, or release a 72%–98% Sweet Spot Tail-Whip Overdrive to whip rivals into gate posts!
 
 #### 🔍 The Brutal Human Critique
-- **The 'Makes No Sense' & Concept Failure:** In *Centipede Slalom*, the player controls an avatar that is permanently rotating in a circle. You don't choose where you want to go; you wait patiently for the engine's rotation timer to swing your nose toward the objective. It removes human agency and replaces it with passive waiting.
-- **The 'Boredom' & Pacing Verdict:** **Severe Parallel Solitaire.** Players are completely quarantined in their own space. You cannot bump, body-block, tackle, or disrupt your rivals. Each person is playing an isolated single-player task on a shared screen. Once a player gains an early lead, the remaining time is a boring, foregone conclusion.
-- **Control Feel & Juice Deficit:** Directional steering feels loose and greasy. The avatar carries too much slippery angular drift and lacks responsive braking, causing players to slide into walls and hazards accidentally rather than through deliberate play.
-- **Multiplayer Griefing & Counterplay Failure:** You cannot grief or sabotage your friends. In couch party games, the greatest moments come from sabotaging the leader. Without physical contact, item stealing, or hazard-shoving, there is zero trash-talking and zero emotional investment.
-- **Bot AI Pathology:** The bot operates with inhuman binary logic. On Hard, it calculates frame-perfect trajectories instantly with 0ms reaction delay, feeling like an unfair aimbot. On Easy/Normal, it routinely runs into walls, spins in circles, or gets trapped in geometry.
-- **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Centipede Slalom'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
+- **The 'Makes No Sense' & Concept Failure:** Previously used awkward auto-rotation instead of responsive left/right slalom carving, and trailing body segments had no physical whip-flick interaction with rival racers.
+- **The 'Boredom' & Pacing Verdict:** **Resolved.** Overhauled into a shared downhill slalom race where every passed gate grows and accelerates your 10-segment centipede, complete with Tail-Whip shunts!
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Revamp the handling model in *Centipede Slalom* with aggressive contact bumping, responsive slipstream drafting (+25% acceleration when directly behind a leader), and a rubber-band Nitro recharge for trailing racers to ensure photo-finish climaxes on the final turn.
-2. **Controls & Tactility Overhaul:** Eliminate passive auto-rotation. Implement an active directional snap system: tap to pivot 45° instantly, double-tap for an immediate 180° turnaround, and hold to charge an explosive forward dash with a visible expanding aura and rising audio whine.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Shared Downhill Slalom Course & 10-Segment Follow-the-Leader Physics:** Players carve cleanly through alternating Red/Blue Slalom Flag Gates (`+50 pts`, `1x -> 4x` combo multiplier) and Golden Arch Gates (`+95 pts`) while keeping their trailing 10-segment body clear of mossy river boulders.
+2. **Hold-to-Charge Millipede Overdrive & Tail-Whip Shunt (72%–98% Sweet Spot):** Releasing in the **72%–98% Sweet Spot** unleashes a **Millipede Speed Overdrive** (`+85 pts`) and cracks a **Segmented Tail-Whip Shunt** (`+70 pts` **"TAIL WHIP!"**) that knocks adjacent rivals into gate posts!
+3. **Three Swappable 2.5D Visual Themes (`[T]` / `[1-3]`):** `mossy_creek_slalom` (Mossy Pebble Creek), `alpine_snow_slalom` (Glacier Ice Gate Slalom), and `neon_centipede_grid` (1981 Arcade Neon Vector).
+- **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
 
 ### #237. Telekinetic Toyroom (ID: `poltergeist_possession`) — [Action]
 - **Class Implementation:** `src/games/PoltergeistPossessionGame.ts` (845 lines)
