@@ -55,6 +55,29 @@ export class CyberGridRunnerGame extends BaseGame {
   private botBoostCooldowns: Map<PlayerId, number> = new Map();
   private touchBtnRect = { x: 0, y: 0, w: 100, h: 48 };
   private pointerdownHandler: ((e: PointerEvent) => void) | null = null;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
+  private themeIndex: number = 0;
+
+  private themes = [
+    {
+      name: 'Neo-Kyoto Synthwave Grid',
+      floorColor: '#050512',
+      gridColor: 'rgba(6, 182, 212, 0.16)',
+      borderColor: '#06B6D4'
+    },
+    {
+      name: 'Outrun Magenta Mainframe',
+      floorColor: '#13051E',
+      gridColor: 'rgba(236, 72, 153, 0.18)',
+      borderColor: '#EC4899'
+    },
+    {
+      name: 'Emerald Matrix Core',
+      floorColor: '#02140D',
+      gridColor: 'rgba(16, 185, 129, 0.16)',
+      borderColor: '#10B981'
+    }
+  ];
 
   constructor(
     players: PlayerConfig[],
@@ -76,6 +99,7 @@ export class CyberGridRunnerGame extends BaseGame {
     if (typeof window !== 'undefined' && (window as unknown as { __CYBER_GRID_DEBUG__?: unknown }).__CYBER_GRID_DEBUG__) {
       delete (window as unknown as { __CYBER_GRID_DEBUG__?: unknown }).__CYBER_GRID_DEBUG__;
     }
+    super.destroy();
   }
 
   private setupListeners(): void {
@@ -97,7 +121,25 @@ export class CyberGridRunnerGame extends BaseGame {
       }
     };
 
+    this.keyHandler = (e: KeyboardEvent) => {
+      if (e.key === 't' || e.key === 'T') {
+        this.themeIndex = (this.themeIndex + 1) % this.themes.length;
+        this.currentMapName = this.themes[this.themeIndex].name;
+        this.audio.playTap();
+      } else if (e.key === '1') {
+        this.themeIndex = 0;
+        this.currentMapName = this.themes[0].name;
+      } else if (e.key === '2') {
+        this.themeIndex = 1;
+        this.currentMapName = this.themes[1].name;
+      } else if (e.key === '3') {
+        this.themeIndex = 2;
+        this.currentMapName = this.themes[2].name;
+      }
+    };
+
     window.addEventListener('pointerdown', this.pointerdownHandler);
+    window.addEventListener('keydown', this.keyHandler);
   }
 
   private removeListeners(): void {
@@ -105,6 +147,10 @@ export class CyberGridRunnerGame extends BaseGame {
     if (this.pointerdownHandler) {
       window.removeEventListener('pointerdown', this.pointerdownHandler);
       this.pointerdownHandler = null;
+    }
+    if (this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
     }
   }
 
@@ -707,12 +753,13 @@ export class CyberGridRunnerGame extends BaseGame {
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const curTheme = this.themes[this.themeIndex] || this.themes[0];
     // 1. Dark Synthwave Cyber Grid Floor
-    ctx.fillStyle = '#050512';
+    ctx.fillStyle = curTheme.floorColor;
     ctx.fillRect(0, 0, width, height);
 
-    // Glowing Cyan Grid Lines with Perspective
-    ctx.strokeStyle = 'rgba(6, 182, 212, 0.16)';
+    // Glowing Grid Lines with Perspective
+    ctx.strokeStyle = curTheme.gridColor;
     ctx.lineWidth = 1;
     for (let x = 0; x < width; x += 35) {
       ctx.beginPath();
@@ -728,7 +775,7 @@ export class CyberGridRunnerGame extends BaseGame {
     }
 
     // Outer Cyber Barrier Frame
-    ctx.strokeStyle = '#06B6D4';
+    ctx.strokeStyle = curTheme.borderColor;
     ctx.lineWidth = 3;
     ctx.strokeRect(16, 50, width - 32, height - 66);
 
@@ -907,7 +954,8 @@ export class CyberGridRunnerGame extends BaseGame {
     this.renderHUD(ctx, width, height);
   }
 
-  private renderHUD(ctx: CanvasRenderingContext2D, width: number, _height: number): void {
+  private renderHUD(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const curTheme = this.themes[this.themeIndex] || this.themes[0];
     ctx.save();
     // Clean HUD Banner (Positioned cleanly below top countdown timer pill)
     const bannerW = Math.min(580, width - 60);
@@ -921,7 +969,7 @@ export class CyberGridRunnerGame extends BaseGame {
     else ctx.rect(bannerX, bannerY, bannerW, bannerH);
     ctx.fill();
 
-    ctx.strokeStyle = '#06B6D4';
+    ctx.strokeStyle = curTheme.borderColor;
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
@@ -942,6 +990,26 @@ export class CyberGridRunnerGame extends BaseGame {
     ctx.font = '700 11px Montserrat, sans-serif';
     ctx.fillStyle = '#38BDF8';
     ctx.fillText(scoreStr, bannerX + bannerW / 2, bannerY + 31);
+
+    // Theme Pill at Bottom-Left (x: 20, y: height - 44)
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(20, height - 44, 340, 30, 15);
+    else ctx.fillRect(20, height - 44, 340, 30);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = curTheme.borderColor;
+    ctx.font = '900 11px Montserrat, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(
+      `💾 [T] [${this.themeIndex + 1}/3] ${curTheme.name}`,
+      34,
+      height - 29
+    );
 
     ctx.restore();
   }
