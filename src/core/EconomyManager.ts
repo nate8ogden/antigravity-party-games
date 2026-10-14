@@ -377,6 +377,96 @@ export const SKIN_CATALOG: MascotSkin[] = [
     price: 140,
     previewColor: '#84CC16',
     cosmeticEffect: 'arcade_retro'
+  },
+  {
+    id: 'mecha_kaiju',
+    name: 'Atomic Mecha-Kaiju',
+    rarity: 'Legendary',
+    description: 'Radioactive cyber-titan with glowing Cherenkov dorsal fins, armored kaiju jaw visor, and nuclear plasma aura.',
+    price: 260,
+    previewColor: '#10B981',
+    cosmeticEffect: 'kaiju_atomic'
+  },
+  {
+    id: 'pharaoh_anubis',
+    name: 'Pharaoh Anubis Sovereign',
+    rarity: 'Legendary',
+    description: 'Royal lapis-and-gold Nemes headdress with golden Uraeus cobra crest, jackal ears, and orbiting Ankh hieroglyphs.',
+    price: 255,
+    previewColor: '#F59E0B',
+    cosmeticEffect: 'pharaoh_ankh'
+  },
+  {
+    id: 'cyber_netrunner',
+    name: 'Night City Netrunner',
+    rarity: 'Epic',
+    description: 'High-collar neon tech-jacket, quad-optic cybernetic hologram goggles, neural jack cables, and glitching hex-polygons.',
+    price: 145,
+    previewColor: '#EC4899',
+    cosmeticEffect: 'netrunner_glitch'
+  },
+  {
+    id: 'celestial_seraphim',
+    name: 'Six-Winged Seraphim',
+    rarity: 'Legendary',
+    description: 'Six fluttering radiant angel wings, burning golden Ophanim wheel-of-eyes halo, and divine starlight choir aura.',
+    price: 275,
+    previewColor: '#FDE047',
+    cosmeticEffect: 'seraphim_halo'
+  },
+  {
+    id: 'neon_reaper',
+    name: 'Abyssal Soul Reaper',
+    rarity: 'Legendary',
+    description: 'Tattered dark spectral hood, glowing violet skull faceplate, twin crossed plasma scythes, and drifting soul-lantern wisps.',
+    price: 265,
+    previewColor: '#A855F7',
+    cosmeticEffect: 'reaper_souls'
+  },
+  {
+    id: 'chrono_timelord',
+    name: 'Chrono Archon Prime',
+    rarity: 'Legendary',
+    description: 'Floating celestial astrolabe clockwork halo, Roman numeral time-dilation rings, and temporal rewind lightning.',
+    price: 270,
+    previewColor: '#38BDF8',
+    cosmeticEffect: 'chrono_gears'
+  },
+  {
+    id: 'shogun_mech',
+    name: 'Crimson Mech-Shogun',
+    rarity: 'Legendary',
+    description: 'Towering golden V-fin Gundam kabuto crest, twin shoulder micro-missile pods, and high-thrust vernier jets.',
+    price: 250,
+    previewColor: '#EF4444',
+    cosmeticEffect: 'shogun_mecha'
+  },
+  {
+    id: 'marshmallow_dj',
+    name: 'Electro Mello-Drop',
+    rarity: 'Epic',
+    description: 'Iconic glowing LED cylinder bucket-helmet with neon X-eyes, RGB equalizer collar, and floating bass-drop notes.',
+    price: 150,
+    previewColor: '#F8FAFC',
+    cosmeticEffect: 'mello_beats'
+  },
+  {
+    id: 'plague_alchemist',
+    name: 'Arcane Plague Alchemist',
+    rarity: 'Epic',
+    description: 'Beaked dark-leather alchemist mask with glowing emerald lenses, wide-brim hat, and orbiting bubbling elixir flasks.',
+    price: 135,
+    previewColor: '#10B981',
+    cosmeticEffect: 'alchemist_elixirs'
+  },
+  {
+    id: 'supernova_phoenix',
+    name: 'Solar Supernova Phoenix',
+    rarity: 'Legendary',
+    description: 'Blazing solar-flare plumage crest, sweeping firebird wings, tail feathers of liquid sunlight, and reborn phoenix embers.',
+    price: 280,
+    previewColor: '#F97316',
+    cosmeticEffect: 'phoenix_supernova'
   }
 ];
 
@@ -404,7 +494,14 @@ export interface ArenaTheme {
     | 'candy_land'
     | 'steampunk_forge'
     | 'synthwave_highway'
-    | 'jade_dragon';
+    | 'jade_dragon'
+    | 'cyber_tokyo'
+    | 'black_hole'
+    | 'dragons_hoard'
+    | 'pinball_matrix'
+    | 'olympus_pantheon'
+    | 'biolum_jungle'
+    | 'pirate_galleon';
 }
 
 export const ARENA_CATALOG: ArenaTheme[] = [
@@ -519,6 +616,39 @@ export const ARENA_CATALOG: ArenaTheme[] = [
     floorPattern: 'atlantis_deep'
   },
   {
+    id: 'arena_pinball_matrix',
+    name: 'Hyper-Pinball Bumper Matrix',
+    rarity: 'Epic',
+    description: 'High-voltage arcade pinball table with flashing 1000-PT pop bumpers, chrome plunger lanes, and neon flipper rails.',
+    price: 130,
+    previewColor: '#1E1B4B',
+    borderColor: '#EC4899',
+    glowColor: 'rgba(236, 72, 153, 0.55)',
+    floorPattern: 'pinball_matrix'
+  },
+  {
+    id: 'arena_biolum_jungle',
+    name: 'Bioluminescent Avatar Grove',
+    rarity: 'Epic',
+    description: 'Alien rainforest canopy with glowing cyan-violet fungi, hanging bioluminescent vines, and drifting spirit spores.',
+    price: 135,
+    previewColor: '#042F2E',
+    borderColor: '#2DD4BF',
+    glowColor: 'rgba(45, 212, 191, 0.55)',
+    floorPattern: 'biolum_jungle'
+  },
+  {
+    id: 'arena_pirate_galleon',
+    name: 'Ghost Galleon Quarterdeck',
+    rarity: 'Epic',
+    description: 'Weathered oak warship deck with brass broadside cannons, ghostly sea lanterns, and writhing Kraken tentacles.',
+    price: 140,
+    previewColor: '#1C1917',
+    borderColor: '#F59E0B',
+    glowColor: 'rgba(245, 158, 11, 0.55)',
+    floorPattern: 'pirate_galleon'
+  },
+  {
     id: 'arena_golden_palace',
     name: 'Imperial Gilded Colosseum',
     rarity: 'Legendary',
@@ -572,6 +702,50 @@ export const ARENA_CATALOG: ArenaTheme[] = [
     borderColor: '#10B981',
     glowColor: 'rgba(16, 185, 129, 0.65)',
     floorPattern: 'jade_dragon'
+  },
+  {
+    id: 'arena_cyber_tokyo',
+    name: 'Neo-Tokyo Rooftop 2099',
+    rarity: 'Legendary',
+    description: 'Rain-slicked cyberpunk megacity rooftop with glowing holographic billboards, neon sky-bridges, and flying spinner traffic.',
+    price: 225,
+    previewColor: '#090D16',
+    borderColor: '#06B6D4',
+    glowColor: 'rgba(6, 182, 212, 0.65)',
+    floorPattern: 'cyber_tokyo'
+  },
+  {
+    id: 'arena_black_hole',
+    name: 'Event Horizon Singularity',
+    rarity: 'Legendary',
+    description: 'Relativistic supermassive black hole with swirling plasma accretion disk, gravitational lensing rings, and Hawking jets.',
+    price: 240,
+    previewColor: '#090514',
+    borderColor: '#A855F7',
+    glowColor: 'rgba(168, 85, 247, 0.7)',
+    floorPattern: 'black_hole'
+  },
+  {
+    id: 'arena_dragons_hoard',
+    name: 'Dragon’s Golden Treasury',
+    rarity: 'Legendary',
+    description: 'Subterranean cavern overflowing with mountains of glittering gold dubloons, ruby goblets, and enchanted treasure chests.',
+    price: 235,
+    previewColor: '#271203',
+    borderColor: '#FBBF24',
+    glowColor: 'rgba(251, 191, 36, 0.68)',
+    floorPattern: 'dragons_hoard'
+  },
+  {
+    id: 'arena_olympus_pantheon',
+    name: 'Mount Olympus Cloud Pantheon',
+    rarity: 'Legendary',
+    description: 'Celestial marble temple of the gods with fluted Corinthian columns, golden lightning braziers, and drifting divine clouds.',
+    price: 250,
+    previewColor: '#0C4A6E',
+    borderColor: '#FDE047',
+    glowColor: 'rgba(253, 224, 71, 0.68)',
+    floorPattern: 'olympus_pantheon'
   }
 ];
 
