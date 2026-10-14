@@ -58,11 +58,66 @@ export class MicroTurboGPGame extends BaseGame {
   private totalLaps = 3;
   private trackWidth = 78;
   private gameTime = 0;
+  private themeIndex: number = 0;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
 
   public currentTrackName: string = 'Grand Prix Circuit';
 
+  private themes = [
+    {
+      name: 'Emerald Grand Prix',
+      lawnLight: '#0F3821',
+      lawnDark: '#0B2A18',
+      curbPrimary: '#DC2626',
+      asphaltOuter: '#1E293B',
+      asphaltInner: '#0F172A',
+      centerDash: '#FBBF24'
+    },
+    {
+      name: 'Sunset Canyon Speedway',
+      lawnLight: '#451A03',
+      lawnDark: '#2E1102',
+      curbPrimary: '#F97316',
+      asphaltOuter: '#292524',
+      asphaltInner: '#1C1917',
+      centerDash: '#38BDF8'
+    },
+    {
+      name: 'Midnight Tokyo Circuit',
+      lawnLight: '#0F172A',
+      lawnDark: '#090D16',
+      curbPrimary: '#EC4899',
+      asphaltOuter: '#1E1B4B',
+      asphaltInner: '#0F0D2E',
+      centerDash: '#22D3EE'
+    }
+  ];
+
   public init(width: number, height: number): void {
     this.reset(width, height);
+    if (typeof window !== 'undefined' && !this.keyHandler) {
+      this.keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 't' || e.key === 'T') {
+          this.themeIndex = (this.themeIndex + 1) % this.themes.length;
+          this.audio.playTap();
+        } else if (e.key === '1') {
+          this.themeIndex = 0;
+        } else if (e.key === '2') {
+          this.themeIndex = 1;
+        } else if (e.key === '3') {
+          this.themeIndex = 2;
+        }
+      };
+      window.addEventListener('keydown', this.keyHandler);
+    }
+  }
+
+  public destroy(): void {
+    if (typeof window !== 'undefined' && this.keyHandler) {
+      window.removeEventListener('keydown', this.keyHandler);
+      this.keyHandler = null;
+    }
+    super.destroy();
   }
 
   public reset(width: number, height: number): void {
@@ -604,6 +659,7 @@ export class MicroTurboGPGame extends BaseGame {
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const curTheme = this.themes[this.themeIndex] || this.themes[0];
     ctx.save();
 
     // 1. Infield / Grass Arena with Checkerboard Lawn Texture
@@ -611,7 +667,7 @@ export class MicroTurboGPGame extends BaseGame {
     for (let y = 0; y < height; y += lawnSize) {
       for (let x = 0; x < width; x += lawnSize) {
         const isLight = (Math.floor(x / lawnSize) + Math.floor(y / lawnSize)) % 2 === 0;
-        ctx.fillStyle = isLight ? '#0F3821' : '#0B2A18';
+        ctx.fillStyle = isLight ? curTheme.lawnLight : curTheme.lawnDark;
         ctx.fillRect(x, y, lawnSize, lawnSize);
       }
     }
@@ -622,7 +678,7 @@ export class MicroTurboGPGame extends BaseGame {
 
     // Red base curb
     ctx.lineWidth = this.trackWidth + 14;
-    ctx.strokeStyle = '#DC2626';
+    ctx.strokeStyle = curTheme.curbPrimary;
     ctx.beginPath();
     ctx.moveTo(this.waypoints[0].x, this.waypoints[0].y);
     for (let i = 1; i < this.waypoints.length; i++) {
@@ -639,17 +695,17 @@ export class MicroTurboGPGame extends BaseGame {
 
     // 3. Asphalt Track Surface
     ctx.lineWidth = this.trackWidth;
-    ctx.strokeStyle = '#1E293B';
+    ctx.strokeStyle = curTheme.asphaltOuter;
     ctx.stroke();
 
     // Inner asphalt texture groove
     ctx.lineWidth = this.trackWidth - 8;
-    ctx.strokeStyle = '#0F172A';
+    ctx.strokeStyle = curTheme.asphaltInner;
     ctx.stroke();
 
     // Track centerline (yellow dash)
     ctx.setLineDash([14, 14]);
-    ctx.strokeStyle = '#FBBF24';
+    ctx.strokeStyle = curTheme.centerDash;
     ctx.lineWidth = 2.5;
     ctx.stroke();
     ctx.setLineDash([]);
@@ -973,6 +1029,28 @@ export class MicroTurboGPGame extends BaseGame {
       ctx.fillText('🛡️ Track walls & auto-rescue prevent looping | Stay on asphalt for top speed', width / 2, banY + 27);
       ctx.restore();
     }
+
+    // Theme Pill at Bottom-Left (x: 20, y: height - 44)
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(20, height - 44, 390, 30, 15);
+    else ctx.fillRect(20, height - 44, 390, 30);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = curTheme.centerDash;
+    ctx.font = '900 11px Montserrat, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(
+      `🏎️ [T] [${this.themeIndex + 1}/3] ${curTheme.name} • ${this.currentTrackName}`,
+      34,
+      height - 29
+    );
+    ctx.restore();
 
     ctx.restore();
   }
