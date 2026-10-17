@@ -322,8 +322,8 @@ export class NeonDriftersGame extends BaseGame {
 
       const steer = this.input.getSteer(p.id);
       const throttle = this.input.getThrottle(p.id);
-      const isAction = this.input.isActionPressed(p.id) || this.input.isPressed(p.id);
-      const justReleased = this.input.justReleased(p.id);
+      const isAction = this.input.isActionPressed(p.id);
+      const justReleased = !isAction && car.driftTier > 0;
 
       // Handle spinout
       if (car.spinTimer > 0) {
@@ -1065,6 +1065,24 @@ export class NeonDriftersGame extends BaseGame {
     ctx.fillText('STEER: A/D/STICK • HOLD ACTION: DRIFT • RELEASE: BOOST', width - 20, height - 14);
 
     ctx.restore();
+  }
+
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    const p1 = this.playersState.get(0);
+    if (!p1 || p1.spinTimer > 0) return false;
+
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.cycleTheme();
+      return true;
+    }
+
+    // Steer car angle towards tap point
+    const targetAngle = Math.atan2(y - p1.y, x - p1.x);
+    p1.angle = targetAngle;
+    p1.speed = Math.min(230, p1.speed + 120);
+    this.audio.playTap();
+    return true;
   }
 
   public syncDebug(): void {

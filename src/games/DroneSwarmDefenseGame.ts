@@ -311,7 +311,7 @@ export class DroneSwarmDefenseGame extends BaseGame {
         }
       }
 
-      const holding = p.stunTimer <= 0 && (this.input.isActionPressed(p.id) || this.input.isPressed(p.id));
+      const holding = p.stunTimer <= 0 && (this.input.isActionPressed(p.id) || (isBot && this.input.isPressed(p.id)));
       if (holding) {
         p.charge += dt * 0.95;
         p.wasHolding = true;

@@ -217,8 +217,8 @@ export class SpiderWebTangleGame extends BaseGame {
 
       const sx = this.input.getSteer(s.id);
       const sy = this.input.getThrottle(s.id);
-      const justTap = this.input.justPressed(s.id) || this.input.justAction(s.id);
-      const isHold = this.input.isActionPressed(s.id) || this.input.isPressed(s.id);
+      const justTap = this.input.justAction(s.id);
+      const isHold = this.input.isActionPressed(s.id);
 
       if (s.moveCooldown <= 0) {
         if (Math.abs(sx) > 0.45) {
@@ -328,7 +328,7 @@ export class SpiderWebTangleGame extends BaseGame {
     }
 
     const hold = !bot.holding || bot.charge < bot.botChargeGoal;
-    this.input.setBotState(botId, hold);
+    this.input.setBotInput(botId, hold, 0, 0, hold);
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
@@ -449,7 +449,22 @@ export class SpiderWebTangleGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
-    return false;
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    const p1 = this.spiders.find(s => s.id === 0);
+    if (!p1 || p1.stunTimer > 0) return false;
+
+    const cx = width * 0.5;
+    const cy = height * 0.54;
+    const ang = Math.atan2(y - cy, x - cx);
+    const spoke = ((Math.round((ang / (Math.PI * 2)) * 8) % 8) + 8) % 8;
+    const dist = Math.hypot(x - cx, y - cy);
+    const ring = Math.max(1, Math.min(4, Math.round(dist / 44)));
+
+    p1.spoke = spoke;
+    p1.ring = ring;
+    this.spinStrand(p1);
+    this.audio.playTap();
+    return true;
   }
 }

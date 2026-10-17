@@ -211,8 +211,8 @@ export class PterodactylGlideGame extends BaseGame {
 
       const sx = this.input.getSteer(f.id);
       const sy = this.input.getThrottle(f.id);
-      const justTap = this.input.justPressed(f.id) || this.input.justAction(f.id);
-      const isHold = this.input.isActionPressed(f.id) || this.input.isPressed(f.id);
+      const justTap = this.input.justAction(f.id);
+      const isHold = this.input.isActionPressed(f.id);
 
       // Gravity + Wing Flap / Steer
       f.vy += 320 * dt;
@@ -334,9 +334,10 @@ export class PterodactylGlideGame extends BaseGame {
       }
     }
 
-    bot.vy += Math.sign(targetY - bot.y) * 780 * dt;
+    const sy = Math.sign(targetY - bot.y);
+    bot.vy += sy * 780 * dt;
     const hold = !bot.holding || bot.charge < bot.botChargeGoal;
-    this.input.setBotState(botId, hold);
+    this.input.setBotInput(botId, hold, 0, -sy, hold);
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
@@ -455,7 +456,23 @@ export class PterodactylGlideGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
-    return false;
+  public handlePointerDown(x: number, y: number, _width: number, _height: number): boolean {
+    if (this.isFinished) return false;
+    const p1 = this.flyers.find(f => f.id === 0);
+    if (!p1 || p1.stunTimer > 0) return false;
+
+    if (y < p1.y) {
+      // Tap above = flap wings up
+      p1.vy = -340;
+      p1.vx += Math.sign(x - p1.x) * 160;
+      this.audio.playTap();
+      return true;
+    } else {
+      // Tap below = dive down
+      p1.vy = 320;
+      p1.vx += Math.sign(x - p1.x) * 160;
+      this.audio.playWhoosh();
+      return true;
+    }
   }
 }

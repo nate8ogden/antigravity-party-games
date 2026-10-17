@@ -236,8 +236,8 @@ export class VineSwingCanopyGame extends BaseGame {
       if (s.stunTimer > 0) s.stunTimer = Math.max(0, s.stunTimer - dt);
 
       const steer = this.input.getSteer(s.id);
-      const justTap = this.input.justPressed(s.id) || this.input.justAction(s.id);
-      const isHold = this.input.isActionPressed(s.id) || this.input.isPressed(s.id);
+      const justTap = this.input.justAction(s.id);
+      const isHold = this.input.isActionPressed(s.id);
 
       if (s.vineId !== null) {
         const v = this.vines.find((item) => item.id === s.vineId);
@@ -396,7 +396,7 @@ export class VineSwingCanopyGame extends BaseGame {
     }
 
     const hold = bot.vineId !== null && (!bot.holding || bot.charge < bot.botChargeGoal);
-    this.input.setBotState(botId, hold);
+    this.input.setBotInput(botId, hold, Math.sign(targetX - bot.x), 0, hold);
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
@@ -521,7 +521,22 @@ export class VineSwingCanopyGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
-    return false;
+  public handlePointerDown(x: number, _y: number, _width: number, _height: number): boolean {
+    if (this.isFinished) return false;
+    const p1 = this.swingers.find(s => s.id === 0);
+    if (!p1 || p1.stunTimer > 0) return false;
+
+    if (p1.vineId !== null) {
+      // Release vine!
+      p1.vineId = null;
+      p1.vx += (x > p1.x ? 1 : -1) * 280;
+      this.audio.playWhoosh();
+      return true;
+    } else {
+      // Nudge lateral swing
+      p1.vx += (x > p1.x ? 1 : -1) * 220;
+      this.audio.playTap();
+      return true;
+    }
   }
 }

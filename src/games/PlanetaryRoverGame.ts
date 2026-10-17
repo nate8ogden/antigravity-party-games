@@ -279,9 +279,9 @@ export class PlanetaryRoverGame extends BaseGame {
 
       if (p && !p.type.startsWith('bot_')) {
         const move = { x: this.input.getSteer(r.id), y: -this.input.getThrottle(r.id) };
-        const holding = this.input.isActionPressed(r.id) || this.input.isPressed(r.id);
-        const justPressed = this.input.justPressed(r.id) || this.input.justAction(r.id);
-        const released = this.input.justReleased(r.id);
+        const holding = this.input.isActionPressed(r.id);
+        const justAction = this.input.justAction(r.id);
+        const released = !holding && r.charging;
 
         if (r.stumbleTimer <= 0) {
           if (move.y < -0.45 && Math.abs(r.laneY - this.getLaneY(r.targetLane, height)) < 16) {
@@ -294,7 +294,7 @@ export class PlanetaryRoverGame extends BaseGame {
             r.vx += move.x * (r.isUnderdog ? 310 : 250) * clampedDt;
           }
 
-          if (justPressed) {
+          if (justAction) {
             if (this.animTime - r.lastTapTime < 0.25) {
               r.targetLane = (r.targetLane + 1) % 3;
             }

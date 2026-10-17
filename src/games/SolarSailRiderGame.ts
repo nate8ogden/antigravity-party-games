@@ -295,9 +295,9 @@ export class SolarSailRiderGame extends BaseGame {
 
       if (p && !p.type.startsWith('bot_')) {
         const move = { x: this.input.getSteer(c.id), y: -this.input.getThrottle(c.id) };
-        const holding = this.input.isActionPressed(c.id) || this.input.isPressed(c.id);
-        const justPressed = this.input.justPressed(c.id) || this.input.justAction(c.id);
-        const released = this.input.justReleased(c.id);
+        const holding = this.input.isActionPressed(c.id);
+        const justAction = this.input.justAction(c.id);
+        const released = !holding && c.charging;
 
         if (move.y < -0.45 && Math.abs(c.y - this.getLaneY(c.targetLane, height)) < 16) {
           c.targetLane = Math.max(0, c.targetLane - 1);
@@ -309,7 +309,7 @@ export class SolarSailRiderGame extends BaseGame {
           c.vx += move.x * 240 * clampedDt;
         }
 
-        if (justPressed && c.sailDamageTimer <= 0) {
+        if (justAction && c.sailDamageTimer <= 0) {
           if (this.animTime - c.lastTapTime < 0.26) {
             c.targetLane = (c.targetLane + 1) % 3;
           }

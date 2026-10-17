@@ -61,7 +61,13 @@ export interface MascotSkin {
     | 'prism_crystal_golem'
     | 'deep_sea_abyssal_kraken'
     | 'inferno_lava_demon'
-    | 'retro_synthwave_racer';
+    | 'retro_synthwave_racer'
+    | 'cyber_stealth_operative'
+    | 'electric_storm_raijin'
+    | 'mecha_dragoon_valkyrie'
+    | 'frost_valkyrie_queen'
+    | 'toxic_cyber_mutant'
+    | 'steampunk_aeronaut_ace';
 }
 
 export const SKIN_CATALOG: MascotSkin[] = [
@@ -589,21 +595,75 @@ export const SKIN_CATALOG: MascotSkin[] = [
   },
   {
     id: 'inferno_lava_demon',
-    name: 'Balrog Hellfire Fiend',
+    name: 'Balrog Hellfire Titan',
     rarity: 'Legendary',
-    description: 'Hardened obsidian demon horns with flowing liquid fire veins, flaming brimstone halo, and volcanic ash plume.',
+    description: 'Volcanic obsidian basalt armor with liquid solar gold veins, towering curved balrog horns, flaming brimstone halo, and molten bat wings.',
     price: 280,
-    previewColor: '#B91C1C',
+    previewColor: '#EA580C',
     cosmeticEffect: 'inferno_lava_demon'
   },
   {
     id: 'retro_synthwave_racer',
-    name: 'Turbo Sunset Outrun',
+    name: 'Turbo Sunset Outrun 1984',
     rarity: 'Epic',
-    description: 'Streamlined neon racing helmet with polarized magenta-cyan visor, checkered racing flag cape, and twin exhaust nitrous flames.',
+    description: 'Glossy obsidian synthwave helmet with dual neon magenta-cyan racing stripes, polarized audio-equalizer visor, and twin nitrous rocket exhaust cones.',
     price: 145,
-    previewColor: '#F43F5E',
+    previewColor: '#EC4899',
     cosmeticEffect: 'retro_synthwave_racer'
+  },
+  {
+    id: 'cyber_stealth_operative',
+    name: 'Ghost Cyber Infiltrator',
+    rarity: 'Legendary',
+    description: 'Matte carbon-fiber stealth armor with tri-ocular night-vision optics, silenced photon jump-drive pack, and flickering hexagonal active-camo cloaking.',
+    price: 285,
+    previewColor: '#10B981',
+    cosmeticEffect: 'cyber_stealth_operative'
+  },
+  {
+    id: 'electric_storm_raijin',
+    name: 'Raijin Thunder Kami',
+    rarity: 'Legendary',
+    description: 'Shinto storm deity with a floating halo ring of 6 electrified gold taiko drums, crackling plasma lightning horns, and orbiting ball-lightning orbs.',
+    price: 290,
+    previewColor: '#38BDF8',
+    cosmeticEffect: 'electric_storm_raijin'
+  },
+  {
+    id: 'mecha_dragoon_valkyrie',
+    name: 'Dragoon Wing Prime',
+    rarity: 'Legendary',
+    description: 'Titanium mecha chassis with twin variable-sweep photon particle wings, glowing afterburner vernier thrusters, and radiant golden V-fin antenna crest.',
+    price: 295,
+    previewColor: '#6366F1',
+    cosmeticEffect: 'mecha_dragoon_valkyrie'
+  },
+  {
+    id: 'frost_valkyrie_queen',
+    name: 'Absolute Zero Frost Queen',
+    rarity: 'Legendary',
+    description: 'Glacial diamond frost crown with 6 floating sub-zero ice shard wings, arctic cyan eye glow, and swirling perpetual blizzard crystals.',
+    price: 290,
+    previewColor: '#38BDF8',
+    cosmeticEffect: 'frost_valkyrie_queen'
+  },
+  {
+    id: 'toxic_cyber_mutant',
+    name: 'Biohazard Acid Mutant',
+    rarity: 'Epic',
+    description: 'Bioluminescent radioactive lime sludge carapace, heavy dual-canister hazmat respirator, twin pressurized acid vats, and bubbling toxic slime.',
+    price: 150,
+    previewColor: '#84CC16',
+    cosmeticEffect: 'toxic_cyber_mutant'
+  },
+  {
+    id: 'steampunk_aeronaut_ace',
+    name: 'Victorian Aeronaut Ace',
+    rarity: 'Epic',
+    description: 'Weathered brown leather flight helmet with flip-down brass magnifying lenses, copper steam boiler backpack with spinning twin brass propellers, and pressure gauges.',
+    price: 155,
+    previewColor: '#D97706',
+    cosmeticEffect: 'steampunk_aeronaut_ace'
   }
 ];
 

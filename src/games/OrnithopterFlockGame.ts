@@ -270,7 +270,7 @@ export class OrnithopterFlockGame extends BaseGame {
       f.vx += move.x * accel * dt;
       f.vy += (move.y * accel + 95) * dt; // light natural glide gravity
 
-      if (this.input.justPressed(f.id) || this.input.justAction(f.id)) {
+      if (this.input.justAction(f.id)) {
         f.vy = -210;
         f.vx += 90;
         this.audio.playWhoosh();
@@ -278,7 +278,7 @@ export class OrnithopterFlockGame extends BaseGame {
       }
 
       // Hold-to-charge Supersonic Falcon Swoop & Gale-Wing Shunt (72%–98% Sweet Spot)
-      const holding = this.input.isActionPressed(f.id) || this.input.isPressed(f.id);
+      const holding = this.input.isActionPressed(f.id);
       if (holding) {
         f.charging = true;
         f.charge += dt * 0.84;

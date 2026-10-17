@@ -272,9 +272,9 @@ export class OrbitalDropPodGame extends BaseGame {
 
       if (p && !p.type.startsWith('bot_')) {
         const steer = this.input.getSteer(pod.id);
-        const holding = this.input.isActionPressed(pod.id) || this.input.isPressed(pod.id);
-        const justPressed = this.input.justPressed(pod.id) || this.input.justAction(pod.id);
-        const released = this.input.justReleased(pod.id);
+        const holding = this.input.isActionPressed(pod.id);
+        const justAction = this.input.justAction(pod.id);
+        const released = !holding && pod.charging;
 
         if (pod.overheatTimer <= 0) {
           if (Math.abs(steer) > 0.15) {
@@ -284,7 +284,7 @@ export class OrbitalDropPodGame extends BaseGame {
             pod.vx += pod.moveDir * 190 * clampedDt;
           }
 
-          if (justPressed) {
+          if (justAction) {
             if (this.animTime - pod.lastTapTime < 0.25) {
               pod.moveDir *= -1;
             }

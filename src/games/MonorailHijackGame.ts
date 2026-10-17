@@ -1138,6 +1138,37 @@ export class MonorailHijackGame extends BaseGame {
     ctx.restore();
   }
 
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    const p1 = this.playersState.get(0);
+    if (!p1 || p1.stunTimer > 0) return false;
+
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.cycleTheme();
+      return true;
+    }
+
+    if (x > width * 0.7) {
+      // Right side tap = jump / dropkick
+      if (!p1.isJumping) {
+        p1.isJumping = true;
+        p1.vAltitude = 280;
+        this.audio.playTap();
+      } else if (!p1.isDropkicking) {
+        p1.isDropkicking = true;
+        p1.vx = 360;
+        p1.vAltitude = -180;
+        this.audio.playWhoosh();
+      }
+      return true;
+    }
+
+    // Left/mid tap = run towards tap x
+    p1.vx = (x > p1.x ? 1 : -1) * 220;
+    this.audio.playTap();
+    return true;
+  }
+
   public syncDebug(): void {
     // Debug inspection helper
   }

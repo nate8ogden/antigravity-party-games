@@ -239,7 +239,7 @@ export class QuantumTunnelingGame extends BaseGame {
         r.phased = false;
       }
 
-      const holding = r.stunTimer <= 0 && (this.input.isActionPressed(r.id) || this.input.isPressed(r.id));
+      const holding = r.stunTimer <= 0 && (this.input.isActionPressed(r.id) || (this.getPlayer(r.id)?.type.startsWith('bot_') && this.input.isPressed(r.id)));
       const wasPhased = r.phased;
 
       if (holding && r.phaseEnergy > 0.05) {

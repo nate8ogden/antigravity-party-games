@@ -286,7 +286,7 @@ export class RingTossFrenzyGame extends BaseGame {
         t.aimDir = 1;
       }
 
-      const holding = t.stunTimer <= 0 && (this.input.isActionPressed(t.id) || this.input.isPressed(t.id));
+      const holding = t.stunTimer <= 0 && (this.input.isActionPressed(t.id) || (this.getPlayer(t.id)?.type.startsWith('bot_') && this.input.isPressed(t.id)));
       if (holding) {
         t.charge += dt * 1.05;
         t.wasHolding = true;

@@ -201,6 +201,15 @@ export class ZeppelinDogfightGame extends BaseGame {
       this.audio.playTap();
       return true;
     }
+    const p1 = this.zeppelins.get(0);
+    if (p1 && p1.deflateTimer <= 0) {
+      const targetAngle = Math.atan2(y - p1.y, x - p1.x);
+      p1.angle = targetAngle;
+      p1.vx += Math.cos(targetAngle) * 140;
+      p1.vy += Math.sin(targetAngle) * 140;
+      this.fireVolley(p1, false);
+      return true;
+    }
     return false;
   }
 
@@ -305,12 +314,12 @@ export class ZeppelinDogfightGame extends BaseGame {
       this.clampZeppelin(z, width, height);
 
       // Tap to fire broadside + bow steam cannon volley
-      if ((this.input.justPressed(z.id) || this.input.justAction(z.id)) && z.fireCooldown <= 0) {
+      if (this.input.justAction(z.id) && z.fireCooldown <= 0) {
         this.fireVolley(z, false);
       }
 
       // Hold-to-charge Ironclad Prow Ram (72%–98% Sweet Spot)
-      const holding = this.input.isActionPressed(z.id) || this.input.isPressed(z.id);
+      const holding = this.input.isActionPressed(z.id);
       if (holding) {
         z.charging = true;
         z.charge += dt * 0.84;

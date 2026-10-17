@@ -4975,6 +4975,192 @@ export class GameManager {
     ctx.restore();
   }
 
+  private renderMiniArenaIcon(ctx: CanvasRenderingContext2D, pattern: string, cx: number, cy: number, borderColor: string) {
+    ctx.save();
+    if (pattern === 'synth_grid' || pattern === 'synthwave_highway' || pattern === 'synth_drift') {
+      const sGrad = ctx.createLinearGradient(cx, cy - 6, cx, cy + 6);
+      sGrad.addColorStop(0, '#FDE047');
+      sGrad.addColorStop(1, '#EC4899');
+      ctx.fillStyle = sGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy - 2, 6, Math.PI, 0);
+      ctx.fill();
+      ctx.strokeStyle = '#06B6D4';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx - 8, cy + 2);
+      ctx.lineTo(cx + 8, cy + 2);
+      ctx.moveTo(cx - 6, cy + 5);
+      ctx.lineTo(cx + 6, cy + 5);
+      ctx.stroke();
+    } else if (pattern === 'matrix_rain') {
+      ctx.fillStyle = '#10B981';
+      ctx.font = 'bold 8px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('01', cx, cy);
+    } else if (pattern === 'arcade_cabinet') {
+      ctx.fillStyle = '#A855F7';
+      ctx.fillRect(cx - 6, cy - 6, 12, 12);
+      ctx.fillStyle = '#FDE047';
+      ctx.fillRect(cx - 3, cy - 3, 6, 6);
+    } else if (pattern === 'candy_land') {
+      ctx.fillStyle = '#EC4899';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (pattern === 'ice_crystals') {
+      ctx.strokeStyle = '#38BDF8';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 6); ctx.lineTo(cx, cy + 6);
+      ctx.moveTo(cx - 6, cy); ctx.lineTo(cx + 6, cy);
+      ctx.stroke();
+    } else if (pattern === 'sakura_petals') {
+      ctx.fillStyle = '#F472B6';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 5, 2.5, Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (pattern === 'volcanic_fissures' || pattern === 'inferno_caldera') {
+      ctx.fillStyle = '#F97316';
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 6);
+      ctx.lineTo(cx + 5, cy + 5);
+      ctx.lineTo(cx - 5, cy + 5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#FEF08A';
+      ctx.beginPath();
+      ctx.arc(cx, cy + 2, 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (pattern === 'haunted_dungeon') {
+      ctx.fillStyle = '#10B981';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#A7F3D0';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (pattern === 'atlantis_deep') {
+      ctx.strokeStyle = '#06B6D4';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, Math.PI);
+      ctx.stroke();
+    } else if (pattern === 'gilded_inlays') {
+      ctx.fillStyle = '#F59E0B';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FEF08A';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (pattern === 'space_hull') {
+      ctx.strokeStyle = '#38BDF8';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(cx - 5, cy - 5, 10, 10);
+    } else if (pattern === 'steampunk_forge') {
+      ctx.fillStyle = '#B45309';
+      ctx.strokeStyle = '#FDE68A';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    } else if (pattern === 'jade_dragon') {
+      ctx.strokeStyle = '#10B981';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, Math.PI * 1.5);
+      ctx.stroke();
+    } else if (pattern === 'pinball_matrix') {
+      ctx.fillStyle = '#EC4899';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (pattern === 'biolum_jungle') {
+      ctx.fillStyle = '#2DD4BF';
+      ctx.beginPath();
+      ctx.arc(cx, cy - 1, 5, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = '#CBD5E1';
+      ctx.fillRect(cx - 1, cy - 1, 2, 6);
+    } else if (pattern === 'pirate_galleon') {
+      ctx.fillStyle = '#F59E0B';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#0F172A';
+      ctx.fillRect(cx - 2, cy - 2, 4, 4);
+    } else if (pattern === 'cyber_tokyo') {
+      ctx.fillStyle = '#06B6D4';
+      ctx.fillRect(cx - 6, cy - 6, 4, 12);
+      ctx.fillStyle = '#EC4899';
+      ctx.fillRect(cx - 1, cy - 3, 4, 9);
+      ctx.fillStyle = '#3B82F6';
+      ctx.fillRect(cx + 4, cy - 7, 3, 13);
+    } else if (pattern === 'black_hole') {
+      ctx.fillStyle = '#000000';
+      ctx.strokeStyle = '#A855F7';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    } else if (pattern === 'dragons_hoard') {
+      ctx.fillStyle = '#FBBF24';
+      ctx.beginPath();
+      ctx.arc(cx, cy + 2, 5, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = '#EF4444';
+      ctx.beginPath();
+      ctx.arc(cx, cy - 2, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (pattern === 'olympus_pantheon') {
+      ctx.fillStyle = '#FDE047';
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 6);
+      ctx.lineTo(cx + 3, cy - 1);
+      ctx.lineTo(cx, cy);
+      ctx.lineTo(cx + 3, cy + 6);
+      ctx.lineTo(cx - 2, cy + 1);
+      ctx.lineTo(cx, cy);
+      ctx.closePath();
+      ctx.fill();
+    } else if (pattern === 'crystal_cavern') {
+      ctx.fillStyle = '#C084FC';
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 6);
+      ctx.lineTo(cx + 4, cy + 6);
+      ctx.lineTo(cx - 4, cy + 6);
+      ctx.closePath();
+      ctx.fill();
+    } else if (pattern === 'cyber_dojo') {
+      ctx.strokeStyle = '#10B981';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(cx - 5, cy - 5, 10, 10);
+      ctx.fillStyle = '#EC4899';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(cx - 5, cy - 5, 10, 10);
+    }
+    ctx.restore();
+  }
+
   public openGameModal(index: number) {
     if (index >= 0 && index < GAME_CATALOG.length) {
       this.modalGameIndex = index;
@@ -8847,22 +9033,15 @@ export class GameManager {
       this.ctx.save();
       if (item.category === 'ARENA' && item.raw) {
         this.drawRoundedRect(swatchX - 4, swatchY, 26, 24, 5, item.raw.previewColor, item.raw.borderColor, 1.5);
-        this.ctx.fillStyle = item.raw.borderColor;
-        this.ctx.globalAlpha = 0.55;
-        this.ctx.fillRect(swatchX, swatchY + 10, 18, 3);
-        this.ctx.globalAlpha = 1;
+        this.renderMiniArenaIcon(this.ctx, item.raw.floorPattern, swatchX + 9, swatchY + 12, item.raw.borderColor);
       } else if (item.category === 'SKIN') {
+        // Draw real custom mascot character with headgear, visor, horns & aura!
+        drawCharacter(this.ctx, swatchX + 9, swatchY + 12, 10, 0, false, 'idle', 0, item.id);
         this.ctx.beginPath();
         this.ctx.arc(swatchX + 9, swatchY + 12, 11, 0, Math.PI * 2);
-        this.ctx.fillStyle = item.previewColor;
-        this.ctx.fill();
         this.ctx.strokeStyle = rarityColor;
-        this.ctx.lineWidth = 2;
+        this.ctx.lineWidth = 1.5;
         this.ctx.stroke();
-        this.ctx.beginPath();
-        this.ctx.arc(swatchX + 6, swatchY + 9, 3, 0, Math.PI * 2);
-        this.ctx.fillStyle = 'rgba(255,255,255,0.65)';
-        this.ctx.fill();
       } else if (item.category === 'BOOSTER' && item.raw) {
         this.ctx.beginPath();
         this.ctx.arc(swatchX + 9, swatchY + 12, 11, 0, Math.PI * 2);
@@ -9185,16 +9364,16 @@ export class GameManager {
 
     // === CASE 2: ARENA THEME ===
     else if (curItem.category === 'ARENA') {
-      const arenaBoxW = Math.min(310, stageW - 28);
-      const arenaBoxH = 122;
+      const arenaBoxW = Math.min(320, stageW - 24);
+      const arenaBoxH = 132;
       const arenaBoxX = centerX - arenaBoxW / 2;
-      const arenaBoxY = stageY + 18;
+      const arenaBoxY = stageY + 16;
       const arenaAnimT = performance.now() * 0.001;
 
-      // Draw Live 2.5D Themed Arena Diorama
+      // Draw Live 2.5D Themed Arena Diorama Container
       this.ctx.save();
       this.ctx.shadowColor = curItem.raw.glowColor;
-      this.ctx.shadowBlur = 16;
+      this.ctx.shadowBlur = 18;
       this.drawRoundedRect(arenaBoxX, arenaBoxY, arenaBoxW, arenaBoxH, 12, curItem.raw.previewColor, curItem.raw.borderColor, 2.5);
       this.ctx.restore();
 
@@ -9204,14 +9383,38 @@ export class GameManager {
       // Frame border & dueling mascots inside the diorama
       this.ctx.save();
       this.drawRoundedRect(arenaBoxX, arenaBoxY, arenaBoxW, arenaBoxH, 12, 'rgba(0,0,0,0)', curItem.raw.borderColor, 2.5);
+
+      // Central floor competition sigil medallion ring
+      this.ctx.strokeStyle = curItem.raw.borderColor;
+      this.ctx.lineWidth = 1.6;
+      this.ctx.setLineDash([8, 5]);
+      this.ctx.lineDashOffset = -arenaAnimT * 22;
+      this.ctx.beginPath();
+      this.ctx.ellipse(centerX, arenaBoxY + arenaBoxH * 0.65, 42, 13, 0, 0, Math.PI * 2);
+      this.ctx.stroke();
+      this.ctx.setLineDash([]);
+
       const p1Skin = EconomyManager.getInstance().getEquippedSkin(0);
       const p2Skin = EconomyManager.getInstance().getEquippedSkin(1);
-      const duelOffset = Math.sin(arenaAnimT * 3.2) * 5;
-      drawCharacter(this.ctx, arenaBoxX + 54 + duelOffset, arenaBoxY + arenaBoxH * 0.56, 20, 0, false, 'happy', arenaAnimT, p1Skin);
-      drawCharacter(this.ctx, arenaBoxX + arenaBoxW - 54 - duelOffset, arenaBoxY + arenaBoxH * 0.56, 20, 1, false, 'happy', arenaAnimT, p2Skin);
+      const duelOffset = Math.sin(arenaAnimT * 3.2) * 6;
+      const m1X = arenaBoxX + 56 + duelOffset;
+      const m1Y = arenaBoxY + arenaBoxH * 0.56;
+      const m2X = arenaBoxX + arenaBoxW - 56 - duelOffset;
+      const m2Y = arenaBoxY + arenaBoxH * 0.56;
+
+      // Soft contact drop shadows beneath dueling mascots
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+      this.ctx.beginPath();
+      this.ctx.ellipse(m1X, m1Y + 16, 16, 5, 0, 0, Math.PI * 2);
+      this.ctx.ellipse(m2X, m2Y + 16, 16, 5, 0, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // Dueling Mascots with their custom skins
+      drawCharacter(this.ctx, m1X, m1Y, 21, 0, false, 'happy', arenaAnimT, p1Skin);
+      drawCharacter(this.ctx, m2X, m2Y, 21, 1, false, 'happy', arenaAnimT, p2Skin);
 
       // Arena Simulation Pill Tag
-      this.drawRoundedRect(centerX - 74, arenaBoxY + arenaBoxH - 19, 148, 15, 5, 'rgba(15, 23, 42, 0.82)', curItem.raw.borderColor, 1);
+      this.drawRoundedRect(centerX - 82, arenaBoxY + arenaBoxH - 19, 164, 15, 5, 'rgba(15, 23, 42, 0.88)', curItem.raw.borderColor, 1);
       this.ctx.fillStyle = '#FFFFFF';
       this.ctx.font = '900 8.5px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
