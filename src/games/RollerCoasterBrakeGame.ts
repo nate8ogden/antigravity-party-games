@@ -341,35 +341,36 @@ export class RollerCoasterBrakeGame extends BaseGame {
 
       // Centrifugal heat build-up on danger curves: leaning into the curve or braking cancels heat!
       const curveDir = Math.cos(c.trackDist * 0.0042) >= 0 ? 1 : -1;
-      const isLeaningIntoCurve = (curveDir > 0 && steer > 0.15) || (curveDir < 0 && steer < -0.15);
+      const isLeaningIntoCurve = (curveDir > 0 && (steer > 0.12 || c.laneOffset > 0.15)) || (curveDir < 0 && (steer < -0.12 || c.laneOffset < -0.15));
 
       if (danger > 0.35 && !c.braking && c.shieldTimer <= 0) {
         if (isLeaningIntoCurve) {
           // Leaning into the curve cuts centrifugal heat and rewards perfect curve banking!
-          c.heat = Math.max(0, c.heat - dt * 0.65);
-          c.score += 25 * dt;
-          if (Math.random() < 0.25) {
-            this.particles.spawnSparks(width * 0.5 + c.laneOffset * 110, height * 0.65, '#38bdf8', 1);
+          c.heat = Math.max(0, c.heat - dt * 1.25);
+          c.score += 45 * dt * (this.suddenDeath ? 2 : 1);
+          if (Math.random() < 0.35) {
+            this.particles.spawnSparks(width * 0.5 + c.laneOffset * 110, height * 0.65, '#38bdf8', 2);
             if (c.calloutTimer <= 0) {
               this.showCallout(c, 'PERFECT LEAN! ★');
             }
           }
         } else {
-          // Failure to lean builds heat
-          const excess = Math.max(0, (c.speed - 310) / 150);
-          c.heat += danger * (0.24 + excess * 0.35) * dt;
+          // Failure to lean builds heat with clear visual caution
+          const excess = Math.max(0, (c.speed - 320) / 160);
+          c.heat += danger * (0.22 + excess * 0.28) * dt;
         }
 
         if (c.heat >= 1.0) {
-          c.heat = 0;
-          c.derailTimer = 0.65;
+          c.heat = 0.35;
+          c.derailTimer = 0.45;
+          c.speed = Math.max(240, c.speed * 0.82); // Thrilling 2-wheel skid rather than dead stop!
           c.combo = 1;
-          this.showCallout(c, 'RAIL WOBBLE!');
+          this.showCallout(c, '⚡ WHEEL LIFT SKID!');
           this.audio.playExplosion();
-          this.triggerHitStop(25, 6);
+          this.triggerHitStop(20, 5);
         }
-      } else if (!isHold) {
-        c.heat = Math.max(0, c.heat - dt * 0.75);
+      } else {
+        c.heat = Math.max(0, c.heat - dt * 0.95);
       }
 
       // Passive distance score
@@ -555,6 +556,29 @@ export class RollerCoasterBrakeGame extends BaseGame {
         ctx.moveTo(centerX + curveShift0 + lane * w0 * 0.42, y0);
         ctx.lineTo(centerX + curveShift1 + lane * w1 * 0.42, y1);
         ctx.stroke();
+      }
+
+      // Overhead 2.5D Neon Curve Warning Archway
+      if (step === 18 && danger > 0.38) {
+        const archCurveDir = Math.cos(segDist * 0.0042) >= 0 ? 1 : -1;
+        const archX = centerX + curveShift0;
+        const archY = y0 - 32 * (1 - t0);
+        ctx.save();
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+        ctx.strokeStyle = danger > 0.6 ? '#ef4444' : '#f59e0b';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.roundRect(archX - w0 * 0.55, archY - 22, w0 * 1.1, 24, 8);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#fef08a';
+        ctx.font = `bold ${Math.max(10, Math.floor(14 * (1 - t0)))}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const msg = archCurveDir > 0 ? '▶▶ BANK RIGHT ▶▶' : '◀◀ BANK LEFT ◀◀';
+        ctx.fillText(msg, archX, archY - 10);
+        ctx.restore();
       }
     }
 

@@ -228,12 +228,6 @@ export class AnimalStackGame extends BaseGame {
       const minCraneX = Math.max(70, this.raftX - this.raftWidth * 0.72);
       const maxCraneX = Math.min(canvas.width - 70, this.raftX + this.raftWidth * 0.72);
       this.craneX = Math.max(minCraneX, Math.min(maxCraneX, clickX));
-
-      // Direct tap below 200 in playfield triggers drop
-      if (clickY > 200 && clickY < this.raftY - 15) {
-        const currentPid = this.activePlayerOrder[this.activePlayerIndex];
-        this.dropAnimal(currentPid);
-      }
     };
     window.addEventListener('pointerdown', this.pointerdownListener);
 
@@ -421,8 +415,8 @@ export class AnimalStackGame extends BaseGame {
 
     // Handle drop action input if no animal currently in mid-air
     if (!this.fallingAnimal && this.nextTurnTimer <= 0) {
-      const isPressed = this.input.justPressed(currentTurnPid) || this.input.justAction(currentTurnPid);
-      if (isPressed) {
+      const isAction = this.input.justAction(currentTurnPid) || (this.players[currentTurnPid]?.type.startsWith('bot_') && (this.input.isActionPressed(currentTurnPid) || this.input.isPressed(currentTurnPid)));
+      if (isAction) {
         this.dropAnimal(currentTurnPid);
       }
     }
@@ -724,7 +718,7 @@ export class AnimalStackGame extends BaseGame {
 
     if (distToTarget <= tolerance) {
       // Release clamp!
-      this.input.setBotInput(botId, true, 0, 0, false);
+      this.input.setBotInput(botId, true, 0, 0, true);
     } else {
       // Steer towards target
       const steer = this.craneX < targetX ? 1 : -1;
@@ -757,6 +751,57 @@ export class AnimalStackGame extends BaseGame {
       })),
       mvpHighlight: winnerId !== null ? `${this.players[winnerId].name} MASTERED THE RAFT STACK!` : 'THE SEA CONSUMED THE STACK!'
     };
+  }
+
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+
+    // Check theme pill
+    if (
+      x >= this.themePillRect.x &&
+      x <= this.themePillRect.x + this.themePillRect.w &&
+      y >= this.themePillRect.y &&
+      y <= this.themePillRect.y + this.themePillRect.h
+    ) {
+      this.currentThemeIndex = (this.currentThemeIndex + 1) % AnimalStackGame.THEMES.length;
+      this.audio.playTap();
+      return true;
+    }
+
+    if (this.fallingAnimal || this.nextTurnTimer > 0) return false;
+
+    // Check rotate button
+    if (
+      x >= this.rotateBtnRect.x - 20 &&
+      x <= this.rotateBtnRect.x + this.rotateBtnRect.w + 20 &&
+      y >= this.rotateBtnRect.y - 12 &&
+      y <= this.rotateBtnRect.y + this.rotateBtnRect.h + 12
+    ) {
+      this.rotateCurrentAnimal(1);
+      this.rotateBtnHover = true;
+      setTimeout(() => { this.rotateBtnHover = false; }, 150);
+      return true;
+    }
+
+    // Check dedicated drop button
+    if (
+      x >= this.dropBtnRect.x - 20 &&
+      x <= this.dropBtnRect.x + this.dropBtnRect.w + 20 &&
+      y >= this.dropBtnRect.y - 12 &&
+      y <= this.dropBtnRect.y + this.dropBtnRect.h + 12
+    ) {
+      const currentPid = this.activePlayerOrder[this.activePlayerIndex];
+      this.dropAnimal(currentPid);
+      this.dropBtnHover = true;
+      setTimeout(() => { this.dropBtnHover = false; }, 150);
+      return true;
+    }
+
+    // Drag crane directly
+    const minCraneX = Math.max(70, this.raftX - this.raftWidth * 0.72);
+    const maxCraneX = Math.min(width - 70, this.raftX + this.raftWidth * 0.72);
+    this.craneX = Math.max(minCraneX, Math.min(maxCraneX, x));
+    return true;
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
