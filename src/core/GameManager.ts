@@ -3829,293 +3829,941 @@ export class GameManager {
       ctx.strokeStyle = 'rgba(16, 185, 129, 0.35)';
       ctx.strokeRect(x + 14, y + 14, w - 28, h - 28);
     } else if (pat === 'arcade_cabinet') {
-      // Retro 8-Bit Marquee Bulbs, Pac-Maze Walls & Pixel Stars
-      ctx.strokeStyle = '#3B82F6';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x + 18, y + 20, 42, 22);
-      ctx.strokeRect(x + w - 60, y + 20, 42, 22);
-      const bCols = ['#EF4444', '#FBBF24', '#22C55E', '#38BDF8', '#EC4899'];
-      for (let i = 0; i < 10; i++) {
-        ctx.fillStyle = bCols[(i + Math.floor(t * 4)) % bCols.length];
+      // Retro 8-Bit Pixel Arcade: CRT scanlines, Pac-maze neon walls, power pellets & marquee lights
+      // Flashing RGB Marquee Bulbs
+      const bCols = ['#EF4444', '#FBBF24', '#22C55E', '#38BDF8', '#EC4899', '#A855F7'];
+      for (let i = 0; i < 12; i++) {
+        ctx.fillStyle = bCols[(i + Math.floor(t * 5)) % bCols.length];
         ctx.beginPath();
-        ctx.arc(x + 16 + i * 25, y + 8, 3, 0, Math.PI * 2);
-        ctx.arc(x + 16 + i * 25, y + h - 8, 3, 0, Math.PI * 2);
+        ctx.arc(x + 12 + i * 22, y + 8, 3, 0, Math.PI * 2);
+        ctx.arc(x + 12 + i * 22, y + h - 8, 3, 0, Math.PI * 2);
         ctx.fill();
+      }
+      // Glowing Neon Pac-Maze Walls
+      ctx.strokeStyle = '#3B82F6';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#60A5FA';
+      ctx.shadowBlur = 8;
+      ctx.strokeRect(x + 16, y + 18, 48, 22);
+      ctx.strokeRect(x + w - 64, y + 18, 48, 22);
+      ctx.strokeRect(cx - 36, cy - 8, 72, 16);
+      ctx.shadowBlur = 0;
+      // Yellow Power Pellets
+      ctx.fillStyle = '#FDE047';
+      for (let i = 0; i < 5; i++) {
+        const px = cx - 44 + i * 22;
+        ctx.beginPath();
+        ctx.arc(px, cy + 22, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Animated 8-bit Ghost
+      const gx = cx + Math.sin(t * 3) * 35;
+      const gy = y + 29;
+      ctx.fillStyle = '#EF4444';
+      ctx.beginPath();
+      ctx.arc(gx, gy, 6, Math.PI, 0);
+      ctx.lineTo(gx + 6, gy + 7);
+      ctx.lineTo(gx + 2, gy + 5);
+      ctx.lineTo(gx - 2, gy + 7);
+      ctx.lineTo(gx - 6, gy + 5);
+      ctx.closePath();
+      ctx.fill();
+      // CRT phosphor horizontal scanlines
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+      for (let sy = y; sy < y + h; sy += 3) {
+        ctx.fillRect(x, sy, w, 1);
       }
     } else if (pat === 'candy_land') {
-      // Striped Peppermint Pillars, Gumdrop Towers & Confection Sparkles
-      const gCols = ['#EC4899', '#38BDF8', '#FBBF24', '#4ADE80'];
-      for (let i = 0; i < 6; i++) {
+      // Sugar Rush Kingdom: Spiraling peppermint swirl columns, gumdrop towers & sugar glints
+      // Wavy marshmallow frosting drip at top
+      ctx.fillStyle = '#FDF2F8';
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      for (let fx = x; fx <= x + w; fx += 16) {
+        const drip = Math.sin((fx - x) * 0.4 + t * 2) * 4 + 7;
+        ctx.lineTo(fx, y + drip);
+      }
+      ctx.lineTo(x + w, y);
+      ctx.closePath();
+      ctx.fill();
+
+      // Left & Right Spiraling Peppermint Candy Pillars
+      for (const colX of [x + 14, x + w - 14]) {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(colX - 8, y + 8, 16, h - 16);
+        ctx.fillStyle = '#EF4444';
+        for (let py = y + 8; py < y + h - 16; py += 10) {
+          ctx.beginPath();
+          ctx.moveTo(colX - 8, py);
+          ctx.lineTo(colX + 8, py + 6);
+          ctx.lineTo(colX + 8, py + 10);
+          ctx.lineTo(colX - 8, py + 4);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
+      // Gumdrop Towers with Sugar Dust Crystals
+      const gCols = ['#EC4899', '#38BDF8', '#FBBF24', '#4ADE80', '#A855F7'];
+      for (let i = 0; i < 4; i++) {
+        const gx = x + 38 + i * 44;
+        const gy = y + h - 14;
         ctx.fillStyle = gCols[i % gCols.length];
         ctx.beginPath();
-        ctx.arc(x + 28 + i * 40, y + 18, 8, Math.PI, 0);
+        ctx.arc(gx, gy - 8, 10, Math.PI, 0);
+        ctx.lineTo(gx + 10, gy);
+        ctx.lineTo(gx - 10, gy);
+        ctx.closePath();
         ctx.fill();
+        // Sugar glint dots
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(gx - 4, gy - 12, 1.5, 1.5);
+        ctx.fillRect(gx + 3, gy - 9, 1.5, 1.5);
       }
-      ctx.strokeStyle = 'rgba(244, 114, 182, 0.4)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(cx, cy, 26, 0, Math.PI * 2);
-      ctx.stroke();
-    } else if (pat === 'ice_crystals') {
-      // Jagged Glacial Ice Spikes, Frozen Lake Cracks & Swirling Snowflakes
-      ctx.fillStyle = '#38BDF8';
-      for (let i = 0; i < 9; i++) {
-        const ix = x + 16 + i * 28;
+
+      // Swirling Center Giant Lollipop Medallion
+      ctx.save();
+      ctx.translate(cx, cy - 2);
+      ctx.rotate(t * 1.5);
+      for (let i = 0; i < 6; i++) {
+        ctx.fillStyle = i % 2 === 0 ? '#EC4899' : '#FFFFFF';
         ctx.beginPath();
-        ctx.moveTo(ix - 8, y);
-        ctx.lineTo(ix, y + 16 + (i % 2) * 8);
-        ctx.lineTo(ix + 8, y);
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, 18, (i * Math.PI) / 3, ((i + 1) * Math.PI) / 3);
         ctx.closePath();
         ctx.fill();
       }
-      ctx.strokeStyle = 'rgba(186, 230, 253, 0.5)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(cx - 40, cy - 10);
-      ctx.lineTo(cx, cy + 5);
-      ctx.lineTo(cx + 45, cy - 8);
-      ctx.moveTo(cx, cy + 5);
-      ctx.lineTo(cx + 12, cy + 32);
-      ctx.stroke();
-      ctx.fillStyle = '#FFFFFF';
-      for (let i = 0; i < 10; i++) {
+      ctx.restore();
+    } else if (pat === 'ice_crystals') {
+      // Glacial Ice Sheet: Deep ice fissures, jagged glacial stalagmites & swirling blizzard
+      // Top & Bottom Glacial Ice Spikes
+      ctx.fillStyle = '#7DD3FC';
+      for (let i = 0; i < 11; i++) {
+        const ix = x + 12 + i * 22;
         ctx.beginPath();
-        ctx.arc(x + ((i * 37 + t * 25) % w), y + ((i * 23 + t * 35) % h), 2, 0, Math.PI * 2);
+        ctx.moveTo(ix - 8, y);
+        ctx.lineTo(ix, y + 14 + (i % 3) * 6);
+        ctx.lineTo(ix + 8, y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(ix - 8, y + h);
+        ctx.lineTo(ix, y + h - 14 - (i % 2) * 7);
+        ctx.lineTo(ix + 8, y + h);
+        ctx.closePath();
+        ctx.fill();
+      }
+      // Glowing Ice Lake Deep Fracture Cracks
+      ctx.strokeStyle = '#BAE6FD';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#38BDF8';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(cx - 55, cy - 14);
+      ctx.lineTo(cx - 15, cy + 4);
+      ctx.lineTo(cx + 25, cy - 6);
+      ctx.lineTo(cx + 60, cy + 12);
+      ctx.moveTo(cx - 15, cy + 4);
+      ctx.lineTo(cx - 5, cy + 28);
+      ctx.moveTo(cx + 25, cy - 6);
+      ctx.lineTo(cx + 35, cy - 24);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      // Multi-layer Swirling Blizzard Snowflakes
+      ctx.fillStyle = '#FFFFFF';
+      for (let i = 0; i < 16; i++) {
+        const sx = x + ((i * 29 + t * (25 + (i % 3) * 15)) % w);
+        const sy = y + ((i * 19 + t * (35 + (i % 2) * 10)) % h);
+        ctx.beginPath();
+        ctx.arc(sx, sy, 1 + (i % 3) * 0.7, 0, Math.PI * 2);
         ctx.fill();
       }
     } else if (pat === 'sakura_petals') {
-      // Vermillion Japanese Torii Gate in Center & Tumbling Pink Sakura Petals
+      // Sakura Zen Sanctuary: Vermillion Torii Gate, stone lanterns & falling blossom petals
+      // Traditional Vermillion Torii Gate in Center
       ctx.fillStyle = '#E11D48';
-      ctx.fillRect(cx - 22, y + 16, 5, 36);
-      ctx.fillRect(cx + 17, y + 16, 5, 36);
-      ctx.fillRect(cx - 32, y + 12, 64, 5);
-      ctx.fillRect(cx - 26, y + 22, 52, 4);
+      ctx.shadowColor = '#BE123C';
+      ctx.shadowBlur = 8;
+      // Columns & Base
+      ctx.fillRect(cx - 26, y + 16, 6, 38);
+      ctx.fillRect(cx + 20, y + 16, 6, 38);
+      // Top Crossbars (Kasagi and Shimaki)
+      ctx.fillRect(cx - 38, y + 12, 76, 5);
+      ctx.fillRect(cx - 30, y + 22, 60, 4);
+      // Black lintel ridge
+      ctx.fillStyle = '#18181B';
+      ctx.fillRect(cx - 40, y + 10, 80, 3);
+      ctx.shadowBlur = 0;
+
+      // Stone Lanterns on flanks with warm flame glow
+      for (const lx of [x + 18, x + w - 18]) {
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(lx - 4, y + h - 22, 8, 14);
+        ctx.fillRect(lx - 7, y + h - 26, 14, 5);
+        ctx.fillStyle = '#FDE047';
+        ctx.shadowColor = '#F59E0B';
+        ctx.shadowBlur = 10;
+        ctx.fillRect(lx - 3, y + h - 21, 6, 6);
+        ctx.shadowBlur = 0;
+      }
+
+      // Tumbling Pink Cherry Blossom Petals
       ctx.fillStyle = '#F472B6';
-      for (let i = 0; i < 10; i++) {
-        const px = x + ((i * 33 + t * 28) % w);
-        const py = y + ((i * 19 + t * 22) % h);
+      for (let i = 0; i < 14; i++) {
+        const px = x + ((i * 27 + t * 24 + Math.sin(t * 2 + i) * 12) % w);
+        const py = y + ((i * 17 + t * 28) % h);
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(t * 2 + i);
         ctx.beginPath();
-        ctx.ellipse(px, py, 4, 2, t + i, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, 4.5, 2.2, 0, 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
       }
     } else if (pat === 'volcanic_fissures') {
-      // Glowing Tectonic Lava Rivers, Basalt Rocks & Rising Fire Embers
+      // Molten Obsidian Core: Basalt plates, glowing liquid lava rivers & volcanic embers
+      // Dark Basalt Rock Floor plates
+      ctx.fillStyle = '#0F0906';
+      ctx.fillRect(x, y, w, h);
+
+      // Glowing Liquid Lava Magma Fissures
       ctx.strokeStyle = '#F97316';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 4;
       ctx.shadowColor = '#EF4444';
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 14;
       ctx.beginPath();
-      ctx.moveTo(x + 10, y + 25);
-      ctx.lineTo(cx - 15, cy);
-      ctx.lineTo(cx + 20, cy + 12);
-      ctx.lineTo(x + w - 10, y + h - 20);
-      ctx.moveTo(cx - 15, cy);
-      ctx.lineTo(cx - 40, y + h - 15);
+      ctx.moveTo(x + 10, y + 22);
+      ctx.lineTo(cx - 20, cy - 4);
+      ctx.lineTo(cx + 15, cy + 10);
+      ctx.lineTo(x + w - 10, y + h - 18);
+      ctx.moveTo(cx - 20, cy - 4);
+      ctx.lineTo(cx - 42, y + h - 14);
+      ctx.stroke();
+
+      // Molten yellow core filament inside lava
+      ctx.strokeStyle = '#FEF08A';
+      ctx.lineWidth = 1.6;
       ctx.stroke();
       ctx.shadowBlur = 0;
-      for (let i = 0; i < 8; i++) {
+
+      // Flying Volcanic Fire Embers
+      for (let i = 0; i < 12; i++) {
+        const ex = x + 16 + ((i * 31 + Math.sin(t * 4 + i) * 14) % (w - 32));
+        const ey = y + h - ((t * 40 + i * 22) % h);
         ctx.fillStyle = i % 2 === 0 ? '#FBBF24' : '#EF4444';
         ctx.beginPath();
-        ctx.arc(x + 25 + i * 28, y + h - ((t * 35 + i * 19) % h), 2.5, 0, Math.PI * 2);
+        ctx.arc(ex, ey, 2 + (i % 3) * 0.6, 0, Math.PI * 2);
         ctx.fill();
       }
     } else if (pat === 'haunted_dungeon') {
-      // Gothic Iron Fence, Glowing Green Gargoyle Torches & Rolling Ectoplasm Mist
-      ctx.fillStyle = 'rgba(16, 185, 129, 0.22)';
-      ctx.fillRect(x, y + h - 26, w, 26);
-      for (const tx of [x + 24, cx, x + w - 24]) {
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(tx - 3, y + 22, 6, 16);
-        ctx.fillStyle = '#10B981';
-        ctx.shadowColor = '#34D399';
-        ctx.shadowBlur = 10;
+      // Spooky Crypt Catacombs: Flagstones, gargoyle torches, witchfire & ectoplasm mist
+      // Cobblestone flagstone grid
+      ctx.strokeStyle = 'rgba(71, 85, 105, 0.4)';
+      ctx.lineWidth = 1;
+      for (let px = x + 24; px < x + w; px += 28) {
         ctx.beginPath();
-        ctx.arc(tx, y + 18 + Math.sin(t * 10 + tx) * 1.5, 6, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-    } else if (pat === 'atlantis_deep') {
-      // Sunken Greek Temple Ruins, Swaying Sea Kelp & Rising Bubbles
-      ctx.strokeStyle = 'rgba(103, 232, 249, 0.25)';
-      ctx.lineWidth = 2;
-      for (let i = 0; i < 3; i++) {
-        ctx.beginPath();
-        ctx.moveTo(x, y + 25 + i * 28);
-        ctx.quadraticCurveTo(cx, y + 15 + i * 28 + Math.sin(t * 2 + i) * 10, x + w, y + 25 + i * 28);
+        ctx.moveTo(px, y);
+        ctx.lineTo(px, y + h);
         ctx.stroke();
       }
-      ctx.strokeStyle = '#10B981';
-      ctx.lineWidth = 3.5;
-      for (let k = 0; k < 5; k++) {
-        const kx = x + 24 + k * 52;
-        ctx.beginPath();
-        ctx.moveTo(kx, y + h);
-        ctx.quadraticCurveTo(kx + Math.sin(t * 3 + k) * 10, y + h - 22, kx, y + h - 42);
-        ctx.stroke();
-      }
-    } else if (pat === 'gilded_inlays') {
-      // Imperial Marble Colosseum Floor, 24K Gold Laurel Ring & Pillars
-      ctx.strokeStyle = '#F59E0B';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x + 12, y + 12, w - 24, h - 24);
-      ctx.beginPath();
-      ctx.arc(cx, cy, 32, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fillStyle = '#FEF08A';
-      for (const px of [x + 20, x + w - 20]) {
-        ctx.fillRect(px - 5, y + 16, 10, h - 32);
-      }
-    } else if (pat === 'space_hull') {
-      // Orbital Star Cruiser Airlock Viewport, Starfield & Hazard Beacons
-      ctx.fillStyle = '#FFFFFF';
-      for (let i = 0; i < 14; i++) {
-        ctx.fillRect(x + ((i * 43) % w), y + ((i * 29) % h), 2, 2);
-      }
-      ctx.strokeStyle = '#38BDF8';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(cx, cy, 30, 0, Math.PI * 2);
-      ctx.stroke();
-    } else if (pat === 'steampunk_forge') {
-      // Rotating Interlocking Brass Clockwork Gears & Steam Plumes
-      for (const g of [{ gx: cx - 32, gy: cy, r: 22, d: 1 }, { gx: cx + 26, gy: cy + 8, r: 16, d: -1.4 }]) {
-        ctx.save();
-        ctx.translate(g.gx, g.gy);
-        ctx.rotate(t * g.d);
-        ctx.fillStyle = '#B45309';
-        ctx.strokeStyle = '#FBBF24';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(0, 0, g.r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
-          ctx.fillStyle = '#FBBF24';
-          ctx.fillRect(Math.cos(a) * g.r - 3, Math.sin(a) * g.r - 3, 6, 6);
-        }
-        ctx.restore();
-      }
-    } else if (pat === 'jade_dragon') {
-      // Swirling Ethereal Emerald Dragon & Glowing Jade Lanterns
-      ctx.strokeStyle = '#10B981';
-      ctx.lineWidth = 4;
-      ctx.shadowColor = '#34D399';
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      for (let xPos = x + 20; xPos <= x + w - 20; xPos += 12) {
-        const yPos = cy + Math.sin(xPos * 0.05 + t * 3) * 18;
-        if (xPos === x + 20) ctx.moveTo(xPos, yPos);
-        else ctx.lineTo(xPos, yPos);
-      }
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-    } else if (pat === 'pinball_matrix') {
-      // Flashing Arcade Pinball Pop Bumpers & Flipper Lanes
-      for (const b of [{ bx: cx - 35, by: cy - 16, c: '#EC4899' }, { bx: cx + 35, by: cy - 16, c: '#06B6D4' }, { bx: cx, by: cy + 18, c: '#F59E0B' }]) {
-        const pulse = 1 + Math.max(0, Math.sin(t * 7 + b.bx)) * 0.2;
-        ctx.fillStyle = b.c;
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(b.bx, b.by, 13 * pulse, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-      }
-    } else if (pat === 'biolum_jungle') {
-      // Glowing Avatar Bioluminescent Giant Mushrooms & Spores
-      for (const m of [{ mx: cx - 40, my: y + h - 12, c: '#2DD4BF', r: 16 }, { mx: cx, my: y + h - 8, c: '#C084FC', r: 22 }, { mx: cx + 42, my: y + h - 12, c: '#38BDF8', r: 15 }]) {
-        ctx.fillStyle = '#E2E8F0';
-        ctx.fillRect(m.mx - 3, m.my - 18, 6, 18);
-        ctx.fillStyle = m.c;
-        ctx.shadowColor = m.c;
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.arc(m.mx, m.my - 18, m.r, Math.PI, 0);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-    } else if (pat === 'pirate_galleon') {
-      // Wood Plank Deck, Broadside Cannons & Kraken Tentacles
-      ctx.strokeStyle = 'rgba(120, 53, 15, 0.5)';
-      ctx.lineWidth = 1.5;
-      for (let py = y + 18; py < y + h; py += 16) {
+      for (let py = y + 20; py < y + h; py += 22) {
         ctx.beginPath();
         ctx.moveTo(x, py);
         ctx.lineTo(x + w, py);
         ctx.stroke();
       }
-      ctx.fillStyle = '#F59E0B';
-      ctx.beginPath();
-      ctx.arc(cx, cy, 18, 0, Math.PI * 2);
-      ctx.stroke();
-    } else if (pat === 'cyber_tokyo') {
-      // Neo-Tokyo Skyscraper Skyline, Neon Billboards & Rain
-      ctx.fillStyle = '#0F172A';
-      const bWidths = [28, 36, 24, 42, 30, 34, 28];
-      let curBx = x + 8;
-      bWidths.forEach((bw, idx) => {
-        const bh = 35 + (idx % 3) * 18;
-        ctx.fillStyle = '#0F172A';
-        ctx.fillRect(curBx, y + h - bh, bw - 3, bh);
-        ctx.strokeStyle = idx % 2 === 0 ? '#06B6D4' : '#EC4899';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(curBx + 4, y + h - bh + 6, bw - 11, 14);
-        curBx += bw;
-      });
-    } else if (pat === 'black_hole') {
-      // Swirling Supermassive Black Hole Singularity & Accretion Disk
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(t * 1.5);
-      ctx.strokeStyle = '#A855F7';
-      ctx.lineWidth = 4;
-      ctx.shadowColor = '#EC4899';
-      ctx.shadowBlur = 14;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 48, 18, 0.3, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fillStyle = '#000000';
-      ctx.strokeStyle = '#FDE047';
+
+      // Rolling Supernatural Green Ectoplasm Mist
+      const mistGrad = ctx.createLinearGradient(x, y + h - 30, x, y + h);
+      mistGrad.addColorStop(0, 'rgba(16, 185, 129, 0)');
+      mistGrad.addColorStop(1, 'rgba(16, 185, 129, 0.35)');
+      ctx.fillStyle = mistGrad;
+      ctx.fillRect(x, y + h - 30, w, 30);
+
+      // 3 Gothic Stone Torch Sconces with Dancing Witchfire Flames
+      for (const tx of [x + 28, cx, x + w - 28]) {
+        // Iron bracket
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(tx - 3, y + 20, 6, 16);
+        // Witchfire emerald flame
+        const flamePulse = Math.sin(t * 12 + tx) * 2;
+        ctx.fillStyle = '#10B981';
+        ctx.shadowColor = '#34D399';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(tx, y + 17 + flamePulse, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#A7F3D0';
+        ctx.beginPath();
+        ctx.arc(tx, y + 17 + flamePulse, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      // Floating Translucent Spectral Wisps
+      for (let i = 0; i < 3; i++) {
+        const wx = cx + Math.sin(t * 2 + i * 2.1) * (w * 0.35);
+        const wy = cy + Math.cos(t * 1.8 + i) * 16;
+        ctx.fillStyle = 'rgba(167, 243, 208, 0.25)';
+        ctx.beginPath();
+        ctx.arc(wx, wy, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (pat === 'atlantis_deep') {
+      // Sunken Atlantis Trench: Caustics light rays, sunken pillars, kelp forest & bubbles
+      // Dynamic Underwater Sunlight Caustics
+      ctx.strokeStyle = 'rgba(103, 232, 249, 0.28)';
+      ctx.lineWidth = 2.5;
+      for (let i = 0; i < 4; i++) {
+        ctx.beginPath();
+        ctx.moveTo(x, y + 18 + i * 22);
+        ctx.quadraticCurveTo(cx, y + 8 + i * 22 + Math.sin(t * 2.5 + i) * 12, x + w, y + 18 + i * 22);
+        ctx.stroke();
+      }
+
+      // Sunken Greek Ruin Columns
+      for (const colX of [x + 32, x + w - 32]) {
+        ctx.fillStyle = '#0E7490';
+        ctx.fillRect(colX - 6, y + 18, 12, h - 36);
+        ctx.fillStyle = '#155E75';
+        ctx.fillRect(colX - 8, y + 14, 16, 5);
+        ctx.fillRect(colX - 8, y + h - 22, 16, 5);
+      }
+
+      // Swaying Emerald Giant Kelp Fronds
+      ctx.strokeStyle = '#10B981';
+      ctx.lineWidth = 3.5;
+      for (let k = 0; k < 6; k++) {
+        const kx = x + 20 + k * 44;
+        const sway = Math.sin(t * 3 + k * 1.2) * 14;
+        ctx.beginPath();
+        ctx.moveTo(kx, y + h);
+        ctx.quadraticCurveTo(kx + sway, y + h - 24, kx + sway * 0.5, y + h - 46);
+        ctx.stroke();
+      }
+
+      // Rising Shimmering Air Bubbles
+      ctx.strokeStyle = 'rgba(186, 230, 253, 0.85)';
+      ctx.lineWidth = 1.2;
+      for (let i = 0; i < 8; i++) {
+        const bx = x + ((i * 33 + Math.sin(t * 3 + i) * 10) % (w - 20)) + 10;
+        const by = y + h - ((t * 30 + i * 24) % h);
+        ctx.beginPath();
+        ctx.arc(bx, by, 2 + (i % 3), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    } else if (pat === 'gilded_inlays') {
+      // Imperial Gilded Colosseum: Carrara marble, 24K gold Greek key border, laurel wreath
+      // Marble Tile Floor
+      ctx.fillStyle = '#1C160C';
+      ctx.fillRect(x, y, w, h);
+
+      // 24K Gold Mosaic Border & Greek Key Pattern
+      ctx.strokeStyle = '#F59E0B';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#FBBF24';
+      ctx.shadowBlur = 8;
+      ctx.strokeRect(x + 12, y + 12, w - 24, h - 24);
+      ctx.shadowBlur = 0;
+
+      // 4 Polished Golden Corner Pedestals
+      for (const [px, py] of [[x + 16, y + 16], [x + w - 16, y + 16], [x + 16, y + h - 16], [x + w - 16, y + h - 16]]) {
+        ctx.fillStyle = '#F59E0B';
+        ctx.fillRect(px - 4, py - 4, 8, 8);
+        ctx.fillStyle = '#FEF08A';
+        ctx.fillRect(px - 2, py - 2, 4, 4);
+      }
+
+      // Central Imperial Golden Laurel Wreath Medallion
+      ctx.strokeStyle = '#FBBF24';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(0, 0, 15, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.arc(cx, cy, 26, 0, Math.PI * 2);
       ctx.stroke();
+
+      // Laurel Leaves along circle
+      ctx.fillStyle = '#FEF08A';
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 6) {
+        const lx = cx + Math.cos(a) * 26;
+        const ly = cy + Math.sin(a) * 26;
+        ctx.save();
+        ctx.translate(lx, ly);
+        ctx.rotate(a + Math.PI / 4);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 4.5, 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      // Center Sunburst Star
+      ctx.fillStyle = '#F59E0B';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (pat === 'space_hull') {
+      // Orbital Star Cruiser: Deep space viewport, drifting starfield, hazard beacons & cyan forcefield
+      // Panoramic Deep Space Starfield & Nebula
+      ctx.fillStyle = '#FFFFFF';
+      for (let i = 0; i < 22; i++) {
+        const starX = x + ((i * 37 + t * 8) % w);
+        const starY = y + ((i * 23) % h);
+        const starSize = (i % 3 === 0 ? 2 : 1);
+        ctx.fillRect(starX, starY, starSize, starSize);
+      }
+
+      // Titanium Viewport Airlock Ring
+      ctx.strokeStyle = '#38BDF8';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#0284C7';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 32, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Hexagonal Forcefield Perimeter Lines
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+      ctx.lineWidth = 1.2;
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 3) {
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a) * 32, cy + Math.sin(a) * 32);
+        ctx.lineTo(cx + Math.cos(a) * 52, cy + Math.sin(a) * 52);
+        ctx.stroke();
+      }
+
+      // Dual Sweeping Orange Hazard Warning Beacons
+      const beaconAngle = t * 4;
+      for (const bx of [x + 20, x + w - 20]) {
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(bx - 4, y + 10, 8, 8);
+        const bGrad = ctx.createRadialGradient(bx, y + 14, 2, bx, y + 14, 18);
+        bGrad.addColorStop(0, '#F59E0B');
+        bGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+        ctx.fillStyle = bGrad;
+        ctx.beginPath();
+        ctx.arc(bx, y + 14, 16, beaconAngle, beaconAngle + Math.PI * 0.7);
+        ctx.lineTo(bx, y + 14);
+        ctx.fill();
+      }
+    } else if (pat === 'steampunk_forge') {
+      // Steampunk Clockwork Forge: 3 Interlocking gears at exact ratios, molten grates, steam plumes
+      // Molten furnace grate floor below
+      ctx.fillStyle = '#1A0C04';
+      ctx.fillRect(x, y, w, h);
+      ctx.fillStyle = 'rgba(249, 115, 22, 0.25)';
+      for (let gy = y + 12; gy < y + h; gy += 14) {
+        ctx.fillRect(x + 12, gy, w - 24, 3);
+      }
+
+      // 3 Meshing Brass Clockwork Gears with Exact Teeth Ratios (1, -1.5, 2)
+      const gearList = [
+        { gx: cx - 28, gy: cy - 2, r: 22, speed: 1.2, teeth: 12 },
+        { gx: cx + 18, gy: cy - 14, r: 15, speed: -1.76, teeth: 8 },
+        { gx: cx + 22, gy: cy + 18, r: 12, speed: 2.2, teeth: 6 }
+      ];
+      for (const g of gearList) {
+        ctx.save();
+        ctx.translate(g.gx, g.gy);
+        ctx.rotate(t * g.speed);
+        // Outer Gear Body
+        ctx.fillStyle = '#B45309';
+        ctx.strokeStyle = '#FBBF24';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.arc(0, 0, g.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Gear Teeth
+        for (let i = 0; i < g.teeth; i++) {
+          const a = (i * Math.PI * 2) / g.teeth;
+          ctx.fillStyle = '#FDE047';
+          ctx.fillRect(Math.cos(a) * g.r - 2.5, Math.sin(a) * g.r - 2.5, 5, 5);
+        }
+        // Center Axle Rivet
+        ctx.fillStyle = '#78350F';
+        ctx.beginPath();
+        ctx.arc(0, 0, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Venting Steam Clouds from corner pipes
+      for (const sx of [x + 18, x + w - 18]) {
+        const steamY = y + h - 14 - ((t * 28 + sx) % (h * 0.7));
+        ctx.fillStyle = 'rgba(254, 243, 199, 0.45)';
+        ctx.beginPath();
+        ctx.arc(sx + Math.sin(t * 5) * 4, steamY, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (pat === 'jade_dragon') {
+      // Jade Dragon Sanctuary: Coiling serpentine emerald dragon, jade scales & golden lanterns
+      // Coiling Ethereal Emerald Dragon Body
+      ctx.strokeStyle = '#10B981';
+      ctx.lineWidth = 6;
+      ctx.shadowColor = '#34D399';
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      for (let xPos = x + 16; xPos <= x + w - 16; xPos += 8) {
+        const yPos = cy + Math.sin(xPos * 0.05 + t * 3.5) * 16;
+        if (xPos === x + 16) ctx.moveTo(xPos, yPos);
+        else ctx.lineTo(xPos, yPos);
+      }
+      ctx.stroke();
+
+      // Dragon Golden Dorsal Crest
+      ctx.strokeStyle = '#FDE047';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Two Ornate Chinese Hanging Red Lanterns with Gold Tassels
+      for (const lx of [x + 26, x + w - 26]) {
+        const sway = Math.sin(t * 2 + lx) * 3;
+        // Cord
+        ctx.strokeStyle = '#D97706';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(lx, y);
+        ctx.lineTo(lx + sway, y + 16);
+        ctx.stroke();
+        // Lantern Hexagon
+        ctx.fillStyle = '#DC2626';
+        ctx.fillRect(lx + sway - 6, y + 16, 12, 14);
+        ctx.fillStyle = '#FDE047';
+        ctx.fillRect(lx + sway - 8, y + 14, 16, 3);
+        ctx.fillRect(lx + sway - 8, y + 29, 16, 3);
+        // Tassel
+        ctx.strokeStyle = '#F59E0B';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(lx + sway, y + 32);
+        ctx.lineTo(lx + sway, y + 42);
+        ctx.stroke();
+      }
+    } else if (pat === 'pinball_matrix') {
+      // Hyper-Pinball Bumper Matrix: Pop bumpers, flipper guides, 1000-PT flash rings & rollover lanes
+      // Pop Bumpers with Pulsing Glow & Star Inserts
+      const bumperData = [
+        { bx: cx - 36, by: cy - 14, c: '#EC4899', score: '1000' },
+        { bx: cx + 36, by: cy - 14, c: '#06B6D4', score: '1000' },
+        { bx: cx, by: cy + 18, c: '#F59E0B', score: '5000' }
+      ];
+      for (const b of bumperData) {
+        const pulse = 1 + Math.max(0, Math.sin(t * 8 + b.bx)) * 0.18;
+        ctx.fillStyle = b.c;
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        ctx.shadowColor = b.c;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(b.bx, b.by, 13 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        // Inner Chrome Rim
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(b.bx, b.by, 7, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Neon Rollover Lane Arrows (▲ ▲ ▲)
+      for (let i = 0; i < 3; i++) {
+        const ax = cx - 22 + i * 22;
+        const ay = y + 16;
+        ctx.fillStyle = (Math.floor(t * 6) % 3 === i) ? '#FDE047' : 'rgba(253, 224, 71, 0.3)';
+        ctx.beginPath();
+        ctx.moveTo(ax, ay - 4);
+        ctx.lineTo(ax + 4, ay + 3);
+        ctx.lineTo(ax - 4, ay + 3);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Chrome Wire Ball Return Rails at Bottom
+      ctx.strokeStyle = '#CBD5E1';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x + 14, y + h - 14);
+      ctx.lineTo(cx - 18, y + h - 6);
+      ctx.moveTo(x + w - 14, y + h - 14);
+      ctx.lineTo(cx + 18, y + h - 6);
+      ctx.stroke();
+    } else if (pat === 'biolum_jungle') {
+      // Bioluminescent Avatar Grove: Giant glowing alien mushrooms, hanging liana vines & spirit spores
+      // Hanging Bioluminescent Liana Vines from Ceiling
+      ctx.strokeStyle = '#059669';
+      ctx.lineWidth = 2;
+      for (let v = 0; v < 4; v++) {
+        const vx = x + 24 + v * 52;
+        ctx.beginPath();
+        ctx.moveTo(vx, y);
+        ctx.quadraticCurveTo(vx + Math.sin(t * 2 + v) * 8, y + 16, vx, y + 26 + (v % 2) * 8);
+        ctx.stroke();
+        // Glowing dewdrop bud
+        ctx.fillStyle = '#2DD4BF';
+        ctx.beginPath();
+        ctx.arc(vx, y + 26 + (v % 2) * 8, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 3 Giant Bioluminescent Mushrooms with Glowing Gills
+      const shroomList = [
+        { mx: cx - 42, my: y + h - 10, c: '#2DD4BF', r: 16, stalkH: 18 },
+        { mx: cx + 2, my: y + h - 8, c: '#C084FC', r: 24, stalkH: 24 },
+        { mx: cx + 44, my: y + h - 10, c: '#38BDF8', r: 15, stalkH: 16 }
+      ];
+      for (const m of shroomList) {
+        // Stalk
+        ctx.fillStyle = '#CBD5E1';
+        ctx.fillRect(m.mx - 3, m.my - m.stalkH, 6, m.stalkH);
+        // Glowing Mushroom Cap
+        ctx.fillStyle = m.c;
+        ctx.shadowColor = m.c;
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(m.mx, m.my - m.stalkH, m.r, Math.PI, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        // Gills underneath
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(m.mx - m.r, m.my - m.stalkH);
+        ctx.lineTo(m.mx + m.r, m.my - m.stalkH);
+        ctx.stroke();
+      }
+
+      // Drifting Glowing Airborne Spirit Spores
+      for (let i = 0; i < 10; i++) {
+        const spX = x + ((i * 31 + t * 14) % (w - 20)) + 10;
+        const spY = y + ((i * 19 + Math.sin(t * 3 + i) * 12) % (h - 20)) + 10;
+        ctx.fillStyle = i % 2 === 0 ? '#5EEAD4' : '#E879F9';
+        ctx.beginPath();
+        ctx.arc(spX, spY, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (pat === 'pirate_galleon') {
+      // Ghost Galleon Quarterdeck: Weathered oak planks, broadside cannons, swinging lantern & kraken tentacles
+      // Weathered Oak Deck Planks & Nail Rivets
+      ctx.strokeStyle = 'rgba(120, 53, 15, 0.45)';
+      ctx.lineWidth = 1.5;
+      for (let py = y + 16; py < y + h; py += 14) {
+        ctx.beginPath();
+        ctx.moveTo(x, py);
+        ctx.lineTo(x + w, py);
+        ctx.stroke();
+        // Iron nail heads
+        ctx.fillStyle = '#451A03';
+        ctx.fillRect(x + 22, py - 1, 2, 2);
+        ctx.fillRect(x + w - 24, py - 1, 2, 2);
+      }
+
+      // Broadside Brass Cannons along gunports
+      for (const canX of [x + 26, x + w - 26]) {
+        ctx.fillStyle = '#78350F';
+        ctx.fillRect(canX - 5, y + h - 18, 10, 14);
+        ctx.fillStyle = '#D97706';
+        ctx.fillRect(canX - 3, y + h - 24, 6, 8);
+      }
+
+      // Writhing Kraken Tentacles curling over deck gunwales
+      for (const tent of [{ tx: x + 12, s: 1 }, { tx: x + w - 12, s: -1 }]) {
+        const sway = Math.sin(t * 3 + tent.tx) * 8;
+        ctx.strokeStyle = '#065F46';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(tent.tx, y + h);
+        ctx.quadraticCurveTo(tent.tx + tent.s * 16 + sway, cy, tent.tx + tent.s * 6, y + 24);
+        ctx.stroke();
+        // Tentacle suckers
+        ctx.fillStyle = '#A7F3D0';
+        ctx.beginPath();
+        ctx.arc(tent.tx + tent.s * 10 + sway * 0.5, cy, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Swinging Brass Ship's Lantern with Warm Light Radial Cast
+      const swayA = Math.sin(t * 2) * 0.25;
+      const lx = cx + Math.sin(swayA) * 16;
+      const ly = y + 26;
+      // Cord
+      ctx.strokeStyle = '#D97706';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(cx, y);
+      ctx.lineTo(lx, ly);
+      ctx.stroke();
+      // Warm radial light bloom
+      const bloom = ctx.createRadialGradient(lx, ly + 8, 3, lx, ly + 8, 28);
+      bloom.addColorStop(0, 'rgba(251, 191, 36, 0.45)');
+      bloom.addColorStop(1, 'rgba(251, 191, 36, 0)');
+      ctx.fillStyle = bloom;
+      ctx.beginPath();
+      ctx.arc(lx, ly + 8, 28, 0, Math.PI * 2);
+      ctx.fill();
+      // Lantern body
+      ctx.fillStyle = '#F59E0B';
+      ctx.fillRect(lx - 4, ly + 4, 8, 10);
+      ctx.fillStyle = '#FEF08A';
+      ctx.fillRect(lx - 2, ly + 6, 4, 6);
+    } else if (pat === 'cyber_tokyo') {
+      // Neo-Tokyo Rooftop 2099: Skyscraper skyline, neon kanji billboards, flying spinners & laser rain
+      // Distant Megacity Spires & Neon Windows
+      ctx.fillStyle = '#0F172A';
+      const bWidths = [28, 38, 26, 42, 32, 36, 28];
+      let curBx = x + 8;
+      bWidths.forEach((bw, idx) => {
+        const bh = 34 + (idx % 3) * 18;
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(curBx, y + h - bh, bw - 3, bh);
+        // Neon Billboard Frames
+        ctx.strokeStyle = idx % 2 === 0 ? '#06B6D4' : '#EC4899';
+        ctx.lineWidth = 1.4;
+        ctx.strokeRect(curBx + 4, y + h - bh + 6, bw - 11, 12);
+        // Red aircraft warning beacon on top
+        if (idx % 2 === 0) {
+          ctx.fillStyle = Math.sin(t * 8 + idx) > 0 ? '#EF4444' : '#7F1D1D';
+          ctx.fillRect(curBx + bw / 2 - 1.5, y + h - bh - 3, 3, 3);
+        }
+        curBx += bw;
+      });
+
+      // Flying Spinner Hovercar with Light Streaks
+      const spinX = x + ((t * 60) % (w + 40)) - 20;
+      const spinY = y + 20 + Math.sin(t * 4) * 4;
+      ctx.fillStyle = '#38BDF8';
+      ctx.fillRect(spinX, spinY, 12, 3);
+      ctx.fillStyle = '#EF4444';
+      ctx.fillRect(spinX - 8, spinY + 1, 8, 1.5);
+
+      // Slanted Cyberpunk Laser Rain
+      ctx.strokeStyle = 'rgba(6, 182, 212, 0.35)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 14; i++) {
+        const rx = x + ((i * 24 + t * 45) % w);
+        const ry = y + ((i * 19 + t * 65) % (h - 20));
+        ctx.beginPath();
+        ctx.moveTo(rx, ry);
+        ctx.lineTo(rx - 4, ry + 10);
+        ctx.stroke();
+      }
+    } else if (pat === 'black_hole') {
+      // Event Horizon Singularity: Gravitational lensing, relativistic accretion disk & polar Hawking jets
+      // Dual Vertical Relativistic Polar Hawking Jets
+      const jetLength = 34 + Math.sin(t * 10) * 8;
+      ctx.strokeStyle = '#38BDF8';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#06B6D4';
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 8);
+      ctx.lineTo(cx, cy - jetLength);
+      ctx.moveTo(cx, cy + 8);
+      ctx.lineTo(cx, cy + jetLength);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Swirling Relativistic Accretion Disk (3D Perspective Doppler Asymmetry)
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(t * 1.6);
+      // Outer purple/violet accretion band
+      ctx.strokeStyle = '#A855F7';
+      ctx.lineWidth = 6;
+      ctx.shadowColor = '#EC4899';
+      ctx.shadowBlur = 16;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 52, 18, 0.3, 0, Math.PI * 2);
+      ctx.stroke();
+      // Inner hot yellow/orange relativistic band
+      ctx.strokeStyle = '#FDE047';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 36, 12, 0.3, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
       ctx.restore();
+
+      // Pitch-Black Event Horizon Core with Photon Sphere Ring
+      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#FDE047';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+      ctx.stroke();
     } else if (pat === 'dragons_hoard') {
-      // Glittering Mountains of Gold Coins & Ruby Treasure Chest
+      // Dragon’s Golden Treasury: Shimmering gold coin mounds, rubies/emeralds, treasure chest
+      // Deep Cavern Stalactites
+      ctx.fillStyle = '#1C1204';
+      for (let i = 0; i < 9; i++) {
+        const sx = x + 14 + i * 26;
+        ctx.beginPath();
+        ctx.moveTo(sx - 6, y);
+        ctx.lineTo(sx, y + 12 + (i % 3) * 6);
+        ctx.lineTo(sx + 6, y);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Shimmering Mountains of Gold Coins
       ctx.fillStyle = '#D97706';
       ctx.beginPath();
-      ctx.arc(cx - 50, y + h + 10, 48, Math.PI, 0);
-      ctx.arc(cx + 55, y + h + 10, 52, Math.PI, 0);
-      ctx.arc(cx, y + h + 15, 56, Math.PI, 0);
+      ctx.arc(cx - 52, y + h + 14, 52, Math.PI, 0);
+      ctx.arc(cx + 52, y + h + 14, 54, Math.PI, 0);
+      ctx.arc(cx, y + h + 18, 60, Math.PI, 0);
       ctx.fill();
-      // Center Treasure Chest
+
+      // Specular Gold Coin Specular Shimmer Dots
+      for (let i = 0; i < 18; i++) {
+        const coinX = cx - 55 + (i * 27) % 110;
+        const coinY = cy + 4 + (i * 19) % 36;
+        const glint = Math.sin(t * 6 + i) > 0.6;
+        ctx.fillStyle = glint ? '#FEF08A' : '#F59E0B';
+        ctx.beginPath();
+        ctx.arc(coinX, coinY, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Cut Sparkling Gemstones (Rubies, Emeralds, Sapphires)
+      const gems = [
+        { gx: cx - 35, gy: cy + 18, c: '#EF4444' },
+        { gx: cx + 32, gy: cy + 16, c: '#10B981' },
+        { gx: cx - 18, gy: cy + 28, c: '#3B82F6' },
+        { gx: cx + 20, gy: cy + 26, c: '#EC4899' }
+      ];
+      for (const gem of gems) {
+        ctx.fillStyle = gem.c;
+        ctx.shadowColor = gem.c;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(gem.gx, gem.gy, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      // Center Royal Treasure Chest with Golden Banding
       ctx.fillStyle = '#78350F';
       ctx.strokeStyle = '#FDE047';
       ctx.lineWidth = 2;
-      ctx.fillRect(cx - 16, cy - 4, 32, 22);
-      ctx.strokeRect(cx - 16, cy - 4, 32, 22);
+      ctx.fillRect(cx - 18, cy - 6, 36, 22);
+      ctx.strokeRect(cx - 18, cy - 6, 36, 22);
+      // Keyhole / Padlock
+      ctx.fillStyle = '#FDE047';
+      ctx.fillRect(cx - 3, cy + 3, 6, 6);
     } else if (pat === 'olympus_pantheon') {
-      // Fluted White Marble Temple Columns, Golden Lightning & Clouds
-      ctx.fillStyle = '#F8FAFC';
-      for (const colX of [x + 22, x + 52, x + w - 52, x + w - 22]) {
-        ctx.fillRect(colX - 5, y + 14, 10, h - 28);
+      // Mount Olympus Cloud Pantheon: Corinthian marble columns, billowing clouds & Zeus lightning
+      // Mount Olympus Twilight Gradient Sky is backdrop
+      // 4 Classical Fluted Corinthian White Marble Columns
+      for (const colX of [x + 22, x + 54, x + w - 54, x + w - 22]) {
+        // Pediment Capital & Base
         ctx.fillStyle = '#FDE047';
-        ctx.fillRect(colX - 7, y + 12, 14, 4);
-        ctx.fillRect(colX - 7, y + h - 16, 14, 4);
+        ctx.fillRect(colX - 8, y + 12, 16, 5);
+        ctx.fillRect(colX - 8, y + h - 18, 16, 5);
+        // Column Shaft
         ctx.fillStyle = '#F8FAFC';
+        ctx.fillRect(colX - 6, y + 17, 12, h - 35);
+        // Fluting lines
+        ctx.strokeStyle = '#CBD5E1';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(colX - 2, y + 17);
+        ctx.lineTo(colX - 2, y + h - 18);
+        ctx.moveTo(colX + 2, y + 17);
+        ctx.lineTo(colX + 2, y + h - 18);
+        ctx.stroke();
+      }
+
+      // Billowing Volumetric Divine Cloud Banks rolling across floor
+      ctx.fillStyle = 'rgba(248, 250, 252, 0.75)';
+      for (let i = 0; i < 7; i++) {
+        const clX = x + 18 + i * 28 + Math.sin(t * 1.5 + i) * 6;
+        const clY = y + h - 14;
+        ctx.beginPath();
+        ctx.arc(clX, clY, 14 + (i % 3) * 4, Math.PI, 0);
+        ctx.fill();
+      }
+
+      // Zeus Golden Thunderbolts crackling dynamically
+      if (Math.sin(t * 8) > 0.4) {
+        ctx.strokeStyle = '#FDE047';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#F59E0B';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.moveTo(cx - 24, y + 14);
+        ctx.lineTo(cx - 8, cy - 2);
+        ctx.lineTo(cx - 14, cy + 2);
+        ctx.lineTo(cx + 12, cy + 18);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
       }
     } else {
-      // Clean Modern Competition Slate
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.28)';
-      ctx.lineWidth = 1.5;
+      // Modern Clean Slate: Sleek esports stadium with perimeter LED ribbon, rotating spotlights & cyber crest
+      // Subtle Cyber Floor Grid
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.12)';
+      ctx.lineWidth = 1;
+      for (let gx = x + 18; gx < x + w; gx += 20) {
+        ctx.beginPath();
+        ctx.moveTo(gx, y + 14);
+        ctx.lineTo(gx, y + h - 14);
+        ctx.stroke();
+      }
+      for (let gy = y + 18; gy < y + h; gy += 18) {
+        ctx.beginPath();
+        ctx.moveTo(x + 14, gy);
+        ctx.lineTo(x + w - 14, gy);
+        ctx.stroke();
+      }
+
+      // High-Contrast Competition Boundary with Rounded Bumpers
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+      ctx.lineWidth = 2;
       ctx.strokeRect(x + 14, y + 14, w - 28, h - 28);
+
+      // Sweeping Stadium Spotlight Beams
+      const spotA1 = t * 1.8;
+      const spotA2 = -t * 1.5;
+      const spotGrad1 = ctx.createRadialGradient(cx, cy, 4, cx + Math.cos(spotA1) * 36, cy + Math.sin(spotA1) * 22, 32);
+      spotGrad1.addColorStop(0, 'rgba(56, 189, 248, 0.22)');
+      spotGrad1.addColorStop(1, 'rgba(56, 189, 248, 0)');
+      ctx.fillStyle = spotGrad1;
       ctx.beginPath();
-      ctx.arc(cx, cy, 24, 0, Math.PI * 2);
-      ctx.moveTo(cx, y + 14);
-      ctx.lineTo(cx, y + h - 14);
+      ctx.arc(cx, cy, 38, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Glowing Center Competition Logo Crest & Crosshairs
+      ctx.strokeStyle = '#38BDF8';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#0284C7';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 22, 0, Math.PI * 2);
       ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx - 28, cy);
+      ctx.lineTo(cx + 28, cy);
+      ctx.moveTo(cx, cy - 28);
+      ctx.lineTo(cx, cy + 28);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Center Dot
+      ctx.fillStyle = '#38BDF8';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Perimeter LED Ticker Tape (Top and Bottom)
+      for (let tx = x + 18; tx < x + w - 18; tx += 12) {
+        const lit = (Math.floor(t * 8) + Math.floor(tx / 12)) % 3 === 0;
+        ctx.fillStyle = lit ? '#38BDF8' : 'rgba(56, 189, 248, 0.2)';
+        ctx.fillRect(tx, y + 8, 6, 2);
+        ctx.fillRect(tx, y + h - 10, 6, 2);
+      }
     }
 
     ctx.restore();

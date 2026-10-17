@@ -2452,21 +2452,21 @@ export function drawCharacter(
       ctx.restore();
     }
   } else if (activeSkin === 'space_pirate_corsair') {
-    // Orbiting Cyber-Parrot Drone & Void Dubloons
+    // Orbiting Cyber-Parrot Drone (Obsidian & Hologram Cyan) & Void Dubloons
     ctx.save();
     const droneA = animTime * 2.2;
     const dx = cx + Math.cos(droneA) * (radius * 1.38);
     const dy = drawY - radius * 0.35 + Math.sin(droneA * 2) * (5 * scale);
-    ctx.fillStyle = '#EF4444';
-    ctx.strokeStyle = '#FBBF24';
-    ctx.lineWidth = 1.2 * scale;
-    ctx.shadowColor = '#EF4444';
-    ctx.shadowBlur = 8 * scale;
+    ctx.fillStyle = '#7C3AED';
+    ctx.strokeStyle = '#06B6D4';
+    ctx.lineWidth = 1.4 * scale;
+    ctx.shadowColor = '#06B6D4';
+    ctx.shadowBlur = 10 * scale;
     ctx.beginPath();
     ctx.arc(dx, dy, 4.5 * scale, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    // Parrot Beak
+    // Cyber Parrot Beak & Optics
     ctx.fillStyle = '#FDE047';
     ctx.beginPath();
     ctx.moveTo(dx + 4 * scale, dy - 1 * scale);
@@ -2474,6 +2474,22 @@ export function drawCharacter(
     ctx.lineTo(dx + 4 * scale, dy + 3 * scale);
     ctx.closePath();
     ctx.fill();
+    ctx.fillStyle = '#22D3EE';
+    ctx.beginPath();
+    ctx.arc(dx + 1.5 * scale, dy - 1 * scale, 1.2 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    // 2 Orbiting Void Doubloons
+    for (let i = 0; i < 2; i++) {
+      const va = animTime * 1.8 + i * Math.PI;
+      const vx = cx + Math.cos(va) * (radius * 1.25);
+      const vy = drawY + Math.sin(va) * (radius * 0.6);
+      ctx.fillStyle = '#FBBF24';
+      ctx.shadowColor = '#F59E0B';
+      ctx.shadowBlur = 6 * scale;
+      ctx.beginPath();
+      ctx.ellipse(vx, vy, 3.5 * scale, 2.2 * scale, animTime * 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
   } else if (activeSkin === 'retro_gameboy_classic') {
     // Floating 8-Bit Pixel Hearts & Chiptune Square Waves
@@ -2562,12 +2578,47 @@ export function drawCharacter(
     ctx.stroke();
     ctx.restore();
   } else if (activeSkin === 'shogun_mech') {
-    // High-Thrust Emerald Vernier Particle Sparks
+    // Titan Mech High-Thrust Vernier Thruster Jets & Tactical HUD Brackets
     ctx.save();
+    // Dual Cyan/Emerald Thruster Plumes
+    const thrusterFlame = (5 + Math.sin(animTime * 18) * 3) * scale;
+    ctx.fillStyle = '#06B6D4';
+    ctx.shadowColor = '#10B981';
+    ctx.shadowBlur = 12 * scale;
+    // Left Thruster Plume
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.75, drawY + radius * 0.7);
+    ctx.lineTo(cx - radius * 0.55, drawY + radius * 0.7);
+    ctx.lineTo(cx - radius * 0.65, drawY + radius * 0.7 + thrusterFlame);
+    ctx.closePath();
+    ctx.fill();
+    // Right Thruster Plume
+    ctx.beginPath();
+    ctx.moveTo(cx + radius * 0.55, drawY + radius * 0.7);
+    ctx.lineTo(cx + radius * 0.75, drawY + radius * 0.7);
+    ctx.lineTo(cx + radius * 0.65, drawY + radius * 0.7 + thrusterFlame);
+    ctx.closePath();
+    ctx.fill();
+
+    // Tactical Target Bracket & Floating Sparks
+    ctx.strokeStyle = '#FBBF24';
+    ctx.lineWidth = 1.4 * scale;
+    ctx.shadowColor = '#F59E0B';
+    ctx.shadowBlur = 8 * scale;
+    const hudAngle = animTime * 1.5;
+    for (let i = 0; i < 4; i++) {
+      const a = hudAngle + (i * Math.PI) / 2;
+      const hx = cx + Math.cos(a) * (radius * 1.35);
+      const hy = drawY + Math.sin(a) * (radius * 0.7);
+      ctx.beginPath();
+      ctx.arc(hx, hy, 2 * scale, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    // High-thrust emerald vernier particles
     for (let i = 0; i < 3; i++) {
       const a = animTime * 3 + i * 2.1;
-      const sx = cx + Math.cos(a) * (radius * 1.3);
-      const sy = drawY + Math.sin(a) * (radius * 0.65);
+      const sx = cx + Math.cos(a) * (radius * 1.25);
+      const sy = drawY + Math.sin(a) * (radius * 0.55);
       ctx.fillStyle = '#34D399';
       ctx.beginPath();
       ctx.arc(sx, sy, 2.5 * scale, 0, Math.PI * 2);
@@ -3011,6 +3062,151 @@ export function drawCharacter(
       ctx.arc(bx, by, 3 * scale, 0, Math.PI * 2);
       ctx.fill();
     }
+    ctx.restore();
+  } else if (activeSkin === 'glitch_cyber_phantom') {
+    // Glitching Hologram Wireframe Nodes & Matrix Hex Sparks
+    ctx.save();
+    ctx.strokeStyle = '#06B6D4';
+    ctx.lineWidth = 1.4 * scale;
+    ctx.shadowColor = '#EC4899';
+    ctx.shadowBlur = 10 * scale;
+    for (let i = 0; i < 4; i++) {
+      const a = animTime * 3 + (i * Math.PI) / 2;
+      const hx = cx + Math.cos(a) * (radius * 1.32);
+      const hy = drawY + Math.sin(a) * (radius * 0.7);
+      ctx.strokeRect(hx - 3 * scale, hy - 3 * scale, 6 * scale, 6 * scale);
+      // Scanline glitch burst
+      if ((Math.floor(animTime * 10) + i) % 3 === 0) {
+        ctx.fillStyle = '#EC4899';
+        ctx.fillRect(hx - 6 * scale, hy - 0.75 * scale, 12 * scale, 1.5 * scale);
+      }
+    }
+    ctx.restore();
+  } else if (activeSkin === 'solar_eclipse_knight') {
+    // Radiant Umbral Solar Eclipse Corona & Coronal Flare Prominences
+    ctx.save();
+    const coronaPulse = 1 + Math.sin(animTime * 5) * 0.08;
+    const coronaR = radius * 1.25 * coronaPulse;
+    ctx.strokeStyle = '#F59E0B';
+    ctx.lineWidth = 2 * scale;
+    ctx.shadowColor = '#FBBF24';
+    ctx.shadowBlur = 14 * scale;
+    ctx.beginPath();
+    ctx.arc(cx, drawY, coronaR, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 6 Coronal Prominence Rays
+    for (let i = 0; i < 6; i++) {
+      const rayA = animTime * 1.2 + (i * Math.PI) / 3;
+      const rInner = coronaR;
+      const rOuter = coronaR + (6 + Math.sin(animTime * 8 + i * 2) * 5) * scale;
+      ctx.strokeStyle = i % 2 === 0 ? '#FEF08A' : '#F97316';
+      ctx.lineWidth = 1.6 * scale;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(rayA) * rInner, drawY + Math.sin(rayA) * rInner);
+      ctx.lineTo(cx + Math.cos(rayA) * rOuter, drawY + Math.sin(rayA) * rOuter);
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'deep_angler_leviathan') {
+    // Bioluminescent Abyssal Lure Beacon & Rising Deep Ocean Bubbles
+    ctx.save();
+    // Glowing Angler Lure Stalk at crown
+    const lureA = animTime * 2;
+    const lx = cx + Math.sin(lureA) * (6 * scale);
+    const ly = drawY - radius * 1.35 + Math.cos(lureA * 1.5) * (3 * scale);
+    ctx.fillStyle = '#38BDF8';
+    ctx.shadowColor = '#06B6D4';
+    ctx.shadowBlur = 14 * scale;
+    ctx.beginPath();
+    ctx.arc(lx, ly, 4.5 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(lx, ly, 2 * scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rising Deep Ocean Bubbles
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
+    ctx.lineWidth = 1.2 * scale;
+    for (let i = 0; i < 3; i++) {
+      const bx = cx + Math.sin(animTime * 2.2 + i * 1.8) * (radius * 0.9);
+      const by = drawY - ((animTime * 28 + i * 18) % (radius * 1.6));
+      ctx.beginPath();
+      ctx.arc(bx, by, (2.2 + (i % 2)) * scale, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'dr_steampunk_inventor') {
+    // Venting Brass Steam Jets & Counter-Rotating Clockwork Cogs
+    ctx.save();
+    // Dual Steam Puffs
+    for (const sx of [cx - radius * 0.9, cx + radius * 0.9]) {
+      const puffY = drawY - radius * 0.4 - ((animTime * 30 + sx) % (radius * 0.8));
+      ctx.fillStyle = 'rgba(241, 245, 249, 0.45)';
+      ctx.beginPath();
+      ctx.arc(sx + Math.sin(animTime * 4) * 3 * scale, puffY, 3.5 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Orbiting Brass Clockwork Cogs
+    for (let i = 0; i < 2; i++) {
+      const ga = animTime * 1.6 + i * Math.PI;
+      const gx = cx + Math.cos(ga) * (radius * 1.32);
+      const gy = drawY + Math.sin(ga) * (radius * 0.6);
+      ctx.save();
+      ctx.translate(gx, gy);
+      ctx.rotate(animTime * (i === 0 ? 3 : -3));
+      ctx.fillStyle = '#D97706';
+      ctx.strokeStyle = '#FDE047';
+      ctx.lineWidth = 1 * scale;
+      ctx.beginPath();
+      ctx.arc(0, 0, 3.5 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'neon_cyber_kitsune') {
+    // 3 Orbiting Neon Cyber Foxfire Spirit Wisps with Glitch Trails
+    ctx.save();
+    for (let i = 0; i < 3; i++) {
+      const fa = animTime * 2.6 + (i * Math.PI * 2) / 3;
+      const fx = cx + Math.cos(fa) * (radius * 1.34);
+      const fy = drawY + Math.sin(fa) * (radius * 0.7);
+      ctx.fillStyle = i % 2 === 0 ? '#EC4899' : '#06B6D4';
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = 12 * scale;
+      ctx.beginPath();
+      ctx.arc(fx, fy, 3.5 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(fx, fy, 1.4 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'cosmic_jester') {
+    // Orbiting Planetary Void Marbles & Twinkling Diamond Star Sparkles
+    ctx.save();
+    const marbleColors = ['#A855F7', '#F59E0B', '#EC4899'];
+    for (let i = 0; i < 3; i++) {
+      const ma = animTime * 2.4 + (i * Math.PI * 2) / 3;
+      const mx = cx + Math.cos(ma) * (radius * 1.36);
+      const my = drawY + Math.sin(ma) * (radius * 0.65);
+      ctx.fillStyle = marbleColors[i];
+      ctx.shadowColor = marbleColors[i];
+      ctx.shadowBlur = 8 * scale;
+      ctx.beginPath();
+      ctx.arc(mx, my, 3.2 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      // Orbiting ring around marble
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 0.8 * scale;
+      ctx.beginPath();
+      ctx.ellipse(mx, my, 4.5 * scale, 1.8 * scale, animTime * 2, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    drawStarSparkle(ctx, cx + Math.sin(animTime * 3) * (radius * 1.1), drawY - radius * 1.1, 4 * scale);
     ctx.restore();
   }
 

@@ -288,7 +288,15 @@ export type MinigameId =
   | 'power_path_clash'
   | 'landscape_artillery'
   | 'spam_click_showdown'
-  | 'sumo_lode_runner';
+  | 'sumo_lode_runner'
+  // Phone-Exclusive Native Touchscreen Games
+  | 'thumb_war_wrestle'
+  | 'swipe_ninja_blitz'
+  | 'tabletop_air_hockey'
+  | 'tap_tug_overdrive';
+
+export type DevicePlatformMode = 'computer' | 'phone';
+export type PhoneSupportMode = '4p_native' | '4p_split_bracket' | '2p_only' | 'pc_only' | 'phone_only';
 
 export interface MinigameMetadata {
   id: MinigameId;
@@ -298,6 +306,7 @@ export interface MinigameMetadata {
   icon: string;
   instructions: string;
   controlPrompt: string;
+  phoneMode?: PhoneSupportMode;
 }
 
 export interface RoundResult {

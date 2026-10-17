@@ -645,7 +645,7 @@ export class AudioEngine {
     osc.stop(t + 0.04);
   }
 
-  public playRopeTension() {
+  public playRopeTension(tensionRatio: number = 1) {
     if (this.muted || !this.sfxEnabled) return;
     this.initContext();
     if (!this.ctx) return;
@@ -655,8 +655,9 @@ export class AudioEngine {
     const t = this.ctx.currentTime;
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(this.jitter(140, 0.06), t);
-    osc.frequency.exponentialRampToValueAtTime(320, t + 0.14);
+    const baseFreq = 140 * Math.max(0.4, Math.min(2.5, tensionRatio));
+    osc.frequency.setValueAtTime(this.jitter(baseFreq, 0.06), t);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 2.2, t + 0.14);
 
     gain.gain.setValueAtTime(0.2, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);

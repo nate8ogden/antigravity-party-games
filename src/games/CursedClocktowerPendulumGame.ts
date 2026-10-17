@@ -197,11 +197,12 @@ export class CursedClocktowerPendulumGame extends BaseGame {
     this.gearSpawnTimer = 0;
 
     const beamY = height - 138;
-    const count = Math.max(1, this.players.length);
+    const count = Math.max(1, this.getActivePlayers().length);
     const leftX = width * 0.22;
     const spanX = width * 0.56;
 
-    this.players.forEach((p, idx) => {
+    const activePlayers = this.getActivePlayers();
+    activePlayers.forEach((p, idx) => {
       const sx = leftX + ((idx + 0.5) / count) * spanX;
       this.smiths.set(p.id, {
         id: p.id,

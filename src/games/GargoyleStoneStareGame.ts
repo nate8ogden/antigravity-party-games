@@ -207,13 +207,14 @@ export class GargoyleStoneStareGame extends BaseGame {
     this.suddenDeath = false;
     this.nextRelicId = 1;
 
-    const count = Math.max(1, this.players.length);
+    const count = Math.max(1, this.getActivePlayers().length);
     const roofLeft = width * 0.22;
     const roofRight = width * 0.78;
     const span = roofRight - roofLeft;
     const startY = height - 92;
 
-    this.players.forEach((p, idx) => {
+    const activePlayers = this.getActivePlayers();
+    activePlayers.forEach((p, idx) => {
       const sx = roofLeft + ((idx + 0.5) / count) * span;
       this.climbers.set(p.id, {
         id: p.id,

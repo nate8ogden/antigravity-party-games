@@ -288,9 +288,10 @@ export class CauldronWitchBrewGame extends BaseGame {
 
     const cx = width * 0.5;
     const cy = height * 0.54;
-    const count = Math.max(1, this.players.length);
+    const activePlayers = this.getActivePlayers();
+    const count = Math.max(1, activePlayers.length);
 
-    this.players.forEach((p, idx) => {
+    activePlayers.forEach((p, idx) => {
       const angle = (idx / count) * Math.PI * 2 + Math.PI * 0.25;
       const sx = cx + Math.cos(angle) * 185;
       const sy = cy + Math.sin(angle) * 125;

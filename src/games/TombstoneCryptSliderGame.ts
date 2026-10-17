@@ -226,8 +226,10 @@ export class TombstoneCryptSliderGame extends BaseGame {
 
     const cx = width * 0.5;
     const cy = height * 0.54;
-    const count = Math.max(1, this.players.length);
-    this.players.forEach((p, idx) => {
+    const activePlayers = this.getActivePlayers();
+    const count = Math.max(1, activePlayers.length);
+
+    activePlayers.forEach((p, idx) => {
       const ang = (idx / count) * Math.PI * 2 + Math.PI * 0.25;
       this.explorers.set(p.id, {
         id: p.id,

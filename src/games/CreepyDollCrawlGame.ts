@@ -183,9 +183,10 @@ export class CreepyDollCrawlGame extends BaseGame {
     const topY = 128;
     const botY = height - 115;
     const spanY = botY - topY;
-    const count = Math.max(1, this.players.length);
+    const activePlayers = this.getActivePlayers();
+    const count = Math.max(1, activePlayers.length);
 
-    this.players.forEach((p, idx) => {
+    activePlayers.forEach((p, idx) => {
       const sy = topY + ((idx + 0.5) / count) * spanY;
       this.racers.set(p.id, {
         id: p.id,
