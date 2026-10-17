@@ -43,7 +43,7 @@ export const SWAT_THEMES: SwatTheme[] = [
 
 interface Insect {
   id: number;
-  type: 'fly' | 'dragonfly' | 'wasp';
+  type: 'fly' | 'golden_fly' | 'wasp';
   x: number;
   y: number;
   targetX: number;
@@ -219,10 +219,10 @@ export class SwatFlyGame extends BaseGame {
     }
   }
 
-  private spawnInsect(forcedType?: 'fly' | 'dragonfly' | 'wasp'): void {
-    const types: ('fly' | 'dragonfly' | 'wasp')[] = ['fly', 'fly', 'fly', 'dragonfly', 'wasp'];
+  private spawnInsect(forcedType?: 'fly' | 'golden_fly' | 'wasp'): void {
+    const types: ('fly' | 'golden_fly' | 'wasp')[] = ['fly', 'fly', 'fly', 'golden_fly', 'wasp'];
     const type = forcedType || types[Math.floor(Math.random() * types.length)];
-    const points = type === 'dragonfly' ? 3 : type === 'wasp' ? -2 : 1;
+    const points = type === 'golden_fly' ? 3 : type === 'wasp' ? -2 : 1;
 
     const margin = 40;
     const tx = this.tableBounds.x + margin + Math.random() * (this.tableBounds.w - margin * 2);
@@ -237,7 +237,7 @@ export class SwatFlyGame extends BaseGame {
       targetY: ty,
       state: 'flying',
       stateTimer: 0,
-      landDuration: type === 'dragonfly' ? 1.4 : type === 'wasp' ? 2.5 : 2.0,
+      landDuration: type === 'golden_fly' ? 1.4 : type === 'wasp' ? 2.5 : 2.0,
       flutterPhase: Math.random() * Math.PI * 2,
       alive: true,
       points
@@ -250,13 +250,13 @@ export class SwatFlyGame extends BaseGame {
     this.roundTimer = Math.max(0, this.roundTimer - dt);
     this.updateBots(dt, width, height);
 
-    // Sudden Death Dragonfly Swarm at <= 15s
+    // Sudden Death Golden Super-Fly Frenzy at <= 15s
     if (this.roundTimer <= 15 && !this.suddenDeathFrenzy) {
       this.suddenDeathFrenzy = true;
-      this.spawnInsect('dragonfly');
-      this.spawnInsect('dragonfly');
+      this.spawnInsect('golden_fly');
+      this.spawnInsect('golden_fly');
       this.audio.playFanfare();
-      this.particles.showFloatingText('🚨 DRAGONFLY SWARM! 🚨', width / 2, height / 2 - 40, '#F59E0B', 24);
+      this.particles.showFloatingText('🚨 GOLDEN SUPER-FLY FRENZY! 🚨', width / 2, height / 2 - 40, '#F59E0B', 24);
     }
 
     // Spawn new insects periodically
@@ -281,7 +281,7 @@ export class SwatFlyGame extends BaseGame {
           ins.state = 'landed';
           ins.stateTimer = ins.landDuration;
         } else {
-          const speed = ins.type === 'dragonfly' ? 280 : ins.type === 'wasp' ? 160 : 210;
+          const speed = ins.type === 'golden_fly' ? 280 : ins.type === 'wasp' ? 160 : 210;
           ins.x += (dx / dist) * speed * dt + Math.sin(ins.flutterPhase) * 1.8;
           ins.y += (dy / dist) * speed * dt + Math.cos(ins.flutterPhase) * 1.8;
         }
@@ -421,14 +421,14 @@ export class SwatFlyGame extends BaseGame {
           this.particles.showFloatingText('-2 PTS! STUNG! 🐝', sw.x, sw.y - 30, '#EF4444', 22);
           this.particles.spawnSparks(sw.x, sw.y, '#EF4444', 16);
           this.particles.addTrauma(0.3);
-        } else if (ins.type === 'dragonfly') {
-          // Golden Dragonfly
+        } else if (ins.type === 'golden_fly') {
+          // Golden Super-Fly
           sw.combo++;
           const comboMult = sw.combo >= 3 ? 2 : 1;
           const pts = 3 * comboMult;
           sw.score += pts;
           this.audio.playFanfare();
-          const label = isMidair ? `+${pts} PTS! MID-AIR DRAGONFLY! 🌟` : `+${pts} PTS! GOLDEN! 🌟`;
+          const label = isMidair ? `+${pts} PTS! MID-AIR SUPER-FLY! 🌟` : `+${pts} PTS! GOLDEN FLY! 🌟`;
           this.particles.showFloatingText(label, sw.x, sw.y - 30, '#F59E0B', 24);
           this.particles.spawnSparks(sw.x, sw.y, '#FBBF24', 20);
         } else {
@@ -569,7 +569,7 @@ export class SwatFlyGame extends BaseGame {
 
       // Fluttering Wings
       const wingSpread = Math.sin(ins.flutterPhase) * (ins.state === 'flying' ? 8 : 4);
-      ctx.fillStyle = ins.type === 'dragonfly' ? 'rgba(253, 224, 71, 0.75)' : ins.type === 'wasp' ? 'rgba(254, 240, 138, 0.65)' : 'rgba(226, 232, 240, 0.65)';
+      ctx.fillStyle = ins.type === 'golden_fly' ? 'rgba(254, 240, 138, 0.85)' : ins.type === 'wasp' ? 'rgba(254, 240, 138, 0.65)' : 'rgba(226, 232, 240, 0.65)';
       ctx.beginPath();
       ctx.ellipse(ins.x - 7, ins.y - 4 + wingSpread, 7, 3, -0.4, 0, Math.PI * 2);
       ctx.fill();
@@ -577,15 +577,25 @@ export class SwatFlyGame extends BaseGame {
       ctx.ellipse(ins.x + 7, ins.y - 4 + wingSpread, 7, 3, 0.4, 0, Math.PI * 2);
       ctx.fill();
 
-      if (ins.type === 'dragonfly') {
+      if (ins.type === 'golden_fly') {
+        // Golden Super-Fly with metallic body and red compound eyes
         ctx.fillStyle = '#F59E0B';
+        ctx.shadowColor = '#FBBF24';
+        ctx.shadowBlur = 6;
         ctx.beginPath();
-        if (ctx.roundRect) ctx.roundRect(ins.x - 3, ins.y - 10, 6, 20, 3);
-        else ctx.rect(ins.x - 3, ins.y - 10, 6, 20);
+        if (ctx.roundRect) ctx.roundRect(ins.x - 4, ins.y - 7, 8, 14, 4);
+        else ctx.rect(ins.x - 4, ins.y - 7, 8, 14);
         ctx.fill();
+        ctx.shadowBlur = 0;
+        // Head with red compound eyes
         ctx.fillStyle = '#D97706';
         ctx.beginPath();
-        ctx.arc(ins.x, ins.y - 10, 4, 0, Math.PI * 2);
+        ctx.arc(ins.x, ins.y - 7, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#EF4444';
+        ctx.beginPath();
+        ctx.arc(ins.x - 2.5, ins.y - 8, 2, 0, Math.PI * 2);
+        ctx.arc(ins.x + 2.5, ins.y - 8, 2, 0, Math.PI * 2);
         ctx.fill();
       } else if (ins.type === 'wasp') {
         ctx.fillStyle = '#EAB308';
