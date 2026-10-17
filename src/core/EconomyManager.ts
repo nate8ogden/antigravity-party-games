@@ -53,7 +53,15 @@ export interface MascotSkin {
     | 'phoenix_supernova'
     | 'eclipse_corona'
     | 'angler_glow'
-    | 'jester_stars';
+    | 'jester_stars'
+    | 'cosmic_black_hole'
+    | 'cyber_valkyrie_prime'
+    | 'cyber_glitch_oni'
+    | 'golden_dragon_emperor'
+    | 'prism_crystal_golem'
+    | 'deep_sea_abyssal_kraken'
+    | 'inferno_lava_demon'
+    | 'retro_synthwave_racer';
 }
 
 export const SKIN_CATALOG: MascotSkin[] = [
@@ -171,7 +179,7 @@ export const SKIN_CATALOG: MascotSkin[] = [
     rarity: 'Epic',
     description: 'Hardened tectonic basalt plates over liquid lava core with fiery venting geysers.',
     price: 115,
-    previewColor: '#DC2626',
+    previewColor: '#EA580C',
     cosmeticEffect: 'magma_eruption'
   },
   {
@@ -524,6 +532,78 @@ export const SKIN_CATALOG: MascotSkin[] = [
     price: 275,
     previewColor: '#A855F7',
     cosmeticEffect: 'jester_stars'
+  },
+  {
+    id: 'cosmic_black_hole',
+    name: 'Singularity Overlord',
+    rarity: 'Legendary',
+    description: 'Supermassive gravitational event horizon crowned with orbiting dark matter spheres, relativistic Hawking jets, and spacetime distortion ripples.',
+    price: 290,
+    previewColor: '#4C1D95',
+    cosmeticEffect: 'cosmic_black_hole'
+  },
+  {
+    id: 'cyber_valkyrie_prime',
+    name: 'Cyber Valkyrie Prime',
+    rarity: 'Legendary',
+    description: 'Divine neon-winged war angel with iridescent holographic feather blades, starlight visor, and sweeping coronal aura.',
+    price: 295,
+    previewColor: '#38BDF8',
+    cosmeticEffect: 'cyber_valkyrie_prime'
+  },
+  {
+    id: 'cyber_glitch_oni',
+    name: 'Neo-Tokyo Cyber Oni',
+    rarity: 'Legendary',
+    description: 'Fearsome cybernetic horned demon with jagged menacing fangs, blood-red glitch matrix particles, and cybernetic smoke plumes.',
+    price: 285,
+    previewColor: '#E11D48',
+    cosmeticEffect: 'cyber_glitch_oni'
+  },
+  {
+    id: 'golden_dragon_emperor',
+    name: 'Golden Dragon Sovereign',
+    rarity: 'Legendary',
+    description: '24-Karat dragon emperor with gleaming golden antler horns, floating celestial pearl orb, and fiery draconic breath wisps.',
+    price: 300,
+    previewColor: '#F59E0B',
+    cosmeticEffect: 'golden_dragon_emperor'
+  },
+  {
+    id: 'prism_crystal_golem',
+    name: 'Prismatic Crystal Titan',
+    rarity: 'Epic',
+    description: 'Faceted amethyst and cyan diamond carapace that refracts light into floating prismatic rainbows and sparkling crystal shards.',
+    price: 155,
+    previewColor: '#C084FC',
+    cosmeticEffect: 'prism_crystal_golem'
+  },
+  {
+    id: 'deep_sea_abyssal_kraken',
+    name: 'Abyssal Kraken Lord',
+    rarity: 'Epic',
+    description: 'Bioluminescent deep sea cephalopod shell with undulating tentacle crest, glowing turquoise suckers, and rising ocean siphon bubbles.',
+    price: 160,
+    previewColor: '#0D9488',
+    cosmeticEffect: 'deep_sea_abyssal_kraken'
+  },
+  {
+    id: 'inferno_lava_demon',
+    name: 'Balrog Hellfire Fiend',
+    rarity: 'Legendary',
+    description: 'Hardened obsidian demon horns with flowing liquid fire veins, flaming brimstone halo, and volcanic ash plume.',
+    price: 280,
+    previewColor: '#B91C1C',
+    cosmeticEffect: 'inferno_lava_demon'
+  },
+  {
+    id: 'retro_synthwave_racer',
+    name: 'Turbo Sunset Outrun',
+    rarity: 'Epic',
+    description: 'Streamlined neon racing helmet with polarized magenta-cyan visor, checkered racing flag cape, and twin exhaust nitrous flames.',
+    price: 145,
+    previewColor: '#F43F5E',
+    cosmeticEffect: 'retro_synthwave_racer'
   }
 ];
 
@@ -558,7 +638,11 @@ export interface ArenaTheme {
     | 'pinball_matrix'
     | 'olympus_pantheon'
     | 'biolum_jungle'
-    | 'pirate_galleon';
+    | 'pirate_galleon'
+    | 'synth_drift'
+    | 'crystal_cavern'
+    | 'inferno_caldera'
+    | 'cyber_dojo';
 }
 
 export const ARENA_CATALOG: ArenaTheme[] = [
@@ -803,6 +887,50 @@ export const ARENA_CATALOG: ArenaTheme[] = [
     borderColor: '#FDE047',
     glowColor: 'rgba(253, 224, 71, 0.68)',
     floorPattern: 'olympus_pantheon'
+  },
+  {
+    id: 'arena_retro_synth_drift',
+    name: 'Hyper-Grid Cyber Tunnel',
+    rarity: 'Legendary',
+    description: 'Curved holographic wireframe cyberspace tunnel with rushing cyan speed-lines, pulsing neon archways, and hyper-vector floor.',
+    price: 260,
+    previewColor: '#1E1B4B',
+    borderColor: '#06B6D4',
+    glowColor: 'rgba(6, 182, 212, 0.7)',
+    floorPattern: 'synth_drift'
+  },
+  {
+    id: 'arena_crystal_cavern',
+    name: 'Amethyst Crystal Geode',
+    rarity: 'Epic',
+    description: 'Subterranean crystal sanctuary with towering purple quartz clusters, glowing cyan geode veins, and sparkling floating light dust.',
+    price: 145,
+    previewColor: '#2E1065',
+    borderColor: '#C084FC',
+    glowColor: 'rgba(192, 132, 252, 0.6)',
+    floorPattern: 'crystal_cavern'
+  },
+  {
+    id: 'arena_inferno_caldera',
+    name: 'Hellfire Dragon Caldera',
+    rarity: 'Legendary',
+    description: 'Volcanic dragon shrine with massive obsidian dragon statues, roaring fire braziers, and boiling lava geyser eruptions.',
+    price: 270,
+    previewColor: '#260707',
+    borderColor: '#EF4444',
+    glowColor: 'rgba(239, 68, 68, 0.7)',
+    floorPattern: 'inferno_caldera'
+  },
+  {
+    id: 'arena_cyber_dojo',
+    name: 'Neo-Shogun Cyber Dojo',
+    rarity: 'Epic',
+    description: 'High-tech martial arts dojo with glowing neon tatami floor mats, holographic shoji sliding panels, and a cybernetic bonsai.',
+    price: 150,
+    previewColor: '#0F172A',
+    borderColor: '#10B981',
+    glowColor: 'rgba(16, 185, 129, 0.6)',
+    floorPattern: 'cyber_dojo'
   }
 ];
 
