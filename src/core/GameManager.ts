@@ -1644,8 +1644,8 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   },
   {
     id: 'dunk_tank',
-    title: 'Plunger Dunk Splashdown',
-    tagline: '4-Player Trapdoor Water Duel',
+    title: 'Rival Dunk Duel',
+    tagline: 'Trapdoor Water Cannon Showdown',
     category: 'Action',
     icon: '[G-150]',
     instructions: 'Perched high above individual water tanks, fire rubber plunger cannons at rival bullseye levers! Land 3 hits to trigger their trapdoor and plunge them into the water. Mash your button to climb back up!',
@@ -1653,8 +1653,8 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   },
   {
     id: 'ferris_wheel',
-    title: 'Sky Wheel Balance',
-    tagline: 'High-Altitude Spoke Tilt',
+    title: 'Sky Wheel Spoke Climber',
+    tagline: 'High-Altitude Radial Spoke Vault',
     category: 'Physics',
     icon: '[G-151]',
     instructions: 'Traverse the rotating structural iron spokes of the giant carnival ferris wheel 100 feet in the air! Gather golden star tokens and crystal gems while fighting slope gravity and high-altitude wind gusts. Don\'t slip off the outer rim!',

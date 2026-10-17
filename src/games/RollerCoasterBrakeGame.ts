@@ -250,8 +250,8 @@ export class RollerCoasterBrakeGame extends BaseGame {
       }
 
       const steer = this.input.getSteer(c.id);
-      const justTap = this.input.justPressed(c.id) || this.input.justAction(c.id);
-      const isHold = this.input.isActionPressed(c.id) || this.input.isPressed(c.id);
+      const justTap = this.input.justAction(c.id) || (this.input.justPressed(c.id) && Math.abs(steer) < 0.2);
+      const isHold = this.input.isActionPressed(c.id);
 
       // Lateral rail switching with zero dead-zone and snappy damping
       const latAccel = 7.5 * (c.underdog ? 1.15 : 1.0);
@@ -305,11 +305,9 @@ export class RollerCoasterBrakeGame extends BaseGame {
               }
             }
           } else if (c.charge > 0.98) {
-            // Brake Lockup Overcharge
-            c.speed *= 0.55;
-            c.combo = 1;
-            this.showCallout(c, 'BRAKE LOCKUP!');
-            this.audio.playStun();
+            // Overcharge safely vents brakes
+            this.showCallout(c, 'BRAKES VENTED 💨');
+            this.audio.playTap();
           }
           c.holding = false;
           c.charge = 0;
@@ -346,23 +344,29 @@ export class RollerCoasterBrakeGame extends BaseGame {
       const isLeaningIntoCurve = (curveDir > 0 && steer > 0.15) || (curveDir < 0 && steer < -0.15);
 
       if (danger > 0.35 && !c.braking && c.shieldTimer <= 0) {
-        // Leaning into the curve cuts centrifugal G-force build-up in half!
-        const leanFactor = isLeaningIntoCurve ? 0.35 : 1.0;
-        const excess = Math.max(0, (c.speed - 310) / 150);
-        c.heat += danger * (0.32 + excess * 0.5) * leanFactor * dt;
-
-        if (isLeaningIntoCurve && Math.random() < 0.25) {
-          this.particles.spawnSparks(width * 0.5 + c.laneOffset * 110, height * 0.65, '#38bdf8', 1);
+        if (isLeaningIntoCurve) {
+          // Leaning into the curve cuts centrifugal heat and rewards perfect curve banking!
+          c.heat = Math.max(0, c.heat - dt * 0.65);
+          c.score += 25 * dt;
+          if (Math.random() < 0.25) {
+            this.particles.spawnSparks(width * 0.5 + c.laneOffset * 110, height * 0.65, '#38bdf8', 1);
+            if (c.calloutTimer <= 0) {
+              this.showCallout(c, 'PERFECT LEAN! ★');
+            }
+          }
+        } else {
+          // Failure to lean builds heat
+          const excess = Math.max(0, (c.speed - 310) / 150);
+          c.heat += danger * (0.24 + excess * 0.35) * dt;
         }
 
         if (c.heat >= 1.0) {
           c.heat = 0;
-          c.derailTimer = 0.95;
+          c.derailTimer = 0.65;
           c.combo = 1;
-          c.score = Math.max(0, c.score - 20);
-          this.showCallout(c, 'RAIL WOBBLE! -20');
+          this.showCallout(c, 'RAIL WOBBLE!');
           this.audio.playExplosion();
-          this.triggerHitStop(35, 10);
+          this.triggerHitStop(25, 6);
         }
       } else if (!isHold) {
         c.heat = Math.max(0, c.heat - dt * 0.75);
