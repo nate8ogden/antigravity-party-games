@@ -23,6 +23,7 @@ interface CandySpinner {
   vy: number;
   angle: number;
   flossSize: number;
+  stackPuffs: { color: string; radius: number; dist: number; angleOffset: number }[];
   charge: number;
   wasHolding: boolean;
   score: number;
@@ -131,6 +132,7 @@ export class CottonCandySpinGame extends BaseGame {
         vy: 0,
         angle: a + Math.PI / 2,
         flossSize: 1,
+        stackPuffs: [],
         charge: 0,
         wasHolding: false,
         score: 0,
@@ -310,6 +312,7 @@ export class CottonCandySpinGame extends BaseGame {
             s.streak = 0;
             s.multiplier = 1;
             s.flossSize = Math.max(1, s.flossSize - 2);
+            if (s.stackPuffs.length > 0) s.stackPuffs.splice(Math.max(0, s.stackPuffs.length - 2), 2);
             s.stunTimer = 0.85;
             this.audio.playStun();
             this.particles.emit(s.x, s.y, 16, '#ff2a85');
@@ -318,6 +321,15 @@ export class CottonCandySpinGame extends BaseGame {
             s.streak++;
             s.flossSize = Math.min(8, s.flossSize + 1);
             s.multiplier = s.streak >= 5 ? 4 : s.streak >= 3 ? 2 : 1;
+
+            const puffColor = st.isRainbowGold ? '#facc15' : s.color;
+            s.stackPuffs.push({
+              color: puffColor,
+              radius: 12 + Math.min(10, s.stackPuffs.length * 1.2),
+              dist: 16 + s.stackPuffs.length * 14,
+              angleOffset: (Math.random() - 0.5) * 0.35,
+            });
+
             const pts = (st.isRainbowGold ? 65 : 20) * s.multiplier * (this.suddenDeath ? 2 : 1);
             s.score += pts;
             this.audio.playScore();
@@ -325,7 +337,7 @@ export class CottonCandySpinGame extends BaseGame {
             this.addFloatingText(
               st.x,
               st.y - 20,
-              `+${pts} (${s.multiplier}x)`,
+              `STICK & STACK! +${pts} (${s.multiplier}x)`,
               st.isRainbowGold ? '#facc15' : '#f472b6',
               18
             );
@@ -457,13 +469,65 @@ export class CottonCandySpinGame extends BaseGame {
       ctx.restore();
     }
 
-    // Draw Spinners & Fluffy Cotton Candy Halos
+    // Draw Spinners with Striped Carnival Stick & Stacked Fluffy Cotton Candy Clouds
     this.spinners.forEach((s) => {
       ctx.save();
+      ctx.translate(s.x, s.y);
+
+      // Carnival striped paper stick pointing in movement angle
+      const stickAngle = s.angle;
+      const stickLen = 34 + s.flossSize * 8;
+      const stickEndX = Math.cos(stickAngle) * stickLen;
+      const stickEndY = Math.sin(stickAngle) * stickLen;
+
+      // Draw paper stick
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 5;
       ctx.beginPath();
-      ctx.arc(s.x, s.y, 22 + s.flossSize * 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(244, 114, 182, 0.32)';
+      ctx.moveTo(0, 0);
+      ctx.lineTo(stickEndX, stickEndY);
+      ctx.stroke();
+
+      // Red carnival candy stripe on stick
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 4;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(stickEndX, stickEndY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Stacked cotton candy puffs along the stick!
+      for (let i = 0; i < s.stackPuffs.length; i++) {
+        const puff = s.stackPuffs[i];
+        const pFrac = Math.min(1.0, (i + 1) / Math.max(1, s.stackPuffs.length));
+        const px = Math.cos(stickAngle + puff.angleOffset) * (18 + pFrac * (stickLen - 18));
+        const py = Math.sin(stickAngle + puff.angleOffset) * (18 + pFrac * (stickLen - 18));
+
+        ctx.fillStyle = puff.color;
+        ctx.beginPath();
+        ctx.arc(px, py, puff.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+
+        // Fluffy cloud highlights
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.beginPath();
+        ctx.arc(px - puff.radius * 0.3, py - puff.radius * 0.3, puff.radius * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Outer cloud halo
+      ctx.beginPath();
+      ctx.arc(0, 0, 20 + s.flossSize * 2, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(244, 114, 182, 0.25)';
       ctx.fill();
+
       ctx.restore();
 
       const mood = s.stunTimer > 0 ? 'shocked' : s.multiplier >= 2 ? 'triumph' : 'happy';

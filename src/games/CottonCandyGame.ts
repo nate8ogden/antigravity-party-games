@@ -49,6 +49,9 @@ interface StackerPlayer {
   isUnderdog: boolean;
   botReactionTimer: number;
   botTargetCharge: number;
+  stickSpinAngle: number;
+  stickStickiness: number;
+  webSparks: { x: number; y: number; color: string; life: number }[];
 }
 
 export class CottonCandyGame extends BaseGame {
@@ -169,16 +172,57 @@ export class CottonCandyGame extends BaseGame {
         shuntsLanded: 0,
         isUnderdog: false,
         botReactionTimer: 0.14 + idx * 0.06,
-        botTargetCharge: 0.82
+        botTargetCharge: 0.82,
+        stickSpinAngle: 0,
+        stickStickiness: 1.0,
+        webSparks: []
       });
     });
   }
 
+  // Returns array of catch centers along the wooden stick and each puff on the stack
+  private getCatchSegments(ps: StackerPlayer): { x: number; y: number; radius: number; isStick: boolean }[] {
+    const segments: { x: number; y: number; radius: number; isStick: boolean }[] = [];
+    const stickBaseY = ps.y - 4;
+    const stickTopY = ps.y - 34;
+
+    // Along the stick itself (so cotton candy sticks and wraps directly onto the stick!)
+    for (let t = 0.2; t <= 1.0; t += 0.35) {
+      segments.push({
+        x: ps.x,
+        y: stickBaseY + (stickTopY - stickBaseY) * t,
+        radius: 20,
+        isStick: true
+      });
+    }
+
+    // Along each puff in the growing stack
+    let curX = ps.x;
+    let curY = stickTopY;
+    const sinW = Math.sin(ps.wobbleAngle);
+    const cosW = Math.cos(ps.wobbleAngle);
+
+    for (let i = 0; i < ps.stack.length; i++) {
+      const puff = ps.stack[i];
+      const dist = (i + 1) * 16;
+      curX = ps.x + sinW * dist + puff.offsetX;
+      curY = stickTopY - cosW * dist;
+      segments.push({
+        x: curX,
+        y: curY,
+        radius: puff.radius + 6,
+        isStick: false
+      });
+    }
+
+    return segments;
+  }
+
   private getStackTipPosition(ps: StackerPlayer): { x: number; y: number } {
-    const stackHeight = ps.stack.length * 16;
+    const stackHeight = 34 + ps.stack.length * 16;
     return {
       x: ps.x + Math.sin(ps.wobbleAngle) * stackHeight,
-      y: ps.y - 30 - Math.cos(ps.wobbleAngle) * stackHeight
+      y: ps.y - Math.cos(ps.wobbleAngle) * stackHeight
     };
   }
 
@@ -319,21 +363,34 @@ export class CottonCandyGame extends BaseGame {
       drop.spin += drop.spinSpeed * dt;
       drop.x = Math.max(36, Math.min(width - 36, drop.x));
 
-      // Check collision with players' cone tip
+      // Check collision with player's stick or any part of the stack
       for (const p of activePlayers) {
         const ps = this.playersState.get(p.id);
         if (!ps) continue;
 
-        const tip = this.getStackTipPosition(ps);
-        const dist = Math.hypot(drop.x - tip.x, drop.y - tip.y);
-        if (dist <= drop.radius + 20) {
+        const segments = this.getCatchSegments(ps);
+        let caught = false;
+        let hitX = ps.x;
+        let hitY = ps.y - 30;
+
+        for (const seg of segments) {
+          const dist = Math.hypot(drop.x - seg.x, drop.y - seg.y);
+          if (dist <= drop.radius + seg.radius) {
+            caught = true;
+            hitX = seg.x;
+            hitY = seg.y;
+            break;
+          }
+        }
+
+        if (caught) {
           drop.destroyed = true;
 
           if (drop.kind === 'burnt') {
             this.audio.playStun();
             this.particles.shake(0.26);
-            this.particles.spawnExplosion(tip.x, tip.y, '#EF4444', 14);
-            this.particles.showFloatingText('BURNT! -100', tip.x, tip.y - 18, '#EF4444', 20);
+            this.particles.spawnExplosion(hitX, hitY, '#EF4444', 14);
+            this.particles.showFloatingText('BURNT! -100', hitX, hitY - 18, '#EF4444', 20);
             ps.score = Math.max(0, ps.score - 100);
             if (ps.stack.length > 0) {
               ps.stack.pop();
@@ -341,22 +398,34 @@ export class CottonCandyGame extends BaseGame {
             ps.wobbleVelocity += (Math.random() - 0.5) * 6;
           } else {
             this.audio.playTap();
-            this.particles.spawnConfetti(tip.x, tip.y, 8);
+            this.particles.spawnConfetti(hitX, hitY, 10);
             const catchScore = Math.round(drop.points * 0.45);
             ps.score += catchScore;
+
+            // Spun web filament sparks that cling and wrap around the stick!
+            for (let s = 0; s < 5; s++) {
+              ps.webSparks.push({
+                x: (Math.random() - 0.5) * 24,
+                y: -ps.stack.length * 16 - Math.random() * 20,
+                color: drop.color,
+                life: 1.0
+              });
+            }
+
+            // Stack on top of stick or previous puff
             ps.stack.push({
               kind: drop.kind,
               color: drop.color,
-              radius: 17 + Math.min(6, ps.stack.length * 0.5),
-              offsetX: (Math.random() - 0.5) * 5,
+              radius: 18 + Math.min(8, ps.stack.length * 0.6),
+              offsetX: (Math.random() - 0.5) * 6,
               points: drop.points
             });
             this.particles.showFloatingText(
-              `+${catchScore} (STACK ${ps.stack.length})`,
-              tip.x,
-              tip.y - 18,
+              `STICK & STACK! +${catchScore}`,
+              hitX,
+              hitY - 20,
               drop.color,
-              17
+              18
             );
           }
           break;
@@ -801,7 +870,7 @@ export class CottonCandyGame extends BaseGame {
       ctx.stroke();
     }
 
-    // 1. Player Mascot holding the cone
+    // 1. Player Mascot holding the stick
     const mood =
       ps.overloadTimer > 0 || Math.abs(ps.wobbleAngle) > 0.75
         ? 'shocked'
@@ -810,41 +879,122 @@ export class CottonCandyGame extends BaseGame {
         : 'focused';
     this.drawPlayerMascot(ctx, ps.id, 0, 6, 15, mood, now);
 
-    // 2. Paper Cone Base
-    ctx.fillStyle = '#F8FAFC';
+    // 2. Realistic Carnival Paper Stick (Striped White & Red/Blue, Tall & Sturdy)
+    ctx.save();
+    ctx.translate(0, 0);
+
+    // Wooden / Paper stick with spiral carnival stripe
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 6;
     ctx.beginPath();
-    ctx.moveTo(-5, -30);
-    ctx.lineTo(5, -30);
-    ctx.lineTo(2, 2);
-    ctx.lineTo(-2, 2);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = '#94A3B8';
-    ctx.lineWidth = 1.2;
+    ctx.moveTo(0, 2);
+    ctx.lineTo(0, -36);
     ctx.stroke();
 
-    // 3. Towering Cotton Candy Cloud Stack with Wobble Tilt
+    // Spiral candy stripe on stick
+    ctx.strokeStyle = '#EF4444';
+    ctx.lineWidth = 5;
+    ctx.setLineDash([6, 6]);
+    ctx.lineDashOffset = -now * 12;
+    ctx.beginPath();
+    ctx.moveTo(0, 2);
+    ctx.lineTo(0, -36);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Sticky sugar base seal where cotton candy binds to stick
+    ctx.fillStyle = ps.stack.length > 0 ? ps.stack[0].color : '#F472B6';
+    ctx.beginPath();
+    ctx.ellipse(0, -30, 8, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 3. Towering Cotton Candy Cloud Stack with Dynamic Wobble & Spun Sugar Fibers
     ctx.save();
-    ctx.translate(0, -30);
+    ctx.translate(0, -34);
     ctx.rotate(ps.wobbleAngle);
 
+    // Render underlying cotton candy core spine
+    if (ps.stack.length > 1) {
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      for (let i = 0; i < ps.stack.length; i++) {
+        const puff = ps.stack[i];
+        ctx.lineTo(puff.offsetX, -i * 16 - 8);
+      }
+      ctx.stroke();
+    }
+
+    // Render each fluffy cotton candy puff on the stack
     for (let i = 0; i < ps.stack.length; i++) {
       const puff = ps.stack[i];
       const py = -i * 16;
+      const px = puff.offsetX;
 
+      // Fluffy outer cloud lobes
       ctx.fillStyle = puff.color;
       ctx.beginPath();
-      ctx.arc(puff.offsetX, py - 8, puff.radius, 0, Math.PI * 2);
+      ctx.arc(px, py - 8, puff.radius, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+      // Additional fluffy cloud lobes for authentic cotton candy texture
+      for (let a = 0; a < Math.PI * 2; a += Math.PI * 0.5) {
+        ctx.beginPath();
+        ctx.arc(
+          px + Math.cos(a + i) * (puff.radius * 0.42),
+          py - 8 + Math.sin(a + i) * (puff.radius * 0.42),
+          puff.radius * 0.55,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      }
+
+      // Shimmer highlight rim
+      ctx.lineWidth = 1.6;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
       ctx.stroke();
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+      // Translucent glossy sugar sheen
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
       ctx.beginPath();
-      ctx.arc(puff.offsetX - 5, py - 12, 3.2, 0, Math.PI * 2);
+      ctx.arc(px - puff.radius * 0.35, py - 8 - puff.radius * 0.35, 4.2, 0, Math.PI * 2);
       ctx.fill();
+
+      // Spun sugar connecting fibers bridging to next puff
+      if (i < ps.stack.length - 1) {
+        const nextPuff = ps.stack[i + 1];
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(px - 6, py - 8);
+        ctx.bezierCurveTo(px - 10, py - 16, nextPuff.offsetX - 10, py - 16, nextPuff.offsetX - 6, py - 24);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(px + 6, py - 8);
+        ctx.bezierCurveTo(px + 10, py - 16, nextPuff.offsetX + 10, py - 16, nextPuff.offsetX + 6, py - 24);
+        ctx.stroke();
+      }
+    }
+
+    // Render clinging spun sugar sparks
+    for (let s = ps.webSparks.length - 1; s >= 0; s--) {
+      const sp = ps.webSparks[s];
+      sp.life -= 0.02;
+      if (sp.life <= 0) {
+        ps.webSparks.splice(s, 1);
+        continue;
+      }
+      ctx.fillStyle = sp.color;
+      ctx.globalAlpha = Math.max(0, sp.life);
+      ctx.beginPath();
+      ctx.arc(sp.x, sp.y, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1.0;
     }
 
     ctx.restore();
@@ -859,7 +1009,7 @@ export class CottonCandyGame extends BaseGame {
     ctx.shadowBlur = 4;
     const multLabel =
       ps.stack.length >= 8 ? ' [2.5x!]' : ps.stack.length >= 5 ? ' [1.75x]' : ps.stack.length >= 3 ? ' [1.35x]' : '';
-    ctx.fillText(`${ps.score} pts (${ps.stack.length}${multLabel})`, ps.x, ps.y - 38);
+    ctx.fillText(`${ps.score} pts (${ps.stack.length} puffs${multLabel})`, ps.x, ps.y - 40);
     ctx.restore();
   }
 

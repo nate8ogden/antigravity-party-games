@@ -287,7 +287,8 @@ export type MinigameId =
   | 'sharks_and_minnows'
   | 'power_path_clash'
   | 'landscape_artillery'
-  | 'spam_click_showdown';
+  | 'spam_click_showdown'
+  | 'sumo_lode_runner';
 
 export interface MinigameMetadata {
   id: MinigameId;

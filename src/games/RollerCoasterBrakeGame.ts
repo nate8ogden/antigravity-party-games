@@ -341,21 +341,31 @@ export class RollerCoasterBrakeGame extends BaseGame {
       c.speed += (baseTarget - c.speed) * Math.min(1, dt * 5.5);
       c.trackDist += c.speed * dt;
 
-      // Centrifugal heat build-up on danger curves if speeding without braking or shield
+      // Centrifugal heat build-up on danger curves: leaning into the curve or braking cancels heat!
+      const curveDir = Math.cos(c.trackDist * 0.0042) >= 0 ? 1 : -1;
+      const isLeaningIntoCurve = (curveDir > 0 && steer > 0.15) || (curveDir < 0 && steer < -0.15);
+
       if (danger > 0.35 && !c.braking && c.shieldTimer <= 0) {
-        const excess = Math.max(0, (c.speed - 295) / 140);
-        c.heat += danger * (0.42 + excess * 0.65) * dt;
+        // Leaning into the curve cuts centrifugal G-force build-up in half!
+        const leanFactor = isLeaningIntoCurve ? 0.35 : 1.0;
+        const excess = Math.max(0, (c.speed - 310) / 150);
+        c.heat += danger * (0.32 + excess * 0.5) * leanFactor * dt;
+
+        if (isLeaningIntoCurve && Math.random() < 0.25) {
+          this.particles.spawnSparks(width * 0.5 + c.laneOffset * 110, height * 0.65, '#38bdf8', 1);
+        }
+
         if (c.heat >= 1.0) {
           c.heat = 0;
-          c.derailTimer = 1.35;
+          c.derailTimer = 0.95;
           c.combo = 1;
-          c.score = Math.max(0, c.score - 35);
-          this.showCallout(c, 'DERAILED! -35');
+          c.score = Math.max(0, c.score - 20);
+          this.showCallout(c, 'RAIL WOBBLE! -20');
           this.audio.playExplosion();
-          this.triggerHitStop(45, 14);
+          this.triggerHitStop(35, 10);
         }
       } else if (!isHold) {
-        c.heat = Math.max(0, c.heat - dt * 0.55);
+        c.heat = Math.max(0, c.heat - dt * 0.75);
       }
 
       // Passive distance score
@@ -619,7 +629,13 @@ export class RollerCoasterBrakeGame extends BaseGame {
         ctx.stroke();
       }
 
-      // 2.5D Coaster Cart Body
+      // 2.5D Coaster Cart Body with banking lean
+      const trackCurveNow = Math.cos(c.trackDist * 0.0042) * 0.28;
+      const totalLean = Math.max(-0.45, Math.min(0.45, c.vx * 0.08 + trackCurveNow));
+
+      ctx.save();
+      ctx.rotate(totalLean);
+
       ctx.fillStyle = c.color;
       ctx.beginPath();
       ctx.roundRect(-24, -22, 48, 26, 8);
@@ -642,7 +658,8 @@ export class RollerCoasterBrakeGame extends BaseGame {
           : c.holding
           ? 'focused'
           : 'happy';
-      this.drawPlayerMascot(ctx, c.id, 0, -28, 15, mood, this.timeElapsed, c.vx * 0.12);
+      this.drawPlayerMascot(ctx, c.id, 0, -28, 15, mood, this.timeElapsed, totalLean * 0.7);
+      ctx.restore();
 
       if (c.calloutTimer > 0 && c.calloutText) {
         ctx.fillStyle = '#fef08a';

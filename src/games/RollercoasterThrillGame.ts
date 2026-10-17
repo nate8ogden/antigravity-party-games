@@ -99,6 +99,8 @@ export class RollercoasterThrillGame extends BaseGame {
 
   private trackScrollOffset: number = 0;
   private coasterMPH: number = 95;
+  private trackCurvature: number = 0; // Visual track bend (-1 left to +1 right)
+  private targetCurvature: number = 0;
 
   private currentThemeIdx: number = 0;
   private keydownListener: ((e: KeyboardEvent) => void) | null = null;
@@ -179,6 +181,8 @@ export class RollercoasterThrillGame extends BaseGame {
     this.lootSpawnTimer = 0.5;
     this.trackScrollOffset = 0;
     this.coasterMPH = 95;
+    this.trackCurvature = 0;
+    this.targetCurvature = 0;
     this.roundTimer = 35.0;
     this.isFinished = false;
 
@@ -250,6 +254,19 @@ export class RollercoasterThrillGame extends BaseGame {
 
     // Update Track Curves & Inversions
     this.updateCurves(dt, width, height, isSuddenDeath);
+
+    // Dynamic Track Curvature: Bend perspective towards incoming banking curve
+    const cartY = height - 110;
+    const nextCurve = this.curves.find(c => c.y < cartY + 120 && c.y > 0);
+    if (nextCurve) {
+      if (nextCurve.type === 'left_bank') this.targetCurvature = -0.55;
+      else if (nextCurve.type === 'right_bank') this.targetCurvature = 0.55;
+      else if (nextCurve.type === 'loop_de_loop') this.targetCurvature = Math.sin(this.roundTimer * 8) * 0.25;
+      else this.targetCurvature = 0;
+    } else {
+      this.targetCurvature = 0;
+    }
+    this.trackCurvature += (this.targetCurvature - this.trackCurvature) * Math.min(1, dt * 5.0);
 
     // Update Track Loot
     this.updateTrackLoot(dt, width, height, isSuddenDeath);
@@ -459,8 +476,8 @@ export class RollercoasterThrillGame extends BaseGame {
       const c = this.curves[i];
       c.y += dt * (this.coasterMPH / 95) * 380;
 
-      // Evaluate curve apex when passing cart zone
-      if (Math.abs(c.y - cartY) < 32) {
+      // Evaluate curve apex when passing cart zone (forgiving window: cartY ± 44)
+      if (Math.abs(c.y - cartY) < 44) {
         for (const p of this.getActivePlayers()) {
           if (!c.handledBy.has(p.id)) {
             const cart = this.carts.get(p.id);
@@ -469,13 +486,17 @@ export class RollercoasterThrillGame extends BaseGame {
             let isHandled = false;
 
             if (c.type === 'left_bank') {
-              isHandled = cart.xRatio < -0.2 || cart.lean < -0.15 || cart.boostTimer > 0;
+              // Lean left or steer left or supersonic boost
+              isHandled = cart.xRatio < -0.1 || cart.lean < -0.08 || cart.boostTimer > 0;
             } else if (c.type === 'right_bank') {
-              isHandled = cart.xRatio > 0.2 || cart.lean > 0.15 || cart.boostTimer > 0;
+              // Lean right or steer right or supersonic boost
+              isHandled = cart.xRatio > 0.1 || cart.lean > 0.08 || cart.boostTimer > 0;
             } else if (c.type === 'loop_de_loop') {
-              isHandled = cart.boostTimer > 0 || cart.isCharging;
+              // Supersonic boost or active charge
+              isHandled = cart.boostTimer > 0 || cart.isCharging || cart.chargeTime > 0.2;
             } else if (c.type === 'airtime_drop') {
-              isHandled = Math.abs(cart.xRatio) < 0.5 || cart.boostTimer > 0;
+              // Center track balance or boost
+              isHandled = Math.abs(cart.xRatio) < 0.65 || cart.boostTimer > 0;
             }
 
             if (isHandled) {
@@ -490,17 +511,17 @@ export class RollercoasterThrillGame extends BaseGame {
               this.audio.playTone(660, 0.12, 'triangle');
               const cx = width / 2 + cart.xRatio * (width * 0.32);
               this.particles.emit(cx, cartY, 14, '#10B981');
-              this.particles.showFloatingText(`PERFECT APEX! +${earned}`, cx, cartY - 35, '#10B981', 18);
+              this.particles.showFloatingText(`LEAN APEX! +${earned}`, cx, cartY - 35, '#10B981', 18);
             } else {
-              // Stumble / G-force wobble
-              cart.wobbleTimer = 0.85;
+              // Mild stumble instead of harsh wobble, with quick recovery
+              cart.wobbleTimer = 0.45;
               cart.streakCount = 0;
-              cart.score = Math.max(0, cart.score - 20);
+              cart.score = Math.max(0, cart.score - 10);
               cart.mood = 'shocked';
-              this.audio.playTone(180, 0.2, 'sawtooth');
+              this.audio.playTone(220, 0.15, 'sawtooth');
               const cx = width / 2 + cart.xRatio * (width * 0.32);
-              this.particles.emit(cx, cartY, 16, '#EF4444');
-              this.particles.showFloatingText('CENTRIFUGAL SLIP! -20', cx, cartY - 35, '#EF4444', 18);
+              this.particles.emit(cx, cartY, 10, '#EF4444');
+              this.particles.showFloatingText('CENTRIFUGAL SLIP! -10', cx, cartY - 35, '#EF4444', 16);
             }
 
             c.handledBy.add(p.id);
@@ -719,40 +740,43 @@ export class RollercoasterThrillGame extends BaseGame {
 
     ctx.save();
 
-    // Wooden Trestle Support Ties in Perspective
+    // Wooden Trestle Support Ties in Perspective with Dynamic Curve Offset
     ctx.strokeStyle = theme.tieColor;
     ctx.lineWidth = 3;
 
     for (let ty = this.trackScrollOffset; ty < height; ty += 40) {
       const p = ty / height;
       const w = topW + (botW - topW) * p;
+      const curveOffset = Math.sin(p * Math.PI) * this.trackCurvature * (width * 0.16);
 
       ctx.beginPath();
-      ctx.moveTo(cx - w / 2, ty);
-      ctx.lineTo(cx + w / 2, ty);
+      ctx.moveTo(cx + curveOffset - w / 2, ty);
+      ctx.lineTo(cx + curveOffset + w / 2, ty);
       ctx.stroke();
 
       // Center rail tie spine
       ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-      ctx.fillRect(cx - 5, ty - 2, 10, 4);
+      ctx.fillRect(cx + curveOffset - 5, ty - 2, 10, 4);
     }
 
-    // Steel Coaster Rails with perspective gradient
+    // Steel Coaster Rails with perspective gradient & curve bend
     ctx.strokeStyle = theme.railColor;
     ctx.lineWidth = 6;
     ctx.shadowColor = theme.accentGlow;
     ctx.shadowBlur = 10;
 
-    // Left Rail
+    const midCurveOffset = this.trackCurvature * (width * 0.16);
+
+    // Left Rail (Bezier Curved)
     ctx.beginPath();
     ctx.moveTo(cx - topW / 2, 0);
-    ctx.lineTo(cx - botW / 2, height);
+    ctx.quadraticCurveTo(cx + midCurveOffset - (topW + botW) * 0.25, height * 0.5, cx - botW / 2, height);
     ctx.stroke();
 
-    // Right Rail
+    // Right Rail (Bezier Curved)
     ctx.beginPath();
     ctx.moveTo(cx + topW / 2, 0);
-    ctx.lineTo(cx + botW / 2, height);
+    ctx.quadraticCurveTo(cx + midCurveOffset + (topW + botW) * 0.25, height * 0.5, cx + botW / 2, height);
     ctx.stroke();
 
     ctx.shadowBlur = 0;
@@ -847,16 +871,18 @@ export class RollercoasterThrillGame extends BaseGame {
       const cart = this.carts.get(p.id);
       if (!cart) return;
 
-      const cartX = width / 2 + cart.xRatio * (width * 0.32);
+      const trackBank = this.trackCurvature * 0.35;
+      const cartX = width / 2 + (cart.xRatio + this.trackCurvature * 0.15) * (width * 0.32);
 
       ctx.save();
       ctx.translate(cartX, cartY);
 
-      // Wobble shaking
+      // Wobble shaking or dynamic lean into the coaster curve!
       if (cart.wobbleTimer > 0) {
         ctx.rotate(Math.sin(cart.animTimer * 24) * 0.25);
       } else {
-        ctx.rotate(cart.lean);
+        // Lean into curve: natural physical camber
+        ctx.rotate(cart.lean + trackBank);
       }
 
       // Supersonic Boost Aura
