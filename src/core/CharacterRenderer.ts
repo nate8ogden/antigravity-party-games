@@ -309,11 +309,11 @@ export function getSkinMascotTheme(skinId: string, playerId: PlayerId): MascotTh
     };
   } else if (skinId === 'space_pirate_corsair') {
     return {
-      primary: '#1E1B4B',
-      light: '#818CF8',
-      dark: '#090D16',
-      visorGlow: '#EF4444',
-      accent: '#F59E0B'
+      primary: '#3B0764',
+      light: '#C084FC',
+      dark: '#1E1B4B',
+      visorGlow: '#22D3EE',
+      accent: '#FDE047'
     };
   } else if (skinId === 'retro_gameboy_classic') {
     return {
@@ -373,10 +373,10 @@ export function getSkinMascotTheme(skinId: string, playerId: PlayerId): MascotTh
     };
   } else if (skinId === 'shogun_mech') {
     return {
-      primary: '#DC2626',
-      light: '#FCA5A5',
-      dark: '#450A0A',
-      visorGlow: '#34D399',
+      primary: '#1E293B',
+      light: '#94A3B8',
+      dark: '#020617',
+      visorGlow: '#10B981',
       accent: '#FBBF24'
     };
   } else if (skinId === 'marshmallow_dj') {
@@ -403,7 +403,56 @@ export function getSkinMascotTheme(skinId: string, playerId: PlayerId): MascotTh
       visorGlow: '#FFFFFF',
       accent: '#F59E0B'
     };
+  } else if (skinId === 'glitch_cyber_phantom') {
+    return {
+      primary: '#090D16',
+      light: '#67E8F9',
+      dark: '#020617',
+      visorGlow: '#EC4899',
+      accent: '#06B6D4'
+    };
+  } else if (skinId === 'solar_eclipse_knight') {
+    return {
+      primary: '#18181B',
+      light: '#FEF08A',
+      dark: '#09090B',
+      visorGlow: '#F59E0B',
+      accent: '#FDE047'
+    };
+  } else if (skinId === 'deep_angler_leviathan') {
+    return {
+      primary: '#042F2E',
+      light: '#5EEAD4',
+      dark: '#022C22',
+      visorGlow: '#22D3EE',
+      accent: '#14B8A6'
+    };
+  } else if (skinId === 'dr_steampunk_inventor') {
+    return {
+      primary: '#78350F',
+      light: '#FDE68A',
+      dark: '#451A03',
+      visorGlow: '#38BDF8',
+      accent: '#F59E0B'
+    };
+  } else if (skinId === 'neon_cyber_kitsune') {
+    return {
+      primary: '#0F172A',
+      light: '#F472B6',
+      dark: '#020617',
+      visorGlow: '#38BDF8',
+      accent: '#EC4899'
+    };
+  } else if (skinId === 'cosmic_jester') {
+    return {
+      primary: '#4C1D95',
+      light: '#DDD6FE',
+      dark: '#1E1B4B',
+      visorGlow: '#FDE047',
+      accent: '#A855F7'
+    };
   }
+
   return MASCOT_THEMES[playerId] || MASCOT_THEMES[0];
 }
 
@@ -658,16 +707,175 @@ export function drawCharacter(
     ctx.fill();
     ctx.stroke();
     ctx.restore();
-  } else if (activeSkin === 'shogun_mech') {
-    // Twin Shoulder Micro-Missile Pods & Vernier Thruster Wings
+  } else if (activeSkin === 'space_pirate_corsair') {
+    // Laser Cutlass Sheath & Hovering Cyber Parrot Drone
     ctx.save();
-    ctx.fillStyle = '#991B1B';
+    // Sheathed Cyber Cutlass Across Back
+    ctx.strokeStyle = '#22D3EE';
+    ctx.lineWidth = 3.5 * scale;
+    ctx.shadowColor = '#06B6D4';
+    ctx.shadowBlur = 8 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 1.2, drawY + radius * 0.7);
+    ctx.lineTo(cx + radius * 1.1, drawY - radius * 0.85);
+    ctx.stroke();
+    // Golden Cutlass Basket Hilt
+    ctx.fillStyle = '#FBBF24';
+    ctx.beginPath();
+    ctx.arc(cx - radius * 1.15, drawY + radius * 0.65, 5 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    // Orbiting Cyber Parrot Drone
+    const parrotA = animTime * 2.5;
+    const parrotX = cx + Math.cos(parrotA) * (radius * 1.35);
+    const parrotY = drawY - radius * 0.6 + Math.sin(parrotA) * 6 * scale;
+    ctx.fillStyle = '#C084FC';
+    ctx.beginPath();
+    ctx.ellipse(parrotX, parrotY, 5 * scale, 3.5 * scale, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#22D3EE';
+    ctx.beginPath();
+    ctx.arc(parrotX + 3 * scale, parrotY - 1 * scale, 1.5 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'shogun_mech') {
+    // High-Torque Gunmetal Vernier Thruster Wings & Micro-Missile Pods
+    ctx.save();
+    // Twin Heavy Shoulder Missile Pods
+    ctx.fillStyle = '#1E293B';
     ctx.strokeStyle = '#FBBF24';
+    ctx.lineWidth = 1.6 * scale;
+    ctx.fillRect(cx - radius * 1.4, drawY - radius * 0.55, 12 * scale, 24 * scale);
+    ctx.strokeRect(cx - radius * 1.4, drawY - radius * 0.55, 12 * scale, 24 * scale);
+    ctx.fillRect(cx + radius * 1.4 - 12 * scale, drawY - radius * 0.55, 12 * scale, 24 * scale);
+    ctx.strokeRect(cx + radius * 1.4 - 12 * scale, drawY - radius * 0.55, 12 * scale, 24 * scale);
+    // Missile Tip Indicators
+    ctx.fillStyle = '#EF4444';
+    for (let r = 0; r < 3; r++) {
+      ctx.fillRect(cx - radius * 1.35 + 2 * scale, drawY - radius * 0.45 + r * 7 * scale, 4 * scale, 4 * scale);
+      ctx.fillRect(cx + radius * 1.35 - 10 * scale, drawY - radius * 0.45 + r * 7 * scale, 4 * scale, 4 * scale);
+    }
+    // High-Thrust Cyan Vernier Jet Plumes
+    const jetFlicker = Math.sin(animTime * 18) * 3 * scale;
+    ctx.fillStyle = '#38BDF8';
+    ctx.shadowColor = '#0284C7';
+    ctx.shadowBlur = 10 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.7, drawY + radius * 0.4);
+    ctx.lineTo(cx - radius * 0.9, drawY + radius * 0.95 + jetFlicker);
+    ctx.lineTo(cx - radius * 0.5, drawY + radius * 0.4);
+    ctx.moveTo(cx + radius * 0.7, drawY + radius * 0.4);
+    ctx.lineTo(cx + radius * 0.9, drawY + radius * 0.95 + jetFlicker);
+    ctx.lineTo(cx + radius * 0.5, drawY + radius * 0.4);
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'glitch_cyber_phantom') {
+    // Digitized Cyber Wings with Cyan/Magenta Chromatic Split
+    ctx.save();
+    const wingFlap = Math.sin(animTime * 7) * 4 * scale;
+    ctx.strokeStyle = '#06B6D4';
+    ctx.lineWidth = 2 * scale;
+    ctx.shadowColor = '#EC4899';
+    ctx.shadowBlur = 8 * scale;
+    for (const dir of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(cx + dir * radius * 0.4, drawY);
+      ctx.lineTo(cx + dir * (radius * 1.6), drawY - radius * 0.8 - wingFlap);
+      ctx.lineTo(cx + dir * (radius * 1.2), drawY);
+      ctx.lineTo(cx + dir * (radius * 1.5), drawY + radius * 0.6);
+      ctx.lineTo(cx + dir * radius * 0.5, drawY + radius * 0.3);
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'solar_eclipse_knight') {
+    // Colossal Obsidian Sun-Greatsword on Back with Coronal Flame
+    ctx.save();
+    ctx.strokeStyle = '#F59E0B';
+    ctx.lineWidth = 4 * scale;
+    ctx.shadowColor = '#FEF08A';
+    ctx.shadowBlur = 12 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 1.25, drawY + radius * 0.9);
+    ctx.lineTo(cx + radius * 1.25, drawY - radius * 1.1);
+    ctx.stroke();
+    // Sun Disc Crossguard
+    ctx.fillStyle = '#18181B';
+    ctx.strokeStyle = '#FDE047';
+    ctx.lineWidth = 2 * scale;
+    ctx.beginPath();
+    ctx.arc(cx - radius * 0.6, drawY + radius * 0.3, 8 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'deep_angler_leviathan') {
+    // Translucent Serrated Dorsal Spine Fins
+    ctx.save();
+    ctx.fillStyle = 'rgba(20, 184, 166, 0.7)';
+    ctx.strokeStyle = '#5EEAD4';
     ctx.lineWidth = 1.5 * scale;
-    ctx.fillRect(cx - radius * 1.35, drawY - radius * 0.45, 11 * scale, 22 * scale);
-    ctx.strokeRect(cx - radius * 1.35, drawY - radius * 0.45, 11 * scale, 22 * scale);
-    ctx.fillRect(cx + radius * 1.35 - 11 * scale, drawY - radius * 0.45, 11 * scale, 22 * scale);
-    ctx.strokeRect(cx + radius * 1.35 - 11 * scale, drawY - radius * 0.45, 11 * scale, 22 * scale);
+    for (let i = 0; i < 4; i++) {
+      const fx = cx - 18 * scale + i * 12 * scale;
+      const finH = (14 + (i % 2) * 6) * scale;
+      ctx.beginPath();
+      ctx.moveTo(fx, drawY - radius * 0.7);
+      ctx.lineTo(fx + 6 * scale, drawY - radius * 0.7 - finH);
+      ctx.lineTo(fx + 10 * scale, drawY - radius * 0.7);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'dr_steampunk_inventor') {
+    // Twin Copper Steam Boilers with Pressure Gauges
+    ctx.save();
+    ctx.fillStyle = '#B45309';
+    ctx.strokeStyle = '#FDE68A';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.fillRect(cx - radius * 1.2, drawY - radius * 0.4, 10 * scale, 22 * scale);
+    ctx.strokeRect(cx - radius * 1.2, drawY - radius * 0.4, 10 * scale, 22 * scale);
+    ctx.fillRect(cx + radius * 1.2 - 10 * scale, drawY - radius * 0.4, 10 * scale, 22 * scale);
+    ctx.strokeRect(cx + radius * 1.2 - 10 * scale, drawY - radius * 0.4, 10 * scale, 22 * scale);
+    // Pressure Gauge Dial
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(cx - radius * 0.8, drawY - radius * 0.1, 4 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (activeSkin === 'neon_cyber_kitsune') {
+    // Triple Animated Neon Fox Tails with Electric Cyan Tips
+    ctx.save();
+    ctx.lineWidth = 4 * scale;
+    ctx.strokeStyle = '#EC4899';
+    ctx.shadowColor = '#38BDF8';
+    ctx.shadowBlur = 10 * scale;
+    for (let i = -1; i <= 1; i++) {
+      const tailSway = Math.sin(animTime * 4 + i * 1.2) * 8 * scale;
+      ctx.beginPath();
+      ctx.moveTo(cx + i * 10 * scale, drawY + radius * 0.4);
+      ctx.quadraticCurveTo(cx + i * 28 * scale + tailSway, drawY + radius * 0.8, cx + i * 36 * scale + tailSway, drawY + radius * 0.1);
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'cosmic_jester') {
+    // Bifurcated Cosmic Cape studded with Diamond Constellations
+    ctx.save();
+    ctx.fillStyle = '#4C1D95';
+    ctx.strokeStyle = '#FDE047';
+    ctx.lineWidth = 1.5 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.7, drawY);
+    ctx.quadraticCurveTo(cx - radius * 1.4, drawY + radius * 0.8, cx - radius * 1.3, drawY + radius * 1.2);
+    ctx.lineTo(cx - radius * 0.4, drawY + radius * 0.6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + radius * 0.7, drawY);
+    ctx.quadraticCurveTo(cx + radius * 1.4, drawY + radius * 0.8, cx + radius * 1.3, drawY + radius * 1.2);
+    ctx.lineTo(cx + radius * 0.4, drawY + radius * 0.6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
     ctx.restore();
   } else if (activeSkin === 'supernova_phoenix') {
     // Blazing Solar Firebird Wings behind mascot
@@ -693,6 +901,7 @@ export function drawCharacter(
     ctx.closePath();
     ctx.fill();
     ctx.restore();
+
   } else if (activeSkin === 'classic') {
     if (playerId === 0) {
       // P1: Winged Crest (Behind)
@@ -1108,13 +1317,13 @@ export function drawCharacter(
     const hatX = cx - hatW / 2;
     const hatY = drawY - radius * 1.45;
     const hatGrad = ctx.createLinearGradient(hatX, hatY, hatX, hatY + hatH);
-    hatGrad.addColorStop(0, '#312E81');
-    hatGrad.addColorStop(1, '#090D16');
+    hatGrad.addColorStop(0, '#4C1D95');
+    hatGrad.addColorStop(1, '#0F0B1E');
     ctx.fillStyle = hatGrad;
-    ctx.strokeStyle = '#EF4444';
+    ctx.strokeStyle = '#22D3EE';
     ctx.lineWidth = 2.2 * scale;
-    ctx.shadowColor = '#EF4444';
-    ctx.shadowBlur = 8 * scale;
+    ctx.shadowColor = '#06B6D4';
+    ctx.shadowBlur = 10 * scale;
     ctx.beginPath();
     ctx.moveTo(hatX, hatY + hatH);
     ctx.quadraticCurveTo(cx - radius * 0.45, hatY + hatH * 0.05, cx, hatY - 2 * scale);
@@ -1123,30 +1332,30 @@ export function drawCharacter(
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
-    // Glowing Neon Crimson Holographic Skull Emblem on Hat
-    ctx.fillStyle = '#EF4444';
+    // Glowing Neon Cyan Holographic Skull Emblem on Hat
+    ctx.fillStyle = '#22D3EE';
     ctx.beginPath();
     ctx.arc(cx, hatY + hatH * 0.5, 4.5 * scale, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#FEF08A';
+    ctx.fillStyle = '#FDE047';
     ctx.beginPath();
     ctx.arc(cx - 1.5 * scale, hatY + hatH * 0.48, 1 * scale, 0, Math.PI * 2);
     ctx.arc(cx + 1.5 * scale, hatY + hatH * 0.48, 1 * scale, 0, Math.PI * 2);
     ctx.fill();
-    // Brass & Neon Laser Telescope Bionic Eye-Scope over Right Eye
-    ctx.fillStyle = '#B45309';
-    ctx.strokeStyle = '#FDE047';
+    // Brass & Neon Cyan Laser Telescope Bionic Eye-Scope over Right Eye
+    ctx.fillStyle = '#1E1B4B';
+    ctx.strokeStyle = '#22D3EE';
     ctx.lineWidth = 1.5 * scale;
     ctx.beginPath();
     ctx.arc(cx + eyeOffset, eyeY, 6.5 * scale, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    ctx.fillStyle = '#EF4444';
+    ctx.fillStyle = '#22D3EE';
     ctx.beginPath();
     ctx.arc(cx + eyeOffset, eyeY, 3.5 * scale, 0, Math.PI * 2);
     ctx.fill();
     // Crosshair reticle inside bionic eye
-    ctx.strokeStyle = '#FECACA';
+    ctx.strokeStyle = '#67E8F9';
     ctx.lineWidth = 0.8 * scale;
     ctx.beginPath();
     ctx.moveTo(cx + eyeOffset - 5 * scale, eyeY);
@@ -1463,6 +1672,163 @@ export function drawCharacter(
       ctx.fill();
       ctx.restore();
     }
+    ctx.restore();
+  } else if (activeSkin === 'glitch_cyber_phantom') {
+    // Holographic Faceted Polygon Faceplate & Shifting Glitch Horns
+    ctx.save();
+    const gY = drawY - radius * 0.75;
+    ctx.strokeStyle = '#06B6D4';
+    ctx.lineWidth = 2 * scale;
+    ctx.shadowColor = '#EC4899';
+    ctx.shadowBlur = 10 * scale;
+    // Polygonal Visor Crown
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.8, gY);
+    ctx.lineTo(cx - radius * 0.4, gY - 14 * scale);
+    ctx.lineTo(cx, gY - 6 * scale);
+    ctx.lineTo(cx + radius * 0.4, gY - 14 * scale);
+    ctx.lineTo(cx + radius * 0.8, gY);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(6, 182, 212, 0.35)';
+    ctx.fill();
+    ctx.stroke();
+    // Glitching Cyan/Magenta Ocular Slits
+    const glitchOffset = Math.sin(animTime * 25) * 2 * scale;
+    ctx.fillStyle = '#EC4899';
+    ctx.fillRect(cx - 10 * scale + glitchOffset, eyeY - 2 * scale, 8 * scale, 3 * scale);
+    ctx.fillStyle = '#06B6D4';
+    ctx.fillRect(cx + 2 * scale - glitchOffset, eyeY - 2 * scale, 8 * scale, 3 * scale);
+    ctx.restore();
+  } else if (activeSkin === 'solar_eclipse_knight') {
+    // Burning Golden Solar Eclipse Coronal Halo & Obsidian Sallet Crest
+    ctx.save();
+    const haloY = drawY - radius * 0.85;
+    // Radiant Coronal Flare Halo
+    ctx.strokeStyle = '#F59E0B';
+    ctx.lineWidth = 3.5 * scale;
+    ctx.shadowColor = '#FEF08A';
+    ctx.shadowBlur = 14 * scale;
+    ctx.beginPath();
+    ctx.arc(cx, haloY, radius * 0.65, 0, Math.PI * 2);
+    ctx.stroke();
+    // Black Moon Eclipse Disc inside
+    ctx.fillStyle = '#09090B';
+    ctx.beginPath();
+    ctx.arc(cx, haloY, radius * 0.58, 0, Math.PI * 2);
+    ctx.fill();
+    // Crown Spikes
+    ctx.fillStyle = '#FDE047';
+    for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+      const sx = cx + Math.cos(a) * radius * 0.65;
+      const sy = haloY + Math.sin(a) * radius * 0.65;
+      ctx.fillRect(sx - 2 * scale, sy - 2 * scale, 4 * scale, 4 * scale);
+    }
+    ctx.restore();
+  } else if (activeSkin === 'deep_angler_leviathan') {
+    // Bioluminescent Curved Lure Stalk Dangling Over Visor
+    ctx.save();
+    const stalkBaseY = drawY - radius * 0.8;
+    ctx.strokeStyle = '#0D9488';
+    ctx.lineWidth = 2.5 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx, stalkBaseY);
+    ctx.quadraticCurveTo(cx + 12 * scale, stalkBaseY - 22 * scale, cx + 6 * scale, stalkBaseY - 8 * scale);
+    ctx.stroke();
+    // Glowing Lure Bulb with Pulse
+    const lureY = stalkBaseY - 6 * scale;
+    const lurePulse = 1 + Math.sin(animTime * 6) * 0.25;
+    ctx.fillStyle = '#22D3EE';
+    ctx.shadowColor = '#5EEAD4';
+    ctx.shadowBlur = 12 * scale * lurePulse;
+    ctx.beginPath();
+    ctx.arc(cx + 6 * scale, lureY, 5 * scale * lurePulse, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  } else if (activeSkin === 'dr_steampunk_inventor') {
+    // Double Brass Magnifying Flight Goggles & Top Hat Rim
+    ctx.save();
+    const gogY = drawY - radius * 0.45;
+    // Leather Goggle Strap
+    ctx.strokeStyle = '#451A03';
+    ctx.lineWidth = 3 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - radius * 0.95, gogY);
+    ctx.lineTo(cx + radius * 0.95, gogY);
+    ctx.stroke();
+    // Twin Brass Goggle Barrels with Glowing Cyan Lenses
+    for (const gx of [cx - eyeOffset, cx + eyeOffset]) {
+      ctx.fillStyle = '#B45309';
+      ctx.strokeStyle = '#FDE68A';
+      ctx.lineWidth = 2 * scale;
+      ctx.beginPath();
+      ctx.arc(gx, gogY, 7.5 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#38BDF8';
+      ctx.shadowColor = '#0284C7';
+      ctx.shadowBlur = 6 * scale;
+      ctx.beginPath();
+      ctx.arc(gx, gogY, 4.5 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'neon_cyber_kitsune') {
+    // Carbon-Fiber Fox Ears with Glowing Pink Interiors & Ceremonial Mask
+    ctx.save();
+    const earY = drawY - radius * 0.72;
+    for (const dir of [-1, 1]) {
+      ctx.fillStyle = '#0F172A';
+      ctx.strokeStyle = '#EC4899';
+      ctx.lineWidth = 2 * scale;
+      ctx.beginPath();
+      ctx.moveTo(cx + dir * 6 * scale, earY);
+      ctx.lineTo(cx + dir * 18 * scale, earY - 18 * scale);
+      ctx.lineTo(cx + dir * 22 * scale, earY + 2 * scale);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // Glowing Pink Inner Ear
+      ctx.fillStyle = '#EC4899';
+      ctx.beginPath();
+      ctx.moveTo(cx + dir * 9 * scale, earY - 1 * scale);
+      ctx.lineTo(cx + dir * 17 * scale, earY - 13 * scale);
+      ctx.lineTo(cx + dir * 19 * scale, earY + 1 * scale);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  } else if (activeSkin === 'cosmic_jester') {
+    // Dual Star-Tipped Jester Horns (Violet & Gold Split)
+    ctx.save();
+    const jY = drawY - radius * 0.7;
+    // Left Violet Horn
+    ctx.strokeStyle = '#A855F7';
+    ctx.lineWidth = 4 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx - 8 * scale, jY);
+    ctx.quadraticCurveTo(cx - 24 * scale, jY - 18 * scale, cx - 18 * scale, jY - 4 * scale);
+    ctx.stroke();
+    // Star Bell Left
+    ctx.fillStyle = '#FDE047';
+    ctx.shadowColor = '#FDE047';
+    ctx.shadowBlur = 8 * scale;
+    ctx.beginPath();
+    ctx.arc(cx - 18 * scale, jY - 4 * scale, 3.5 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    // Right Gold Horn
+    ctx.strokeStyle = '#FBBF24';
+    ctx.lineWidth = 4 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx + 8 * scale, jY);
+    ctx.quadraticCurveTo(cx + 24 * scale, jY - 18 * scale, cx + 18 * scale, jY - 4 * scale);
+    ctx.stroke();
+    // Star Bell Right
+    ctx.fillStyle = '#A855F7';
+    ctx.shadowColor = '#A855F7';
+    ctx.shadowBlur = 8 * scale;
+    ctx.beginPath();
+    ctx.arc(cx + 18 * scale, jY - 4 * scale, 3.5 * scale, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   } else if (activeSkin === 'cyber_neon') {
     // Cyberpunk Neon Mohawk Fin & Circuit Brow

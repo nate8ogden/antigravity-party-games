@@ -9834,8 +9834,8 @@ export class GameManager {
           return;
         }
 
-        // Check Skyline Sumo custom mode hitboxes
-        if (game?.id === 'skyline_sumo') {
+        // Check Skyline Sumo / Sumo Lode Runner custom mode & stage hitboxes
+        if (game?.id === 'skyline_sumo' || game?.id === 'sumo_lode_runner') {
           for (const hb of this.sumoHitboxes) {
             if (x >= hb.x && x <= hb.x + hb.w && y >= hb.y && y <= hb.y + hb.h) {
               hb.action();
