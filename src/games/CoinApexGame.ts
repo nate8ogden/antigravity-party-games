@@ -198,7 +198,11 @@ export class CoinApexGame extends BaseGame {
     };
   }
 
-  private launchCoin(width: number, height: number): void {
+  public get coin(): any {
+    return this.coins[0] || null;
+  }
+
+  public launchCoin(width: number, height: number): void {
     this.currentToss++;
     const isSuddenDeath = this.currentToss >= this.maxTosses - 1 || this.roundTimer <= 15;
 
@@ -322,7 +326,7 @@ export class CoinApexGame extends BaseGame {
           coin.hasCaught.set(p.id, true);
           const absVy = Math.abs(coin.vy);
 
-          const isUnderdog = maxScore >= 350 && (this.scores.get(p.id) || 0) <= maxScore - 350;
+          const isUnderdog = maxScore >= 4 && (this.scores.get(p.id) || 0) <= maxScore - 3;
           // Underdog tolerance cushion (+25 px/s)
           const effectiveAbsVy = Math.max(0, absVy - (isUnderdog ? 25 : 0));
 
@@ -331,12 +335,12 @@ export class CoinApexGame extends BaseGame {
           const py = height * 0.58;
 
           if (effectiveAbsVy < 26) {
-            // 5X PERFECT APEX JACKPOT!
+            // PERFECT APEX!
             const cur = this.scores.get(p.id) || 0;
-            const pts = 500;
+            const pts = 3;
             this.scores.set(p.id, cur + pts);
             this.audio.playFanfare();
-            this.particles.showFloatingText('🌟 5X PERFECT APEX! +500 PTS!', px, py - 40, '#F59E0B', 24);
+            this.particles.showFloatingText('🌟 PERFECT APEX! +3 PTS!', px, py - 40, '#F59E0B', 24);
             this.particles.spawnExplosion(coin.x, coin.y, '#FBBF24', 32);
             this.particles.addTrauma(0.3);
 
@@ -346,12 +350,12 @@ export class CoinApexGame extends BaseGame {
               m.timer = 1.2;
             }
           } else if (effectiveAbsVy < 60) {
-            // CLEAN APEX (+250)
+            // CLEAN APEX (+1)
             const cur = this.scores.get(p.id) || 0;
-            const pts = 250;
+            const pts = 1;
             this.scores.set(p.id, cur + pts);
             this.audio.playScore();
-            this.particles.showFloatingText('✨ CLEAN APEX! +250 PTS', px, py - 40, '#38BDF8', 22);
+            this.particles.showFloatingText('✨ CLEAN CATCH! +1 PT', px, py - 40, '#38BDF8', 22);
             this.particles.spawnSparks(coin.x, coin.y, '#38BDF8', 18);
 
             const m = this.playerCatchMood.get(p.id);
@@ -360,12 +364,12 @@ export class CoinApexGame extends BaseGame {
               m.timer = 0.8;
             }
           } else if (effectiveAbsVy < 95) {
-            // GOOD CATCH (+100)
+            // GOOD CATCH (+1)
             const cur = this.scores.get(p.id) || 0;
-            const pts = 100;
+            const pts = 1;
             this.scores.set(p.id, cur + pts);
             this.audio.playTap();
-            this.particles.showFloatingText('+100 PTS! GOOD CATCH 👍', px, py - 40, '#10B981', 19);
+            this.particles.showFloatingText('GOOD CATCH! +1 PT 👍', px, py - 40, '#10B981', 19);
             this.particles.spawnSparks(coin.x, coin.y, '#34D399', 12);
 
             const m = this.playerCatchMood.get(p.id);
@@ -531,7 +535,7 @@ export class CoinApexGame extends BaseGame {
       const isLeft = p.id === active[0]?.id;
       const px = isLeft ? width * 0.22 : width * 0.78;
       const py = height * 0.72;
-      const isUnderdog = maxScore >= 350 && (this.scores.get(p.id) || 0) <= maxScore - 350;
+      const isUnderdog = maxScore >= 4 && (this.scores.get(p.id) || 0) <= maxScore - 3;
 
       ctx.save();
       ctx.textAlign = 'center';

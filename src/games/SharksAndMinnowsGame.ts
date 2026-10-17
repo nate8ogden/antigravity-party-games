@@ -67,7 +67,7 @@ interface PredatorShark {
 }
 
 export class SharksAndMinnowsGame extends BaseGame {
-  public gameMode: SharksGameMode = 'last_fish_standing';
+  public gameMode: SharksGameMode = 'classic_crossing';
   private swimmers: Map<PlayerId, Swimmer> = new Map();
   private npcMinnows: NpcMinnow[] = [];
   private seaStars: SeaStar[] = [];
@@ -77,7 +77,7 @@ export class SharksAndMinnowsGame extends BaseGame {
   private maxWaves: number = 4;
   private waveTimer: number = 16.0;
   private waveState: 'announcing' | 'swimming' | 'wave_cleared' = 'announcing';
-  private announcementTimer: number = 1.6;
+  private announcementTimer: number = 1.0;
 
   // Ocean zones
   private northShoreY: number = 115;
@@ -245,7 +245,21 @@ export class SharksAndMinnowsGame extends BaseGame {
         getSwimmer: (id: PlayerId) => this.swimmers.get(id),
         getNpcMinnows: () => this.npcMinnows,
         getSeaStars: () => this.seaStars,
-        getHelperSharks: () => this.helperSharks
+        getHelperSharks: () => this.helperSharks,
+        setPlayerPos: (id: PlayerId, x: number, y: number) => {
+          const s = this.swimmers.get(id);
+          if (s) {
+            s.x = x;
+            s.y = y;
+          }
+        },
+        triggerLunge: (id: PlayerId) => {
+          const s = this.swimmers.get(id);
+          if (s) {
+            s.lungeDuration = 0.40;
+            s.lungeCooldown = 1.6;
+          }
+        }
       };
     }
   }
@@ -254,7 +268,7 @@ export class SharksAndMinnowsGame extends BaseGame {
     this.currentWave = waveNum;
     this.waveTimer = 16.0;
     this.waveState = 'announcing';
-    this.announcementTimer = 1.6;
+    this.announcementTimer = 1.0;
 
     // Alternate crossing direction each wave
     this.swimmingDirection = waveNum % 2 === 1 ? 'south_to_north' : 'north_to_south';
