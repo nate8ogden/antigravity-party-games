@@ -6,7 +6,8 @@ import {
   GameState,
   MinigameId,
   MinigameMetadata,
-  RoundResult
+  RoundResult,
+  DevicePlatformMode
 } from './Types';
 import { InputRouter } from './InputRouter';
 import { AudioEngine } from './AudioEngine';
@@ -273,6 +274,11 @@ import { PowerPathClashGame } from '../games/PowerPathClashGame';
 import { LandscapeArtilleryGame } from '../games/LandscapeArtilleryGame';
 import { SpamClickShowdownGame } from '../games/SpamClickShowdownGame';
 import { SumoLodeRunnerGame, SUMO_LODE_LEVELS } from '../games/SumoLodeRunnerGame';
+import { ThumbWarWrestleGame } from '../games/ThumbWarWrestleGame';
+import { SwipeNinjaBlitzGame } from '../games/SwipeNinjaBlitzGame';
+import { TabletopAirHockeyGame } from '../games/TabletopAirHockeyGame';
+import { TapTugOverdriveGame } from '../games/TapTugOverdriveGame';
+import { getGamePhoneMode, getPhoneModeBadge } from './PhoneCatalogConfig';
 import { renderGameThumbnailArt } from './GameThumbnails';
 import { drawCharacter } from './CharacterRenderer';
 import {
@@ -2634,6 +2640,46 @@ export const GAME_CATALOG: MinigameMetadata[] = [
     icon: '[G-260]',
     instructions: 'Spam click as fast as humanly possible! Every click pumps pressurized fizzy soda into your rocket bottle. Hit over 8 CPS to activate burning Overdrive and reach 1000 PSI first to blast off into the stratosphere!',
     controlPrompt: 'SPAM CLICK MOUSE / TAP / SPACE / ENTER / BUTTONS AS FAST AS YOU CAN!'
+  },
+  {
+    id: 'thumb_war_wrestle',
+    title: 'Thumb War Wrestle',
+    tagline: '1-2-3-4 I Declare A Thumb War!',
+    category: 'Party',
+    icon: '[P-01]',
+    instructions: 'Phone-Exclusive Tabletop Showdown! Tap to lunge your articulated thumb across the ring and hold down on top of your rival’s thumb when exhausted to pin them for a 3-count! In 3-4P Phone Mode, Top 1v1 & Bottom 1v1 play simultaneously and winners battle in the Grand Final!',
+    controlPrompt: 'Tap Touch Zone: Lunge & Slam • Hold on Pinned Rival: 1-2-3 Pin Count',
+    phoneMode: 'phone_only'
+  },
+  {
+    id: 'swipe_ninja_blitz',
+    title: 'Swipe Ninja Blitz',
+    tagline: '4-Corner Touchscreen Katana Fruit Slash',
+    category: 'Reflex',
+    icon: '[P-02]',
+    instructions: 'Phone-Exclusive 1–4 Player Touch Blitz! Swipe or tap inside your quadrant to unleash glowing katana arcs! Slice flying watermelons, golden pineapples, and combo stars flying through your corner while avoiding spiked bombs!',
+    controlPrompt: 'Swipe / Drag or Tap Your Quadrant: Unleash Katana Slash Arcs!',
+    phoneMode: 'phone_only'
+  },
+  {
+    id: 'tabletop_air_hockey',
+    title: 'Tabletop Neon Hockey',
+    tagline: 'Face-to-Face Touchscreen Mallet Clash',
+    category: 'Action',
+    icon: '[P-03]',
+    instructions: 'Phone-Exclusive Tabletop Air Hockey! Hold your side of the phone screen to supercharge your magnetic striker mallet and drag to smash the neon puck into your rival’s goal! In 3-4P Phone Mode, Top 1v1 & Bottom 1v1 play simultaneously and winners face off in the Final!',
+    controlPrompt: 'Drag Touch Zone: Aim Striker • Hold/Tap: Power Mallet Surge',
+    phoneMode: 'phone_only'
+  },
+  {
+    id: 'tap_tug_overdrive',
+    title: 'Tap Tug Overdrive',
+    tagline: '4-Way Touchscreen Plasma Core Tug-of-War',
+    category: 'Party',
+    icon: '[P-04]',
+    instructions: 'Phone-Exclusive 1–4 Player Touch Overdrive! Furiously tap your corner pad to pull the unstable Plasma Core into your capture zone! Watch the spinning Golden Overdrive Ring—tapping when it aligns triggers a 3x Mega Pull Shockwave!',
+    controlPrompt: 'Rapid Tap Your Corner: Pull Plasma Core • Tap on Gold Ring: 3x Overdrive Pull!',
+    phoneMode: 'phone_only'
   }
 ];
 
@@ -2659,6 +2705,16 @@ export class GameManager {
   public activeGame: BaseGame | null = null;
   public currentRoundResult: RoundResult | null = null;
 
+  // Device Platform Mode (Computer vs Phone) & 4P Split-Screen Bracket State
+  public deviceMode: DevicePlatformMode = 'computer';
+  public deviceModePillHitbox: { x: number; y: number; w: number; h: number } | null = null;
+  public secondarySplitGame: BaseGame | null = null;
+  public splitBracketStage: 'none' | 'semis' | 'final' = 'none';
+  public splitBracketGameId: MinigameId | null = null;
+  public splitBracketTopWinner: PlayerId | null = null;
+  public splitBracketBotWinner: PlayerId | null = null;
+  public splitBracketTransitionTimer: number = 0;
+
   // Tournament settings
   public isTournament: boolean = false;
   public tournamentGoalPoints: number = 3;
@@ -2672,6 +2728,15 @@ export class GameManager {
   public pauseHoldProgress: number = 0;
   private isHoldingPause: boolean = false;
   private pauseHoldStartTime: number = 0;
+
+  // Device Mode: Computer vs Phone toggle
+  public deviceMode: 'computer' | 'phone' = 'computer';
+
+  public setDeviceMode(mode: 'computer' | 'phone'): void {
+    this.deviceMode = mode;
+    this.audio.playTap();
+    this.resizeCanvas();
+  }
 
   // Rematch / Next button hold
   public rematchTimer: number = 0;
@@ -10885,18 +10950,22 @@ export class GameManager {
     this.canvas.style.cursor = 'default';
   }
 
+  public resizeCanvas(): void {
+    const container = this.canvas.parentElement;
+    if (!container) return;
+    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.logicalWidth = container.clientWidth;
+    this.logicalHeight = container.clientHeight;
+    this.canvas.width = Math.round(this.logicalWidth * this.dpr);
+    this.canvas.height = Math.round(this.logicalHeight * this.dpr);
+    this.canvas.style.width = this.logicalWidth + 'px';
+    this.canvas.style.height = this.logicalHeight + 'px';
+    this.dotPattern = null;
+  }
+
   private setupResize() {
     const resize = () => {
-      const container = this.canvas.parentElement;
-      if (!container) return;
-      this.dpr = Math.min(window.devicePixelRatio || 1, 2);
-      this.logicalWidth = container.clientWidth;
-      this.logicalHeight = container.clientHeight;
-      this.canvas.width = Math.round(this.logicalWidth * this.dpr);
-      this.canvas.height = Math.round(this.logicalHeight * this.dpr);
-      this.canvas.style.width = this.logicalWidth + 'px';
-      this.canvas.style.height = this.logicalHeight + 'px';
-      this.dotPattern = null;
+      this.resizeCanvas();
     };
     window.addEventListener('resize', resize);
     resize();

@@ -20,12 +20,53 @@ window.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('pointerdown', unlockAudio, { once: true });
   window.addEventListener('keydown', unlockAudio, { once: true });
 
+  // Bind Top Device Mode Toggle (Computer vs Phone) - Clickable by both Mouse & Touch!
+  const btnModeComputer = document.getElementById('btn-mode-computer');
+  const btnModePhone = document.getElementById('btn-mode-phone');
+
+  const syncDeviceToggleUI = () => {
+    const isPhone = gameManager.deviceMode === 'phone';
+    if (btnModeComputer) btnModeComputer.classList.toggle('active', !isPhone);
+    if (btnModePhone) btnModePhone.classList.toggle('active', isPhone);
+    document.body.classList.toggle('phone-mode', isPhone);
+  };
+
+  const bindDualClickAndTouch = (el: HTMLElement | null, handler: () => void) => {
+    if (!el) return;
+    let lastTouchSwitch = 0;
+    el.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      lastTouchSwitch = performance.now();
+      handler();
+      syncDeviceToggleUI();
+    }, { passive: false });
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (performance.now() - lastTouchSwitch < 400) return;
+      handler();
+      syncDeviceToggleUI();
+    });
+  };
+
+  bindDualClickAndTouch(btnModeComputer, () => {
+    gameManager.setDeviceMode('computer');
+  });
+  bindDualClickAndTouch(btnModePhone, () => {
+    gameManager.setDeviceMode('phone');
+  });
+  syncDeviceToggleUI();
+
   // Bind Canvas click/pointer for UI interaction (Lobby cards, modal, buttons)
+  let lastCanvasTouchTapTime = 0;
   canvas.addEventListener('click', (e) => {
+    if (performance.now() - lastCanvasTouchTapTime < 400) return;
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     gameManager.handleCanvasClick(x, y);
+    syncDeviceToggleUI();
   });
 
   // Bind Mouse Move for dynamic hover cursor styling
@@ -44,19 +85,45 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }, { passive: false });
 
-  // Bind Touch Drag for Lobby and Shop Vertical Scrolling
+  // Bind Touch Drag for Lobby and Shop Vertical Scrolling + Tap-to-Click on Mobile
+  let lobbyTouchStartX = 0;
   let lobbyTouchStartY = 0;
+  let lobbyTouchTotalTravel = 0;
   canvas.addEventListener('touchstart', (e) => {
-    if ((gameManager.state === 'LOBBY' || gameManager.isShopOpen) && e.touches.length === 1) {
+    if (e.touches.length === 1) {
+      lobbyTouchStartX = e.touches[0].clientX;
       lobbyTouchStartY = e.touches[0].clientY;
+      lobbyTouchTotalTravel = 0;
     }
   }, { passive: true });
 
   canvas.addEventListener('touchmove', (e) => {
     if ((gameManager.state === 'LOBBY' || gameManager.isShopOpen) && e.touches.length === 1) {
       const deltaY = lobbyTouchStartY - e.touches[0].clientY;
+      lobbyTouchTotalTravel += Math.hypot(e.touches[0].clientX - lobbyTouchStartX, deltaY);
+      lobbyTouchStartX = e.touches[0].clientX;
       lobbyTouchStartY = e.touches[0].clientY;
       gameManager.handleScroll(deltaY);
+    }
+  }, { passive: true });
+
+  canvas.addEventListener('touchend', (e) => {
+    if (e.changedTouches.length === 1 && lobbyTouchTotalTravel < 14) {
+      const isMenuOrOverlay =
+        gameManager.state !== 'PLAYING' ||
+        gameManager.isModalOpen ||
+        gameManager.isSettingsOpen ||
+        gameManager.isShopOpen ||
+        gameManager.isTrophiesOpen;
+      if (isMenuOrOverlay) {
+        const t = e.changedTouches[0];
+        const rect = canvas.getBoundingClientRect();
+        const x = t.clientX - rect.left;
+        const y = t.clientY - rect.top;
+        lastCanvasTouchTapTime = performance.now();
+        gameManager.handleCanvasClick(x, y);
+        syncDeviceToggleUI();
+      }
     }
   }, { passive: true });
 
@@ -226,10 +293,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
       const isPlayingState = currentState === 'PLAYING' || currentState === 'COUNTDOWN';
       document.body.classList.toggle('in-game', isPlayingState);
-      const targetPointer = isPlayingState ? 'auto' : 'none';
+      syncDeviceToggleUI();
       zones.forEach(({ el }) => {
-        if (el && el.style.pointerEvents !== targetPointer) {
-          el.style.pointerEvents = targetPointer;
+        if (el && el.style.pointerEvents !== 'none') {
+          el.style.pointerEvents = 'none';
         }
       });
     }

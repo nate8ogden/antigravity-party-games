@@ -265,6 +265,7 @@ export const PHONE_GAME_MODES: Record<string, PhoneSupportMode> = {
   "power_path_clash": "4p_split_bracket",
   "landscape_artillery": "pc_only",
   "spam_click_showdown": "4p_native",
+  "sumo_lode_runner": "2p_only",
   "thumb_war_wrestle": "phone_only",
   "swipe_ninja_blitz": "phone_only",
   "tabletop_air_hockey": "phone_only",

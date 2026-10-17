@@ -238,10 +238,6 @@ export class CyberTanksGame extends BaseGame {
         });
       }
     }
-
-    if (typeof window !== 'undefined' && (window as any).__GAME_MANAGER__) {
-      (window as any).__GAME_MANAGER__.matchElapsedSeconds = 0;
-    }
   }
 
   public currentMapName: string = 'Crossroads';

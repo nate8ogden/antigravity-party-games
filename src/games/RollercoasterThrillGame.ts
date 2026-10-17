@@ -307,8 +307,34 @@ export class RollercoasterThrillGame extends BaseGame {
       // Read steer & throttle inputs
       const steerX = this.input.getSteer(p.id);
       const actionHeld = this.input.isActionPressed(p.id) || this.input.isPressed(p.id);
+      const actionJustPressed = this.input.justPressed(p.id) || this.input.justAction(p.id);
 
       const lateralSpeed = (cart.isUnderdog ? 2.4 : 1.9) * (cart.boostTimer > 0 ? 1.4 : 1.0);
+
+      // Mobile / One-Touch Smart Banking Assist:
+      // Tapping action when approaching a banking curve snaps cart into optimal centrifugal lean angle!
+      if (actionJustPressed) {
+        const cartY = this.lastCanvasHeight - 110;
+        const upcomingCurve = this.curves.find(c => c.y < cartY + 180 && c.y > 0 && !c.handledBy.has(p.id));
+        if (upcomingCurve) {
+          if (upcomingCurve.type === 'left_bank') {
+            cart.vx = -1.6;
+            cart.lean = -0.55;
+            this.audio.playTone(520, 0.08, 'sine');
+          } else if (upcomingCurve.type === 'right_bank') {
+            cart.vx = 1.6;
+            cart.lean = 0.55;
+            this.audio.playTone(520, 0.08, 'sine');
+          } else if (upcomingCurve.type === 'loop_de_loop') {
+            cart.boostTimer = Math.max(cart.boostTimer, 0.6);
+            this.audio.playBoost();
+          } else if (upcomingCurve.type === 'airtime_drop') {
+            cart.xRatio *= 0.4;
+            cart.lean = 0;
+            this.audio.playTone(600, 0.08, 'triangle');
+          }
+        }
+      }
 
       // Lateral banking along rails
       if (Math.abs(steerX) > 0.08) {
@@ -507,21 +533,21 @@ export class RollercoasterThrillGame extends BaseGame {
               cart.mood = 'triumph';
               const earned = 60 * mult;
               cart.score += earned;
+              cart.boostTimer = Math.max(cart.boostTimer, 0.45);
 
               this.audio.playTone(660, 0.12, 'triangle');
+              this.audio.playTone(880, 0.14, 'sine');
               const cx = width / 2 + cart.xRatio * (width * 0.32);
-              this.particles.emit(cx, cartY, 14, '#10B981');
-              this.particles.showFloatingText(`LEAN APEX! +${earned}`, cx, cartY - 35, '#10B981', 18);
+              this.particles.emit(cx, cartY, 18, '#10B981');
+              this.particles.showFloatingText(`PERFECT LEAN! +${earned}`, cx, cartY - 35, '#10B981', 18);
             } else {
-              // Mild stumble instead of harsh wobble, with quick recovery
-              cart.wobbleTimer = 0.45;
-              cart.streakCount = 0;
-              cart.score = Math.max(0, cart.score - 10);
-              cart.mood = 'shocked';
-              this.audio.playTone(220, 0.15, 'sawtooth');
+              // Smooth, forgiving coaster ride: award coasting points without jarring spinout or score deduction!
+              const earned = 15 * mult;
+              cart.score += earned;
+              this.audio.playTone(420, 0.08, 'triangle');
               const cx = width / 2 + cart.xRatio * (width * 0.32);
-              this.particles.emit(cx, cartY, 10, '#EF4444');
-              this.particles.showFloatingText('CENTRIFUGAL SLIP! -10', cx, cartY - 35, '#EF4444', 16);
+              this.particles.emit(cx, cartY, 6, '#F59E0B');
+              this.particles.showFloatingText(`COASTING +${earned}`, cx, cartY - 35, '#F59E0B', 15);
             }
 
             c.handledBy.add(p.id);
@@ -787,26 +813,101 @@ export class RollercoasterThrillGame extends BaseGame {
     const cx = width / 2;
     const topW = 90;
     const botW = width * 0.72;
+    const t = performance.now() * 0.003;
 
     for (const c of this.curves) {
       const p = Math.max(0, c.y / height);
       const curW = topW + (botW - topW) * p;
+      const pylonLeftX = cx - curW * 0.48;
+      const pylonRightX = cx + curW * 0.48;
+      const archH = Math.max(18, 32 * p);
 
       ctx.save();
       const isLoop = c.type === 'loop_de_loop';
-      ctx.fillStyle = isLoop ? 'rgba(236, 72, 153, 0.92)' : 'rgba(245, 158, 11, 0.92)';
-      ctx.beginPath();
-      ctx.roundRect(cx - curW * 0.48, c.y - 14, curW * 0.96, 28, 6);
-      ctx.fill();
+      const isLeft = c.type === 'left_bank';
+      const isRight = c.type === 'right_bank';
+      const isAirtime = c.type === 'airtime_drop';
 
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 2;
+      const archColor = isLoop ? '#EC4899' : isAirtime ? '#06B6D4' : isLeft ? '#38BDF8' : '#F59E0B';
+      const glowColor = isLoop ? '#F472B6' : isAirtime ? '#67E8F9' : isLeft ? '#06B6D4' : '#FBBF24';
+
+      // 1. Dual Gantry Pylons at track rails
+      ctx.fillStyle = '#1E293B';
+      ctx.strokeStyle = archColor;
+      ctx.lineWidth = Math.max(1.5, 2.5 * p);
+      ctx.shadowColor = glowColor;
+      ctx.shadowBlur = 8 * p;
+
+      // Left truss pylon
+      ctx.fillRect(pylonLeftX - 6 * p, c.y - archH, 12 * p, archH + 10);
+      ctx.strokeRect(pylonLeftX - 6 * p, c.y - archH, 12 * p, archH + 10);
+
+      // Right truss pylon
+      ctx.fillRect(pylonRightX - 6 * p, c.y - archH, 12 * p, archH + 10);
+      ctx.strokeRect(pylonRightX - 6 * p, c.y - archH, 12 * p, archH + 10);
+
+      // 2. High-Voltage Neon Overhead Arch Span
+      ctx.beginPath();
+      ctx.moveTo(pylonLeftX, c.y);
+      ctx.quadraticCurveTo(cx, c.y - archH * 1.35, pylonRightX, c.y);
+      ctx.strokeStyle = archColor;
+      ctx.lineWidth = Math.max(2, 4.5 * p);
       ctx.stroke();
 
-      ctx.font = 'bold 12px system-ui, sans-serif';
-      ctx.fillStyle = '#0F172A';
+      // 3. Central Neon Gantry Banner Box
+      const boxW = Math.min(curW * 0.75, 260);
+      const boxH = Math.max(18, 26 * p);
+      const boxY = c.y - archH * 0.85;
+
+      const bgGrad = ctx.createLinearGradient(cx - boxW / 2, boxY, cx + boxW / 2, boxY);
+      bgGrad.addColorStop(0, 'rgba(15, 23, 42, 0.95)');
+      bgGrad.addColorStop(0.5, 'rgba(30, 41, 59, 0.95)');
+      bgGrad.addColorStop(1, 'rgba(15, 23, 42, 0.95)');
+
+      ctx.fillStyle = bgGrad;
+      ctx.beginPath();
+      ctx.roundRect(cx - boxW / 2, boxY - boxH / 2, boxW, boxH, 6);
+      ctx.fill();
+      ctx.strokeStyle = glowColor;
+      ctx.lineWidth = Math.max(1.5, 2.2 * p);
+      ctx.stroke();
+
+      // 4. Directional Animated Chevrons
+      let displayArrows = '';
+      if (isLeft) {
+        const frame = Math.floor(t * 8) % 3;
+        displayArrows = frame === 0 ? '◀ ◀ ◁' : frame === 1 ? '◀ ◁ ◀' : '◁ ◀ ◀';
+      } else if (isRight) {
+        const frame = Math.floor(t * 8) % 3;
+        displayArrows = frame === 0 ? '▷ ▶ ▶' : frame === 1 ? '▶ ▷ ▶' : '▶ ▶ ▷';
+      } else if (isLoop) {
+        displayArrows = '🌀 360° LOOP 🌀';
+      } else {
+        displayArrows = '⚡ AIRTIME DROP ⚡';
+      }
+
+      ctx.font = `900 ${Math.max(10, Math.floor(13 * p))}px "Outfit", system-ui, sans-serif`;
+      ctx.fillStyle = '#FFFFFF';
       ctx.textAlign = 'center';
-      ctx.fillText(c.label, cx, c.y + 5);
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = glowColor;
+      ctx.shadowBlur = 10;
+      ctx.fillText(c.label, cx, boxY);
+      ctx.shadowBlur = 0;
+
+      // 5. Track Apex Timing Guide Line across rails
+      const apexDist = Math.abs(c.y - (height - 110));
+      if (apexDist < 80) {
+        const apexPulse = 1 - apexDist / 80;
+        ctx.strokeStyle = isLoop ? 'rgba(236, 72, 153, 0.7)' : 'rgba(16, 185, 129, 0.85)';
+        ctx.lineWidth = Math.max(2, 4 * apexPulse);
+        ctx.shadowColor = '#10B981';
+        ctx.shadowBlur = 12 * apexPulse;
+        ctx.beginPath();
+        ctx.moveTo(pylonLeftX + 6, c.y);
+        ctx.lineTo(pylonRightX - 6, c.y);
+        ctx.stroke();
+      }
 
       ctx.restore();
     }
