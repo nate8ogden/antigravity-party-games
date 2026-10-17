@@ -205,8 +205,8 @@ export class FireflyNightBeaconGame extends BaseGame {
 
       const sx = this.input.getSteer(f.id);
       const sy = this.input.getThrottle(f.id);
-      const justTap = this.input.justPressed(f.id) || this.input.justAction(f.id);
-      const isHold = this.input.isActionPressed(f.id) || this.input.isPressed(f.id);
+      const justTap = this.input.justAction(f.id);
+      const isHold = this.input.isActionPressed(f.id);
 
       const accel = 1350 * (f.underdog ? 1.15 : 1.0);
       f.vx += sx * accel * dt;
@@ -328,7 +328,7 @@ export class FireflyNightBeaconGame extends BaseGame {
     }
 
     const hold = !bot.holding || bot.charge < bot.botChargeGoal;
-    this.input.setBotState(botId, hold);
+    this.input.setBotInput(botId, hold, Math.sign(bot.vx), Math.sign(-bot.vy), hold);
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {

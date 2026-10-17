@@ -203,7 +203,7 @@ export class DungBeetleRollGame extends BaseGame {
 
       const sx = this.input.getSteer(b.id);
       const sy = this.input.getThrottle(b.id);
-      const isHold = this.input.isActionPressed(b.id) || this.input.isPressed(b.id);
+      const isHold = this.input.isActionPressed(b.id);
 
       const accel = 1350 * (b.underdog ? 1.15 : 1.0) * (b.boulderBoostTimer > 0 ? 1.35 : 1.0);
       b.vx += sx * accel * dt;
@@ -323,7 +323,7 @@ export class DungBeetleRollGame extends BaseGame {
     }
 
     const hold = !bot.holding || bot.charge < bot.botChargeGoal;
-    this.input.setBotState(botId, hold);
+    this.input.setBotInput(botId, hold, Math.sign(bot.vx), Math.sign(-bot.vy), hold);
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {

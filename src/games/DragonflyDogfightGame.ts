@@ -218,12 +218,12 @@ export class DragonflyDogfightGame extends BaseGame {
       }
 
       const steer = this.input.getSteer(f.id);
-      const justTap = this.input.justPressed(f.id) || this.input.justAction(f.id);
-      const isHold = this.input.isActionPressed(f.id) || this.input.isPressed(f.id);
+      const justTap = this.input.justAction(f.id);
+      const isHold = this.input.isActionPressed(f.id);
 
       // 360° Jet-Fighter banking & Hydro-Pulse Cannon
-      f.heading += steer * 3.8 * dt;
-      const spd = (f.afterburnerTimer > 0 ? 340 : 230) * (f.underdog ? 1.15 : 1.0);
+      f.heading += steer * 4.2 * dt;
+      const spd = (f.afterburnerTimer > 0 ? 360 : 240) * (f.underdog ? 1.15 : 1.0);
       f.x += Math.cos(f.heading) * spd * dt;
       f.y += Math.sin(f.heading) * spd * dt;
 
@@ -246,10 +246,10 @@ export class DragonflyDogfightGame extends BaseGame {
         this.pulses.push({
           ownerId: f.id,
           color: f.color,
-          x: f.x + Math.cos(f.heading) * 20,
-          y: f.y + Math.sin(f.heading) * 20,
-          vx: Math.cos(f.heading) * 580,
-          vy: Math.sin(f.heading) * 580,
+          x: f.x + Math.cos(f.heading) * 24,
+          y: f.y + Math.sin(f.heading) * 24,
+          vx: Math.cos(f.heading) * 620,
+          vy: Math.sin(f.heading) * 620,
           active: true,
         });
         this.audio.playTap();
@@ -332,22 +332,32 @@ export class DragonflyDogfightGame extends BaseGame {
   protected updateBotAI(
     dt: number,
     botId: PlayerId,
-    _difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
+    difficulty: 'bot_easy' | 'bot_normal' | 'bot_hard',
     _width: number,
     _height: number
   ): void {
     const bot = this.fighters.find((f) => f.id === botId);
     if (!bot) return;
 
-    const target = this.drones[0];
-    if (target) {
-      const desired = Math.atan2(target.y - bot.y, target.x - bot.x);
-      const diff = Math.atan2(Math.sin(desired - bot.heading), Math.cos(desired - bot.heading));
-      bot.heading += Math.sign(diff) * 3.0 * dt;
+    bot.botTimer -= dt;
+    if (bot.botTimer <= 0) {
+      bot.botTimer = difficulty === 'bot_hard' ? 0.14 : difficulty === 'bot_normal' ? 0.22 : 0.32;
+      bot.botChargeGoal = 0.76 + Math.random() * 0.18;
     }
 
+    // Target closest drone or rival in front
+    const target = this.drones[0];
+    let diff = 0;
+    if (target) {
+      const desired = Math.atan2(target.y - bot.y, target.x - bot.x);
+      diff = Math.atan2(Math.sin(desired - bot.heading), Math.cos(desired - bot.heading));
+      const turnRate = difficulty === 'bot_hard' ? 4.5 : difficulty === 'bot_normal' ? 3.6 : 2.5;
+      bot.heading += Math.sign(diff) * Math.min(Math.abs(diff), turnRate * dt);
+    }
+
+    const firePulse = Math.abs(diff) < 0.3 && Math.random() < (difficulty === 'bot_hard' ? 0.45 : 0.25);
     const hold = !bot.holding || bot.charge < bot.botChargeGoal;
-    this.input.setBotState(botId, hold);
+    this.input.setBotInput(botId, hold, Math.sign(diff), 0, hold || firePulse);
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
@@ -359,70 +369,234 @@ export class DragonflyDogfightGame extends BaseGame {
       ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
     }
 
+    // 1. Water Backdrop Gradient
     const bg = ctx.createLinearGradient(0, 0, 0, height);
     bg.addColorStop(0, pal.bgTop);
     bg.addColorStop(1, pal.bgBot);
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, width, height);
 
-    // Drones
-    for (const d of this.drones) {
-      ctx.fillStyle = d.golden ? '#fbbf24' : '#38bdf8';
+    // Water Caustic Shimmer Waves
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 3;
+    for (let r = 0; r < 5; r++) {
+      const wy = height * 0.2 + r * (height * 0.15);
       ctx.beginPath();
-      ctx.arc(d.x, d.y, d.golden ? 16 : 12, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Hydro-Pulse Rings
-    for (const p of this.pulses) {
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 9, 0, Math.PI * 2);
+      ctx.moveTo(0, wy + Math.sin(this.timeElapsed * 2 + r) * 12);
+      for (let wx = 50; wx <= width; wx += 60) {
+        ctx.lineTo(wx, wy + Math.sin(wx * 0.02 + this.timeElapsed * 2.5 + r) * 10);
+      }
       ctx.stroke();
     }
 
-    // Fighters
+    // Floating Lotus Lily Pads & Water Lilies
+    const pads = [
+      { x: width * 0.22, y: height * 0.32, r: 42 },
+      { x: width * 0.78, y: height * 0.35, r: 46 },
+      { x: width * 0.32, y: height * 0.74, r: 48 },
+      { x: width * 0.72, y: height * 0.72, r: 40 },
+      { x: width * 0.50, y: height * 0.50, r: 36 }
+    ];
+    for (const pad of pads) {
+      // Lily Pad Shadow
+      ctx.fillStyle = 'rgba(2, 44, 34, 0.35)';
+      ctx.beginPath();
+      ctx.arc(pad.x, pad.y + 4, pad.r, 0, Math.PI * 2);
+      ctx.fill();
+      // Pad Leaf
+      ctx.fillStyle = pal.lilyColor;
+      ctx.beginPath();
+      ctx.arc(pad.x, pad.y, pad.r, 0.25, Math.PI * 1.95);
+      ctx.lineTo(pad.x, pad.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      // Pink Lotus Blossom in center of large pads
+      if (pad.r > 41) {
+        for (let pet = 0; pet < 6; pet++) {
+          const pa = (pet * Math.PI) / 3;
+          ctx.fillStyle = '#F472B6';
+          ctx.beginPath();
+          ctx.ellipse(pad.x + Math.cos(pa) * 8, pad.y + Math.sin(pa) * 8, 8, 4, pa, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = '#FDE047';
+        ctx.beginPath();
+        ctx.arc(pad.x, pad.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // 2. Animated Aerial Drones (Golden Honeybees & Luminous Mosquitoes)
+    for (const d of this.drones) {
+      ctx.save();
+      ctx.translate(d.x, d.y);
+      const flutter = Math.sin(this.timeElapsed * 24 + d.id) * 8;
+      // Shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+      ctx.beginPath();
+      ctx.ellipse(0, 16, 12, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // 4 Translucent Buzzing Wings
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+      for (const wDir of [-1, 1]) {
+        ctx.beginPath();
+        ctx.ellipse(wDir * 10, -6 + flutter * 0.4, 12, 5, wDir * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Body
+      ctx.fillStyle = d.golden ? '#FBBF24' : '#38BDF8';
+      ctx.shadowColor = d.golden ? '#F59E0B' : '#0284C7';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, d.golden ? 13 : 9, d.golden ? 8 : 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Black Stripes
+      ctx.strokeStyle = '#0F172A';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-2, -6);
+      ctx.lineTo(-2, 6);
+      ctx.moveTo(3, -5);
+      ctx.lineTo(3, 5);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 3. Swirling Hydro-Pulse Torpedo Projectiles
+    for (const p of this.pulses) {
+      ctx.save();
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 3.5;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 9, 0, Math.PI * 2);
+      ctx.stroke();
+      // Inner glowing water core
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 4. Supersonic Dragonfly Fighters
     for (const f of this.fighters) {
       ctx.save();
       ctx.translate(f.x, f.y);
+
+      // Jet afterburner spray wake
+      if (f.afterburnerTimer > 0) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        for (let i = 0; i < 4; i++) {
+          const sx = -Math.cos(f.heading) * (24 + i * 8) + (Math.random() - 0.5) * 8;
+          const sy = -Math.sin(f.heading) * (24 + i * 8) + (Math.random() - 0.5) * 8;
+          ctx.beginPath();
+          ctx.arc(sx, sy, 3 + i, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Rotate dragonfly into direction of flight
+      ctx.rotate(f.heading);
+
+      // 4 Long Fluttering Translucent Veined Dragonfly Wings
+      const wingFlap = Math.sin(this.timeElapsed * 35 + f.id) * 0.35;
+      ctx.fillStyle = 'rgba(224, 242, 254, 0.72)';
+      ctx.strokeStyle = f.color;
+      ctx.lineWidth = 1.2;
+      for (const side of [-1, 1]) {
+        // Forewing
+        ctx.save();
+        ctx.rotate(side * (0.85 + wingFlap));
+        ctx.beginPath();
+        ctx.ellipse(26, 0, 24, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+        // Hindwing
+        ctx.save();
+        ctx.rotate(side * (1.25 - wingFlap));
+        ctx.beginPath();
+        ctx.ellipse(20, 0, 18, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Long Segmented Tail / Abdomen
+      ctx.strokeStyle = f.color;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(-28, 0);
+      ctx.stroke();
+      ctx.fillStyle = '#0F172A';
+      for (let s = 1; s <= 3; s++) {
+        ctx.beginPath();
+        ctx.arc(-s * 8, 0, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Compound Eyes
+      ctx.fillStyle = '#FFFFFF';
+      ctx.shadowColor = f.color;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(10, -5, 4.5, 0, Math.PI * 2);
+      ctx.arc(10, 5, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#0F172A';
+      ctx.beginPath();
+      ctx.arc(11, -5, 2, 0, Math.PI * 2);
+      ctx.arc(11, 5, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Mascot Pilot in Cockpit
+      ctx.rotate(-f.heading); // Keep mascot upright
+      const mood = f.afterburnerTimer > 0 ? 'triumph' : f.holding ? 'focused' : 'happy';
+      this.drawPlayerMascot(ctx, f.id, 0, 0, 15, mood, this.timeElapsed, 0);
+
+      // Charge Reticle Indicator
       if (f.holding && f.charge > 0.05) {
         const sweet = f.charge >= 0.72 && f.charge <= 0.98;
-        ctx.strokeStyle = sweet ? '#4ade80' : '#fbbf24';
+        ctx.strokeStyle = sweet ? '#4ADE80' : '#FBBF24';
         ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.arc(0, 0, 26, -Math.PI / 2, -Math.PI / 2 + f.charge * Math.PI * 2);
+        ctx.arc(0, 0, 28, -Math.PI / 2, -Math.PI / 2 + f.charge * Math.PI * 2);
         ctx.stroke();
       }
-      const mood = f.afterburnerTimer > 0 ? 'triumph' : f.holding ? 'focused' : 'happy';
-      this.drawPlayerMascot(ctx, f.id, 0, 0, 16, mood, this.timeElapsed, 0);
+
       if (f.calloutTimer > 0 && f.calloutText) {
-        ctx.fillStyle = '#fef08a';
-        ctx.font = 'bold 12px sans-serif';
+        ctx.fillStyle = '#FEF08A';
+        ctx.font = 'bold 12.5px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(f.calloutText, 0, -28);
+        ctx.fillText(f.calloutText, 0, -32);
       }
       ctx.restore();
     }
 
-    // HUD
+    // 5. HUD Top Bar
     const remaining = Math.max(0, Math.ceil(this.roundTime - this.timeElapsed));
-    ctx.fillStyle = 'rgba(15,23,42,0.82)';
-    ctx.fillRect(0, 0, width, 46);
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = 'bold 15px sans-serif';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.fillRect(0, 0, width, 48);
+    ctx.fillStyle = '#F8FAFC';
+    ctx.font = '900 14px Montserrat, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(
-      `🛩️ DRAGONFLY DOGFIGHT • ${pal.name} [T/1-3] • ${remaining}s ${this.suddenDeath ? '🔥 2X MACH' : ''}`,
+      `🛩️ DRAGONFLY DOGFIGHT • ${pal.name} • ${remaining}s ${this.suddenDeath ? '🔥 2X MACH' : ''}`,
       width * 0.5,
-      19
+      20
     );
 
     this.fighters.forEach((f, idx) => {
       ctx.fillStyle = f.color;
-      ctx.font = 'bold 13px sans-serif';
+      ctx.font = '900 12.5px Montserrat, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(`P${f.id}: ${Math.round(f.score)} pts (${f.combo}x)`, 90 + idx * 170, 38);
+      ctx.fillText(`P${f.id + 1}: ${Math.round(f.score)} pts (${f.combo}x)`, 70 + idx * 165, 38);
     });
 
     ctx.restore();
@@ -445,7 +619,28 @@ export class DragonflyDogfightGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
-    return false;
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    const midX = width / 2;
+    const midY = height / 2;
+    const pid: PlayerId = x < midX ? (y < midY ? 0 : 2) : (y < midY ? 1 : 3);
+    const f = this.fighters.find((fighter) => fighter.id === pid);
+    if (!f) return false;
+
+    // Direct touch steering toward tap point + tap fire pulse
+    const dx = x - f.x;
+    const dy = y - f.y;
+    f.heading = Math.atan2(dy, dx);
+    this.pulses.push({
+      ownerId: f.id,
+      color: f.color,
+      x: f.x + Math.cos(f.heading) * 24,
+      y: f.y + Math.sin(f.heading) * 24,
+      vx: Math.cos(f.heading) * 620,
+      vy: Math.sin(f.heading) * 620,
+      active: true,
+    });
+    this.audio.playTap();
+    return true;
   }
 }

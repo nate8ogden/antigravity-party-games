@@ -233,7 +233,7 @@ export class LadybugAphidHuntGame extends BaseGame {
 
       const sx = this.input.getSteer(l.id);
       const sy = this.input.getThrottle(l.id);
-      const isHold = this.input.isActionPressed(l.id) || this.input.isPressed(l.id);
+      const isHold = this.input.isActionPressed(l.id);
 
       const accel = 1400 * (l.underdog ? 1.15 : 1.0);
       l.vx += (sx * accel + this.leafTiltX * 210) * dt;
@@ -334,21 +334,23 @@ export class LadybugAphidHuntGame extends BaseGame {
 
     bot.botTimer -= dt;
     if (bot.botTimer <= 0) {
-      bot.botTimer = difficulty === 'bot_hard' ? 0.18 : 0.26;
+      bot.botTimer = difficulty === 'bot_hard' ? 0.16 : 0.24;
       bot.botChargeGoal = 0.76 + Math.random() * 0.18;
     }
 
     const best = this.aphids.find((a) => a.royalGolden) ?? this.aphids[0];
+    let dx = 0;
+    let dy = 0;
     if (best) {
-      const dx = best.x - bot.x;
-      const dy = best.y - bot.y;
+      dx = best.x - bot.x;
+      dy = best.y - bot.y;
       const d = Math.max(1, Math.hypot(dx, dy));
       bot.vx += (dx / d) * 1100 * dt;
       bot.vy += (dy / d) * 1100 * dt;
     }
 
     const hold = !bot.holding || bot.charge < bot.botChargeGoal;
-    this.input.setBotState(botId, hold);
+    this.input.setBotInput(botId, hold, Math.sign(dx), Math.sign(-dy), hold);
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
@@ -360,73 +362,225 @@ export class LadybugAphidHuntGame extends BaseGame {
       ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
     }
 
+    // 1. Garden Canopy Backdrop Gradient
     const bg = ctx.createLinearGradient(0, 0, 0, height);
     bg.addColorStop(0, pal.bgTop);
     bg.addColorStop(1, pal.bgBot);
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, width, height);
 
-    // Giant Tilting Rose Leaf Arena
+    const leafX = width * 0.5 + this.leafTiltX * 18;
+    const leafY = height * 0.54 + this.leafTiltY * 18;
+
+    // 2. 3D Tilting Giant Rose Leaf Arena
     ctx.save();
-    ctx.translate(width * 0.5 + this.leafTiltX * 14, height * 0.54 + this.leafTiltY * 14);
+    ctx.translate(leafX, leafY);
+
+    // Leaf Underside 3D Depth Shadow
+    ctx.fillStyle = '#064E3B';
+    ctx.beginPath();
+    ctx.ellipse(0, 14, 256, 190, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Leaf Main Blade Surface
     ctx.fillStyle = pal.leafColor;
     ctx.beginPath();
-    ctx.ellipse(0, 0, 250, 185, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, 252, 186, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = '#86efac';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-    ctx.restore();
 
-    // Aphids
-    for (const ap of this.aphids) {
-      ctx.fillStyle = ap.royalGolden ? '#fbbf24' : '#bbf7d0';
+    // Serrated Leaf Tip and Stem
+    ctx.fillStyle = '#15803D';
+    ctx.beginPath();
+    ctx.moveTo(-252, 0);
+    ctx.lineTo(-270, 8);
+    ctx.lineTo(-246, 16);
+    ctx.closePath();
+    ctx.fill();
+
+    // Botanical Leaf Vein Networks
+    ctx.strokeStyle = '#86EFAC';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    // Central Primary Rib (Midrib)
+    ctx.moveTo(-240, 0);
+    ctx.lineTo(240, 0);
+    ctx.stroke();
+
+    // Lateral Branching Veins
+    ctx.lineWidth = 1.6;
+    for (let vx = -200; vx <= 200; vx += 35) {
+      const vLen = Math.sqrt(Math.max(0, 1 - Math.pow(vx / 240, 2))) * 160;
       ctx.beginPath();
-      ctx.arc(ap.x, ap.y, ap.royalGolden ? 15 : 11, 0, Math.PI * 2);
-      ctx.fill();
+      // Upper branch
+      ctx.moveTo(vx, 0);
+      ctx.quadraticCurveTo(vx + 20, -vLen * 0.5, vx + 40, -vLen * 0.85);
+      // Lower branch
+      ctx.moveTo(vx, 0);
+      ctx.quadraticCurveTo(vx + 20, vLen * 0.5, vx + 40, vLen * 0.85);
+      ctx.stroke();
     }
 
-    // Ladybugs
+    // Leaf Perimeter Border
+    ctx.strokeStyle = '#BBF7D0';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 252, 186, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Glistening Morning Dew Droplets on Leaf
+    const dewList = [
+      { dx: -120, dy: -60, r: 5 },
+      { dx: 140, dy: 50, r: 6 },
+      { dx: -40, dy: 80, r: 4 },
+      { dx: 80, dy: -90, r: 5.5 }
+    ];
+    for (const dew of dewList) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+      ctx.beginPath();
+      ctx.arc(dew.dx + this.leafTiltX * 8, dew.dy + this.leafTiltY * 8, dew.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(dew.dx + this.leafTiltX * 8 - 1.5, dew.dy + this.leafTiltY * 8 - 1.5, dew.r * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // 3. Cute Rolling Aphids with Wiggling Antennae & Legs
+    for (const ap of this.aphids) {
+      ctx.save();
+      ctx.translate(ap.x, ap.y);
+      // Shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+      ctx.beginPath();
+      ctx.ellipse(0, 6, ap.royalGolden ? 13 : 9, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Plump Aphid Body
+      ctx.fillStyle = ap.royalGolden ? '#FBBF24' : '#4ADE80';
+      ctx.shadowColor = ap.royalGolden ? '#F59E0B' : '#22C55E';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, ap.royalGolden ? 14 : 10, ap.royalGolden ? 11 : 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Tiny Twitching Antennae
+      const antWiggle = Math.sin(this.timeElapsed * 15 + ap.id) * 3;
+      ctx.strokeStyle = '#0F172A';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-4, -6);
+      ctx.lineTo(-7 + antWiggle, -12);
+      ctx.moveTo(4, -6);
+      ctx.lineTo(7 - antWiggle, -12);
+      ctx.stroke();
+
+      // Cute Startled Black Bead Eyes
+      ctx.fillStyle = '#0F172A';
+      ctx.beginPath();
+      ctx.arc(-3, -3, 1.8, 0, Math.PI * 2);
+      ctx.arc(3, -3, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(-3.5, -3.5, 0.7, 0, Math.PI * 2);
+      ctx.arc(2.5, -3.5, 0.7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 4. Armored Ladybug Sumo Mascots
     for (const l of this.ladybugs) {
       ctx.save();
       ctx.translate(l.x, l.y);
+
+      // Ladybug Wing Shell (Elytra)
+      const isRamming = l.flutterTimer > 0;
+      ctx.save();
+      ctx.fillStyle = l.color;
+      ctx.strokeStyle = '#0F172A';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(0, 0, 22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Black Wing Shell Spots
+      ctx.fillStyle = '#0F172A';
+      const spots = [
+        { sx: -10, sy: -8, r: 3.5 },
+        { sx: 10, sy: -8, r: 3.5 },
+        { sx: -12, sy: 6, r: 4 },
+        { sx: 12, sy: 6, r: 4 },
+        { sx: 0, sy: 12, r: 3.5 }
+      ];
+      for (const sp of spots) {
+        ctx.beginPath();
+        ctx.arc(sp.sx, sp.sy, sp.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Elytra Center Split Line
+      ctx.strokeStyle = '#0F172A';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, -22);
+      ctx.lineTo(0, 22);
+      ctx.stroke();
+
+      // Fluttering Hindwings when boosting
+      if (isRamming) {
+        const wingFlap = Math.sin(this.timeElapsed * 40) * 8;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+        ctx.beginPath();
+        ctx.ellipse(-18, -4 + wingFlap, 16, 7, -0.4, 0, Math.PI * 2);
+        ctx.ellipse(18, -4 - wingFlap, 16, 7, 0.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // Mascot Character Rider on Back
+      const mood = l.flutterTimer > 0 ? 'triumph' : l.holding ? 'focused' : 'happy';
+      this.drawPlayerMascot(ctx, l.id, 0, -2, 14, mood, this.timeElapsed, l.vx * 0.0005);
+
+      // Charge Reticle Indicator
       if (l.holding && l.charge > 0.05) {
         const sweet = l.charge >= 0.72 && l.charge <= 0.98;
-        ctx.strokeStyle = sweet ? '#4ade80' : '#fbbf24';
+        ctx.strokeStyle = sweet ? '#4ADE80' : '#FBBF24';
         ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.arc(0, 0, 26, -Math.PI / 2, -Math.PI / 2 + l.charge * Math.PI * 2);
+        ctx.arc(0, 0, 30, -Math.PI / 2, -Math.PI / 2 + l.charge * Math.PI * 2);
         ctx.stroke();
       }
-      const mood = l.flutterTimer > 0 ? 'triumph' : l.holding ? 'focused' : 'happy';
-      this.drawPlayerMascot(ctx, l.id, 0, 0, 16, mood, this.timeElapsed, l.vx * 0.0005);
+
       if (l.calloutTimer > 0 && l.calloutText) {
-        ctx.fillStyle = '#fef08a';
-        ctx.font = 'bold 12px sans-serif';
+        ctx.fillStyle = '#FEF08A';
+        ctx.font = 'bold 12.5px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(l.calloutText, 0, -28);
+        ctx.fillText(l.calloutText, 0, -32);
       }
       ctx.restore();
     }
 
-    // HUD
+    // 5. HUD Top Bar
     const remaining = Math.max(0, Math.ceil(this.roundTime - this.timeElapsed));
-    ctx.fillStyle = 'rgba(15,23,42,0.82)';
-    ctx.fillRect(0, 0, width, 46);
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = 'bold 15px sans-serif';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.fillRect(0, 0, width, 48);
+    ctx.fillStyle = '#F8FAFC';
+    ctx.font = '900 14px Montserrat, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(
-      `🐞 LADYBUG APHID HUNT • ${pal.name} [T/1-3] • ${remaining}s ${this.suddenDeath ? '🔥 2X LEAF SUMO' : ''}`,
+      `🐞 LADYBUG APHID HUNT • ${pal.name} • ${remaining}s ${this.suddenDeath ? '🔥 2X LEAF SUMO' : ''}`,
       width * 0.5,
-      19
+      20
     );
 
     this.ladybugs.forEach((l, idx) => {
       ctx.fillStyle = l.color;
-      ctx.font = 'bold 13px sans-serif';
+      ctx.font = '900 12.5px Montserrat, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(`P${l.id}: ${Math.round(l.score)} pts (${l.combo}x)`, 90 + idx * 170, 38);
+      ctx.fillText(`P${l.id + 1}: ${Math.round(l.score)} pts (${l.combo}x)`, 70 + idx * 165, 38);
     });
 
     ctx.restore();
@@ -449,7 +603,24 @@ export class LadybugAphidHuntGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
-    return false;
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    const midX = width / 2;
+    const midY = height / 2;
+    const pid: PlayerId = x < midX ? (y < midY ? 0 : 2) : (y < midY ? 1 : 3);
+    const l = this.ladybugs.find((lb) => lb.id === pid);
+    if (!l) return false;
+
+    // Steer toward tap location on mobile and execute sumo boost
+    const dx = x - l.x;
+    const dy = y - l.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist > 10) {
+      l.vx += (dx / dist) * 750;
+      l.vy += (dy / dist) * 750;
+      l.flutterTimer = 1.0;
+      this.audio.playBoost();
+    }
+    return true;
   }
 }

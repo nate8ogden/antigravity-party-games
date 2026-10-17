@@ -228,7 +228,7 @@ export class HoneybeeNectarRelayGame extends BaseGame {
 
       const sx = this.input.getSteer(b.id);
       const sy = this.input.getThrottle(b.id);
-      const isHold = this.input.isActionPressed(b.id) || this.input.isPressed(b.id);
+      const isHold = this.input.isActionPressed(b.id);
 
       // Direct 2D flight (eliminated passive auto-rotation!)
       const accel = 1400 * (b.underdog ? 1.15 : 1.0) * (b.queenBoostTimer > 0 ? 1.35 : 1.0);
@@ -350,17 +350,19 @@ export class HoneybeeNectarRelayGame extends BaseGame {
       bot.botChargeGoal = 0.76 + Math.random() * 0.18;
     }
 
+    let dx = 0;
+    let dy = 0;
     const best = this.blossoms.find((bl) => bl.royalJelly) ?? this.blossoms[0];
     if (best) {
-      const dx = best.x - bot.x;
-      const dy = best.y - bot.y;
+      dx = best.x - bot.x;
+      dy = best.y - bot.y;
       const d = Math.max(1, Math.hypot(dx, dy));
       bot.vx += (dx / d) * 1100 * dt;
       bot.vy += (dy / d) * 1100 * dt;
     }
 
     const hold = !bot.holding || bot.charge < bot.botChargeGoal;
-    this.input.setBotState(botId, hold);
+    this.input.setBotInput(botId, hold, Math.sign(dx), Math.sign(-dy), hold);
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
@@ -372,79 +374,196 @@ export class HoneybeeNectarRelayGame extends BaseGame {
       ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
     }
 
+    // 1. Meadow Backdrop Gradient
     const bg = ctx.createLinearGradient(0, 0, 0, height);
     bg.addColorStop(0, pal.bgTop);
     bg.addColorStop(1, pal.bgBot);
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, width, height);
 
-    // Central Golden Honeycomb Hive
-    ctx.fillStyle = pal.hiveColor;
+    // 2. Central Golden Honeycomb Hive (Geometric Hex Comb Cells)
+    const hx = width * 0.5;
+    const hy = height * 0.52;
+    ctx.save();
+    // Shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
     ctx.beginPath();
-    ctx.arc(width * 0.5, height * 0.52, 42, 0, Math.PI * 2);
+    ctx.arc(hx, hy + 6, 52, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#0f172a';
-    ctx.font = 'bold 11px sans-serif';
+
+    // Golden Hexagon Base Hive
+    ctx.fillStyle = pal.hiveColor;
+    ctx.shadowColor = '#F59E0B';
+    ctx.shadowBlur = 14;
+    ctx.beginPath();
+    for (let a = 0; a < 6; a++) {
+      const angle = (a * Math.PI) / 3;
+      const px = hx + Math.cos(angle) * 50;
+      const py = hy + Math.sin(angle) * 50;
+      if (a === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Hexagonal Honeycomb Cells inside Hive
+    ctx.strokeStyle = '#D97706';
+    ctx.lineWidth = 2;
+    const cellOffsets = [
+      { ox: 0, oy: 0 },
+      { ox: -16, oy: -14 },
+      { ox: 16, oy: -14 },
+      { ox: -20, oy: 14 },
+      { ox: 20, oy: 14 }
+    ];
+    for (const cell of cellOffsets) {
+      ctx.fillStyle = '#FEF08A';
+      ctx.beginPath();
+      for (let a = 0; a < 6; a++) {
+        const angle = (a * Math.PI) / 3;
+        const px = hx + cell.ox + Math.cos(angle) * 11;
+        const py = hy + cell.oy + Math.sin(angle) * 11;
+        if (a === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#78350F';
+    ctx.font = '900 11px Montserrat, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('🍯 HIVE', width * 0.5, height * 0.52 + 4);
+    ctx.fillText('🍯 HIVE', hx, hy + 30);
+    ctx.restore();
 
-    // Blossoms
+    // 3. Flower Blossoms with Blooming Petals
     for (const bl of this.blossoms) {
-      ctx.fillStyle = bl.royalJelly ? '#fbbf24' : '#f472b6';
+      ctx.save();
+      ctx.translate(bl.x, bl.y);
+      // Petals
+      const petColor = bl.royalJelly ? '#FDE047' : '#F472B6';
+      ctx.fillStyle = petColor;
+      for (let p = 0; p < 5; p++) {
+        const pa = (p * Math.PI * 2) / 5;
+        ctx.beginPath();
+        ctx.ellipse(Math.cos(pa) * 10, Math.sin(pa) * 10, 8, 5, pa, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Nectar Pistil Core
+      ctx.fillStyle = bl.royalJelly ? '#F59E0B' : '#FEF08A';
       ctx.beginPath();
-      ctx.arc(bl.x, bl.y, bl.royalJelly ? 16 : 12, 0, Math.PI * 2);
+      ctx.arc(0, 0, bl.royalJelly ? 8 : 6, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
     }
 
-    // Wasps
+    // 4. Predatory Wasps
     for (const w of this.wasps) {
-      ctx.fillStyle = '#ef4444';
+      ctx.save();
+      ctx.translate(w.x, w.y);
+      const flutter = Math.sin(this.timeElapsed * 30 + w.x) * 6;
+      // Translucent Wasp Wings
+      ctx.fillStyle = 'rgba(254, 202, 202, 0.7)';
+      for (const dir of [-1, 1]) {
+        ctx.beginPath();
+        ctx.ellipse(dir * 10, -8 + flutter * 0.4, 12, 4, dir * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Striped Red/Black Wasp Body
+      ctx.fillStyle = '#EF4444';
+      ctx.shadowColor = '#DC2626';
+      ctx.shadowBlur = 8;
       ctx.beginPath();
-      ctx.arc(w.x, w.y, 13, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 14, 8, 0, 0, Math.PI * 2);
       ctx.fill();
+      ctx.shadowBlur = 0;
+      // Stinger
+      ctx.fillStyle = '#0F172A';
+      ctx.beginPath();
+      ctx.moveTo(-14, 0);
+      ctx.lineTo(-20, 0);
+      ctx.lineTo(-14, -2);
+      ctx.closePath();
+      ctx.fill();
+      // Stripes
+      ctx.strokeStyle = '#0F172A';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-4, -7);
+      ctx.lineTo(-4, 7);
+      ctx.moveTo(3, -6);
+      ctx.lineTo(3, 6);
+      ctx.stroke();
+      ctx.restore();
     }
 
-    // Bees
+    // 5. Honeybees
     for (const b of this.bees) {
       ctx.save();
       ctx.translate(b.x, b.y);
+
+      // Flapping bee wings
+      const wingSway = Math.sin(this.timeElapsed * 35) * 5;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.beginPath();
+      ctx.ellipse(-12, -10 + wingSway, 12, 5, -0.4, 0, Math.PI * 2);
+      ctx.ellipse(12, -10 - wingSway, 12, 5, 0.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Pollen Vortex Aura when boosting
+      if (b.queenBoostTimer > 0) {
+        ctx.strokeStyle = '#FBBF24';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#F59E0B';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(0, 0, 26, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+
+      // Mascot Rider
+      const mood = b.stunTimer > 0 ? 'shocked' : b.queenBoostTimer > 0 ? 'triumph' : b.holding ? 'focused' : 'happy';
+      this.drawPlayerMascot(ctx, b.id, 0, 0, 15, mood, this.timeElapsed, b.vx * 0.0005);
+
+      // Charge Indicator Reticle
       if (b.holding && b.charge > 0.05) {
         const sweet = b.charge >= 0.72 && b.charge <= 0.98;
-        ctx.strokeStyle = sweet ? '#4ade80' : '#fbbf24';
+        ctx.strokeStyle = sweet ? '#4ADE80' : '#FBBF24';
         ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.arc(0, 0, 26, -Math.PI / 2, -Math.PI / 2 + b.charge * Math.PI * 2);
+        ctx.arc(0, 0, 28, -Math.PI / 2, -Math.PI / 2 + b.charge * Math.PI * 2);
         ctx.stroke();
       }
-      const mood = b.stunTimer > 0 ? 'shocked' : b.queenBoostTimer > 0 ? 'triumph' : b.holding ? 'focused' : 'happy';
-      this.drawPlayerMascot(ctx, b.id, 0, 0, 16, mood, this.timeElapsed, b.vx * 0.0005);
+
       if (b.calloutTimer > 0 && b.calloutText) {
-        ctx.fillStyle = '#fef08a';
-        ctx.font = 'bold 12px sans-serif';
+        ctx.fillStyle = '#FEF08A';
+        ctx.font = 'bold 12.5px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(b.calloutText, 0, -28);
+        ctx.fillText(b.calloutText, 0, -30);
       }
       ctx.restore();
     }
 
-    // HUD
+    // 6. HUD Top Bar
     const remaining = Math.max(0, Math.ceil(this.roundTime - this.timeElapsed));
-    ctx.fillStyle = 'rgba(15,23,42,0.82)';
-    ctx.fillRect(0, 0, width, 46);
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = 'bold 15px sans-serif';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.fillRect(0, 0, width, 48);
+    ctx.fillStyle = '#F8FAFC';
+    ctx.font = '900 14px Montserrat, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(
-      `🐝 HONEYBEE NECTAR RELAY • ${pal.name} [T/1-3] • ${remaining}s ${this.suddenDeath ? '🔥 2X HONEY' : ''}`,
+      `🐝 HONEYBEE NECTAR RELAY • ${pal.name} • ${remaining}s ${this.suddenDeath ? '🔥 2X HONEY' : ''}`,
       width * 0.5,
-      19
+      20
     );
 
     this.bees.forEach((b, idx) => {
       ctx.fillStyle = b.color;
-      ctx.font = 'bold 13px sans-serif';
+      ctx.font = '900 12.5px Montserrat, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(`P${b.id}: ${Math.round(b.score)} pts (${b.combo}x)`, 90 + idx * 170, 38);
+      ctx.fillText(`P${b.id + 1}: ${Math.round(b.score)} pts (${b.combo}x)`, 70 + idx * 165, 38);
     });
 
     ctx.restore();
@@ -467,7 +586,24 @@ export class HoneybeeNectarRelayGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
-    return false;
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    const midX = width / 2;
+    const midY = height / 2;
+    const pid: PlayerId = x < midX ? (y < midY ? 0 : 2) : (y < midY ? 1 : 3);
+    const b = this.bees.find((bee) => bee.id === pid);
+    if (!b || b.stunTimer > 0) return false;
+
+    // Mobile touch steering toward tap point + pollen burst
+    const dx = x - b.x;
+    const dy = y - b.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist > 10) {
+      b.vx += (dx / dist) * 750;
+      b.vy += (dy / dist) * 750;
+      b.queenBoostTimer = 1.0;
+      this.audio.playBoost();
+    }
+    return true;
   }
 }

@@ -3791,6 +3791,65 @@ export class GameManager {
         this.ctx.fillRect(px - 9, 50, 18, 5);
       }
       this.ctx.restore();
+    } else if (arenaId === 'arena_retro_synth_drift') {
+      this.ctx.save();
+      // Cyberspace Warp Tunnel: Speedlines & Pulsing Neon Arches
+      this.ctx.strokeStyle = 'rgba(6, 182, 212, 0.35)';
+      this.ctx.lineWidth = 2;
+      for (let i = 0; i < 4; i++) {
+        const ringScale = ((t * 0.8 + i * 0.25) % 1);
+        const rw = w * ringScale;
+        const rh = h * ringScale;
+        this.ctx.strokeRect(w / 2 - rw / 2, h / 2 - rh / 2, rw, rh);
+      }
+      this.ctx.restore();
+    } else if (arenaId === 'arena_crystal_cavern') {
+      this.ctx.save();
+      // Amethyst Crystal Clusters in 4 corners
+      const corners = [{ x: 18, y: 18 }, { x: w - 18, y: 18 }, { x: 18, y: h - 18 }, { x: w - 18, y: h - 18 }];
+      for (const c of corners) {
+        this.ctx.fillStyle = '#C084FC';
+        this.ctx.strokeStyle = '#E9D5FF';
+        this.ctx.lineWidth = 1.5;
+        this.ctx.beginPath();
+        this.ctx.moveTo(c.x, c.y - 12);
+        this.ctx.lineTo(c.x + 8, c.y + 4);
+        this.ctx.lineTo(c.x - 8, c.y + 4);
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.stroke();
+      }
+      this.ctx.restore();
+    } else if (arenaId === 'arena_inferno_caldera') {
+      this.ctx.save();
+      // Roaring Fire Braziers in bottom corners
+      for (const bx of [24, w - 24]) {
+        this.ctx.fillStyle = '#450A0A';
+        this.ctx.fillRect(bx - 8, h - 22, 16, 16);
+        const fPulse = Math.sin(t * 14 + bx) * 3;
+        this.ctx.fillStyle = '#EF4444';
+        this.ctx.shadowColor = '#F97316';
+        this.ctx.shadowBlur = 12;
+        this.ctx.beginPath();
+        this.ctx.arc(bx, h - 24 + fPulse, 7, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.fillStyle = '#FEF08A';
+        this.ctx.beginPath();
+        this.ctx.arc(bx, h - 24 + fPulse, 3, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      this.ctx.restore();
+    } else if (arenaId === 'arena_cyber_dojo') {
+      this.ctx.save();
+      // Holographic Shoji Frames & Green Cyber Lanterns
+      for (const lx of [22, w - 22]) {
+        this.ctx.strokeStyle = '#10B981';
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(lx - 8, 16, 16, 24);
+        this.ctx.fillStyle = 'rgba(16, 185, 129, 0.4)';
+        this.ctx.fillRect(lx - 6, 18, 12, 20);
+      }
+      this.ctx.restore();
     }
 
     this.ctx.restore();
@@ -4757,6 +4816,97 @@ export class GameManager {
         ctx.stroke();
         ctx.shadowBlur = 0;
       }
+    } else if (pat === 'synth_drift') {
+      // Hyper-Grid Cyber Tunnel: 3D Cyberspace Tunnel with Wireframe Arches & Speedlines
+      ctx.strokeStyle = '#06B6D4';
+      ctx.lineWidth = 1.8;
+      ctx.shadowColor = '#06B6D4';
+      ctx.shadowBlur = 8;
+      for (let i = 1; i <= 4; i++) {
+        const scale = ((t * 0.6 + i * 0.25) % 1);
+        const rw = w * 0.9 * scale;
+        const rh = h * 0.8 * scale;
+        ctx.strokeRect(cx - rw / 2, cy - rh / 2, rw, rh);
+      }
+      ctx.shadowBlur = 0;
+      // Perspective convergence lines to center
+      ctx.strokeStyle = 'rgba(236, 72, 153, 0.45)';
+      ctx.lineWidth = 1.2;
+      for (const [cornerX, cornerY] of [[x, y], [x + w, y], [x, y + h], [x + w, y + h]]) {
+        ctx.beginPath();
+        ctx.moveTo(cornerX, cornerY);
+        ctx.lineTo(cx, cy);
+        ctx.stroke();
+      }
+    } else if (pat === 'crystal_cavern') {
+      // Amethyst Crystal Geode: Jagged quartz stalactites, central geode pool & floating crystal dust
+      ctx.fillStyle = '#C084FC';
+      ctx.strokeStyle = '#E9D5FF';
+      ctx.lineWidth = 1.2;
+      for (let i = 0; i < 8; i++) {
+        const qx = x + 20 + i * 36;
+        const qh = 16 + (i % 3) * 8;
+        ctx.beginPath();
+        ctx.moveTo(qx - 6, y);
+        ctx.lineTo(qx, y + qh);
+        ctx.lineTo(qx + 6, y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(qx - 6, y + h);
+        ctx.lineTo(qx, y + h - qh);
+        ctx.lineTo(qx + 6, y + h);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+      // Glowing Geode Pool in Center
+      ctx.fillStyle = 'rgba(6, 182, 212, 0.35)';
+      ctx.strokeStyle = '#22D3EE';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 42, 16, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    } else if (pat === 'inferno_caldera') {
+      // Hellfire Dragon Caldera: Volcanic crater with obsidian dragon statues & erupting fire embers
+      ctx.fillStyle = '#1C0603';
+      ctx.fillRect(x, y, w, h);
+      // Boiling Lava Lake
+      ctx.fillStyle = '#EA580C';
+      ctx.shadowColor = '#EF4444';
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 12, 64, 22, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // Rising Fire Embers
+      for (let i = 0; i < 12; i++) {
+        const ex = x + 20 + ((i * 26 + t * 40) % (w - 40));
+        const ey = y + h - ((t * 45 + i * 22) % h);
+        ctx.fillStyle = i % 2 === 0 ? '#FBBF24' : '#EF4444';
+        ctx.beginPath();
+        ctx.arc(ex, ey, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (pat === 'cyber_dojo') {
+      // Neo-Shogun Cyber Dojo: Neon tatami floor, shoji sliding screens & cyber bonsai
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+      ctx.lineWidth = 1.2;
+      for (let tx = x + 16; tx < x + w; tx += 28) {
+        ctx.strokeRect(tx, y + 16, 26, h - 32);
+      }
+      // Cybernetic Bonsai in Center
+      ctx.fillStyle = '#065F46';
+      ctx.fillRect(cx - 3, cy - 8, 6, 22);
+      ctx.fillStyle = '#EC4899';
+      ctx.shadowColor = '#EC4899';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(cx, cy - 12, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
     } else {
       // Modern Clean Slate: Sleek esports stadium with perimeter LED ribbon, rotating spotlights & cyber crest
       // Subtle Cyber Floor Grid
