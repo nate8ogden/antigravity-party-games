@@ -179,10 +179,6 @@ body.in-game .trophy-btn {
   display: none !important;
 }
 
-/* Hide pause button in lobby since game is not active */
-body:not(.in-game) #center-pause-btn {
-  display: none !important;
-}
 
 /* Hide floating utility bar when modal or post-round overlay is active to avoid collisions */
 body.modal-open .utility-bar {

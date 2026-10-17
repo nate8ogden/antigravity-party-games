@@ -74,7 +74,7 @@ export class LaserGridReflexGame extends BaseGame {
   private patternTimer: number = 2.5;
   private laserSpeedMultiplier: number = 1.0;
   private batterySpawnTimer: number = 2.8;
-  private targetBatteriesToWin: number = 14;
+  private targetBatteriesToWin: number = 10;
   private tileSize: number = 64;
   private gridOriginX: number = 0;
   private gridOriginY: number = 0;
