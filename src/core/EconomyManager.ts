@@ -50,7 +50,10 @@ export interface MascotSkin {
     | 'shogun_mecha'
     | 'mello_beats'
     | 'alchemist_elixirs'
-    | 'phoenix_supernova';
+    | 'phoenix_supernova'
+    | 'eclipse_corona'
+    | 'angler_glow'
+    | 'jester_stars';
 }
 
 export const SKIN_CATALOG: MascotSkin[] = [
@@ -364,9 +367,9 @@ export const SKIN_CATALOG: MascotSkin[] = [
     id: 'space_pirate_corsair',
     name: 'Captain Void Corsair',
     rarity: 'Legendary',
-    description: 'Pirate tricorne with holographic skull emblem, brass telescope visor, and orbiting parrot drone.',
+    description: 'Deep cosmic obsidian-and-violet captain coat, holographic neon skull bicorne, laser cutlass rig, and orbiting parrot drone.',
     price: 240,
-    previewColor: '#EF4444',
+    previewColor: '#7C3AED',
     cosmeticEffect: 'pirate_cannon'
   },
   {
@@ -434,11 +437,11 @@ export const SKIN_CATALOG: MascotSkin[] = [
   },
   {
     id: 'shogun_mech',
-    name: 'Crimson Mech-Shogun',
+    name: 'Titan Mech-Shogun 01',
     rarity: 'Legendary',
-    description: 'Towering golden V-fin Gundam kabuto crest, twin shoulder micro-missile pods, and high-thrust vernier jets.',
+    description: 'Midnight gunmetal and gold titanium plating, dual shoulder micro-missile pods, golden V-fin crest, and emerald optics.',
     price: 250,
-    previewColor: '#EF4444',
+    previewColor: '#1E293B',
     cosmeticEffect: 'shogun_mecha'
   },
   {
@@ -467,6 +470,60 @@ export const SKIN_CATALOG: MascotSkin[] = [
     price: 280,
     previewColor: '#F97316',
     cosmeticEffect: 'phoenix_supernova'
+  },
+  {
+    id: 'glitch_cyber_phantom',
+    name: 'Matrix Glitch Spectre',
+    rarity: 'Legendary',
+    description: 'Holographic shifting cyan-and-magenta polyhedral faceplate with digitized cyber wings and streaming matrix data code.',
+    price: 270,
+    previewColor: '#06B6D4',
+    cosmeticEffect: 'netrunner_glitch'
+  },
+  {
+    id: 'solar_eclipse_knight',
+    name: 'Umbral Eclipse Paladin',
+    rarity: 'Legendary',
+    description: 'Deep obsidian void armor crowned with a blinding golden solar eclipse corona halo and burning coronal energy flames.',
+    price: 285,
+    previewColor: '#F59E0B',
+    cosmeticEffect: 'eclipse_corona'
+  },
+  {
+    id: 'deep_angler_leviathan',
+    name: 'Abyssal Angler Behemoth',
+    rarity: 'Epic',
+    description: 'Bioluminescent abyssal ocean creature with a dangling glowing lure stalk, jagged aquatic fin spikes, and deep sea bubbles.',
+    price: 140,
+    previewColor: '#0284C7',
+    cosmeticEffect: 'angler_glow'
+  },
+  {
+    id: 'dr_steampunk_inventor',
+    name: 'Professor Brass Chrononaut',
+    rarity: 'Epic',
+    description: 'Victorian brass flight goggles, spinning pocket-watch astrolabe, and pressurized copper steam pack with lightning arcs.',
+    price: 135,
+    previewColor: '#D97706',
+    cosmeticEffect: 'steam_mechanic'
+  },
+  {
+    id: 'neon_cyber_kitsune',
+    name: 'Holographic Cyber Kitsune',
+    rarity: 'Legendary',
+    description: 'Sleek carbon-fiber ceremonial fox mask with pulsing cyan cheek markings, triple neon spirit tails, and electric foxfire.',
+    price: 260,
+    previewColor: '#EC4899',
+    cosmeticEffect: 'kitsune_wisps'
+  },
+  {
+    id: 'cosmic_jester',
+    name: 'Galactic Void Harlequin',
+    rarity: 'Legendary',
+    description: 'Bipolar cosmic purple and golden starry split jester cap with miniature pulsating star bells and orbiting planetary marbles.',
+    price: 275,
+    previewColor: '#A855F7',
+    cosmeticEffect: 'jester_stars'
   }
 ];
 

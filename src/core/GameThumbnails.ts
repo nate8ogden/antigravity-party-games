@@ -973,6 +973,9 @@ function drawThumbnailDirect(
     case 'spam_click_showdown':
       drawSpamClickShowdownArt(ctx, x, y, w, h);
       break;
+    case 'sumo_lode_runner':
+      drawSumoLodeRunnerArt(ctx, x, y, w, h);
+      break;
     default:
       drawDefaultArt(ctx, x, y, w, h);
       break;
@@ -15000,5 +15003,120 @@ function drawDefaultArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: 
   ctx.fillText('MINIGAME', cx, y + h - 12);
   ctx.shadowBlur = 0;
 }
+
+// 261. SUMO LODE RUNNER (30-Stage Dohyō Gold Heist & Trap Puzzle)
+function drawSumoLodeRunnerArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  // Warm Dojo Night Backdrop
+  const bg = ctx.createLinearGradient(x, y, x, y + h);
+  bg.addColorStop(0, '#1A110B');
+  bg.addColorStop(1, '#3B1D11');
+  ctx.fillStyle = bg;
+  ctx.fillRect(x, y, w, h);
+
+  // Shimenawa Sacred Rope across top
+  const ropeY = y + h * 0.22;
+  ctx.strokeStyle = '#FBBF24';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x + 8, ropeY);
+  ctx.lineTo(x + w - 8, ropeY);
+  ctx.stroke();
+
+  // White Shide Paper Tassels on rope
+  ctx.fillStyle = '#FFFFFF';
+  for (let rx = x + 26; rx < x + w - 20; rx += 34) {
+    ctx.fillRect(rx, ropeY + 2, 4, 7);
+  }
+
+  // Dohyō Clay Brick Platforms (Left & Right of dug hole)
+  const platY = y + h * 0.64;
+  const brickH = 22;
+  const holeX = x + w * 0.50;
+  const holeW = 28;
+
+  // Draw Left & Right Brick Courses
+  const drawBrickSpan = (bx: number, bw: number) => {
+    ctx.fillStyle = '#78350F';
+    ctx.fillRect(bx, platY, bw, brickH);
+    ctx.fillStyle = '#B45309';
+    ctx.fillRect(bx + 1, platY + 1, bw - 2, brickH - 3);
+    ctx.fillStyle = '#D97706';
+    ctx.fillRect(bx + 1, platY + 1, bw - 2, 3);
+  };
+  drawBrickSpan(x + 8, holeX - (x + 8));
+  drawBrickSpan(holeX + holeW, x + w - 8 - (holeX + holeW));
+
+  // Bamboo Ladder on Right Side
+  const ladX = x + w * 0.78;
+  ctx.fillStyle = '#D97706';
+  ctx.fillRect(ladX, y + h * 0.22, 3, h * 0.68);
+  ctx.fillRect(ladX + 14, y + h * 0.22, 3, h * 0.68);
+  ctx.fillStyle = '#FDE68A';
+  for (let ry = y + h * 0.26; ry < y + h * 0.88; ry += 10) {
+    ctx.fillRect(ladX - 1, ry, 19, 2.5);
+  }
+
+  // Trapped Horned Oni-Sumo Guard in Dug Hole!
+  const gx = holeX + holeW * 0.5;
+  const gy = platY + 7;
+  ctx.fillStyle = '#DC2626';
+  ctx.beginPath();
+  ctx.arc(gx, gy, 10, 0, Math.PI * 2);
+  ctx.fill();
+  // Oni Horns
+  ctx.fillStyle = '#FDE047';
+  ctx.beginPath();
+  ctx.moveTo(gx - 7, gy - 6);
+  ctx.lineTo(gx - 10, gy - 13);
+  ctx.lineTo(gx - 3, gy - 8);
+  ctx.moveTo(gx + 7, gy - 6);
+  ctx.lineTo(gx + 10, gy - 13);
+  ctx.lineTo(gx + 3, gy - 8);
+  ctx.fill();
+
+  // Hero Sumo Rikishi on Left Platform Blasting Diagonal Ki Beam into Hole!
+  const sx = x + w * 0.28;
+  const sy = platY - 12;
+  // Diagonal Digging Laser / Ki Beam
+  ctx.strokeStyle = '#FDE047';
+  ctx.lineWidth = 3.5;
+  ctx.beginPath();
+  ctx.moveTo(sx + 8, sy + 2);
+  ctx.lineTo(gx, platY + 10);
+  ctx.stroke();
+
+  // Sumo Body
+  ctx.fillStyle = '#FDBA74';
+  ctx.beginPath();
+  ctx.arc(sx, sy, 12, 0, Math.PI * 2);
+  ctx.fill();
+  // Red Mawashi Belt
+  ctx.fillStyle = '#EF4444';
+  ctx.fillRect(sx - 11, sy + 1, 22, 6);
+  // Black Topknot
+  ctx.fillStyle = '#0F172A';
+  ctx.beginPath();
+  ctx.arc(sx, sy - 8, 6, Math.PI, 0);
+  ctx.fill();
+  ctx.fillRect(sx - 2.5, sy - 14, 5, 6);
+
+  // Gleaming Golden Chanko Treasure Chest
+  const tx = x + w * 0.78;
+  const ty = platY - 10;
+  ctx.fillStyle = '#FACC15';
+  ctx.beginPath();
+  ctx.arc(tx, ty, 9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#FEF08A';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 30 STAGES Badge
+  ctx.fillStyle = '#FDE047';
+  ctx.font = '900 10px Montserrat, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('30 STAGES • WASM', x + w * 0.5, y + h - 8);
+}
+
 
 

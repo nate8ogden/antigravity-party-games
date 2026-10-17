@@ -272,6 +272,7 @@ import { SharksAndMinnowsGame } from '../games/SharksAndMinnowsGame';
 import { PowerPathClashGame } from '../games/PowerPathClashGame';
 import { LandscapeArtilleryGame } from '../games/LandscapeArtilleryGame';
 import { SpamClickShowdownGame } from '../games/SpamClickShowdownGame';
+import { SumoLodeRunnerGame, SUMO_LODE_LEVELS } from '../games/SumoLodeRunnerGame';
 import { renderGameThumbnailArt } from './GameThumbnails';
 import { drawCharacter } from './CharacterRenderer';
 import {
@@ -285,6 +286,15 @@ import {
 import { AchievementManager, ACHIEVEMENTS } from './AchievementManager';
 
 export const GAME_CATALOG: MinigameMetadata[] = [
+  {
+    id: 'sumo_lode_runner',
+    title: 'Sumo Lode Runner',
+    tagline: '30-Stage Dohyō Gold Heist & Trap Puzzle',
+    category: 'Action',
+    icon: '[G-261]',
+    instructions: 'Collect all Golden Chanko chests across 30 progressive dojo stages to reveal the Escape Ladder! Climb bamboo ladders, shimmy across shimenawa ropes, and blast diagonal Dohyō clay pits (Q/E or Space/Enter) to trap Oni-Sumo guards and walk across their heads!',
+    controlPrompt: 'Move/Climb: WASD / Arrows • Dig Left/Right: Q & E / Space / Enter • [ / ]: Stage Select'
+  },
   {
     id: 'tanks',
     title: 'Cyber Tanks 2.0',
@@ -2674,6 +2684,7 @@ export class GameManager {
   public modalGameIndex: number = 0;
   public sumoMode: 'standard' | 'no_limit' = 'standard';
   public sumoTargetMeters: number = 250;
+  public lodeRunnerLevel: number = 1;
   public sumoHitboxes: Array<{ id: string; x: number; y: number; w: number; h: number; action: () => void }> = [];
   public selectedCategory: string = 'ALL';
   public categoryPillBoxes: { id: string; x: number; y: number; w: number; h: number; type: 'category' | 'random' | 'cup' }[] = [];
@@ -2980,6 +2991,15 @@ export class GameManager {
       if (gameParam === 'power_path_clash' || gameParam === 'power_path' || gameParam === 'path_clash' || gameParam === 'hero_path' || gameParam === 'damage_path') gameParam = 'power_path_clash';
       if (gameParam === 'landscape_artillery' || gameParam === 'artillery' || gameParam === 'landscape' || gameParam === 'artillery_duel' || gameParam === 'worms') gameParam = 'landscape_artillery';
       if (gameParam === 'spam_click_showdown' || gameParam === 'spam_click' || gameParam === 'spam' || gameParam === 'click' || gameParam === 'clicker') gameParam = 'spam_click_showdown';
+      if (gameParam === 'sumo_lode_runner' || gameParam === 'loderunner' || gameParam === 'lode_runner' || gameParam === 'lode' || gameParam === 'sumo_lode') gameParam = 'sumo_lode_runner';
+
+      const levelParam = params.get('level');
+      if (levelParam) {
+        const parsedLvl = parseInt(levelParam, 10);
+        if (!isNaN(parsedLvl) && parsedLvl >= 1 && parsedLvl <= 30) {
+          this.lodeRunnerLevel = parsedLvl;
+        }
+      }
 
       const idx = GAME_CATALOG.findIndex((g) => g.id === gameParam);
       if (idx !== -1) {
@@ -5381,6 +5401,12 @@ export class GameManager {
       case 'spam_click_showdown':
         this.activeGame = new SpamClickShowdownGame(this.players, this.input, this.audio, this.particles);
         break;
+      case 'sumo_lode_runner': {
+        const lodeGame = new SumoLodeRunnerGame(this.players, this.input, this.audio, this.particles);
+        lodeGame.setStartingLevel(this.lodeRunnerLevel);
+        this.activeGame = lodeGame;
+        break;
+      }
     }
 
     const SINGLE_BUTTON_GAMES = new Set<string>([
@@ -6832,6 +6858,80 @@ export class GameManager {
         this.ctx.textAlign = 'center';
         this.wrapText(game.instructions, modalX + modalW / 2, tabY + 48, modalW - 48, 18);
       }
+    } else if (game.id === 'sumo_lode_runner') {
+      this.sumoHitboxes = [];
+      const bp = SUMO_LODE_LEVELS[this.lodeRunnerLevel - 1] || SUMO_LODE_LEVELS[0];
+      const topY = artY + artH + 64;
+
+      this.ctx.fillStyle = '#0F172A';
+      this.ctx.font = '900 12.5px Montserrat, sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText(
+        `🎌 STARTING STAGE: ${this.lodeRunnerLevel}/30 — ${bp.title.toUpperCase()} (${bp.guardCount} ONI)`,
+        modalX + modalW / 2,
+        topY
+      );
+
+      // Chapter & Stage Selector Pills
+      const stageOpts = [
+        { label: 'Lv 1', val: 1 },
+        { label: 'Lv 7', val: 7 },
+        { label: 'Lv 13', val: 13 },
+        { label: 'Lv 19', val: 19 },
+        { label: 'Lv 25', val: 25 },
+        { label: 'Lv 30', val: 30 },
+        { label: '− 1', step: -1 },
+        { label: '+ 1', step: 1 }
+      ];
+
+      const rowW = modalW - 48;
+      const pillGap = 5;
+      const pillW = (rowW - pillGap * (stageOpts.length - 1)) / stageOpts.length;
+      const pillH = 25;
+      const pillY = topY + 10;
+
+      stageOpts.forEach((opt, oIdx) => {
+        const pillX = modalX + 24 + oIdx * (pillW + pillGap);
+        const isSelected = opt.val === this.lodeRunnerLevel;
+
+        this.sumoHitboxes.push({
+          id: `lode_lvl_${opt.label}`,
+          x: pillX,
+          y: pillY,
+          w: pillW,
+          h: pillH,
+          action: () => {
+            if (opt.val) {
+              this.lodeRunnerLevel = opt.val;
+            } else if (opt.step) {
+              this.lodeRunnerLevel = Math.max(1, Math.min(30, this.lodeRunnerLevel + opt.step));
+            }
+            this.audio.playTap();
+          }
+        });
+
+        this.ctx.save();
+        this.drawRoundedRect(
+          pillX,
+          pillY,
+          pillW,
+          pillH,
+          6,
+          isSelected ? '#0284C7' : '#F8FAFC',
+          isSelected ? '#38BDF8' : '#CBD5E1',
+          isSelected ? 1.5 : 1
+        );
+        this.ctx.fillStyle = isSelected ? '#FFFFFF' : '#334155';
+        this.ctx.font = '800 9.5px Montserrat, sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(opt.label, pillX + pillW / 2, pillY + 16);
+        this.ctx.restore();
+      });
+
+      this.ctx.fillStyle = '#334155';
+      this.ctx.font = '12.5px sans-serif';
+      this.ctx.textAlign = 'center';
+      this.wrapText(game.instructions, modalX + modalW / 2, pillY + 42, modalW - 48, 16);
     } else {
       // Standard Instructions
       this.ctx.fillStyle = '#334155';
@@ -6877,6 +6977,8 @@ export class GameManager {
 
     const playText = game.id === 'skyline_sumo' && this.sumoMode === 'no_limit'
       ? `▶ START SPEEDRUN [${this.sumoTargetMeters}m]`
+      : game.id === 'sumo_lode_runner'
+      ? `▶ PLAY STAGE ${this.lodeRunnerLevel}/30 [Space / Enter]`
       : '▶ PLAY GAME [Space / Enter]';
 
     this.ctx.fillStyle = '#FFFFFF';
@@ -6884,7 +6986,7 @@ export class GameManager {
     this.ctx.textAlign = 'center';
     this.ctx.fillText(playText, modalX + modalW / 2, btnY + 27);
 
-    if (game.id === 'skyline_sumo') {
+    if (game.id === 'skyline_sumo' || game.id === 'sumo_lode_runner') {
       this.sumoHitboxes.push({
         id: 'sumo_play_btn',
         x: btnX,
