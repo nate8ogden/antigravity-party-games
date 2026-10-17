@@ -1,0 +1,2342 @@
+[
+  {
+    "num": 1,
+    "id": "tanks",
+    "title": "Cyber Tanks 2.0",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Ricochet Arena Duel",
+    "controlPrompt": "Hold: Rotate | Release: Drive | Tap: Fire (1.2s Recharge)"
+  },
+  {
+    "num": 2,
+    "id": "hovercraft",
+    "title": "Neon Bumper Derby",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Pinball Demolition Arena",
+    "controlPrompt": "WASD / Arrows: Steer & Drive | Space / Tap: Turbo Boost | Grippy Tires"
+  },
+  {
+    "num": 3,
+    "id": "laser_grid",
+    "title": "Laser Grid Reflex",
+    "category": "Reflex",
+    "control": "directional",
+    "tagline": "Tile Overcharge Dodge",
+    "controlPrompt": "Tap: Dash Step | Hold: Reverse Direction"
+  },
+  {
+    "num": 4,
+    "id": "orbital",
+    "title": "Orbital Slingshot",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Meteor Miner Physics",
+    "controlPrompt": "Hold [W] / [↑]: Tether Orbit | Release: Slingshot Arc"
+  },
+  {
+    "num": 5,
+    "id": "micro_gp",
+    "title": "Micro Turbo GP",
+    "category": "Racing",
+    "control": "single_button",
+    "tagline": "Single-Button Drift Racer",
+    "controlPrompt": "Hold: Drift & Charge Nitro | Release: Unleash Nitro Blast"
+  },
+  {
+    "num": 6,
+    "id": "ghost_flashlight",
+    "title": "Ghost Flashlight",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Darkness Tag & Stealth",
+    "controlPrompt": "Move: Direct / WASD / Stick | Hold Action: Ultra-Beam | Least Ghost Time Wins"
+  },
+  {
+    "num": 7,
+    "id": "kitchen_chaos",
+    "title": "Kitchen Chaos",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "High-Speed Food Fling",
+    "controlPrompt": "Hold: Charge Throw | Release: Fling Food"
+  },
+  {
+    "num": 8,
+    "id": "skyline_sumo",
+    "title": "Skyline Sumo",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Springboard Platform Climber",
+    "controlPrompt": "Hold: Charge Jump & Aim | Release: Spring Leap"
+  },
+  {
+    "num": 9,
+    "id": "animal_stack",
+    "title": "Animal Stack",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Sky Crane Animal Stacker",
+    "controlPrompt": "Space / Tap: Drop | W / S / ↑ / ↓ / R: Rotate | A / D / ← / →: Steer"
+  },
+  {
+    "num": 10,
+    "id": "sumo_iceberg",
+    "title": "Sumo Iceberg",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Dynamic Tilting Disc",
+    "controlPrompt": "Tap / Space: Sprint Tackle (3 Charges) | Steer: Ice Drift"
+  },
+  {
+    "num": 11,
+    "id": "cannon_barrage",
+    "title": "Cannon Barrage",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Destructible Fortress Duel",
+    "controlPrompt": "Tap: Fire Cannonball"
+  },
+  {
+    "num": 12,
+    "id": "anvil_rain",
+    "title": "Anvil Rain",
+    "category": "Reflex",
+    "control": "directional",
+    "tagline": "Shadow Dodging Survival",
+    "controlPrompt": "Steer: Run | Tap / Space: Dash & Body-Check"
+  },
+  {
+    "num": 13,
+    "id": "bomb_relay",
+    "title": "Bomb Relay",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Hot Potato Explosive Tag",
+    "controlPrompt": "Tap/Hold: Dash & Tag"
+  },
+  {
+    "num": 14,
+    "id": "micro_hockey",
+    "title": "Micro Hockey",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "4-Way Circular Air Table",
+    "controlPrompt": "Hold: Defend & Slap Puck"
+  },
+  {
+    "num": 15,
+    "id": "quick_draw",
+    "title": "Quick Draw Western",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "High Noon Millisecond Duel",
+    "controlPrompt": "Tap on DRAW!: Fire Gun"
+  },
+  {
+    "num": 16,
+    "id": "balloon_burst",
+    "title": "Balloon Burst",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Pressure Inflation Showdown",
+    "controlPrompt": "Hold: Pump Air | Release: Bank Score"
+  },
+  {
+    "num": 17,
+    "id": "swat_fly",
+    "title": "Swat the Fly",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Picnic Pest Buster",
+    "controlPrompt": "WASD / Arrows to Move • Space / Enter to Swat"
+  },
+  {
+    "num": 18,
+    "id": "stop_at_zero",
+    "title": "Stop at Zero",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Blind Precision Stopwatch",
+    "controlPrompt": "Tap: Freeze Blind Clock"
+  },
+  {
+    "num": 19,
+    "id": "turf_whack",
+    "title": "Turf Whack",
+    "category": "Party",
+    "control": "directional",
+    "tagline": "Garden Mole Whacker",
+    "controlPrompt": "Tap: Swing Mallet"
+  },
+  {
+    "num": 20,
+    "id": "neon_lightcycles",
+    "title": "Neon Lightcycles",
+    "category": "Racing",
+    "control": "single_button",
+    "tagline": "Cyber Grid Trail Duel",
+    "controlPrompt": "Tap: Turn 90° Clockwise"
+  },
+  {
+    "num": 21,
+    "id": "blade_parry",
+    "title": "Blade Parry",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Rock \\",
+    "controlPrompt": "A / D / ← / →: Shuffle | W / ↑: Left Punch | S / ↓: Right Punch | Space / Enter: Parry"
+  },
+  {
+    "num": 22,
+    "id": "safe_dial",
+    "title": "Safe Dial Lock",
+    "category": "Puzzle",
+    "control": "single_button",
+    "tagline": "Bank Vault Lockpicker",
+    "controlPrompt": "Tap: Lock Tumbler"
+  },
+  {
+    "num": 23,
+    "id": "coin_apex",
+    "title": "Coin Apex",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Zero-Velocity Catch",
+    "controlPrompt": "Tap: Catch at Apex"
+  },
+  {
+    "num": 24,
+    "id": "red_light_sentry",
+    "title": "Red Light Sentry",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Watchtower Stealth Dash",
+    "controlPrompt": "Hold: Sprint | Release: Freeze"
+  },
+  {
+    "num": 25,
+    "id": "laser_leap",
+    "title": "Laser Leap",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Neon Laser Jump Rope",
+    "controlPrompt": "Tap: Jump Over Laser Beam"
+  },
+  {
+    "num": 26,
+    "id": "color_clash",
+    "title": "Color Clash",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Turf Painter Duel",
+    "controlPrompt": "Steer: Paint Tiles | Seek Paint Bombs"
+  },
+  {
+    "num": 27,
+    "id": "meteor_shield",
+    "title": "Meteor Shield",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Planetary Core Defense",
+    "controlPrompt": "Steer: Orbit Shield | Tap: Kinetic Pulse"
+  },
+  {
+    "num": 28,
+    "id": "sequence_clash",
+    "title": "Sequence Clash",
+    "category": "Puzzle",
+    "control": "directional",
+    "tagline": "Cyber Memory Duel",
+    "controlPrompt": "WASD / Arrows: Enter Sequence"
+  },
+  {
+    "num": 29,
+    "id": "bubble_soccer",
+    "title": "Bubble Soccer",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Inflatable Bumper Derby",
+    "controlPrompt": "Steer: Drive Suit | Tap: Turbo Dash"
+  },
+  {
+    "num": 30,
+    "id": "wire_cutter",
+    "title": "Wire Cutter",
+    "category": "Puzzle",
+    "control": "directional",
+    "tagline": "Cyber Defusal Relay",
+    "controlPrompt": "WASD / Arrows: Snip Red/Blue/Green/Yellow Wire"
+  },
+  {
+    "num": 31,
+    "id": "magma_hop",
+    "title": "Magma Hop",
+    "category": "Reflex",
+    "control": "directional",
+    "tagline": "Volcanic Basalt Survival",
+    "controlPrompt": "Steer / Arrows / Tap: Leap To Adjacent Pillar"
+  },
+  {
+    "num": 32,
+    "id": "rhythm_duel",
+    "title": "Rhythm Duel",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Synthwave Neon Highway",
+    "controlPrompt": "Space / Enter / Primary Tap: Hit Note On Beat"
+  },
+  {
+    "num": 33,
+    "id": "cosmic_vortex",
+    "title": "Cosmic Vortex",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Gravitational Singularity Duel",
+    "controlPrompt": "Hold: Fire Thrusters | Tap: Repulsor Pulse"
+  },
+  {
+    "num": 34,
+    "id": "pixel_paintball",
+    "title": "Pixel Paintball",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Ricochet Splat Arena",
+    "controlPrompt": "Hold: Aim Cannon | Release: Fire Splat Pellet"
+  },
+  {
+    "num": 35,
+    "id": "minefield_dash",
+    "title": "Minefield Dash",
+    "category": "Puzzle",
+    "control": "directional",
+    "tagline": "Proximity Rune Sprint",
+    "controlPrompt": "WASD / Arrows: Move • Space / Enter: Dash Sprint"
+  },
+  {
+    "num": 36,
+    "id": "asteroid_miner",
+    "title": "Asteroid Miner",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Zero-G Kinetic Salvage",
+    "controlPrompt": "A/D or Left/Right: Steer • Space/Enter or W/Up: Fire Thrusters"
+  },
+  {
+    "num": 37,
+    "id": "dont_look_down",
+    "title": "Don",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "90-Second Vertical Tower Rush",
+    "controlPrompt": "A/D or Left/Right: Steer • Space/W or Enter/Up: Instant Leap & Air Jump • 1-3: Switch Map"
+  },
+  {
+    "num": 38,
+    "id": "snowball_fight",
+    "title": "Snowball Fight",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Artillery Snow Fort Duel",
+    "controlPrompt": "Hold: Charge Power | Release: Throw | A/D or Steer: Aim"
+  },
+  {
+    "num": 39,
+    "id": "highway_hop",
+    "title": "Highway Hop",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Procedural Crossy Freeway",
+    "controlPrompt": "Tap/Space: Hop Forward | Arrows/WASD: Steer & Jump"
+  },
+  {
+    "num": 40,
+    "id": "gold_miner",
+    "title": "Gold Rush Miner",
+    "category": "Physics",
+    "control": "single_button",
+    "tagline": "Underground Reel & Claw Winch",
+    "controlPrompt": "Tap / Down: Fire Winch Claw"
+  },
+  {
+    "num": 41,
+    "id": "chomp_frogs",
+    "title": "Chomp Frogs",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Lilypad Hop & Bug Chomp Arena",
+    "controlPrompt": "Steer/WASD/Arrows: Aim & Hop | Space/Enter/Tap: Instant Chomp | 1-3: Switch Pond"
+  },
+  {
+    "num": 42,
+    "id": "tug_of_war",
+    "title": "Tug of War",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "High-Voltage Rhythm Pit Heave",
+    "controlPrompt": "Tap / Space: Rhythm Power Pull"
+  },
+  {
+    "num": 43,
+    "id": "volley_spike",
+    "title": "Volley Spike",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Beach Volley Smash Duel",
+    "controlPrompt": "A/D or Steer: Move | Tap/Space: Jump & Spike"
+  },
+  {
+    "num": 44,
+    "id": "maze_escape",
+    "title": "Maze Escape",
+    "category": "Puzzle",
+    "control": "directional",
+    "tagline": "Labyrinth Relic Dash",
+    "controlPrompt": "Arrows/WASD: Move | Tap/Space: Drop Trap"
+  },
+  {
+    "num": 45,
+    "id": "pinball_battle",
+    "title": "Pinball Battle",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Multi-Flipper Defense Arena",
+    "controlPrompt": "Steer: Move Paddle | Tap/Hold Space: Fire Flippers"
+  },
+  {
+    "num": 46,
+    "id": "mole_panic",
+    "title": "Mole Panic",
+    "category": "Reflex",
+    "control": "directional",
+    "tagline": "Carnival Whack-A-Mole Stampede",
+    "controlPrompt": "Steer / Move: Position Mallet | Tap/Space: Whack!"
+  },
+  {
+    "num": 47,
+    "id": "color_flood",
+    "title": "Color Flood",
+    "category": "Puzzle",
+    "control": "directional",
+    "tagline": "Territory Capture Grid",
+    "controlPrompt": "Tap/Space: Flood Color | Steer: Pick Color"
+  },
+  {
+    "num": 48,
+    "id": "memory_matrix",
+    "title": "Memory Matrix",
+    "category": "Reflex",
+    "control": "directional",
+    "tagline": "Musical Reflex Sequence",
+    "controlPrompt": "Tap/Space: Strike Pad | Sweep: Auto Pointer"
+  },
+  {
+    "num": 49,
+    "id": "snake_arena",
+    "title": "Snake Arena",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "4-Player Battle Royale",
+    "controlPrompt": "Tap/Space: 90° Turn | Steer: Guide Direction"
+  },
+  {
+    "num": 50,
+    "id": "mirror_laser",
+    "title": "Mirror Laser",
+    "category": "Reflex",
+    "control": "directional",
+    "tagline": "Reflective Core Duel",
+    "controlPrompt": "Tap/Space: Rotate Mirror 45° | Deflect Beams"
+  },
+  {
+    "num": 51,
+    "id": "domino_cascade",
+    "title": "Domino Cascade",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Rhythmic Chain Topple",
+    "controlPrompt": "Tap/Space in Rhythm: Lay Tile | Topple Chain"
+  },
+  {
+    "num": 52,
+    "id": "water_balloon",
+    "title": "Water Balloon Barrage",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Backyard Artillery Duel",
+    "controlPrompt": "Hold: Angle & Power | Release: Launch Splash"
+  },
+  {
+    "num": 53,
+    "id": "sheep_dog",
+    "title": "Sheep Dog Corrals",
+    "category": "Party",
+    "control": "directional",
+    "tagline": "Meadow Herding Frenzy",
+    "controlPrompt": "Hold: Sprint | Release: Bark Shockwave"
+  },
+  {
+    "num": 54,
+    "id": "chest_snatch",
+    "title": "Chest Snatch",
+    "category": "Reflex",
+    "control": "directional",
+    "tagline": "Mimic Vault Jewel Heist",
+    "controlPrompt": "Hold: Reach In & Grab | Release: Pull Hand Back"
+  },
+  {
+    "num": 55,
+    "id": "rapid_drop4",
+    "title": "Rapid Drop 4",
+    "category": "Puzzle",
+    "control": "directional",
+    "tagline": "Real-Time 4-in-a-Row",
+    "controlPrompt": "Steer: Choose Column | Tap/Space: Drop Token"
+  },
+  {
+    "num": 56,
+    "id": "floor_painter",
+    "title": "Floor Painter",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Roller Skate Turf War",
+    "controlPrompt": "Hold: Steer & Drift | Bump Rivals: Steal Paint"
+  },
+  {
+    "num": 57,
+    "id": "dodgeball_blitz",
+    "title": "Dodgeball Blitz",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Gymnasium Ball Elimination",
+    "controlPrompt": "WASD / Arrows: Run | Space / Enter: Throw or Catch"
+  },
+  {
+    "num": 58,
+    "id": "gravity_golf",
+    "title": "Gravity Golf",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Celestial Orbital Mini-Golf",
+    "controlPrompt": "Steer: Aim Angle | Hold Space: Charge Power"
+  },
+  {
+    "num": 59,
+    "id": "cyber_disc",
+    "title": "Cyber Disc",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Tron Energy Disc Duel",
+    "controlPrompt": "WASD / Arrows: Skim | Space / Enter: Energy Shield"
+  },
+  {
+    "num": 60,
+    "id": "sumo_spheres",
+    "title": "Sumo Spheres",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Tilting Gyro Platform Derby",
+    "controlPrompt": "WASD / Arrows: Roll | Space / Enter: Turbo Ram"
+  },
+  {
+    "num": 61,
+    "id": "sky_gliders",
+    "title": "Sky Gliders",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Paper Airplane Canyon Flight",
+    "controlPrompt": "Throttle Up/Down: Pitch Climb/Dive | Steer: Bank Left/Right"
+  },
+  {
+    "num": 62,
+    "id": "whack_a_thief",
+    "title": "Whack-A-Thief",
+    "category": "Reflex",
+    "control": "directional",
+    "tagline": "Bank Vault Reflex Zap",
+    "controlPrompt": "WASD / Arrows: Move Reticle | Space / Enter: Zap Thief"
+  },
+  {
+    "num": 63,
+    "id": "pixel_curling",
+    "title": "Pixel Curling",
+    "category": "Sports",
+    "control": "directional",
+    "tagline": "Olympic Friction Ice Clash",
+    "controlPrompt": "Steer: Aim Curl | Hold Space: Launch | Tap Space: Sweep"
+  },
+  {
+    "num": 64,
+    "id": "bumper_boats",
+    "title": "Bumper Boats",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Splash Lagoon Water Derby",
+    "controlPrompt": "Steer: Rudder | Throttle: Propeller | Space: Water Cannon"
+  },
+  {
+    "num": 65,
+    "id": "target_sniper",
+    "title": "Target Sniper",
+    "category": "Reflex",
+    "control": "directional",
+    "tagline": "Carnival Shooting Gallery",
+    "controlPrompt": "WASD / Arrows: Aim Reticle | Space / Enter: Fire Shot"
+  },
+  {
+    "num": 66,
+    "id": "fruit_chopper",
+    "title": "Fruit Chopper",
+    "category": "Reflex",
+    "control": "directional",
+    "tagline": "Airborne Katana Dojo Slice",
+    "controlPrompt": "WASD / Arrows: Move Blade | Space / Enter: Katana Slice"
+  },
+  {
+    "num": 67,
+    "id": "catapult_clash",
+    "title": "Catapult Clash",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Destructible Castle Siege",
+    "controlPrompt": "Hold: Power / Arc | Release: Catapult Fire"
+  },
+  {
+    "num": 68,
+    "id": "jousting_knights",
+    "title": "Jousting Knights",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Galloping Steed Tilt Clash",
+    "controlPrompt": "Hold / Drag: Aim Lance | Tap: Charge & Couched Strike"
+  },
+  {
+    "num": 69,
+    "id": "dragon_tamer",
+    "title": "Dragon Tamer",
+    "category": "Party",
+    "control": "directional",
+    "tagline": "Fire Drake Corral Panic",
+    "controlPrompt": "WASD / Move: Guide Tamer | Tap / Space: Sound Horn"
+  },
+  {
+    "num": 70,
+    "id": "castle_archer",
+    "title": "Castle Archer",
+    "category": "Reflex",
+    "control": "directional",
+    "tagline": "Parapet Volley Defense",
+    "controlPrompt": "WASD / Arrows: Aim Arc | Space / Tap: Release Bowstring"
+  },
+  {
+    "num": 71,
+    "id": "drawbridge_panic",
+    "title": "Drawbridge Panic",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Moat Drop Gatekeeper",
+    "controlPrompt": "Hold: Lower Bridge | Release: Raise Gate"
+  },
+  {
+    "num": 72,
+    "id": "blacksmith_forge",
+    "title": "Blacksmith Forge",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Rhythmic Anvil Blade Striking",
+    "controlPrompt": "Tap / Press: Anvil Hammer Strike"
+  },
+  {
+    "num": 73,
+    "id": "potion_alchemist",
+    "title": "Potion Alchemist",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Bubbling Cauldron Alchemy",
+    "controlPrompt": "Tap / Space: Add Active Reagent"
+  },
+  {
+    "num": 74,
+    "id": "royal_feast",
+    "title": "Royal Feast",
+    "category": "Party",
+    "control": "directional",
+    "tagline": "Banquet Platter Catcher",
+    "controlPrompt": "Move / Tap: Steer Platter / Reverse Direction"
+  },
+  {
+    "num": 75,
+    "id": "sword_in_stone",
+    "title": "Sword in the Stone",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Excalibur Pull Showdown",
+    "controlPrompt": "Tap / Press: Power Heave Tug"
+  },
+  {
+    "num": 76,
+    "id": "dungeon_escape",
+    "title": "Dungeon Maze Runner",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Pendulum Blade Citadel",
+    "controlPrompt": "WASD / Move: Steer Runner | Tap: 90° Quick Turn"
+  },
+  {
+    "num": 77,
+    "id": "neon_drifters",
+    "title": "Neon Drifters",
+    "category": "Racing",
+    "control": "directional",
+    "tagline": "Cyberpunk Drift Circuit",
+    "controlPrompt": "WASD / Move: Steer / Drift | Space / Gas: Accelerate"
+  },
+  {
+    "num": 78,
+    "id": "hoverboard_rail",
+    "title": "Hoverboard Rail",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Aero Skyline Rail Grind",
+    "controlPrompt": "Up / Down: Switch Rails | Tap / Space: Ollie Jump"
+  },
+  {
+    "num": 79,
+    "id": "traffic_jam",
+    "title": "Traffic Jam Fury",
+    "category": "Racing",
+    "control": "directional",
+    "tagline": "Cyber Highway Expressway",
+    "controlPrompt": "Left / Right: Switch Lanes | Hold: Turbo Throttle"
+  },
+  {
+    "num": 80,
+    "id": "nitro_kart",
+    "title": "Nitro Kart Arena",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Weaponized Derby Clash",
+    "controlPrompt": "Steer: Drive Kart | Tap / Space: Launch Weapon"
+  },
+  {
+    "num": 81,
+    "id": "monorail_hijack",
+    "title": "Monorail Hijack",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Maglev Rooftop Heist",
+    "controlPrompt": "Left / Right: Run Roof | Up / Tap: Jump | Down: Duck"
+  },
+  {
+    "num": 82,
+    "id": "drone_delivery",
+    "title": "Drone Delivery",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Wind Tunnel Quadcopter",
+    "controlPrompt": "Steer: Tilt Drone | Hold: Rotor Lift"
+  },
+  {
+    "num": 83,
+    "id": "rocket_skates",
+    "title": "Rocket Skates",
+    "category": "Racing",
+    "control": "directional",
+    "tagline": "Loop-de-Loop Velodrome",
+    "controlPrompt": "Steer: Inner/Outer Lane | Hold: Rocket Boost"
+  },
+  {
+    "num": 84,
+    "id": "cyber_demolition",
+    "title": "Cyber Demolition",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Monster Truck Wrecking Ball",
+    "controlPrompt": "Steer & Drive: Swing Wrecking Ball"
+  },
+  {
+    "num": 85,
+    "id": "laser_speedway",
+    "title": "Laser Speedway",
+    "category": "Racing",
+    "control": "single_button",
+    "tagline": "Micro Slot-Car Overheat",
+    "controlPrompt": "Hold: Accelerate | Release: Coast & Cool Down"
+  },
+  {
+    "num": 86,
+    "id": "gravity_pods",
+    "title": "Gravity Pods",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Magnetic Pipeline Racer",
+    "controlPrompt": "Steer: Rotate Around Tube | Tap: Nitro Surge"
+  },
+  {
+    "num": 87,
+    "id": "pancake_flipper",
+    "title": "Pancake Flipper",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Precision Pan Flipping",
+    "controlPrompt": "Tap / Space: Flip Pancake"
+  },
+  {
+    "num": 88,
+    "id": "sushi_express",
+    "title": "Sushi Express",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Conveyor Snatch Race",
+    "controlPrompt": "Tap / Space: Snatch Plate"
+  },
+  {
+    "num": 89,
+    "id": "pizza_toss",
+    "title": "Pizza Toss",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Dough Spinning Rhythm",
+    "controlPrompt": "Tap / Space: Catch & Toss Dough"
+  },
+  {
+    "num": 90,
+    "id": "burger_stack",
+    "title": "Burger Stack",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Falling Patty Balance",
+    "controlPrompt": "Steer: Move Plate Left / Right"
+  },
+  {
+    "num": 91,
+    "id": "ice_cream_scoop",
+    "title": "Ice Cream Scoop",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Wobbly Cone Stacker",
+    "controlPrompt": "Steer: Move Cone Left / Right"
+  },
+  {
+    "num": 92,
+    "id": "wok_stir_fry",
+    "title": "Wok Stir Fry",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Flaming Toss Timing",
+    "controlPrompt": "Tap / Space: Toss Wok"
+  },
+  {
+    "num": 93,
+    "id": "donut_glazer",
+    "title": "Donut Glazer",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Glaze Conveyor Drop",
+    "controlPrompt": "Tap / Space: Dispense Glaze"
+  },
+  {
+    "num": 94,
+    "id": "fruit_blender",
+    "title": "Fruit Blender",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Smoothie Slicing Frenzy",
+    "controlPrompt": "Tap / Space: Pulse Blender Blades"
+  },
+  {
+    "num": 95,
+    "id": "teppanyaki_catch",
+    "title": "Teppanyaki Catch",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Sizzling Shrimp Catch",
+    "controlPrompt": "Steer: Slide Bowl Across Griddle"
+  },
+  {
+    "num": 96,
+    "id": "popcorn_popper",
+    "title": "Popcorn Popper",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Cinema Kernel Catch",
+    "controlPrompt": "Tap / Space: Snag Popped Kernels"
+  },
+  {
+    "num": 97,
+    "id": "submarine_torpedo",
+    "title": "Submarine Torpedo",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Deep Trench Sonar Duel",
+    "controlPrompt": "Steer: Navigate Trench | Tap / Space: Launch Torpedo"
+  },
+  {
+    "num": 98,
+    "id": "jellyfish_jump",
+    "title": "Jellyfish Jump",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Abyss Bioluminescent Ascent",
+    "controlPrompt": "Steer: Move Diver Left / Right"
+  },
+  {
+    "num": 99,
+    "id": "pearl_divers",
+    "title": "Pearl Divers",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Deep Reef Clam Snatch",
+    "controlPrompt": "Tap / Space: Plunge Dive"
+  },
+  {
+    "num": 100,
+    "id": "shark_bait",
+    "title": "Shark Bait",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Feeding Frenzy Lagoon",
+    "controlPrompt": "Steer: Navigate Raft"
+  },
+  {
+    "num": 101,
+    "id": "sunken_treasure",
+    "title": "Sunken Treasure",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Galleon Winch Crane",
+    "controlPrompt": "Tap / Space: Drop Winch Hook"
+  },
+  {
+    "num": 102,
+    "id": "octopus_ink",
+    "title": "Octopus Ink",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Kraken Whirlpool Vortex",
+    "controlPrompt": "Steer: Orbit / Radial | Tap / Space: Turbo Thrust"
+  },
+  {
+    "num": 103,
+    "id": "crab_walk",
+    "title": "Crab Walk",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Lateral Beach Scuttle",
+    "controlPrompt": "Steer: Scuttle Left / Right"
+  },
+  {
+    "num": 104,
+    "id": "electric_eel",
+    "title": "Electric Eel",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Cavern High-Voltage Slalom",
+    "controlPrompt": "Steer: Pilot Submersible"
+  },
+  {
+    "num": 105,
+    "id": "water_scooter",
+    "title": "Water Scooter",
+    "category": "Racing",
+    "control": "directional",
+    "tagline": "Jet-Ski Slalom Sprint",
+    "controlPrompt": "Steer: Carve Turns | Hold: Accelerate"
+  },
+  {
+    "num": 106,
+    "id": "deep_sea_harpoon",
+    "title": "Deep Sea Harpoon",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Midnight Trench Sniping",
+    "controlPrompt": "Tap / Space: Fire Harpoon"
+  },
+  {
+    "num": 107,
+    "id": "moon_lander",
+    "title": "Moon Lander",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Lunar Crater Touchdown",
+    "controlPrompt": "Steer: Tilt Lander | Hold: Fire Thrusters"
+  },
+  {
+    "num": 108,
+    "id": "space_junk_salvage",
+    "title": "Space Junk Salvage",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Orbital Debris Tractor",
+    "controlPrompt": "Steer: Pilot Tug | Action: Magnetic Tractor Beam"
+  },
+  {
+    "num": 109,
+    "id": "alien_probe",
+    "title": "Alien Probe",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Mothership Core Recon",
+    "controlPrompt": "Steer: Fly Saucer | Action: Stealth Cloaking"
+  },
+  {
+    "num": 110,
+    "id": "solar_flare",
+    "title": "Solar Flare",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Coronal Wave Glider",
+    "controlPrompt": "Steer: Navigate | Action / Up: Unfurl Solar Sail"
+  },
+  {
+    "num": 111,
+    "id": "wormhole_leap",
+    "title": "Wormhole Leap",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Quantum Portal Chaining",
+    "controlPrompt": "Steer: Navigate | Action: Quantum Warp Burst"
+  },
+  {
+    "num": 112,
+    "id": "astro_miner",
+    "title": "Astro Miner",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Asteroid Geode Blaster",
+    "controlPrompt": "Steer: Pilot Miner | Action / Space: Fire Mining Laser"
+  },
+  {
+    "num": 113,
+    "id": "nebula_drift",
+    "title": "Nebula Drift",
+    "category": "Racing",
+    "control": "directional",
+    "tagline": "Cosmic Dust Circuit",
+    "controlPrompt": "Steer: Drift Craft | Action: Turbo Nitro Boost"
+  },
+  {
+    "num": 114,
+    "id": "satellite_laser",
+    "title": "Satellite Laser",
+    "category": "Puzzle",
+    "control": "directional",
+    "tagline": "Solar Reflector Grid",
+    "controlPrompt": "Steer: Position Satellite | Action: Rotate Mirror"
+  },
+  {
+    "num": 115,
+    "id": "mars_rover",
+    "title": "Mars Rover",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Red Planet Sample Drill",
+    "controlPrompt": "Steer: Drive Rover | Action: Deploy Soil Drill"
+  },
+  {
+    "num": 116,
+    "id": "zero_g_tether",
+    "title": "Zero-G Tether",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Orbital Spacewalk Duels",
+    "controlPrompt": "Steer: Thrusters | Action: Reel / Latch Tether"
+  },
+  {
+    "num": 117,
+    "id": "saloon_brawler",
+    "title": "Saloon Brawler",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Mug Slide & Barstool Duck",
+    "controlPrompt": "Tap: Slide Mug | Hold: Duck Counter"
+  },
+  {
+    "num": 118,
+    "id": "train_heist",
+    "title": "Train Heist",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Locomotive Rooftop Dash",
+    "controlPrompt": "Tap: Jump Gap | Hold: Duck Low"
+  },
+  {
+    "num": 119,
+    "id": "gold_panning",
+    "title": "Gold Panning",
+    "category": "Puzzle",
+    "control": "single_button",
+    "tagline": "Resonant River Silt Swirl",
+    "controlPrompt": "Hold: Swirl Pan | Tap: Scoop Center Nugget"
+  },
+  {
+    "num": 120,
+    "id": "rodeo_bull",
+    "title": "Rodeo Bull",
+    "category": "Physics",
+    "control": "single_button",
+    "tagline": "Mechanical Bronco Balance",
+    "controlPrompt": "Tap / Hold: Counter-Lean Balance"
+  },
+  {
+    "num": 121,
+    "id": "horseshoe_toss",
+    "title": "Horseshoe Toss",
+    "category": "Sports",
+    "control": "single_button",
+    "tagline": "Iron Stake Ringers",
+    "controlPrompt": "Tap 1: Lock Aim | Tap 2: Pitch Power"
+  },
+  {
+    "num": 122,
+    "id": "dynamite_tumble",
+    "title": "Dynamite Tumble",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "TNT Sizzle Boot",
+    "controlPrompt": "Tap: Kick Dynamite Away"
+  },
+  {
+    "num": 123,
+    "id": "cactus_slalom",
+    "title": "Cactus Slalom",
+    "category": "Racing",
+    "control": "single_button",
+    "tagline": "Desert Gallop Weave",
+    "controlPrompt": "Tap: Slalom Turn"
+  },
+  {
+    "num": 124,
+    "id": "bandit_chase",
+    "title": "Bandit Chase",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Stagecoach Quadrant Defense",
+    "controlPrompt": "Tap: Fire Shotgun Blast"
+  },
+  {
+    "num": 125,
+    "id": "rattlesnake_reflex",
+    "title": "Rattlesnake Reflex",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "High-Noon Snake Strike Duel",
+    "controlPrompt": "Wait for Strike... Tap Instant!"
+  },
+  {
+    "num": 126,
+    "id": "western_poker",
+    "title": "Western Poker Showdown",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Rapid Card River Draft",
+    "controlPrompt": "Tap: Draft Card in River"
+  },
+  {
+    "num": 127,
+    "id": "laser_tripwire",
+    "title": "Laser Tripwire",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Vault Corridor Infiltration",
+    "controlPrompt": "Tap: Jump | Hold: Crawl Low"
+  },
+  {
+    "num": 128,
+    "id": "vault_safe",
+    "title": "Vault Safe Stethoscope",
+    "category": "Puzzle",
+    "control": "single_button",
+    "tagline": "Titanium Combination Crack",
+    "controlPrompt": "Tap: Lock Tumbler Gate"
+  },
+  {
+    "num": 129,
+    "id": "security_camera",
+    "title": "Security Camera Freeze",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "CCTV Vision Cone Sneak",
+    "controlPrompt": "Hold: Sneak | Release: Freeze Still"
+  },
+  {
+    "num": 130,
+    "id": "briefcase_snatch",
+    "title": "Briefcase Snatch",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Subway Station Turnstile Dash",
+    "controlPrompt": "Hold: Turn / Steer"
+  },
+  {
+    "num": 131,
+    "id": "hack_terminal",
+    "title": "Hack The Terminal",
+    "category": "Puzzle",
+    "control": "single_button",
+    "tagline": "Cyber Mainframe ICE Decrypt",
+    "controlPrompt": "Tap: Decrypt Node"
+  },
+  {
+    "num": 132,
+    "id": "smoke_bomb_escape",
+    "title": "Smoke Bomb Escape",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Shipyard Searchlight Evasion",
+    "controlPrompt": "Tap: Deploy Smoke Canister"
+  },
+  {
+    "num": 133,
+    "id": "micro_wiretap",
+    "title": "Micro Wiretap",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Silent Embassy Bug Plant",
+    "controlPrompt": "Tap in Green: Tighten Screw"
+  },
+  {
+    "num": 134,
+    "id": "rooftop_zipline",
+    "title": "Rooftop Zipline",
+    "category": "Racing",
+    "control": "single_button",
+    "tagline": "Skyscraper Antenna Glider",
+    "controlPrompt": "Tap: Switch Cable Line"
+  },
+  {
+    "num": 135,
+    "id": "drone_intercept",
+    "title": "Drone Intercept",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "EMP Surveillance Jammer",
+    "controlPrompt": "Tap: Discharge EMP Shockwave"
+  },
+  {
+    "num": 136,
+    "id": "disguise_shuffle",
+    "title": "Disguise Shuffle",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Masquerade Ball Double Agent",
+    "controlPrompt": "Tap: Unmask Rogue Agent"
+  },
+  {
+    "num": 137,
+    "id": "synthwave_highway",
+    "title": "Synthwave Highway",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Neon Outrun Drifter",
+    "controlPrompt": "Tap: Switch Lane"
+  },
+  {
+    "num": 138,
+    "id": "drum_solo",
+    "title": "Drum Solo",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Percussion Precision Clash",
+    "controlPrompt": "Tap: Strike Snare"
+  },
+  {
+    "num": 139,
+    "id": "turntable_scratch",
+    "title": "Turntable Scratch",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Vinyl DJ Beat Match",
+    "controlPrompt": "Tap: Scratch Record"
+  },
+  {
+    "num": 140,
+    "id": "bass_drop",
+    "title": "Bass Drop",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Subwoofer Soundwave Jump",
+    "controlPrompt": "Tap: Shockwave Leap"
+  },
+  {
+    "num": 141,
+    "id": "vocal_pitch",
+    "title": "Vocal Pitch",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Autotune Frequency Lock",
+    "controlPrompt": "Tap: Modulate Pitch"
+  },
+  {
+    "num": 142,
+    "id": "breakdance_battle",
+    "title": "Breakdance Battle",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Neon B-Boy Freeze Clash",
+    "controlPrompt": "Tap: Freeze Pose"
+  },
+  {
+    "num": 143,
+    "id": "neon_metronome",
+    "title": "Neon Metronome",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Pendulum Tempo Match",
+    "controlPrompt": "Tap: Hit Downbeat"
+  },
+  {
+    "num": 144,
+    "id": "equalizer_bounce",
+    "title": "Equalizer Bounce",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Audio Spectrum Trampoline",
+    "controlPrompt": "Tap: Surge Bounce"
+  },
+  {
+    "num": 145,
+    "id": "retro_chiptune",
+    "title": "Retro Chiptune",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "8-Bit Arpeggio Step Sequencer",
+    "controlPrompt": "Tap: Trigger Step Note"
+  },
+  {
+    "num": 146,
+    "id": "disco_tile",
+    "title": "Disco Tile",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Neon Dance Floor Drop",
+    "controlPrompt": "Tap: Rotate 90°"
+  },
+  {
+    "num": 147,
+    "id": "ring_toss",
+    "title": "Neon Ring Pitch",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Rotating Bottle Tray Toss",
+    "controlPrompt": "Steer: Aim Angle | Tap/Space: Pitch Hoop | 1-3: Switch Theme"
+  },
+  {
+    "num": 148,
+    "id": "rollercoaster_thrill",
+    "title": "Rollercoaster Thrill",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Runaway Coaster Banking",
+    "controlPrompt": "Tap: Lean Into Curve"
+  },
+  {
+    "num": 149,
+    "id": "balloon_dart",
+    "title": "Balloon Dart Gallery",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Multi-Tier Conveyor Pop Gallery",
+    "controlPrompt": "Steer: Aim Angle | Tap/Space: Pitch Dart | 1-3: Switch Gallery"
+  },
+  {
+    "num": 150,
+    "id": "dunk_tank",
+    "title": "Plunger Dunk Splashdown",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "4-Player Trapdoor Water Duel",
+    "controlPrompt": "Steer: Aim Cannon | Tap/Space: Fire Plunger | Mash Tap: Climb Ladder | 1-3: Switch Tank"
+  },
+  {
+    "num": 151,
+    "id": "ferris_wheel",
+    "title": "Sky Wheel Balance",
+    "category": "Physics",
+    "control": "single_button",
+    "tagline": "High-Altitude Spoke Tilt",
+    "controlPrompt": "Up/Down: Climb Spoke | Left/Right/Space: Jump Adjacent Spoke | 1-3: Switch Theme"
+  },
+  {
+    "num": 152,
+    "id": "funhouse_mirrors",
+    "title": "Funhouse Mirrors",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Hall of Illusions Maze",
+    "controlPrompt": "Tap: Turn 90°"
+  },
+  {
+    "num": 153,
+    "id": "cotton_candy",
+    "title": "Sugar Cloud Stacker",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Candy Tower Balance Rush",
+    "controlPrompt": "Steer: Slide Stick | Tap/Space: Cash In Stack | 1-3: Switch Theme"
+  },
+  {
+    "num": 154,
+    "id": "test_strength",
+    "title": "Test Your Strength",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "High-Striker Sledgehammer",
+    "controlPrompt": "Tap: Slam Hammer"
+  },
+  {
+    "num": 155,
+    "id": "haunted_mansion",
+    "title": "Haunted Mansion",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "UV Strobe Specter Hunt",
+    "controlPrompt": "Tap: Fire UV Strobe"
+  },
+  {
+    "num": 156,
+    "id": "fireworks_finale",
+    "title": "Fireworks Grand Finale",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Pyrotechnic Sky Spectacular",
+    "controlPrompt": "Tap: Detonate Apex"
+  },
+  {
+    "num": 157,
+    "id": "hydra_slayer",
+    "title": "Hydra Swamp Slayer",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Multi-Headed Mythic Duel",
+    "controlPrompt": "Tap: Blade Strike"
+  },
+  {
+    "num": 158,
+    "id": "pharaoh_tomb",
+    "title": "Pharaoh Tomb Escape",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Rolling Boulder & Spike Vault",
+    "controlPrompt": "Tap: Vault Jump"
+  },
+  {
+    "num": 159,
+    "id": "spartan_shield",
+    "title": "Spartan Phalanx Wall",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Shield Wall & Spear Counter",
+    "controlPrompt": "Hold: Shield • Release: Spear"
+  },
+  {
+    "num": 160,
+    "id": "kraken_whirlpool",
+    "title": "Kraken Maelstrom Vortex",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Tentacle Dodge & Treasure Tacking",
+    "controlPrompt": "Tap: Steer Rudder"
+  },
+  {
+    "num": 161,
+    "id": "icarus_wings",
+    "title": "Flight of Icarus",
+    "category": "Physics",
+    "control": "single_button",
+    "tagline": "Thermal Updrafts & Solar Blaze",
+    "controlPrompt": "Tap: Flap Wings"
+  },
+  {
+    "num": 162,
+    "id": "minotaur_labyrinth",
+    "title": "Knossos Labyrinth",
+    "category": "Puzzle",
+    "control": "single_button",
+    "tagline": "Ariadne Thread & Beast Escape",
+    "controlPrompt": "Tap: Switch Corridor"
+  },
+  {
+    "num": 163,
+    "id": "olympus_lightning",
+    "title": "Olympus Lightning Conduit",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Divine Bolt Catch & Discharge",
+    "controlPrompt": "Tap: Catch Lightning"
+  },
+  {
+    "num": 164,
+    "id": "anubis_scales",
+    "title": "Anubis Scales of Truth",
+    "category": "Puzzle",
+    "control": "single_button",
+    "tagline": "Maat Feather Soul Balance",
+    "controlPrompt": "Tap: Drop Offering"
+  },
+  {
+    "num": 165,
+    "id": "gorgon_gaze",
+    "title": "Gorgon Mirror Deflection",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Petrifying Gaze Mirror Counter",
+    "controlPrompt": "Hold: Mirror Shield"
+  },
+  {
+    "num": 166,
+    "id": "viking_longship",
+    "title": "Viking Fjord Raid",
+    "category": "Racing",
+    "control": "single_button",
+    "tagline": "War Drum Cadence & Ice Ram",
+    "controlPrompt": "Tap: Drum Beat"
+  },
+  {
+    "num": 167,
+    "id": "antimatter_containment",
+    "title": "Antimatter Containment",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Magnetic Coils & Singularity Pulse",
+    "controlPrompt": "Tap: Magnetic Pulse"
+  },
+  {
+    "num": 168,
+    "id": "warp_gate_jump",
+    "title": "Warp Gate Hyperdrive",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Chromatic Gate Trajectory Alignment",
+    "controlPrompt": "Tap: Warp Jump"
+  },
+  {
+    "num": 169,
+    "id": "solar_sail_rider",
+    "title": "Solar Sail Corona Rider",
+    "category": "Racing",
+    "control": "single_button",
+    "tagline": "Photon Gale & Ion Storm Tack",
+    "controlPrompt": "Tap: Deploy / Furl Sail"
+  },
+  {
+    "num": 170,
+    "id": "planetary_rover",
+    "title": "Martian Planetary Rover",
+    "category": "Physics",
+    "control": "single_button",
+    "tagline": "Low-Gravity Crater Hop",
+    "controlPrompt": "Tap: Low-G Hop"
+  },
+  {
+    "num": 171,
+    "id": "pulsar_signal",
+    "title": "Pulsar Radio Signal",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Frequency Lock & Cosmic Wave Sync",
+    "controlPrompt": "Tap: Lock Frequency"
+  },
+  {
+    "num": 172,
+    "id": "asteroid_catcher",
+    "title": "Kuiper Asteroid Catcher",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Magnetic Harpoon & Refinery Mining",
+    "controlPrompt": "Tap: Fire Harpoon"
+  },
+  {
+    "num": 173,
+    "id": "alien_abduction",
+    "title": "UFO Alien Abduction",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Tractor Beam Specimen Hoist",
+    "controlPrompt": "Hold: Tractor Beam"
+  },
+  {
+    "num": 174,
+    "id": "space_elevator",
+    "title": "Space Elevator Tether",
+    "category": "Racing",
+    "control": "single_button",
+    "tagline": "Orbital Climber & Mag-Surge",
+    "controlPrompt": "Tap: Magnetic Surge"
+  },
+  {
+    "num": 175,
+    "id": "orbital_drop_pod",
+    "title": "Orbital Drop Pod",
+    "category": "Physics",
+    "control": "single_button",
+    "tagline": "Atmospheric Re-entry Burn",
+    "controlPrompt": "Tap: Retro-Thruster"
+  },
+  {
+    "num": 176,
+    "id": "dyson_sphere_collector",
+    "title": "Dyson Swarm Collector",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Solar Flare Mega-Capacitor",
+    "controlPrompt": "Hold: Deploy Panels"
+  },
+  {
+    "num": 177,
+    "id": "penguin_slide",
+    "title": "Penguin Glacier Slide",
+    "category": "Racing",
+    "control": "single_button",
+    "tagline": "High-Speed Bobsled Slalom",
+    "controlPrompt": "Tap: Steer / Bank"
+  },
+  {
+    "num": 178,
+    "id": "iceberg_breaker",
+    "title": "Icebreaker Ram",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Arctic Pack Ice Demolition",
+    "controlPrompt": "Hold: Charge Ram"
+  },
+  {
+    "num": 179,
+    "id": "blizzard_beacon",
+    "title": "Blizzard Lighthouse",
+    "category": "Puzzle",
+    "control": "single_button",
+    "tagline": "Zero-Visibility Fog Guide",
+    "controlPrompt": "Tap: Lock Beam Angle"
+  },
+  {
+    "num": 180,
+    "id": "walrus_bask",
+    "title": "Walrus Iceberg King",
+    "category": "Physics",
+    "control": "single_button",
+    "tagline": "Sumo Tusk King of the Hill",
+    "controlPrompt": "Hold: Belly Charge"
+  },
+  {
+    "num": 181,
+    "id": "polar_ice_fishing",
+    "title": "Polar Ice Fishing",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Deep Trench Frost Angler",
+    "controlPrompt": "Tap: Cast & Strike"
+  },
+  {
+    "num": 182,
+    "id": "aurora_collector",
+    "title": "Aurora Borealis Weaver",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Geomagnetic Light Prism",
+    "controlPrompt": "Tap: Shift Polarity"
+  },
+  {
+    "num": 183,
+    "id": "dog_sled_dash",
+    "title": "Husky Dog Sled Sprint",
+    "category": "Racing",
+    "control": "single_button",
+    "tagline": "Great Northern Mushers",
+    "controlPrompt": "Tap: Leap Obstacle"
+  },
+  {
+    "num": 184,
+    "id": "mammoth_stampede",
+    "title": "Mammoth Stampede",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Tundra Ice Age Survival",
+    "controlPrompt": "Hold: Move / Dodge"
+  },
+  {
+    "num": 185,
+    "id": "frostbite_cavern",
+    "title": "Frostbite Stalactite Cavern",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Glacial Drop Hazard Reflex",
+    "controlPrompt": "Tap: Direction Dash"
+  },
+  {
+    "num": 186,
+    "id": "geyser_leap",
+    "title": "Geothermal Geyser Leap",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Icelandic Volcanic Hot Springs",
+    "controlPrompt": "Tap: Leap Next Stone"
+  },
+  {
+    "num": 187,
+    "id": "clockwork_cogs",
+    "title": "Clockwork Cog Synchrony",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Precision Escapement Mesh",
+    "controlPrompt": "Tap: Mesh Gears"
+  },
+  {
+    "num": 188,
+    "id": "steam_boiler_relief",
+    "title": "Steam Boiler Relief",
+    "category": "Physics",
+    "control": "single_button",
+    "tagline": "High-Pressure Safety Regulator",
+    "controlPrompt": "Hold: Vent Steam Valve"
+  },
+  {
+    "num": 189,
+    "id": "zeppelin_dogfight",
+    "title": "Zeppelin Sky Duel",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Victorian Dirigible Aerial Combat",
+    "controlPrompt": "Tap: Rotate & Shoot | Hold: Thrust"
+  },
+  {
+    "num": 190,
+    "id": "tesla_coil_arc",
+    "title": "Tesla Coil Lightning Net",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Wardenclyffe High-Voltage Harvester",
+    "controlPrompt": "Hold: Ground Rod"
+  },
+  {
+    "num": 191,
+    "id": "automator_assembly",
+    "title": "Automaton Clockwork Assembly",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Hydraulic Toy Stamp Factory",
+    "controlPrompt": "Tap: Stamp Gear"
+  },
+  {
+    "num": 192,
+    "id": "pneumatic_tube_rush",
+    "title": "Pneumatic Tube Dispatch",
+    "category": "Puzzle",
+    "control": "single_button",
+    "tagline": "Underground Brass Capsule Sorter",
+    "controlPrompt": "Tap: Toggle Gate"
+  },
+  {
+    "num": 193,
+    "id": "ornithopter_flock",
+    "title": "Ornithopter Wing Flight",
+    "category": "Racing",
+    "control": "single_button",
+    "tagline": "Da Vinci Flapping Air Spire",
+    "controlPrompt": "Tap: Flap Wings"
+  },
+  {
+    "num": 194,
+    "id": "pressure_gauge_lock",
+    "title": "Pressure Gauge Safe Cracker",
+    "category": "Puzzle",
+    "control": "single_button",
+    "tagline": "Clockwork Tumbler Lock Duel",
+    "controlPrompt": "Tap: Lock Tumbler Pin"
+  },
+  {
+    "num": 195,
+    "id": "copper_conduit",
+    "title": "Copper Conduit Smelter",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Foundry Molten Flow Manifold",
+    "controlPrompt": "Tap: Rotate Valve"
+  },
+  {
+    "num": 196,
+    "id": "monocycle_derby",
+    "title": "Velodrome Monocycle Derby",
+    "category": "Racing",
+    "control": "single_button",
+    "tagline": "Giant Gyroscopic Single-Wheel Sprint",
+    "controlPrompt": "Hold: Pedal & Lean"
+  },
+  {
+    "num": 197,
+    "id": "cyber_samurai_slash",
+    "title": "Cyber Samurai Katana Duel",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "High-Speed Neon Energy Parry",
+    "controlPrompt": "Tap: Slash | Hold: Parry Shield"
+  },
+  {
+    "num": 198,
+    "id": "mainframe_breach",
+    "title": "Mainframe ICE Core Breach",
+    "category": "Puzzle",
+    "control": "single_button",
+    "tagline": "Quantum Data Packet Injection",
+    "controlPrompt": "Tap: Fire Data Packet"
+  },
+  {
+    "num": 199,
+    "id": "hovercar_skyline",
+    "title": "Hovercar Skyline Highway",
+    "category": "Racing",
+    "control": "single_button",
+    "tagline": "Neo-Tokyo Cyberway Traffic Weave",
+    "controlPrompt": "Tap: Switch Lane"
+  },
+  {
+    "num": 200,
+    "id": "hologram_glitch",
+    "title": "Hologram Glitch Purge",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Android Replica Perception Reflex",
+    "controlPrompt": "Tap: Purge Glitch"
+  },
+  {
+    "num": 201,
+    "id": "laser_grapple",
+    "title": "Laser Grapple Swing",
+    "category": "Physics",
+    "control": "single_button",
+    "tagline": "Skyline Tether Kinetic Physics",
+    "controlPrompt": "Hold: Grapple | Release: Leap"
+  },
+  {
+    "num": 202,
+    "id": "neural_synapse",
+    "title": "Neural Synapse Bridge",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "AI Cortex Impulses & Ion Channels",
+    "controlPrompt": "Tap: Toggle Synapse"
+  },
+  {
+    "num": 203,
+    "id": "drone_swarm_defense",
+    "title": "Drone Swarm EMP Bastion",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Data Vault Shockwave Annihilation",
+    "controlPrompt": "Tap: EMP Shockwave"
+  },
+  {
+    "num": 204,
+    "id": "synth_keytar_solo",
+    "title": "Synthwave Keytar Solo",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Neon Outrun Rhythm Rocker",
+    "controlPrompt": "Tap: Strike Note"
+  },
+  {
+    "num": 205,
+    "id": "quantum_tunneling",
+    "title": "Quantum Tunneling Accelerator",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Subatomic Wave-Particle Duality",
+    "controlPrompt": "Hold: Phase Shift"
+  },
+  {
+    "num": 206,
+    "id": "hyperloop_racer",
+    "title": "Maglev Hyperloop Velocity",
+    "category": "Racing",
+    "control": "single_button",
+    "tagline": "Vacuum Tube 360-Degree Helical Sprint",
+    "controlPrompt": "Hold: Maglev Thrust"
+  },
+  {
+    "num": 207,
+    "id": "ring_toss_frenzy",
+    "title": "Ring Toss Frenzy",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Midway Bottle Ringer Duel",
+    "controlPrompt": "Hold: Charge Throw | Release: Pitch Ring"
+  },
+  {
+    "num": 208,
+    "id": "balloon_dart_clown",
+    "title": "Balloon Dart Clown",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Rotating Clown Wheel Shootout",
+    "controlPrompt": "Tap / Action: Fire Dart"
+  },
+  {
+    "num": 209,
+    "id": "duck_pond_derby",
+    "title": "Duck Pond Derby",
+    "category": "Physics",
+    "control": "single_button",
+    "tagline": "Magnetic Rubber Duck Winch",
+    "controlPrompt": "Tap / Action: Drop & Reel Hook"
+  },
+  {
+    "num": 210,
+    "id": "milk_bottle_knockdown",
+    "title": "Milk Bottle Knockdown",
+    "category": "Action",
+    "control": "single_button",
+    "tagline": "Carnival Baseball Strikeout",
+    "controlPrompt": "Hold: Charge Pitch | Release: Throw Baseball"
+  },
+  {
+    "num": 211,
+    "id": "bumper_car_derby",
+    "title": "Bumper Car Derby",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Electric Arena Smash",
+    "controlPrompt": "Steer: Drive | Tap: Nitro Ram"
+  },
+  {
+    "num": 212,
+    "id": "cotton_candy_spin",
+    "title": "Cotton Candy Spin",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Centrifugal Sugar Cloud Maker",
+    "controlPrompt": "Tap / Steer: Reverse Cone Spin"
+  },
+  {
+    "num": 213,
+    "id": "roller_coaster_brake",
+    "title": "Roller Coaster Brake",
+    "category": "Racing",
+    "control": "single_button",
+    "tagline": "Wooden Trestle Thrill Braker",
+    "controlPrompt": "Hold: Apply Track Brakes"
+  },
+  {
+    "num": 214,
+    "id": "ferris_wheel_hop",
+    "title": "Ferris Wheel Hop",
+    "category": "Physics",
+    "control": "single_button",
+    "tagline": "Counter-Rotating Gondola Leap",
+    "controlPrompt": "Tap / Action: Leap Gondola"
+  },
+  {
+    "num": 215,
+    "id": "dunk_clown_tank",
+    "title": "Dunk Clown Tank",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Bullseye Heckler Splashdown",
+    "controlPrompt": "Tap / Action: Pitch Softball"
+  },
+  {
+    "num": 216,
+    "id": "fortune_teller_tarot",
+    "title": "Fortune Teller Tarot",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Mystic Arcana Crystal Match",
+    "controlPrompt": "Tap / Action: Select Arcana Card"
+  },
+  {
+    "num": 217,
+    "id": "vine_swing_canopy",
+    "title": "Vine Swing Canopy",
+    "category": "Physics",
+    "control": "single_button",
+    "tagline": "Jungle Pendulum Liana Rush",
+    "controlPrompt": "Tap: Release / Catch Vine"
+  },
+  {
+    "num": 218,
+    "id": "trex_egg_scramble",
+    "title": "T-Rex Egg Scramble",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Prehistoric Nest Heist",
+    "controlPrompt": "Steer: Sneak | Release: Freeze"
+  },
+  {
+    "num": 219,
+    "id": "piranha_river_hop",
+    "title": "Piranha River Hop",
+    "category": "Reflex",
+    "control": "directional",
+    "tagline": "Rapids Log Frog Crossing",
+    "controlPrompt": "Tap: Hop Forward | Steer: Hop Lateral"
+  },
+  {
+    "num": 220,
+    "id": "pterodactyl_glide",
+    "title": "Pterodactyl Glide",
+    "category": "Racing",
+    "control": "directional",
+    "tagline": "Volcanic Thermal Flight",
+    "controlPrompt": "Tap: Flap Wings | Hold: Dive"
+  },
+  {
+    "num": 221,
+    "id": "quicksand_escape",
+    "title": "Quicksand Escape",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Bubbling Mud Pit Rescue",
+    "controlPrompt": "Tap: Kick Mud | Hold: Grab Rope"
+  },
+  {
+    "num": 222,
+    "id": "blowpipe_target",
+    "title": "Blowpipe Target",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Ancient Ruins Dart Aim",
+    "controlPrompt": "Hold: Inhale Breath | Release: Fire Dart"
+  },
+  {
+    "num": 223,
+    "id": "amber_fossil_excavate",
+    "title": "Amber Fossil Excavate",
+    "category": "Puzzle",
+    "control": "single_button",
+    "tagline": "Paleontology Quarry Chisel",
+    "controlPrompt": "Tap: Chisel Rock Block"
+  },
+  {
+    "num": 224,
+    "id": "raptor_pounce_dodge",
+    "title": "Raptor Pounce Dodge",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Velociraptor Ambush Evasion",
+    "controlPrompt": "Steer: Move | Tap: Dodge Roll"
+  },
+  {
+    "num": 225,
+    "id": "bamboo_pole_vault",
+    "title": "Bamboo Pole Vault",
+    "category": "Sports",
+    "control": "single_button",
+    "tagline": "Jungle Ravine Spring Leap",
+    "controlPrompt": "Tap: Plant Pole | Release: Launch Vault"
+  },
+  {
+    "num": 226,
+    "id": "volcano_lava_leap",
+    "title": "Volcano Lava Leap",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Caldera Basalt Pillar Hop",
+    "controlPrompt": "Steer / Tap: Leap Basalt Pillar"
+  },
+  {
+    "num": 227,
+    "id": "caterpillar_inchworm",
+    "title": "Caterpillar Inchworm",
+    "category": "Reflex",
+    "control": "single_button",
+    "tagline": "Dewy Twig Scrunch & Surge",
+    "controlPrompt": "Hold: Contract Tail | Release: Extend Head"
+  },
+  {
+    "num": 228,
+    "id": "honeybee_nectar_relay",
+    "title": "Honeybee Nectar Relay",
+    "category": "Racing",
+    "control": "directional",
+    "tagline": "Wildflower Harvest Rush",
+    "controlPrompt": "Steer: Fly Bee | Hover: Sip Nectar"
+  },
+  {
+    "num": 229,
+    "id": "spider_web_tangle",
+    "title": "Spider Web Tangle",
+    "category": "Puzzle",
+    "control": "directional",
+    "tagline": "Radial Dew Web Trapper",
+    "controlPrompt": "Tap: Crawl Web | Steer: Radial Switch"
+  },
+  {
+    "num": 230,
+    "id": "ant_colony_haul",
+    "title": "Ant Colony Haul",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Subterranean Picnic Pantry",
+    "controlPrompt": "Steer: Scurry Ant | Touch: Grab & Deliver"
+  },
+  {
+    "num": 231,
+    "id": "firefly_night_beacon",
+    "title": "Firefly Night Beacon",
+    "category": "Party",
+    "control": "directional",
+    "tagline": "Midnight Meadow Glow Harmony",
+    "controlPrompt": "Tap: Flash Lantern | Steer: Hover"
+  },
+  {
+    "num": 232,
+    "id": "dung_beetle_roll",
+    "title": "Dung Beetle Roll",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Colossal Soil Sphere Smash",
+    "controlPrompt": "Steer: Roll Mud Ball | Ram: Bump Rivals"
+  },
+  {
+    "num": 233,
+    "id": "ladybug_aphid_hunt",
+    "title": "Ladybug Aphid Hunt",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Rose Leaf Pest Gobbler",
+    "controlPrompt": "Steer: Skitter | Tap: Flutter Dash"
+  },
+  {
+    "num": 234,
+    "id": "grasshopper_high_jump",
+    "title": "Grasshopper High Jump",
+    "category": "Sports",
+    "control": "single_button",
+    "tagline": "Spring Leg Meadow Leap",
+    "controlPrompt": "Hold: Charge Jump | Release: Launch Leap"
+  },
+  {
+    "num": 235,
+    "id": "dragonfly_dogfight",
+    "title": "Dragonfly Dogfight",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Lily Pond Aerial Ace Duel",
+    "controlPrompt": "Steer: Fly Dragonfly | Tap: Supersonic Dash"
+  },
+  {
+    "num": 236,
+    "id": "centipede_slalom",
+    "title": "Centipede Slalom",
+    "category": "Racing",
+    "control": "directional",
+    "tagline": "Wiggling Pebble Gate Weave",
+    "controlPrompt": "Steer: Slalom Wiggle"
+  },
+  {
+    "num": 237,
+    "id": "poltergeist_possession",
+    "title": "Poltergeist Possession",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Haunted Furniture Hover",
+    "controlPrompt": "Steer: Move Ghost | Tap: Possess & Hurl"
+  },
+  {
+    "num": 238,
+    "id": "graveyard_zombie_bash",
+    "title": "Graveyard Zombie Bash",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Midnight Tombstone Whack",
+    "controlPrompt": "Steer: Run Graveyard | Tap: Shovel Bash"
+  },
+  {
+    "num": 239,
+    "id": "phantom_mirror_gaze",
+    "title": "Phantom Mirror Gaze",
+    "category": "Puzzle",
+    "control": "directional",
+    "tagline": "True Reflection Reflex",
+    "controlPrompt": "Steer: Select Mirror | Tap: Shatter Mirror"
+  },
+  {
+    "num": 240,
+    "id": "cauldron_witch_brew",
+    "title": "Cauldron Witch Brew",
+    "category": "Puzzle",
+    "control": "directional",
+    "tagline": "Bioluminescent Potion Craft",
+    "controlPrompt": "Steer: Select Ingredient | Tap: Drop In Cauldron"
+  },
+  {
+    "num": 241,
+    "id": "gargoyle_stone_stare",
+    "title": "Gargoyle Stone Stare",
+    "category": "Reflex",
+    "control": "directional",
+    "tagline": "Cathedral Belfry Freeze",
+    "controlPrompt": "Steer: Creep Forward | Release: Freeze Solid"
+  },
+  {
+    "num": 242,
+    "id": "ghost_vacuum_buster",
+    "title": "Ghost Vacuum Buster",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Proton Ecto-Canister Trap",
+    "controlPrompt": "Steer: Aim Nozzle | Hold: Vacuum Suction"
+  },
+  {
+    "num": 243,
+    "id": "tombstone_crypt_slider",
+    "title": "Tombstone Crypt Slider",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Ancient Sarcophagus Shove",
+    "controlPrompt": "Steer: Approach Tomb | Hold: Slide Slab"
+  },
+  {
+    "num": 244,
+    "id": "creepy_doll_crawl",
+    "title": "Creepy Doll Crawl",
+    "category": "Racing",
+    "control": "single_button",
+    "tagline": "Victorian Wind-Up Race",
+    "controlPrompt": "Hold: Wind Spring | Release: Crawl Sprint"
+  },
+  {
+    "num": 245,
+    "id": "ouija_spirit_board",
+    "title": "Ouija Spirit Board",
+    "category": "Party",
+    "control": "directional",
+    "tagline": "Occult Planchette Spelling",
+    "controlPrompt": "Steer: Slide Planchette | Tap: Lock Letter"
+  },
+  {
+    "num": 246,
+    "id": "cursed_clocktower_pendulum",
+    "title": "Cursed Clocktower Pendulum",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Razor Scythe Rafter Leap",
+    "controlPrompt": "Steer: Run Rafters | Hold: Duck / Crouch"
+  },
+  {
+    "num": 247,
+    "id": "synthwave_neon_racer",
+    "title": "Synthwave Neon Racer",
+    "category": "Racing",
+    "control": "directional",
+    "tagline": "Wireframe Sunset Highway",
+    "controlPrompt": "Steer: Switch Lanes | Hold: Turbo Nitro"
+  },
+  {
+    "num": 248,
+    "id": "pixel_space_invader",
+    "title": "Pixel Space Invader",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Descending Alien Matrix",
+    "controlPrompt": "Steer: Move Cannon | Tap: Fire Laser"
+  },
+  {
+    "num": 249,
+    "id": "vector_tank_battle",
+    "title": "Vector Tank Battle",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "1980 Wireframe Radar Duel",
+    "controlPrompt": "Steer: Rotate Turret | Throttle: Drive | Tap: Shoot"
+  },
+  {
+    "num": 250,
+    "id": "pac_maze_chomp",
+    "title": "Pac Maze Chomp",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Neon Dot Labyrinth Gobbler",
+    "controlPrompt": "Steer: Navigate Maze | Chomp Pellets"
+  },
+  {
+    "num": 251,
+    "id": "breakout_brick_blaster",
+    "title": "Breakout Brick Blaster",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Rainbow Neon Wall Smash",
+    "controlPrompt": "Steer: Slide Paddle | Volley Ball"
+  },
+  {
+    "num": 252,
+    "id": "laser_disc_dance",
+    "title": "LaserDisc Dance",
+    "category": "Party",
+    "control": "directional",
+    "tagline": "Interactive Synth QTE",
+    "controlPrompt": "Steer / Tap: Match Arrow On Beat"
+  },
+  {
+    "num": 253,
+    "id": "crt_scanline_sniper",
+    "title": "CRT Scanline Sniper",
+    "category": "Reflex",
+    "control": "directional",
+    "tagline": "Phosphor Target Gallery",
+    "controlPrompt": "Steer: Move Crosshair | Tap: Fire Lightgun"
+  },
+  {
+    "num": 254,
+    "id": "cyber_grid_runner",
+    "title": "Cyber Grid Runner",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Hoverboard Data Core Chaser",
+    "controlPrompt": "WASD / Arrows: 360° Hover | Space / Enter: Nitro Boost & EMP Shock"
+  },
+  {
+    "num": 255,
+    "id": "synth_drum_pad",
+    "title": "Synth Drum Pad",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "808 Electronic Beat Battle",
+    "controlPrompt": "Steer: Select Pad | Tap: Strike On Beat"
+  },
+  {
+    "num": 256,
+    "id": "matrix_code_rain",
+    "title": "Matrix Code Rain",
+    "category": "Puzzle",
+    "control": "directional",
+    "tagline": "Falling Terminal Cipher Stream",
+    "controlPrompt": "Steer: Slide Hacker Terminal | Catch Keys"
+  },
+  {
+    "num": 257,
+    "id": "sharks_and_minnows",
+    "title": "Sharks & Minnows",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Deep Ocean Lagoon Dash",
+    "controlPrompt": "WASD / Arrows: Swim • Space / Enter: Dash / Lunge"
+  },
+  {
+    "num": 258,
+    "id": "power_path_clash",
+    "title": "Power Path Clash",
+    "category": "Action",
+    "control": "directional",
+    "tagline": "Math Tower Combat Showdown",
+    "controlPrompt": "WASD / Arrows: Select Door • Space / Enter: Advance"
+  },
+  {
+    "num": 259,
+    "id": "landscape_artillery",
+    "title": "Landscape Artillery",
+    "category": "Physics",
+    "control": "directional",
+    "tagline": "Turn-Based Hillside Slingshot Duel",
+    "controlPrompt": "Left/Right: Aim • Down/Up: Pull Back Power • Space/Enter: Launch"
+  },
+  {
+    "num": 260,
+    "id": "spam_click_showdown",
+    "title": "Spam Click Showdown",
+    "category": "Party",
+    "control": "single_button",
+    "tagline": "Furious Button-Mashing Soda Blastoff",
+    "controlPrompt": "SPAM CLICK MOUSE / TAP / SPACE / ENTER / BUTTONS AS FAST AS YOU CAN!"
+  }
+]

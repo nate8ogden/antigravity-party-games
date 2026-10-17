@@ -181,26 +181,17 @@ export interface LevelBlueprint {
 
 /**
  * 30 Hand-Crafted Sumo Lode Runner Levels (28 cols x 16 rows each).
- * Legend:
- *  '.' = Empty
- *  '#' = Diggable Dohyō Clay Brick
- *  '@' = Indestructible Imperial Stone
- *  'H' = Bamboo Ladder
- *  '-' = Sacred Shimenawa Rope (hand-over-hand)
- *  'X' = Trapdoor (False Brick: looks like '#', entities fall straight through!)
- *  'S' = Hidden Escape Ladder (appears once all '$' Gold is collected)
- *  '$' = Golden Chanko / Koban Treasure
- *  'P' = Player 1/3 Spawn
- *  'Q' = Player 2/4 Spawn
- *  'E' = Rival Oni-Sumo Guard Spawn
  */
 export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
+  // =========================================================================
+  // CHAPTER 1: EDO KOKUGIKAN DOJO (Levels 1 - 6)
+  // =========================================================================
   {
     level: 1,
-    title: "Dohyō Initiate",
+    title: 'Dohyō Initiate',
     guardCount: 2,
     guardSpeed: 3.1,
-    holeDuration: 7,
+    holeDuration: 7.0,
     trapDuration: 3.8,
     rows: [
       '.............S..............',
@@ -223,10 +214,10 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 2,
-    title: "Twin Torii Towers",
+    title: 'Twin Torii Towers',
     guardCount: 2,
     guardSpeed: 3.2,
-    holeDuration: 7,
+    holeDuration: 7.0,
     trapDuration: 3.7,
     rows: [
       '.............S..............',
@@ -249,7 +240,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 3,
-    title: "Sacred Rope Crossing",
+    title: 'Sacred Rope Crossing',
     guardCount: 2,
     guardSpeed: 3.25,
     holeDuration: 6.9,
@@ -275,7 +266,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 4,
-    title: "The Stepping Stone Pit",
+    title: 'The Stepping Stone Pit',
     guardCount: 2,
     guardSpeed: 3.3,
     holeDuration: 6.8,
@@ -327,7 +318,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 6,
-    title: "Staircase Excavation",
+    title: 'Staircase Excavation',
     guardCount: 3,
     guardSpeed: 3.4,
     holeDuration: 6.7,
@@ -351,9 +342,13 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
     ]
   },
+
+  // =========================================================================
+  // CHAPTER 2: ARASHIYAMA BAMBOO SHRINE (Levels 7 - 12)
+  // =========================================================================
   {
     level: 7,
-    title: "Bamboo Labyrinth",
+    title: 'Bamboo Labyrinth',
     guardCount: 3,
     guardSpeed: 3.5,
     holeDuration: 6.6,
@@ -379,7 +374,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 8,
-    title: "The Hanging Gardens",
+    title: 'The Hanging Gardens',
     guardCount: 3,
     guardSpeed: 3.55,
     holeDuration: 6.5,
@@ -405,7 +400,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 9,
-    title: "Oni Bridge Puzzle",
+    title: 'Oni Bridge Puzzle',
     guardCount: 3,
     guardSpeed: 3.6,
     holeDuration: 6.5,
@@ -431,7 +426,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 10,
-    title: "Three-Story Dig",
+    title: 'Three-Story Dig',
     guardCount: 3,
     guardSpeed: 3.65,
     holeDuration: 6.4,
@@ -457,7 +452,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 11,
-    title: "Shrine of Illusions",
+    title: 'Shrine of Illusions',
     guardCount: 3,
     guardSpeed: 3.7,
     holeDuration: 6.4,
@@ -483,7 +478,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 12,
-    title: "Emerald Pagoda",
+    title: 'Emerald Pagoda',
     guardCount: 3,
     guardSpeed: 3.75,
     holeDuration: 6.3,
@@ -491,7 +486,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     rows: [
       '.............S..............',
       '..........$..S..$...........',
-      '........H###HS####..........',
+      '........H###HS###H..........',
       '........H....S....H.........',
       '......$.H.E.....E.H.$.......',
       '.....H###H#######H###H......',
@@ -507,9 +502,13 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
     ]
   },
+
+  // =========================================================================
+  // CHAPTER 3: HOKKAIDO FROST ONSEN (Levels 13 - 18)
+  // =========================================================================
   {
     level: 13,
-    title: "Glacial Tiers",
+    title: 'Glacial Tiers',
     guardCount: 4,
     guardSpeed: 3.8,
     holeDuration: 6.2,
@@ -535,7 +534,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 14,
-    title: "Frozen Waterfall",
+    title: 'Frozen Waterfall',
     guardCount: 4,
     guardSpeed: 3.85,
     holeDuration: 6.2,
@@ -561,7 +560,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 15,
-    title: "The Ice Vaults",
+    title: 'The Ice Vaults',
     guardCount: 4,
     guardSpeed: 3.9,
     holeDuration: 6.1,
@@ -587,11 +586,11 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 16,
-    title: "Rope & Chasm Gauntlet",
+    title: 'Rope & Chasm Gauntlet',
     guardCount: 4,
     guardSpeed: 3.95,
-    holeDuration: 6,
-    trapDuration: 3,
+    holeDuration: 6.0,
+    trapDuration: 3.0,
     rows: [
       '.............S..............',
       '.............S..............',
@@ -613,24 +612,24 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 17,
-    title: "Double Trapdoor Drop",
+    title: 'Double Trapdoor Drop',
     guardCount: 4,
-    guardSpeed: 4,
-    holeDuration: 6,
-    trapDuration: 3,
+    guardSpeed: 4.0,
+    holeDuration: 6.0,
+    trapDuration: 3.0,
     rows: [
       '.............S..............',
       '.............S..............',
       '..$...E......S......E...$...',
       '####XX######HS######XX######',
       '....XX......H.......XX......',
-      '....$......H.......$......',
+      '....$$......H.......$$......',
       '###H####..E.H.E...####H#####',
       '...H...#####H#####....H.....',
       '...H........H.........H.....',
       '...H..$.....H.....$...H.....',
       '...H.##XX###H###XX##..H.....',
-      '...H...$...H...$....H.....',
+      '...H...$$...H...$$....H.....',
       '...H..H#####H#####H...H.....',
       '...H..H.....H.....H...H.....',
       '...H..H..P..H..Q..H...H.....',
@@ -639,7 +638,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 18,
-    title: "Blizzard Bastion",
+    title: 'Blizzard Bastion',
     guardCount: 4,
     guardSpeed: 4.05,
     holeDuration: 5.9,
@@ -653,19 +652,23 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '.....H...$.......$...H......',
       '.....H..H###H.H###H..H......',
       '..$..H..H...H.H...H..H..$...',
-      'H#####..H.E.H.H.E.H..######H',
-      'H.......H###H.H###H........H',
-      'H...$...H...H.H...H...$....H',
-      'H..H#####...H.H...#####H...H',
-      'H..H........H.H........H...H',
-      'H..H...P....H.H....Q...H...H',
-      'H..H........$ $........H...H',
+      'H#####..H.E.H.H.E.H..#####H.',
+      'H.......H###H.H###H.......H.',
+      'H...$...H...H.H...H...$...H.',
+      'H..H#####...H.H...#####H..H.',
+      'H..H........H.H........H..H.',
+      'H..H...P....H.H....Q...H..H.',
+      'H..H........$ $........H..H.',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
     ]
   },
+
+  // =========================================================================
+  // CHAPTER 4: KAGOSHIMA MAGMA FORGE (Levels 19 - 24)
+  // =========================================================================
   {
     level: 19,
-    title: "The Iron Foundry",
+    title: 'The Iron Foundry',
     guardCount: 4,
     guardSpeed: 4.15,
     holeDuration: 5.8,
@@ -691,7 +694,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 20,
-    title: "Crucible of Timing",
+    title: 'Crucible of Timing',
     guardCount: 5,
     guardSpeed: 4.2,
     holeDuration: 5.8,
@@ -717,7 +720,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 21,
-    title: "Deep Magma Excavation",
+    title: 'Deep Magma Excavation',
     guardCount: 5,
     guardSpeed: 4.25,
     holeDuration: 5.7,
@@ -743,7 +746,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 22,
-    title: "Suspended Anvils",
+    title: 'Suspended Anvils',
     guardCount: 5,
     guardSpeed: 4.3,
     holeDuration: 5.7,
@@ -755,7 +758,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '##H----------S----------H###',
       '..H.....................H...',
       '..H..$....$.....$....$..H...',
-      '..H.@H@..@H@...@H@..@H@.H...',
+      '..H.@H@..@@H...H@@..@H@.H...',
       '..H..H----H-----H----H..H...',
       '..H..H.E...........E.H..H...',
       '..H..H...$...$...$...H..H...',
@@ -769,7 +772,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 23,
-    title: "Furnace Maze",
+    title: 'Furnace Maze',
     guardCount: 5,
     guardSpeed: 4.35,
     holeDuration: 5.6,
@@ -795,7 +798,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 24,
-    title: "Caldera Rim",
+    title: 'Caldera Rim',
     guardCount: 5,
     guardSpeed: 4.4,
     holeDuration: 5.6,
@@ -819,6 +822,10 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
     ]
   },
+
+  // =========================================================================
+  // CHAPTER 5: IMPERIAL GOLDEN CASTLE (Levels 25 - 30)
+  // =========================================================================
   {
     level: 25,
     title: "Shogun's Courtyard",
@@ -847,7 +854,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 26,
-    title: "The Gauntlet of Ropes",
+    title: 'The Gauntlet of Ropes',
     guardCount: 5,
     guardSpeed: 4.6,
     holeDuration: 5.5,
@@ -873,7 +880,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 27,
-    title: "Master Excavator",
+    title: 'Master Excavator',
     guardCount: 6,
     guardSpeed: 4.65,
     holeDuration: 5.4,
@@ -899,7 +906,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 28,
-    title: "Trapdoor Matrix",
+    title: 'Trapdoor Matrix',
     guardCount: 6,
     guardSpeed: 4.7,
     holeDuration: 5.4,
@@ -951,7 +958,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 30,
-    title: "Imperial Grand Dohyō",
+    title: 'Imperial Grand Dohyō',
     guardCount: 6,
     guardSpeed: 4.9,
     holeDuration: 5.2,
@@ -959,7 +966,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     rows: [
       '.............S..............',
       '.........$...S...$..........',
-      '..$..E..H###HS####..E...$...',
+      '..$..E..H###HS###H..E...$...',
       '#####H--H....S....H--H######',
       '.....H..H..$...$..H..H......',
       '.....H..H#########H..H......',
@@ -1352,7 +1359,6 @@ export class SumoLodeRunnerGame extends BaseGame {
     if (t === TILE_SOLID || t === TILE_BRICK) return false;
     // Note: TILE_TRAPDOOR looks like brick but is passable!
     if (isGuard && t === TILE_TRAPDOOR && this.trapdoorRevealed[idx] === 0) {
-      // Guards can also fall through trapdoors
       return true;
     }
     return true;
@@ -1649,7 +1655,6 @@ export class SumoLodeRunnerGame extends BaseGame {
 
         const newRow = Math.floor(r.y + 0.05);
         if (newRow > row && newRow < GRID_ROWS) {
-          // Check if we landed on solid ground or caught a rope/ladder
           const landTile = this.gridMem[newRow * GRID_COLS + col];
           if (landTile === TILE_ROPE && r.dropFromRopeCooldown <= 0) {
             r.y = newRow;
@@ -1686,7 +1691,6 @@ export class SumoLodeRunnerGame extends BaseGame {
       }
 
       if (wantDigDir === 0 && justAct && !onRope) {
-        // Smart directional dig: dig in facing direction, or if blocked and opposite side is diggable, assist!
         if (this.canDigAt(col + r.facing, row + 1)) {
           wantDigDir = r.facing;
         } else if (moveX === 0 && this.canDigAt(col - r.facing, row + 1)) {
@@ -1713,7 +1717,6 @@ export class SumoLodeRunnerGame extends BaseGame {
       // Vertical climbing on Ladders
       let movedVertically = false;
       if (moveY !== 0) {
-        // Check if current column or nearby column has a ladder
         let ladderCol = -1;
         if (moveY < 0) {
           if (this.isClimbable(col, row) || this.isClimbable(col, row - 1)) ladderCol = col;
@@ -1927,7 +1930,6 @@ export class SumoLodeRunnerGame extends BaseGame {
       // Execute Guard Movement
       if (g.moveDirY !== 0 && (onLadder || (g.moveDirY > 0 && onRope) || this.isClimbable(col, row + g.moveDirY))) {
         if (g.moveDirY > 0 && onRope && !onLadder) {
-          // Drop off rope toward player below
           g.y += 0.25;
           g.state = 'FALL';
         } else {
@@ -1974,8 +1976,6 @@ export class SumoLodeRunnerGame extends BaseGame {
 
   /**
    * Zero-Allocation Ring-Buffer BFS Pathfinding across the 28x16 Lode Runner Graph.
-   * Respects Lode Runner rules: walking left/right when supported, climbing ladders,
-   * traversing ropes, and dropping off ledges/ropes.
    */
   private computeShortestPathStep(
     startCol: number,
@@ -2037,7 +2037,6 @@ export class SumoLodeRunnerGame extends BaseGame {
       const onRope = tile === TILE_ROPE;
       const supported = onLadder || onRope || this.isTileSupported(c, r);
 
-      // If unsupported in air, can only fall straight down!
       if (!supported) {
         const nr = r + 1;
         if (nr < GRID_ROWS && this.isCellPassable(c, nr, isGuard)) {
@@ -2060,14 +2059,12 @@ export class SumoLodeRunnerGame extends BaseGame {
         const nr = r + dy;
         if (nc < 0 || nc >= GRID_COLS || nr < 0 || nr >= GRID_ROWS) continue;
 
-        if (dy === -1 && !onLadder) continue; // Can only climb UP if on a ladder
+        if (dy === -1 && !onLadder) continue;
         if (dy === 1) {
-          // Can climb DOWN if on a ladder, ladder below, or dropping off a rope
           const ladderBelow = this.isClimbable(c, nr);
           if (!onLadder && !ladderBelow && !onRope) continue;
         }
         if (dx !== 0) {
-          // Avoid walking into dug holes if this is a smart Bot player!
           if (!isGuard && this.dynMem[nr * GRID_COLS + nc] === DYN_DUG_HOLE) continue;
         }
 
@@ -2354,7 +2351,6 @@ export class SumoLodeRunnerGame extends BaseGame {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
     for (let px = originX + tileW * 3; px < originX + totalW; px += tileW * 7) {
       ctx.fillRect(px, originY, 8, totalH);
-      // Hanging Paper Chōchin Lantern
       const lanternY = originY + 28 + Math.sin(now * 2 + px) * 2;
       const glow = ctx.createRadialGradient(px + 4, lanternY, 2, px + 4, lanternY, 36);
       glow.addColorStop(0, biome.lanternGlow);
@@ -2388,13 +2384,11 @@ export class SumoLodeRunnerGame extends BaseGame {
       const by = originY + b.row * tileH;
       const rem = b.maxDuration - b.timer;
 
-      // Dark excavated cavity outline
       ctx.strokeStyle = 'rgba(253, 224, 71, 0.35)';
       ctx.lineWidth = 1;
       ctx.strokeRect(bx + 2, by + 2, tileW - 4, tileH - 4);
 
       if (rem < 1.6) {
-        // Brick is regenerating! Draw rising clay blocks with tremor
         const progress = 1 - Math.max(0, rem / 1.6);
         const fillH = Math.floor(tileH * progress);
         const shakeX = Math.sin(now * 45) * 1.5;
@@ -2445,7 +2439,6 @@ export class SumoLodeRunnerGame extends BaseGame {
       const rx = originX + (r.x + 0.5) * tileW;
       const ry = originY + (r.y + 0.5) * tileH;
 
-      // If digging, draw diagonal Sumo Shiko Stomp Ki Beam into target brick
       if (r.state === 'DIG') {
         const tx = originX + (r.digTargetCol + 0.5) * tileW;
         const ty = originY + (r.digTargetRow + 0.5) * tileH;
@@ -2501,7 +2494,6 @@ export class SumoLodeRunnerGame extends BaseGame {
 
   private drawGoldenTreasure(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, t: number): void {
     ctx.save();
-    // Golden Chanko Cauldron / Koban Ingot Stack
     const grad = ctx.createRadialGradient(x - r * 0.25, y - r * 0.25, 1, x, y, r * 1.2);
     grad.addColorStop(0, '#FEF08A');
     grad.addColorStop(0.55, '#FACC15');
@@ -2519,7 +2511,6 @@ export class SumoLodeRunnerGame extends BaseGame {
     ctx.lineWidth = 1.2;
     ctx.stroke();
 
-    // Specular glint
     if (Math.sin(t * 5) > 0.2) {
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(x - r * 0.35, y - r * 0.25, 2.5, 2.5);
@@ -2547,7 +2538,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     ctx.arc(0, 0, r * 0.88, 0, Math.PI * 2);
     ctx.fill();
 
-    // Dark Indigo Mawashi Belt (glows gold when carrying stolen gold!)
+    // Dark Indigo Mawashi Belt
     ctx.fillStyle = g.carryingGoldId !== null ? '#FACC15' : '#1E1B4B';
     ctx.fillRect(-r * 0.82, r * 0.08, r * 1.64, r * 0.38);
 
@@ -2581,7 +2572,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     ctx.fillRect(eyeOff - r * 0.35, -r * 0.25, r * 0.25, r * 0.2);
     ctx.fillRect(eyeOff + r * 0.1, -r * 0.25, r * 0.25, r * 0.2);
 
-    // If trapped in dug hole, draw flat walkable bridge indicator + dizzy stars!
+    // If trapped in dug hole, draw dizzy stars
     if (g.state === 'TRAPPED') {
       const starAngle = now * 6;
       ctx.fillStyle = '#38BDF8';
@@ -2607,7 +2598,7 @@ export class SumoLodeRunnerGame extends BaseGame {
 
     const stride = r.state === 'RUN' || r.state === 'CLIMB' || r.state === 'ROPE' ? Math.sin(r.animPhase) * 3.2 : 0;
 
-    // Sumo Legs (Shiko stomp pose when digging!)
+    // Sumo Legs
     ctx.fillStyle = '#FDBA74';
     if (r.state === 'DIG') {
       ctx.fillRect(-rad * 0.75, rad * 0.2, rad * 0.45, rad * 0.65);
@@ -2626,7 +2617,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     ctx.arc(0, 0, rad * 0.9, 0, Math.PI * 2);
     ctx.fill();
 
-    // Player-Colored Ceremonial Mawashi Belt + Gold Kesho-Mawashi Apron Trim
+    // Player-Colored Ceremonial Mawashi Belt
     ctx.fillStyle = mawashiColor;
     ctx.fillRect(-rad * 0.86, rad * 0.08, rad * 1.72, rad * 0.42);
     ctx.strokeStyle = '#FDE047';
@@ -2639,11 +2630,10 @@ export class SumoLodeRunnerGame extends BaseGame {
     ctx.arc(0, -rad * 0.55, rad * 0.48, Math.PI, 0);
     ctx.fill();
     ctx.fillRect(-rad * 0.18, -rad * 1.12, rad * 0.36, rad * 0.45);
-    // White topknot tie (motoyui)
     ctx.fillStyle = '#F8FAFC';
     ctx.fillRect(-rad * 0.16, -rad * 0.85, rad * 0.32, 2);
 
-    // Expressive Eyes & Headband facing direction
+    // Expressive Eyes
     const faceOff = r.facing * rad * 0.2;
     ctx.fillStyle = '#0F172A';
     ctx.fillRect(faceOff - rad * 0.28, -rad * 0.25, 2.5, 3);
@@ -2674,7 +2664,6 @@ export class SumoLodeRunnerGame extends BaseGame {
   ): void {
     this.hudHitboxes = [];
 
-    // Bottom Classic Lode Runner Status Bar
     const barY = height - 26;
     ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
     ctx.fillRect(0, barY, width, 26);
@@ -2688,7 +2677,6 @@ export class SumoLodeRunnerGame extends BaseGame {
     const remainingGold = this.golds.filter((g) => !g.collected).length;
     const totalGold = this.golds.length;
 
-    // Interactive Level Selector Pill in Bottom Center: [ ◀ ] STAGE X/30: TITLE [ ▶ ] [ ↻ RETRY ]
     const prevBtnX = width / 2 - 195;
     const nextBtnX = width / 2 + 115;
     const retryBtnX = width / 2 + 150;
