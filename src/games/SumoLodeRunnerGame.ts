@@ -195,15 +195,12 @@ export interface LevelBlueprint {
  *  'E' = Rival Oni-Sumo Guard Spawn
  */
 export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
-  // =========================================================================
-  // CHAPTER 1: EDO KOKUGIKAN DOJO (Levels 1 - 6)
-  // =========================================================================
   {
     level: 1,
-    title: 'Dohyō Initiate',
+    title: "Dohyō Initiate",
     guardCount: 2,
     guardSpeed: 3.1,
-    holeDuration: 7.0,
+    holeDuration: 7,
     trapDuration: 3.8,
     rows: [
       '.............S..............',
@@ -212,10 +209,10 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '#######H###########H########',
       '.......H...........H........',
       '.......H...$...$...H........',
-      '.......H..#######..H........',
+      '.......H..H#####H..H........',
       '.......H..H.....H..H........',
       '..E....H..H.....H..H....$...',
-      '###########.....############',
+      '####H######.....######H#####',
       '....H.................H.....',
       '....H...$.........$...H.....',
       '....#########H#########.....',
@@ -226,10 +223,10 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 2,
-    title: 'Twin Torii Towers',
+    title: "Twin Torii Towers",
     guardCount: 2,
     guardSpeed: 3.2,
-    holeDuration: 7.0,
+    holeDuration: 7,
     trapDuration: 3.7,
     rows: [
       '.............S..............',
@@ -239,12 +236,12 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '.....H-------.-------H......',
       '.....H...............H......',
       '.....H...$.......$...H......',
-      '.....H..###########..H......',
+      '.....H..H#########H..H......',
       '..$..H..H.........H..H..$...',
-      '######..H...$ $...H..#######',
-      '....H...H..#####..H...H.....',
+      '####H#..H...$ $...H..#H#####',
+      '....H...H..H###H..H...H.....',
       '....H...H..H...H..H...H.....',
-      '....#####..H...H..#####.....',
+      '....H####..H...H..####H.....',
       '....H......H...H......H.....',
       '....H..P...H...H...Q..H.....',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
@@ -252,7 +249,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 3,
-    title: 'Sacred Rope Crossing',
+    title: "Sacred Rope Crossing",
     guardCount: 2,
     guardSpeed: 3.25,
     holeDuration: 6.9,
@@ -264,13 +261,13 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '####H-----------------H#####',
       '....H.................H.....',
       '....H..$.....E.....$..H.....',
-      '....H.#####.....#####.H.....',
+      '....H.H####.....####H.H.....',
       '....H.H.............H.H.....',
       '....H.H..$.......$..H.H.....',
       '....H.H.####H.H####.H.H.....',
       '....H.H.....H.H.....H.H.....',
       '..$.H.H..E..H.H.....H.H.$...',
-      '#####.#######.#######.######',
+      '####H.#######.#######.H#####',
       '....H.................H.....',
       '....H....P.......Q....H.....',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
@@ -278,7 +275,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 4,
-    title: 'The Stepping Stone Pit',
+    title: "The Stepping Stone Pit",
     guardCount: 2,
     guardSpeed: 3.3,
     holeDuration: 6.8,
@@ -315,13 +312,13 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '..$..........S..........$...',
       '#####XX#####HS#####XX#######',
       '.....$......H......$........',
-      '....###..E..H..E..###.......',
+      '....H##..E..H..E..##H.......',
       '....H#######H#######H.......',
       '....H.......H.......H.......',
       '....H..$....H....$..H.......',
       '....H.##XX#####XX##.H.......',
       '....H...$.......$...H.......',
-      '....H..###########..H.......',
+      '....H..H#########H..H.......',
       '....H..H.........H..H.......',
       '....H..H.P.....Q.H..H.......',
       '....H..H....$....H..H.......',
@@ -330,7 +327,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 6,
-    title: 'Staircase Excavation',
+    title: "Staircase Excavation",
     guardCount: 3,
     guardSpeed: 3.4,
     holeDuration: 6.7,
@@ -354,13 +351,9 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
     ]
   },
-
-  // =========================================================================
-  // CHAPTER 2: ARASHIYAMA BAMBOO SHRINE (Levels 7 - 12)
-  // =========================================================================
   {
     level: 7,
-    title: 'Bamboo Labyrinth',
+    title: "Bamboo Labyrinth",
     guardCount: 3,
     guardSpeed: 3.5,
     holeDuration: 6.6,
@@ -378,7 +371,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '#####H#####...#####H########',
       '.....H.............H........',
       '.....H...$.....$...H........',
-      '.....H..#########..H........',
+      '.....H..H#######H..H........',
       '.....H..H.......H..H........',
       '.....H..H.P...Q.H..H........',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
@@ -386,7 +379,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 8,
-    title: 'The Hanging Gardens',
+    title: "The Hanging Gardens",
     guardCount: 3,
     guardSpeed: 3.55,
     holeDuration: 6.5,
@@ -402,9 +395,9 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '...H-------H.H-------..H....',
       '...H.......H.H.........H....',
       '...H..$....H.H....$....H....',
-      '...H.#####.H.H.#####...H....',
+      '...H.H####.H.H.####H...H....',
       '...H.H...E.H.H.E...H...H....',
-      '...H.H.###########.H...H....',
+      '...H.H.H#########H.H...H....',
       '...H.H.H.........H.H...H....',
       '...H.H.H..P...Q..H.H...H....',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
@@ -412,7 +405,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 9,
-    title: 'Oni Bridge Puzzle',
+    title: "Oni Bridge Puzzle",
     guardCount: 3,
     guardSpeed: 3.6,
     holeDuration: 6.5,
@@ -438,7 +431,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 10,
-    title: 'Three-Story Dig',
+    title: "Three-Story Dig",
     guardCount: 3,
     guardSpeed: 3.65,
     holeDuration: 6.4,
@@ -464,7 +457,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 11,
-    title: 'Shrine of Illusions',
+    title: "Shrine of Illusions",
     guardCount: 3,
     guardSpeed: 3.7,
     holeDuration: 6.4,
@@ -479,10 +472,10 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '####H###X#########X###H#####',
       '....H.................H.....',
       '....H..$.....E.....$..H.....',
-      '....H.###X#######X###.H.....',
+      '....H.H##X#######X##H.H.....',
       '....H.H.............H.H.....',
       '....H.H..$.......$..H.H.....',
-      '....H.H.###########.H.H.....',
+      '....H.H.H#########H.H.H.....',
       '....H.H.H.........H.H.H.....',
       '....H.H.H..P...Q..H.H.H.....',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
@@ -490,7 +483,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 12,
-    title: 'Emerald Pagoda',
+    title: "Emerald Pagoda",
     guardCount: 3,
     guardSpeed: 3.75,
     holeDuration: 6.3,
@@ -498,29 +491,25 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     rows: [
       '.............S..............',
       '..........$..S..$...........',
-      '........####HS####..........',
+      '........H###HS####..........',
       '........H....S....H.........',
       '......$.H.E.....E.H.$.......',
-      '.....####H#######H####......',
+      '.....H###H#######H###H......',
       '.....H...H.......H...H......',
       '...$.H...H..$ $..H...H.$....',
-      '..####...#########...####...',
+      '..H##H...#########...H##H...',
       '..H..H.......E.......H..H...',
       '..H..H..$.........$..H..H...',
-      '..H..#################..H...',
+      '..H..H###############H..H...',
       '..H..H...............H..H...',
       '..H..H...P.......Q...H..H...',
       '..H..H.......$.......H..H...',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
     ]
   },
-
-  // =========================================================================
-  // CHAPTER 3: HOKKAIDO FROST ONSEN (Levels 13 - 18)
-  // =========================================================================
   {
     level: 13,
-    title: 'Glacial Tiers',
+    title: "Glacial Tiers",
     guardCount: 4,
     guardSpeed: 3.8,
     holeDuration: 6.2,
@@ -529,16 +518,16 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '.............S..............',
       '.............S..............',
       '..$...E......S......E...$...',
-      '############################',
+      'H##########################H',
       'H..........................H',
       'H....$.......$.......$.....H',
       'H..######H#######H######...H',
       'H........H.......H.........H',
       'H..E.....H...$...H.....E...H',
-      'H.#######H#######H#######..H',
+      'H.H######H#######H######H..H',
       'H.H......H.......H......H..H',
       'H.H..$...H.......H...$..H..H',
-      'H.H.#####H#######H#####.H..H',
+      'H.H.H####H#######H####H.H..H',
       'H.H.H.................H.H..H',
       'H.H.H.....P.....Q.....H.H..H',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
@@ -546,7 +535,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 14,
-    title: 'Frozen Waterfall',
+    title: "Frozen Waterfall",
     guardCount: 4,
     guardSpeed: 3.85,
     holeDuration: 6.2,
@@ -555,16 +544,16 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '.............S..............',
       '.............S..............',
       '..$..........S..........$...',
-      '###H-----###HS###-----H#####',
+      '###H-----H##HS##H-----H#####',
       '...H.....H......H.....H.....',
       '...H..$..H.E..E.H..$..H.....',
-      '...H.###.########.###.H.....',
+      '...H.H##.########.##H.H.....',
       '...H.H---........---H.H.....',
       '...H.H...$......$...H.H.....',
-      '...H.H..####XX####..H.H.....',
+      '...H.H..H###XX###H..H.H.....',
       '...H.H..H..E..E..H..H.H.....',
       '...H.H..H..$..$..H..H.H.....',
-      '...H.H..##########..H.H.....',
+      '...H.H..H########H..H.H.....',
       '...H.H..H........H..H.H.....',
       '...H.H..H.P....Q.H..H.H.....',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
@@ -572,7 +561,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 15,
-    title: 'The Ice Vaults',
+    title: "The Ice Vaults",
     guardCount: 4,
     guardSpeed: 3.9,
     holeDuration: 6.1,
@@ -590,7 +579,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '....H.E....#####....E.H.....',
       '....H#####.......#####H.....',
       '....H.#$#.........#$#.H.....',
-      '....H.###..#####..###.H.....',
+      '....H.###..H###H..###.H.....',
       '....H......H...H......H.....',
       '....H..P...H...H...Q..H.....',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
@@ -598,11 +587,11 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 16,
-    title: 'Rope & Chasm Gauntlet',
+    title: "Rope & Chasm Gauntlet",
     guardCount: 4,
     guardSpeed: 3.95,
-    holeDuration: 6.0,
-    trapDuration: 3.0,
+    holeDuration: 6,
+    trapDuration: 3,
     rows: [
       '.............S..............',
       '.............S..............',
@@ -616,7 +605,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '..H...###---###---###...H...',
       '..H......E.......E......H...',
       '..H..$...............$..H...',
-      '..H.###################.H...',
+      '..H.H#################H.H...',
       '..H.H.................H.H...',
       '..H.H.....P.....Q.....H.H...',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
@@ -624,25 +613,25 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 17,
-    title: 'Double Trapdoor Drop',
+    title: "Double Trapdoor Drop",
     guardCount: 4,
-    guardSpeed: 4.0,
-    holeDuration: 6.0,
-    trapDuration: 3.0,
+    guardSpeed: 4,
+    holeDuration: 6,
+    trapDuration: 3,
     rows: [
       '.............S..............',
       '.............S..............',
       '..$...E......S......E...$...',
       '####XX######HS######XX######',
       '....XX......H.......XX......',
-      '....$$......H.......$$......',
+      '....$......H.......$......',
       '###H####..E.H.E...####H#####',
       '...H...#####H#####....H.....',
       '...H........H.........H.....',
       '...H..$.....H.....$...H.....',
       '...H.##XX###H###XX##..H.....',
-      '...H...$$...H...$$....H.....',
-      '...H..######H######...H.....',
+      '...H...$...H...$....H.....',
+      '...H..H#####H#####H...H.....',
       '...H..H.....H.....H...H.....',
       '...H..H..P..H..Q..H...H.....',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
@@ -650,7 +639,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 18,
-    title: 'Blizzard Bastion',
+    title: "Blizzard Bastion",
     guardCount: 4,
     guardSpeed: 4.05,
     holeDuration: 5.9,
@@ -662,25 +651,21 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '#####H#######S#######H######',
       '.....H-------.-------H......',
       '.....H...$.......$...H......',
-      '.....H..####H.H####..H......',
+      '.....H..H###H.H###H..H......',
       '..$..H..H...H.H...H..H..$...',
-      '######..H.E.H.H.E.H..#######',
+      'H#####..H.E.H.H.E.H..######H',
       'H.......H###H.H###H........H',
       'H...$...H...H.H...H...$....H',
-      'H..######...H.H...######...H',
+      'H..H#####...H.H...#####H...H',
       'H..H........H.H........H...H',
       'H..H...P....H.H....Q...H...H',
       'H..H........$ $........H...H',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
     ]
   },
-
-  // =========================================================================
-  // CHAPTER 4: KAGOSHIMA MAGMA FORGE (Levels 19 - 24)
-  // =========================================================================
   {
     level: 19,
-    title: 'The Iron Foundry',
+    title: "The Iron Foundry",
     guardCount: 4,
     guardSpeed: 4.15,
     holeDuration: 5.8,
@@ -692,10 +677,10 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '@@@##H@@####HS####@@H##@@@@@',
       '.....H......H.......H.......',
       '.....H..$...H...$...H.......',
-      '.....H.@@##@H@##@@..H.......',
+      '.....H.H@##@H@##@H..H.......',
       '.....H.H....H....H..H.......',
       '..$..H.H.E..H..E.H..H...$...',
-      '@@@##H.H####H####H..H###@@@@',
+      '@@@#HH.H####H####H..H###@@@@',
       '....H..H....H....H..H.......',
       '....H..H.$..H..$.H..H.......',
       '....H..H#########H..H.......',
@@ -706,7 +691,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 20,
-    title: 'Crucible of Timing',
+    title: "Crucible of Timing",
     guardCount: 5,
     guardSpeed: 4.2,
     holeDuration: 5.8,
@@ -721,10 +706,10 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '####H#######H.H#######H#####',
       '....H.......H.H.......H.....',
       '....H...$...H.H...$...H.....',
-      '....H..#####H.H#####..H.....',
+      '....H..H####H.H####H..H.....',
       '....H..H....H.H....H..H.....',
       '..$.H..H..E.H.H....H..H.$...',
-      '#####..H###########H..######',
+      '####H..H###########H..H#####',
       '....H..H...........H..H.....',
       '....H..H...P...Q...H..H.....',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
@@ -732,7 +717,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 21,
-    title: 'Deep Magma Excavation',
+    title: "Deep Magma Excavation",
     guardCount: 5,
     guardSpeed: 4.25,
     holeDuration: 5.7,
@@ -758,7 +743,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 22,
-    title: 'Suspended Anvils',
+    title: "Suspended Anvils",
     guardCount: 5,
     guardSpeed: 4.3,
     holeDuration: 5.7,
@@ -770,13 +755,13 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '##H----------S----------H###',
       '..H.....................H...',
       '..H..$....$.....$....$..H...',
-      '..H.@@@..@@@...@@@..@@@.H...',
+      '..H.@H@..@H@...@H@..@H@.H...',
       '..H..H----H-----H----H..H...',
       '..H..H.E...........E.H..H...',
       '..H..H...$...$...$...H..H...',
       '..H..H..###.###.###..H..H...',
       '..H..H.E...........E.H..H...',
-      '..H..#################..H...',
+      '..H..H###############H..H...',
       '..H..H.......E.......H..H...',
       '..H..H....P.....Q....H..H...',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
@@ -784,7 +769,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 23,
-    title: 'Furnace Maze',
+    title: "Furnace Maze",
     guardCount: 5,
     guardSpeed: 4.35,
     holeDuration: 5.6,
@@ -795,13 +780,13 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '..$..E.......S.......E..$...',
       '####H###XX###S###XX###H#####',
       '....H....$.......$....H.....',
-      '....H..#####H.H#####..H.....',
+      '....H..H####H.H####H..H.....',
       '....H..H.E..H.H..E.H..H.....',
       '..$.H..H..$.H.H.$..H..H.$...',
-      '#####..H###XH.HX###H..######',
+      'H####..H###XH.HX###H..#####H',
       'H......H....H.H....H.......H',
       'H..$...H.E..H.H....H...$...H',
-      'H.####.######.######.####..H',
+      'H.H##H.######.######.H##H..H',
       'H.H..H...............H..H..H',
       'H.H..H....P.....Q....H..H..H',
       'H.H..H.......$.......H..H..H',
@@ -810,7 +795,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 24,
-    title: 'Caldera Rim',
+    title: "Caldera Rim",
     guardCount: 5,
     guardSpeed: 4.4,
     holeDuration: 5.6,
@@ -824,20 +809,16 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '...######H...S...H######....',
       '.........H...S...H..........',
       '.....E...H..$S$..H...E......',
-      '....######H#####H######.....',
+      '....H#####H#####H#####H.....',
       '....H.....H.....H.....H.....',
       '....H..E..H.$ $.H..E..H.....',
-      '....H.#####.###.#####.H.....',
+      '....H.H####.###.####H.H.....',
       '....H.H.....#$#.....H.H.....',
       '....H.H..E..###.....H.H.....',
       '....H.H...P.....Q...H.H.....',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
     ]
   },
-
-  // =========================================================================
-  // CHAPTER 5: IMPERIAL GOLDEN CASTLE (Levels 25 - 30)
-  // =========================================================================
   {
     level: 25,
     title: "Shogun's Courtyard",
@@ -858,7 +839,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '####H#################H#####',
       '....H.................H.....',
       '....H..$....$ $....$..H.....',
-      '....H.#####.###.#####.H.....',
+      '....H.H####.H#H.####H.H.....',
       '....H.H.....H.H.....H.H.....',
       '....H.H..P..H.H..Q..H.H.....',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
@@ -866,7 +847,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 26,
-    title: 'The Gauntlet of Ropes',
+    title: "The Gauntlet of Ropes",
     guardCount: 5,
     guardSpeed: 4.6,
     holeDuration: 5.5,
@@ -881,10 +862,10 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '..H....E.....$.....E....H...',
       '..H---------###---------H...',
       '..H..$.......E.......$..H...',
-      '..H.###-------------###.H...',
+      '..H.H##-------------##H.H...',
       '..H.H..E...........E..H.H...',
       '..H.H..$.....$.....$..H.H...',
-      '..H.H.###############.H.H...',
+      '..H.H.H#############H.H.H...',
       '..H.H.H.............H.H.H...',
       '..H.H.H....P...Q....H.H.H...',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
@@ -892,7 +873,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 27,
-    title: 'Master Excavator',
+    title: "Master Excavator",
     guardCount: 6,
     guardSpeed: 4.65,
     holeDuration: 5.4,
@@ -918,7 +899,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 28,
-    title: 'Trapdoor Matrix',
+    title: "Trapdoor Matrix",
     guardCount: 6,
     guardSpeed: 4.7,
     holeDuration: 5.4,
@@ -936,7 +917,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '....H###X###H.H###X###H.....',
       '....H.......H.H.......H.....',
       '....H..E.$..H.H..$.E..H.....',
-      '....H.######H.H######.H.....',
+      '....H.H#####H.H#####H.H.....',
       '....H.H.....H.H.....H.H.....',
       '....H.H..P..H.H..Q..H.H.....',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
@@ -955,13 +936,13 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '..$..E.......S.......E..$...',
       '#####H-------S-------H######',
       '.....H...............H......',
-      '..$..H..####H.H####..H..$...',
+      '..$..H..H###H.H###H..H..$...',
       '####H###H.#$H.H$#.H###H#####',
       '....H...H.###.###.H...H.....',
       '....H.E.H..E...E..H.E.H.....',
       '....H###H#########H###H.....',
       '....H...H...$ $...H...H.....',
-      '....H...H.#######.H...H.....',
+      '....H...H.H#####H.H...H.....',
       '....H...H.H..$..H.H...H.....',
       '....H...H.H.###.H.H...H.....',
       '....H...H.H.P.Q.H.H...H.....',
@@ -970,7 +951,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
   {
     level: 30,
-    title: 'Imperial Grand Dohyō',
+    title: "Imperial Grand Dohyō",
     guardCount: 6,
     guardSpeed: 4.9,
     holeDuration: 5.2,
@@ -978,10 +959,10 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     rows: [
       '.............S..............',
       '.........$...S...$..........',
-      '..$..E..####HS####..E...$...',
+      '..$..E..H###HS####..E...$...',
       '#####H--H....S....H--H######',
       '.....H..H..$...$..H..H......',
-      '.....H..###########..H......',
+      '.....H..H#########H..H......',
       '.....H..H..##$##..H..H......',
       '..$..H..H..#####..H..H..$...',
       '####H###H.E.....E.H###H#####',

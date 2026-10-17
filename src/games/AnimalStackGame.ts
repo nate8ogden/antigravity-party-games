@@ -754,6 +754,11 @@ export class AnimalStackGame extends BaseGame {
     ctx.fill();
     ctx.restore();
 
+    // 5b. Visual Drop Plumb-Line & Landing Ghost Silhouette
+    if (!this.fallingAnimal && this.nextTurnTimer <= 0) {
+      this.renderDropGuide(ctx, width, height);
+    }
+
     // 6. Active Animal in Crane Clamp (if not in flight)
     if (!this.fallingAnimal) {
       const animal = ANIMAL_TYPES[this.currentAnimalIndex];
@@ -774,9 +779,9 @@ export class AnimalStackGame extends BaseGame {
       this.renderAnimal(ctx, fa.type, fa.x, fa.y, fa.playerId, fa.angle);
     }
 
-    // 8. Render Stacked Animals
+    // 8. Render Stacked Animals (with juicy squish-and-stretch on landing)
     for (const sa of this.animals) {
-      this.renderAnimal(ctx, sa.type, sa.x, sa.y, sa.playerId, sa.angle);
+      this.renderAnimal(ctx, sa.type, sa.x, sa.y, sa.playerId, sa.angle, sa.squish || 0);
     }
 
     // 9. Floating Moored Raft (Wood Cannot Tip: Level & Stable!)
@@ -989,13 +994,112 @@ export class AnimalStackGame extends BaseGame {
     ctx.restore();
   }
 
+  private renderDropGuide(ctx: CanvasRenderingContext2D, _width: number, _height: number): void {
+    const curPid = this.activePlayerOrder[this.activePlayerIndex];
+    if (curPid === undefined) return;
+    const animal = ANIMAL_TYPES[this.currentAnimalIndex];
+    const ext = AnimalStackGame.getExtents(animal, this.heldRotation);
+
+    const raftTopY = this.raftY - this.raftHeight / 2;
+    const raftLeft = this.raftX - this.raftWidth / 2;
+    const raftRight = this.raftX + this.raftWidth / 2;
+
+    let landedY = raftTopY - ext.halfH;
+    let suppL = raftLeft;
+    let suppR = raftRight;
+    let hitRaft = (Math.min(this.craneX + ext.halfW, raftRight) - Math.max(this.craneX - ext.halfW, raftLeft)) > 6;
+    let hitSa = false;
+
+    for (const sa of this.animals) {
+      if (!sa.settled) continue;
+      const saExt = AnimalStackGame.getExtents(sa.type, sa.angle);
+      const saL = sa.x - saExt.halfW;
+      const saR = sa.x + saExt.halfW;
+      const overlap = Math.min(this.craneX + ext.halfW, saR) - Math.max(this.craneX - ext.halfW, saL);
+      if (overlap > 6) {
+        const candidateY = (sa.y - saExt.halfH) - ext.halfH;
+        if (!hitSa || candidateY < landedY - 6) {
+          landedY = candidateY;
+          suppL = saL;
+          suppR = saR;
+          hitSa = true;
+        } else if (Math.abs(candidateY - landedY) <= 8) {
+          suppL = Math.min(suppL, saL);
+          suppR = Math.max(suppR, saR);
+        }
+      }
+    }
+
+    const isSupported = (hitSa || hitRaft);
+    const isStable = isSupported && this.craneX >= suppL && this.craneX <= suppR;
+    const isTipping = isSupported && !isStable;
+
+    const guideColor = isStable ? '#38BDF8' : (isTipping ? '#F59E0B' : 'rgba(244, 63, 94, 0.75)');
+
+    ctx.save();
+    // 1. Dotted Alignment Plumb-line
+    ctx.setLineDash([5, 4]);
+    ctx.strokeStyle = guideColor;
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(this.craneX, this.craneY + 34);
+    ctx.lineTo(this.craneX, landedY + ext.halfH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 2. Landing Surface Brackets [   ]
+    ctx.strokeStyle = guideColor;
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    // Left bracket
+    ctx.moveTo(this.craneX - ext.halfW, landedY + ext.halfH - 5);
+    ctx.lineTo(this.craneX - ext.halfW, landedY + ext.halfH);
+    ctx.lineTo(this.craneX - ext.halfW + 8, landedY + ext.halfH);
+    // Right bracket
+    ctx.moveTo(this.craneX + ext.halfW, landedY + ext.halfH - 5);
+    ctx.lineTo(this.craneX + ext.halfW, landedY + ext.halfH);
+    ctx.lineTo(this.craneX + ext.halfW - 8, landedY + ext.halfH);
+    ctx.stroke();
+
+    // 3. Ghost Silhouette Preview of Landing Animal
+    ctx.save();
+    ctx.globalAlpha = 0.28;
+    this.renderAnimal(ctx, animal, this.craneX, landedY, curPid, this.heldRotation);
+    ctx.restore();
+
+    // 4. Compact Alignment Pill
+    const tagText = isStable ? '● STABLE' : (isTipping ? '▲ TIPPING' : '✕ MISS');
+    const tagBg = isStable ? 'rgba(6, 78, 59, 0.88)' : (isTipping ? 'rgba(120, 53, 15, 0.88)' : 'rgba(136, 19, 55, 0.88)');
+    const tagFg = isStable ? '#34D399' : (isTipping ? '#FCD34D' : '#FDA4AF');
+    const tagW = 76;
+    const tagH = 18;
+    const tagX = this.craneX - tagW / 2;
+    const tagY = this.craneY + 44;
+
+    ctx.fillStyle = tagBg;
+    ctx.beginPath();
+    ctx.roundRect(tagX, tagY, tagW, tagH, 9);
+    ctx.fill();
+    ctx.strokeStyle = guideColor;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = '800 10px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = tagFg;
+    ctx.fillText(tagText, tagX + tagW / 2, tagY + 12.5);
+
+    ctx.restore();
+  }
+
   private renderAnimal(
     ctx: CanvasRenderingContext2D,
     def: AnimalDef,
     x: number,
     y: number,
     pid: PlayerId,
-    angle: number = 0
+    angle: number = 0,
+    squish: number = 0
   ) {
     const ext = AnimalStackGame.getExtents(def, angle);
     const pColor = this.players[pid]?.color || '#38BDF8';
@@ -1012,6 +1116,11 @@ export class AnimalStackGame extends BaseGame {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
+
+    if (squish > 0) {
+      const squishFactor = Math.sin(squish * Math.PI) * 0.2;
+      ctx.scale(1 + squishFactor, 1 - squishFactor);
+    }
 
     const halfW = def.width / 2;
     const halfH = def.height / 2;
