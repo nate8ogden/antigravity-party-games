@@ -422,44 +422,20 @@ export class SequenceClashGame extends BaseGame {
             if (d.inputIndex >= this.sequence.length) {
               // Completed entire sequence cleanly!
               d.completedCurrentSequence = true;
-              const timeTaken = d.inputStartTime - this.inputWindowTimer;
-              let bonus = 25;
-              let label = '+25 CLEAR!';
-              let color = '#10B981';
-
-              if (timeTaken <= 1.5) {
-                bonus = 50;
-                label = '⚡ BLAZING SPEED! +50!';
-                color = '#F59E0B';
-                this.audio.playScore();
-              } else if (timeTaken <= 3.0) {
-                bonus = 35;
-                label = '✨ SWIFT! +35!';
-                color = '#38BDF8';
-                this.audio.playScore();
-              }
-
-              d.score += bonus;
-              this.particles.showFloatingText(label, cx, cy - 130, color, 20);
+              d.score += 25;
+              this.audio.playScore();
+              this.particles.showFloatingText('+25 CLEAR! ✨', cx, cy - 130, '#10B981', 20);
             }
           } else {
-            // WRONG PAD! Deduct 1 Life / Heart instead of instant total game-over
-            d.lives--;
-            d.score = Math.max(0, d.score - 15);
+            // WRONG PAD! Mistake elimination
+            d.alive = false;
             d.mistakeTimer = 1.0;
-            d.inputIndex = 0; // Reset index for this round so player can retry
+            this.eliminationOrder.push(d.id);
 
             this.audio.playExplosion();
             this.particles.addTrauma(0.3);
             this.particles.spawnExplosion(padPos.x, padPos.y, '#EF4444', 30);
-
-            if (d.lives <= 0) {
-              d.alive = false;
-              this.eliminationOrder.push(d.id);
-              this.particles.showFloatingText('OUT OF HEARTS! 💀', cx, cy - 130, '#EF4444', 24);
-            } else {
-              this.particles.showFloatingText(`MISTAKE! -15 (${d.lives} ❤️ LEFT)`, cx, cy - 130, '#F87171', 18);
-            }
+            this.particles.showFloatingText('MISTAKE! ❌', cx, cy - 130, '#EF4444', 24);
           }
         }
       }
