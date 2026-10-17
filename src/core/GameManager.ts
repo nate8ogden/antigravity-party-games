@@ -2157,8 +2157,8 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   },
   {
     id: 'ring_toss_frenzy',
-    title: 'Ring Toss Frenzy',
-    tagline: 'Midway Bottle Ringer Duel',
+    title: 'Carousel Bottle Toss',
+    tagline: 'Whirling Turntable Ringer Rush',
     category: 'Reflex',
     icon: '[G-207]',
     instructions: 'Time your sweeping aim guide and charge power to heave rings onto spinning carnival glass bottles! Score golden bottles for massive points.',
@@ -2166,8 +2166,8 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   },
   {
     id: 'balloon_dart_clown',
-    title: 'Balloon Dart Clown',
-    tagline: 'Rotating Clown Wheel Shootout',
+    title: 'Clown Wheel Shootout',
+    tagline: 'Rotating Circus Target Wheel',
     category: 'Action',
     icon: '[G-208]',
     instructions: 'Aim your sweeping dart reticle and pop colorful balloons on the rotating clown wheel! Hit the laughing clown nose for a loud honk and jackpot points!',
@@ -2202,8 +2202,8 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   },
   {
     id: 'cotton_candy_spin',
-    title: 'Cotton Candy Spin',
-    tagline: 'Centrifugal Sugar Cloud Maker',
+    title: 'Cotton Candy Drum Spin',
+    tagline: 'Centrifugal Sugar Floss Drum',
     category: 'Party',
     icon: '[G-212]',
     instructions: 'Spin your paper cone along the perimeter of the giant spinning sugar drum to catch flying cotton candy strands! Build huge fluffy clouds for giant bonus payouts.',
@@ -2211,7 +2211,7 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   },
   {
     id: 'roller_coaster_brake',
-    title: 'Roller Coaster Brake',
+    title: 'Trestle Speed Braker',
     tagline: 'Wooden Trestle Thrill Braker',
     category: 'Racing',
     icon: '[G-213]',
@@ -2220,7 +2220,7 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   },
   {
     id: 'ferris_wheel_hop',
-    title: 'Ferris Wheel Hop',
+    title: 'Twin Wheel Gondola Hop',
     tagline: 'Counter-Rotating Gondola Leap',
     category: 'Physics',
     icon: '[G-214]',
@@ -2229,8 +2229,8 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   },
   {
     id: 'dunk_clown_tank',
-    title: 'Dunk Clown Tank',
-    tagline: 'Bullseye Heckler Splashdown',
+    title: 'Heckler Dunk Tank',
+    tagline: 'Bullseye Clown Splashdown',
     category: 'Reflex',
     icon: '[G-215]',
     instructions: 'Heckling clown perches on the wooden plank above the splash tank! Time your pitch to strike the oscillating metal bullseye target and drop him into the water!',
