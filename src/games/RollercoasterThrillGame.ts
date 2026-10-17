@@ -304,10 +304,10 @@ export class RollercoasterThrillGame extends BaseGame {
         }
       }
 
-      // Read steer & throttle inputs
+      // Read steer & action inputs
       const steerX = this.input.getSteer(p.id);
-      const actionHeld = this.input.isActionPressed(p.id) || this.input.isPressed(p.id);
-      const actionJustPressed = this.input.justPressed(p.id) || this.input.justAction(p.id);
+      const actionHeld = this.input.isActionPressed(p.id);
+      const actionJustPressed = this.input.justAction(p.id) || (this.input.justPressed(p.id) && Math.abs(steerX) < 0.1);
 
       const lateralSpeed = (cart.isUnderdog ? 2.4 : 1.9) * (cart.boostTimer > 0 ? 1.4 : 1.0);
 
@@ -319,11 +319,11 @@ export class RollercoasterThrillGame extends BaseGame {
         if (upcomingCurve) {
           if (upcomingCurve.type === 'left_bank') {
             cart.vx = -1.6;
-            cart.lean = -0.55;
+            cart.lean = -0.65;
             this.audio.playTone(520, 0.08, 'sine');
           } else if (upcomingCurve.type === 'right_bank') {
             cart.vx = 1.6;
-            cart.lean = 0.55;
+            cart.lean = 0.65;
             this.audio.playTone(520, 0.08, 'sine');
           } else if (upcomingCurve.type === 'loop_de_loop') {
             cart.boostTimer = Math.max(cart.boostTimer, 0.6);
@@ -336,34 +336,37 @@ export class RollercoasterThrillGame extends BaseGame {
         }
       }
 
-      // Lateral banking along rails
+      // Lateral banking along rails with dynamic physical tilt
       if (Math.abs(steerX) > 0.08) {
-        cart.vx += steerX * lateralSpeed * dt * 8.0;
-        cart.lean += (steerX * 0.45 - cart.lean) * dt * 10.0;
+        cart.vx += steerX * lateralSpeed * dt * 9.0;
+        const targetLean = steerX * 0.65;
+        cart.lean += (targetLean - cart.lean) * Math.min(1, dt * 12.0);
+        if (Math.random() < 0.22) {
+          const theme = THEMES[this.currentThemeIdx];
+          const cx = this.lastCanvasWidth / 2 + cart.xRatio * (this.lastCanvasWidth * 0.32);
+          this.particles.emit(cx + (steerX > 0 ? 18 : -18), this.lastCanvasHeight - 110, 2, theme.accentGlow);
+        }
       } else {
-        cart.lean += (0 - cart.lean) * dt * 8.0;
+        cart.lean += (0 - cart.lean) * Math.min(1, dt * 8.0);
       }
       cart.vx *= Math.pow(0.02, dt);
       cart.xRatio += cart.vx * dt;
       cart.xRatio = Math.max(-0.95, Math.min(0.95, cart.xRatio));
 
-      // Hold-to-Charge Kinetic Magnetic Rail Boost Sweet Spot (72%–98%)
+      // Hold-to-Charge Kinetic Magnetic Rail Boost Sweet Spot (70%–98%)
       if (actionHeld && cart.boostTimer <= 0) {
         cart.isCharging = true;
         cart.chargeTime += dt;
         cart.mood = 'focused';
 
-        // Overcharge past 1.25s triggers Rail Overheat Emergency Lockup!
+        // Overcharge past 1.25s safely vents steam without locking brakes
         if (cart.chargeTime > 1.25) {
           cart.isCharging = false;
           cart.chargeTime = 0;
-          cart.wobbleTimer = 0.85;
-          cart.score = Math.max(0, cart.score - 5);
-          cart.mood = 'shocked';
-          this.audio.playTone(170, 0.25, 'sawtooth');
+          this.audio.playTone(320, 0.12, 'triangle');
           const cx = this.lastCanvasWidth / 2 + cart.xRatio * (this.lastCanvasWidth * 0.32);
-          this.particles.emit(cx, this.lastCanvasHeight - 110, 16, '#EF4444');
-          this.particles.showFloatingText('BRAKE LOCKUP! -5', cx, this.lastCanvasHeight - 145, '#EF4444', 18);
+          this.particles.emit(cx, this.lastCanvasHeight - 110, 8, '#38BDF8');
+          this.particles.showFloatingText('STEAM VENTED 💨', cx, this.lastCanvasHeight - 145, '#38BDF8', 16);
         }
       } else {
         if (cart.isCharging) {

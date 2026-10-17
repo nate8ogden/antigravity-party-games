@@ -186,31 +186,31 @@ export class CottonCandyGame extends BaseGame {
     const stickBaseY = ps.y - 4;
     const stickTopY = ps.y - 34;
 
-    // Along the stick itself (so cotton candy sticks and wraps directly onto the stick!)
-    for (let t = 0.2; t <= 1.0; t += 0.35) {
+    // Along the stick itself (wide sticky capture column so sugar instantly clings to stick)
+    for (let t = 0.1; t <= 1.0; t += 0.25) {
       segments.push({
         x: ps.x,
         y: stickBaseY + (stickTopY - stickBaseY) * t,
-        radius: 20,
+        radius: 28,
         isStick: true
       });
     }
 
-    // Along each puff in the growing stack
-    let curX = ps.x;
-    let curY = stickTopY;
+    // Along each puff in the growing stack with precise world-space rotation
     const sinW = Math.sin(ps.wobbleAngle);
     const cosW = Math.cos(ps.wobbleAngle);
 
     for (let i = 0; i < ps.stack.length; i++) {
       const puff = ps.stack[i];
-      const dist = (i + 1) * 16;
-      curX = ps.x + sinW * dist + puff.offsetX;
-      curY = stickTopY - cosW * dist;
+      const localX = puff.offsetX;
+      const localY = -(i * 16 + 8);
+      // Transform local rotated offset around stickTopY
+      const curX = ps.x + cosW * localX + sinW * (-localY);
+      const curY = stickTopY + sinW * localX - cosW * (-localY);
       segments.push({
         x: curX,
         y: curY,
-        radius: puff.radius + 6,
+        radius: puff.radius + 14, // Generous fluffy adhesion margin
         isStick: false
       });
     }
@@ -341,19 +341,22 @@ export class CottonCandyGame extends BaseGame {
         continue;
       }
 
-      // If a player is holding Action (Centrifugal Sugar Vortex), attract non-burnt drops toward their cone tip!
+      // Sticky Sugar Attraction: cotton candy naturally attracts and pulls falling sugar drops towards the stick and stack!
       if (drop.kind !== 'burnt') {
         for (const p of activePlayers) {
           const ps = this.playersState.get(p.id);
-          if (!ps || !ps.isCharging) continue;
+          if (!ps) continue;
           const tip = this.getStackTipPosition(ps);
           const dx = tip.x - drop.x;
           const dy = tip.y - drop.y;
           const d = Math.hypot(dx, dy);
-          const pullRadius = ps.isUnderdog ? 115 : 88;
-          if (d > 4 && d < pullRadius) {
-            drop.vx += (dx / d) * 380 * dt;
-            drop.vy += (dy / d) * 220 * dt;
+
+          // Active vortex has large radius; passive sticky adhesion pulls drops in vicinity
+          const pullRadius = ps.isCharging ? (ps.isUnderdog ? 140 : 110) : (ps.isUnderdog ? 75 : 55);
+          if (d > 4 && d < pullRadius && drop.y < tip.y + 40) {
+            const pullForce = ps.isCharging ? 380 : 180;
+            drop.vx += (dx / d) * pullForce * dt;
+            drop.vy += (dy / d) * (pullForce * 0.75) * dt;
           }
         }
       }
@@ -487,29 +490,18 @@ export class CottonCandyGame extends BaseGame {
         }
       }
 
-      // Physics Wobble on Stack
+      // Physics Wobble on Stack - Organic spring elasticity
       const stackLen = ps.stack.length;
       if (stackLen > 0) {
-        const accelForce = -steer * (0.04 + stackLen * 0.028);
-        ps.wobbleVelocity += accelForce * 16 * dt;
+        const accelForce = -steer * (0.02 + stackLen * 0.012);
+        ps.wobbleVelocity += accelForce * 12 * dt;
 
-        const springK = 22;
-        const damping = ps.isCharging ? 14 : 6.5;
+        const springK = 32;
+        const damping = ps.isCharging ? 18 : 9.5;
         ps.wobbleVelocity += (-springK * ps.wobbleAngle - damping * ps.wobbleVelocity) * dt;
         ps.wobbleAngle += ps.wobbleVelocity * dt;
-
-        // If stack tips over (> 64 degrees), collapse top half!
-        if (Math.abs(ps.wobbleAngle) > 1.12 && stackLen >= 4) {
-          const lostCount = Math.ceil(stackLen * 0.5);
-          for (let k = 0; k < lostCount; k++) {
-            ps.stack.pop();
-          }
-          this.audio.playSnowSplat();
-          this.particles.shake(0.28);
-          this.particles.showFloatingText('TOPPLE! HALF LOST!', ps.x, ps.y - 80, '#EF4444', 20);
-          ps.wobbleAngle *= 0.25;
-          ps.wobbleVelocity = 0;
-        }
+        // Clamp maximum angle so it sways satisfyingly without snapping
+        ps.wobbleAngle = Math.max(-0.95, Math.min(0.95, ps.wobbleAngle));
       } else {
         ps.wobbleAngle = 0;
         ps.wobbleVelocity = 0;
