@@ -24,26 +24,27 @@ export const GRID_ROWS = 16;
 export const GRID_SIZE = GRID_COLS * GRID_ROWS; // 448 cells
 
 /**
- * Pre-compiled 266-byte Inline WebAssembly (Wasm) Physics & Grid Kernel.
+ * Pre-compiled 283-byte Inline WebAssembly (Wasm) Physics & Grid Kernel.
  * Instantiated synchronously via new WebAssembly.Module / WebAssembly.Instance
  * with zero external network fetches so it works 100% inside the single-file bundle.
  *
  * Exports:
  * - mem: WebAssembly.Memory (1 page = 64KB, shared with JS Uint8Array views)
- * - isSupported(col: i32, row: i32, escapeRevealed: i32) -> i32 (1 if supported, 0 if falling)
+ * - isSupported(col: i32, row: i32, escapeRevealed: i32) -> i32 (1 if floor/ladder supported, 0 if falling)
  * - manhattanCost(c1: i32, r1: i32, c2: i32, r2: i32) -> i32 (|c1-c2| + |r1-r2|*2)
  */
 const WASM_LODE_KERNEL_BYTES = new Uint8Array([
   0, 97, 115, 109, 1, 0, 0, 0, 1, 16, 2, 96, 3, 127, 127, 127, 1, 127, 96, 4, 127, 127, 127, 127, 1, 127,
   3, 3, 2, 0, 1, 5, 3, 1, 0, 1, 7, 37, 3, 3, 109, 101, 109, 2, 0, 11, 105, 115, 83, 117, 112, 112, 111,
   114, 116, 101, 100, 0, 0, 13, 109, 97, 110, 104, 97, 116, 116, 97, 110, 67, 111, 115, 116, 0, 1, 10,
-  188, 1, 2, 132, 1, 1, 5, 127, 32, 1, 65, 15, 78, 4, 64, 65, 1, 15, 11, 32, 1, 65, 28, 108, 32, 0, 106,
-  34, 3, 45, 0, 0, 34, 4, 65, 3, 70, 32, 4, 65, 4, 70, 114, 4, 64, 65, 1, 15, 11, 32, 4, 65, 6, 70, 32,
-  2, 69, 69, 113, 4, 64, 65, 1, 15, 11, 32, 3, 65, 28, 106, 34, 5, 45, 0, 128, 4, 34, 7, 65, 2, 70, 4,
-  64, 65, 1, 15, 11, 32, 7, 65, 1, 70, 4, 64, 65, 0, 15, 11, 32, 5, 45, 0, 0, 34, 6, 65, 1, 70, 32, 6,
-  65, 2, 70, 114, 32, 6, 65, 3, 70, 114, 4, 64, 65, 1, 15, 11, 32, 6, 65, 6, 70, 32, 2, 69, 69, 113, 11,
-  52, 1, 2, 127, 32, 0, 32, 2, 107, 34, 4, 65, 0, 72, 4, 64, 65, 0, 32, 4, 107, 33, 4, 11, 32, 1, 32, 3,
-  107, 34, 5, 65, 0, 72, 4, 64, 65, 0, 32, 5, 107, 33, 5, 11, 32, 4, 32, 5, 65, 2, 108, 106, 11
+  205, 1, 2, 149, 1, 1, 5, 127, 32, 0, 65, 0, 72, 32, 0, 65, 28, 78, 114, 32, 1, 65, 0, 72, 114, 4, 64,
+  65, 0, 15, 11, 32, 1, 65, 15, 78, 4, 64, 65, 1, 15, 11, 32, 1, 65, 28, 108, 32, 0, 106, 34, 3, 45, 0,
+  0, 34, 4, 65, 3, 70, 4, 64, 65, 1, 15, 11, 32, 4, 65, 6, 70, 32, 2, 69, 69, 113, 4, 64, 65, 1, 15, 11,
+  32, 3, 65, 28, 106, 34, 5, 45, 0, 128, 4, 34, 7, 65, 2, 70, 4, 64, 65, 1, 15, 11, 32, 7, 65, 1, 70, 4,
+  64, 65, 0, 15, 11, 32, 5, 45, 0, 0, 34, 6, 65, 1, 70, 32, 6, 65, 2, 70, 114, 32, 6, 65, 3, 70, 114, 4,
+  64, 65, 1, 15, 11, 32, 6, 65, 6, 70, 32, 2, 69, 69, 113, 11, 52, 1, 2, 127, 32, 0, 32, 2, 107, 34, 4,
+  65, 0, 72, 4, 64, 65, 0, 32, 4, 107, 33, 4, 11, 32, 1, 32, 3, 107, 34, 5, 65, 0, 72, 4, 64, 65, 0, 32,
+  5, 107, 33, 5, 11, 32, 4, 32, 5, 65, 2, 108, 106, 11
 ]);
 
 interface WasmLodeExports {
@@ -249,7 +250,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '.............S..............',
       '.............S..............',
       '..$..........S..........$...',
-      '####H-----------------H#####',
+      '####H--------S--------H#####',
       '....H.................H.....',
       '....H..$.....E.....$..H.....',
       '....H.H####.....####H.H.....',
@@ -280,7 +281,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '......H..$...$...$..H.......',
       '......H.###.###.###.H.......',
       '......H.#$#.#$#.#$#.H.......',
-      '......H.###.###.###.H.......',
+      '......H.#X#.#X#.#X#.H.......',
       '..$...H.............H...$...',
       '#######H###########H########',
       '.......H...........H........',
@@ -331,13 +332,13 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '......H.............H.......',
       '......H..#########..H.......',
       '......H..##$###$##..H.......',
-      '......H..#########..H.......',
+      '......H..##X###X##..H.......',
       '..$...H.............H...$...',
       '####H########H########H#####',
       '....H........H........H.....',
       '....H..####..H..####..H.....',
       '....H..#$##..E..##$#..H.....',
-      '....H..####..H..####..H.....',
+      '....H..#X##..H..##X#..H.....',
       '....H...P....H....Q...H.....',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
     ]
@@ -440,7 +441,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '.....H...#########...H......',
       '.....H...###$#$###...H......',
       '.....H...###$#$###...H......',
-      '.....H...#########...H......',
+      '.....H...###X#X###...H......',
       '..$..H.......E.......H..$...',
       '####H#################H#####',
       '....H.................H.....',
@@ -486,7 +487,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     rows: [
       '.............S..............',
       '..........$..S..$...........',
-      '........H###HS###H..........',
+      '........H###H#H###H.........',
       '........H....S....H.........',
       '......$.H.E.....E.H.$.......',
       '.....H###H#######H###H......',
@@ -573,12 +574,12 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '....H.................H.....',
       '....H.#####.....#####.H.....',
       '....H.#$#$#.....#$#$#.H.....',
-      '....H.#####..$..#####.H.....',
+      '....H.#X#X#..$..#X#X#.H.....',
       '....H.......###.......H.....',
       '....H.E....#####....E.H.....',
       '....H#####.......#####H.....',
       '....H.#$#.........#$#.H.....',
-      '....H.###..H###H..###.H.....',
+      '....H.#X#..H###H..#X#.H.....',
       '....H......H...H......H.....',
       '....H..P...H...H...Q..H.....',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
@@ -734,8 +735,8 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '....H..#############..H.....',
       '....H..####$###$####..H.....',
       '....H..#####$#$#####..H.....',
-      '....H..######$######..H.....',
-      '....H..#############..H.....',
+      '....H..####X#$#X####..H.....',
+      '....H..#####XXX#####..H.....',
       '..$.H..E.....E.....E..H.$...',
       '#####H###############H######',
       '.....H...............H......',
@@ -817,7 +818,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '....H..E..H.$ $.H..E..H.....',
       '....H.H####.###.####H.H.....',
       '....H.H.....#$#.....H.H.....',
-      '....H.H..E..###.....H.H.....',
+      '....H.H..E..#X#.....H.H.....',
       '....H.H...P.....Q...H.H.....',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
     ]
@@ -841,7 +842,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '.....H-------.-------H......',
       '.....H..#####.#####..H......',
       '.....H..#$#$#.#$#$#..H......',
-      '.....H..#####.#####..H......',
+      '.....H..#X#X#.#X#X#..H......',
       '..$..H...E...E...E...H..$...',
       '####H#################H#####',
       '....H.................H.....',
@@ -893,13 +894,13 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '....H.................H.....',
       '....H.@@@@#######@@@@.H.....',
       '....H.@@@@##$#$##@@@@.H.....',
-      '....H.@@@@###$###@@@@.H.....',
-      '....H.@@@@#######@@@@.H.....',
+      '....H.@@@@##X$X##@@@@.H.....',
+      '....H.@@@@##XXX##@@@@.H.....',
       '..$.H..E..E.....E..E..H.$...',
       '#####H###############H######',
       '.....H...#########...H......',
       '.....H...###$#$###...H......',
-      '.....H...#########...H......',
+      '.....H...###X#X###...H......',
       '.....H....P.....Q....H......',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
     ]
@@ -945,13 +946,13 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '.....H...............H......',
       '..$..H..H###H.H###H..H..$...',
       '####H###H.#$H.H$#.H###H#####',
-      '....H...H.###.###.H...H.....',
+      '....H...H.#X#.#X#.H...H.....',
       '....H.E.H..E...E..H.E.H.....',
       '....H###H#########H###H.....',
       '....H...H...$ $...H...H.....',
       '....H...H.H#####H.H...H.....',
       '....H...H.H..$..H.H...H.....',
-      '....H...H.H.###.H.H...H.....',
+      '....H...H.H.#X#.H.H...H.....',
       '....H...H.H.P.Q.H.H...H.....',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
     ]
@@ -971,13 +972,13 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '.....H..H..$...$..H..H......',
       '.....H..H#########H..H......',
       '.....H..H..##$##..H..H......',
-      '..$..H..H..#####..H..H..$...',
+      '..$..H..H..##X##..H..H..$...',
       '####H###H.E.....E.H###H#####',
       '....H...H#########H...H.....',
       '....H.E.H..$...$..H.E.H.....',
       '....H###H.###X###.H###H.....',
       '....H...H.#$#.#$#.H...H.....',
-      '....H...H.###.###.H...H.....',
+      '....H...H.#X#.#X#.H...H.....',
       '....H...H...P.Q...H...H.....',
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
     ]
@@ -998,6 +999,14 @@ interface GoldItem {
   row: number;
   collected: boolean;
   carriedByGuardId: number | null;
+}
+
+interface BonusItem {
+  active: boolean;
+  spawnedThisLevel: boolean;
+  col: number;
+  row: number;
+  timer: number;
 }
 
 interface SumoRunnerPlayer {
@@ -1032,6 +1041,8 @@ interface OniGuard {
   trapTimer: number;
   trapCol: number;
   trapRow: number;
+  climbOutTimer: number;
+  climbOutCol: number;
   carryingGoldId: number | null;
   goldHoldTimer: number;
   animPhase: number;
@@ -1040,7 +1051,16 @@ interface OniGuard {
   repathTimer: number;
   immuneHoleCol: number;
   immuneHoleRow: number;
+  dropFromRopeCooldown: number;
+  respawnFlashTimer: number;
 }
+
+const BFS_DIRS: readonly { dx: number; dy: number }[] = [
+  { dx: -1, dy: 0 },
+  { dx: 1, dy: 0 },
+  { dx: 0, dy: -1 },
+  { dx: 0, dy: 1 }
+];
 
 export class SumoLodeRunnerGame extends BaseGame {
   // Multi-round / 30-level campaign flags so GameManager does not cut off at 65s
@@ -1054,6 +1074,10 @@ export class SumoLodeRunnerGame extends BaseGame {
   private levelClearBannerTimer: number = 0;
   private escapeRevealed: boolean = false;
   private escapeFlashTimer: number = 0;
+
+  // Dynamic Viewport Dimensions for Resize-Safe Mouse Hitboxes
+  private lastWidth: number = 960;
+  private lastHeight: number = 640;
 
   // WebAssembly Kernel & Shared Linear Memory Views
   private wasmExports: WasmLodeExports | null = null;
@@ -1081,6 +1105,13 @@ export class SumoLodeRunnerGame extends BaseGame {
   private golds: GoldItem[] = [];
   private dugBricks: DugBrick[] = [];
   private trapdoorRevealed: Uint8Array = new Uint8Array(GRID_SIZE);
+  private bonusItem: BonusItem = {
+    active: false,
+    spawnedThisLevel: false,
+    col: 13,
+    row: 14,
+    timer: 0
+  };
 
   // Direct keyboard listener for dedicated Dig Left (Q/Z), Dig Right (E/X/C), and Level Select ([ / ] / R)
   private rawKeys: Set<string> = new Set();
@@ -1116,6 +1147,8 @@ export class SumoLodeRunnerGame extends BaseGame {
   }
 
   public init(width: number, height: number): void {
+    this.lastWidth = width;
+    this.lastHeight = height;
     this.initWasmKernel();
 
     // Load saved level progress
@@ -1149,11 +1182,12 @@ export class SumoLodeRunnerGame extends BaseGame {
       this.canvasClickHandler = (e: MouseEvent) => {
         if (this.isFinished) return;
         const rect = canvas.getBoundingClientRect();
-        const scaleX = width / Math.max(1, rect.width);
-        const scaleY = height / Math.max(1, rect.height);
+        const scaleX = this.lastWidth / Math.max(1, rect.width);
+        const scaleY = this.lastHeight / Math.max(1, rect.height);
         const cx = (e.clientX - rect.left) * scaleX;
         const cy = (e.clientY - rect.top) * scaleY;
-        for (const box of this.hudHitboxes) {
+        for (let i = 0; i < this.hudHitboxes.length; i++) {
+          const box = this.hudHitboxes[i];
           if (cx >= box.x && cx <= box.x + box.w && cy >= box.y && cy <= box.y + box.h) {
             box.action();
             break;
@@ -1182,6 +1216,8 @@ export class SumoLodeRunnerGame extends BaseGame {
   }
 
   public reset(width: number, height: number): void {
+    this.lastWidth = width;
+    this.lastHeight = height;
     this.initWasmKernel();
     this.isFinished = false;
     this.roundTimer = 180;
@@ -1275,6 +1311,14 @@ export class SumoLodeRunnerGame extends BaseGame {
     const defaultP = pSpawns[0] || { col: 8, row: 14 };
     const defaultQ = qSpawns[0] || { col: 19, row: 14 };
 
+    this.bonusItem = {
+      active: false,
+      spawnedThisLevel: false,
+      col: Math.round((defaultP.col + defaultQ.col) / 2),
+      row: defaultP.row,
+      timer: 0
+    };
+
     let pIdx = 0;
     for (const runner of this.runners.values()) {
       const sp = pIdx % 2 === 0 ? defaultP : defaultQ;
@@ -1305,6 +1349,8 @@ export class SumoLodeRunnerGame extends BaseGame {
         trapTimer: 0,
         trapCol: -1,
         trapRow: -1,
+        climbOutTimer: 0,
+        climbOutCol: sp.col,
         carryingGoldId: null,
         goldHoldTimer: 0,
         animPhase: i * 1.3,
@@ -1312,13 +1358,27 @@ export class SumoLodeRunnerGame extends BaseGame {
         moveDirY: 0,
         repathTimer: 0,
         immuneHoleCol: -1,
-        immuneHoleRow: -1
+        immuneHoleRow: -1,
+        dropFromRopeCooldown: 0,
+        respawnFlashTimer: 0
       });
     }
   }
 
   /**
-   * Calls into the compiled WebAssembly kernel (or fallback) to check if tile (col, row) has support
+   * Zero-allocation count of remaining uncollected gold on the stage.
+   */
+  public getRemainingGoldCount(): number {
+    let count = 0;
+    for (let i = 0; i < this.golds.length; i++) {
+      if (!this.golds[i].collected) count++;
+    }
+    return count;
+  }
+
+  /**
+   * Calls into the compiled WebAssembly kernel (or fallback) to check if tile (col, row) has floor/ladder support.
+   * Note: Rope support is intentionally checked separately via `onRope` so `dropFromRopeCooldown` can release ropes!
    */
   public isTileSupported(col: number, row: number): boolean {
     const c = Math.max(0, Math.min(GRID_COLS - 1, Math.round(col)));
@@ -1329,7 +1389,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     if (r >= GRID_ROWS - 1) return true;
     const idx = r * GRID_COLS + c;
     const t = this.gridMem[idx];
-    if (t === TILE_LADDER || t === TILE_ROPE) return true;
+    if (t === TILE_LADDER) return true;
     if (t === TILE_HIDDEN_LADDER && this.escapeRevealed) return true;
     const belowIdx = idx + GRID_COLS;
     const dynBelow = this.dynMem[belowIdx];
@@ -1373,7 +1433,7 @@ export class SumoLodeRunnerGame extends BaseGame {
   /**
    * Validates Lode Runner digging rule:
    * Target (digCol, digRow) must be TILE_BRICK (not already dug),
-   * and the tile directly above (digCol, digRow - 1) must be passable and not a ladder/rope.
+   * and the tile directly above (digCol, digRow - 1) must be free of intact bricks, stone, ladders, ropes, or trapped guards.
    */
   public canDigAt(digCol: number, digRow: number): boolean {
     if (digCol < 0 || digCol >= GRID_COLS || digRow <= 0 || digRow >= GRID_ROWS - 1) return false;
@@ -1383,13 +1443,23 @@ export class SumoLodeRunnerGame extends BaseGame {
 
     const aboveIdx = (digRow - 1) * GRID_COLS + digCol;
     const aboveTile = this.gridMem[aboveIdx];
-    if (aboveTile === TILE_BRICK && this.dynMem[aboveIdx] === DYN_NONE) return false;
-    if (aboveTile === TILE_SOLID || aboveTile === TILE_LADDER) return false;
+    const aboveDyn = this.dynMem[aboveIdx];
+    if (aboveDyn === DYN_TRAPPED_GUARD) return false;
+    if (aboveTile === TILE_BRICK && aboveDyn === DYN_NONE) return false;
+    if (aboveTile === TILE_SOLID || aboveTile === TILE_LADDER || aboveTile === TILE_ROPE) return false;
+    if (aboveTile === TILE_HIDDEN_LADDER && this.escapeRevealed) return false;
 
     return true;
   }
 
-  private triggerDig(runner: SumoRunnerPlayer, dir: -1 | 1, gridOriginX: number, gridOriginY: number, tileW: number, tileH: number): boolean {
+  private triggerDig(
+    runner: SumoRunnerPlayer,
+    dir: -1 | 0 | 1,
+    gridOriginX: number,
+    gridOriginY: number,
+    tileW: number,
+    tileH: number
+  ): boolean {
     const baseCol = Math.round(runner.x);
     const baseRow = Math.round(runner.y);
     const digCol = baseCol + dir;
@@ -1397,10 +1467,12 @@ export class SumoLodeRunnerGame extends BaseGame {
 
     if (!this.canDigAt(digCol, digRow)) return false;
 
-    // Snap runner cleanly to baseCol so dig beam aligns with diagonal brick
+    // Snap runner cleanly to baseCol so dig beam aligns with target brick
     runner.x = baseCol;
     runner.y = baseRow;
-    runner.facing = dir;
+    if (dir !== 0) {
+      runner.facing = dir;
+    }
     runner.state = 'DIG';
     runner.digTimer = 0.16;
     runner.digTargetCol = digCol;
@@ -1423,6 +1495,8 @@ export class SumoLodeRunnerGame extends BaseGame {
     const biome = this.getCurrentBiome();
     this.audio.playLaser(this.audio.getPlayerPan(runner.id));
     this.particles.spawnSparks(px, py, biome.brickLight, 10);
+    // Ceremonial Shio-maki salt crystals on Shiko Stomp dig
+    this.particles.spawnSparks(px, py - 4, '#F8FAFC', 4);
     return true;
   }
 
@@ -1432,6 +1506,8 @@ export class SumoLodeRunnerGame extends BaseGame {
   }
 
   public update(dt: number, width: number, height: number): void {
+    this.lastWidth = width;
+    this.lastHeight = height;
     if (this.isFinished) return;
 
     const clampedDt = Math.min(dt, 0.05);
@@ -1490,14 +1566,39 @@ export class SumoLodeRunnerGame extends BaseGame {
     // 1. Update Dug Bricks & Regeneration Timers
     this.updateDugBricks(clampedDt, originX, originY, tileW, tileH);
 
-    // 2. Update Sumo Players
+    // 2. Update Bonus Yokozuna Onigiri Item (1994 Legend Returns tribute)
+    if (this.bonusItem.active) {
+      this.bonusItem.timer -= clampedDt;
+      if (this.bonusItem.timer <= 0) {
+        this.bonusItem.active = false;
+      }
+    }
+
+    // 3. Update Sumo Players
     this.updateRunners(clampedDt, originX, originY, tileW, tileH);
 
-    // 3. Update Rival Oni-Sumo Guards
+    // 4. Update Rival Oni-Sumo Guards
     this.updateGuards(clampedDt, originX, originY, tileW, tileH);
 
-    // 4. Check Escape Ladder Stage Clear condition
-    const remainingGold = this.golds.filter((g) => !g.collected).length;
+    // 5. Check Escape Ladder Stage Clear condition
+    const remainingGold = this.getRemainingGoldCount();
+    const totalGold = this.golds.length;
+
+    // Spawn Bonus Yokozuna Onigiri when 50% of gold is collected!
+    if (
+      !this.bonusItem.spawnedThisLevel &&
+      totalGold >= 4 &&
+      totalGold - remainingGold >= Math.ceil(totalGold * 0.5)
+    ) {
+      this.bonusItem.spawnedThisLevel = true;
+      this.bonusItem.active = true;
+      this.bonusItem.timer = 15.0;
+      const bx = originX + (this.bonusItem.col + 0.5) * tileW;
+      const by = originY + (this.bonusItem.row + 0.5) * tileH;
+      this.particles.spawnSparks(bx, by, '#FFFFFF', 10);
+      this.particles.showFloatingText('🍙 YOKOZUNA ONIGIRI APPEARED!', bx, by - 16, '#F8FAFC', 13);
+    }
+
     if (remainingGold === 0 && !this.escapeRevealed) {
       this.escapeRevealed = true;
       this.escapeFlashTimer = 1.2;
@@ -1512,10 +1613,20 @@ export class SumoLodeRunnerGame extends BaseGame {
           // Player reached top of the escape ladder!
           runner.score += 500;
           runner.levelsCleared += 1;
+
+          // Award Co-op Survival Bonus to surviving teammates
+          for (const mate of this.runners.values()) {
+            if (mate.id !== runner.id && mate.state !== 'DEAD') {
+              mate.score += 250;
+              mate.levelsCleared += 1;
+            }
+          }
+
           this.audio.playFanfare();
           const px = originX + (runner.x + 0.5) * tileW;
           const py = originY + 20;
           this.particles.spawnWinnerCelebration(px, py, '#FBBF24');
+          this.particles.spawnSparks(px, py, '#F8FAFC', 18); // Ceremonial Shio-maki salt shower
           this.particles.showFloatingText(`🏆 STAGE ${this.currentLevel} CLEAR! +500 PTS!`, width / 2, height / 2 - 20, '#FDE047', 24);
           this.levelClearBannerTimer = 1.75;
           break;
@@ -1546,7 +1657,8 @@ export class SumoLodeRunnerGame extends BaseGame {
         const py = originY + (b.row + 0.5) * tileH;
 
         // Check if any guard is inside the sealing brick -> Crush & Respawn at top!
-        for (const g of this.guards) {
+        for (let gIdx = 0; gIdx < this.guards.length; gIdx++) {
+          const g = this.guards[gIdx];
           if (Math.round(g.x) === b.col && Math.round(g.y) === b.row) {
             if (g.carryingGoldId !== null) {
               this.dropGuardGold(g, b.col, b.row - 1);
@@ -1557,6 +1669,8 @@ export class SumoLodeRunnerGame extends BaseGame {
             g.trapTimer = 0;
             g.trapCol = -1;
             g.trapRow = -1;
+            g.climbOutTimer = 0;
+            g.respawnFlashTimer = 0.65;
 
             const creditPlayer = this.runners.get(b.dugBy);
             if (creditPlayer) {
@@ -1568,15 +1682,32 @@ export class SumoLodeRunnerGame extends BaseGame {
           }
         }
 
-        // Check if any player is trapped inside the sealing brick
+        // Check if any player is trapped inside the sealing brick or sealed inside a 1-tile pocket below
         for (const r of this.runners.values()) {
-          if (r.state !== 'DEAD' && Math.round(r.x) === b.col && Math.round(r.y) === b.row) {
+          if (r.state === 'DEAD') continue;
+          const rCol = Math.round(r.x);
+          const rRow = Math.round(r.y);
+          if (rCol === b.col && rRow === b.row) {
             this.killRunner(r, originX, originY, tileW, tileH, 'CRUSHED BY DOHYO CLAY!');
+          } else if (
+            rCol === b.col &&
+            rRow === b.row + 1 &&
+            !this.isCellPassable(rCol - 1, rRow) &&
+            !this.isCellPassable(rCol + 1, rRow) &&
+            !this.isCellPassable(rCol, rRow + 1) &&
+            !this.isClimbable(rCol, rRow)
+          ) {
+            // Anti-entombment failsafe: boost the Sumo runner above the sealing brick so they are never softlocked
+            r.y = Math.max(0, b.row - 1);
+            r.state = 'IDLE';
+            this.particles.spawnSparks(px, py - tileH, '#F8FAFC', 10);
+            this.particles.showFloatingText('SHIKO BOOST UP!', px, py - tileH, '#38BDF8', 12);
           }
         }
 
         // Ensure no gold item is buried inside the sealed brick
-        for (const gold of this.golds) {
+        for (let gIdx = 0; gIdx < this.golds.length; gIdx++) {
+          const gold = this.golds[gIdx];
           if (!gold.collected && gold.carriedByGuardId === null && gold.col === b.col && gold.row === b.row) {
             gold.row = Math.max(0, b.row - 1);
           }
@@ -1618,6 +1749,7 @@ export class SumoLodeRunnerGame extends BaseGame {
           const px = originX + (r.x + 0.5) * tileW;
           const py = originY + (r.y + 0.5) * tileH;
           this.particles.spawnSparks(px, py, '#38BDF8', 12);
+          this.particles.spawnSparks(px, py, '#F8FAFC', 8); // Ceremonial salt purification
         }
         continue;
       }
@@ -1636,31 +1768,36 @@ export class SumoLodeRunnerGame extends BaseGame {
       const currentTile = this.gridMem[cellIdx];
       const onLadder = this.isClimbable(col, row);
       const onRope = currentTile === TILE_ROPE && r.dropFromRopeCooldown <= 0 && Math.abs(r.y - row) < 0.38;
-      const supported = onLadder || onRope || this.isTileSupported(col, row);
+      // Floor support only engages once the runner has actually reached the integer row (not at y = row - 0.49 mid-air!)
+      const floorSupport = this.isTileSupported(col, row) && (onLadder || r.y >= row - 0.08);
+      const supported = onLadder || onRope || floorSupport;
 
-      // Reveal false brick if player falls through a trapdoor
+      // Reveal false brick if player steps or falls through a trapdoor
       const belowRow = Math.min(GRID_ROWS - 1, row + 1);
       if (this.gridMem[belowRow * GRID_COLS + col] === TILE_TRAPDOOR) {
         this.trapdoorRevealed[belowRow * GRID_COLS + col] = 1;
+        this.tileCacheDirty = true;
       }
       if (currentTile === TILE_TRAPDOOR) {
         this.trapdoorRevealed[cellIdx] = 1;
+        this.tileCacheDirty = true;
       }
 
       if (!supported) {
         // Gravity fall (authentic Lode Runner: straight vertical drop, snap X to column)
+        const prevFloorRow = Math.floor(r.y + 0.05);
         r.state = 'FALL';
         r.x += (col - r.x) * Math.min(1, dt * 18);
-        r.y += moveSpeed * 1.18 * dt;
+        r.y = Math.min(GRID_ROWS - 1, r.y + moveSpeed * 1.18 * dt);
 
-        const newRow = Math.floor(r.y + 0.05);
-        if (newRow > row && newRow < GRID_ROWS) {
-          const landTile = this.gridMem[newRow * GRID_COLS + col];
+        const newFloorRow = Math.floor(r.y + 0.05);
+        if (newFloorRow > prevFloorRow && newFloorRow < GRID_ROWS) {
+          const landTile = this.gridMem[newFloorRow * GRID_COLS + col];
           if (landTile === TILE_ROPE && r.dropFromRopeCooldown <= 0) {
-            r.y = newRow;
+            r.y = newFloorRow;
             r.state = 'ROPE';
-          } else if (this.isTileSupported(col, newRow)) {
-            r.y = newRow;
+          } else if (this.isClimbable(col, newFloorRow) || this.isTileSupported(col, newFloorRow)) {
+            r.y = newFloorRow;
             r.state = 'IDLE';
           }
         }
@@ -1668,10 +1805,10 @@ export class SumoLodeRunnerGame extends BaseGame {
         continue;
       }
 
-      // Read directional & dig inputs
+      // Read directional & dig inputs (use justAction without justPressed so touch joystick movement doesn't auto-dig)
       const steer = this.input.getSteer(r.id);
       const throttle = this.input.getThrottle(r.id);
-      const justAct = this.input.justAction(r.id) || this.input.justPressed(r.id);
+      const justAct = this.input.justAction(r.id);
 
       const moveX = Math.abs(steer) > 0.25 ? Math.sign(steer) : 0;
       const moveY = Math.abs(throttle) > 0.25 ? -Math.sign(throttle) : 0; // -1 = UP, +1 = DOWN
@@ -1681,7 +1818,7 @@ export class SumoLodeRunnerGame extends BaseGame {
       }
 
       // Check dedicated Dig Left / Dig Right hotkeys OR Action button
-      let wantDigDir: -1 | 1 | 0 = 0;
+      let wantDigDir: -1 | 1 | 0 | null = null;
       if (r.id === 0) {
         if (this.justRawKeys.has('KeyQ') || this.justRawKeys.has('KeyZ')) wantDigDir = -1;
         else if (this.justRawKeys.has('KeyE') || this.justRawKeys.has('KeyX') || this.justRawKeys.has('KeyC')) wantDigDir = 1;
@@ -1690,17 +1827,24 @@ export class SumoLodeRunnerGame extends BaseGame {
         else if (this.justRawKeys.has('Period')) wantDigDir = 1;
       }
 
-      if (wantDigDir === 0 && justAct && !onRope) {
+      if (wantDigDir === null && justAct && !onRope) {
         if (this.canDigAt(col + r.facing, row + 1)) {
           wantDigDir = r.facing;
         } else if (moveX === 0 && this.canDigAt(col - r.facing, row + 1)) {
           wantDigDir = (r.facing * -1) as -1 | 1;
+        } else if (this.canDigAt(col, row + 1)) {
+          // Sumo Shiko Stomp downward dig when enclosed or standing directly over a diggable brick
+          wantDigDir = 0;
         } else {
           wantDigDir = r.facing;
         }
+      } else if (wantDigDir !== null && !this.canDigAt(col + wantDigDir, row + 1) && this.canDigAt(col, row + 1)) {
+        // Allow Q/Z/E/X/C to Shiko-stomp straight down if diagonal is blocked by a wall
+        wantDigDir = 0;
       }
 
-      if (wantDigDir !== 0 && !onRope) {
+      if (wantDigDir !== null && !onRope) {
+        this.input.consumeAction(r.id);
         if (this.triggerDig(r, wantDigDir, originX, originY, tileW, tileH)) {
           continue;
         }
@@ -1708,8 +1852,8 @@ export class SumoLodeRunnerGame extends BaseGame {
 
       // Drop off rope when pressing Down
       if (onRope && moveY > 0 && !onLadder) {
-        r.dropFromRopeCooldown = 0.28;
-        r.y += 0.22;
+        r.dropFromRopeCooldown = 0.32;
+        r.y = row + 0.45;
         r.state = 'FALL';
         continue;
       }
@@ -1759,7 +1903,8 @@ export class SumoLodeRunnerGame extends BaseGame {
   }
 
   private collectGoldAt(runner: SumoRunnerPlayer, col: number, row: number, originX: number, originY: number, tileW: number, tileH: number): void {
-    for (const g of this.golds) {
+    for (let i = 0; i < this.golds.length; i++) {
+      const g = this.golds[i];
       if (!g.collected && g.carriedByGuardId === null && g.col === col && g.row === row) {
         g.collected = true;
         runner.goldCollected++;
@@ -1771,6 +1916,17 @@ export class SumoLodeRunnerGame extends BaseGame {
         this.particles.showFloatingText('+250 GOLD!', px, py - 12, '#FDE047', 13);
       }
     }
+
+    // Check Yokozuna Onigiri Bonus pickup
+    if (this.bonusItem.active && this.bonusItem.col === col && this.bonusItem.row === row) {
+      this.bonusItem.active = false;
+      runner.score += Math.round(800 * this.activeMutator.scoreMultiplier);
+      const px = originX + (col + 0.5) * tileW;
+      const py = originY + (row + 0.5) * tileH;
+      this.audio.playFanfare();
+      this.particles.spawnSparks(px, py, '#FFFFFF', 16);
+      this.particles.showFloatingText('🍙 +800 ONIGIRI BONUS!', px, py - 14, '#4ADE80', 15);
+    }
   }
 
   private dropGuardGold(guard: OniGuard, col: number, row: number): void {
@@ -1778,6 +1934,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     const gold = this.golds[guard.carryingGoldId];
     guard.carryingGoldId = null;
     if (!gold) return;
+    gold.carriedByGuardId = null;
 
     const safeCol = Math.max(0, Math.min(GRID_COLS - 1, col));
     const safeRow = Math.max(0, Math.min(GRID_ROWS - 2, row));
@@ -1789,11 +1946,33 @@ export class SumoLodeRunnerGame extends BaseGame {
     const bp = SUMO_LODE_LEVELS[this.currentLevel - 1];
     const guardSpeed = bp.guardSpeed * this.activeMutator.speedMultiplier;
 
-    for (const g of this.guards) {
+    for (let gIdx = 0; gIdx < this.guards.length; gIdx++) {
+      const g = this.guards[gIdx];
       g.animPhase += dt * 9;
+      if (g.dropFromRopeCooldown > 0) g.dropFromRopeCooldown = Math.max(0, g.dropFromRopeCooldown - dt);
+      if (g.respawnFlashTimer > 0) g.respawnFlashTimer = Math.max(0, g.respawnFlashTimer - dt);
+
       const col = Math.round(g.x);
       const row = Math.round(g.y);
       const cellIdx = row * GRID_COLS + col;
+
+      // 0. Check if guard is currently climbing out of a hole
+      if (g.state === 'CLIMB_OUT') {
+        g.climbOutTimer -= dt;
+        const t = 1 - Math.max(0, g.climbOutTimer / 0.22);
+        g.x = g.trapCol + (g.climbOutCol - g.trapCol) * t;
+        g.y = g.trapRow - t;
+        if (g.climbOutTimer <= 0) {
+          g.x = g.climbOutCol;
+          g.y = Math.max(0, g.trapRow - 1);
+          g.immuneHoleCol = g.trapCol;
+          g.immuneHoleRow = g.trapRow;
+          g.state = 'PATROL';
+          g.trapCol = -1;
+          g.trapRow = -1;
+        }
+        continue;
+      }
 
       // 1. Check if guard is currently TRAPPED in a dug hole
       if (g.state === 'TRAPPED') {
@@ -1804,24 +1983,22 @@ export class SumoLodeRunnerGame extends BaseGame {
         }
 
         if (g.trapTimer >= bp.trapDuration) {
-          // Guard climbs out of the hole!
-          this.dynMem[holeIdx] = DYN_DUG_HOLE;
-          const climbDir = g.facing;
-          let exitCol = g.trapCol + climbDir;
-          if (!this.isCellPassable(exitCol, g.trapRow - 1, true)) {
-            exitCol = g.trapCol - climbDir;
+          // Verify cell directly above hole is passable before climbing out
+          if (this.isCellPassable(g.trapCol, g.trapRow - 1, true)) {
+            this.dynMem[holeIdx] = DYN_DUG_HOLE;
+            const climbDir = g.facing;
+            let exitCol = g.trapCol + climbDir;
+            if (!this.isCellPassable(exitCol, g.trapRow - 1, true)) {
+              exitCol = g.trapCol - climbDir;
+            }
+            if (!this.isCellPassable(exitCol, g.trapRow - 1, true)) {
+              exitCol = g.trapCol;
+            }
+            g.climbOutCol = Math.max(0, Math.min(GRID_COLS - 1, exitCol));
+            g.climbOutTimer = 0.22;
+            g.state = 'CLIMB_OUT';
+            g.trapTimer = 0;
           }
-          if (!this.isCellPassable(exitCol, g.trapRow - 1, true)) {
-            exitCol = g.trapCol;
-          }
-          g.x = Math.max(0, Math.min(GRID_COLS - 1, exitCol));
-          g.y = Math.max(0, g.trapRow - 1);
-          g.immuneHoleCol = g.trapCol;
-          g.immuneHoleRow = g.trapRow;
-          g.state = 'PATROL';
-          g.trapTimer = 0;
-          g.trapCol = -1;
-          g.trapRow = -1;
         }
         continue;
       }
@@ -1847,13 +2024,16 @@ export class SumoLodeRunnerGame extends BaseGame {
           this.dropGuardGold(g, col, Math.max(0, row - 1));
         }
 
-        // Award trap points to the player who dug this hole
-        const dugBrick = this.dugBricks.find((b) => b.col === col && b.row === row);
-        if (dugBrick) {
-          const r = this.runners.get(dugBrick.dugBy);
-          if (r) {
-            r.score += 75;
-            r.guardsTrapped++;
+        // Award trap points to the player who dug this hole (zero-allocation loop)
+        for (let bIdx = 0; bIdx < this.dugBricks.length; bIdx++) {
+          const b = this.dugBricks[bIdx];
+          if (b.col === col && b.row === row) {
+            const r = this.runners.get(b.dugBy);
+            if (r) {
+              r.score += 75;
+              r.guardsTrapped++;
+            }
+            break;
           }
         }
         const px = originX + (col + 0.5) * tileW;
@@ -1866,20 +2046,25 @@ export class SumoLodeRunnerGame extends BaseGame {
 
       // 3. Check if guard is supported or falling
       const onLadder = this.isClimbable(col, row);
-      const onRope = this.gridMem[cellIdx] === TILE_ROPE && Math.abs(g.y - row) < 0.38;
-      const supported = onLadder || onRope || this.isTileSupported(col, row);
+      const onRope = this.gridMem[cellIdx] === TILE_ROPE && g.dropFromRopeCooldown <= 0 && Math.abs(g.y - row) < 0.38;
+      const floorSupport = this.isTileSupported(col, row) && (onLadder || g.y >= row - 0.08);
+      const supported = onLadder || onRope || floorSupport;
 
       if (!supported) {
+        const prevFloorRow = Math.floor(g.y + 0.05);
         g.state = 'FALL';
         g.x += (col - g.x) * Math.min(1, dt * 16);
-        g.y += guardSpeed * 1.25 * dt;
-        const newRow = Math.floor(g.y + 0.05);
-        if (newRow > row && newRow < GRID_ROWS) {
-          const newIdx = newRow * GRID_COLS + col;
-          if (this.dynMem[newIdx] === DYN_DUG_HOLE) {
-            g.y = newRow;
-          } else if (this.gridMem[newIdx] === TILE_ROPE || this.isTileSupported(col, newRow)) {
-            g.y = newRow;
+        g.y = Math.min(GRID_ROWS - 1, g.y + guardSpeed * 1.25 * dt);
+        const newFloorRow = Math.floor(g.y + 0.05);
+        if (newFloorRow > prevFloorRow && newFloorRow < GRID_ROWS) {
+          const newIdx = newFloorRow * GRID_COLS + col;
+          if (this.dynMem[newIdx] === DYN_DUG_HOLE && !(col === g.immuneHoleCol && newFloorRow === g.immuneHoleRow)) {
+            g.y = newFloorRow;
+          } else if (this.gridMem[newIdx] === TILE_ROPE && g.dropFromRopeCooldown <= 0) {
+            g.y = newFloorRow;
+            g.state = 'ROPE';
+          } else if (this.isClimbable(col, newFloorRow) || this.isTileSupported(col, newFloorRow)) {
+            g.y = newFloorRow;
             g.state = 'PATROL';
           }
         }
@@ -1888,7 +2073,8 @@ export class SumoLodeRunnerGame extends BaseGame {
 
       // 4. Guard Gold Stealing & Dropping
       if (g.carryingGoldId === null) {
-        for (const gold of this.golds) {
+        for (let i = 0; i < this.golds.length; i++) {
+          const gold = this.golds[i];
           if (!gold.collected && gold.carriedByGuardId === null && gold.col === col && gold.row === row) {
             gold.carriedByGuardId = g.id;
             g.carryingGoldId = gold.id;
@@ -1930,7 +2116,8 @@ export class SumoLodeRunnerGame extends BaseGame {
       // Execute Guard Movement
       if (g.moveDirY !== 0 && (onLadder || (g.moveDirY > 0 && onRope) || this.isClimbable(col, row + g.moveDirY))) {
         if (g.moveDirY > 0 && onRope && !onLadder) {
-          g.y += 0.25;
+          g.dropFromRopeCooldown = 0.32;
+          g.y = row + 0.45;
           g.state = 'FALL';
         } else {
           g.x += (col - g.x) * Math.min(1, dt * 15);
@@ -1966,7 +2153,8 @@ export class SumoLodeRunnerGame extends BaseGame {
   }
 
   private isGuardAt(excludeGuardId: number, col: number, row: number): boolean {
-    for (const g of this.guards) {
+    for (let i = 0; i < this.guards.length; i++) {
+      const g = this.guards[i];
       if (g.id !== excludeGuardId && g.state !== 'TRAPPED' && Math.round(g.x) === col && Math.round(g.y) === row) {
         return true;
       }
@@ -2002,13 +2190,6 @@ export class SumoLodeRunnerGame extends BaseGame {
 
     let bestFallbackIdx = -1;
     let bestFallbackCost = 999999;
-
-    const dirs = [
-      { dx: -1, dy: 0 },
-      { dx: 1, dy: 0 },
-      { dx: 0, dy: -1 },
-      { dx: 0, dy: 1 }
-    ];
 
     while (head < tail) {
       const c = this.bfsQueueCol[head];
@@ -2054,7 +2235,7 @@ export class SumoLodeRunnerGame extends BaseGame {
       }
 
       for (let d = 0; d < 4; d++) {
-        const { dx, dy } = dirs[d];
+        const { dx, dy } = BFS_DIRS[d];
         const nc = c + dx;
         const nr = r + dy;
         if (nc < 0 || nc >= GRID_COLS || nr < 0 || nr >= GRID_ROWS) continue;
@@ -2109,8 +2290,9 @@ export class SumoLodeRunnerGame extends BaseGame {
     const myRow = Math.round(me.y);
 
     // 1. Check if an Oni Guard is dangerously close on the same row -> Dig a defensive trap hole!
-    for (const g of this.guards) {
-      if (g.state === 'TRAPPED') continue;
+    for (let i = 0; i < this.guards.length; i++) {
+      const g = this.guards[i];
+      if (g.state === 'TRAPPED' || g.state === 'CLIMB_OUT') continue;
       const gCol = Math.round(g.x);
       const gRow = Math.round(g.y);
       const distX = gCol - myCol;
@@ -2135,10 +2317,14 @@ export class SumoLodeRunnerGame extends BaseGame {
           break;
         }
       }
+    } else if (this.bonusItem.active) {
+      targetCol = this.bonusItem.col;
+      targetRow = this.bonusItem.row;
     } else {
       // Find closest uncollected gold
       let bestDist = 999999;
-      for (const gold of this.golds) {
+      for (let i = 0; i < this.golds.length; i++) {
+        const gold = this.golds[i];
         if (!gold.collected && gold.carriedByGuardId === null) {
           const d = Math.abs(gold.col - myCol) + Math.abs(gold.row - myRow) * 2;
           if (d < bestDist) {
@@ -2157,6 +2343,9 @@ export class SumoLodeRunnerGame extends BaseGame {
         return;
       } else if (this.canDigAt(myCol + 1, myRow + 1)) {
         this.input.setBotInput(botId, true, 1, 0, true);
+        return;
+      } else if (this.canDigAt(myCol, myRow + 1)) {
+        this.input.setBotInput(botId, true, 0, 0, true);
         return;
       }
     }
@@ -2333,6 +2522,8 @@ export class SumoLodeRunnerGame extends BaseGame {
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    this.lastWidth = width;
+    this.lastHeight = height;
     ctx.save();
     const now = performance.now() * 0.001;
     const biome = this.getCurrentBiome();
@@ -2378,8 +2569,15 @@ export class SumoLodeRunnerGame extends BaseGame {
       ctx.drawImage(this.tileCacheCanvas, originX, originY);
     }
 
+    // Golden Escape Reveal Screen Flash
+    if (this.escapeFlashTimer > 0) {
+      ctx.fillStyle = `rgba(253, 224, 71, ${Math.min(0.32, this.escapeFlashTimer * 0.25)})`;
+      ctx.fillRect(originX, originY, totalW, totalH);
+    }
+
     // 3. Render Dug Brick Pits & Regeneration Warning Animations
-    for (const b of this.dugBricks) {
+    for (let i = 0; i < this.dugBricks.length; i++) {
+      const b = this.dugBricks[i];
       const bx = originX + b.col * tileW;
       const by = originY + b.row * tileH;
       const rem = b.maxDuration - b.timer;
@@ -2400,11 +2598,19 @@ export class SumoLodeRunnerGame extends BaseGame {
     }
 
     // 4. Render Golden Chanko Pots & Imperial Koban Treasures
-    for (const g of this.golds) {
+    for (let i = 0; i < this.golds.length; i++) {
+      const g = this.golds[i];
       if (g.collected || g.carriedByGuardId !== null) continue;
       const gx = originX + (g.col + 0.5) * tileW;
       const gy = originY + (g.row + 0.55) * tileH + Math.sin(now * 4 + g.id) * 1.5;
       this.drawGoldenTreasure(ctx, gx, gy, Math.min(tileW, tileH) * 0.42, now + g.id);
+    }
+
+    // 4b. Render Bonus Yokozuna Onigiri Item (1994 Legend Returns tribute)
+    if (this.bonusItem.active) {
+      const bx = originX + (this.bonusItem.col + 0.5) * tileW;
+      const by = originY + (this.bonusItem.row + 0.5) * tileH + Math.sin(now * 6) * 2;
+      this.drawBonusOnigiri(ctx, bx, by, Math.min(tileW, tileH) * 0.45);
     }
 
     // 5. Escape Beacon at Top of Revealed Escape Ladder
@@ -2425,8 +2631,22 @@ export class SumoLodeRunnerGame extends BaseGame {
       }
     }
 
-    // 6. Render Rival Oni-Sumo Guards (Mad Monks)
-    for (const g of this.guards) {
+    // 6. Render Rival Oni-Sumo Guards (Mad Monks) & Top Respawn Lightning Telegraphs
+    for (let i = 0; i < this.guards.length; i++) {
+      const g = this.guards[i];
+      if (g.respawnFlashTimer > 0) {
+        const sx = originX + (g.spawnCol + 0.5) * tileW;
+        ctx.save();
+        ctx.strokeStyle = '#FDE047';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(sx - 4, originY);
+        ctx.lineTo(sx + 3, originY + tileH * 0.6);
+        ctx.lineTo(sx - 2, originY + tileH * 0.9);
+        ctx.lineTo(sx + 4, originY + tileH * 1.5);
+        ctx.stroke();
+        ctx.restore();
+      }
       const shakeX = g.state === 'TRAPPED' && g.trapTimer > bp.trapDuration - 0.9 ? Math.sin(now * 50) * 2.5 : 0;
       const gx = originX + (g.x + 0.5) * tileW + shakeX;
       const gy = originY + (g.y + 0.52) * tileH;
@@ -2468,7 +2688,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     // 9. Stage Clear Banner Overlay
     if (this.levelClearBannerTimer > 0) {
       ctx.save();
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
       ctx.fillRect(width / 2 - 210, height / 2 - 48, 420, 96);
       ctx.strokeStyle = '#FACC15';
       ctx.lineWidth = 2.5;
@@ -2489,6 +2709,27 @@ export class SumoLodeRunnerGame extends BaseGame {
       ctx.restore();
     }
 
+    ctx.restore();
+  }
+
+  private drawBonusOnigiri(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): void {
+    ctx.save();
+    ctx.translate(x, y);
+    // Triangular rice ball with nori seaweed wrap
+    ctx.fillStyle = '#F8FAFC';
+    ctx.beginPath();
+    ctx.moveTo(0, -r);
+    ctx.lineTo(r * 0.95, r * 0.85);
+    ctx.lineTo(-r * 0.95, r * 0.85);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#CBD5E1';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // Nori strip at bottom
+    ctx.fillStyle = '#0F172A';
+    ctx.fillRect(-r * 0.42, r * 0.15, r * 0.84, r * 0.7);
     ctx.restore();
   }
 
@@ -2662,7 +2903,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     bp: LevelBlueprint,
     biome: BiomePalette
   ): void {
-    this.hudHitboxes = [];
+    this.hudHitboxes.length = 0;
 
     const barY = height - 26;
     ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
@@ -2674,7 +2915,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     ctx.lineTo(width, barY);
     ctx.stroke();
 
-    const remainingGold = this.golds.filter((g) => !g.collected).length;
+    const remainingGold = this.getRemainingGoldCount();
     const totalGold = this.golds.length;
 
     const prevBtnX = width / 2 - 195;

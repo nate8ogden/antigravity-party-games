@@ -2729,15 +2729,6 @@ export class GameManager {
   private isHoldingPause: boolean = false;
   private pauseHoldStartTime: number = 0;
 
-  // Device Mode: Computer vs Phone toggle
-  public deviceMode: 'computer' | 'phone' = 'computer';
-
-  public setDeviceMode(mode: 'computer' | 'phone'): void {
-    this.deviceMode = mode;
-    this.audio.playTap();
-    this.resizeCanvas();
-  }
-
   // Rematch / Next button hold
   public rematchTimer: number = 0;
 
@@ -4996,6 +4987,50 @@ export class GameManager {
     this.audio.playFanfare();
   }
 
+  public setDeviceMode(mode: DevicePlatformMode) {
+    if (this.deviceMode === mode) return;
+    this.deviceMode = mode;
+    if (this.input) {
+      this.input.setDeviceMode(mode);
+      this.syncInputActivePlayers();
+    }
+    this.catalogFilterDirty = true;
+    this.selectedGameIndex = 0;
+    this.scrollY = 0;
+    this.targetScrollY = 0;
+
+    if (typeof document !== 'undefined') {
+      const btnComp = document.getElementById('btn-mode-computer');
+      const btnPhone = document.getElementById('btn-mode-phone');
+      if (btnComp && btnPhone) {
+        btnComp.classList.toggle('active', mode === 'computer');
+        btnPhone.classList.toggle('active', mode === 'phone');
+      }
+      document.body.classList.toggle('phone-platform-mode', mode === 'phone');
+    }
+
+    this.audio.playTap();
+  }
+
+  public syncInputActivePlayers() {
+    if (!this.input) return;
+    const mask: Record<PlayerId, boolean> = {
+      0: this.players[0]?.type !== 'disabled',
+      1: this.players[1]?.type !== 'disabled',
+      2: this.players[2]?.type !== 'disabled',
+      3: this.players[3]?.type !== 'disabled'
+    };
+    this.input.setActivePlayerMask(mask);
+    const activeCount = this.players.filter((p) => p.type !== 'disabled').length;
+    if (this.splitBracketStage === 'final' && this.splitBracketTopWinner !== null && this.splitBracketBotWinner !== null) {
+      this.input.setPhoneTouchLayout('2p_final', [this.splitBracketTopWinner, this.splitBracketBotWinner]);
+    } else if (activeCount <= 2) {
+      this.input.setPhoneTouchLayout('2p_faceoff');
+    } else {
+      this.input.setPhoneTouchLayout('4p_corners');
+    }
+  }
+
   public setPlayerCount(count: number) {
     // 1P: P1 Human, P2 Bot (using global difficulty), P3/P4 Disabled
     // 2P: P1 Human, P2 Human, P3/P4 Disabled
@@ -5011,6 +5046,11 @@ export class GameManager {
         this.players[i].type = i < count ? 'human' : 'disabled';
       }
     }
+    this.catalogFilterDirty = true;
+    this.selectedGameIndex = 0;
+    this.scrollY = 0;
+    this.targetScrollY = 0;
+    this.syncInputActivePlayers();
   }
 
   public togglePlayerSlot(id: PlayerId) {
@@ -5018,6 +5058,8 @@ export class GameManager {
     const cycle: PlayerType[] = ['human', 'bot_easy', 'bot_normal', 'bot_hard', 'disabled'];
     const curIdx = cycle.indexOf(p.type);
     p.type = cycle[(curIdx + 1) % cycle.length];
+    this.catalogFilterDirty = true;
+    this.syncInputActivePlayers();
     this.audio.playTap();
   }
 
@@ -5053,7 +5095,23 @@ export class GameManager {
       return this.cachedFilteredCatalog;
     }
 
-    let list = GAME_CATALOG;
+    const activeCount = this.players.filter((p) => p.type !== 'disabled').length;
+
+    let list = GAME_CATALOG.filter((g) => {
+      const pMode = g.phoneMode || getGamePhoneMode(g.id);
+      if (this.deviceMode === 'computer') {
+        // On Computer mode, hide phone-exclusive games
+        return pMode !== 'phone_only';
+      } else {
+        // On Phone mode:
+        // 1. Hide pc_only games that aren't feasible on a phone screen
+        if (pMode === 'pc_only') return false;
+        // 2. If 3 or 4 players are active, hide 2p_only games (they only show when 1P v AI or 2P is selected!)
+        if (activeCount >= 3 && pMode === '2p_only') return false;
+        return true;
+      }
+    });
+
     if (this.selectedCategory !== 'ALL') {
       list = list.filter((g) => g.category.toUpperCase() === this.selectedCategory.toUpperCase());
     }
@@ -5092,9 +5150,18 @@ export class GameManager {
       this.activeGame.destroy();
       this.activeGame = null;
     }
+    if (this.secondarySplitGame) {
+      this.secondarySplitGame.destroy();
+      this.secondarySplitGame = null;
+    }
+    this.splitBracketStage = 'none';
+    this.splitBracketTopWinner = null;
+    this.splitBracketBotWinner = null;
     if (this.input) {
+      this.input.isInGame = false;
       this.input.resetAll();
       this.input.setControlMode('directional');
+      this.syncInputActivePlayers();
     }
     this.state = 'LOBBY';
     this.audio.playTap();
@@ -5323,14 +5390,11 @@ export class GameManager {
     }
   }
 
-  public startGame(gameId: MinigameId) {
-    if (this.activeGame) {
-      this.activeGame.destroy();
-      this.activeGame = null;
-    }
-    this.isModalOpen = false;
-    const idx = GAME_CATALOG.findIndex((g) => g.id === gameId);
-    if (idx !== -1) this.selectedGameIndex = idx;
+  private instantiateGameWithPlayers(gameId: MinigameId, customPlayers: PlayerConfig[]): BaseGame | null {
+    const savedPlayers = this.players;
+    const savedActive = this.activeGame;
+    this.players = customPlayers;
+    this.activeGame = null;
 
     switch (gameId) {
       case 'tanks':
@@ -6120,10 +6184,93 @@ export class GameManager {
         this.activeGame = lodeGame;
         break;
       }
+      case 'thumb_war_wrestle':
+        this.activeGame = new ThumbWarWrestleGame(this.players, this.input, this.audio, this.particles);
+        break;
+      case 'swipe_ninja_blitz':
+        this.activeGame = new SwipeNinjaBlitzGame(this.players, this.input, this.audio, this.particles);
+        break;
+      case 'tabletop_air_hockey':
+        this.activeGame = new TabletopAirHockeyGame(this.players, this.input, this.audio, this.particles);
+        break;
+      case 'tap_tug_overdrive':
+        this.activeGame = new TapTugOverdriveGame(this.players, this.input, this.audio, this.particles);
+        break;
+    }
+
+    const created = this.activeGame;
+    this.players = savedPlayers;
+    this.activeGame = savedActive;
+    return created;
+  }
+
+  public startGame(gameId: MinigameId, isSplitFinal: boolean = false) {
+    if (gameId === 'sumo_lode_runner' && this.activeGame instanceof SumoLodeRunnerGame) {
+      this.lodeRunnerLevel = this.activeGame.currentLevel;
+    }
+    if (this.activeGame) {
+      this.activeGame.destroy();
+      this.activeGame = null;
+    }
+    if (this.secondarySplitGame) {
+      this.secondarySplitGame.destroy();
+      this.secondarySplitGame = null;
+    }
+    this.isModalOpen = false;
+    const idx = GAME_CATALOG.findIndex((g) => g.id === gameId);
+    if (idx !== -1) this.selectedGameIndex = idx;
+
+    const activeCount = this.players.filter((p) => p.type !== 'disabled').length;
+    const phoneMode = getGamePhoneMode(gameId);
+    const usesSplitBracketOnPhone =
+      phoneMode === '4p_split_bracket' ||
+      gameId === 'thumb_war_wrestle' ||
+      gameId === 'tabletop_air_hockey';
+
+    if (isSplitFinal && this.splitBracketTopWinner !== null && this.splitBracketBotWinner !== null) {
+      // GRAND FINAL of Phone 4P Split Bracket: Top 1v1 Winner vs Bottom 1v1 Winner!
+      this.splitBracketStage = 'final';
+      this.splitBracketGameId = gameId;
+      const topWin = this.splitBracketTopWinner;
+      const botWin = this.splitBracketBotWinner;
+      const finalPlayers: PlayerConfig[] = this.players.map((p) => ({
+        ...p,
+        type: p.id === topWin || p.id === botWin ? (p.type === 'disabled' ? this.globalBotDifficulty : p.type) : 'disabled'
+      }));
+      this.activeGame = this.instantiateGameWithPlayers(gameId, finalPlayers);
+    } else if (this.deviceMode === 'phone' && activeCount >= 3 && usesSplitBracketOnPhone) {
+      // SIMULTANEOUS TOP 1v1 (P1 vs P2) & BOTTOM 1v1 (P3 vs P4) ON PHONE!
+      this.splitBracketStage = 'semis';
+      this.splitBracketGameId = gameId;
+      this.splitBracketTopWinner = null;
+      this.splitBracketBotWinner = null;
+      this.splitBracketTransitionTimer = 0;
+
+      const topPlayers: PlayerConfig[] = this.players.map((p) => ({
+        ...p,
+        type: p.id === 0 || p.id === 1 ? (p.type === 'disabled' ? this.globalBotDifficulty : p.type) : 'disabled'
+      }));
+      const botPlayers: PlayerConfig[] = this.players.map((p) => ({
+        ...p,
+        type: p.id === 2 || p.id === 3 ? (p.type === 'disabled' ? this.globalBotDifficulty : p.type) : 'disabled'
+      }));
+
+      this.activeGame = this.instantiateGameWithPlayers(gameId, topPlayers);
+      this.secondarySplitGame = this.instantiateGameWithPlayers(gameId, botPlayers);
+    } else {
+      this.splitBracketStage = 'none';
+      this.splitBracketGameId = null;
+      this.splitBracketTopWinner = null;
+      this.splitBracketBotWinner = null;
+      this.activeGame = this.instantiateGameWithPlayers(gameId, this.players);
     }
 
     const SINGLE_BUTTON_GAMES = new Set<string>([
       'spam_click_showdown',
+      'thumb_war_wrestle',
+      'swipe_ninja_blitz',
+      'tabletop_air_hockey',
+      'tap_tug_overdrive',
       'neon_lightcycles',
       'micro_gp',
       'kitchen_chaos',
@@ -6267,18 +6414,34 @@ export class GameManager {
     ]);
 
     if (this.input) {
+      this.input.isInGame = true;
       this.input.setControlMode(SINGLE_BUTTON_GAMES.has(gameId) ? 'single_button' : 'directional');
+      this.syncInputActivePlayers();
     }
 
     if (this.activeGame) {
       this.activeGame.init(this.logicalWidth, this.logicalHeight);
+      if (this.secondarySplitGame) {
+        this.secondarySplitGame.init(this.logicalWidth, this.logicalHeight);
+      }
       const mutator = this.activeGame.rollRandomMutator(0.35);
       if (mutator.type !== 'none') {
         this.particles.showFloatingText(`🎲 MUTATOR: ${mutator.name}!`, this.logicalWidth / 2, 95, mutator.color, 24);
         this.audio.playBoost();
       }
+      if (this.splitBracketStage === 'semis') {
+        this.particles.showFloatingText('📱 TOP 1v1 & BOTTOM 1v1 -> WINNERS FINAL!', this.logicalWidth / 2, this.logicalHeight / 2, '#FDE047', 20);
+      } else if (this.splitBracketStage === 'final' && this.splitBracketTopWinner !== null && this.splitBracketBotWinner !== null) {
+        this.particles.showFloatingText(
+          `🏆 GRAND FINAL: P${this.splitBracketTopWinner + 1} vs P${this.splitBracketBotWinner + 1}!`,
+          this.logicalWidth / 2,
+          this.logicalHeight / 2,
+          '#FBBF24',
+          24
+        );
+      }
       this.state = 'COUNTDOWN';
-      this.countdownTimer = 3.2;
+      this.countdownTimer = isSplitFinal ? 2.4 : 3.2;
       this.chronoClutchTriggered = false;
       this.initRoundBoosters();
       this.matchElapsedSeconds = 0;
@@ -6448,14 +6611,24 @@ export class GameManager {
       }
     } else if (this.state === 'PLAYING' && this.activeGame) {
       const prevTimerInt = Math.ceil(this.activeGame.roundTimer);
-      this.activeGame.update(effectiveDt, this.logicalWidth, this.logicalHeight);
+      if (!this.activeGame.isRoundOver()) {
+        this.activeGame.update(effectiveDt, this.logicalWidth, this.logicalHeight);
+      }
+      if (this.splitBracketStage === 'semis' && this.secondarySplitGame && !this.secondarySplitGame.isRoundOver()) {
+        this.secondarySplitGame.update(effectiveDt, this.logicalWidth, this.logicalHeight);
+      }
       const curTimerInt = Math.ceil(this.activeGame.roundTimer);
 
       // Universal Match Anti-Stalemate Watchdog: ensure no standard round can stall indefinitely
       this.matchElapsedSeconds += effectiveDt;
       const isUnlimitedMode = (this.activeGame as any)?.isNoTimeLimit === true;
-      if (!isUnlimitedMode && this.matchElapsedSeconds >= 65.0 && !this.activeGame.isFinished) {
-        this.activeGame.isFinished = true;
+      if (!isUnlimitedMode && this.matchElapsedSeconds >= 65.0) {
+        if (!this.activeGame.isFinished) {
+          this.activeGame.isFinished = true;
+        }
+        if (this.secondarySplitGame && !this.secondarySplitGame.isFinished) {
+          this.secondarySplitGame.isFinished = true;
+        }
         this.particles.showFloatingText('⚡ ANTI-LOOP SUDDEN DEATH RESOLVED!', this.logicalWidth / 2, 75, '#38BDF8', 22);
       }
 
@@ -6476,14 +6649,56 @@ export class GameManager {
         if (hasTimeBooster) {
           this.chronoClutchTriggered = true;
           this.activeGame.roundTimer += 5.0;
+          if (this.secondarySplitGame) this.secondarySplitGame.roundTimer += 5.0;
           this.audio.playCountdown(true);
           this.particles.showFloatingText('⏱️ CHRONO CLUTCH! +5s!', this.logicalWidth / 2, 80, '#38BDF8', 26);
           this.particles.spawnGoBlast(this.logicalWidth / 2, 80);
         }
       }
 
-      if (this.activeGame.isRoundOver()) {
+      if (this.splitBracketStage === 'semis' && this.secondarySplitGame) {
+        // Check Top 1v1 (P1 vs P2) completion
+        if (this.activeGame.isRoundOver() && this.splitBracketTopWinner === null) {
+          const topRes = this.activeGame.getRoundResult();
+          this.splitBracketTopWinner = (topRes.winnerId !== null && (topRes.winnerId === 0 || topRes.winnerId === 1)) ? topRes.winnerId : 0;
+          this.audio.playPointScore(this.splitBracketTopWinner);
+          this.particles.showFloatingText(
+            `🏆 P${this.splitBracketTopWinner + 1} WINS TOP 1v1!`,
+            this.logicalWidth / 2,
+            this.logicalHeight * 0.25,
+            this.players[this.splitBracketTopWinner].color,
+            22
+          );
+        }
+        // Check Bottom 1v1 (P3 vs P4) completion
+        if (this.secondarySplitGame.isRoundOver() && this.splitBracketBotWinner === null) {
+          const botRes = this.secondarySplitGame.getRoundResult();
+          this.splitBracketBotWinner = (botRes.winnerId !== null && (botRes.winnerId === 2 || botRes.winnerId === 3)) ? botRes.winnerId : 2;
+          this.audio.playPointScore(this.splitBracketBotWinner);
+          this.particles.showFloatingText(
+            `🏆 P${this.splitBracketBotWinner + 1} WINS BOTTOM 1v1!`,
+            this.logicalWidth / 2,
+            this.logicalHeight * 0.75,
+            this.players[this.splitBracketBotWinner].color,
+            22
+          );
+        }
+        // When BOTH Top 1v1 and Bottom 1v1 have finished, transition to the GRAND FINAL!
+        if (this.splitBracketTopWinner !== null && this.splitBracketBotWinner !== null) {
+          if (this.splitBracketTransitionTimer === 0) {
+            this.audio.playFanfare();
+          }
+          this.splitBracketTransitionTimer += effectiveDt;
+          if (this.splitBracketTransitionTimer >= 1.8 && this.splitBracketGameId) {
+            this.startGame(this.splitBracketGameId, true);
+            return;
+          }
+        }
+      } else if (this.activeGame.isRoundOver()) {
         this.state = 'ROUND_OVER';
+        if (this.input) {
+          this.input.isInGame = false;
+        }
         this.currentRoundResult = this.activeGame.getRoundResult();
         this.audio.playFanfare();
         this.autoNextTimer = 2.0;
@@ -6563,6 +6778,74 @@ export class GameManager {
     this.input.endFrame();
   }
 
+  private renderSplitBracketViewports(w: number, h: number) {
+    if (!this.activeGame || !this.secondarySplitGame) return;
+
+    // 1. TOP HALF: P1 vs P2 1v1 Semi-Final
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.rect(0, 0, w, h / 2 - 2);
+    this.ctx.clip();
+    this.ctx.scale(1, 0.5);
+    this.activeGame.render(this.ctx, w, h);
+    this.ctx.restore();
+
+    if (this.splitBracketTopWinner !== null) {
+      this.ctx.save();
+      this.ctx.fillStyle = 'rgba(15, 23, 42, 0.58)';
+      this.ctx.fillRect(0, 0, w, h / 2 - 2);
+      this.ctx.fillStyle = this.players[this.splitBracketTopWinner].color;
+      this.ctx.font = '900 18px Montserrat, sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText(`✓ PLAYER ${this.splitBracketTopWinner + 1} ADVANCES TO GRAND FINAL!`, w / 2, h * 0.25);
+      this.ctx.restore();
+    }
+
+    // 2. BOTTOM HALF: P3 vs P4 1v1 Semi-Final
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.rect(0, h / 2 + 2, w, h / 2 - 2);
+    this.ctx.clip();
+    this.ctx.translate(0, h / 2);
+    this.ctx.scale(1, 0.5);
+    this.secondarySplitGame.render(this.ctx, w, h);
+    this.ctx.restore();
+
+    if (this.splitBracketBotWinner !== null) {
+      this.ctx.save();
+      this.ctx.fillStyle = 'rgba(15, 23, 42, 0.58)';
+      this.ctx.fillRect(0, h / 2 + 2, w, h / 2 - 2);
+      this.ctx.fillStyle = this.players[this.splitBracketBotWinner].color;
+      this.ctx.font = '900 18px Montserrat, sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText(`✓ PLAYER ${this.splitBracketBotWinner + 1} ADVANCES TO GRAND FINAL!`, w / 2, h * 0.75);
+      this.ctx.restore();
+    }
+
+    // 3. Center Neon Split-Bracket Divider Ribbon
+    this.ctx.save();
+    this.ctx.fillStyle = '#0F172A';
+    this.ctx.fillRect(0, h / 2 - 11, w, 22);
+    this.ctx.strokeStyle = '#F59E0B';
+    this.ctx.lineWidth = 1.5;
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, h / 2 - 11);
+    this.ctx.lineTo(w, h / 2 - 11);
+    this.ctx.moveTo(0, h / 2 + 11);
+    this.ctx.lineTo(w, h / 2 + 11);
+    this.ctx.stroke();
+
+    this.ctx.fillStyle = '#FDE047';
+    this.ctx.font = '900 10px Montserrat, sans-serif';
+    this.ctx.textAlign = 'center';
+    const bannerTxt =
+      this.splitBracketTopWinner !== null && this.splitBracketBotWinner !== null
+        ? `🏆 LAUNCHING GRAND FINAL: P${this.splitBracketTopWinner + 1} vs P${this.splitBracketBotWinner + 1}!`
+        : '📱 PHONE 4P BRACKET — TOP: P1 vs P2  •  BOTTOM: P3 vs P4  (WINNERS PLAY FINAL!)';
+    this.ctx.fillText(bannerTxt, w / 2, h / 2 + 3.5);
+    this.ctx.restore();
+  }
+
   public render() {
     this.ctx.save();
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -6575,9 +6858,25 @@ export class GameManager {
     if (this.state === 'LOBBY') {
       this.renderLobby();
     } else if (this.state === 'COUNTDOWN' || this.state === 'PLAYING' || this.state === 'PAUSED') {
-      if (this.activeGame) {
+      if (this.splitBracketStage === 'semis' && this.activeGame && this.secondarySplitGame) {
+        this.renderSplitBracketViewports(this.logicalWidth, this.logicalHeight);
+      } else if (this.activeGame) {
         this.activeGame.render(this.ctx, this.logicalWidth, this.logicalHeight);
         this.activeGame.drawMutatorHUD(this.ctx, this.logicalWidth);
+        if (this.splitBracketStage === 'final' && this.splitBracketTopWinner !== null && this.splitBracketBotWinner !== null) {
+          this.ctx.save();
+          const pillW = Math.min(340, this.logicalWidth - 40);
+          this.drawRoundedRect(this.logicalWidth / 2 - pillW / 2, 42, pillW, 22, 8, 'rgba(15, 23, 42, 0.88)', '#F59E0B', 1.5);
+          this.ctx.fillStyle = '#FDE047';
+          this.ctx.font = '900 10.5px Montserrat, sans-serif';
+          this.ctx.textAlign = 'center';
+          this.ctx.fillText(
+            `🏆 GRAND FINAL: P${this.splitBracketTopWinner + 1} (TOP) vs P${this.splitBracketBotWinner + 1} (BOTTOM)`,
+            this.logicalWidth / 2,
+            56.5
+          );
+          this.ctx.restore();
+        }
       }
       this.renderArenaThemeAura(this.logicalWidth, this.logicalHeight);
       this.renderHUD();
@@ -10809,8 +11108,9 @@ export class GameManager {
     }
 
     if (this.isModalOpen) {
+      const game = GAME_CATALOG[this.modalGameIndex];
       const modalW = Math.min(540, w * 0.9);
-      const modalH = Math.min(530, h * 0.9);
+      const modalH = (game?.id === 'skyline_sumo') ? Math.min(575, h * 0.95) : Math.min(545, h * 0.92);
       const modalX = w / 2 - modalW / 2;
       const modalY = h / 2 - modalH / 2;
       const closeBtnX = modalX + modalW - 24;
@@ -10819,10 +11119,18 @@ export class GameManager {
         this.canvas.style.cursor = 'pointer';
         return;
       }
-      const btnW = 230;
+      if (game?.id === 'skyline_sumo' || game?.id === 'sumo_lode_runner') {
+        for (const hb of this.sumoHitboxes) {
+          if (x >= hb.x && x <= hb.x + hb.w && y >= hb.y && y <= hb.y + hb.h) {
+            this.canvas.style.cursor = 'pointer';
+            return;
+          }
+        }
+      }
+      const btnW = 260;
       const btnH = 44;
       const btnX = modalX + modalW / 2 - btnW / 2;
-      const btnY = modalY + modalH - 58;
+      const btnY = modalY + modalH - 62;
       if (x >= btnX && x <= btnX + btnW && y >= btnY && y <= btnY + btnH) {
         this.canvas.style.cursor = 'pointer';
         return;

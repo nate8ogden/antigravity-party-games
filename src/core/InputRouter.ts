@@ -109,6 +109,21 @@ export class InputRouter {
     return this.controlMode;
   }
 
+  public setDeviceMode(mode: 'computer' | 'phone') {
+    this.deviceMode = mode;
+  }
+
+  public setActivePlayerMask(mask: Record<PlayerId, boolean>) {
+    this.activePlayerMask = mask;
+  }
+
+  public setPhoneTouchLayout(layout: '4p_corners' | '2p_faceoff' | '2p_final', finalPlayers?: [PlayerId, PlayerId]) {
+    this.phoneTouchLayout = layout;
+    if (finalPlayers) {
+      this.finalPlayerIds = finalPlayers;
+    }
+  }
+
   public getCanvas(): HTMLCanvasElement {
     return this.canvas;
   }

@@ -109,6 +109,7 @@ export class LadybugAphidHuntGame extends BaseGame {
   public reset(width: number, height: number): void {
     this.timeElapsed = 0;
     this.roundTime = 45;
+    this.roundTimer = 45;
     this.isFinished = false;
     this.suddenDeath = false;
     this.hitStopTimer = 0;
@@ -183,6 +184,7 @@ export class LadybugAphidHuntGame extends BaseGame {
 
     this.timeElapsed += dt;
     const remaining = Math.max(0, this.roundTime - this.timeElapsed);
+    this.roundTimer = remaining;
     if (remaining <= 15 && !this.suddenDeath) {
       this.suddenDeath = true;
       this.audio.playBuzzer();
