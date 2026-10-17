@@ -187,7 +187,7 @@ export class RedLightSentryGame extends BaseGame {
         startX,
         targetX: this.trophyX,
         dir: isLeft ? 1 : -1,
-        speed: 95,
+        speed: 92,
         isRunning: false,
         stunTimer: 0,
         runAnim: 0,
