@@ -6389,8 +6389,7 @@ export class GameManager {
       // Universal Match Anti-Stalemate Watchdog: ensure no standard round can stall indefinitely
       this.matchElapsedSeconds += effectiveDt;
       const isUnlimitedMode = (this.activeGame as any)?.isNoTimeLimit === true;
-      const isMultiRound = (this.activeGame as any)?.isMultiRound === true;
-      if (!isUnlimitedMode && !isMultiRound && this.matchElapsedSeconds >= 65.0 && !this.activeGame.isFinished) {
+      if (!isUnlimitedMode && this.matchElapsedSeconds >= 65.0 && !this.activeGame.isFinished) {
         this.activeGame.isFinished = true;
         this.particles.showFloatingText('⚡ ANTI-LOOP SUDDEN DEATH RESOLVED!', this.logicalWidth / 2, 75, '#38BDF8', 22);
       }

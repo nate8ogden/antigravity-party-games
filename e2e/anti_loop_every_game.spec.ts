@@ -213,8 +213,21 @@ test.describe('Universal Anti-Loop Framework & Game Loop Breakouts', () => {
       gm.startGame('tanks');
       gm.state = 'PLAYING';
 
+      // Keep tanks alive so match cannot conclude from early crossfire
+      const game = gm.activeGame;
+      if (game && game.tanks) {
+        for (const t of game.tanks.values()) {
+          t.lives = 99;
+        }
+      }
+
       // Simulate match running for 66 seconds
       for (let i = 0; i < 70; i++) {
+        if (game && game.tanks) {
+          for (const t of game.tanks.values()) {
+            t.lives = 99;
+          }
+        }
         gm.update(1.0);
       }
 

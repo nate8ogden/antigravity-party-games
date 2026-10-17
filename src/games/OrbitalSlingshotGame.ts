@@ -235,7 +235,7 @@ export class OrbitalSlingshotGame extends BaseGame {
       const bot = this.input.getBotInput(pid);
       return bot.pressed || bot.action;
     }
-    return this.input.isPlayerTetherDown(pid);
+    return this.input.isPlayerTetherDown(pid) || this.input.isPressed(pid) || this.input.isActionPressed(pid);
   }
 
   public update(dt: number, width: number, height: number): void {

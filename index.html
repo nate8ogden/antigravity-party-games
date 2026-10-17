@@ -11,6 +11,16 @@
   </head>
   <body>
     <div id="app">
+      <!-- Top Device Mode Toggle: Switch between Computer and Phone (Clickable by Mouse & Touch) -->
+      <div id="device-mode-toggle" class="device-toggle-bar" role="group" aria-label="Device Mode Toggle">
+        <button id="btn-mode-computer" class="device-toggle-btn active" type="button" title="Computer Mode (Keyboard / Mouse / Gamepad)">
+          💻 COMPUTER
+        </button>
+        <button id="btn-mode-phone" class="device-toggle-btn" type="button" title="Phone Mode (1-4P Touch Controls & Split-Bracket)">
+          📱 PHONE
+        </button>
+      </div>
+
       <canvas id="game-canvas"></canvas>
 
       <!-- 4 Corner Touch Overlays for Mobile/Tablet -->

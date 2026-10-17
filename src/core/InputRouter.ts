@@ -44,6 +44,11 @@ interface TouchTrack {
 export class InputRouter {
   private canvas: HTMLCanvasElement;
   public controlMode: 'single_button' | 'directional' = 'directional';
+  public deviceMode: 'computer' | 'phone' = 'computer';
+  public phoneTouchLayout: '4p_corners' | '2p_faceoff' | '2p_final' = '4p_corners';
+  public finalPlayerIds: [PlayerId, PlayerId] = [0, 1];
+  public isInGame: boolean = false;
+  public activePlayerMask: Record<PlayerId, boolean> = { 0: true, 1: true, 2: false, 3: false };
 
   private states: Record<PlayerId, DetailedInputState> = {
     0: { pressed: false, justPressed: false, justReleased: false, pressStartTime: 0, holdDuration: 0, steer: 0, throttle: 0, rawSteer: 0, rawThrottle: 0, action: false, justAction: false, justUp: false, justDown: false, justLeft: false, justRight: false },
@@ -194,8 +199,8 @@ export class InputRouter {
           this.addRipple(clientX, clientY, this.playerColors[pid]);
           this.triggerHaptic(10);
 
-          if (this.controlMode === 'single_button') {
-            // In single_button mode: EVERY touch anywhere in player quadrant triggers action immediately!
+          if (this.controlMode === 'single_button' || info.isActionZone) {
+            // In single_button mode or dedicated Phone Action Pad: trigger action immediately!
             this.activeTouches.set(touch.identifier, {
               pid,
               role: 'action',
@@ -208,7 +213,6 @@ export class InputRouter {
             this.triggerAction(pid);
           } else {
             // Directional mode
-            // If player doesn't have an active joystick touch yet, anchor a new floating joystick
             const hasJoystick = Array.from(this.activeTouches.values()).some((t) => t.pid === pid && t.role === 'joystick');
             if (!hasJoystick) {
               this.activeTouches.set(touch.identifier, {
@@ -283,6 +287,9 @@ export class InputRouter {
             this.joysticks[track.pid].active = false;
             this.touchSteer[track.pid] = 0;
             this.touchThrottle[track.pid] = 0;
+          } else {
+            this.touchSteer[track.pid] = 0;
+            this.touchThrottle[track.pid] = 0;
           }
           this.activeTouches.delete(touch.identifier);
           this.checkPlayerRelease(track.pid);
@@ -299,9 +306,9 @@ export class InputRouter {
         if (track) {
           if (track.role === 'joystick') {
             this.joysticks[track.pid].active = false;
-            this.touchSteer[track.pid] = 0;
-            this.touchThrottle[track.pid] = 0;
           }
+          this.touchSteer[track.pid] = 0;
+          this.touchThrottle[track.pid] = 0;
           this.activeTouches.delete(touch.identifier);
           this.checkPlayerRelease(track.pid);
         }
@@ -321,7 +328,7 @@ export class InputRouter {
         this.addRipple(clientX, clientY, this.playerColors[pid]);
         this.triggerHaptic(10);
 
-        if (this.controlMode === 'single_button') {
+        if (this.controlMode === 'single_button' || info.isActionZone) {
           this.activeTouches.set(-999, {
             pid,
             role: 'action',
@@ -381,9 +388,9 @@ export class InputRouter {
             this.triggerAction(track.pid);
           }
           this.joysticks[track.pid].active = false;
-          this.touchSteer[track.pid] = 0;
-          this.touchThrottle[track.pid] = 0;
         }
+        this.touchSteer[track.pid] = 0;
+        this.touchThrottle[track.pid] = 0;
         this.activeTouches.delete(-999);
         this.checkPlayerRelease(track.pid);
         this.recalculateTouchInputs();
@@ -391,16 +398,31 @@ export class InputRouter {
     });
   }
 
-  private pointToPlayerDetailed(x: number, y: number, width: number, height: number): { pid: PlayerId } | null {
+  private pointToPlayerDetailed(x: number, y: number, width: number, height: number): { pid: PlayerId; isActionZone?: boolean } | null {
     const midX = width / 2;
     const midY = height / 2;
 
-    // Check center Safe Pause deadzone (~10% of canvas dimensions)
-    const deadzoneRadius = Math.min(width, height) * 0.10;
+    // Check center Safe Pause deadzone (~9% of canvas dimensions)
+    const deadzoneRadius = Math.min(width, height) * 0.09;
     const dx = x - midX;
     const dy = y - midY;
     if (Math.hypot(dx, dy) < deadzoneRadius) {
       return null;
+    }
+
+    if (this.deviceMode === 'phone') {
+      if (this.phoneTouchLayout === '2p_faceoff') {
+        // 2-Player Face-to-Face Phone Layout: Top Half = Player 2 (pid 1), Bottom Half = Player 1 (pid 0)
+        // If Player 2 is a bot (1P vs AI mode), allow Player 1 to use the bottom half or left/right
+        const pid: PlayerId = y < midY ? (this.activePlayerMask[1] ? 1 : 0) : 0;
+        const isActionZone = this.controlMode === 'directional' && x > width * 0.70;
+        return { pid, isActionZone };
+      } else if (this.phoneTouchLayout === '2p_final') {
+        // Grand Final of 4P Split-Bracket: Top Half = Top Semifinal Winner, Bottom Half = Bottom Semifinal Winner
+        const pid: PlayerId = y < midY ? this.finalPlayerIds[0] : this.finalPlayerIds[1];
+        const isActionZone = this.controlMode === 'directional' && x > width * 0.70;
+        return { pid, isActionZone };
+      }
     }
 
     let pid: PlayerId;
@@ -425,6 +447,24 @@ export class InputRouter {
           hasActiveTouch = true;
           if (track.role === 'action') {
             anyActionTouch = true;
+            // Hybrid Single-Button + Drag Steer support: if dragging finger > 8px while holding in single_button mode, also populate steer/throttle!
+            if (this.controlMode === 'single_button') {
+              const dx = track.currentX - track.originX;
+              const dy = track.currentY - track.originY;
+              const dist = Math.hypot(dx, dy);
+              const deadzone = 8;
+              const maxRadius = 42;
+              if (dist > deadzone) {
+                const clamped = Math.min(dist, maxRadius);
+                const norm = (clamped - deadzone) / (maxRadius - deadzone);
+                const safeDist = Math.max(0.001, dist);
+                this.touchSteer[pid] = (dx / safeDist) * norm;
+                this.touchThrottle[pid] = (-dy / safeDist) * norm;
+              } else {
+                this.touchSteer[pid] = 0;
+                this.touchThrottle[pid] = 0;
+              }
+            }
           } else if (track.role === 'joystick') {
             const dx = track.currentX - track.originX;
             const dy = track.currentY - track.originY;
@@ -888,8 +928,125 @@ export class InputRouter {
   }
 
   public render(ctx: CanvasRenderingContext2D) {
+    if (this.deviceMode === 'phone' && this.isInGame) {
+      this.renderPhoneControlsOverlay(ctx);
+    }
     this.renderJoysticks(ctx);
     this.renderRipples(ctx);
+  }
+
+  private renderPhoneControlsOverlay(ctx: CanvasRenderingContext2D) {
+    const rect = this.canvas.getBoundingClientRect();
+    const w = rect.width || 800;
+    const h = rect.height || 600;
+
+    ctx.save();
+    if (this.phoneTouchLayout === '2p_faceoff' || this.phoneTouchLayout === '2p_final') {
+      const topPid: PlayerId = this.phoneTouchLayout === '2p_final' ? this.finalPlayerIds[0] : 1;
+      const botPid: PlayerId = this.phoneTouchLayout === '2p_final' ? this.finalPlayerIds[1] : 0;
+
+      // Bottom Player Touch Bar
+      if (this.activePlayerMask[botPid]) {
+        const isPressed = this.states[botPid].pressed;
+        const c = this.playerColors[botPid];
+        ctx.fillStyle = isPressed ? 'rgba(239, 68, 68, 0.22)' : 'rgba(15, 23, 42, 0.55)';
+        ctx.strokeStyle = c;
+        ctx.lineWidth = isPressed ? 2.5 : 1.5;
+        const padW = Math.min(280, w * 0.42);
+        const padH = 32;
+        const padX = 16;
+        const padY = h - padH - 10;
+        ctx.beginPath();
+        ctx.roundRect(padX, padY, padW, padH, 10);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#F8FAFC';
+        ctx.font = '800 10px Montserrat, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(
+          this.controlMode === 'single_button' ? `📱 P${botPid + 1} TOUCH ZONE (TAP / HOLD / DRAG)` : `🕹️ P${botPid + 1} DRAG TO MOVE`,
+          padX + padW / 2,
+          padY + 20
+        );
+
+        if (this.controlMode === 'directional') {
+          const actW = Math.min(140, w * 0.25);
+          const actX = w - actW - 16;
+          ctx.fillStyle = this.states[botPid].action ? c : 'rgba(15, 23, 42, 0.68)';
+          ctx.beginPath();
+          ctx.roundRect(actX, padY, actW, padH, 10);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillText(`⚡ P${botPid + 1} ACTION`, actX + actW / 2, padY + 20);
+        }
+      }
+
+      // Top Player Touch Bar (if human active)
+      if (this.activePlayerMask[topPid]) {
+        const isPressed = this.states[topPid].pressed;
+        const c = this.playerColors[topPid];
+        ctx.fillStyle = isPressed ? 'rgba(59, 130, 246, 0.22)' : 'rgba(15, 23, 42, 0.55)';
+        ctx.strokeStyle = c;
+        ctx.lineWidth = isPressed ? 2.5 : 1.5;
+        const padW = Math.min(280, w * 0.42);
+        const padH = 30;
+        const padX = 16;
+        const padY = 46;
+        ctx.beginPath();
+        ctx.roundRect(padX, padY, padW, padH, 10);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#F8FAFC';
+        ctx.font = '800 10px Montserrat, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(
+          this.controlMode === 'single_button' ? `📱 P${topPid + 1} TOP TOUCH ZONE (TAP / HOLD)` : `🕹️ P${topPid + 1} TOP DRAG MOVE`,
+          padX + padW / 2,
+          padY + 19
+        );
+
+        if (this.controlMode === 'directional') {
+          const actW = Math.min(140, w * 0.25);
+          const actX = w - actW - 16;
+          ctx.fillStyle = this.states[topPid].action ? c : 'rgba(15, 23, 42, 0.68)';
+          ctx.beginPath();
+          ctx.roundRect(actX, padY, actW, padH, 10);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillText(`⚡ P${topPid + 1} ACTION`, actX + actW / 2, padY + 19);
+        }
+      }
+    } else {
+      // 4-Corner Touch Pads for 3P / 4P Phone Mode
+      const corners: { pid: PlayerId; x: number; y: number; label: string }[] = [
+        { pid: 0, x: 14, y: 46, label: 'P1 TOUCH' },
+        { pid: 1, x: w - 118, y: 46, label: 'P2 TOUCH' },
+        { pid: 2, x: 14, y: h - 42, label: 'P3 TOUCH' },
+        { pid: 3, x: w - 118, y: h - 42, label: 'P4 TOUCH' }
+      ];
+      for (const cn of corners) {
+        if (!this.activePlayerMask[cn.pid]) continue;
+        const active = this.states[cn.pid].pressed;
+        const c = this.playerColors[cn.pid];
+        ctx.fillStyle = active ? c : 'rgba(15, 23, 42, 0.58)';
+        ctx.strokeStyle = c;
+        ctx.lineWidth = active ? 2.5 : 1.5;
+        ctx.beginPath();
+        ctx.roundRect(cn.x, cn.y, 104, 30, 9);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '800 10px Montserrat, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`📱 ${cn.label}`, cn.x + 52, cn.y + 19);
+      }
+    }
+    ctx.restore();
   }
 
   public renderRipples(ctx: CanvasRenderingContext2D) {

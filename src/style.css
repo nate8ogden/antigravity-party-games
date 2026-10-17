@@ -353,3 +353,77 @@ body.in-game .util-btn {
     font-size: 12px;
   }
 }
+
+/* Top Computer / Phone Device Mode Toggle Bar */
+.device-toggle-bar {
+  position: absolute;
+  top: 8px;
+  right: 14px;
+  z-index: 35;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(15, 23, 42, 0.90);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 999px;
+  border: 1.5px solid rgba(56, 189, 248, 0.45);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.device-toggle-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: #94A3B8;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  touch-action: manipulation;
+  white-space: nowrap;
+}
+
+.device-toggle-btn:hover {
+  color: #F8FAFC;
+}
+
+.device-toggle-btn.active {
+  background: linear-gradient(135deg, #2563EB 0%, #0EA5E9 100%);
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.45);
+}
+
+#btn-mode-phone.active {
+  background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(236, 72, 153, 0.45);
+}
+
+body.in-game .device-toggle-bar {
+  top: 6px;
+  right: 10px;
+  opacity: 0.82;
+  transform: scale(0.92);
+  transform-origin: top right;
+}
+
+@media (max-width: 720px) {
+  .device-toggle-bar {
+    top: 6px;
+    right: 8px;
+    padding: 3px;
+  }
+  .device-toggle-btn {
+    font-size: 10px;
+    padding: 5px 9px;
+  }
+}
+

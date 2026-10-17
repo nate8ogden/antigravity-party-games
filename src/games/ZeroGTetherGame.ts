@@ -35,6 +35,9 @@ interface TetherAstronaut {
   vy: number;
   angle: number;
   tetherPylonId: number | null;
+  tetherNodeId?: number | null;
+  tetherHoldTime?: number;
+  boostCooldown?: number;
   tetherLength: number;
   score: number;
   chargeTime: number; // 0 to 1.3
@@ -401,7 +404,7 @@ export class ZeroGTetherGame extends BaseGame {
       a.vy += throttleY * thrust * dt;
 
       // Inertial zero-G drag
-      const dragFactor = a.slingshotTimer > 0 ? 0.96 : 0.92;
+      const dragFactor = a.slingshotTimer > 0 ? 0.99 : 0.92;
       a.vx *= Math.pow(dragFactor, dt * 60);
       a.vy *= Math.pow(dragFactor, dt * 60);
 
@@ -416,6 +419,31 @@ export class ZeroGTetherGame extends BaseGame {
       // Astronaut heading
       if (Math.hypot(a.vx, a.vy) > 20) {
         a.angle = Math.atan2(a.vy, a.vx);
+      }
+
+      // Sync tether node aliases & handle auto-slingshot if tethered > 3.0s
+      if (a.tetherNodeId !== undefined && a.tetherNodeId !== null && a.tetherPylonId === null) {
+        a.tetherPylonId = a.tetherNodeId;
+      }
+      if (a.tetherPylonId !== null) {
+        a.tetherHoldTime = (a.tetherHoldTime ?? 0) + dt;
+        if (a.tetherHoldTime >= 3.0) {
+          const pylon = this.pylons[a.tetherPylonId % this.pylons.length] || this.pylons[0];
+          const toPylonAngle = Math.atan2(a.y - pylon.y, a.x - pylon.x);
+          const launchAngle = toPylonAngle + Math.PI * 0.5 * (a.vx * Math.sin(toPylonAngle) - a.vy * Math.cos(toPylonAngle) >= 0 ? 1 : -1);
+          const launchSpeed = 460;
+          a.vx = Math.cos(launchAngle) * launchSpeed;
+          a.vy = Math.sin(launchAngle) * launchSpeed;
+          a.tetherPylonId = null;
+          a.tetherNodeId = null;
+          a.tetherHoldTime = 0;
+          a.chargeTime = 0;
+          a.isCharging = false;
+          a.slingshotTimer = 1.0;
+          a.boostCooldown = 1.0;
+          this.audio.playBoost();
+          this.particles.emit(a.x, a.y, 16, '#00E676');
+        }
       }
 
       // Tether Mechanics & Tension Hold-to-Charge
@@ -538,6 +566,9 @@ export class ZeroGTetherGame extends BaseGame {
           break;
         }
       }
+
+      a.tetherNodeId = a.tetherPylonId;
+      a.boostCooldown = Math.max(a.slingshotTimer, a.overheatTimer);
     }
 
     // Physical Astronaut Collision & Bumper Sabotage
