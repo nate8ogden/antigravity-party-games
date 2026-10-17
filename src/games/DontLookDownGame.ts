@@ -186,6 +186,7 @@ export class DontLookDownGame extends BaseGame {
     if (typeof window !== 'undefined') {
       (window as any).__DONT_LOOK_DOWN_DEBUG__ = {
         game: this,
+        getRoundTimer: () => this.roundTimer,
         getPlayer: (id: PlayerId) => this.playersState.get(id),
         getPlatforms: () => this.platforms,
         setPlayerPos: (id: PlayerId, x: number, y: number, vx = 0, vy = 0) => {

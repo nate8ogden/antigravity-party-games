@@ -29,9 +29,9 @@ test.describe('Unified Shop, Mystery Lucky Packs, Arena Themes & Power-Up Booste
 
     expect(shopState.isShopOpen).toBe(true);
     expect(shopState.currentShopTab).toBe('ALL');
-    expect(shopState.totalItemsCount).toBe(39);
-    expect(shopState.skinCount).toBe(22);
-    expect(shopState.arenaCount).toBe(8);
+    expect(shopState.totalItemsCount).toBe(83);
+    expect(shopState.skinCount).toBe(52);
+    expect(shopState.arenaCount).toBe(22);
     expect(shopState.packCount).toBe(4);
     expect(shopState.boosterCount).toBe(5);
 
@@ -45,7 +45,7 @@ test.describe('Unified Shop, Mystery Lucky Packs, Arena Themes & Power-Up Booste
       };
     });
     expect(skinsTabState.tab).toBe('SKINS');
-    expect(skinsTabState.count).toBe(22);
+    expect(skinsTabState.count).toBe(52);
 
     // Switch to ARENAS tab
     await page.keyboard.press('Tab');
@@ -57,7 +57,7 @@ test.describe('Unified Shop, Mystery Lucky Packs, Arena Themes & Power-Up Booste
       };
     });
     expect(arenasTabState.tab).toBe('ARENAS');
-    expect(arenasTabState.count).toBe(8);
+    expect(arenasTabState.count).toBe(22);
 
     // Switch to PACKS tab
     await page.keyboard.press('Tab');
