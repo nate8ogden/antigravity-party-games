@@ -31,6 +31,7 @@ export interface StackedAnimal {
   vy: number;
   settled: boolean;
   angle: number; // 45° step increments: 0, PI/4, PI/2, 3PI/4, PI, 5PI/4, 3PI/2, 7PI/4
+  squish?: number;
 }
 
 export class AnimalStackGame extends BaseGame {
@@ -319,7 +320,8 @@ export class AnimalStackGame extends BaseGame {
     // Crane steering if player nudges steer
     const steer = this.input.getSteer(currentTurnPid);
     if (steer !== 0) {
-      this.craneX += steer * (isUnderdog ? 120 : 160) * dt;
+      this.craneDir = Math.sign(steer);
+      this.craneX += steer * (isUnderdog ? 160 : 210) * dt;
     } else {
       this.craneX += this.craneDir * effectiveCraneSpeed * dt;
       if (this.craneX > maxCraneX) {
@@ -400,33 +402,43 @@ export class AnimalStackGame extends BaseGame {
         const overlapR = Math.min(fa.x + faExt.halfW, saR);
         const overlapW = overlapR - overlapL;
 
-        if (overlapW > 8) {
+        if (overlapW > 6) {
           const saTopY = sa.y - saExt.halfH;
           const targetFaY = saTopY - faExt.halfH;
 
           // Descending downward and bottom touches or passes top of sa
           if (fa.vy > 0 && fa.y + faExt.halfH >= saTopY - 12 && fa.y - faExt.halfH <= saTopY + 16) {
-            if (!landedOnSomething || targetFaY < highestLandedY) {
+            if (!landedOnSomething || targetFaY < highestLandedY - 6) {
               highestLandedY = targetFaY;
               landedOnSomething = true;
               supportLeft = saL;
               supportRight = saR;
+            } else if (Math.abs(targetFaY - highestLandedY) <= 8) {
+              // Same tier: expand bridge support span!
+              supportLeft = Math.min(supportLeft, saL);
+              supportRight = Math.max(supportRight, saR);
             }
           }
         }
       }
 
       // 2. Check collision with solid raft wood surface (Zero sinking!)
-      if (!landedOnSomething) {
+      if (!landedOnSomething || Math.abs((raftTopY - faExt.halfH) - highestLandedY) <= 8) {
         const raftOverlapL = Math.max(fa.x - faExt.halfW, raftLeft);
         const raftOverlapR = Math.min(fa.x + faExt.halfW, raftRight);
         const raftOverlapW = raftOverlapR - raftOverlapL;
 
-        if (raftOverlapW > 8 && fa.vy > 0 && fa.y + faExt.halfH >= raftTopY - 10 && fa.y - faExt.halfH <= raftTopY + 18) {
-          highestLandedY = raftTopY - faExt.halfH; // Flush on wood surface!
-          landedOnSomething = true;
-          supportLeft = raftLeft;
-          supportRight = raftRight;
+        if (raftOverlapW > 6 && fa.vy > 0 && fa.y + faExt.halfH >= raftTopY - 10 && fa.y - faExt.halfH <= raftTopY + 18) {
+          const raftTargetY = raftTopY - faExt.halfH;
+          if (!landedOnSomething || raftTargetY < highestLandedY - 6) {
+            highestLandedY = raftTargetY; // Flush on wood surface!
+            landedOnSomething = true;
+            supportLeft = raftLeft;
+            supportRight = raftRight;
+          } else if (Math.abs(raftTargetY - highestLandedY) <= 8) {
+            supportLeft = Math.min(supportLeft, raftLeft);
+            supportRight = Math.max(supportRight, raftRight);
+          }
         }
       }
 
@@ -437,7 +449,7 @@ export class AnimalStackGame extends BaseGame {
         const rightOverhang = fa.x - supportRight;
 
         // If center of mass is past the support edge, the animal is overbalanced and tilts/slides off!
-        if (leftOverhang > 4) {
+        if (leftOverhang > 0) {
           // Unbalanced to the left: slide and tumble off edge!
           fa.vx = -Math.max(120, leftOverhang * 6 + fa.type.mass * 1.5);
           fa.vy = Math.max(80, fa.vy * 0.4);
@@ -445,7 +457,7 @@ export class AnimalStackGame extends BaseGame {
           this.audio.playWhoosh();
           this.particles.showFloatingText('TIPPING!', fa.x, fa.y - 15, '#F59E0B', 16);
           this.particles.spawnSparks(supportLeft, fa.y + faExt.halfH, '#F59E0B', 6);
-        } else if (rightOverhang > 4) {
+        } else if (rightOverhang > 0) {
           // Unbalanced to the right: slide and tumble off edge!
           fa.vx = Math.max(120, rightOverhang * 6 + fa.type.mass * 1.5);
           fa.vy = Math.max(80, fa.vy * 0.4);
@@ -459,6 +471,7 @@ export class AnimalStackGame extends BaseGame {
           fa.settled = true;
           fa.vy = 0;
           fa.vx = 0;
+          fa.squish = 1.0;
           this.animals.push(fa);
           this.fallingAnimal = null;
           this.audio.playTap();
@@ -493,36 +506,13 @@ export class AnimalStackGame extends BaseGame {
       }
     }
 
-    // DYNAMIC BUOYANT RAFT TILT & SLIDING PHYSICS (Inspired by Sumo Iceberg!)
-    let netTorque = 0;
+    // Raft remains strictly level & moored (cannot tip!)
+    this.raftTilt = 0;
+
+    // Update squish spring physics on settled animals
     for (const a of this.animals) {
-      if (a.settled) {
-        const arm = a.x - this.raftX;
-        netTorque += arm * a.type.mass * 0.00016;
-      }
-    }
-
-    // Natural wave rocking + spectator sabotage impulse
-    const waveRock = Math.sin(this.waterWaveOffset) * 0.035 + this.waveImpulse;
-    const targetTilt = Math.max(-0.25, Math.min(0.25, netTorque * 0.35 + waveRock));
-    this.raftTilt += (targetTilt - this.raftTilt) * Math.min(1, 4.5 * dt);
-    this.waveImpulse *= Math.max(0, 1 - 3.2 * dt);
-
-    // If tilt exceeds threshold, animals slide down the slope!
-    if (Math.abs(this.raftTilt) > 0.08) {
-      const slideDir = Math.sign(this.raftTilt);
-      const slideForce = (Math.abs(this.raftTilt) - 0.08) * 110 * dt;
-      for (const a of this.animals) {
-        if (a.settled) {
-          a.x += slideDir * slideForce;
-          const ext = AnimalStackGame.getExtents(a.type, a.angle);
-          if (a.x < this.raftX - this.raftWidth / 2 - ext.halfW || a.x > this.raftX + this.raftWidth / 2 + ext.halfW) {
-            a.settled = false;
-            a.vy = 120;
-            this.particles.showFloatingText('SLID OFF! 🌊', a.x, a.y - 15, '#EF4444', 18);
-            this.audio.playWhoosh();
-          }
-        }
+      if (a.squish && a.squish > 0) {
+        a.squish = Math.max(0, a.squish - dt * 3.5);
       }
     }
 
@@ -532,6 +522,8 @@ export class AnimalStackGame extends BaseGame {
       if (!a.settled) {
         a.y += a.vy * dt;
         a.vy += 650 * dt;
+        a.x += a.vx * dt;
+        a.angle += (a.vx > 0 ? 0.08 : -0.08);
         if (a.y > this.raftY + 35) {
           this.triggerSplash(a.x, this.raftY + 20);
           this.animals.splice(i, 1);
@@ -550,15 +542,17 @@ export class AnimalStackGame extends BaseGame {
     this.sabotageCooldown.set(pid, 3.8); // 3.8s cooldown
 
     const side = (pid % 2 === 0) ? -1 : 1;
-    this.waveImpulse += side * 0.12;
+    // Fun gust of wind nudges the crane carriage slightly
+    this.craneX += side * 14;
     const p = this.players[pid];
     const splashX = this.raftX + side * (this.raftWidth * 0.52);
     const splashY = this.raftY + 12;
 
     this.particles.spawnExplosion(splashX, splashY, '#38BDF8', 25);
-    this.particles.showFloatingText(`🌊 ${p?.name || 'P' + (pid + 1)} WAVE SABOTAGE!`, splashX, splashY - 30, p?.color || '#38BDF8', 16);
+    this.particles.showFloatingText(`🌊 ${p?.name || 'P' + (pid + 1)} WATER JET!`, splashX, splashY - 30, p?.color || '#38BDF8', 16);
     this.audio.playWhoosh();
   }
+
 
   private dropAnimal(pid: PlayerId) {
     const type = ANIMAL_TYPES[this.currentAnimalIndex];
