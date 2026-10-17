@@ -77,13 +77,18 @@ export class AnimalStackGame extends BaseGame {
   private waterWaveOffset: number = 0;
   private botDropDelay: number = 0;
 
-  // Interactive On-screen Rotate Button bounds
-  private rotateBtnRect = { x: 0, y: 0, w: 146, h: 32 };
+  // Interactive On-screen Rotate & Drop Buttons
+  private rotateBtnRect = { x: 0, y: 0, w: 154, h: 30 };
+  private dropBtnRect = { x: 0, y: 0, w: 154, h: 30 };
   private rotateBtnHover: boolean = false;
+  private dropBtnHover: boolean = false;
+  private isDraggingCrane: boolean = false;
 
   // Event handlers
   private keydownListener: ((e: KeyboardEvent) => void) | null = null;
   private pointerdownListener: ((e: PointerEvent) => void) | null = null;
+  private pointermoveListener: ((e: PointerEvent) => void) | null = null;
+  private pointerupListener: ((e: PointerEvent) => void) | null = null;
 
   public static getExtents(def: AnimalDef, angle: number = 0) {
     const cos = Math.abs(Math.cos(angle));
@@ -146,11 +151,15 @@ export class AnimalStackGame extends BaseGame {
       }
 
       // Drop keys if active player:
-      if (
-        (currentPid === 0 && (e.code === 'KeyF' || e.code === 'KeyE')) ||
-        (currentPid === 1 && (e.code === 'Enter' || e.code === 'ShiftRight' || e.code === 'NumpadEnter')) ||
-        e.code === 'Space'
-      ) {
+      if (currentPid === 0 && (e.code === 'KeyF' || e.code === 'KeyE' || e.code === 'Space')) {
+        this.dropAnimal(0);
+        return;
+      }
+      if (currentPid === 1 && (e.code === 'Enter' || e.code === 'ShiftRight' || e.code === 'NumpadEnter')) {
+        this.dropAnimal(1);
+        return;
+      }
+      if (e.code === 'Space' && (currentPid === 0 || this.players[currentPid]?.type.startsWith('bot_'))) {
         this.dropAnimal(currentPid);
         return;
       }
@@ -170,8 +179,8 @@ export class AnimalStackGame extends BaseGame {
       if (!canvas) return;
 
       const rect = canvas.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
+      const clickX = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const clickY = (e.clientY - rect.top) * (canvas.height / rect.height);
 
       // Check if tap hit the theme pill
       if (
@@ -200,13 +209,50 @@ export class AnimalStackGame extends BaseGame {
         return;
       }
 
-      // Only drop if tapped in the active playfield area (below top banner/HUD)
-      if (clickY > 135) {
+      // Check if tap hit the dedicated drop button
+      if (
+        clickX >= this.dropBtnRect.x - 20 &&
+        clickX <= this.dropBtnRect.x + this.dropBtnRect.w + 20 &&
+        clickY >= this.dropBtnRect.y - 12 &&
+        clickY <= this.dropBtnRect.y + this.dropBtnRect.h + 12
+      ) {
+        const currentPid = this.activePlayerOrder[this.activePlayerIndex];
+        this.dropAnimal(currentPid);
+        this.dropBtnHover = true;
+        setTimeout(() => { this.dropBtnHover = false; }, 150);
+        return;
+      }
+
+      // Start drag steering crane
+      this.isDraggingCrane = true;
+      const minCraneX = Math.max(70, this.raftX - this.raftWidth * 0.72);
+      const maxCraneX = Math.min(canvas.width - 70, this.raftX + this.raftWidth * 0.72);
+      this.craneX = Math.max(minCraneX, Math.min(maxCraneX, clickX));
+
+      // Direct tap below 200 in playfield triggers drop
+      if (clickY > 200 && clickY < this.raftY - 15) {
         const currentPid = this.activePlayerOrder[this.activePlayerIndex];
         this.dropAnimal(currentPid);
       }
     };
     window.addEventListener('pointerdown', this.pointerdownListener);
+
+    this.pointermoveListener = (e: PointerEvent) => {
+      if (!this.isDraggingCrane || this.fallingAnimal || this.isFinished) return;
+      const canvas = document.querySelector('canvas');
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const clickX = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const minCraneX = Math.max(70, this.raftX - this.raftWidth * 0.72);
+      const maxCraneX = Math.min(canvas.width - 70, this.raftX + this.raftWidth * 0.72);
+      this.craneX = Math.max(minCraneX, Math.min(maxCraneX, clickX));
+    };
+    window.addEventListener('pointermove', this.pointermoveListener);
+
+    this.pointerupListener = () => {
+      this.isDraggingCrane = false;
+    };
+    window.addEventListener('pointerup', this.pointerupListener);
 
     // Expose debug interface for tests
     (window as unknown as { __ANIMAL_STACK_DEBUG__?: unknown }).__ANIMAL_STACK_DEBUG__ = {
@@ -233,6 +279,14 @@ export class AnimalStackGame extends BaseGame {
       window.removeEventListener('pointerdown', this.pointerdownListener);
       this.pointerdownListener = null;
     }
+    if (this.pointermoveListener) {
+      window.removeEventListener('pointermove', this.pointermoveListener);
+      this.pointermoveListener = null;
+    }
+    if (this.pointerupListener) {
+      window.removeEventListener('pointerup', this.pointerupListener);
+      this.pointerupListener = null;
+    }
   }
 
   public reset(width: number, height: number): void {
@@ -249,6 +303,7 @@ export class AnimalStackGame extends BaseGame {
     const btnW = 154;
     const btnH = 30;
     this.rotateBtnRect = { x: width / 2 - btnW / 2, y: 94, w: btnW, h: btnH };
+    this.dropBtnRect = { x: width / 2 - btnW / 2, y: 130, w: btnW, h: btnH };
     this.themePillRect = { x: 20, y: height - 44, w: 165, h: 32 };
 
     this.raftX = width / 2;
@@ -270,7 +325,7 @@ export class AnimalStackGame extends BaseGame {
     for (const pid of this.activePlayerOrder) {
       this.playerEliminated.set(pid, false);
       this.playerScores.set(pid, 0);
-      this.playerLives.set(pid, 3); // 3 drop lives per player
+      this.playerLives.set(pid, 5); // 5 drop lives per player for rich, rewarding tower building
       this.sabotageCooldown.set(pid, 0);
     }
 
@@ -317,13 +372,15 @@ export class AnimalStackGame extends BaseGame {
     const minCraneX = Math.max(70, this.raftX - this.raftWidth * 0.72);
     const maxCraneX = Math.min(width - 70, this.raftX + this.raftWidth * 0.72);
 
-    // Crane steering if player nudges steer
+    // Crane steering if player nudges steer or drags touch
     const steer = this.input.getSteer(currentTurnPid);
-    if (steer !== 0) {
+    if (this.isDraggingCrane) {
+      // User is dragging crane directly with pointer/touch
+    } else if (steer !== 0) {
       this.craneDir = Math.sign(steer);
-      this.craneX += steer * (isUnderdog ? 160 : 210) * dt;
+      this.craneX += steer * (isUnderdog ? 240 : 280) * dt;
     } else {
-      this.craneX += this.craneDir * effectiveCraneSpeed * dt;
+      this.craneX += this.craneDir * (isUnderdog ? 105 : 130) * dt;
       if (this.craneX > maxCraneX) {
         this.craneX = maxCraneX;
         this.craneDir = -1;
@@ -407,14 +464,14 @@ export class AnimalStackGame extends BaseGame {
           const targetFaY = saTopY - faExt.halfH;
 
           // Descending downward and bottom touches or passes top of sa
-          if (fa.vy > 0 && fa.y + faExt.halfH >= saTopY - 12 && fa.y - faExt.halfH <= saTopY + 16) {
+          if (fa.vy > 0 && fa.y + faExt.halfH >= saTopY - 14 && fa.y - faExt.halfH <= saTopY + 20) {
             if (!landedOnSomething || targetFaY < highestLandedY - 6) {
               highestLandedY = targetFaY;
               landedOnSomething = true;
               supportLeft = saL;
               supportRight = saR;
-            } else if (Math.abs(targetFaY - highestLandedY) <= 8) {
-              // Same tier: expand bridge support span!
+            } else if (Math.abs(targetFaY - highestLandedY) <= 24) {
+              // Same tier or step: expand bridge support span!
               supportLeft = Math.min(supportLeft, saL);
               supportRight = Math.max(supportRight, saR);
             }
@@ -423,19 +480,19 @@ export class AnimalStackGame extends BaseGame {
       }
 
       // 2. Check collision with solid raft wood surface (Zero sinking!)
-      if (!landedOnSomething || Math.abs((raftTopY - faExt.halfH) - highestLandedY) <= 8) {
+      if (!landedOnSomething || Math.abs((raftTopY - faExt.halfH) - highestLandedY) <= 12) {
         const raftOverlapL = Math.max(fa.x - faExt.halfW, raftLeft);
         const raftOverlapR = Math.min(fa.x + faExt.halfW, raftRight);
         const raftOverlapW = raftOverlapR - raftOverlapL;
 
-        if (raftOverlapW > 6 && fa.vy > 0 && fa.y + faExt.halfH >= raftTopY - 10 && fa.y - faExt.halfH <= raftTopY + 18) {
+        if (raftOverlapW > 4 && fa.vy > 0 && fa.y + faExt.halfH >= raftTopY - 12 && fa.y - faExt.halfH <= raftTopY + 20) {
           const raftTargetY = raftTopY - faExt.halfH;
           if (!landedOnSomething || raftTargetY < highestLandedY - 6) {
             highestLandedY = raftTargetY; // Flush on wood surface!
             landedOnSomething = true;
             supportLeft = raftLeft;
             supportRight = raftRight;
-          } else if (Math.abs(raftTargetY - highestLandedY) <= 8) {
+          } else if (Math.abs(raftTargetY - highestLandedY) <= 24) {
             supportLeft = Math.min(supportLeft, raftLeft);
             supportRight = Math.max(supportRight, raftRight);
           }
@@ -445,8 +502,12 @@ export class AnimalStackGame extends BaseGame {
       // 3. Realistic Physics Resolution: Center of Mass Balance Check
       if (landedOnSomething) {
         // Center of mass balance check: Is fa.x supported beneath it?
-        const leftOverhang = supportLeft - fa.x;
-        const rightOverhang = fa.x - supportRight;
+        const isRaftSupportOnly = (supportLeft === raftLeft && supportRight === raftRight);
+        // Generous organic grip margin for animal backs, snouts, & feet (raft edge remains strict)
+        const gripMargin = isRaftSupportOnly ? 0 : Math.min(24, faExt.halfW * 0.45);
+
+        const leftOverhang = (supportLeft - gripMargin) - fa.x;
+        const rightOverhang = fa.x - (supportRight + gripMargin);
 
         // If center of mass is past the support edge, the animal is overbalanced and tilts/slides off!
         if (leftOverhang > 0) {
@@ -475,15 +536,21 @@ export class AnimalStackGame extends BaseGame {
           this.animals.push(fa);
           this.fallingAnimal = null;
           this.audio.playTap();
-          this.particles.spawnSparks(fa.x, fa.y + faExt.halfH, '#F59E0B', 8);
+          this.particles.spawnSparks(fa.x, fa.y + faExt.halfH, '#F59E0B', 10);
+          this.particles.spawnConfetti(fa.x, fa.y, 8);
 
           // Award points based on placement and tower stack height bonus
           const cur = this.playerScores.get(currentTurnPid) || 0;
           const stackHeightAboveRaft = Math.max(0, raftTopY - (fa.y - faExt.halfH));
-          const heightBonus = Math.floor(stackHeightAboveRaft / 18) * 2;
-          const points = 10 + heightBonus;
+          const heightTier = Math.floor(stackHeightAboveRaft / 24);
+          const heightBonus = heightTier * 5;
+          const isDaring = (!isRaftSupportOnly && (fa.x < supportLeft || fa.x > supportRight));
+          const daringBonus = isDaring ? 15 : 0;
+          const points = 15 + heightBonus + daringBonus;
           this.playerScores.set(currentTurnPid, cur + points);
-          this.particles.showFloatingText(`+${points} BALANCED!`, fa.x, fa.y - 20, '#10B981', 18);
+
+          const label = isDaring ? `+${points} DAREDEVIL!` : (heightTier >= 3 ? `+${points} HIGH TOWER!` : `+${points} BALANCED!`);
+          this.particles.showFloatingText(label, fa.x, fa.y - 20, isDaring ? '#F59E0B' : '#10B981', 18);
 
           this.advanceToNextTurn();
         }
@@ -570,7 +637,7 @@ export class AnimalStackGame extends BaseGame {
   }
 
   private advanceToNextTurn() {
-    this.nextTurnTimer = 0.75;
+    this.nextTurnTimer = 0.38;
     this.currentAnimalIndex = Math.floor(Math.random() * ANIMAL_TYPES.length);
     this.heldRotation = 0; // Reset rotation for next incoming animal
 
@@ -921,12 +988,30 @@ export class AnimalStackGame extends BaseGame {
     ctx.fillText(`🔄 ROTATE 45° (${rotDeg}°)`, btnX + btnW / 2, btnY + 19.5);
     ctx.restore();
 
-    // Rotation Control Hint below button
+    // Dedicated Interactive On-screen [ ⬇ TAP TO DROP ⬇ ] Pill Button
+    const dropY = 130;
+    this.dropBtnRect = { x: btnX, y: dropY, w: btnW, h: btnH };
     ctx.save();
-    ctx.font = '700 10.5px Montserrat, sans-serif';
+    ctx.fillStyle = this.dropBtnHover ? '#15803D' : 'rgba(21, 128, 61, 0.92)';
+    ctx.beginPath();
+    ctx.roundRect(btnX, dropY, btnW, btnH, 15);
+    ctx.fill();
+    ctx.strokeStyle = '#4ADE80';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+
+    ctx.font = '800 12px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#F0FDF4';
+    ctx.fillText('⬇ TAP TO DROP ⬇', btnX + btnW / 2, dropY + 19.5);
+    ctx.restore();
+
+    // Control Hint below buttons
+    ctx.save();
+    ctx.font = '700 10px Montserrat, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#CBD5E1';
-    ctx.fillText('Keys: [W/S] or [↑/↓] or [R] or Tap Button to rotate 45° | Action: Sabotage Wave', width / 2, btnY + btnH + 13);
+    ctx.fillText('Steer: [A/D] or [←/→] or Drag | Rotate: [W/S] or [R] | Drop: [Space] or [Enter]', width / 2, dropY + btnH + 13);
     ctx.restore();
 
     // Bottom-Left Visual Theme Switcher Pill (x: 20, y: height - 44, h: 32)
@@ -984,7 +1069,7 @@ export class AnimalStackGame extends BaseGame {
       const pid = this.activePlayerOrder[i];
       const p = this.players[pid];
       const lives = this.playerLives.get(pid) || 0;
-      const hearts = '❤️'.repeat(Math.max(0, lives)) + '🖤'.repeat(Math.max(0, 3 - lives));
+      const hearts = '❤️'.repeat(Math.max(0, lives)) + '🖤'.repeat(Math.max(0, 5 - lives));
 
       ctx.fillStyle = p.color;
       ctx.font = '700 11px Montserrat, sans-serif';
@@ -1007,7 +1092,7 @@ export class AnimalStackGame extends BaseGame {
     let landedY = raftTopY - ext.halfH;
     let suppL = raftLeft;
     let suppR = raftRight;
-    let hitRaft = (Math.min(this.craneX + ext.halfW, raftRight) - Math.max(this.craneX - ext.halfW, raftLeft)) > 6;
+    let hitRaft = (Math.min(this.craneX + ext.halfW, raftRight) - Math.max(this.craneX - ext.halfW, raftLeft)) > 4;
     let hitSa = false;
 
     for (const sa of this.animals) {
@@ -1016,22 +1101,24 @@ export class AnimalStackGame extends BaseGame {
       const saL = sa.x - saExt.halfW;
       const saR = sa.x + saExt.halfW;
       const overlap = Math.min(this.craneX + ext.halfW, saR) - Math.max(this.craneX - ext.halfW, saL);
-      if (overlap > 6) {
+      if (overlap > 4) {
         const candidateY = (sa.y - saExt.halfH) - ext.halfH;
         if (!hitSa || candidateY < landedY - 6) {
           landedY = candidateY;
           suppL = saL;
           suppR = saR;
           hitSa = true;
-        } else if (Math.abs(candidateY - landedY) <= 8) {
+        } else if (Math.abs(candidateY - landedY) <= 24) {
           suppL = Math.min(suppL, saL);
           suppR = Math.max(suppR, saR);
         }
       }
     }
 
+    const isRaftSupportOnly = (suppL === raftLeft && suppR === raftRight);
+    const gripMargin = isRaftSupportOnly ? 0 : Math.min(24, ext.halfW * 0.45);
     const isSupported = (hitSa || hitRaft);
-    const isStable = isSupported && this.craneX >= suppL && this.craneX <= suppR;
+    const isStable = isSupported && this.craneX >= (suppL - gripMargin) && this.craneX <= (suppR + gripMargin);
     const isTipping = isSupported && !isStable;
 
     const guideColor = isStable ? '#38BDF8' : (isTipping ? '#F59E0B' : 'rgba(244, 63, 94, 0.75)');

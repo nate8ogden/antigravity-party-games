@@ -976,6 +976,18 @@ function drawThumbnailDirect(
     case 'sumo_lode_runner':
       drawSumoLodeRunnerArt(ctx, x, y, w, h);
       break;
+    case 'thumb_war_wrestle':
+      drawThumbWarWrestleArt(ctx, x, y, w, h);
+      break;
+    case 'swipe_ninja_blitz':
+      drawSwipeNinjaBlitzArt(ctx, x, y, w, h);
+      break;
+    case 'tabletop_air_hockey':
+      drawTabletopAirHockeyArt(ctx, x, y, w, h);
+      break;
+    case 'tap_tug_overdrive':
+      drawTapTugOverdriveArt(ctx, x, y, w, h);
+      break;
     default:
       drawDefaultArt(ctx, x, y, w, h);
       break;
@@ -15118,5 +15130,150 @@ function drawSumoLodeRunnerArt(ctx: CanvasRenderingContext2D, x: number, y: numb
   ctx.fillText('30 STAGES • WASM', x + w * 0.5, y + h - 8);
 }
 
+function drawThumbWarWrestleArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  const bg = ctx.createRadialGradient(x + w * 0.5, y + h * 0.5, 8, x + w * 0.5, y + h * 0.5, w * 0.7);
+  bg.addColorStop(0, '#311042');
+  bg.addColorStop(1, '#0f051d');
+  ctx.fillStyle = bg;
+  ctx.fillRect(x, y, w, h);
 
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
 
+  // Wrestling Ring Ropes
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x + 14, y + 14, w - 28, h - 28);
+
+  // Two Giant Articulated Thumbs Clashing in the Ring!
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.arc(cx - 16, cy + 4, 15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fecaca';
+  ctx.beginPath();
+  ctx.arc(cx - 12, cy, 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#3b82f6';
+  ctx.beginPath();
+  ctx.arc(cx + 16, cy - 4, 15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#bfdbfe';
+  ctx.beginPath();
+  ctx.arc(cx + 12, cy - 8, 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Golden Clash Starburst
+  ctx.fillStyle = '#fde047';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawSwipeNinjaBlitzArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  const bg = ctx.createLinearGradient(x, y, x + w, y + h);
+  bg.addColorStop(0, '#1e1b4b');
+  bg.addColorStop(1, '#090d16');
+  ctx.fillStyle = bg;
+  ctx.fillRect(x, y, w, h);
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Sliced Watermelon Halves
+  ctx.fillStyle = '#22c55e';
+  ctx.beginPath();
+  ctx.arc(cx - 10, cy - 6, 14, Math.PI * 0.8, Math.PI * 1.8);
+  ctx.fill();
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.arc(cx - 10, cy - 6, 11, Math.PI * 0.8, Math.PI * 1.8);
+  ctx.fill();
+
+  ctx.fillStyle = '#22c55e';
+  ctx.beginPath();
+  ctx.arc(cx + 10, cy + 6, 14, -Math.PI * 0.2, Math.PI * 0.8);
+  ctx.fill();
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.arc(cx + 10, cy + 6, 11, -Math.PI * 0.2, Math.PI * 0.8);
+  ctx.fill();
+
+  // Glowing Katana Slash Arc
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 3.5;
+  ctx.beginPath();
+  ctx.moveTo(x + 18, y + h - 18);
+  ctx.quadraticCurveTo(cx, cy - 10, x + w - 18, y + 18);
+  ctx.stroke();
+}
+
+function drawTabletopAirHockeyArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  ctx.fillStyle = '#091526';
+  ctx.fillRect(x, y, w, h);
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // Center Line & Circle
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x + 10, cy);
+  ctx.lineTo(x + w - 10, cy);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(cx, cy, 16, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Top & Bottom Mallets
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.arc(cx - 18, y + 26, 11, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#3b82f6';
+  ctx.beginPath();
+  ctx.arc(cx + 18, y + h - 26, 11, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Neon Puck
+  ctx.fillStyle = '#fde047';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawTapTugOverdriveArt(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(x, y, w, h);
+
+  const cx = x + w * 0.5;
+  const cy = y + h * 0.5;
+
+  // 4 Corner Tractor Beams
+  const corners = [
+    { px: x + 16, py: y + 16, c: '#ef4444' },
+    { px: x + w - 16, py: y + 16, c: '#3b82f6' },
+    { px: x + 16, py: y + h - 16, c: '#10b981' },
+    { px: x + w - 16, py: y + h - 16, c: '#f59e0b' }
+  ];
+  for (const cr of corners) {
+    ctx.strokeStyle = cr.c;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(cr.px, cr.py);
+    ctx.lineTo(cx, cy);
+    ctx.stroke();
+  }
+
+  // Unstable Plasma Core
+  ctx.fillStyle = '#a855f7';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 13, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#fde047';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}

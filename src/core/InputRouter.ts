@@ -201,6 +201,7 @@ export class InputRouter {
     // Multi-touch listeners with dynamic floating virtual thumbsticks
     this.canvas.addEventListener('touchstart', (e) => {
       e.preventDefault();
+      if (!this.isInGame) return;
       const rect = this.canvas.getBoundingClientRect();
       const now = performance.now();
 
@@ -333,6 +334,7 @@ export class InputRouter {
 
     // Mouse listeners for click & drag testing on desktop
     this.canvas.addEventListener('mousedown', (e) => {
+      if (!this.isInGame) return;
       const rect = this.canvas.getBoundingClientRect();
       const clientX = e.clientX - rect.left;
       const clientY = e.clientY - rect.top;

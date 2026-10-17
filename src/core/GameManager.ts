@@ -7082,25 +7082,30 @@ export class GameManager {
     this.trophyLobbyBannerHitbox = null;
     this.shopLobbyBannerHitbox = null;
 
-    // Center Title Header (Unobstructed, zero overlap with desktop player cards or mobile borders)
-    this.ctx.save();
-    this.ctx.fillStyle = '#0F172A';
-    this.ctx.font = w < 500 ? '900 15px Montserrat, sans-serif' : (w < 720 ? '900 18px Montserrat, sans-serif' : '900 20px Montserrat, sans-serif');
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText('ANTIGRAVITY PARTY GAMES', w / 2, 35);
-    this.ctx.restore();
-
-    // Center Subtitle
-    this.ctx.fillStyle = '#64748B';
-    this.ctx.font = w < 500 ? '600 10px Montserrat, sans-serif' : (w < 720 ? '600 11px Montserrat, sans-serif' : '600 12px Montserrat, sans-serif');
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText(`${GAME_CATALOG.length} Minigames  •  1-4 Players & Bots  •  Tournament Cup`, w / 2, 54);
-
     // 3. Player Count Quick Tabs (Responsive 2.5D Tactile Buttons)
     this.playerTabHitboxes = [];
     const humanCount = this.players.filter((p) => p.type === 'human').length;
     const botCount = this.players.filter((p) => p.type !== 'human' && p.type !== 'disabled').length;
     const activeCount = humanCount + botCount;
+    const currentDisplayedCount = this.getFilteredCatalog().length;
+
+    // Center Title Header (Unobstructed, zero overlap with desktop player cards or mobile borders)
+    this.ctx.save();
+    this.ctx.fillStyle = '#0F172A';
+    this.ctx.font = w < 500 ? '900 15px Montserrat, sans-serif' : (w < 720 ? '900 18px Montserrat, sans-serif' : '900 20px Montserrat, sans-serif');
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText('ANTIGRAVITY PARTY GAMES', w / 2, 42);
+    this.ctx.restore();
+
+    // Center Subtitle
+    this.ctx.fillStyle = this.deviceMode === 'phone' ? '#0284C7' : '#64748B';
+    this.ctx.font = w < 500 ? '700 9.5px Montserrat, sans-serif' : (w < 720 ? '700 10.5px Montserrat, sans-serif' : '700 11.5px Montserrat, sans-serif');
+    this.ctx.textAlign = 'center';
+    const subText =
+      this.deviceMode === 'phone'
+        ? `📱 PHONE MODE (${currentDisplayedCount} Games)  •  ${activeCount >= 3 ? '4-Corner Touch + 1v1 Top/Bot → Final' : '1-2P Face-to-Face & Touch'}`
+        : `${currentDisplayedCount} Minigames  •  1-4 Players & Bots  •  Tournament Cup`;
+    this.ctx.fillText(subText, w / 2, 58);
 
     // At startup or when playing 1 Human vs AI bot(s), Tab 1 ("1 PLAYER V AI") is selected
     let selectedTabCount = activeCount;
@@ -7215,7 +7220,7 @@ export class GameManager {
     const isNarrow = w < 780;
     const catBarY = 148;
     const categories: { id: string; label: string; icon: string }[] = [
-      { id: 'ALL', label: `ALL (${GAME_CATALOG.length})`, icon: '🎮' },
+      { id: 'ALL', label: `ALL (${currentDisplayedCount})`, icon: '🎮' },
       { id: 'Action', label: 'ACTION', icon: '⚡' },
       { id: 'Reflex', label: 'REFLEX', icon: '⏱' },
       { id: 'Racing', label: 'RACING', icon: '🏎' },
@@ -7437,6 +7442,7 @@ export class GameManager {
     const galleryW = isDesktop ? w - 396 : w - 32;
 
     const displayedGames = this.getFilteredCatalog();
+    const activePlayerCount = this.players.filter((p) => p.type !== 'disabled').length;
 
     // Card sizing
     const cardW = 195;
@@ -7566,6 +7572,16 @@ export class GameManager {
       this.ctx.font = '900 9px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
       this.ctx.fillText(game.icon, cardX + cardW - 33, cardY + 24.5);
+
+      // Phone Mode Compatibility Badge along bottom of artwork when Phone toggle is active
+      if (this.deviceMode === 'phone') {
+        const badge = getPhoneModeBadge(game.id, activePlayerCount);
+        this.drawRoundedRect(cardX + 12, cardY + artH - 14, cardW - 24, 16, 4, badge.bg, 'rgba(255,255,255,0.35)', 1);
+        this.ctx.fillStyle = badge.color;
+        this.ctx.font = '900 8px Montserrat, sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(badge.label, cardX + cardW / 2, cardY + artH - 3);
+      }
 
       // Game Title (Clean, centered, auto-fit font to card width)
       this.ctx.fillStyle = '#0F172A';
