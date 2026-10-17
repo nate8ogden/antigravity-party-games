@@ -445,7 +445,7 @@ export class PterodactylGlideGame extends BaseGame {
   public getRoundResult(): RoundResult {
     const sorted = [...this.flyers].sort((a, b) => b.score - a.score);
     return {
-      winnerId: sorted[0]?.id ?? 1,
+      winnerId: sorted[0]?.id ?? 0,
       rankings: sorted.map((f, i) => ({
         playerId: f.id,
         score: Math.round(f.score),

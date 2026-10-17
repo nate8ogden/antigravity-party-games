@@ -386,7 +386,7 @@ export class BambooPoleVaultGame extends BaseGame {
   public getRoundResult(): RoundResult {
     const sorted = [...this.vaulters].sort((a, b) => b.score - a.score);
     return {
-      winnerId: sorted[0]?.id ?? 1,
+      winnerId: sorted[0]?.id ?? 0,
       rankings: sorted.map((v, i) => ({
         playerId: v.id,
         score: Math.round(v.score),

@@ -457,7 +457,7 @@ export class HoneybeeNectarRelayGame extends BaseGame {
   public getRoundResult(): RoundResult {
     const sorted = [...this.bees].sort((a, b) => b.score - a.score);
     return {
-      winnerId: sorted[0]?.id ?? 1,
+      winnerId: sorted[0]?.id ?? 0,
       rankings: sorted.map((b, i) => ({
         playerId: b.id,
         score: Math.round(b.score),

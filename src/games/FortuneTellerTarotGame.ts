@@ -528,7 +528,7 @@ export class FortuneTellerTarotGame extends BaseGame {
   public getRoundResult(): RoundResult {
     const sorted = [...this.astronomers].sort((a, b) => b.score - a.score);
     return {
-      winnerId: sorted[0]?.id ?? 1,
+      winnerId: sorted[0]?.id ?? 0,
       rankings: sorted.map((a, i) => ({
         playerId: a.id,
         score: Math.round(a.score),

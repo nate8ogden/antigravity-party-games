@@ -504,7 +504,7 @@ export class TrexEggScrambleGame extends BaseGame {
   public getRoundResult(): RoundResult {
     const sorted = [...this.raiders].sort((a, b) => b.score - a.score);
     return {
-      winnerId: sorted[0]?.id ?? 1,
+      winnerId: sorted[0]?.id ?? 0,
       rankings: sorted.map((r, i) => ({
         playerId: r.id,
         score: Math.round(r.score),

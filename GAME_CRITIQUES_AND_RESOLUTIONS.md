@@ -240,12 +240,17 @@ Three specific minigames in this collection demonstrate world-class arcade game 
 - **Benchmark Contrast:** Unlike *Skyline Sumo*'s hilarious vertical leaps, *Sumo Iceberg*'s edge-sliding terror, or *Gold Miner*'s cutthroat claw steals, *'Animal Stack'* generates no memorable screams, no clutch comebacks, and no immediate requests for a rematch.
 
 #### 🛠️ The Definitive Design Resolution ('Nothing Left to Say')
-1. **Core Gameplay & Objective Overhaul:** Redesign *Animal Stack* around a high-stakes, push-your-luck mechanic. Consecutive successful actions build a score multiplier (1x -> 2x -> 4x), but incurring an error or taking a hit triggers an 'Overcharge Explosion' that banks zero points and scatters loose pickups. At the 15-second mark, trigger a sudden-death event (e.g. shrinking boundaries, crumbling floors, or rapid hazard sweeps) to force aggressive play.
-2. **Controls & Tactility Overhaul:** Eliminate passive auto-rotation. Implement an active directional snap system: tap to pivot 45° instantly, double-tap for an immediate 180° turnaround, and hold to charge an explosive forward dash with a visible expanding aura and rising audio whine.
-3. **Multiplayer Chaos & Comeback Mechanic:** Implement mandatory elastic player-to-player body collision ($m_1 v_1 + m_2 v_2$). If any player falls behind by $\ge 2$ points or lives, activate the 'Underdog Surge' (+15% movement speed, massive knockback force against the leader, and temporary hazard armor) to keep every match winnable until the final buzzer.
-4. **Visual & Audio Juice Polish:** Integrate 45ms hit-stop freeze-frames on critical impacts, dynamic screenshake scaled to impact force ($intensity = \min(18, impulse \times 0.25)$), high-contrast colored particle shockwaves matching player palettes, and heavy bass-boosted FM sound effects.
-5. **Humanized AI Tuning:** Equip the bot AI with a 240ms sensory-motor perception delay, an intentional 12% blunder/misjudgment rate on Easy/Normal, and Gaussian angular aiming dispersion ($\pm 0.14\ radians$) to ensure solo play feels authentic and human.
+1. **Moored Raft & Zero Tilt Stability:** Fixed the critical bug where stealth `raftTilt` drift caused all settled animals to slide violently into the ocean. The raft is firmly anchored and strictly level (`raftTilt = 0`), ensuring players' carefully constructed towers never wipe out arbitrarily.
+2. **Multi-Support Physics & Bridge Stacking:** Completely overhauled the landing physics. Replaced the hyper-punitive 4px overhang threshold with multi-surface contact detection. Animals can now bridge across multiple settled animals with full support span evaluation. Overhung centers of mass realistically tumble into the water, while supported animals land flush with zero pixel sinking.
+3. **Alignment Plumb-Line & Ghost Silhouette Guide:** Added an overhead-to-surface drop guide system:
+   - Translucent dotted plumb line from the crane clamp down to the touchdown point.
+   - Real-time ghost silhouette preview showing the exact landing position and orientation.
+   - Surface landing brackets `[   ]` and alignment status badge (`● STABLE`, `▲ TIPPING`, `✕ MISS`).
+4. **Juicy Squish-and-Stretch Tactility:** Settled animals now exhibit physical squash-and-stretch on impact (`scaleX: 1.2, scaleY: 0.8` decaying with spring physics), accompanied by wood landing sparks, soft thud audio, and height milestone bonuses.
+5. **Responsive Crane Authority & Steering:** Crane steering immediately sets velocity direction with high-torque manual control (up to 210 px/s), allowing players to make minute timing adjustments effortlessly.
+6. **Fair Spectator Sabotage:** Water jet sabotage creates a playful side splash and a gentle wind gust that nudges the crane trolley, providing hilarious party mischief without unfair stack destruction.
 - **Status:** ✅ STATUS: FULLY RESOLVED & VERIFIED
+
 
 ### #10. Sumo Iceberg (ID: `sumo_iceberg`) — [Physics]
 - **Class Implementation:** `src/games/SumoIcebergGame.ts` (527 lines)

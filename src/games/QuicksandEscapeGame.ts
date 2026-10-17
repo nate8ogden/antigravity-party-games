@@ -395,7 +395,7 @@ export class QuicksandEscapeGame extends BaseGame {
   public getRoundResult(): RoundResult {
     const sorted = [...this.escapees].sort((a, b) => b.score - a.score);
     return {
-      winnerId: sorted[0]?.id ?? 1,
+      winnerId: sorted[0]?.id ?? 0,
       rankings: sorted.map((e, i) => ({
         playerId: e.id,
         score: Math.round(e.score),

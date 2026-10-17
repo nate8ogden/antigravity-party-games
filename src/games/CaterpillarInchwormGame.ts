@@ -436,7 +436,7 @@ export class CaterpillarInchwormGame extends BaseGame {
   public getRoundResult(): RoundResult {
     const sorted = [...this.worms].sort((a, b) => b.score - a.score);
     return {
-      winnerId: sorted[0]?.id ?? 1,
+      winnerId: sorted[0]?.id ?? 0,
       rankings: sorted.map((w, i) => ({
         playerId: w.id,
         score: Math.round(w.score),

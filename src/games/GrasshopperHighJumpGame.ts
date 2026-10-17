@@ -384,7 +384,7 @@ export class GrasshopperHighJumpGame extends BaseGame {
   public getRoundResult(): RoundResult {
     const sorted = [...this.hoppers].sort((a, b) => b.score - a.score);
     return {
-      winnerId: sorted[0]?.id ?? 1,
+      winnerId: sorted[0]?.id ?? 0,
       rankings: sorted.map((h, i) => ({
         playerId: h.id,
         score: Math.round(h.score),

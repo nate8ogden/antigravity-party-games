@@ -409,7 +409,7 @@ export class CentipedeSlalomGame extends BaseGame {
   public getRoundResult(): RoundResult {
     const sorted = [...this.racers].sort((a, b) => b.score - a.score);
     return {
-      winnerId: sorted[0]?.id ?? 1,
+      winnerId: sorted[0]?.id ?? 0,
       rankings: sorted.map((r, i) => ({
         playerId: r.id,
         score: Math.round(r.score),

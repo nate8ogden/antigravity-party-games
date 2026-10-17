@@ -460,7 +460,7 @@ export class RaptorPounceDodgeGame extends BaseGame {
   public getRoundResult(): RoundResult {
     const sorted = [...this.survivors].sort((a, b) => b.score - a.score);
     return {
-      winnerId: sorted[0]?.id ?? 1,
+      winnerId: sorted[0]?.id ?? 0,
       rankings: sorted.map((s, i) => ({
         playerId: s.id,
         score: Math.round(s.score),

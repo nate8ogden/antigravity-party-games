@@ -424,7 +424,7 @@ export class AmberFossilExcavateGame extends BaseGame {
   public getRoundResult(): RoundResult {
     const sorted = [...this.diggers].sort((a, b) => b.score - a.score);
     return {
-      winnerId: sorted[0]?.id ?? 1,
+      winnerId: sorted[0]?.id ?? 0,
       rankings: sorted.map((d, i) => ({
         playerId: d.id,
         score: Math.round(d.score),

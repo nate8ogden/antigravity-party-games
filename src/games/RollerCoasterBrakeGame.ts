@@ -707,7 +707,7 @@ export class RollerCoasterBrakeGame extends BaseGame {
       place: i + 1,
     }));
     return {
-      winnerId: sorted[0]?.id ?? 1,
+      winnerId: sorted[0]?.id ?? 0,
       rankings,
       mvpHighlight: `Coaster Champion ${Math.round(sorted[0]?.score ?? 0)} pts!`,
     };

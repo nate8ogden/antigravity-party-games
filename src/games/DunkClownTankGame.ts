@@ -487,7 +487,7 @@ export class DunkClownTankGame extends BaseGame {
   public getRoundResult(): RoundResult {
     const sorted = [...this.pitchers].sort((a, b) => b.score - a.score);
     return {
-      winnerId: sorted[0]?.id ?? 1,
+      winnerId: sorted[0]?.id ?? 0,
       rankings: sorted.map((p, i) => ({
         playerId: p.id,
         score: Math.round(p.score),
