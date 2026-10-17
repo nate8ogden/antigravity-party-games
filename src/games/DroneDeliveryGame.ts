@@ -372,9 +372,9 @@ export class DroneDeliveryGame extends BaseGame {
 
       const steer = this.input.getSteer(p.id);
       const throttle = this.input.getThrottle(p.id);
-      const isCharging = this.input.isActionPressed(p.id) || this.input.isPressed(p.id);
-      const justAction = this.input.justAction(p.id) || this.input.justPressed(p.id);
-      const justReleased = this.input.justReleased(p.id);
+      const isCharging = this.input.isActionPressed(p.id);
+      const justAction = this.input.justAction(p.id);
+      const justReleased = !isCharging && drone.thrustCharge > 0.1;
 
       // Drone bank tilt angle
       drone.angle = steer * 0.38;
@@ -1119,6 +1119,26 @@ export class DroneDeliveryGame extends BaseGame {
     ctx.fillText('STEER: TILT • W/SPACE: ROTOR LIFT • HOLD ACTION: EMP', width - 20, height - 14);
 
     ctx.restore();
+  }
+
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    const p1 = this.playersState.get(0);
+    if (!p1 || p1.stunTimer > 0) return false;
+
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.cycleTheme();
+      return true;
+    }
+
+    // Tap to steer drone towards tapped position
+    const dx = x - p1.x;
+    const dy = y - p1.y;
+    const d = Math.max(1, Math.hypot(dx, dy));
+    p1.vx += (dx / d) * 220;
+    p1.vy += (dy / d) * 220;
+    this.audio.playTap();
+    return true;
   }
 
   public syncDebug(): void {

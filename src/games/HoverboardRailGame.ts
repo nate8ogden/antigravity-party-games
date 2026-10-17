@@ -365,9 +365,9 @@ export class HoverboardRailGame extends BaseGame {
       b.x = Math.max(100, Math.min(width - 220, b.x));
 
       // Jump Ollie & Hydraulic Rail Slam Mechanics
-      const isCharging = this.input.isActionPressed(p.id) || this.input.isPressed(p.id);
-      const justAction = this.input.justAction(p.id) || this.input.justPressed(p.id);
-      const justReleased = this.input.justReleased(p.id);
+      const isCharging = this.input.isActionPressed(p.id);
+      const justAction = this.input.justAction(p.id);
+      const justReleased = !isCharging && b.jumpCharge > 0.05;
 
       if (!b.isJumping) {
         if (isCharging) {
@@ -1082,6 +1082,45 @@ export class HoverboardRailGame extends BaseGame {
     ctx.fillText('W/S: CHANGE RAIL • A/D: SPEED • SPACE: OLLIE / SLAM', width - 20, height - 14);
 
     ctx.restore();
+  }
+
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    const p1 = this.playersState.get(0);
+    if (!p1 || p1.stunTimer > 0) return false;
+
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.cycleTheme();
+      return true;
+    }
+
+    if (x > width * 0.7) {
+      if (!p1.isJumping) {
+        p1.isJumping = true;
+        p1.vAltitude = 360;
+        this.audio.playWhoosh();
+      } else if (!p1.isSlamming) {
+        p1.isSlamming = true;
+        p1.vAltitude = -650;
+        this.audio.playWhoosh();
+      }
+      return true;
+    }
+
+    if (y < height * 0.5 && p1.railIdx > 0 && p1.switchCooldown <= 0) {
+      p1.railIdx--;
+      p1.targetY = this.railYPositions[p1.railIdx];
+      p1.switchCooldown = 0.18;
+      this.audio.playTap();
+      return true;
+    } else if (y >= height * 0.5 && p1.railIdx < this.railYPositions.length - 1 && p1.switchCooldown <= 0) {
+      p1.railIdx++;
+      p1.targetY = this.railYPositions[p1.railIdx];
+      p1.switchCooldown = 0.18;
+      this.audio.playTap();
+      return true;
+    }
+    return false;
   }
 
   public syncDebug(): void {

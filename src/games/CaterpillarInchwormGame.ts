@@ -202,8 +202,8 @@ export class CaterpillarInchwormGame extends BaseGame {
       }
 
       const sx = this.input.getSteer(w.id);
-      const justTap = this.input.justPressed(w.id) || this.input.justAction(w.id);
-      const isHold = this.input.isActionPressed(w.id) || this.input.isPressed(w.id);
+      const justTap = this.input.justAction(w.id);
+      const isHold = this.input.isActionPressed(w.id);
 
       // Accordion scrunch movement along branches + gravity when airborne
       if (w.grounded) {
@@ -337,7 +337,8 @@ export class CaterpillarInchwormGame extends BaseGame {
     bot.vx += Math.sign(tx - bot.x) * 850 * dt;
 
     const hold = !bot.holding || bot.charge < bot.botChargeGoal;
-    this.input.setBotState(botId, hold);
+    const steer = Math.sign(tx - bot.x);
+    this.input.setBotInput(botId, hold, steer, 0, hold);
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
@@ -446,7 +447,24 @@ export class CaterpillarInchwormGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
-    return false;
+  public handlePointerDown(x: number, y: number, _width: number, _height: number): boolean {
+    if (this.isFinished) return false;
+    const p1 = this.worms.find(w => w.id === 0);
+    if (!p1 || p1.stunTimer > 0) return false;
+
+    if (Math.abs(x - p1.x) < 45 && Math.abs(y - p1.y) < 45) {
+      // Tap on worm = jump
+      if (p1.grounded) {
+        p1.vy = -420;
+        p1.grounded = false;
+        this.audio.playTap();
+      }
+      return true;
+    }
+
+    // Steer towards tap x
+    p1.vx += Math.sign(x - p1.x) * 450;
+    this.audio.playTap();
+    return true;
   }
 }

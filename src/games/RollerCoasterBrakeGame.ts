@@ -672,7 +672,29 @@ export class RollerCoasterBrakeGame extends BaseGame {
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Centrifugal Heat Bar on Cart
+      // Centrifugal Heat & Dynamic Lean Badge
+      const dangerHere = this.getCurveDangerAt(c.trackDist);
+      if (dangerHere > 0.35) {
+        const curveDir = Math.cos(c.trackDist * 0.0042) >= 0 ? 1 : -1;
+        const isLeaning = (curveDir > 0 && (c.vx > 0.4 || c.laneOffset > 0.15)) || (curveDir < 0 && (c.vx < -0.4 || c.laneOffset < -0.15));
+        const badgeColor = isLeaning ? '#4ade80' : c.braking ? '#38bdf8' : '#f59e0b';
+        const badgeText = isLeaning ? '★ LEANING IN! ★' : c.braking ? '🛡️ BRAKED' : (curveDir > 0 ? 'LEAN RIGHT ▶▶' : '◀◀ LEAN LEFT');
+
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+        ctx.beginPath();
+        ctx.roundRect(-55, -74, 110, 18, 9);
+        ctx.fill();
+        ctx.strokeStyle = badgeColor;
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+
+        ctx.fillStyle = badgeColor;
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(badgeText, 0, -65);
+      }
+
       ctx.fillStyle = 'rgba(0,0,0,0.6)';
       ctx.fillRect(-20, 8, 40, 5);
       ctx.fillStyle = c.heat > 0.7 ? '#ef4444' : '#fbbf24';
@@ -720,6 +742,49 @@ export class RollerCoasterBrakeGame extends BaseGame {
       ctx.fillText(`P${c.id}: ${Math.round(c.score)} pts (${c.combo}x)`, hx, 38);
     });
 
+    // Mobile / Touch Controls Bar at bottom
+    const touchBtnY = height - 52;
+    const btnW = Math.min(130, width * 0.28);
+    const btnH = 36;
+
+    // Left Button
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.beginPath();
+    ctx.roundRect(20, touchBtnY, btnW, btnH, 18);
+    ctx.fill();
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('◀ LEAN LEFT', 20 + btnW * 0.5, touchBtnY + btnH * 0.5);
+
+    // Center Brake Button
+    const centerW = Math.min(160, width * 0.32);
+    const centerXBtn = width * 0.5 - centerW * 0.5;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.beginPath();
+    ctx.roundRect(centerXBtn, touchBtnY, centerW, btnH, 18);
+    ctx.fill();
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+    ctx.fillStyle = '#fef08a';
+    ctx.fillText('🛑 BRAKE / BOOST', centerXBtn + centerW * 0.5, touchBtnY + btnH * 0.5);
+
+    // Right Button
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.beginPath();
+    ctx.roundRect(width - 20 - btnW, touchBtnY, btnW, btnH, 18);
+    ctx.fill();
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillText('LEAN RIGHT ▶', width - 20 - btnW * 0.5, touchBtnY + btnH * 0.5);
+
     ctx.restore();
   }
 
@@ -741,7 +806,31 @@ export class RollerCoasterBrakeGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
-    return false;
+  public handlePointerDown(x: number, _y: number, width: number, _height: number): boolean {
+    if (this.isFinished) return false;
+    const p1 = this.carts[0];
+    if (!p1) return false;
+
+    if (x < width * 0.33) {
+      // Steer/lean left
+      p1.vx = -4.5;
+      this.audio.playTap();
+      return true;
+    } else if (x > width * 0.67) {
+      // Steer/lean right
+      p1.vx = 4.5;
+      this.audio.playTap();
+      return true;
+    } else {
+      // Center: brake / slingshot
+      p1.holding = true;
+      p1.braking = true;
+      setTimeout(() => {
+        p1.holding = false;
+        p1.braking = false;
+      }, 260);
+      this.audio.playTap();
+      return true;
+    }
   }
 }

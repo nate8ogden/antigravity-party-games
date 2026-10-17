@@ -152,6 +152,14 @@ export class CottonCandySpinGame extends BaseGame {
       this.audio.playTap();
       return true;
     }
+    const p1 = this.spinners.get(0);
+    if (p1 && p1.stunTimer <= 0) {
+      p1.angle = Math.atan2(y - p1.y, x - p1.x);
+      p1.vx += Math.cos(p1.angle) * 320;
+      p1.vy += Math.sin(p1.angle) * 320;
+      this.audio.playTap();
+      return true;
+    }
     return false;
   }
 
@@ -253,7 +261,7 @@ export class CottonCandySpinGame extends BaseGame {
           const accel = s.underdog ? 740 : 620;
           s.vx += (move.x / mag) * accel * dt;
           s.vy += (move.y / mag) * accel * dt;
-        } else if (this.input.justPressed(s.id) || this.input.justAction(s.id)) {
+        } else if (this.input.justAction(s.id)) {
           s.angle += Math.PI / 4;
           s.vx += Math.cos(s.angle) * 165;
           s.vy += Math.sin(s.angle) * 165;
@@ -261,7 +269,7 @@ export class CottonCandySpinGame extends BaseGame {
         }
       }
 
-      const holding = s.stunTimer <= 0 && (this.input.isActionPressed(s.id) || this.input.isPressed(s.id));
+      const holding = s.stunTimer <= 0 && this.input.isActionPressed(s.id);
       if (holding) {
         s.charge = Math.min(1.1, s.charge + dt * 1.15);
         s.wasHolding = true;
@@ -416,7 +424,7 @@ export class CottonCandySpinGame extends BaseGame {
     const speed = difficulty === 'bot_hard' ? 420 : difficulty === 'bot_normal' ? 340 : 260;
     s.vx += Math.cos(s.angle) * speed * dt;
     s.vy += Math.sin(s.angle) * speed * dt;
-    this.input.setBotState(botId, Math.random() < 0.35);
+    this.input.setBotInput(botId, false, Math.cos(s.angle), -Math.sin(s.angle), false);
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {

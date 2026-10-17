@@ -382,9 +382,9 @@ export class MonorailHijackGame extends BaseGame {
 
       const steer = this.input.getSteer(p.id);
       const throttle = this.input.getThrottle(p.id);
-      const isCharging = this.input.isActionPressed(p.id) || this.input.isPressed(p.id);
-      const justAction = this.input.justAction(p.id) || this.input.justPressed(p.id);
-      const justReleased = this.input.justReleased(p.id);
+      const isCharging = this.input.isActionPressed(p.id);
+      const justAction = this.input.justAction(p.id);
+      const justReleased = !isCharging && runner.jumpCharge > 0.05;
 
       // Horizontal run & braking
       const speedMult = runner.isUnderdog ? 1.22 : 1.0;

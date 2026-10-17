@@ -222,7 +222,7 @@ export class VolcanoLavaLeapGame extends BaseGame {
 
       const sx = this.input.getSteer(h.id);
       const sy = this.input.getThrottle(h.id);
-      const isHold = this.input.isActionPressed(h.id) || this.input.isPressed(h.id);
+      const isHold = this.input.isActionPressed(h.id);
 
       const accel = 1350 * (h.underdog ? 1.15 : 1.0);
       h.vx += sx * accel * dt;
@@ -328,17 +328,18 @@ export class VolcanoLavaLeapGame extends BaseGame {
       bot.botChargeGoal = 0.76 + Math.random() * 0.18;
     }
 
+    let dx = 0, dy = 0;
     const best = this.pillars.find((p) => p.state === 'solid' && (p.hasGoldenCrown || p.hasRuby)) ?? this.pillars[0];
     if (best) {
-      const dx = best.x - bot.x;
-      const dy = best.y - bot.y;
+      dx = best.x - bot.x;
+      dy = best.y - bot.y;
       const d = Math.max(1, Math.hypot(dx, dy));
       bot.vx += (dx / d) * 1100 * dt;
       bot.vy += (dy / d) * 1100 * dt;
     }
 
     const hold = !bot.holding || bot.charge < bot.botChargeGoal;
-    this.input.setBotState(botId, hold);
+    this.input.setBotInput(botId, hold, Math.sign(dx), Math.sign(-dy), hold);
   }
 
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
@@ -446,7 +447,17 @@ export class VolcanoLavaLeapGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
-    return false;
+  public handlePointerDown(x: number, y: number, _width: number, _height: number): boolean {
+    if (this.isFinished) return false;
+    const p1 = this.hoppers.find(h => h.id === 0);
+    if (!p1 || p1.singedTimer > 0) return false;
+
+    const dx = x - p1.x;
+    const dy = y - p1.y;
+    const d = Math.max(1, Math.hypot(dx, dy));
+    p1.vx += (dx / d) * 480;
+    p1.vy += (dy / d) * 480;
+    this.audio.playTap();
+    return true;
   }
 }
