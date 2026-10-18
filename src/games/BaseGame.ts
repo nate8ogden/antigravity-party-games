@@ -311,6 +311,13 @@ export abstract class BaseGame {
   public abstract getRoundResult(): RoundResult;
   public abstract reset(width: number, height: number): void;
 
+  public wasm: WasmPhysicsEngine = WasmPhysicsEngine.getInstance();
+  public baseHitStopTimer: number = 0;
+
+  public triggerBaseHitStop(durationSec: number = 0.045): void {
+    this.baseHitStopTimer = Math.max(this.baseHitStopTimer, durationSec);
+  }
+
   protected updateBots(dt: number, width: number, height: number): void {
     for (const p of this.getActivePlayers()) {
       if (p.type.startsWith('bot_')) {
@@ -339,14 +346,19 @@ export abstract class BaseGame {
   ): void {
     const p = this.getPlayer(playerId);
     const isBot = p ? p.type.startsWith('bot_') : false;
+    const isActivating = this.input.isPressed(playerId) || this.input.isActionPressed(playerId);
+    const sx = isActivating ? 1.12 : 1.0;
+    const sy = isActivating ? 0.90 : 1.0;
+
     ctx.save();
+    ctx.translate(x, y);
     if (typeof angle === 'number') {
-      ctx.translate(x, y);
       ctx.rotate(angle);
-      drawCharacter(ctx, 0, 0, radius, playerId, isBot, mood, time);
-    } else {
-      drawCharacter(ctx, x, y, radius, playerId, isBot, mood, time);
     }
+    if (isActivating) {
+      ctx.scale(sx, sy);
+    }
+    drawCharacter(ctx, 0, 0, radius, playerId, isBot, mood, time);
     ctx.restore();
   }
 

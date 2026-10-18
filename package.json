@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && cp dist/index.html Antigravity_Games.html",
+    "build:rom": "npm run build && node scripts/build-rom.mjs",
     "preview": "vite preview",
     "test": "playwright test e2e/playtest.spec.ts"
   },

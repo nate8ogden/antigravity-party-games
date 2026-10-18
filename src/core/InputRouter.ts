@@ -1097,14 +1097,27 @@ export class InputRouter {
         this.gamepadSteer[pid] = stickX;
         this.gamepadThrottle[pid] = -stickY; // invert stick Y so up is positive throttle
 
-        // Action buttons: A / Cross (0), B / Circle (1), X / Square (2), Y / Triangle (3), RB (5), RT (7)
-        const actionPressed = (gp.buttons[0]?.pressed || gp.buttons[1]?.pressed || gp.buttons[2]?.pressed || gp.buttons[3]?.pressed || gp.buttons[5]?.pressed || gp.buttons[7]?.pressed) ?? false;
+        // Action buttons: A / Cross (0), B / Circle (1), X / Square (2), Y / Triangle (3), LB (4), RB (5), LT (6), RT (7)
+        const anyFaceOrShoulder =
+          (gp.buttons[0]?.pressed ||
+            gp.buttons[1]?.pressed ||
+            gp.buttons[2]?.pressed ||
+            gp.buttons[3]?.pressed ||
+            gp.buttons[4]?.pressed ||
+            gp.buttons[5]?.pressed ||
+            gp.buttons[6]?.pressed ||
+            gp.buttons[7]?.pressed) ??
+          false;
+        const anyDirection = Math.abs(stickX) > 0.5 || Math.abs(stickY) > 0.5;
+        const actionPressed = this.controlMode === 'single_button' ? (anyFaceOrShoulder || anyDirection) : anyFaceOrShoulder;
+
         const wasAction = this.gamepadAction[pid];
         this.gamepadAction[pid] = actionPressed;
 
         if (actionPressed && !wasAction) {
           this.triggerAction(pid);
         } else if (!actionPressed && wasAction) {
+          this.states[pid].action = false;
           this.checkPlayerRelease(pid);
         }
       }

@@ -2085,24 +2085,28 @@ export class SumoLodeRunnerGame extends BaseGame {
     if (leadFreq > 0) {
       const wave: OscillatorType = this.bgmMood === 'negative' ? 'sawtooth' : 'square';
       const slide = this.bgmMood === 'positive' && step % 2 === 1 ? leadFreq * 1.06 : undefined;
-      this.audio.playChiptuneVoice(leadFreq, stepDuration * 0.85, wave, 0.022, -0.12, slide);
-      // Add harmonic fifth shimmer on positive / escape moods
+      this.audio.playChiptuneVoice(leadFreq, stepDuration * 0.88, wave, 0.115, -0.12, slide);
+      // Add harmonic fifth / third counter-melody shimmer
       if ((this.bgmMood === 'positive' || this.bgmMood === 'escape') && step % 2 === 0) {
-        this.audio.playChiptuneVoice(leadFreq * 1.5, stepDuration * 0.65, 'triangle', 0.014, 0.18);
+        this.audio.playChiptuneVoice(leadFreq * 1.5, stepDuration * 0.72, 'triangle', 0.068, 0.18);
+      } else if (this.bgmMood === 'normal' && step % 4 === 0) {
+        this.audio.playChiptuneVoice(leadFreq * 0.5, stepDuration * 0.75, 'triangle', 0.055, 0.14);
       }
     }
 
     if (bassFreq > 0) {
-      this.audio.playChiptuneVoice(bassFreq, stepDuration * 0.92, 'triangle', 0.032, 0.08);
+      // Fundamental NES triangle bass + subtle octave-up square overtone so bassline cuts through laptop/phone speakers
+      this.audio.playChiptuneVoice(bassFreq, stepDuration * 0.92, 'triangle', 0.155, 0.06);
+      this.audio.playChiptuneVoice(bassFreq * 2, stepDuration * 0.55, 'square', 0.042, 0.06);
     }
 
     // Chiptune Taiko & Hi-Hat Percussion Groove
     if (step % 4 === 0) {
-      this.audio.playChiptunePercussion('kick', this.bgmMood === 'negative' ? 0.032 : 0.024);
+      this.audio.playChiptunePercussion('kick', this.bgmMood === 'negative' ? 0.14 : 0.115);
     } else if (step % 4 === 2) {
-      this.audio.playChiptunePercussion(this.bgmMood === 'negative' ? 'snare' : 'hat', 0.018);
+      this.audio.playChiptunePercussion(this.bgmMood === 'negative' ? 'snare' : 'hat', 0.085);
     } else if (this.bgmMood !== 'normal' && step % 2 === 1) {
-      this.audio.playChiptunePercussion('hat', 0.012);
+      this.audio.playChiptunePercussion('hat', 0.062);
     }
   }
 

@@ -2087,6 +2087,95 @@ test.describe('1-4 Player Game Engine Verification', () => {
     expect(consoleErrors).toEqual([]);
   });
 
+  test('WASM Physics Engine, Firebase Cloud Ratings/Saves/HighScores Ranking & Raspberry Pi ROM Verification', async ({ page }) => {
+    const consoleErrors: string[] = [];
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') consoleErrors.push(msg.text());
+    });
+
+    await page.goto(LOCAL_URL);
+    await expect(page.locator('canvas')).toBeVisible();
+    await page.waitForTimeout(400);
+
+    // 1. Verify Native WebAssembly Physics Engine & Live Benchmark
+    const wasmResult = await page.evaluate(() => {
+      const gm = (window as unknown as {
+        __GAME_MANAGER__?: {
+          wasm: {
+            isNativeWasmActive: () => boolean;
+            distSq: (x1: number, y1: number, x2: number, y2: number) => number;
+            runBenchmark: (count?: number, iters?: number) => { wasmMs: number; jsMs: number; speedupRatio: number; nativeWasmActive: boolean };
+          };
+        };
+      }).__GAME_MANAGER__;
+      if (!gm?.wasm) return null;
+      const d2 = gm.wasm.distSq(0, 0, 3, 4);
+      const bench = gm.wasm.runBenchmark(512, 20);
+      return {
+        nativeActive: gm.wasm.isNativeWasmActive(),
+        distSq34: d2,
+        bench
+      };
+    });
+
+    expect(wasmResult).not.toBeNull();
+    expect(wasmResult?.nativeActive).toBe(true);
+    expect(wasmResult?.distSq34).toBe(25);
+    expect(wasmResult?.bench.nativeWasmActive).toBe(true);
+
+    // 2. Verify Cloud Persistence (Ratings, Saves, High Scores) & Lobby Ranking Sort Modes
+    const cloudRankingResult = await page.evaluate(() => {
+      const gm = (window as unknown as {
+        __GAME_MANAGER__?: {
+          cloud: {
+            getGameStats: (id: string) => { userRating: number; saved: boolean; highScore: number; plays: number };
+            recordRoundComplete: (id: string, score: number, won: boolean, sec: number) => void;
+          };
+          rateGame: (id: string, stars: number) => void;
+          toggleSaveGame: (id: string) => boolean;
+          setCatalogSortMode: (mode: 'default' | 'rating' | 'highscore' | 'saved' | 'most_played') => void;
+          getFilteredCatalog: () => Array<{ id: string }>;
+        };
+      }).__GAME_MANAGER__;
+      if (!gm) return null;
+
+      // Rate 'tanks' 5 stars, bookmark 'sumo', and record a 9999 high score on 'hovercraft'
+      gm.rateGame('tanks', 5);
+      const savedSumo = gm.toggleSaveGame('sumo');
+      gm.cloud.recordRoundComplete('hovercraft', 9999, true, 12.5);
+
+      // Sort by Saved
+      gm.setCatalogSortMode('saved');
+      const savedList = gm.getFilteredCatalog().map((g) => g.id);
+
+      // Sort by High Score
+      gm.setCatalogSortMode('highscore');
+      const highScoreTop = gm.getFilteredCatalog()[0]?.id;
+
+      // Sort by Rating
+      gm.setCatalogSortMode('rating');
+      const ratingTop5 = gm.getFilteredCatalog().slice(0, 5).map((g) => g.id);
+
+      // Restore Default
+      gm.setCatalogSortMode('default');
+
+      return {
+        tanksRating: gm.cloud.getGameStats('tanks').userRating,
+        savedSumo,
+        savedList,
+        highScoreTop,
+        ratingIncludesTanks: ratingTop5.includes('tanks')
+      };
+    });
+
+    expect(cloudRankingResult?.tanksRating).toBe(5);
+    expect(cloudRankingResult?.savedSumo).toBe(true);
+    expect(cloudRankingResult?.savedList).toContain('sumo');
+    expect(cloudRankingResult?.highScoreTop).toBe('hovercraft');
+    expect(cloudRankingResult?.ratingIncludesTanks).toBe(true);
+    expect(consoleErrors).toEqual([]);
+  });
+
 });
 
 

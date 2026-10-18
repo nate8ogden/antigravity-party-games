@@ -279,6 +279,8 @@ import {
   PackResult
 } from './EconomyManager';
 import { AchievementManager, ACHIEVEMENTS } from './AchievementManager';
+import { CloudPersistenceManager, CatalogSortMode } from './CloudPersistenceManager';
+import { WasmPhysicsEngine } from './WasmPhysicsEngine';
 
 export const GAME_CATALOG: MinigameMetadata[] = [
   {
@@ -2657,8 +2659,13 @@ export class GameManager {
   public lodeRunnerLevel: number = 0;
   public lodeRunnerSoloMode: boolean = true;
   public sumoHitboxes: Array<{ id: string; x: number; y: number; w: number; h: number; action: () => void }> = [];
+  public modalCloudHitboxes: Array<{ id?: string; x: number; y: number; w: number; h: number; action: () => void }> = [];
+  public roundOverCloudHitboxes: Array<{ id?: string; x: number; y: number; w: number; h: number; action: () => void }> = [];
   public selectedCategory: string = 'ALL';
-  public categoryPillBoxes: { id: string; x: number; y: number; w: number; h: number; type: 'category' | 'random' | 'cup' }[] = [];
+  public catalogSortMode: CatalogSortMode = 'default';
+  public cloud: CloudPersistenceManager = CloudPersistenceManager.getInstance();
+  public wasm: WasmPhysicsEngine = WasmPhysicsEngine.getInstance();
+  public categoryPillBoxes: { id: string; x: number; y: number; w: number; h: number; type: 'category' | 'random' | 'cup' | 'sort' }[] = [];
   public playerTabHitboxes: { count: number; x: number; y: number; w: number; h: number }[] = [];
   public diffHitboxes: { id: 'bot_easy' | 'bot_normal' | 'bot_hard'; x: number; y: number; w: number; h: number }[] = [];
   public playerBadgeHitboxes: { pid: number; x: number; y: number; w: number; h: number }[] = [];
@@ -2739,6 +2746,7 @@ export class GameManager {
     this.audio = new AudioEngine();
     this.particles = new ParticleSystem();
     this.input = new InputRouter(this.canvas);
+    this.cloud.initializeCatalog(GAME_CATALOG.map((g) => g.id));
 
     // Apply auto-detected phone mode to input router and DOM elements
     if (this.deviceMode === 'phone') {
@@ -2898,6 +2906,12 @@ export class GameManager {
     const autoParam = params.get('auto');
     const autostartParam = params.get('autostart');
     const devParam = params.get('device') || params.get('mode') || params.get('platform');
+    const sortParam = params.get('sort') || params.get('rank');
+
+    if (sortParam && ['default', 'rating', 'highscore', 'saved', 'most_played'].includes(sortParam)) {
+      this.catalogSortMode = sortParam as CatalogSortMode;
+      this.catalogFilterDirty = true;
+    }
 
     if (devParam === 'phone' || devParam === 'mobile') {
       this.setDeviceMode('phone');
@@ -5371,6 +5385,38 @@ export class GameManager {
     this.audio.playTap();
   }
 
+  public setCatalogSortMode(mode: CatalogSortMode) {
+    this.catalogSortMode = mode;
+    this.catalogFilterDirty = true;
+    this.selectedGameIndex = 0;
+    this.scrollY = 0;
+    this.targetScrollY = 0;
+    this.audio.playTap();
+  }
+
+  public cycleCatalogSortMode() {
+    const order: CatalogSortMode[] = ['default', 'rating', 'highscore', 'saved', 'most_played'];
+    const idx = order.indexOf(this.catalogSortMode);
+    this.setCatalogSortMode(order[(idx + 1) % order.length]);
+  }
+
+  public rateGame(gameId: string, stars: number) {
+    this.cloud.setRating(gameId, stars);
+    this.catalogFilterDirty = true;
+    this.audio.playCoin();
+  }
+
+  public toggleSaveGame(gameId: string): boolean {
+    const isNowSaved = this.cloud.toggleSave(gameId);
+    this.catalogFilterDirty = true;
+    if (isNowSaved) {
+      this.audio.playCoin();
+    } else {
+      this.audio.playTap();
+    }
+    return isNowSaved;
+  }
+
   public getGalleryCols(): number {
     const w = this.logicalWidth;
     if (w < 600) {
@@ -5426,6 +5472,9 @@ export class GameManager {
         g.id.toLowerCase().includes(q)
       );
     }
+
+    // Apply Firebase / Cloud Ranking Sort Mode (Rating, High Score, Saved, Most Played)
+    list = this.cloud.sortCatalog(list, this.catalogSortMode);
 
     this.cachedFilteredCatalog = list;
     this.catalogFilterDirty = false;
@@ -6789,12 +6838,38 @@ export class GameManager {
         state: this.state,
         game: this.activeGame,
         roundTimer: this.activeGame?.roundTimer,
-        selectedGame: this.activeGameId || GAME_CATALOG[this.selectedGameIndex]?.id
+        selectedGame: this.activeGameId || GAME_CATALOG[this.selectedGameIndex]?.id,
+        sortMode: this.catalogSortMode,
+        wasmActive: this.wasm.isNativeWasmActive()
       };
     }
 
     if (this.isShopOpen) {
       this.shopScrollY += (this.targetShopScrollY - this.shopScrollY) * Math.min(1, effectiveDt * 16);
+    }
+
+    // Universal Libretro / RetroArch / Raspberry Pi Gamepad Hotkeys (Select+Start = Exit to Lobby, Start = Pause/Resume)
+    if (typeof navigator !== 'undefined' && typeof navigator.getGamepads === 'function') {
+      try {
+        const gps = navigator.getGamepads();
+        const gp = gps?.[0] || gps?.[1] || gps?.[2] || gps?.[3];
+        if (gp && gp.connected) {
+          const now = performance.now();
+          const btnSelect = gp.buttons[8]?.pressed ?? false;
+          const btnStart = gp.buttons[9]?.pressed ?? false;
+          if (btnSelect && btnStart && now - this.lastGamepadNavTime > 350) {
+            if (this.state !== 'LOBBY') {
+              this.returnToLobby();
+              this.lastGamepadNavTime = now + 300;
+            }
+          } else if (btnStart && !btnSelect && (this.state === 'PLAYING' || this.state === 'PAUSED') && now - this.lastGamepadNavTime > 300) {
+            this.togglePause();
+            this.lastGamepadNavTime = now + 250;
+          }
+        }
+      } catch {
+        // Ignore gamepad permission errors
+      }
     }
 
     if (this.state === 'LOBBY') {
@@ -6825,6 +6900,7 @@ export class GameManager {
             const btnB = gp.buttons[1]?.pressed; // B button / Circle
             const btnX = gp.buttons[2]?.pressed; // X button / Square (Random)
             const btnY = gp.buttons[3]?.pressed; // Y button / Triangle (Cup)
+            const btnL1 = gp.buttons[4]?.pressed; // L1 / LB (Cycle Sort Mode)
 
             const displayed = this.getFilteredCatalog();
             if (displayed.length > 0) {
@@ -6875,6 +6951,9 @@ export class GameManager {
                 this.lastGamepadNavTime = now + 250;
               } else if (btnY) {
                 this.startCupTournament();
+                this.lastGamepadNavTime = now + 250;
+              } else if (btnL1) {
+                this.cycleCatalogSortMode();
                 this.lastGamepadNavTime = now + 250;
               }
             }
@@ -7005,6 +7084,29 @@ export class GameManager {
         this.currentRoundResult = this.activeGame.getRoundResult();
         this.audio.playFanfare();
         this.autoNextTimer = 2.0;
+
+        // Record High Score, Wins & Plays in CloudPersistenceManager (Local + Firebase Sync)
+        const finishedGameId = this.activeGameId || GAME_CATALOG[this.selectedGameIndex]?.id;
+        if (finishedGameId && this.currentRoundResult) {
+          let bestNumericScore = 100;
+          for (const r of this.currentRoundResult.rankings) {
+            const parsed = parseFloat(String(r.score).replace(/[^0-9.]/g, ''));
+            if (!isNaN(parsed) && parsed > bestNumericScore) {
+              bestNumericScore = Math.round(parsed);
+            }
+          }
+          if (this.currentRoundResult.winnerId !== null) {
+            bestNumericScore = Math.max(bestNumericScore, this.players[this.currentRoundResult.winnerId].score * 100 + 100);
+          }
+          const humanWon = this.currentRoundResult.winnerId !== null && !this.players[this.currentRoundResult.winnerId]?.type.startsWith('bot_');
+          this.cloud.recordRoundComplete(
+            finishedGameId,
+            bestNumericScore,
+            humanWon,
+            this.matchElapsedSeconds
+          );
+          this.catalogFilterDirty = true;
+        }
 
         // Award points to round winner with celebratory audio and visual confetti
         if (this.currentRoundResult.winnerId !== null) {
@@ -7180,6 +7282,23 @@ export class GameManager {
           );
           this.ctx.restore();
         }
+      }
+      // Climax Tension Vignette in final 8 seconds of standard rounds
+      if (
+        this.state === 'PLAYING' &&
+        this.activeGame &&
+        !(this.activeGame as any)?.isNoTimeLimit &&
+        this.activeGame.roundTimer > 0 &&
+        this.activeGame.roundTimer <= 8.0
+      ) {
+        this.ctx.save();
+        const urgency = 1.0 - this.activeGame.roundTimer / 8.0;
+        const pulse = (Math.sin(performance.now() * 0.014) + 1) * 0.5;
+        const alpha = (0.08 + urgency * 0.14) * (0.65 + pulse * 0.35);
+        this.ctx.strokeStyle = `rgba(239, 68, 68, ${alpha.toFixed(3)})`;
+        this.ctx.lineWidth = 8 + urgency * 8;
+        this.ctx.strokeRect(0, 0, this.logicalWidth, this.logicalHeight);
+        this.ctx.restore();
       }
       this.renderArenaThemeAura(this.logicalWidth, this.logicalHeight);
       this.renderHUD();
@@ -7534,11 +7653,24 @@ export class GameManager {
       { id: 'Puzzle', label: 'PUZZLE', icon: '🧩' }
     ];
 
+    const sortMeta: Record<CatalogSortMode, { label: string; shortLabel: string; color: string; bgTop: string; bgBot: string; border: string }> = {
+      default: { label: '📊 RANK: ALL', shortLabel: '📊 RANK', color: '#475569', bgTop: '#FFFFFF', bgBot: '#F8FAFC', border: '#CBD5E1' },
+      rating: { label: '⭐ TOP RATED', shortLabel: '⭐ RATED', color: '#FFFFFF', bgTop: '#F59E0B', bgBot: '#D97706', border: '#FDE68A' },
+      highscore: { label: '🏆 HIGH SCORES', shortLabel: '🏆 SCORES', color: '#FFFFFF', bgTop: '#0EA5E9', bgBot: '#0284C7', border: '#BAE6FD' },
+      saved: { label: `❤️ SAVED (${this.cloud.getSavedCount()})`, shortLabel: `❤️ SAVED`, color: '#FFFFFF', bgTop: '#EC4899', bgBot: '#DB2777', border: '#FBCFE8' },
+      most_played: { label: '🔥 MOST PLAYED', shortLabel: '🔥 PLAYED', color: '#FFFFFF', bgTop: '#8B5CF6', bgBot: '#6D28D9', border: '#DDD6FE' }
+    };
+    const activeSort = sortMeta[this.catalogSortMode] || sortMeta.default;
+
     if (!isNarrow) {
-      const catW = 64;
-      const allPillW = 78;
-      const catGap = 5;
-      const totalPillsW = allPillW + 6 * (catW + catGap) + 12 + 86 + 6 + 88 + 6 + 94;
+      const catW = 60;
+      const allPillW = 74;
+      const catGap = 4;
+      const randW = 82;
+      const cupW = 78;
+      const sortW = 104;
+      const searchBaseW = 90;
+      const totalPillsW = allPillW + 6 * (catW + catGap) + 10 + randW + 5 + cupW + 5 + sortW + 5 + searchBaseW;
       let curX = Math.max(16, w / 2 - totalPillsW / 2);
 
       categories.forEach((cat) => {
@@ -7568,10 +7700,9 @@ export class GameManager {
         curX += pillW + catGap;
       });
 
-      curX += 6;
+      curX += 5;
 
       // 🎲 RANDOM MINIGAME BUTTON (Tactile Violet 3D Button)
-      const randW = 86;
       this.categoryPillBoxes.push({ id: 'RANDOM', x: curX, y: catBarY, w: randW, h: 22, type: 'random' });
       this.ctx.save();
       this.ctx.shadowColor = 'rgba(139, 92, 246, 0.4)';
@@ -7585,14 +7716,13 @@ export class GameManager {
       this.ctx.restore();
 
       this.ctx.fillStyle = '#FFFFFF';
-      this.ctx.font = '900 10px Montserrat, sans-serif';
+      this.ctx.font = '900 9.5px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
       this.ctx.fillText('🎲 RANDOM', curX + randW / 2, catBarY + 14.5);
 
-      curX += randW + 6;
+      curX += randW + 5;
 
       // 🏆 CUP TOURNAMENT BUTTON (Tactile Gold 3D Button)
-      const cupW = 88;
       this.categoryPillBoxes.push({ id: 'CUP', x: curX, y: catBarY, w: cupW, h: 22, type: 'cup' });
       this.ctx.save();
       this.ctx.shadowColor = 'rgba(245, 158, 11, 0.4)';
@@ -7606,17 +7736,39 @@ export class GameManager {
       this.ctx.restore();
 
       this.ctx.fillStyle = '#FFFFFF';
-      this.ctx.font = '900 10px Montserrat, sans-serif';
+      this.ctx.font = '900 9.5px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
       this.ctx.fillText('🏆 CUP', curX + cupW / 2, catBarY + 14.5);
 
-      curX += cupW + 6;
+      curX += cupW + 5;
+
+      // ⭐ RANK / SORT PILL (Firebase Cloud Ratings, High Scores, Saves, Plays)
+      this.categoryPillBoxes.push({ id: 'SORT_CYCLE', x: curX, y: catBarY, w: sortW, h: 22, type: 'sort' });
+      this.ctx.save();
+      if (this.catalogSortMode !== 'default') {
+        this.ctx.shadowColor = 'rgba(15, 23, 42, 0.25)';
+        this.ctx.shadowBlur = 6;
+        this.ctx.shadowOffsetY = 2;
+        const sGrad = this.ctx.createLinearGradient(curX, catBarY, curX, catBarY + 22);
+        sGrad.addColorStop(0, activeSort.bgTop);
+        sGrad.addColorStop(1, activeSort.bgBot);
+        this.drawRoundedRect(curX, catBarY, sortW, 22, 6, sGrad, activeSort.border, 1.5);
+      } else {
+        this.drawRoundedRect(curX, catBarY, sortW, 22, 6, '#FFFFFF', '#CBD5E1', 1);
+      }
+      this.ctx.restore();
+      this.ctx.fillStyle = activeSort.color;
+      this.ctx.font = '900 9px Montserrat, sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText(activeSort.label, curX + sortW / 2, catBarY + 14.5);
+
+      curX += sortW + 5;
 
       // 🔍 LIVE SEARCH PILL
       const searchLabel = this.searchQuery ? `🔍 "${this.searchQuery}" [✕]` : (this.isSearchFocused ? '🔍 TYPE... [Esc]' : '🔍 SEARCH [/]');
-      this.ctx.font = '900 10px Montserrat, sans-serif';
+      this.ctx.font = '900 9.5px Montserrat, sans-serif';
       const sTextW = this.ctx.measureText(searchLabel).width;
-      const searchW = Math.max(94, sTextW + 18);
+      const searchW = Math.max(searchBaseW, sTextW + 16);
       this.categoryPillBoxes.push({ id: 'SEARCH', x: curX, y: catBarY, w: searchW, h: 22, type: 'category' });
 
       this.ctx.save();
@@ -7635,7 +7787,7 @@ export class GameManager {
         this.ctx.fillStyle = '#475569';
       }
       this.ctx.restore();
-      this.ctx.font = '900 10px Montserrat, sans-serif';
+      this.ctx.font = '900 9.5px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
       this.ctx.fillText(searchLabel, curX + searchW / 2, catBarY + 14.5);
     } else {
@@ -7668,64 +7820,80 @@ export class GameManager {
         curX += catW + catGap;
       });
 
-      // Narrow Row 2: Actions (RANDOM, CUP, SEARCH)
+      // Narrow Row 2: Actions (RANDOM, CUP, RANK, SEARCH)
       const actionY = 175;
-      const actGap = 8;
-      const randW = Math.min(96, Math.floor((w - 32 - 2 * actGap) / 3));
-      const cupW = randW;
-      const searchW = randW;
-      const totalActW = randW + cupW + searchW + 2 * actGap;
+      const actGap = 6;
+      const btnW = Math.min(92, Math.floor((w - 28 - 3 * actGap) / 4));
+      const totalActW = 4 * btnW + 3 * actGap;
       let actX = (w - totalActW) / 2;
 
       // 🎲 RANDOM
-      this.categoryPillBoxes.push({ id: 'RANDOM', x: actX, y: actionY, w: randW, h: 22, type: 'random' });
+      this.categoryPillBoxes.push({ id: 'RANDOM', x: actX, y: actionY, w: btnW, h: 22, type: 'random' });
       this.ctx.save();
-      this.drawRoundedRect(actX, actionY + 2, randW, 20, 6, '#6D28D9');
+      this.drawRoundedRect(actX, actionY + 2, btnW, 20, 6, '#6D28D9');
       const randGrad = this.ctx.createLinearGradient(actX, actionY, actX, actionY + 22);
       randGrad.addColorStop(0, '#A78BFA');
       randGrad.addColorStop(1, '#7C3AED');
-      this.drawRoundedRect(actX, actionY, randW, 21, 6, randGrad, '#C4B5FD', 1.5);
+      this.drawRoundedRect(actX, actionY, btnW, 21, 6, randGrad, '#C4B5FD', 1.5);
       this.ctx.restore();
       this.ctx.fillStyle = '#FFFFFF';
-      this.ctx.font = '900 9.5px Montserrat, sans-serif';
+      this.ctx.font = '900 8.5px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText('🎲 RANDOM', actX + randW / 2, actionY + 14.5);
-      actX += randW + actGap;
+      this.ctx.fillText('🎲 RANDOM', actX + btnW / 2, actionY + 14.5);
+      actX += btnW + actGap;
 
       // 🏆 CUP
-      this.categoryPillBoxes.push({ id: 'CUP', x: actX, y: actionY, w: cupW, h: 22, type: 'cup' });
+      this.categoryPillBoxes.push({ id: 'CUP', x: actX, y: actionY, w: btnW, h: 22, type: 'cup' });
       this.ctx.save();
-      this.drawRoundedRect(actX, actionY + 2, cupW, 20, 6, '#B45309');
+      this.drawRoundedRect(actX, actionY + 2, btnW, 20, 6, '#B45309');
       const cupGrad = this.ctx.createLinearGradient(actX, actionY, actX, actionY + 22);
       cupGrad.addColorStop(0, '#FBBF24');
       cupGrad.addColorStop(1, '#D97706');
-      this.drawRoundedRect(actX, actionY, cupW, 21, 6, cupGrad, '#FDE68A', 1.5);
+      this.drawRoundedRect(actX, actionY, btnW, 21, 6, cupGrad, '#FDE68A', 1.5);
       this.ctx.restore();
       this.ctx.fillStyle = '#FFFFFF';
-      this.ctx.font = '900 9.5px Montserrat, sans-serif';
+      this.ctx.font = '900 8.5px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText('🏆 CUP', actX + cupW / 2, actionY + 14.5);
-      actX += cupW + actGap;
+      this.ctx.fillText('🏆 CUP', actX + btnW / 2, actionY + 14.5);
+      actX += btnW + actGap;
+
+      // ⭐ RANK
+      this.categoryPillBoxes.push({ id: 'SORT_CYCLE', x: actX, y: actionY, w: btnW, h: 22, type: 'sort' });
+      this.ctx.save();
+      if (this.catalogSortMode !== 'default') {
+        const sGrad = this.ctx.createLinearGradient(actX, actionY, actX, actionY + 22);
+        sGrad.addColorStop(0, activeSort.bgTop);
+        sGrad.addColorStop(1, activeSort.bgBot);
+        this.drawRoundedRect(actX, actionY, btnW, 22, 6, sGrad, activeSort.border, 1.5);
+      } else {
+        this.drawRoundedRect(actX, actionY, btnW, 22, 6, '#FFFFFF', '#CBD5E1', 1);
+      }
+      this.ctx.restore();
+      this.ctx.fillStyle = activeSort.color;
+      this.ctx.font = '900 8.5px Montserrat, sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText(activeSort.shortLabel, actX + btnW / 2, actionY + 14.5);
+      actX += btnW + actGap;
 
       // 🔍 SEARCH
       const sLabel = this.searchQuery ? `🔍 "${this.searchQuery}"` : (this.isSearchFocused ? '🔍 TYPE...' : '🔍 SEARCH');
-      this.categoryPillBoxes.push({ id: 'SEARCH', x: actX, y: actionY, w: searchW, h: 22, type: 'category' });
+      this.categoryPillBoxes.push({ id: 'SEARCH', x: actX, y: actionY, w: btnW, h: 22, type: 'category' });
       this.ctx.save();
       if (this.searchQuery || this.isSearchFocused) {
-        this.drawRoundedRect(actX, actionY + 2, searchW, 20, 6, '#0369A1');
+        this.drawRoundedRect(actX, actionY + 2, btnW, 20, 6, '#0369A1');
         const sGrad = this.ctx.createLinearGradient(actX, actionY, actX, actionY + 22);
         sGrad.addColorStop(0, '#38BDF8');
         sGrad.addColorStop(1, '#0284C7');
-        this.drawRoundedRect(actX, actionY, searchW, 21, 6, sGrad, '#BAE6FD', 1.5);
+        this.drawRoundedRect(actX, actionY, btnW, 21, 6, sGrad, '#BAE6FD', 1.5);
         this.ctx.fillStyle = '#FFFFFF';
       } else {
-        this.drawRoundedRect(actX, actionY, searchW, 22, 6, '#FFFFFF', '#CBD5E1', 1);
+        this.drawRoundedRect(actX, actionY, btnW, 22, 6, '#FFFFFF', '#CBD5E1', 1);
         this.ctx.fillStyle = '#475569';
       }
       this.ctx.restore();
-      this.ctx.font = '900 9.5px Montserrat, sans-serif';
+      this.ctx.font = '900 8.5px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText(sLabel, actX + searchW / 2, actionY + 14.5);
+      this.ctx.fillText(sLabel, actX + btnW / 2, actionY + 14.5);
     }
 
     // 6. Corner Player Badges
@@ -7791,11 +7959,14 @@ export class GameManager {
 
       this.ctx.fillStyle = '#64748B';
       this.ctx.font = '600 12px sans-serif';
-      this.ctx.fillText(`No games match "${this.searchQuery}" in category ${this.selectedCategory}.`, emptyX + emptyW / 2, emptyY + 70);
+      const emptyMsg = this.catalogSortMode === 'saved'
+        ? 'No saved games yet! Click ❤️ SAVE inside any game card to bookmark it.'
+        : `No games match "${this.searchQuery}" in category ${this.selectedCategory}.`;
+      this.ctx.fillText(emptyMsg, emptyX + emptyW / 2, emptyY + 70);
 
       this.ctx.fillStyle = '#0284C7';
       this.ctx.font = 'bold 12px Montserrat, sans-serif';
-      this.ctx.fillText('Press [Escape] or click [✕] on Search to clear', emptyX + emptyW / 2, emptyY + 98);
+      this.ctx.fillText('Click 📊 RANK or [✕] on Search to show all games', emptyX + emptyW / 2, emptyY + 98);
 
       this.ctx.restore();
       return;
@@ -7871,7 +8042,29 @@ export class GameManager {
       this.ctx.textAlign = 'center';
       this.ctx.fillText(game.category.toUpperCase(), cardX + 43, cardY + 24.5);
 
-      // Phone Mode Compatibility Badge along bottom of artwork when Phone toggle is active
+      // Floating Rating & Save Badge (Top-Right overlay on artwork)
+      const cloudStats = this.cloud.getGameStats(game.id);
+      const effRating = this.cloud.getEffectiveRating(game.id);
+      const ratingBadgeText = cloudStats.saved ? `❤️ ★ ${effRating.toFixed(1)}` : `★ ${effRating.toFixed(1)}`;
+      const rBadgeW = cloudStats.saved ? 58 : 44;
+      const rBadgeX = cardX + cardW - 12 - rBadgeW;
+      this.drawRoundedRect(rBadgeX, cardY + 13.5, rBadgeW, 18, 5, 'rgba(15, 23, 42, 0.9)');
+      this.drawRoundedRect(
+        rBadgeX,
+        cardY + 12,
+        rBadgeW,
+        18,
+        5,
+        cloudStats.saved ? '#BE185D' : 'rgba(15, 23, 42, 0.82)',
+        cloudStats.userRating > 0 ? '#FBBF24' : 'rgba(255, 255, 255, 0.25)',
+        1
+      );
+      this.ctx.fillStyle = '#FDE047';
+      this.ctx.font = '900 8.5px Montserrat, sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText(ratingBadgeText, rBadgeX + rBadgeW / 2, cardY + 24.5);
+
+      // Phone Mode Compatibility Badge or High Score Pill along bottom of artwork
       if (this.deviceMode === 'phone') {
         const badge = getPhoneModeBadge(game.id, activePlayerCount);
         this.drawRoundedRect(cardX + 12, cardY + artH - 14, cardW - 24, 16, 4, badge.bg, 'rgba(255,255,255,0.35)', 1);
@@ -7879,6 +8072,15 @@ export class GameManager {
         this.ctx.font = '900 8px Montserrat, sans-serif';
         this.ctx.textAlign = 'center';
         this.ctx.fillText(badge.label, cardX + cardW / 2, cardY + artH - 3);
+      } else if (cloudStats.highScore > 0 || this.catalogSortMode === 'highscore' || this.catalogSortMode === 'most_played') {
+        const statText = this.catalogSortMode === 'most_played'
+          ? `🔥 ${cloudStats.plays} PLAYS • ${cloudStats.wins}W`
+          : `🏆 HI-SCORE: ${cloudStats.highScore} (${cloudStats.wins}W)`;
+        this.drawRoundedRect(cardX + 12, cardY + artH - 14, cardW - 24, 16, 4, 'rgba(15, 23, 42, 0.82)', '#38BDF8', 1);
+        this.ctx.fillStyle = '#BAE6FD';
+        this.ctx.font = '900 8px Montserrat, sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(statText, cardX + cardW / 2, cardY + artH - 3);
       }
 
       // Game Title (Clean, centered, auto-fit font to card width)
@@ -7939,6 +8141,7 @@ export class GameManager {
   }
 
   private renderGameModal(w: number, h: number) {
+    this.modalCloudHitboxes = [];
     const game = GAME_CATALOG[this.modalGameIndex];
     if (!game) return;
 
@@ -7966,7 +8169,7 @@ export class GameManager {
     this.drawRoundedRect(modalX, modalY, modalW, modalH, 18, '#FFFFFF', '#CBD5E1', 2);
     this.ctx.restore();
 
-    // Top Header Strip: Category Pill & Mode Pill & Close Button
+    // Top Header Strip: Category Pill & Mode Pill & Interactive Star Rating + Save & Close Button
     const catColors: Record<string, string> = {
       Action: '#DC2626',
       Physics: '#7C3AED',
@@ -7976,18 +8179,78 @@ export class GameManager {
       Puzzle: '#0284C7'
     };
     const catColor = catColors[game.category] || '#0284C7';
-    this.drawRoundedRect(modalX + 16, modalY + 12, 76, 22, 6, catColor);
+    this.drawRoundedRect(modalX + 16, modalY + 12, 72, 22, 6, catColor);
     this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.font = '900 10px Montserrat, sans-serif';
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText(game.category.toUpperCase(), modalX + 54, modalY + 26.5);
-
-    const headerSubPill = game.id === 'sumo_lode_runner' ? '40 STAGES + DOJO' : '1–4P ARCADE';
-    const subPillW = game.id === 'sumo_lode_runner' ? 118 : 88;
-    this.drawRoundedRect(modalX + 98, modalY + 12, subPillW, 22, 6, '#F1F5F9', '#CBD5E1', 1);
-    this.ctx.fillStyle = '#0284C7';
     this.ctx.font = '900 9.5px Montserrat, sans-serif';
-    this.ctx.fillText(headerSubPill, modalX + 98 + subPillW / 2, modalY + 26.5);
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText(game.category.toUpperCase(), modalX + 52, modalY + 26.5);
+
+    const headerSubPill = game.id === 'sumo_lode_runner' ? '40 STAGES' : '1–4P ARCADE';
+    const subPillW = game.id === 'sumo_lode_runner' ? 84 : 84;
+    this.drawRoundedRect(modalX + 94, modalY + 12, subPillW, 22, 6, '#F1F5F9', '#CBD5E1', 1);
+    this.ctx.fillStyle = '#0284C7';
+    this.ctx.font = '900 9px Montserrat, sans-serif';
+    this.ctx.fillText(headerSubPill, modalX + 94 + subPillW / 2, modalY + 26.5);
+
+    // Interactive 1–5 Star Rating + ❤️ Save Controls in Modal Header
+    const cloudStats = this.cloud.getGameStats(game.id);
+    const effRating = this.cloud.getEffectiveRating(game.id);
+    const activeStars = cloudStats.userRating > 0 ? cloudStats.userRating : Math.round(effRating);
+    const starBarX = modalX + 94 + subPillW + 8;
+    const starBtnW = 20;
+    for (let s = 1; s <= 5; s++) {
+      const sx = starBarX + (s - 1) * (starBtnW + 2);
+      const isLit = s <= activeStars;
+      this.drawRoundedRect(
+        sx,
+        modalY + 12,
+        starBtnW,
+        22,
+        5,
+        isLit ? '#FEF3C7' : '#F8FAFC',
+        isLit ? '#F59E0B' : '#CBD5E1',
+        1
+      );
+      this.ctx.fillStyle = isLit ? '#D97706' : '#94A3B8';
+      this.ctx.font = '900 11px sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText('★', sx + starBtnW / 2, modalY + 27);
+      const starVal = s;
+      this.modalCloudHitboxes.push({
+        x: sx,
+        y: modalY + 10,
+        w: starBtnW,
+        h: 26,
+        action: () => this.rateGame(game.id, starVal)
+      });
+    }
+
+    // Save / Bookmark Pill Button
+    const saveBtnX = starBarX + 5 * (starBtnW + 2) + 6;
+    const saveBtnW = 68;
+    if (saveBtnX + saveBtnW < modalX + modalW - 44) {
+      this.drawRoundedRect(
+        saveBtnX,
+        modalY + 12,
+        saveBtnW,
+        22,
+        6,
+        cloudStats.saved ? '#FCE7F3' : '#F8FAFC',
+        cloudStats.saved ? '#EC4899' : '#CBD5E1',
+        1.2
+      );
+      this.ctx.fillStyle = cloudStats.saved ? '#BE185D' : '#475569';
+      this.ctx.font = '900 9px Montserrat, sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText(cloudStats.saved ? '❤️ SAVED' : '🤍 SAVE', saveBtnX + saveBtnW / 2, modalY + 26.5);
+      this.modalCloudHitboxes.push({
+        x: saveBtnX,
+        y: modalY + 10,
+        w: saveBtnW,
+        h: 26,
+        action: () => this.toggleSaveGame(game.id)
+      });
+    }
 
     // Close Button "✕" (Tactile circle in top-right header, completely clear of artwork)
     const closeBtnX = modalX + modalW - 24;
@@ -10930,6 +11193,7 @@ export class GameManager {
   }
 
   private renderRoundOverOverlay() {
+    this.roundOverCloudHitboxes = [];
     const w = this.logicalWidth;
     const h = this.logicalHeight;
 
@@ -11062,6 +11326,75 @@ export class GameManager {
     this.ctx.fillStyle = '#FFFFFF';
     this.ctx.font = '900 12px Montserrat, sans-serif';
     this.ctx.fillText('⌂ LOBBY [Esc]', menuX + menuW / 2, btnY + 26);
+
+    // Post-Match Rate & Save Strip below Rematch/Lobby buttons
+    const curGame = GAME_CATALOG[this.selectedGameIndex];
+    if (curGame) {
+      const rateY = btnY + btnH + 14;
+      const cStats = this.cloud.getGameStats(curGame.id);
+      const effR = this.cloud.getEffectiveRating(curGame.id);
+      const litStars = cStats.userRating > 0 ? cStats.userRating : Math.round(effR);
+      const stripW = 264;
+      const stripX = w / 2 - stripW / 2;
+
+      this.drawRoundedRect(stripX, rateY, stripW, 28, 8, 'rgba(15, 23, 42, 0.85)', 'rgba(148, 163, 184, 0.35)', 1);
+      this.ctx.fillStyle = '#CBD5E1';
+      this.ctx.font = '900 9.5px Montserrat, sans-serif';
+      this.ctx.textAlign = 'left';
+      this.ctx.fillText('RATE:', stripX + 10, rateY + 18);
+
+      const starStart = stripX + 48;
+      for (let s = 1; s <= 5; s++) {
+        const sx = starStart + (s - 1) * 24;
+        const isLit = s <= litStars;
+        this.drawRoundedRect(
+          sx,
+          rateY + 4,
+          20,
+          20,
+          4,
+          isLit ? 'rgba(245, 158, 11, 0.25)' : 'rgba(30, 41, 59, 0.8)',
+          isLit ? '#FBBF24' : '#475569',
+          1
+        );
+        this.ctx.fillStyle = isLit ? '#FDE047' : '#64748B';
+        this.ctx.font = '900 12px sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('★', sx + 10, rateY + 18);
+        const sVal = s;
+        this.roundOverCloudHitboxes.push({
+          x: sx,
+          y: rateY + 2,
+          w: 22,
+          h: 24,
+          action: () => this.rateGame(curGame.id, sVal)
+        });
+      }
+
+      const saveX = starStart + 5 * 24 + 8;
+      const saveW = 76;
+      this.drawRoundedRect(
+        saveX,
+        rateY + 4,
+        saveW,
+        20,
+        5,
+        cStats.saved ? '#BE185D' : 'rgba(30, 41, 59, 0.9)',
+        cStats.saved ? '#F472B6' : '#475569',
+        1
+      );
+      this.ctx.fillStyle = '#FFFFFF';
+      this.ctx.font = '900 9px Montserrat, sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText(cStats.saved ? '❤️ SAVED' : '🤍 SAVE', saveX + saveW / 2, rateY + 17.5);
+      this.roundOverCloudHitboxes.push({
+        x: saveX,
+        y: rateY + 2,
+        w: saveW,
+        h: 24,
+        action: () => this.toggleSaveGame(curGame.id)
+      });
+    }
   }
 
   private renderPodiumOverlay() {
@@ -11361,6 +11694,14 @@ export class GameManager {
           return;
         }
 
+        // Check Star Rating & Save buttons in Modal Header
+        for (const chb of this.modalCloudHitboxes) {
+          if (x >= chb.x && x <= chb.x + chb.w && y >= chb.y && y <= chb.y + chb.h) {
+            chb.action();
+            return;
+          }
+        }
+
         // Check Skyline Sumo / Sumo Lode Runner custom mode & stage hitboxes
         if (game?.id === 'skyline_sumo' || game?.id === 'sumo_lode_runner') {
           for (const hb of this.sumoHitboxes) {
@@ -11432,6 +11773,12 @@ export class GameManager {
             this.startRandomGame();
           } else if (pill.type === 'cup') {
             this.startCupTournament();
+          } else if (pill.type === 'sort') {
+            if (pill.id === 'SORT_CYCLE') {
+              this.cycleCatalogSortMode();
+            } else {
+              this.setCatalogSortMode(pill.id as CatalogSortMode);
+            }
           }
           return;
         }
@@ -11525,6 +11872,13 @@ export class GameManager {
         return;
       }
     } else if (this.state === 'ROUND_OVER') {
+      for (const chb of this.roundOverCloudHitboxes) {
+        if (x >= chb.x && x <= chb.x + chb.w && y >= chb.y && y <= chb.y + chb.h) {
+          chb.action();
+          return;
+        }
+      }
+
       const btnW = this.isTournament ? 200 : 160;
       const btnH = 42;
       const gap = 14;
@@ -11641,6 +11995,12 @@ export class GameManager {
       if (Math.hypot(x - closeBtnX, y - closeBtnY) <= 18) {
         this.canvas.style.cursor = 'pointer';
         return;
+      }
+      for (const chb of this.modalCloudHitboxes) {
+        if (x >= chb.x && x <= chb.x + chb.w && y >= chb.y && y <= chb.y + chb.h) {
+          this.canvas.style.cursor = 'pointer';
+          return;
+        }
       }
       if (game?.id === 'skyline_sumo' || game?.id === 'sumo_lode_runner') {
         for (const hb of this.sumoHitboxes) {

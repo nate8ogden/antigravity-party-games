@@ -225,6 +225,10 @@ export class WasmPhysicsEngine {
     return WasmPhysicsEngine.instance;
   }
 
+  public isNativeWasmActive(): boolean {
+    return this.isWasmSupported && this.wasmExports !== null;
+  }
+
   /**
    * Native WASM squared Euclidean distance
    */

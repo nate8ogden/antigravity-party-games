@@ -1037,13 +1037,14 @@ export class AudioEngine {
 
   /**
    * Synthesizes a single retro chiptune note (NES Pulse / Triangle / Sine / Sawtooth)
-   * with crisp attack/decay envelope and optional pitch slide or vibrato.
+   * with an authentic NES APU sustain plateau envelope so melodies and basslines project
+   * clearly across laptop, desktop, and mobile speakers.
    */
   public playChiptuneVoice(
     freq: number,
     duration: number,
     waveType: OscillatorType = 'square',
-    gainLevel: number = 0.05,
+    gainLevel: number = 0.12,
     pan: number = 0,
     slideToFreq?: number
   ) {
@@ -1062,9 +1063,14 @@ export class AudioEngine {
       osc.frequency.exponentialRampToValueAtTime(slideToFreq, t + duration * 0.85);
     }
 
-    const safeDur = Math.max(0.03, duration);
+    const safeDur = Math.max(0.04, duration);
+    const attackEnd = t + Math.min(0.008, safeDur * 0.15);
+    const sustainEnd = t + safeDur * 0.78;
+    const sustainLevel = Math.max(0.001, gainLevel * 0.82);
+
     gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.linearRampToValueAtTime(gainLevel, t + Math.min(0.012, safeDur * 0.2));
+    gain.gain.linearRampToValueAtTime(gainLevel, attackEnd);
+    gain.gain.linearRampToValueAtTime(sustainLevel, sustainEnd);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + safeDur);
 
     osc.connect(gain);
@@ -1075,9 +1081,9 @@ export class AudioEngine {
   }
 
   /**
-   * Synthesizes a soft retro NES / Edo-taiko percussion hit ('taiko' | 'kick' | 'hat' | 'snare')
+   * Synthesizes a retro NES / Edo-taiko percussion hit ('taiko' | 'kick' | 'hat' | 'snare')
    */
-  public playChiptunePercussion(kind: 'taiko' | 'kick' | 'hat' | 'snare', gainLevel: number = 0.04) {
+  public playChiptunePercussion(kind: 'taiko' | 'kick' | 'hat' | 'snare', gainLevel: number = 0.12) {
     if (this.muted || !this.sfxEnabled) return;
     this.initContext();
     if (!this.ctx) return;
@@ -1089,24 +1095,24 @@ export class AudioEngine {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(115, t);
-      osc.frequency.exponentialRampToValueAtTime(46, t + 0.09);
-      gain.gain.setValueAtTime(gainLevel * 1.4, t);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+      osc.frequency.setValueAtTime(130, t);
+      osc.frequency.exponentialRampToValueAtTime(48, t + 0.1);
+      gain.gain.setValueAtTime(gainLevel * 1.45, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
       osc.connect(gain);
       gain.connect(dest);
       osc.start(t);
-      osc.stop(t + 0.11);
+      osc.stop(t + 0.12);
     } else {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = 'square';
-      const startF = kind === 'snare' ? 280 : 1650;
-      const endF = kind === 'snare' ? 95 : 920;
-      const dur = kind === 'snare' ? 0.065 : 0.032;
+      const startF = kind === 'snare' ? 320 : 1850;
+      const endF = kind === 'snare' ? 105 : 980;
+      const dur = kind === 'snare' ? 0.075 : 0.038;
       osc.frequency.setValueAtTime(startF, t);
       osc.frequency.exponentialRampToValueAtTime(endF, t + dur);
-      gain.gain.setValueAtTime(gainLevel * 0.55, t);
+      gain.gain.setValueAtTime(gainLevel * 0.9, t);
       gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
       osc.connect(gain);
       gain.connect(dest);
@@ -1132,13 +1138,14 @@ export class AudioEngine {
 
     notes.forEach((freq, idx) => {
       const start = t + idx * step;
-      const dur = idx === notes.length - 1 ? 0.24 : 0.075;
+      const dur = idx === notes.length - 1 ? 0.26 : 0.08;
       const osc = this.ctx!.createOscillator();
       const gain = this.ctx!.createGain();
       osc.type = idx % 2 === 0 ? 'square' : 'triangle';
       osc.frequency.setValueAtTime(freq, start);
       gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.linearRampToValueAtTime(0.055, start + 0.01);
+      gain.gain.linearRampToValueAtTime(0.16, start + 0.008);
+      gain.gain.linearRampToValueAtTime(0.13, start + dur * 0.75);
       gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
       osc.connect(gain);
       gain.connect(dest);

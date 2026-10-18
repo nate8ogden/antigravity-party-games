@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<gameList>
+  <game>
+    <path>./Antigravity 2P Arcade.sh</path>
+    <name>Antigravity 2-4P Party Arcade (100 Games + WASM)</name>
+    <desc>100 tactile 1-4 player head-to-head arcade minigames with WebAssembly physics, AI bots (Easy/Normal/Hard), 5-match Cup Tournament, and full 4-player USB/GPIO arcade stick support. Press Select+Start to exit.</desc>
+    <rating>0.96</rating>
+    <releasedate>20261018T000000</releasedate>
+    <developer>Antigravity Arcade Studio</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Party / Arcade / 4-Player</genre>
+    <players>1-4</players>
+  </game>
+</gameList>
