@@ -74,7 +74,6 @@ import { GravityGolfGame } from '../games/GravityGolfGame';
 import { CyberDiscGame } from '../games/CyberDiscGame';
 import { SumoSpheresGame } from '../games/SumoSpheresGame';
 import { SkyGlidersGame } from '../games/SkyGlidersGame';
-import { WhackAThiefGame } from '../games/WhackAThiefGame';
 import { PixelCurlingGame } from '../games/PixelCurlingGame';
 import { BumperBoatsGame } from '../games/BumperBoatsGame';
 import { TargetSniperGame } from '../games/TargetSniperGame';
@@ -124,7 +123,6 @@ import { SpaceJunkSalvageGame } from '../games/SpaceJunkSalvageGame';
 import { AlienProbeGame } from '../games/AlienProbeGame';
 import { SolarFlareGame } from '../games/SolarFlareGame';
 import { WormholeLeapGame } from '../games/WormholeLeapGame';
-import { AstroMinerGame } from '../games/AstroMinerGame';
 import { NebulaDriftGame } from '../games/NebulaDriftGame';
 import { SatelliteLaserGame } from '../games/SatelliteLaserGame';
 import { MarsRoverGame } from '../games/MarsRoverGame';
@@ -159,13 +157,7 @@ import { NeonMetronomeGame } from '../games/NeonMetronomeGame';
 import { EqualizerBounceGame } from '../games/EqualizerBounceGame';
 import { RetroChiptuneGame } from '../games/RetroChiptuneGame';
 import { DiscoTileGame } from '../games/DiscoTileGame';
-import { RingTossGame } from '../games/RingTossGame';
-import { RollercoasterThrillGame } from '../games/RollercoasterThrillGame';
-import { BalloonDartGame } from '../games/BalloonDartGame';
-import { DunkTankGame } from '../games/DunkTankGame';
-import { FerrisWheelGame } from '../games/FerrisWheelGame';
 import { FunhouseMirrorsGame } from '../games/FunhouseMirrorsGame';
-import { CottonCandyGame } from '../games/CottonCandyGame';
 import { TestStrengthGame } from '../games/TestStrengthGame';
 import { HauntedMansionGame } from '../games/HauntedMansionGame';
 import { FireworksFinaleGame } from '../games/FireworksFinaleGame';
@@ -261,7 +253,6 @@ import { OuijaSpiritBoardGame } from '../games/OuijaSpiritBoardGame';
 import { CursedClocktowerPendulumGame } from '../games/CursedClocktowerPendulumGame';
 import { SynthwaveNeonRacerGame } from '../games/SynthwaveNeonRacerGame';
 import { PixelSpaceInvaderGame } from '../games/PixelSpaceInvaderGame';
-import { VectorTankBattleGame } from '../games/VectorTankBattleGame';
 import { PacMazeChompGame } from '../games/PacMazeChompGame';
 import { BreakoutBrickBlasterGame } from '../games/BreakoutBrickBlasterGame';
 import { LaserDiscDanceGame } from '../games/LaserDiscDanceGame';
@@ -276,8 +267,6 @@ import { SpamClickShowdownGame } from '../games/SpamClickShowdownGame';
 import { SumoLodeRunnerGame, SUMO_LODE_LEVELS } from '../games/SumoLodeRunnerGame';
 import { ThumbWarWrestleGame } from '../games/ThumbWarWrestleGame';
 import { SwipeNinjaBlitzGame } from '../games/SwipeNinjaBlitzGame';
-import { TabletopAirHockeyGame } from '../games/TabletopAirHockeyGame';
-import { TapTugOverdriveGame } from '../games/TapTugOverdriveGame';
 import { getGamePhoneMode, getPhoneModeBadge } from './PhoneCatalogConfig';
 import { renderGameThumbnailArt } from './GameThumbnails';
 import { drawCharacter } from './CharacterRenderer';
@@ -851,15 +840,6 @@ export const GAME_CATALOG: MinigameMetadata[] = [
     controlPrompt: 'Throttle Up/Down: Pitch Climb/Dive | Steer: Bank Left/Right'
   },
   {
-    id: 'whack_a_thief',
-    title: 'Whack-A-Thief',
-    tagline: 'Bank Vault Reflex Zap',
-    category: 'Reflex',
-    icon: '[G-64]',
-    instructions: 'Masked raccoon bandits are raiding the bank safe deposit boxes! Steer your reticle across the 4x3 vault and zap thieves for cash. Avoid red flashing electric shock traps!',
-    controlPrompt: 'WASD / Arrows: Move Reticle | Space / Enter: Zap Thief'
-  },
-  {
     id: 'pixel_curling',
     title: 'Pixel Curling',
     tagline: 'Olympic Friction Ice Clash',
@@ -1301,15 +1281,6 @@ export const GAME_CATALOG: MinigameMetadata[] = [
     controlPrompt: 'Steer: Navigate | Action: Quantum Warp Burst'
   },
   {
-    id: 'astro_miner',
-    title: 'Astro Miner',
-    tagline: 'Asteroid Geode Blaster',
-    category: 'Action',
-    icon: '[G-112]',
-    instructions: 'Blast drifting asteroid geodes with mining lasers! Shatter mineral crusts to release and vacuum up rubies, sapphires, and emeralds.',
-    controlPrompt: 'Steer: Pilot Miner | Action / Space: Fire Mining Laser'
-  },
-  {
     id: 'nebula_drift',
     title: 'Nebula Drift',
     tagline: 'Cosmic Dust Circuit',
@@ -1616,51 +1587,6 @@ export const GAME_CATALOG: MinigameMetadata[] = [
     controlPrompt: 'Tap: Rotate 90°'
   },
   {
-    id: 'ring_toss',
-    title: 'Neon Ring Pitch',
-    tagline: 'Rotating Bottle Tray Toss',
-    category: 'Reflex',
-    icon: '[G-147]',
-    instructions: 'Pitch glowing neon hoops onto 3 rotating concentric trays of glass bottles! Land consecutive ringers for combo multipliers, and aim for the center Golden Decanter for 300 bonus points!',
-    controlPrompt: 'Steer: Aim Angle | Tap/Space: Pitch Hoop | 1-3: Switch Theme'
-  },
-  {
-    id: 'rollercoaster_thrill',
-    title: 'Rollercoaster Thrill',
-    tagline: 'Runaway Coaster Banking',
-    category: 'Action',
-    icon: '[G-148]',
-    instructions: 'Speed along high-speed wooden coaster tracks! Tap to lean into sharp hairpin turns and 360-degree loops.',
-    controlPrompt: 'Tap: Lean Into Curve'
-  },
-  {
-    id: 'balloon_dart',
-    title: 'Balloon Dart Gallery',
-    tagline: 'Multi-Tier Conveyor Pop Gallery',
-    category: 'Action',
-    icon: '[G-149]',
-    instructions: 'Aim your dart catapult and pop balloons along 3 moving conveyor tiers! Snipe golden star balloons for bonus points and trigger chain-reaction bomb balloons to wipe entire rows. Watch out for crosswinds!',
-    controlPrompt: 'Steer: Aim Angle | Tap/Space: Pitch Dart | 1-3: Switch Gallery'
-  },
-  {
-    id: 'dunk_tank',
-    title: 'Rival Dunk Duel',
-    tagline: 'Trapdoor Water Cannon Showdown',
-    category: 'Action',
-    icon: '[G-150]',
-    instructions: 'Perched high above individual water tanks, fire rubber plunger cannons at rival bullseye levers! Land 3 hits to trigger their trapdoor and plunge them into the water. Mash your button to climb back up!',
-    controlPrompt: 'Steer: Aim Cannon | Tap/Space: Fire Plunger | Mash Tap: Climb Ladder | 1-3: Switch Tank'
-  },
-  {
-    id: 'ferris_wheel',
-    title: 'Sky Wheel Spoke Climber',
-    tagline: 'High-Altitude Radial Spoke Vault',
-    category: 'Physics',
-    icon: '[G-151]',
-    instructions: 'Traverse the rotating structural iron spokes of the giant carnival ferris wheel 100 feet in the air! Gather golden star tokens and crystal gems while fighting slope gravity and high-altitude wind gusts. Don\'t slip off the outer rim!',
-    controlPrompt: 'Up/Down: Climb Spoke | Left/Right/Space: Jump Adjacent Spoke | 1-3: Switch Theme'
-  },
-  {
     id: 'funhouse_mirrors',
     title: 'Funhouse Mirrors',
     tagline: 'Hall of Illusions Maze',
@@ -1668,15 +1594,6 @@ export const GAME_CATALOG: MinigameMetadata[] = [
     icon: '[G-152]',
     instructions: 'Navigate optical mirror reflections! Tap to turn and snatch golden prize tickets while dodging deceptive glass reflections.',
     controlPrompt: 'Tap: Turn 90°'
-  },
-  {
-    id: 'cotton_candy',
-    title: 'Sugar Cloud Stacker',
-    tagline: 'Candy Tower Balance Rush',
-    category: 'Party',
-    icon: '[G-153]',
-    instructions: 'Slide your paper stick to catch falling pastel sugar drops and build towering, wobbly cotton candy clouds! Tap to cash in your stack for banked bonus multipliers before it tips over. Beware burnt crisps!',
-    controlPrompt: 'Steer: Slide Stick | Tap/Space: Cash In Stack | 1-3: Switch Theme'
   },
   {
     id: 'test_strength',
@@ -2534,15 +2451,6 @@ export const GAME_CATALOG: MinigameMetadata[] = [
     controlPrompt: 'Steer: Move Cannon | Tap: Fire Laser'
   },
   {
-    id: 'vector_tank_battle',
-    title: 'Vector Tank Battle',
-    tagline: '1980 Wireframe Radar Duel',
-    category: 'Action',
-    icon: '[G-249]',
-    instructions: 'Command wireframe green tanks across a phosphor vector CRT battlefield! Shoot bouncing ricochet shells off geometric wireframe barriers.',
-    controlPrompt: 'Steer: Rotate Turret | Throttle: Drive | Tap: Shoot'
-  },
-  {
     id: 'pac_maze_chomp',
     title: 'Pac Maze Chomp',
     tagline: 'Neon Dot Labyrinth Gobbler',
@@ -2659,26 +2567,6 @@ export const GAME_CATALOG: MinigameMetadata[] = [
     icon: '[P-02]',
     instructions: 'Phone-Exclusive 1–4 Player Touch Blitz! Swipe or tap inside your quadrant to unleash glowing katana arcs! Slice flying watermelons, golden pineapples, and combo stars flying through your corner while avoiding spiked bombs!',
     controlPrompt: 'Swipe / Drag or Tap Your Quadrant: Unleash Katana Slash Arcs!',
-    phoneMode: 'phone_only'
-  },
-  {
-    id: 'tabletop_air_hockey',
-    title: 'Tabletop Neon Hockey',
-    tagline: 'Face-to-Face Touchscreen Mallet Clash',
-    category: 'Action',
-    icon: '[P-03]',
-    instructions: 'Phone-Exclusive Tabletop Air Hockey! Hold your side of the phone screen to supercharge your magnetic striker mallet and drag to smash the neon puck into your rival’s goal! In 3-4P Phone Mode, Top 1v1 & Bottom 1v1 play simultaneously and winners face off in the Final!',
-    controlPrompt: 'Drag Touch Zone: Aim Striker • Hold/Tap: Power Mallet Surge',
-    phoneMode: 'phone_only'
-  },
-  {
-    id: 'tap_tug_overdrive',
-    title: 'Tap Tug Overdrive',
-    tagline: '4-Way Touchscreen Plasma Core Tug-of-War',
-    category: 'Party',
-    icon: '[P-04]',
-    instructions: 'Phone-Exclusive 1–4 Player Touch Overdrive! Furiously tap your corner pad to pull the unstable Plasma Core into your capture zone! Watch the spinning Golden Overdrive Ring—tapping when it aligns triggers a 3x Mega Pull Shockwave!',
-    controlPrompt: 'Rapid Tap Your Corner: Pull Plasma Core • Tap on Gold Ring: 3x Overdrive Pull!',
     phoneMode: 'phone_only'
   }
 ];
@@ -5919,7 +5807,7 @@ export class GameManager {
         this.activeGame = new SkyGlidersGame(this.players, this.input, this.audio, this.particles);
         break;
       case 'whack_a_thief':
-        this.activeGame = new WhackAThiefGame(this.players, this.input, this.audio, this.particles);
+        this.activeGame = new TurfWhackGame(this.players, this.input, this.audio, this.particles);
         break;
       case 'pixel_curling':
         this.activeGame = new PixelCurlingGame(this.players, this.input, this.audio, this.particles);
@@ -6069,7 +5957,7 @@ export class GameManager {
         this.activeGame = new WormholeLeapGame(this.players, this.input, this.audio, this.particles);
         break;
       case 'astro_miner':
-        this.activeGame = new AstroMinerGame(this.players, this.input, this.audio, this.particles);
+        this.activeGame = new AsteroidMinerGame(this.players, this.input, this.audio, this.particles);
         break;
       case 'nebula_drift':
         this.activeGame = new NebulaDriftGame(this.players, this.input, this.audio, this.particles);
@@ -6174,25 +6062,25 @@ export class GameManager {
         this.activeGame = new DiscoTileGame(this.players, this.input, this.audio, this.particles);
         break;
       case 'ring_toss':
-        this.activeGame = new RingTossGame(this.players, this.input, this.audio, this.particles);
+        this.activeGame = new RingTossFrenzyGame(this.players, this.input, this.audio, this.particles);
         break;
       case 'rollercoaster_thrill':
-        this.activeGame = new RollercoasterThrillGame(this.players, this.input, this.audio, this.particles);
+        this.activeGame = new RollerCoasterBrakeGame(this.players, this.input, this.audio, this.particles);
         break;
       case 'balloon_dart':
-        this.activeGame = new BalloonDartGame(this.players, this.input, this.audio, this.particles);
+        this.activeGame = new BalloonDartClownGame(this.players, this.input, this.audio, this.particles);
         break;
       case 'dunk_tank':
-        this.activeGame = new DunkTankGame(this.players, this.input, this.audio, this.particles);
+        this.activeGame = new DunkClownTankGame(this.players, this.input, this.audio, this.particles);
         break;
       case 'ferris_wheel':
-        this.activeGame = new FerrisWheelGame(this.players, this.input, this.audio, this.particles);
+        this.activeGame = new FerrisWheelHopGame(this.players, this.input, this.audio, this.particles);
         break;
       case 'funhouse_mirrors':
         this.activeGame = new FunhouseMirrorsGame(this.players, this.input, this.audio, this.particles);
         break;
       case 'cotton_candy':
-        this.activeGame = new CottonCandyGame(this.players, this.input, this.audio, this.particles);
+        this.activeGame = new CottonCandySpinGame(this.players, this.input, this.audio, this.particles);
         break;
       case 'test_strength':
         this.activeGame = new TestStrengthGame(this.players, this.input, this.audio, this.particles);
@@ -6480,7 +6368,7 @@ export class GameManager {
         this.activeGame = new PixelSpaceInvaderGame(this.players, this.input, this.audio, this.particles);
         break;
       case 'vector_tank_battle':
-        this.activeGame = new VectorTankBattleGame(this.players, this.input, this.audio, this.particles);
+        this.activeGame = new CyberTanksGame(this.players, this.input, this.audio, this.particles);
         break;
       case 'pac_maze_chomp':
         this.activeGame = new PacMazeChompGame(this.players, this.input, this.audio, this.particles);
@@ -6528,10 +6416,10 @@ export class GameManager {
         this.activeGame = new SwipeNinjaBlitzGame(this.players, this.input, this.audio, this.particles);
         break;
       case 'tabletop_air_hockey':
-        this.activeGame = new TabletopAirHockeyGame(this.players, this.input, this.audio, this.particles);
+        this.activeGame = new MicroHockeyGame(this.players, this.input, this.audio, this.particles);
         break;
       case 'tap_tug_overdrive':
-        this.activeGame = new TapTugOverdriveGame(this.players, this.input, this.audio, this.particles);
+        this.activeGame = new TugOfWarGame(this.players, this.input, this.audio, this.particles);
         break;
     }
 
@@ -6561,8 +6449,7 @@ export class GameManager {
     const phoneMode = getGamePhoneMode(gameId);
     const usesSplitBracketOnPhone =
       phoneMode === '4p_split_bracket' ||
-      gameId === 'thumb_war_wrestle' ||
-      gameId === 'tabletop_air_hockey';
+      gameId === 'thumb_war_wrestle';
 
     if (isSplitFinal && this.splitBracketTopWinner !== null && this.splitBracketBotWinner !== null) {
       // GRAND FINAL of Phone 4P Split Bracket: Top 1v1 Winner vs Bottom 1v1 Winner!
@@ -6606,7 +6493,6 @@ export class GameManager {
       'spam_click_showdown',
       'thumb_war_wrestle',
       'swipe_ninja_blitz',
-      'tap_tug_overdrive',
       'neon_lightcycles',
       'micro_gp',
       'kitchen_chaos',
@@ -6669,13 +6555,7 @@ export class GameManager {
       'equalizer_bounce',
       'retro_chiptune',
       'disco_tile',
-      'ring_toss',
-      'rollercoaster_thrill',
-      'balloon_dart',
-      'dunk_tank',
-      'ferris_wheel',
       'funhouse_mirrors',
-      'cotton_candy',
       'test_strength',
       'haunted_mansion',
       'fireworks_finale',
