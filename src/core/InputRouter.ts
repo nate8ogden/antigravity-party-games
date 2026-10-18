@@ -362,12 +362,31 @@ export class InputRouter {
           track.currentX = nx;
           track.currentY = ny;
           if (track.role === 'joystick') {
+            const dx = track.currentX - track.originX;
+            const dy = track.currentY - track.originY;
+            const dist = Math.hypot(dx, dy);
+            const maxRadius = 48;
+            if (dist > maxRadius) {
+              const excess = dist - maxRadius;
+              track.originX += (dx / dist) * excess;
+              track.originY += (dy / dist) * excess;
+            }
             const joy = this.joysticks[track.pid];
+            joy.originX = track.originX;
+            joy.originY = track.originY;
             joy.currentX = track.currentX;
             joy.currentY = track.currentY;
           } else if (this.controlMode === 'single_button') {
-            const dist = Math.hypot(track.currentX - track.originX, track.currentY - track.originY);
+            const dx = track.currentX - track.originX;
+            const dy = track.currentY - track.originY;
+            const dist = Math.hypot(dx, dy);
             if (dist > 6) {
+              const maxRadius = 48;
+              if (dist > maxRadius) {
+                const excess = dist - maxRadius;
+                track.originX += (dx / dist) * excess;
+                track.originY += (dy / dist) * excess;
+              }
               const joy = this.joysticks[track.pid];
               joy.active = true;
               joy.originX = track.originX;
@@ -499,12 +518,31 @@ export class InputRouter {
         track.currentX = nx;
         track.currentY = ny;
         if (track.role === 'joystick') {
+          const dx = track.currentX - track.originX;
+          const dy = track.currentY - track.originY;
+          const dist = Math.hypot(dx, dy);
+          const maxRadius = 48;
+          if (dist > maxRadius) {
+            const excess = dist - maxRadius;
+            track.originX += (dx / dist) * excess;
+            track.originY += (dy / dist) * excess;
+          }
           const joy = this.joysticks[track.pid];
+          joy.originX = track.originX;
+          joy.originY = track.originY;
           joy.currentX = track.currentX;
           joy.currentY = track.currentY;
         } else if (this.controlMode === 'single_button') {
-          const dist = Math.hypot(track.currentX - track.originX, track.currentY - track.originY);
+          const dx = track.currentX - track.originX;
+          const dy = track.currentY - track.originY;
+          const dist = Math.hypot(dx, dy);
           if (dist > 6) {
+            const maxRadius = 48;
+            if (dist > maxRadius) {
+              const excess = dist - maxRadius;
+              track.originX += (dx / dist) * excess;
+              track.originY += (dy / dist) * excess;
+            }
             const joy = this.joysticks[track.pid];
             joy.active = true;
             joy.originX = track.originX;
@@ -544,6 +582,22 @@ export class InputRouter {
     });
   }
 
+  public isTopPhonePlayer(pid: PlayerId): boolean {
+    if (this.deviceMode !== 'phone') return false;
+    if (this.phoneTouchLayout === '4p_corners') return false;
+    const humanIds = ([0, 1, 2, 3] as PlayerId[]).filter((id) => this.humanPlayerMask[id] && this.activePlayerMask[id]);
+    if (this.phoneTouchLayout === '2p_final') {
+      return pid === this.finalPlayerIds[0];
+    }
+    if (humanIds.length === 2) {
+      return pid === humanIds[1];
+    }
+    if (this.phoneTouchLayout === '2p_faceoff') {
+      return pid === 1;
+    }
+    return false;
+  }
+
   private pointToPlayerDetailed(x: number, y: number, width: number, height: number): { pid: PlayerId; isActionZone?: boolean } | null {
     const midX = width / 2;
     const midY = height / 2;
@@ -574,7 +628,8 @@ export class InputRouter {
       if (!this.humanPlayerMask[pid]) {
         pid = this.humanPlayerMask[botPid] ? botPid : topPid;
       }
-      const isActionZone = this.controlMode === 'directional' && x > width * 0.66;
+      const isTop = y < midY;
+      const isActionZone = this.controlMode === 'directional' && (isTop ? x < width * 0.34 : x > width * 0.66);
       return { pid, isActionZone };
     }
 
@@ -582,8 +637,9 @@ export class InputRouter {
     if (humanIds.length === 2 && this.phoneTouchLayout !== '4p_corners') {
       if (this.deviceMode === 'phone') {
         // 2-Player Face-to-Face Phone Layout: Top Half = P2 (humanIds[1]), Bottom Half = P1 (humanIds[0])
-        const pid: PlayerId = y < midY ? humanIds[1] : humanIds[0];
-        const isActionZone = this.controlMode === 'directional' && x > width * 0.66;
+        const isTop = y < midY;
+        const pid: PlayerId = isTop ? humanIds[1] : humanIds[0];
+        const isActionZone = this.controlMode === 'directional' && (isTop ? x < width * 0.34 : x > width * 0.66);
         return { pid, isActionZone };
       } else {
         // Computer / Tablet Landscape 2P: Left Half = P1, Right Half = P2 across full height
@@ -622,6 +678,7 @@ export class InputRouter {
 
       let hasActiveTouch = false;
       let anyActionTouch = false;
+      const isTop = this.isTopPhonePlayer(pid);
 
       for (const track of this.activeTouches.values()) {
         if (track.pid === pid) {
@@ -633,14 +690,19 @@ export class InputRouter {
               const dx = track.currentX - track.originX;
               const dy = track.currentY - track.originY;
               const dist = Math.hypot(dx, dy);
-              const deadzone = 6;
-              const maxRadius = 40;
+              const deadzone = 5;
+              const maxRadius = 48;
               if (dist > deadzone) {
                 const clamped = Math.min(dist, maxRadius);
                 const norm = (clamped - deadzone) / (maxRadius - deadzone);
                 const safeDist = Math.max(0.001, dist);
-                this.touchSteer[pid] = (dx / safeDist) * norm;
-                this.touchThrottle[pid] = (-dy / safeDist) * norm;
+                if (isTop) {
+                  this.touchSteer[pid] = (-dx / safeDist) * norm;
+                  this.touchThrottle[pid] = (dy / safeDist) * norm;
+                } else {
+                  this.touchSteer[pid] = (dx / safeDist) * norm;
+                  this.touchThrottle[pid] = (-dy / safeDist) * norm;
+                }
               } else {
                 this.touchSteer[pid] = 0;
                 this.touchThrottle[pid] = 0;
@@ -651,14 +713,21 @@ export class InputRouter {
             const dy = track.currentY - track.originY;
             const dist = Math.hypot(dx, dy);
             const deadzone = 4;
-            const maxRadius = 42;
+            const maxRadius = 48;
 
             if (dist > deadzone) {
               const clamped = Math.min(dist, maxRadius);
               const norm = (clamped - deadzone) / (maxRadius - deadzone);
               const safeDist = Math.max(0.001, dist);
-              this.touchSteer[pid] = (dx / safeDist) * norm;
-              this.touchThrottle[pid] = (-dy / safeDist) * norm; // upwards drag is forward throttle
+              if (isTop) {
+                // Top player sitting opposite: dragging down toward center is forward throttle, dragging left on screen is to their right
+                this.touchSteer[pid] = (-dx / safeDist) * norm;
+                this.touchThrottle[pid] = (dy / safeDist) * norm;
+              } else {
+                // Bottom player / solo player: dragging up is forward throttle, dragging right is steer right
+                this.touchSteer[pid] = (dx / safeDist) * norm;
+                this.touchThrottle[pid] = (-dy / safeDist) * norm; // upwards drag is forward throttle
+              }
             } else {
               this.touchSteer[pid] = 0;
               this.touchThrottle[pid] = 0;
@@ -1042,8 +1111,8 @@ export class InputRouter {
   public update(dt: number) {
     this.pollGamepads();
 
-    // Responsive exponential smoothing (~40ms rise time, silky smooth without lag)
-    const smoothingFactor = 1 - Math.exp(-24 * dt);
+    // Responsive exponential smoothing (~20ms rise time, snappy and silky smooth without lag)
+    const smoothingFactor = 1 - Math.exp(-48 * dt);
 
     for (let p = 0; p < 4; p++) {
       const pid = p as PlayerId;
@@ -1187,7 +1256,7 @@ export class InputRouter {
         }
       }
 
-      // Top Player Touch Bar (only if human active!)
+      // Top Player Touch Bar (only if human active! Symmetrically mirrored & rotated 180° for Player 2 sitting opposite)
       if (this.activePlayerMask[topPid] && this.humanPlayerMask[topPid]) {
         const isPressed = this.states[topPid].pressed;
         const c = this.playerColors[topPid];
@@ -1196,32 +1265,47 @@ export class InputRouter {
         ctx.lineWidth = isPressed ? 2.5 : 1.5;
         const padW = this.controlMode === 'directional' ? Math.min(240, w * 0.52) : Math.min(310, w * 0.72);
         const padH = 32;
-        const padX = 14;
+        // Top player's thumbstick is placed under their left hand (screen right)
+        const padX = this.controlMode === 'directional' ? w - padW - 14 : (w - padW) / 2;
         const padY = 46;
         ctx.beginPath();
         ctx.roundRect(padX, padY, padW, padH, 10);
         ctx.fill();
         ctx.stroke();
 
+        ctx.save();
+        ctx.translate(padX + padW / 2, padY + padH / 2);
+        ctx.rotate(Math.PI); // Rotate 180° so text faces top player sitting opposite
         ctx.fillStyle = '#F8FAFC';
         ctx.font = '800 10px Montserrat, sans-serif';
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.fillText(
-          this.controlMode === 'single_button' ? `📱 P${topPid + 1} TOP: TAP / HOLD / DRAG` : `🕹️ P${topPid + 1} TOP THUMBSTICK`,
-          padX + padW / 2,
-          padY + 20
+          this.controlMode === 'single_button' ? `📱 P${topPid + 1} TOP: TAP / HOLD / DRAG` : `🕹️ P${topPid + 1} THUMBSTICK`,
+          0,
+          0
         );
+        ctx.restore();
 
         if (this.controlMode === 'directional') {
+          // Top player's action button is placed under their right hand (screen left: x < 0.34)
           const actW = Math.min(148, w * 0.30);
-          const actX = w - actW - 14;
+          const actX = 14;
           ctx.fillStyle = this.states[topPid].action ? c : 'rgba(15, 23, 42, 0.75)';
           ctx.beginPath();
           ctx.roundRect(actX, padY, actW, padH, 10);
           ctx.fill();
           ctx.stroke();
+
+          ctx.save();
+          ctx.translate(actX + actW / 2, padY + padH / 2);
+          ctx.rotate(Math.PI); // Rotate 180° so text faces top player sitting opposite
           ctx.fillStyle = '#FFFFFF';
-          ctx.fillText(`⚡ P${topPid + 1} ACTION`, actX + actW / 2, padY + 20);
+          ctx.font = '800 10px Montserrat, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`⚡ P${topPid + 1} ACTION`, 0, 0);
+          ctx.restore();
         }
       }
     } else {
