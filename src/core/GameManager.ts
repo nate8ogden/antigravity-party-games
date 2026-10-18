@@ -7271,7 +7271,6 @@ export class GameManager {
       this.isSettingsOpen ||
       this.isShopOpen ||
       this.isTrophiesOpen ||
-      this.state === 'PAUSED' ||
       this.state === 'ROUND_OVER' ||
       this.state === 'PODIUM';
     if (document.body.classList.contains('modal-open') !== isOverlayActive) {
