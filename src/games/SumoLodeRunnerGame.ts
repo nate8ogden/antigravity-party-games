@@ -1111,11 +1111,12 @@ export class SumoLodeRunnerGame extends BaseGame {
   public isMultiRound: boolean = true;
   public isNoTimeLimit: boolean = false;
 
-  // Current Level (1..30)
-  public currentLevel: number = 1;
+  // Current Level (0 = Interactive Tutorial Dojo, 1..30 = Campaign Stages)
+  public currentLevel: number = 0;
   public maxUnlockedLevel: number = 1;
   public teamLives: number = 5;
   private levelClearBannerTimer: number = 0;
+  private stageHintTimer: number = 0;
   private escapeRevealed: boolean = false;
   private escapeFlashTimer: number = 0;
 
@@ -1157,7 +1158,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     timer: 0
   };
 
-  // Direct keyboard listener for dedicated Dig Left (Q/Z), Dig Right (E/X/C), and Level Select ([ / ] / R)
+  // Direct keyboard listener for dedicated Dig Left (Q/Z), Dig Right (E/X/C), and Level Select ([ / ] / T / R)
   private rawKeys: Set<string> = new Set();
   private justRawKeys: Set<string> = new Set();
   private keyDownHandler: ((e: KeyboardEvent) => void) | null = null;
@@ -1168,7 +1169,13 @@ export class SumoLodeRunnerGame extends BaseGame {
   private hudHitboxes: { id: string; x: number; y: number; w: number; h: number; action: () => void }[] = [];
 
   public setStartingLevel(level: number): void {
-    this.currentLevel = Math.max(1, Math.min(30, Math.floor(level)));
+    this.currentLevel = Math.max(0, Math.min(30, Math.floor(level)));
+  }
+
+  public getLevelBlueprint(levelNum: number = this.currentLevel): LevelBlueprint {
+    if (levelNum <= 0) return SUMO_LODE_TUTORIAL_LEVEL;
+    const idx = Math.max(0, Math.min(SUMO_LODE_LEVELS.length - 1, levelNum - 1));
+    return SUMO_LODE_LEVELS[idx];
   }
 
   private initWasmKernel(): void {
@@ -1296,8 +1303,8 @@ export class SumoLodeRunnerGame extends BaseGame {
   }
 
   public loadLevel(levelNum: number): void {
-    this.currentLevel = Math.max(1, Math.min(30, levelNum));
-    const bp = SUMO_LODE_LEVELS[this.currentLevel - 1];
+    this.currentLevel = Math.max(0, Math.min(30, levelNum));
+    const bp = this.getLevelBlueprint(this.currentLevel);
 
     this.gridMem.fill(TILE_EMPTY);
     this.dynMem.fill(DYN_NONE);
@@ -1308,6 +1315,8 @@ export class SumoLodeRunnerGame extends BaseGame {
     this.escapeRevealed = false;
     this.escapeFlashTimer = 0;
     this.levelClearBannerTimer = 0;
+    this.stageHintTimer = bp.hint ? 11.0 : 4.5;
+    this.teamLives = 5; // Fresh 5 lives per stage (infinite in Stage 0 Tutorial)
     this.roundTimer = 180; // Fresh 3-minute timer per stage
     this.tileCacheDirty = true;
 
@@ -1371,6 +1380,7 @@ export class SumoLodeRunnerGame extends BaseGame {
       runner.spawnRow = sp.row;
       runner.x = runner.spawnCol;
       runner.y = runner.spawnRow;
+      runner.facing = pIdx % 2 === 0 ? 1 : -1;
       runner.state = 'IDLE';
       runner.digTimer = 0;
       runner.respawnTimer = 0;
@@ -1475,6 +1485,28 @@ export class SumoLodeRunnerGame extends BaseGame {
   }
 
   /**
+   * Finds a climbable ladder column within ±0.42 tiles of x so players don't get stuck on ladder corners.
+   */
+  private findNearbyLadderCol(x: number, row: number, moveY: number): number {
+    const centerCol = Math.round(x);
+    const candidates = [centerCol, Math.floor(x + 0.42), Math.ceil(x - 0.42)];
+    for (let i = 0; i < candidates.length; i++) {
+      const c = candidates[i];
+      if (c < 0 || c >= GRID_COLS || Math.abs(x - c) > 0.44) continue;
+      if (moveY < 0) {
+        if (this.isClimbable(c, row) || this.isClimbable(c, row - 1) || this.isClimbable(c, row + 1)) {
+          return c;
+        }
+      } else if (moveY > 0) {
+        if (this.isClimbable(c, row) || this.isClimbable(c, row + 1)) {
+          return c;
+        }
+      }
+    }
+    return -1;
+  }
+
+  /**
    * Validates Lode Runner digging rule:
    * Target (digCol, digRow) must be TILE_BRICK (not already dug),
    * and the tile directly above (digCol, digRow - 1) must be free of intact bricks, stone, ladders, ropes, or trapped guards.
@@ -1494,6 +1526,19 @@ export class SumoLodeRunnerGame extends BaseGame {
     if (aboveTile === TILE_HIDDEN_LADDER && this.escapeRevealed) return false;
 
     return true;
+  }
+
+  /**
+   * Resolves the best dig direction (-1, +1, or 0) for a runner pressing the single Action button.
+   */
+  private getPreferredDigDir(runner: SumoRunnerPlayer): -1 | 0 | 1 | null {
+    const col = Math.round(runner.x);
+    const row = Math.round(runner.y);
+    if (this.canDigAt(col + runner.facing, row + 1)) return runner.facing;
+    const opp = (runner.facing * -1) as -1 | 1;
+    if (this.canDigAt(col + opp, row + 1)) return opp;
+    if (this.canDigAt(col, row + 1)) return 0;
+    return null;
   }
 
   private triggerDig(
@@ -1522,7 +1567,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     runner.digTargetCol = digCol;
     runner.digTargetRow = digRow;
 
-    const bp = SUMO_LODE_LEVELS[this.currentLevel - 1];
+    const bp = this.getLevelBlueprint();
     const idx = digRow * GRID_COLS + digCol;
     this.dynMem[idx] = DYN_DUG_HOLE;
     this.dugBricks.push({
@@ -1545,6 +1590,7 @@ export class SumoLodeRunnerGame extends BaseGame {
   }
 
   public getCurrentBiome(): BiomePalette {
+    if (this.currentLevel <= 0) return BIOME_PALETTES[0];
     const chapterIdx = Math.min(4, Math.floor((this.currentLevel - 1) / 6));
     return BIOME_PALETTES[chapterIdx];
   }
@@ -1555,11 +1601,16 @@ export class SumoLodeRunnerGame extends BaseGame {
     if (this.isFinished) return;
 
     const clampedDt = Math.min(dt, 0.05);
-    this.roundTimer = Math.max(0, this.roundTimer - clampedDt);
+    if (this.currentLevel > 0) {
+      this.roundTimer = Math.max(0, this.roundTimer - clampedDt);
+    }
+    if (this.stageHintTimer > 0) {
+      this.stageHintTimer = Math.max(0, this.stageHintTimer - clampedDt);
+    }
 
-    // Handle quick keyboard level navigation ([ / ] / R)
+    // Handle quick keyboard level navigation ([ / ] / T / R)
     if (this.justRawKeys.has('BracketLeft') || this.justRawKeys.has('PageDown')) {
-      if (this.currentLevel > 1) {
+      if (this.currentLevel > 0) {
         this.audio.playMenuTick();
         this.loadLevel(this.currentLevel - 1);
       }
@@ -1568,6 +1619,9 @@ export class SumoLodeRunnerGame extends BaseGame {
         this.audio.playMenuTick();
         this.loadLevel(this.currentLevel + 1);
       }
+    } else if (this.justRawKeys.has('KeyT')) {
+      this.audio.playMenuTick();
+      this.loadLevel(0);
     } else if (this.justRawKeys.has('KeyR')) {
       this.audio.playTap();
       this.loadLevel(this.currentLevel);
@@ -1628,8 +1682,9 @@ export class SumoLodeRunnerGame extends BaseGame {
     const remainingGold = this.getRemainingGoldCount();
     const totalGold = this.golds.length;
 
-    // Spawn Bonus Yokozuna Onigiri when 50% of gold is collected!
+    // Spawn Bonus Yokozuna Onigiri when 50% of gold is collected (Stages 1..30)
     if (
+      this.currentLevel > 0 &&
       !this.bonusItem.spawnedThisLevel &&
       totalGold >= 4 &&
       totalGold - remainingGold >= Math.ceil(totalGold * 0.5)
@@ -1653,7 +1708,7 @@ export class SumoLodeRunnerGame extends BaseGame {
 
     if (this.escapeRevealed) {
       for (const runner of this.runners.values()) {
-        if (runner.state !== 'DEAD' && runner.y <= 0.35 && this.isClimbable(Math.round(runner.x), 0)) {
+        if (runner.state !== 'DEAD' && runner.y <= 0.38 && this.isClimbable(Math.round(runner.x), 0)) {
           // Player reached top of the escape ladder!
           runner.score += 500;
           runner.levelsCleared += 1;
@@ -1671,15 +1726,19 @@ export class SumoLodeRunnerGame extends BaseGame {
           const py = originY + 20;
           this.particles.spawnWinnerCelebration(px, py, '#FBBF24');
           this.particles.spawnSparks(px, py, '#F8FAFC', 18); // Ceremonial Shio-maki salt shower
-          this.particles.showFloatingText(`🏆 STAGE ${this.currentLevel} CLEAR! +500 PTS!`, width / 2, height / 2 - 20, '#FDE047', 24);
+          const stageLabel = this.currentLevel === 0 ? 'TUTORIAL DOJO' : `STAGE ${this.currentLevel}`;
+          this.particles.showFloatingText(`🏆 ${stageLabel} CLEAR! +500 PTS!`, width / 2, height / 2 - 20, '#FDE047', 24);
           this.levelClearBannerTimer = 1.75;
           break;
         }
       }
     }
 
-    // Check if team lives exhausted or timer ran out
-    if (this.teamLives <= 0 || this.roundTimer <= 0) {
+    // If teamLives runs out on a campaign stage, restart the current stage instead of booting to Game Over
+    if (this.teamLives <= 0 && this.currentLevel > 0) {
+      this.particles.showFloatingText('🔄 DOHYŌ RESET — TRY STAGE AGAIN!', width / 2, height / 2, '#38BDF8', 20);
+      this.loadLevel(this.currentLevel);
+    } else if (this.roundTimer <= 0 && this.currentLevel > 0) {
       this.isFinished = true;
     }
 
@@ -1708,8 +1767,8 @@ export class SumoLodeRunnerGame extends BaseGame {
               this.dropGuardGold(g, b.col, b.row - 1);
             }
             g.x = g.spawnCol;
-            g.y = 0;
-            g.state = 'FALL';
+            g.y = this.currentLevel === 0 ? g.spawnRow : 0;
+            g.state = this.currentLevel === 0 ? 'PATROL' : 'FALL';
             g.trapTimer = 0;
             g.trapCol = -1;
             g.trapRow = -1;
@@ -1765,8 +1824,15 @@ export class SumoLodeRunnerGame extends BaseGame {
   private killRunner(runner: SumoRunnerPlayer, originX: number, originY: number, tileW: number, tileH: number, reason: string): void {
     if (runner.state === 'DEAD' || runner.invulnTimer > 0) return;
     runner.state = 'DEAD';
-    runner.respawnTimer = 1.35;
-    this.teamLives = Math.max(0, this.teamLives - 1);
+    runner.respawnTimer = 1.15;
+
+    // Only human deaths in non-tutorial stages consume teamLives
+    const pConfig = this.players[runner.id];
+    const isHuman = pConfig ? pConfig.type === 'human' : true;
+    if (this.currentLevel > 0 && isHuman) {
+      this.teamLives = Math.max(0, this.teamLives - 1);
+    }
+
     const px = originX + (runner.x + 0.5) * tileW;
     const py = originY + (runner.y + 0.5) * tileH;
     this.audio.playStun();
@@ -1785,7 +1851,7 @@ export class SumoLodeRunnerGame extends BaseGame {
 
       if (r.state === 'DEAD') {
         r.respawnTimer -= dt;
-        if (r.respawnTimer <= 0 && this.teamLives > 0) {
+        if (r.respawnTimer <= 0 && (this.teamLives > 0 || this.currentLevel === 0)) {
           r.x = r.spawnCol;
           r.y = r.spawnRow;
           r.state = 'IDLE';
@@ -1872,16 +1938,7 @@ export class SumoLodeRunnerGame extends BaseGame {
       }
 
       if (wantDigDir === null && justAct && !onRope) {
-        if (this.canDigAt(col + r.facing, row + 1)) {
-          wantDigDir = r.facing;
-        } else if (moveX === 0 && this.canDigAt(col - r.facing, row + 1)) {
-          wantDigDir = (r.facing * -1) as -1 | 1;
-        } else if (this.canDigAt(col, row + 1)) {
-          // Sumo Shiko Stomp downward dig when enclosed or standing directly over a diggable brick
-          wantDigDir = 0;
-        } else {
-          wantDigDir = r.facing;
-        }
+        wantDigDir = this.getPreferredDigDir(r);
       } else if (wantDigDir !== null && !this.canDigAt(col + wantDigDir, row + 1) && this.canDigAt(col, row + 1)) {
         // Allow Q/Z/E/X/C to Shiko-stomp straight down if diagonal is blocked by a wall
         wantDigDir = 0;
@@ -1902,21 +1959,25 @@ export class SumoLodeRunnerGame extends BaseGame {
         continue;
       }
 
-      // Vertical climbing on Ladders
+      // Vertical climbing on Ladders (with ±0.42 corner-snapping & smooth top-of-ladder completion)
       let movedVertically = false;
       if (moveY !== 0) {
-        let ladderCol = -1;
-        if (moveY < 0) {
-          if (this.isClimbable(col, row) || this.isClimbable(col, row - 1)) ladderCol = col;
-        } else {
-          if (this.isClimbable(col, row) || this.isClimbable(col, row + 1)) ladderCol = col;
-        }
-
+        const ladderCol = this.findNearbyLadderCol(r.x, row, moveY);
         if (ladderCol !== -1) {
-          const targetY = r.y + moveY * moveSpeed * dt;
-          const checkRow = moveY < 0 ? Math.floor(targetY) : Math.ceil(targetY);
-          if (checkRow >= 0 && checkRow < GRID_ROWS && this.isCellPassable(ladderCol, checkRow)) {
-            r.x += (ladderCol - r.x) * Math.min(1, dt * 16);
+          let targetY = r.y + moveY * moveSpeed * dt;
+          // If climbing UP out of the top rung (where row itself is empty air above the ladder at row + 1),
+          // clamp targetY at `row` so the player reaches the exact floor level and can walk off smoothly
+          if (moveY < 0 && !this.isClimbable(ladderCol, row) && !this.isClimbable(ladderCol, row - 1)) {
+            targetY = Math.max(row, targetY);
+          }
+          const checkRow = moveY < 0 ? Math.floor(targetY + 0.02) : Math.ceil(targetY - 0.02);
+          if (
+            checkRow >= 0 &&
+            checkRow < GRID_ROWS &&
+            this.isCellPassable(ladderCol, checkRow) &&
+            Math.abs(targetY - r.y) > 0.001
+          ) {
+            r.x += (ladderCol - r.x) * Math.min(1, dt * 18);
             r.y = Math.max(0, Math.min(GRID_ROWS - 2, targetY));
             r.state = 'CLIMB';
             movedVertically = true;
@@ -1987,7 +2048,7 @@ export class SumoLodeRunnerGame extends BaseGame {
   }
 
   private updateGuards(dt: number, originX: number, originY: number, tileW: number, tileH: number): void {
-    const bp = SUMO_LODE_LEVELS[this.currentLevel - 1];
+    const bp = this.getLevelBlueprint();
     const guardSpeed = bp.guardSpeed * this.activeMutator.speedMultiplier;
 
     for (let gIdx = 0; gIdx < this.guards.length; gIdx++) {
@@ -2115,82 +2176,113 @@ export class SumoLodeRunnerGame extends BaseGame {
         continue;
       }
 
-      // 4. Guard Gold Stealing & Dropping
-      if (g.carryingGoldId === null) {
-        for (let i = 0; i < this.golds.length; i++) {
-          const gold = this.golds[i];
-          if (!gold.collected && gold.carriedByGuardId === null && gold.col === col && gold.row === row) {
-            gold.carriedByGuardId = g.id;
-            g.carryingGoldId = gold.id;
-            g.goldHoldTimer = 7.0 + Math.random() * 5.0;
-            break;
+      // 4. Guard Gold Stealing & Dropping (disabled in Stage 0 Tutorial so tutorial gold stays in place)
+      if (this.currentLevel > 0) {
+        if (g.carryingGoldId === null) {
+          for (let i = 0; i < this.golds.length; i++) {
+            const gold = this.golds[i];
+            if (!gold.collected && gold.carriedByGuardId === null && gold.col === col && gold.row === row) {
+              gold.carriedByGuardId = g.id;
+              g.carryingGoldId = gold.id;
+              g.goldHoldTimer = 7.0 + Math.random() * 5.0;
+              break;
+            }
+          }
+        } else {
+          g.goldHoldTimer -= dt;
+          if (g.goldHoldTimer <= 0 && this.gridMem[cellIdx] === TILE_EMPTY && this.isTileSupported(col, row)) {
+            this.dropGuardGold(g, col, row);
           }
         }
-      } else {
-        g.goldHoldTimer -= dt;
-        if (g.goldHoldTimer <= 0 && this.gridMem[cellIdx] === TILE_EMPTY && this.isTileSupported(col, row)) {
-          this.dropGuardGold(g, col, row);
-        }
       }
 
-      // 5. Find nearest alive player & run Wasm-assisted BFS pathfinding
-      let nearestPlayer: SumoRunnerPlayer | null = null;
-      let bestCost = 999999;
-      for (const r of this.runners.values()) {
-        if (r.state === 'DEAD') continue;
-        const rc = Math.round(r.x);
-        const rr = Math.round(r.y);
-        const cost = this.wasmExports
-          ? this.wasmExports.manhattanCost(col, row, rc, rr)
-          : Math.abs(col - rc) + Math.abs(row - rr) * 2;
-        if (cost < bestCost) {
-          bestCost = cost;
-          nearestPlayer = r;
-        }
-      }
-
-      g.repathTimer -= dt;
-      if (nearestPlayer && (g.repathTimer <= 0 || (g.moveDirX === 0 && g.moveDirY === 0))) {
-        g.repathTimer = 0.14;
-        const step = this.computeShortestPathStep(col, row, Math.round(nearestPlayer.x), Math.round(nearestPlayer.y), true);
-        g.moveDirX = step.dx;
-        g.moveDirY = step.dy;
-      }
-
-      // Execute Guard Movement
-      if (g.moveDirY !== 0 && (onLadder || (g.moveDirY > 0 && onRope) || this.isClimbable(col, row + g.moveDirY))) {
-        if (g.moveDirY > 0 && onRope && !onLadder) {
-          g.dropFromRopeCooldown = 0.32;
-          g.y = row + 0.45;
-          g.state = 'FALL';
-        } else {
-          g.x += (col - g.x) * Math.min(1, dt * 15);
-          g.y = Math.max(0, Math.min(GRID_ROWS - 2, g.y + g.moveDirY * guardSpeed * dt));
-          g.state = 'CLIMB';
-        }
-      } else if (g.moveDirX !== 0) {
-        g.facing = g.moveDirX as -1 | 1;
+      // 5. In Stage 0 Tutorial, keep the trainee Oni Guard patrolling its upper platform (cols 14..22, row 5)
+      if (this.currentLevel === 0) {
+        if (g.moveDirX === 0) g.moveDirX = 1;
         const nextX = g.x + g.moveDirX * guardSpeed * dt;
-        const checkCol = g.moveDirX > 0 ? Math.ceil(nextX - 0.12) : Math.floor(nextX + 0.12);
-        if (
-          checkCol >= 0 &&
-          checkCol < GRID_COLS &&
-          this.isCellPassable(checkCol, row, true) &&
-          !this.isGuardAt(g.id, checkCol, row)
-        ) {
-          g.x = Math.max(0, Math.min(GRID_COLS - 1, nextX));
-          g.y += (row - g.y) * Math.min(1, dt * 15);
-          g.state = onRope ? 'ROPE' : 'PATROL';
+        if (nextX > 22) {
+          g.x = 22;
+          g.moveDirX = -1;
+        } else if (nextX < 14) {
+          g.x = 14;
+          g.moveDirX = 1;
         } else {
-          g.moveDirX = -g.moveDirX;
+          g.x = nextX;
+        }
+        g.facing = g.moveDirX as -1 | 1;
+        g.y += (row - g.y) * Math.min(1, dt * 15);
+        g.state = 'PATROL';
+      } else {
+        // Find nearest alive player & run Wasm-assisted BFS pathfinding
+        let nearestPlayer: SumoRunnerPlayer | null = null;
+        let bestCost = 999999;
+        for (const r of this.runners.values()) {
+          if (r.state === 'DEAD') continue;
+          const rc = Math.round(r.x);
+          const rr = Math.round(r.y);
+          const cost = this.wasmExports
+            ? this.wasmExports.manhattanCost(col, row, rc, rr)
+            : Math.abs(col - rc) + Math.abs(row - rr) * 2;
+          if (cost < bestCost) {
+            bestCost = cost;
+            nearestPlayer = r;
+          }
+        }
+
+        g.repathTimer -= dt;
+        if (nearestPlayer && (g.repathTimer <= 0 || (g.moveDirX === 0 && g.moveDirY === 0))) {
+          g.repathTimer = 0.14;
+          const step = this.computeShortestPathStep(col, row, Math.round(nearestPlayer.x), Math.round(nearestPlayer.y), true);
+          g.moveDirX = step.dx;
+          g.moveDirY = step.dy;
+        }
+
+        // Execute Guard Movement (with smooth top-of-ladder completion)
+        const canFinishLadderUp = g.moveDirY < 0 && g.y > row && this.isClimbable(col, row + 1);
+        if (
+          g.moveDirY !== 0 &&
+          (onLadder || canFinishLadderUp || (g.moveDirY > 0 && onRope) || this.isClimbable(col, row + g.moveDirY))
+        ) {
+          if (g.moveDirY > 0 && onRope && !onLadder) {
+            g.dropFromRopeCooldown = 0.32;
+            g.y = row + 0.45;
+            g.state = 'FALL';
+          } else {
+            g.x += (col - g.x) * Math.min(1, dt * 15);
+            let nextY = g.y + g.moveDirY * guardSpeed * dt;
+            if (g.moveDirY < 0 && !onLadder && !this.isClimbable(col, row - 1)) {
+              nextY = Math.max(row, nextY);
+            }
+            g.y = Math.max(0, Math.min(GRID_ROWS - 2, nextY));
+            g.state = 'CLIMB';
+          }
+        } else if (g.moveDirX !== 0) {
+          g.facing = g.moveDirX as -1 | 1;
+          const nextX = g.x + g.moveDirX * guardSpeed * dt;
+          const checkCol = g.moveDirX > 0 ? Math.ceil(nextX - 0.12) : Math.floor(nextX + 0.12);
+          if (
+            checkCol >= 0 &&
+            checkCol < GRID_COLS &&
+            this.isCellPassable(checkCol, row, true) &&
+            !this.isGuardAt(g.id, checkCol, row)
+          ) {
+            g.x = Math.max(0, Math.min(GRID_COLS - 1, nextX));
+            g.y += (row - g.y) * Math.min(1, dt * 15);
+            g.state = onRope ? 'ROPE' : 'PATROL';
+          } else {
+            g.moveDirX = -g.moveDirX;
+          }
         }
       }
 
-      // 6. Check Guard catching a Player
-      for (const r of this.runners.values()) {
-        if (r.state === 'DEAD' || r.invulnTimer > 0) continue;
-        if (Math.hypot(r.x - g.x, r.y - g.y) < 0.58) {
-          this.killRunner(r, originX, originY, tileW, tileH, 'CAUGHT BY ONI GUARD!');
+      // 6. Check Guard catching a Player (do not catch players on the ledge above when guard is already falling into a hole)
+      const guardOverHole = this.dynMem[cellIdx] === DYN_DUG_HOLE || (row + 1 < GRID_ROWS && this.dynMem[(row + 1) * GRID_COLS + col] === DYN_DUG_HOLE && g.state === 'FALL');
+      if (!guardOverHole) {
+        for (const r of this.runners.values()) {
+          if (r.state === 'DEAD' || r.invulnTimer > 0) continue;
+          if (Math.abs(r.x - g.x) < 0.48 && Math.abs(r.y - g.y) < 0.48) {
+            this.killRunner(r, originX, originY, tileW, tileH, 'CAUGHT BY ONI GUARD!');
+          }
         }
       }
     }
@@ -2330,6 +2422,16 @@ export class SumoLodeRunnerGame extends BaseGame {
       return;
     }
 
+    // In Stage 0 (Tutorial Dojo), if there is a human player in the match, keep the AI bot idle
+    // so the human player gets to complete all 5 tutorial steps themselves!
+    if (this.currentLevel === 0) {
+      const hasHuman = this.getActivePlayers().some((p) => p.type === 'human');
+      if (hasHuman) {
+        this.input.setBotInput(botId, false, 0, 0, false);
+        return;
+      }
+    }
+
     const myCol = Math.round(me.x);
     const myRow = Math.round(me.y);
 
@@ -2466,6 +2568,12 @@ export class SumoLodeRunnerGame extends BaseGame {
         const y = r * tileH;
 
         if ((t === TILE_BRICK && dyn === DYN_NONE) || t === TILE_TRAPDOOR) {
+          const isRevealedTrap = t === TILE_TRAPDOOR && this.trapdoorRevealed[idx] === 1;
+          ctx.save();
+          if (isRevealedTrap) {
+            ctx.globalAlpha = 0.42;
+          }
+
           // 1990s Legend Returns style 3D Dohyō Clay Brick with woven straw tawara trim
           ctx.fillStyle = biome.brickDark;
           ctx.fillRect(x, y, tileW, tileH);
@@ -2484,14 +2592,32 @@ export class SumoLodeRunnerGame extends BaseGame {
           for (let sx = x + 3; sx < x + tileW - 3; sx += 6) {
             ctx.fillRect(sx, y + 1, 2, 2);
           }
+          ctx.restore();
 
-          // Subtle tell if trapdoor has been revealed by someone falling through it
-          if (t === TILE_TRAPDOOR && this.trapdoorRevealed[idx] === 1) {
-            ctx.strokeStyle = 'rgba(253, 224, 71, 0.55)';
-            ctx.lineWidth = 1;
-            ctx.setLineDash([2, 2]);
-            ctx.strokeRect(x + 2, y + 2, tileW - 4, tileH - 4);
-            ctx.setLineDash([]);
+          // Subtle hairline crack on false bricks (TILE_TRAPDOOR), plus clear chevron when revealed
+          if (t === TILE_TRAPDOOR) {
+            ctx.save();
+            if (isRevealedTrap) {
+              ctx.strokeStyle = 'rgba(253, 224, 71, 0.78)';
+              ctx.lineWidth = 1.2;
+              ctx.setLineDash([2, 2]);
+              ctx.strokeRect(x + 2, y + 2, tileW - 4, tileH - 4);
+              ctx.setLineDash([]);
+              ctx.fillStyle = '#FDE047';
+              ctx.font = '900 9px Montserrat, sans-serif';
+              ctx.textAlign = 'center';
+              ctx.fillText('▾', x + tileW / 2, y + tileH * 0.68);
+            } else {
+              // Subtle 1994 Legend Returns hairline mortar crack so observant players can spot false bricks
+              ctx.strokeStyle = 'rgba(0, 0, 0, 0.55)';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(x + tileW * 0.35, y + 3);
+              ctx.lineTo(x + tileW * 0.52, y + tileH * 0.55);
+              ctx.lineTo(x + tileW * 0.42, y + tileH - 2);
+              ctx.stroke();
+            }
+            ctx.restore();
           }
         } else if (t === TILE_SOLID) {
           // Indestructible Imperial Castle Bedrock Block with metallic rivets
@@ -2571,7 +2697,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     ctx.save();
     const now = performance.now() * 0.001;
     const biome = this.getCurrentBiome();
-    const bp = SUMO_LODE_LEVELS[this.currentLevel - 1];
+    const bp = this.getLevelBlueprint();
     const layout = this.getGridLayout(width, height);
     const { originX, originY, tileW, tileH, totalW, totalH } = layout;
 
@@ -2618,6 +2744,9 @@ export class SumoLodeRunnerGame extends BaseGame {
       ctx.fillStyle = `rgba(253, 224, 71, ${Math.min(0.32, this.escapeFlashTimer * 0.25)})`;
       ctx.fillRect(originX, originY, totalW, totalH);
     }
+
+    // 2b. Render Live Dig Target Reticles for Players
+    this.renderDigTargetReticles(ctx, originX, originY, tileW, tileH, now);
 
     // 3. Render Dug Brick Pits & Regeneration Warning Animations
     for (let i = 0; i < this.dugBricks.length; i++) {
@@ -2726,33 +2855,217 @@ export class SumoLodeRunnerGame extends BaseGame {
       this.drawSumoRunner(ctx, r, rx, ry, Math.min(tileW, tileH) * 0.5, now);
     }
 
+    // 7b. Interactive Tutorial Overlay & Step-by-Step World Callouts (Stage 0) or Stage Hint Banner
+    if (this.currentLevel === 0) {
+      this.renderTutorialOverlay(ctx, width, originX, originY, tileW, tileH, now);
+    } else if (bp.hint && this.stageHintTimer > 0) {
+      this.renderStageHintBanner(ctx, width, originY, bp.hint, Math.min(1, this.stageHintTimer));
+    }
+
     // 8. Render Top & Bottom Classic-Modern Sumo Lode Runner HUD Bar
     this.renderLodeRunnerHUD(ctx, width, height, bp, biome);
 
     // 9. Stage Clear Banner Overlay
     if (this.levelClearBannerTimer > 0) {
       ctx.save();
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
-      ctx.fillRect(width / 2 - 210, height / 2 - 48, 420, 96);
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      ctx.fillRect(width / 2 - 220, height / 2 - 48, 440, 96);
       ctx.strokeStyle = '#FACC15';
       ctx.lineWidth = 2.5;
-      ctx.strokeRect(width / 2 - 210, height / 2 - 48, 420, 96);
+      ctx.strokeRect(width / 2 - 220, height / 2 - 48, 440, 96);
 
       ctx.fillStyle = '#FDE047';
-      ctx.font = '900 22px Montserrat, sans-serif';
+      ctx.font = '900 21px Montserrat, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(`🎌 STAGE ${this.currentLevel} COMPLETE! 🎌`, width / 2, height / 2 - 10);
+      const clearTitle =
+        this.currentLevel === 0
+          ? '🎓 TRAINING DOJO COMPLETE! 🎓'
+          : `🎌 STAGE ${this.currentLevel} COMPLETE! 🎌`;
+      ctx.fillText(clearTitle, width / 2, height / 2 - 10);
 
       ctx.fillStyle = '#F8FAFC';
       ctx.font = '700 13px Montserrat, sans-serif';
+      const nextBp = this.getLevelBlueprint(this.currentLevel + 1);
       const nextMsg =
         this.currentLevel < 30
-          ? `Advancing to Stage ${this.currentLevel + 1}: ${SUMO_LODE_LEVELS[this.currentLevel].title}...`
+          ? `Advancing to Stage ${this.currentLevel + 1}: ${nextBp.title}...`
           : 'ALL 30 YOKOZUNA STAGES CONQUERED!';
       ctx.fillText(nextMsg, width / 2, height / 2 + 22);
       ctx.restore();
     }
 
+    ctx.restore();
+  }
+
+  /**
+   * Draws a subtle live Dig Target Reticle on the brick a human player will excavate when pressing Action.
+   */
+  private renderDigTargetReticles(
+    ctx: CanvasRenderingContext2D,
+    originX: number,
+    originY: number,
+    tileW: number,
+    tileH: number,
+    now: number
+  ): void {
+    for (const r of this.runners.values()) {
+      if (r.state === 'DEAD' || r.state === 'FALL' || r.state === 'ROPE') continue;
+      const pConfig = this.players[r.id];
+      if (pConfig && pConfig.type !== 'human') continue;
+
+      const dir = this.getPreferredDigDir(r);
+      if (dir === null) continue;
+
+      const digCol = Math.round(r.x) + dir;
+      const digRow = Math.round(r.y) + 1;
+      const bx = originX + digCol * tileW;
+      const by = originY + digRow * tileH;
+      const pulse = 0.55 + 0.35 * Math.sin(now * 8);
+
+      ctx.save();
+      ctx.strokeStyle = `rgba(253, 224, 71, ${pulse})`;
+      ctx.lineWidth = 1.8;
+      ctx.setLineDash([4, 3]);
+      ctx.strokeRect(bx + 1.5, by + 1.5, tileW - 3, tileH - 3);
+      ctx.setLineDash([]);
+
+      if (this.currentLevel <= 2) {
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
+        ctx.fillRect(bx - 2, by + tileH - 11, tileW + 4, 11);
+        ctx.fillStyle = '#FDE047';
+        ctx.font = '800 7.5px Montserrat, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('DIG [SPACE]', bx + tileW / 2, by + tileH - 3);
+      }
+      ctx.restore();
+    }
+  }
+
+  /**
+   * Renders the 5-step interactive coaching overlay & world callouts in Stage 0 (Yokozuna Training Dojo).
+   */
+  private renderTutorialOverlay(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    originX: number,
+    originY: number,
+    tileW: number,
+    tileH: number,
+    now: number
+  ): void {
+    // Identify tutorial golds by coordinates:
+    // Step 1: (6, 10) | Step 2: (11, 12) | Step 3: (20, 9) | Step 4: (18, 2)
+    const gStep1 = this.golds.find((g) => g.col === 6 && g.row === 10);
+    const gStep2 = this.golds.find((g) => g.col === 11 && g.row === 12);
+    const gStep3 = this.golds.find((g) => g.col === 20 && g.row === 9);
+    const gStep4 = this.golds.find((g) => g.col === 18 && g.row === 2);
+
+    let stepNum = 5;
+    let bannerTitle = 'STEP 5/5: CLIMB THE GOLDEN ESCAPE LADDER TO GRADUATE!';
+    let bannerSub = 'Climb the revealed Golden Ladder (S) at the top-center all the way to ▲ EXIT ▲!';
+    let targetCol = 13;
+    let targetRow = 1;
+    let targetLabel = '▲ CLIMB EXIT!';
+
+    if (gStep1 && !gStep1.collected) {
+      stepNum = 1;
+      bannerTitle = 'STEP 1/5: MOVE & CLIMB BAMBOO LADDERS';
+      bannerSub = 'Use [WASD / Arrows] to climb the Bamboo Ladder (H) and collect the 1st Gold Pot!';
+      targetCol = 6;
+      targetRow = 10;
+      targetLabel = '1. GRAB GOLD!';
+    } else if (gStep2 && !gStep2.collected) {
+      stepNum = 2;
+      bannerTitle = 'STEP 2/5: EXCAVATE DOHYŌ CLAY BRICKS';
+      bannerSub = 'Stand on the ledge at left of the buried Gold & press [SPACE / E / ENTER] to dig the brick (#)!';
+      targetCol = 11;
+      targetRow = 11;
+      targetLabel = '2. DIG BRICK [SPACE]';
+    } else if (gStep3 && !gStep3.collected) {
+      stepNum = 3;
+      bannerTitle = 'STEP 3/5: SHIMMY ACROSS SACRED ROPES';
+      bannerSub = 'Climb the center ladder to the Sacred Rope (-), move RIGHT over the Gold & press DOWN [S / ▼]!';
+      targetCol = 20;
+      targetRow = 7;
+      targetLabel = '3. PRESS DOWN [S/▼] HERE!';
+    } else if (gStep4 && !gStep4.collected) {
+      stepNum = 4;
+      bannerTitle = 'STEP 4/5: TRAP THE ONI GUARD & WALK OVER ITS HEAD';
+      bannerSub = 'Press [SPACE / Q / E] to dig a trap hole for the Oni Guard, walk over its head & climb to the Gold!';
+      targetCol = 18;
+      targetRow = 2;
+      targetLabel = '4. TRAP GUARD & GRAB!';
+    }
+
+    // Draw floating world callout badge + bouncing pointer at target tile
+    const tx = originX + (targetCol + 0.5) * tileW;
+    const ty = originY + targetRow * tileH - 8 + Math.sin(now * 6) * 3;
+
+    ctx.save();
+    // Pulsing highlight ring around target tile
+    ctx.strokeStyle = '#4ADE80';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(originX + targetCol * tileW - 2, originY + targetRow * tileH - 2, tileW + 4, tileH + 4);
+
+    // Callout pill
+    ctx.font = '900 9.5px Montserrat, sans-serif';
+    const pillW = Math.max(96, ctx.measureText(targetLabel).width + 16);
+    const pillX = Math.max(originX + 4, Math.min(originX + GRID_COLS * tileW - pillW - 4, tx - pillW / 2));
+    const pillY = Math.max(originY + 28, ty - 22);
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    ctx.fillRect(pillX, pillY, pillW, 18);
+    ctx.strokeStyle = '#4ADE80';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(pillX, pillY, pillW, 18);
+
+    ctx.fillStyle = '#4ADE80';
+    ctx.textAlign = 'center';
+    ctx.fillText(targetLabel, pillX + pillW / 2, pillY + 12.5);
+
+    // Top-of-arena coaching banner
+    const bannerW = Math.min(width - 32, 680);
+    const bannerX = (width - bannerW) / 2;
+    const bannerY = originY + 2;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
+    ctx.fillRect(bannerX, bannerY, bannerW, 36);
+    ctx.strokeStyle = stepNum === 5 ? '#FACC15' : '#38BDF8';
+    ctx.lineWidth = 1.8;
+    ctx.strokeRect(bannerX, bannerY, bannerW, 36);
+
+    ctx.fillStyle = stepNum === 5 ? '#FDE047' : '#38BDF8';
+    ctx.font = '900 11px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`🎓 ${bannerTitle}`, width / 2, bannerY + 14);
+
+    ctx.fillStyle = '#F8FAFC';
+    ctx.font = '700 10px Montserrat, sans-serif';
+    ctx.fillText(bannerSub, width / 2, bannerY + 29);
+    ctx.restore();
+  }
+
+  private renderStageHintBanner(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    originY: number,
+    hint: string,
+    alpha: number
+  ): void {
+    ctx.save();
+    ctx.globalAlpha = Math.min(0.95, alpha);
+    const bannerW = Math.min(width - 40, 640);
+    const bannerX = (width - bannerW) / 2;
+    const bannerY = originY + 2;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.86)';
+    ctx.fillRect(bannerX, bannerY, bannerW, 22);
+    ctx.strokeStyle = '#FACC15';
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(bannerX, bannerY, bannerW, 22);
+
+    ctx.fillStyle = '#FEF08A';
+    ctx.font = '800 10px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`💡 ${hint}`, width / 2, bannerY + 14.5);
     ctx.restore();
   }
 
@@ -2962,27 +3275,47 @@ export class SumoLodeRunnerGame extends BaseGame {
     const remainingGold = this.getRemainingGoldCount();
     const totalGold = this.golds.length;
 
-    const prevBtnX = width / 2 - 195;
-    const nextBtnX = width / 2 + 115;
-    const retryBtnX = width / 2 + 150;
+    const tutBtnX = width / 2 - 245;
+    const prevBtnX = width / 2 - 180;
+    const nextBtnX = width / 2 + 125;
+    const retryBtnX = width / 2 + 156;
     const btnY = barY + 3;
     const btnH = 20;
 
+    // Tutorial Quick-Jump Button [T]
+    ctx.fillStyle = this.currentLevel === 0 ? '#0284C7' : '#1E293B';
+    ctx.fillRect(tutBtnX, btnY, 60, btnH);
+    ctx.fillStyle = '#E0F2FE';
+    ctx.font = '800 9px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🎓 DOJO [T]', tutBtnX + 30, btnY + 13.5);
+    this.hudHitboxes.push({
+      id: 'lvl_tut',
+      x: tutBtnX,
+      y: btnY,
+      w: 60,
+      h: btnH,
+      action: () => {
+        this.audio.playMenuTick();
+        this.loadLevel(0);
+      }
+    });
+
     // Prev Level Button
-    ctx.fillStyle = this.currentLevel > 1 ? '#334155' : '#1E293B';
-    ctx.fillRect(prevBtnX, btnY, 26, btnH);
+    ctx.fillStyle = this.currentLevel > 0 ? '#334155' : '#1E293B';
+    ctx.fillRect(prevBtnX, btnY, 24, btnH);
     ctx.fillStyle = '#F8FAFC';
     ctx.font = '900 10px Montserrat, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('◀', prevBtnX + 13, btnY + 14);
+    ctx.fillText('◀', prevBtnX + 12, btnY + 14);
     this.hudHitboxes.push({
       id: 'lvl_prev',
       x: prevBtnX,
       y: btnY,
-      w: 26,
+      w: 24,
       h: btnH,
       action: () => {
-        if (this.currentLevel > 1) {
+        if (this.currentLevel > 0) {
           this.audio.playMenuTick();
           this.loadLevel(this.currentLevel - 1);
         }
@@ -2991,20 +3324,24 @@ export class SumoLodeRunnerGame extends BaseGame {
 
     // Stage Title & Biome Label
     ctx.fillStyle = '#FDE047';
-    ctx.font = '900 11px Montserrat, sans-serif';
+    ctx.font = '900 10.5px Montserrat, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`STAGE ${this.currentLevel}/30: ${bp.title.toUpperCase()}`, width / 2 - 25, btnY + 14);
+    const stageHeader =
+      this.currentLevel === 0
+        ? `STAGE 0 (TUTORIAL): ${bp.title.toUpperCase()}`
+        : `STAGE ${this.currentLevel}/30: ${bp.title.toUpperCase()}`;
+    ctx.fillText(stageHeader, width / 2 - 15, btnY + 14);
 
     // Next Level Button
     ctx.fillStyle = this.currentLevel < 30 ? '#334155' : '#1E293B';
-    ctx.fillRect(nextBtnX, btnY, 26, btnH);
+    ctx.fillRect(nextBtnX, btnY, 24, btnH);
     ctx.fillStyle = '#F8FAFC';
-    ctx.fillText('▶', nextBtnX + 13, btnY + 14);
+    ctx.fillText('▶', nextBtnX + 12, btnY + 14);
     this.hudHitboxes.push({
       id: 'lvl_next',
       x: nextBtnX,
       y: btnY,
-      w: 26,
+      w: 24,
       h: btnH,
       action: () => {
         if (this.currentLevel < 30) {
@@ -3018,7 +3355,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     ctx.fillStyle = '#7F1D1D';
     ctx.fillRect(retryBtnX, btnY, 58, btnH);
     ctx.fillStyle = '#FCA5A5';
-    ctx.font = '800 9.5px Montserrat, sans-serif';
+    ctx.font = '800 9px Montserrat, sans-serif';
     ctx.fillText('↻ RETRY [R]', retryBtnX + 29, btnY + 13.5);
     this.hudHitboxes.push({
       id: 'lvl_retry',
@@ -3035,12 +3372,13 @@ export class SumoLodeRunnerGame extends BaseGame {
     // Left Status: Gold Remaining & Lives
     ctx.textAlign = 'left';
     ctx.fillStyle = remainingGold === 0 ? '#4ADE80' : '#FACC15';
-    ctx.font = '900 10.5px Montserrat, sans-serif';
+    ctx.font = '900 10px Montserrat, sans-serif';
+    const livesLabel = this.currentLevel === 0 ? '∞' : String(this.teamLives);
     const goldText =
       remainingGold === 0
         ? '✨ ALL GOLD COLLECTED! CLIMB UP!'
-        : `🪙 GOLD: ${totalGold - remainingGold}/${totalGold}   ❤️ LIVES: ${this.teamLives}`;
-    ctx.fillText(goldText, 16, btnY + 14);
+        : `🪙 GOLD: ${totalGold - remainingGold}/${totalGold}  ❤️ LIVES: ${livesLabel}`;
+    ctx.fillText(goldText, 12, btnY + 14);
 
     // Right Status: Player Scores & Wasm Engine Badge
     ctx.textAlign = 'right';
@@ -3049,6 +3387,6 @@ export class SumoLodeRunnerGame extends BaseGame {
     const wasmTag = this.wasmActive ? '⚡WASM' : '⚡JIT';
     ctx.fillStyle = '#38BDF8';
     ctx.font = '800 10px Montserrat, sans-serif';
-    ctx.fillText(`P1: ${p1Score}  •  P2: ${p2Score}  [${wasmTag}]`, width - 16, btnY + 14);
+    ctx.fillText(`P1: ${p1Score} • P2: ${p2Score} [${wasmTag}]`, width - 12, btnY + 14);
   }
 }

@@ -264,7 +264,7 @@ import { SharksAndMinnowsGame } from '../games/SharksAndMinnowsGame';
 import { PowerPathClashGame } from '../games/PowerPathClashGame';
 import { LandscapeArtilleryGame } from '../games/LandscapeArtilleryGame';
 import { SpamClickShowdownGame } from '../games/SpamClickShowdownGame';
-import { SumoLodeRunnerGame, SUMO_LODE_LEVELS } from '../games/SumoLodeRunnerGame';
+import { SumoLodeRunnerGame, SUMO_LODE_LEVELS, SUMO_LODE_TUTORIAL_LEVEL } from '../games/SumoLodeRunnerGame';
 import { ThumbWarWrestleGame } from '../games/ThumbWarWrestleGame';
 import { SwipeNinjaBlitzGame } from '../games/SwipeNinjaBlitzGame';
 import { getGamePhoneMode, getPhoneModeBadge } from './PhoneCatalogConfig';
@@ -2628,7 +2628,7 @@ export class GameManager {
   public modalGameIndex: number = 0;
   public sumoMode: 'standard' | 'no_limit' = 'standard';
   public sumoTargetMeters: number = 250;
-  public lodeRunnerLevel: number = 1;
+  public lodeRunnerLevel: number = 0;
   public sumoHitboxes: Array<{ id: string; x: number; y: number; w: number; h: number; action: () => void }> = [];
   public selectedCategory: string = 'ALL';
   public categoryPillBoxes: { id: string; x: number; y: number; w: number; h: number; type: 'category' | 'random' | 'cup' }[] = [];
