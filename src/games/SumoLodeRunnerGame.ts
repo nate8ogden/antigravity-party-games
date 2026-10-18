@@ -2176,21 +2176,23 @@ export class SumoLodeRunnerGame extends BaseGame {
         continue;
       }
 
-      // 4. Guard Gold Stealing & Dropping (disabled in Stage 0 Tutorial so tutorial gold stays in place)
-      if (this.currentLevel > 0) {
+      // 4. Guard Gold Stealing & Dropping (disabled in Stage 0 Tutorial and first 2.5s of a stage)
+      if (this.currentLevel > 0 && this.roundTimer < 177.5) {
         if (g.carryingGoldId === null) {
           for (let i = 0; i < this.golds.length; i++) {
             const gold = this.golds[i];
             if (!gold.collected && gold.carriedByGuardId === null && gold.col === col && gold.row === row) {
               gold.carriedByGuardId = g.id;
               g.carryingGoldId = gold.id;
-              g.goldHoldTimer = 7.0 + Math.random() * 5.0;
+              g.goldHoldTimer = 4.5 + Math.random() * 3.0;
               break;
             }
           }
         } else {
           g.goldHoldTimer -= dt;
-          if (g.goldHoldTimer <= 0 && this.gridMem[cellIdx] === TILE_EMPTY && this.isTileSupported(col, row)) {
+          const belowT = row + 1 < GRID_ROWS ? this.gridMem[(row + 1) * GRID_COLS + col] : TILE_SOLID;
+          const permanentFloor = belowT === TILE_BRICK || belowT === TILE_SOLID || belowT === TILE_LADDER;
+          if (g.goldHoldTimer <= 0 && this.gridMem[cellIdx] === TILE_EMPTY && permanentFloor && this.isTileSupported(col, row)) {
             this.dropGuardGold(g, col, row);
           }
         }
