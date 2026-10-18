@@ -8021,7 +8021,7 @@ export class GameManager {
       this.ctx.restore();
 
       // Custom full-art square thumbnail with top rounded clipping
-      const artH = 118;
+      const artH = w < 600 ? Math.max(86, cardH - 76) : 118;
       this.ctx.save();
       this.ctx.beginPath();
       if (this.ctx.roundRect) {
@@ -8197,32 +8197,34 @@ export class GameManager {
     const effRating = this.cloud.getEffectiveRating(game.id);
     const activeStars = cloudStats.userRating > 0 ? cloudStats.userRating : Math.round(effRating);
     const starBarX = modalX + 94 + subPillW + 8;
-    const starBtnW = 20;
-    for (let s = 1; s <= 5; s++) {
-      const sx = starBarX + (s - 1) * (starBtnW + 2);
-      const isLit = s <= activeStars;
-      this.drawRoundedRect(
-        sx,
-        modalY + 12,
-        starBtnW,
-        22,
-        5,
-        isLit ? '#FEF3C7' : '#F8FAFC',
-        isLit ? '#F59E0B' : '#CBD5E1',
-        1
-      );
-      this.ctx.fillStyle = isLit ? '#D97706' : '#94A3B8';
-      this.ctx.font = '900 11px sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText('★', sx + starBtnW / 2, modalY + 27);
-      const starVal = s;
-      this.modalCloudHitboxes.push({
-        x: sx,
-        y: modalY + 10,
-        w: starBtnW,
-        h: 26,
-        action: () => this.rateGame(game.id, starVal)
-      });
+    const starBtnW = modalW < 400 ? 17 : 20;
+    if (starBarX + 5 * (starBtnW + 2) < modalX + modalW - 36) {
+      for (let s = 1; s <= 5; s++) {
+        const sx = starBarX + (s - 1) * (starBtnW + 2);
+        const isLit = s <= activeStars;
+        this.drawRoundedRect(
+          sx,
+          modalY + 12,
+          starBtnW,
+          22,
+          5,
+          isLit ? '#FEF3C7' : '#F8FAFC',
+          isLit ? '#F59E0B' : '#CBD5E1',
+          1
+        );
+        this.ctx.fillStyle = isLit ? '#D97706' : '#94A3B8';
+        this.ctx.font = '900 11px sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('★', sx + starBtnW / 2, modalY + 27);
+        const starVal = s;
+        this.modalCloudHitboxes.push({
+          x: sx,
+          y: modalY + 10,
+          w: starBtnW,
+          h: 26,
+          action: () => this.rateGame(game.id, starVal)
+        });
+      }
     }
 
     // Save / Bookmark Pill Button
@@ -8273,9 +8275,10 @@ export class GameManager {
     this.ctx.textAlign = 'center';
     this.ctx.fillText('✕', closeBtnX, closeBtnY + 4.5);
 
-    // Hero Full-Art banner with rounded clipping (Placed cleanly below header)
+    // Hero Full-Art banner with rounded clipping (Placed cleanly below header, scaled on compact viewports)
     const artY = modalY + 40;
-    const artH = game.id === 'sumo_lode_runner' ? 116 : 142;
+    const isCompactModal = w < 460 || h < 540;
+    const artH = h < 440 ? 58 : isCompactModal ? 88 : game.id === 'sumo_lode_runner' ? 116 : 142;
     this.ctx.save();
     this.ctx.beginPath();
     if (this.ctx.roundRect) {
@@ -8309,13 +8312,13 @@ export class GameManager {
 
     // Game Title & Tagline (Auto-fit title & tagline so they never overflow)
     this.ctx.fillStyle = '#0F172A';
-    this.ctx.font = game.id === 'sumo_lode_runner' ? '900 21px Montserrat, sans-serif' : '900 23px Montserrat, sans-serif';
+    this.ctx.font = isCompactModal ? '900 18px Montserrat, sans-serif' : game.id === 'sumo_lode_runner' ? '900 21px Montserrat, sans-serif' : '900 23px Montserrat, sans-serif';
     this.ctx.textAlign = 'center';
-    this.ctx.fillText(game.title, modalX + modalW / 2, artY + artH + 26);
+    this.ctx.fillText(game.title, modalX + modalW / 2, artY + artH + 22, modalW - 28);
 
     this.ctx.fillStyle = '#0284C7';
-    this.ctx.font = 'bold 12px Montserrat, sans-serif';
-    this.ctx.fillText(game.tagline, modalX + modalW / 2, artY + artH + 43);
+    this.ctx.font = isCompactModal ? 'bold 11px Montserrat, sans-serif' : 'bold 12px Montserrat, sans-serif';
+    this.ctx.fillText(game.tagline, modalX + modalW / 2, artY + artH + 38, modalW - 28);
 
     // How to Play Instructions or Custom Mode Config
     if (game.id === 'skyline_sumo') {
@@ -8352,7 +8355,7 @@ export class GameManager {
       this.ctx.fillStyle = isStd ? '#FFFFFF' : '#64748B';
       this.ctx.font = '900 11px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText('🏆 60s STANDARD MATCH', tab1X + tabW / 2, tabY + 20);
+      this.ctx.fillText('🏆 60s STANDARD MATCH', tab1X + tabW / 2, tabY + 20, tabW - 8);
       this.ctx.restore();
 
       // Render Tab 2 (Just For Fun)
@@ -8361,7 +8364,7 @@ export class GameManager {
       this.ctx.fillStyle = !isStd ? '#FFFFFF' : '#64748B';
       this.ctx.font = '900 11px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText('⚡ JUST FOR FUN (NO LIMIT)', tab2X + tabW / 2, tabY + 20);
+      this.ctx.fillText('⚡ JUST FOR FUN (NO LIMIT)', tab2X + tabW / 2, tabY + 20, tabW - 8);
       this.ctx.restore();
 
       if (!isStd) {
@@ -8370,7 +8373,7 @@ export class GameManager {
         this.ctx.fillStyle = '#0F172A';
         this.ctx.font = '900 13px Montserrat, sans-serif';
         this.ctx.textAlign = 'center';
-        this.ctx.fillText(`🎯 CHOOSE TARGET ALTITUDE TO REACH: ${this.sumoTargetMeters}m`, modalX + modalW / 2, altY + 12);
+        this.ctx.fillText(`🎯 CHOOSE TARGET ALTITUDE TO REACH: ${this.sumoTargetMeters}m`, modalX + modalW / 2, altY + 12, modalW - 32);
 
         const btnOptions = [
           { label: '100m', val: 100 },
@@ -8433,14 +8436,14 @@ export class GameManager {
           this.ctx.fillStyle = isSelected ? '#FFFFFF' : '#334155';
           this.ctx.font = '800 9px Montserrat, sans-serif';
           this.ctx.textAlign = 'center';
-          this.ctx.fillText(opt.label, pillX + pillW / 2, pillY + 16.5);
+          this.ctx.fillText(opt.label, pillX + pillW / 2, pillY + 16.5, pillW - 4);
           this.ctx.restore();
         });
 
         this.ctx.fillStyle = '#64748B';
         this.ctx.font = '600 11px sans-serif';
         this.ctx.textAlign = 'center';
-        this.ctx.fillText('⏱ Live stopwatch counts your climb. First to conquer the summit wins!', modalX + modalW / 2, pillY + 38);
+        this.ctx.fillText('⏱ Live stopwatch counts your climb. First to conquer the summit wins!', modalX + modalW / 2, pillY + 38, modalW - 32);
       } else {
         this.ctx.fillStyle = '#334155';
         this.ctx.font = '13px sans-serif';
@@ -8451,13 +8454,14 @@ export class GameManager {
       this.sumoHitboxes = [];
       const totalLevels = SUMO_LODE_LEVELS.length;
       const bp = this.lodeRunnerLevel <= 0 ? SUMO_LODE_TUTORIAL_LEVEL : (SUMO_LODE_LEVELS[this.lodeRunnerLevel - 1] || SUMO_LODE_LEVELS[0]);
-      const rowW = modalW - 48;
+      const sidePad = modalW < 400 ? 14 : 24;
+      const rowW = modalW - sidePad * 2;
 
       // ROW 1: 1P SOLO (NO CPU) vs 2P CO-OP / VS CPU Mode Toggle
-      const modeY = artY + artH + 52;
+      const modeY = artY + artH + 46;
       const modeH = 26;
       const modeW = (rowW - 8) / 2;
-      const mode1X = modalX + 24;
+      const mode1X = modalX + sidePad;
       const mode2X = mode1X + modeW + 8;
 
       this.sumoHitboxes.push({
@@ -8499,9 +8503,14 @@ export class GameManager {
         this.lodeRunnerSoloMode ? 1.5 : 1
       );
       this.ctx.fillStyle = this.lodeRunnerSoloMode ? '#FFFFFF' : '#475569';
-      this.ctx.font = '900 10px Montserrat, sans-serif';
+      this.ctx.font = modeW < 175 ? '900 9px Montserrat, sans-serif' : '900 10px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText('👤 1P SOLO PUZZLE (NO CPU)', mode1X + modeW / 2, modeY + 16.5);
+      this.ctx.fillText(
+        modeW < 175 ? '👤 1P SOLO (NO CPU)' : '👤 1P SOLO PUZZLE (NO CPU)',
+        mode1X + modeW / 2,
+        modeY + 16.5,
+        modeW - 8
+      );
 
       this.drawRoundedRect(
         mode2X,
@@ -8514,27 +8523,32 @@ export class GameManager {
         !this.lodeRunnerSoloMode ? 1.5 : 1
       );
       this.ctx.fillStyle = !this.lodeRunnerSoloMode ? '#FFFFFF' : '#475569';
-      this.ctx.font = '900 10px Montserrat, sans-serif';
+      this.ctx.font = modeW < 175 ? '900 9px Montserrat, sans-serif' : '900 10px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText('👥 2P CO-OP / VS CPU BOT', mode2X + modeW / 2, modeY + 16.5);
+      this.ctx.fillText(
+        modeW < 175 ? '👥 2P CO-OP / VS CPU' : '👥 2P CO-OP / VS CPU BOT',
+        mode2X + modeW / 2,
+        modeY + 16.5,
+        modeW - 8
+      );
       this.ctx.restore();
 
       // ROW 2: Chapter Quick-Jump Pills (Dojo 0 | 1983 1-10 | Ch 2 11-16 | Ch 3 17-22 | Ch 4 23-28 | Ch 5 29-40)
-      const chapY = modeY + 32;
+      const chapY = modeY + 31;
       const chapH = 24;
-      const chapOpts: { label: string; startLvl: number; endLvl: number }[] = [
-        { label: '🎓 Dojo (0)', startLvl: 0, endLvl: 0 },
-        { label: '1983 (1-10)', startLvl: 1, endLvl: 10 },
-        { label: 'Ch 2 (11-16)', startLvl: 11, endLvl: 16 },
-        { label: 'Ch 3 (17-22)', startLvl: 17, endLvl: 22 },
-        { label: 'Ch 4 (23-28)', startLvl: 23, endLvl: 28 },
-        { label: 'Ch 5 (29-40)', startLvl: 29, endLvl: 40 }
-      ];
       const chapGap = 4;
-      const chapW = (rowW - chapGap * (chapOpts.length - 1)) / chapOpts.length;
+      const chapW = (rowW - chapGap * 5) / 6;
+      const chapOpts: { label: string; shortLabel: string; startLvl: number; endLvl: number }[] = [
+        { label: '🎓 Dojo (0)', shortLabel: '🎓 Dojo', startLvl: 0, endLvl: 0 },
+        { label: '1983 (1-10)', shortLabel: '1-10', startLvl: 1, endLvl: 10 },
+        { label: 'Ch 2 (11-16)', shortLabel: '11-16', startLvl: 11, endLvl: 16 },
+        { label: 'Ch 3 (17-22)', shortLabel: '17-22', startLvl: 17, endLvl: 22 },
+        { label: 'Ch 4 (23-28)', shortLabel: '23-28', startLvl: 23, endLvl: 28 },
+        { label: 'Ch 5 (29-40)', shortLabel: '29-40', startLvl: 29, endLvl: 40 }
+      ];
 
       chapOpts.forEach((ch, cIdx) => {
-        const cx = modalX + 24 + cIdx * (chapW + chapGap);
+        const cx = modalX + sidePad + cIdx * (chapW + chapGap);
         const isCurrentChap = this.lodeRunnerLevel >= ch.startLvl && this.lodeRunnerLevel <= ch.endLvl;
 
         this.sumoHitboxes.push({
@@ -8561,20 +8575,20 @@ export class GameManager {
           isCurrentChap ? 1.5 : 1
         );
         this.ctx.fillStyle = isCurrentChap ? '#38BDF8' : '#334155';
-        this.ctx.font = '800 8.5px Montserrat, sans-serif';
+        this.ctx.font = chapW < 58 ? '800 8px Montserrat, sans-serif' : '800 8.5px Montserrat, sans-serif';
         this.ctx.textAlign = 'center';
-        this.ctx.fillText(ch.label, cx + chapW / 2, chapY + 15.5);
+        this.ctx.fillText(chapW < 58 ? ch.shortLabel : ch.label, cx + chapW / 2, chapY + 15.5, chapW - 4);
         this.ctx.restore();
       });
 
       // ROW 3: Stage Stepper Bar [ ◀ PREV ]  Stage X/40: Title (N Oni)  [ NEXT ▶ ]
-      const stepY = chapY + 30;
+      const stepY = chapY + 29;
       const stepH = 28;
-      const navBtnW = 68;
-      const prevX = modalX + 24;
-      const nextX = modalX + modalW - 24 - navBtnW;
-      const infoX = prevX + navBtnW + 6;
-      const infoW = nextX - infoX - 6;
+      const navBtnW = modalW < 420 ? 50 : 68;
+      const prevX = modalX + sidePad;
+      const nextX = modalX + modalW - sidePad - navBtnW;
+      const infoX = prevX + navBtnW + 5;
+      const infoW = nextX - infoX - 5;
 
       this.sumoHitboxes.push({
         id: 'lode_stage_prev',
@@ -8603,38 +8617,41 @@ export class GameManager {
       this.drawRoundedRect(prevX, stepY, navBtnW, stepH, 6, '#F8FAFC', '#94A3B8', 1.2);
       this.drawRoundedRect(nextX, stepY, navBtnW, stepH, 6, '#F8FAFC', '#94A3B8', 1.2);
       this.ctx.fillStyle = '#0F172A';
-      this.ctx.font = '900 10px Montserrat, sans-serif';
+      this.ctx.font = modalW < 420 ? '900 9px Montserrat, sans-serif' : '900 10px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText('◀ PREV', prevX + navBtnW / 2, stepY + 18);
-      this.ctx.fillText('NEXT ▶', nextX + navBtnW / 2, stepY + 18);
+      this.ctx.fillText('◀ PREV', prevX + navBtnW / 2, stepY + 18, navBtnW - 4);
+      this.ctx.fillText('NEXT ▶', nextX + navBtnW / 2, stepY + 18, navBtnW - 4);
 
       // Center Stage Info Pill
       this.drawRoundedRect(infoX, stepY, infoW, stepH, 6, '#EFF6FF', '#93C5FD', 1.2);
       this.ctx.fillStyle = '#1E3A8A';
       const stageDesc =
         this.lodeRunnerLevel === 0
-          ? `🎓 Stage 0: ${bp.title} (Guided Tutorial)`
+          ? `🎓 Stage 0: ${bp.title}`
           : `🎌 Stage ${this.lodeRunnerLevel}/${totalLevels}: ${bp.title} (${bp.guardCount} Oni)`;
       let stgFont = 10.5;
       this.ctx.font = `900 ${stgFont}px Montserrat, sans-serif`;
-      while (this.ctx.measureText(stageDesc).width > infoW - 14 && stgFont > 8) {
+      while (this.ctx.measureText(stageDesc).width > infoW - 10 && stgFont > 7.5) {
         stgFont -= 0.5;
         this.ctx.font = `900 ${stgFont}px Montserrat, sans-serif`;
       }
-      this.ctx.fillText(stageDesc, infoX + infoW / 2, stepY + 18);
+      this.ctx.fillText(stageDesc, infoX + infoW / 2, stepY + 18, infoW - 8);
       this.ctx.restore();
 
-      // ROW 4: Concise 2-line instructions cleanly above CONTROLS box
-      this.ctx.fillStyle = '#334155';
-      this.ctx.font = '11.5px sans-serif';
-      this.ctx.textAlign = 'center';
-      this.wrapText(game.instructions, modalX + modalW / 2, stepY + 44, modalW - 48, 14.5);
+      // ROW 4: Concise instructions cleanly above CONTROLS box (hidden if ultra-short landscape modal)
+      const ctrlYEst = modalY + modalH - 114;
+      if (stepY + 42 < ctrlYEst - 8) {
+        this.ctx.fillStyle = '#334155';
+        this.ctx.font = isCompactModal ? '10.5px sans-serif' : '11.5px sans-serif';
+        this.ctx.textAlign = 'center';
+        this.wrapText(game.instructions, modalX + modalW / 2, stepY + 42, modalW - sidePad * 2, isCompactModal ? 13 : 14.5);
+      }
     } else {
       // Standard Instructions
       this.ctx.fillStyle = '#334155';
-      this.ctx.font = '13px sans-serif';
+      this.ctx.font = isCompactModal ? '11.5px sans-serif' : '13px sans-serif';
       this.ctx.textAlign = 'center';
-      this.wrapText(game.instructions, modalX + modalW / 2, artY + artH + 68, modalW - 48, 17);
+      this.wrapText(game.instructions, modalX + modalW / 2, artY + artH + 58, modalW - 40, isCompactModal ? 14.5 : 17);
     }
 
     // Controls Prompt Box (High-contrast mint container, auto-fitted so text never touches mascots)
@@ -8650,7 +8667,7 @@ export class GameManager {
       ctrlFont -= 0.5;
       this.ctx.font = `900 ${ctrlFont}px Montserrat, sans-serif`;
     }
-    this.ctx.fillText(ctrlText, modalX + modalW / 2, ctrlY + 19);
+    this.ctx.fillText(ctrlText, modalX + modalW / 2, ctrlY + 19, maxCtrlTextW);
 
     // Player Mascots flanking the controls box
     const isBotP2 = this.players[1].type.startsWith('bot_');
@@ -8659,9 +8676,9 @@ export class GameManager {
 
     // Player Key Shortcuts Badge
     this.ctx.fillStyle = '#64748B';
-    this.ctx.font = '600 10.5px sans-serif';
+    this.ctx.font = '600 10px sans-serif';
     this.ctx.textAlign = 'center';
-    this.ctx.fillText('P1: [WASD / Q,E]  •  P2: [Arrows / , .]  •  Touch Controls Ready', modalX + modalW / 2, ctrlY + 44);
+    this.ctx.fillText('P1: [WASD / Q,E]  •  P2: [Arrows / , .]  •  iPhone Touch Deck Ready', modalX + modalW / 2, ctrlY + 44, modalW - 32);
 
     // Play Button (Sitting cleanly with margin above bottom card bevel)
     const btnW = 280;
