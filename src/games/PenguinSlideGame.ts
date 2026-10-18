@@ -67,6 +67,8 @@ interface PenguinRacer {
   aiReactTimer: number;
   aiTargetLane: number;
   aiShouldHold: boolean;
+  pressDuration: number;
+  wasPressed: boolean;
 }
 
 interface ChuteItem {
@@ -149,12 +151,14 @@ export class PenguinSlideGame extends BaseGame {
     super.destroy();
   }
 
-  public handlePointerDown(x: number, y: number, _width: number, height: number): void {
+  public handlePointerDown(x: number, y: number, _width: number = 960, height: number = 540): boolean {
     if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
       const idx = (THEME_ORDER.indexOf(this.theme) + 1) % THEME_ORDER.length;
       this.theme = THEME_ORDER[idx];
       this.audio.playTap();
+      return true;
     }
+    return false;
   }
 
   private triggerScreenShake(amt: number): void {
@@ -196,6 +200,8 @@ export class PenguinSlideGame extends BaseGame {
         aiReactTimer: 0.2,
         aiTargetLane: startLane,
         aiShouldHold: false,
+        pressDuration: 0,
+        wasPressed: false,
       });
     });
   }
@@ -312,56 +318,93 @@ export class PenguinSlideGame extends BaseGame {
       });
 
       if (r.stunTimer <= 0) {
-        let steer = 0;
-        let tapSwitch = false;
-        let holdAction = false;
-        let releaseAction = false;
+        const isBot = p.type.startsWith('bot_');
+        const hasSteer = this.input.hasSteer(p.id);
+        const steerX = this.input.getSteer(p.id);
+        const throttleY = this.input.getThrottle(p.id);
+        const isHolding = this.input.isActionPressed(p.id) || (isBot && this.input.isPressed(p.id)) || (!hasSteer && !isBot && this.input.isPressed(p.id));
 
-        if (!p.type.startsWith('bot_')) {
-          const hasSteer = this.input.hasSteer(p.id);
-          steer = this.input.getSteer(p.id);
-          tapSwitch = this.input.justAction(p.id) || (!hasSteer && this.input.justPressed(p.id));
-          holdAction = this.input.isActionPressed(p.id) || (!hasSteer && this.input.isPressed(p.id));
-          releaseAction = this.input.justReleased(p.id) || (!holdAction && r.chargeRatio > 0);
-
-          if (Math.abs(steer) > 0.5 && r.laneCooldown <= 0) {
-            const nextLane = Math.max(0, Math.min(2, r.lane + (steer > 0 ? 1 : -1)));
-            if (nextLane !== r.lane) {
-              r.lane = nextLane;
-              r.laneCooldown = 0.2;
-              this.audio.playTap();
+        if (!isBot) {
+          if (hasSteer) {
+            // Steering via W/S, Up/Down, or A/D, Left/Right
+            const laneDelta = Math.abs(throttleY) > 0.45 ? (throttleY > 0 ? -1 : 1) : (Math.abs(steerX) > 0.45 ? (steerX > 0 ? 1 : -1) : 0);
+            if (laneDelta !== 0 && r.laneCooldown <= 0) {
+              const nextLane = Math.max(0, Math.min(2, r.lane + laneDelta));
+              if (nextLane !== r.lane) {
+                r.lane = nextLane;
+                r.laneCooldown = 0.2;
+                this.audio.playTap();
+              }
             }
-          } else if (tapSwitch && r.laneCooldown <= 0) {
-            r.lane = (r.lane + 1) % 3;
-            r.laneCooldown = 0.18;
-            this.audio.playTap();
+
+            // Action button cleanly charges Torpedo Spin
+            if (isHolding) {
+              r.chargeRatio = Math.min(1, r.chargeRatio + clampedDt * 0.85);
+              if (r.chargeRatio >= 1.0) {
+                r.stunTimer = 0.75;
+                r.chargeRatio = 0;
+                r.combo = 1;
+                this.audio.playStun();
+                this.addFloatingText(r.x, r.ySmooth - 36, 'BELLY SPIN OUT!', '#ef4444');
+              }
+            } else {
+              if (r.wasPressed && r.chargeRatio >= 0.72 && r.chargeRatio <= 0.98) {
+                this.fireTorpedoSpin(r, p.color);
+              }
+              r.chargeRatio = Math.max(0, r.chargeRatio - clampedDt * 2.4);
+            }
+          } else {
+            // 1-Button Accessibility Mode:
+            // Short tap (< 0.18s) switches lane; Hold (> 0.18s) charges Torpedo Spin!
+            if (isHolding) {
+              r.pressDuration += clampedDt;
+              if (r.pressDuration > 0.18) {
+                r.chargeRatio = Math.min(1, r.chargeRatio + clampedDt * 0.85);
+                if (r.chargeRatio >= 1.0) {
+                  r.stunTimer = 0.75;
+                  r.chargeRatio = 0;
+                  r.combo = 1;
+                  this.audio.playStun();
+                  this.addFloatingText(r.x, r.ySmooth - 36, 'BELLY SPIN OUT!', '#ef4444');
+                }
+              }
+            } else {
+              if (r.wasPressed) {
+                if (r.chargeRatio >= 0.72 && r.chargeRatio <= 0.98) {
+                  this.fireTorpedoSpin(r, p.color);
+                } else if (r.pressDuration <= 0.18 && r.laneCooldown <= 0) {
+                  r.lane = (r.lane + 1) % 3;
+                  r.laneCooldown = 0.18;
+                  this.audio.playTap();
+                }
+              }
+              r.chargeRatio = Math.max(0, r.chargeRatio - clampedDt * 2.4);
+              r.pressDuration = 0;
+            }
           }
+          r.wasPressed = isHolding;
         } else {
+          // Bot logic
           if (r.lane !== r.aiTargetLane && r.laneCooldown <= 0) {
             r.lane += Math.sign(r.aiTargetLane - r.lane);
             r.laneCooldown = 0.22;
             this.audio.playTap();
           }
-          holdAction = r.aiShouldHold;
-          if (!holdAction && r.chargeRatio >= 0.76) {
-            releaseAction = true;
+          if (r.aiShouldHold) {
+            r.chargeRatio = Math.min(1, r.chargeRatio + clampedDt * 0.85);
+            if (r.chargeRatio >= 1.0) {
+              r.stunTimer = 0.75;
+              r.chargeRatio = 0;
+              r.combo = 1;
+              this.audio.playStun();
+              this.addFloatingText(r.x, r.ySmooth - 36, 'BELLY SPIN OUT!', '#ef4444');
+            }
+          } else {
+            if (r.chargeRatio >= 0.76 && r.chargeRatio <= 0.98) {
+              this.fireTorpedoSpin(r, p.color);
+            }
+            r.chargeRatio = Math.max(0, r.chargeRatio - clampedDt * 2.4);
           }
-        }
-
-        if (holdAction) {
-          r.chargeRatio = Math.min(1, r.chargeRatio + clampedDt * 0.85);
-          if (r.chargeRatio >= 1.0) {
-            r.stunTimer = 0.75;
-            r.chargeRatio = 0;
-            r.combo = 1;
-            this.audio.playStun();
-            this.addFloatingText(r.x, r.ySmooth - 36, 'BELLY SPIN OUT!', '#ef4444');
-          }
-        } else {
-          if (releaseAction && r.chargeRatio >= 0.72 && r.chargeRatio <= 0.98) {
-            this.fireTorpedoSpin(r, p.color);
-          }
-          r.chargeRatio = Math.max(0, r.chargeRatio - clampedDt * 2.4);
         }
       }
 

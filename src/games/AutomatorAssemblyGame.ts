@@ -194,7 +194,7 @@ export class AutomatorAssemblyGame extends BaseGame {
     }
   }
 
-  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number = 960, height: number = 540): boolean {
     if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
       this.themeIndex = (this.themeIndex + 1) % THEMES.length;
       this.audio.playTap();
@@ -288,6 +288,10 @@ export class AutomatorAssemblyGame extends BaseGame {
         return;
       }
 
+      const pCfg = this.getPlayer(t.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(t.id);
+
       const move = { x: this.input.getSteer(t.id), y: -this.input.getThrottle(t.id) };
       const speedMult = (t.underdog ? 1.24 : 1.0) * (t.shieldTimer > 0 ? 1.2 : 1.0) * (t.charging ? 0.72 : 1.0);
       const accel = 980 * speedMult;
@@ -300,6 +304,27 @@ export class AutomatorAssemblyGame extends BaseGame {
         t.facingY = ny;
         t.vx += nx * accel * dt;
         t.vy += ny * accel * dt;
+      } else if (!hasSteer && !isBot) {
+        // 1-button auto-steering towards nearest active unstamped unit
+        let targetX = width * 0.5;
+        let targetY = height * 0.5;
+        let bestDist = 9999;
+        for (const u of this.units) {
+          if (u.assembled) continue;
+          const d = Math.hypot(u.x - t.x, u.y - t.y);
+          if (d < bestDist) {
+            bestDist = d;
+            targetX = u.x;
+            targetY = u.y;
+          }
+        }
+        const dx = targetX - t.x;
+        const dy = targetY - t.y;
+        const len = Math.hypot(dx, dy) || 1;
+        t.facingX = dx / len;
+        t.facingY = dy / len;
+        t.vx += t.facingX * accel * 0.72 * dt;
+        t.vy += t.facingY * accel * 0.72 * dt;
       }
 
       // Subtle conveyor belt push if standing right on a belt
@@ -315,10 +340,6 @@ export class AutomatorAssemblyGame extends BaseGame {
       t.y += t.vy * dt;
       this.clampToymaker(t, width, height);
 
-      const pCfg = this.getPlayer(t.id);
-      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
-      const hasSteer = Math.abs(move.x) > 0.05 || Math.abs(move.y) > 0.05;
-
       // Tap: Hydraulic Stamp Hammer
       if (this.input.justAction(t.id) || (isBot && this.input.justPressed(t.id)) || (!hasSteer && !isBot && this.input.justPressed(t.id))) {
         t.hammerAnim = 1.0;
@@ -326,7 +347,7 @@ export class AutomatorAssemblyGame extends BaseGame {
       }
 
       // Hold-to-charge Master Windup Overdrive & Forge Shunt (72%–98% Sweet Spot)
-      const holding = this.input.isActionPressed(t.id) || (isBot && this.input.isPressed(t.id));
+      const holding = this.input.isActionPressed(t.id) || (isBot && this.input.isPressed(t.id)) || (!hasSteer && !isBot && this.input.isPressed(t.id));
       if (holding) {
         t.charging = true;
         t.charge += dt * 0.82;

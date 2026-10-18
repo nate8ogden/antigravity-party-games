@@ -174,7 +174,7 @@ export class BalloonDartClownGame extends BaseGame {
     });
   }
 
-  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number = 960, height: number = 540): boolean {
     void height;
     if (y < 60 && x > width - 220) {
       this.themeIndex = (this.themeIndex + 1) % THEME_ORDER.length;
@@ -271,19 +271,24 @@ export class BalloonDartClownGame extends BaseGame {
 
       // Reticle orbits and sweeps radially across the wheel
       const steer = this.input.getSteer(s.id);
+      const throttle = this.input.getThrottle(s.id);
       if (Math.abs(steer) > 0.1 && s.stunTimer <= 0) {
         s.reticleAngle += steer * 3.2 * dt;
       } else {
         s.reticleAngle -= 1.35 * dt;
       }
 
-      s.reticleDist += s.reticleDir * 145 * dt;
-      if (s.reticleDist > 185) {
-        s.reticleDist = 185;
-        s.reticleDir = -1;
-      } else if (s.reticleDist < 0) {
-        s.reticleDist = 0;
-        s.reticleDir = 1;
+      if (Math.abs(throttle) > 0.1 && s.stunTimer <= 0) {
+        s.reticleDist = Math.max(0, Math.min(185, s.reticleDist + throttle * 160 * dt));
+      } else {
+        s.reticleDist += s.reticleDir * 145 * dt;
+        if (s.reticleDist > 185) {
+          s.reticleDist = 185;
+          s.reticleDir = -1;
+        } else if (s.reticleDist < 0) {
+          s.reticleDist = 0;
+          s.reticleDir = 1;
+        }
       }
 
       const pCfg = this.getPlayer(s.id);

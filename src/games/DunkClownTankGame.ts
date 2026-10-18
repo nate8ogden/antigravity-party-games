@@ -222,7 +222,15 @@ export class DunkClownTankGame extends BaseGame {
       const justTap = this.input.justAction(p.id) || (p.isBot && this.input.justPressed(p.id)) || (!hasSteer && !p.isBot && this.input.justPressed(p.id));
       const isHold = this.input.isActionPressed(p.id) || (p.isBot && this.input.isPressed(p.id)) || (!hasSteer && !p.isBot && this.input.isPressed(p.id));
 
-      p.vx += steer * 1500 * (p.underdog ? 1.15 : 1.0) * dt;
+      if (hasSteer) {
+        p.vx += steer * 1500 * (p.underdog ? 1.15 : 1.0) * dt;
+      } else if (!p.isBot) {
+        const bestTarget = this.targets.find((t) => t.kind !== 'decoy_pie') || this.targets[0];
+        if (bestTarget) {
+          const dx = bestTarget.x - p.x;
+          p.vx += Math.sign(dx) * 450 * (p.underdog ? 1.15 : 1.0) * dt;
+        }
+      }
       p.vx *= Math.pow(0.06, dt);
       p.x = Math.max(width * 0.12, Math.min(width * 0.88, p.x + p.vx * dt));
 

@@ -194,7 +194,7 @@ export class MainframeBreachGame extends BaseGame {
     }
   }
 
-  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number = 960, height: number = 540): boolean {
     void width;
     if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
       this.themeIndex = (this.themeIndex + 1) % THEMES.length;
@@ -287,27 +287,48 @@ export class MainframeBreachGame extends BaseGame {
         return;
       }
 
+      const pCfg = this.getPlayer(r.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(r.id);
+
       const move = { x: this.input.getSteer(r.id), y: -this.input.getThrottle(r.id) };
       const speedMult = (r.underdog ? 1.24 : 1.0) * (r.charging ? 0.72 : 1.0);
       const accel = 960 * speedMult;
 
-      r.vx += move.x * accel * dt;
-      r.vy += move.y * accel * dt;
+      if (Math.abs(move.x) > 0.05 || Math.abs(move.y) > 0.05) {
+        r.vx += move.x * accel * dt;
+        r.vy += move.y * accel * dt;
+      } else if (!hasSteer && !isBot) {
+        // 1-button auto-navigation towards nearest crypto node or central mainframe
+        let targetX = cx;
+        let targetY = cy;
+        let bestDist = 9999;
+        for (const n of this.nodes) {
+          const d = Math.hypot(n.x - r.x, n.y - r.y);
+          if (d < bestDist) {
+            bestDist = d;
+            targetX = n.x;
+            targetY = n.y;
+          }
+        }
+        const dx = targetX - r.x;
+        const dy = targetY - r.y;
+        const d = Math.hypot(dx, dy) || 1;
+        r.vx += (dx / d) * accel * 0.72 * dt;
+        r.vy += (dy / d) * accel * 0.72 * dt;
+      }
+
       r.vx *= 0.86;
       r.vy *= 0.86;
       r.x += r.vx * dt;
       r.y += r.vy * dt;
       this.clampRunner(r, width, height);
 
-      const pCfg = this.getPlayer(r.id);
-      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
-      const hasSteer = Math.abs(move.x) > 0.05 || Math.abs(move.y) > 0.05;
-
       if ((this.input.justAction(r.id) || (isBot && this.input.justPressed(r.id)) || (!hasSteer && !isBot && this.input.justPressed(r.id))) && r.cooldown <= 0) {
         this.fireDataPacket(r, cx, cy, false);
       }
 
-      const holding = this.input.isActionPressed(r.id) || (isBot && this.input.isPressed(r.id));
+      const holding = this.input.isActionPressed(r.id) || (isBot && this.input.isPressed(r.id)) || (!hasSteer && !isBot && this.input.isPressed(r.id));
       if (holding) {
         r.charging = true;
         r.charge += dt * 0.84;

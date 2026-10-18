@@ -127,7 +127,7 @@ export class HyperloopRacerGame extends BaseGame {
     });
   }
 
-  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number = 960, height: number = 540): boolean {
     void height;
     if (y < 60 && x > width - 220) {
       this.themeIndex = (this.themeIndex + 1) % THEME_ORDER.length;
@@ -224,7 +224,10 @@ export class HyperloopRacerGame extends BaseGame {
       } else {
         const isBot = this.getPlayer(p.id)?.type.startsWith('bot_');
         const steer = this.input.getSteer(p.id);
-        const hasSteer = Math.abs(steer) > 0.08;
+        const hasSteer = this.input.hasSteer(p.id);
+        if (hasSteer && Math.abs(steer) > 0.08) {
+          p.laneVel += steer * 280 * dt;
+        }
         const holding = this.input.isActionPressed(p.id) || (isBot && this.input.isPressed(p.id)) || (!hasSteer && !isBot && this.input.isPressed(p.id));
         if (holding) {
           p.heat += dt * 62;

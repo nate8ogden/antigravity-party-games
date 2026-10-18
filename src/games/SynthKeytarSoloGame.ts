@@ -133,7 +133,7 @@ export class SynthKeytarSoloGame extends BaseGame {
     });
   }
 
-  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number = 960, height: number = 540): boolean {
     void height;
     if (y < 60 && x > width - 220) {
       this.themeIndex = (this.themeIndex + 1) % THEME_ORDER.length;
@@ -273,8 +273,7 @@ export class SynthKeytarSoloGame extends BaseGame {
       r.angle += r.angVel * dt;
       r.angVel *= 0.88;
 
-      const steer = this.input.getSteer(r.id);
-      const hasSteer = Math.abs(steer) > 0.1;
+      const hasSteer = this.input.hasSteer(r.id);
       const justStruck =
         r.stunTimer <= 0 && (this.input.justAction(r.id) || (isBot && this.input.justPressed(r.id)) || (!hasSteer && !isBot && this.input.justPressed(r.id)));
       if (justStruck) {

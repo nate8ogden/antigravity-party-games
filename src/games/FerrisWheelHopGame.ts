@@ -266,14 +266,14 @@ export class FerrisWheelHopGame extends BaseGame {
 
       const steer = this.input.getSteer(h.id);
       const isBot = this.getPlayer(h.id)?.type.startsWith('bot_');
-      const hasSteer = Math.abs(steer) > 0.15;
+      const hasSteer = this.input.hasSteer(h.id);
       const justTap = this.input.justAction(h.id) || (isBot && this.input.justPressed(h.id)) || (!hasSteer && !isBot && this.input.justPressed(h.id));
-      const isHold = this.input.isActionPressed(h.id) || (isBot && this.input.isPressed(h.id));
+      const isHold = this.input.isActionPressed(h.id) || (isBot && this.input.isPressed(h.id)) || (!hasSteer && !isBot && this.input.isPressed(h.id));
 
       if (h.attachedGondolaId !== null) {
         const g = this.gondolas.find((item) => item.id === h.attachedGondolaId);
         if (g) {
-          h.x = g.x + steer * 14;
+          h.x = g.x + (hasSteer ? steer * 14 : 0);
           h.y = g.y - 12;
           h.vx = 0;
           h.vy = 0;

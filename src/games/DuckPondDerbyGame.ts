@@ -166,7 +166,7 @@ export class DuckPondDerbyGame extends BaseGame {
     });
   }
 
-  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number = 960, height: number = 540): boolean {
     void height;
     if (y < 60 && x > width - 220) {
       this.themeIndex = (this.themeIndex + 1) % THEME_ORDER.length;
@@ -247,16 +247,27 @@ export class DuckPondDerbyGame extends BaseGame {
       if (a.stunTimer > 0) a.stunTimer -= dt;
 
       if (a.state === 'aiming') {
-        a.aimAngle += a.aimDir * 1.55 * dt;
-        if (a.aimAngle > a.baseAim + 0.68) {
-          a.aimAngle = a.baseAim + 0.68;
-          a.aimDir = -1;
-        } else if (a.aimAngle < a.baseAim - 0.68) {
-          a.aimAngle = a.baseAim - 0.68;
-          a.aimDir = 1;
+        const steer = this.input.getSteer(a.id);
+        const hasSteer = this.input.hasSteer(a.id);
+
+        if (hasSteer && Math.abs(steer) > 0.1) {
+          a.aimAngle = Math.max(a.baseAim - 0.72, Math.min(a.baseAim + 0.72, a.aimAngle + steer * 2.8 * dt));
+        } else {
+          a.aimAngle += a.aimDir * 1.55 * dt;
+          if (a.aimAngle > a.baseAim + 0.68) {
+            a.aimAngle = a.baseAim + 0.68;
+            a.aimDir = -1;
+          } else if (a.aimAngle < a.baseAim - 0.68) {
+            a.aimAngle = a.baseAim - 0.68;
+            a.aimDir = 1;
+          }
         }
 
-        if (a.stunTimer <= 0 && (this.input.justPressed(a.id) || this.input.justAction(a.id))) {
+        const pCfg = this.getPlayer(a.id);
+        const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+        const justCast = a.stunTimer <= 0 && (this.input.justAction(a.id) || (isBot && this.input.justPressed(a.id)) || (!hasSteer && !isBot && this.input.justPressed(a.id)));
+
+        if (justCast) {
           a.state = 'extending';
           this.audio.playWhoosh();
         }

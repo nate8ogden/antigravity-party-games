@@ -294,6 +294,10 @@ export class ZeppelinDogfightGame extends BaseGame {
         return;
       }
 
+      const pCfg = this.getPlayer(z.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(z.id);
+
       const move = { x: this.input.getSteer(z.id), y: -this.input.getThrottle(z.id) };
       const speedMult = (z.underdog ? 1.24 : 1.0) * (z.ramTimer > 0 ? 1.85 : 1.0) * (z.charging ? 0.75 : 1.0);
       const accel = 820 * speedMult;
@@ -305,6 +309,27 @@ export class ZeppelinDogfightGame extends BaseGame {
         z.angle = Math.atan2(ny, nx);
         z.vx += nx * accel * dt;
         z.vy += ny * accel * dt;
+      } else if (!hasSteer && !isBot) {
+        // 1-button auto-navigation toward nearest positive pickup
+        let targetX = width * 0.5;
+        let targetY = height * 0.5;
+        let bestDist = 9999;
+        for (const pk of this.pickups) {
+          if (pk.kind === 'mine') continue;
+          const d = Math.hypot(pk.x - z.x, pk.y - z.y);
+          if (d < bestDist) {
+            bestDist = d;
+            targetX = pk.x;
+            targetY = pk.y;
+          }
+        }
+        const targetAngle = Math.atan2(targetY - z.y, targetX - z.x);
+        let diff = targetAngle - z.angle;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        z.angle += Math.sign(diff) * Math.min(Math.abs(diff), dt * 3.6);
+        z.vx += Math.cos(z.angle) * accel * 0.72 * dt;
+        z.vy += Math.sin(z.angle) * accel * 0.72 * dt;
       }
 
       z.vx *= 0.88;
@@ -314,9 +339,6 @@ export class ZeppelinDogfightGame extends BaseGame {
       this.clampZeppelin(z, width, height);
 
       // Tap to fire broadside + bow steam cannon volley
-      const pCfg = this.getPlayer(z.id);
-      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
-      const hasSteer = this.input.hasSteer(z.id);
       if ((this.input.justAction(z.id) || (isBot && this.input.justPressed(z.id)) || (!hasSteer && !isBot && this.input.justPressed(z.id))) && z.fireCooldown <= 0) {
         this.fireVolley(z, false);
       }

@@ -167,7 +167,7 @@ export class OrnithopterFlockGame extends BaseGame {
     }
   }
 
-  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number = 960, height: number = 540): boolean {
     if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
       this.themeIndex = (this.themeIndex + 1) % THEMES.length;
       this.audio.playTap();
@@ -263,16 +263,40 @@ export class OrnithopterFlockGame extends BaseGame {
         return;
       }
 
+      const pCfg = this.getPlayer(f.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(f.id);
+
       const move = { x: this.input.getSteer(f.id), y: -this.input.getThrottle(f.id) };
       const speedMult = (f.underdog ? 1.24 : 1.0) * (f.drafting ? 1.24 : 1.0) * (f.swoopTimer > 0 ? 1.55 : 1.0);
       const accel = 880 * speedMult;
 
-      f.vx += move.x * accel * dt;
-      f.vy += (move.y * accel + 95) * dt; // light natural glide gravity
+      if (Math.abs(move.x) > 0.05 || Math.abs(move.y) > 0.05) {
+        f.vx += move.x * accel * dt;
+        f.vy += (move.y * accel + 95) * dt; // light natural glide gravity
+      } else if (!hasSteer && !isBot) {
+        // 1-button auto-navigation towards nearest positive target
+        let targetX = width * 0.7;
+        let targetY = height * 0.5;
+        let bestDist = 9999;
+        for (const t of this.targets) {
+          if (t.kind === 'storm_cloud') continue;
+          const d = Math.hypot(t.x - f.x, t.y - f.y);
+          if (d < bestDist) {
+            bestDist = d;
+            targetX = t.x;
+            targetY = t.y;
+          }
+        }
+        const dx = targetX - f.x;
+        const dy = targetY - f.y;
+        const d = Math.hypot(dx, dy) || 1;
+        f.vx += (dx / d) * accel * 0.65 * dt;
+        f.vy += (dy / d) * accel * 0.65 * dt + 50 * dt;
+      } else {
+        f.vy += 95 * dt;
+      }
 
-      const pCfg = this.getPlayer(f.id);
-      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
-      const hasSteer = this.input.hasSteer(f.id);
       if (this.input.justAction(f.id) || (isBot && this.input.justPressed(f.id)) || (!hasSteer && !isBot && this.input.justPressed(f.id))) {
         f.vy = -210;
         f.vx += 90;
@@ -281,7 +305,7 @@ export class OrnithopterFlockGame extends BaseGame {
       }
 
       // Hold-to-charge Supersonic Falcon Swoop & Gale-Wing Shunt (72%–98% Sweet Spot)
-      const holding = this.input.isActionPressed(f.id) || (isBot && this.input.isPressed(f.id));
+      const holding = this.input.isActionPressed(f.id) || (isBot && this.input.isPressed(f.id)) || (!hasSteer && !isBot && this.input.isPressed(f.id));
       if (holding) {
         f.charging = true;
         f.charge += dt * 0.84;
