@@ -1,3 +1,5 @@
+import { WasmPhysicsEngine } from './WasmPhysicsEngine';
+
 export interface Particle {
   x: number;
   y: number;
@@ -28,6 +30,7 @@ export class ParticleSystem {
   private floatingTexts: FloatingText[] = [];
   private trauma: number = 0; // 0 to 1 for screen shake
   private traumaDecay: number = 2.5;
+  private wasm: WasmPhysicsEngine = WasmPhysicsEngine.getInstance();
 
   public shakeIntensity: number = 1.0; // 1.0 = Full, 0.5 = Reduced, 0 = Off
   public particleDensity: number = 1.0; // 1.0 = High, 0.5 = Low, 0 = Off
@@ -38,22 +41,8 @@ export class ParticleSystem {
       this.trauma = Math.max(0, this.trauma - this.traumaDecay * dt);
     }
 
-    // High-performance in-place particle array compaction (0 allocations, no splice shifts)
-    let aliveParticles = 0;
-    const pLen = this.particles.length;
-    for (let i = 0; i < pLen; i++) {
-      const p = this.particles[i];
-      p.x += p.vx * dt * 60;
-      p.y += p.vy * dt * 60;
-      p.vx *= 0.96;
-      p.vy *= 0.96;
-      p.life -= dt;
-      p.alpha = Math.max(0, p.life / p.maxLife);
-      if (p.life > 0) {
-        this.particles[aliveParticles++] = p;
-      }
-    }
-    this.particles.length = aliveParticles;
+    // Native WebAssembly batch particle integration & in-place compaction
+    this.wasm.updateParticles(this.particles, dt, 0.96);
 
     // In-place floating text compaction
     let aliveTexts = 0;

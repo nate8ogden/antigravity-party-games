@@ -3,6 +3,7 @@ import { InputRouter } from '../core/InputRouter';
 import { AudioEngine } from '../core/AudioEngine';
 import { ParticleSystem } from '../core/ParticleSystem';
 import { drawCharacter, CharacterMood } from '../core/CharacterRenderer';
+import { WasmPhysicsEngine } from '../core/WasmPhysicsEngine';
 
 export type MatchMutatorType = 'none' | 'turbo' | 'golden_bounty' | 'low_gravity' | 'slippery' | 'gusty_wind';
 
