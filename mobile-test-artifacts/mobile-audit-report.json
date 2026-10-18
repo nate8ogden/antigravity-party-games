@@ -1,10 +1,10 @@
 {
   "Google Pixel 7 (Android)": {
     "initialDeviceMode": {
-      "deviceMode": "computer",
-      "bodyClasses": "",
-      "btnPhoneActive": false,
-      "btnCompActive": true,
+      "deviceMode": "phone",
+      "bodyClasses": "phone-platform-mode phone-mode",
+      "btnPhoneActive": true,
+      "btnCompActive": false,
       "viewport": {
         "width": 412,
         "height": 839
@@ -70,18 +70,15 @@
       "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
     ]
   },
   "Apple iPhone 14 (iOS)": {
     "initialDeviceMode": {
-      "deviceMode": "computer",
-      "bodyClasses": "",
-      "btnPhoneActive": false,
-      "btnCompActive": true,
+      "deviceMode": "phone",
+      "bodyClasses": "phone-platform-mode phone-mode",
+      "btnPhoneActive": true,
+      "btnCompActive": false,
       "viewport": {
         "width": 390,
         "height": 664
@@ -106,6 +103,9 @@
     },
     "consoleErrors": [],
     "consoleWarnings": [
+      "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
+      "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
+      "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",

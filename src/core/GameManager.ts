@@ -10377,11 +10377,12 @@ export class GameManager {
     const isOrbital = this.activeGame instanceof OrbitalSlingshotGame;
     const isPhone = this.deviceMode === 'phone';
     const activeCount = this.players.filter((p) => p.type !== 'disabled').length;
+    const isPhone2P = isPhone && activeCount <= 2;
 
     const hudPositions = [
       {
         x: 18,
-        y: isPhone && activeCount <= 2 ? h - 24 : 22,
+        y: isPhone2P ? h - 70 : 22,
         align: 'left' as const,
         p: this.players[0],
         keys: isOrbital ? 'W / Space' : 'WASD + Space',
@@ -10389,11 +10390,11 @@ export class GameManager {
       },
       {
         x: w - 18,
-        y: 22,
+        y: isPhone2P ? 68 : 22,
         align: 'right' as const,
         p: this.players[1],
         keys: isOrbital ? '↑ / Enter' : 'Arrows + Enter',
-        rotate180: isPhone && activeCount <= 2
+        rotate180: isPhone2P
       },
       {
         x: 18,
@@ -10517,7 +10518,7 @@ export class GameManager {
         const timerW = 190;
         const timerH = 30;
         const timerX = w / 2 - timerW / 2;
-        const timerY = 8;
+        const timerY = isPhone2P ? 56 : 8;
 
         this.ctx.save();
         // High-contrast frosted glass container
@@ -10571,7 +10572,7 @@ export class GameManager {
         const timerW = 96 * pulseScale;
         const timerH = 30 * pulseScale;
         const timerX = w / 2 - timerW / 2;
-        const timerY = 8 - (timerH - 30) / 2;
+        const timerY = (isPhone2P ? 56 : 8) - (timerH - 30) / 2;
 
         this.ctx.save();
         // Frosted beveled pill with high-contrast critical warning state
