@@ -314,12 +314,13 @@ export class ZeppelinDogfightGame extends BaseGame {
       this.clampZeppelin(z, width, height);
 
       // Tap to fire broadside + bow steam cannon volley
-      if (this.input.justAction(z.id) && z.fireCooldown <= 0) {
+      const isBot = z.config.type.startsWith('bot_');
+      if ((this.input.justAction(z.id) || (isBot && this.input.justPressed(z.id))) && z.fireCooldown <= 0) {
         this.fireVolley(z, false);
       }
 
       // Hold-to-charge Ironclad Prow Ram (72%–98% Sweet Spot)
-      const holding = this.input.isActionPressed(z.id);
+      const holding = this.input.isActionPressed(z.id) || (isBot && this.input.isPressed(z.id));
       if (holding) {
         z.charging = true;
         z.charge += dt * 0.84;
@@ -892,4 +893,12 @@ export class ZeppelinDogfightGame extends BaseGame {
     void amt;
   }
 
+  public handlePointerDown(x: number, y: number, _width: number, height: number): boolean {
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.audio.playSelect();
+      return true;
+    }
+    return false;
+  }
 }

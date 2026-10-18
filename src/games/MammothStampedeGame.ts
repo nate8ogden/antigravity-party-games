@@ -393,7 +393,7 @@ export class MammothStampedeGame extends BaseGame {
           r.angle = Math.atan2(move.y, move.x);
         }
 
-        const holding = this.input.isActionPressed(r.id) || this.input.isPressed(r.id);
+        const holding = this.input.isActionPressed(r.id);
         if (holding && r.overchargeTimer <= 0) {
           r.isHolding = true;
           r.charge = Math.min(1.15, r.charge + safeDt * 0.85);
@@ -408,7 +408,7 @@ export class MammothStampedeGame extends BaseGame {
             this.executeSpearVault(r);
           }
           r.charge = 0;
-        } else if (this.input.justPressed(r.id) || this.input.justAction(r.id)) {
+        } else if (this.input.justAction(r.id)) {
           this.executeSpearVault(r);
         }
       }
@@ -1032,4 +1032,12 @@ export class MammothStampedeGame extends BaseGame {
     ctx.restore();
   }
 
+  public handlePointerDown(x: number, y: number, _width: number, height: number): boolean {
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.audio.playSelect();
+      return true;
+    }
+    return false;
+  }
 }

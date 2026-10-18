@@ -200,7 +200,8 @@ export class SynthDrumPadGame extends BaseGame {
       const steer = this.input.getSteer(p.id);
       const throttle = this.input.getThrottle(p.id);
       const isBot = p.type.startsWith('bot_');
-      const justAction = this.input.justAction(p.id) || (isBot && this.input.justPressed(p.id));
+      const hasSteer = Math.abs(steer) > 0.08 || Math.abs(throttle) > 0.08;
+      const justAction = this.input.justAction(p.id) || (isBot && this.input.justPressed(p.id)) || (!hasSteer && this.input.justPressed(p.id));
 
       // Directional Pad Selection (Gamepad thumbsticks, D-Pad, Arrow keys, WASD)
       if (steer < -0.3 && throttle > 0.3) ps.padIndex = 0; // KICK (Top-Left)
