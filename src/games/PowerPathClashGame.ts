@@ -310,6 +310,7 @@ export class PowerPathClashGame extends BaseGame {
 
         // Check player movement inputs to pick Left/Right or advance
         const rawSteer = this.input.getRawSteer(p.id);
+        const steer = Math.abs(rawSteer) > 0 ? rawSteer : this.input.getSteer(p.id);
         const isBot = p.type.startsWith('bot_');
         const justAction = this.input.justAction(p.id) || (isBot && this.input.justPressed(p.id));
         const justUp = this.input.justUp(p.id);
@@ -872,5 +873,32 @@ export class PowerPathClashGame extends BaseGame {
       rankings,
       mvpHighlight: `${winName} built a massive ${winPower} DMG build and crushed the Final Showdown!`
     };
+  }
+
+  public handlePointerDown(x: number, _y: number, width: number, _height: number): boolean {
+    if (this.gamePhase !== 'path_selection') return false;
+
+    const active = this.getActivePlayers();
+    const count = active.length;
+    if (count === 0) return false;
+
+    const laneWidth = width / count;
+
+    for (let idx = 0; idx < active.length; idx++) {
+      const p = active[idx];
+      if (p.type.startsWith('bot_')) continue;
+
+      const laneX = laneWidth * idx;
+      if (x >= laneX && x <= laneX + laneWidth) {
+        const optionIndex = x < laneX + laneWidth * 0.5 ? 0 : 1;
+        const ps = this.playerStates.get(p.id);
+        if (ps && !ps.readyForClash) {
+          ps.selectedOptionIndex = optionIndex;
+          this.handlePlayerSelect(p.id, optionIndex);
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }

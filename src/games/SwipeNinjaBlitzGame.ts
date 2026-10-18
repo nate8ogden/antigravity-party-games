@@ -19,6 +19,20 @@ interface FlyingFruit {
   sliced: boolean;
 }
 
+interface SlicedHalf {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  color: string;
+  innerColor: string;
+  angle: number;
+  vRot: number;
+  side: 1 | -1;
+  alpha: number;
+}
+
 interface SlashTrail {
   x1: number;
   y1: number;
@@ -43,12 +57,16 @@ interface NinjaZone {
   spawnTimer: number;
   bladeX: number;
   bladeY: number;
+  prevBladeX: number;
+  prevBladeY: number;
+  bladeActive: boolean;
   botTimer: number;
 }
 
 export class SwipeNinjaBlitzGame extends BaseGame {
   private zones: NinjaZone[] = [];
   private fruits: FlyingFruit[] = [];
+  private halves: SlicedHalf[] = [];
   private slashes: SlashTrail[] = [];
   private winnerId: PlayerId | null = null;
   private animTime: number = 0;
@@ -68,10 +86,11 @@ export class SwipeNinjaBlitzGame extends BaseGame {
 
   public reset(width: number, height: number): void {
     this.isFinished = false;
-    this.roundTimer = 30.0;
+    this.roundTimer = 35.0;
     this.winnerId = null;
     this.animTime = 0;
     this.fruits = [];
+    this.halves = [];
     this.slashes = [];
     this.input.setControlMode('single_button');
 
@@ -90,9 +109,12 @@ export class SwipeNinjaBlitzGame extends BaseGame {
         score: 0,
         combo: 0,
         stunTimer: 0,
-        spawnTimer: 0.35 + idx * 0.15,
+        spawnTimer: 0.35 + idx * 0.12,
         bladeX: bounds.x + bounds.w / 2,
         bladeY: bounds.y + bounds.h / 2,
+        prevBladeX: bounds.x + bounds.w / 2,
+        prevBladeY: bounds.y + bounds.h / 2,
+        bladeActive: false,
         botTimer: 0.2
       };
     });
@@ -101,7 +123,16 @@ export class SwipeNinjaBlitzGame extends BaseGame {
   private computeZoneBounds(idx: number, count: number, width: number, height: number) {
     const topMargin = 48;
     const availH = height - topMargin;
-    if (count <= 2) {
+    if (count === 1) {
+      return { x: 0, y: topMargin, w: width, h: availH };
+    }
+    if (count === 2) {
+      if (this.input.deviceMode === 'phone' || height > width) {
+        // Phone 2P Face-to-Face: Top Half = Player 2 (idx 1), Bottom Half = Player 1 (idx 0)
+        const zh = availH / 2;
+        const row = idx === 0 ? 1 : 0;
+        return { x: 0, y: topMargin + row * zh, w: width, h: zh };
+      }
       const zw = width / 2;
       return { x: idx * zw, y: topMargin, w: zw, h: availH };
     }
@@ -119,7 +150,9 @@ export class SwipeNinjaBlitzGame extends BaseGame {
     this.animTime += dt;
     this.updateBots(dt, width, height);
 
+    const rawTouches = this.input.getAllActiveTouches();
     const activeCount = this.zones.length;
+
     for (let i = 0; i < activeCount; i++) {
       const z = this.zones[i];
       const b = this.computeZoneBounds(i, activeCount, width, height);
@@ -134,11 +167,56 @@ export class SwipeNinjaBlitzGame extends BaseGame {
 
       z.spawnTimer -= dt;
       if (z.spawnTimer <= 0) {
-        z.spawnTimer = 0.65 + Math.random() * 0.45;
-        this.spawnFruitForZone(z);
+        z.spawnTimer = 0.52 + Math.random() * 0.38;
+        // Spawn 1 or 2 fruits per wave for exciting multi-slice combos!
+        const waveCount = Math.random() < 0.42 ? 2 : 1;
+        for (let w = 0; w < waveCount; w++) {
+          this.spawnFruitForZone(z);
+        }
       }
 
-      // Check player swipe / tap action
+      // 1. Direct Finger-Swipe Katana Blade Tracking (matches touch in zone or assigned pid)
+      const isBot = this.players.find((p) => p.id === z.id)?.type.startsWith('bot_') ?? false;
+      let matchingTouch = rawTouches.find(
+        (t) => t.x >= z.x && t.x <= z.x + z.w && t.y >= z.y && t.y <= z.y + z.h
+      );
+      if (!matchingTouch && !isBot) {
+        matchingTouch = rawTouches.find((t) => t.pid === z.id);
+      }
+
+      if (matchingTouch && !isBot && z.stunTimer <= 0) {
+        // Clamp touch position into zone if using remote zone
+        const tx = Math.max(z.x + 12, Math.min(z.x + z.w - 12, matchingTouch.x));
+        const ty = Math.max(z.y + 12, Math.min(z.y + z.h - 12, matchingTouch.y));
+        if (!z.bladeActive) {
+          z.bladeActive = true;
+          z.prevBladeX = tx;
+          z.prevBladeY = ty;
+        } else {
+          z.prevBladeX = z.bladeX;
+          z.prevBladeY = z.bladeY;
+        }
+        z.bladeX = tx;
+        z.bladeY = ty;
+
+        const moveDist = Math.hypot(z.bladeX - z.prevBladeX, z.bladeY - z.prevBladeY);
+        if (moveDist > 3) {
+          this.slashes.push({
+            x1: z.prevBladeX,
+            y1: z.prevBladeY,
+            x2: z.bladeX,
+            y2: z.bladeY,
+            color: z.colorLight,
+            alpha: 0.95
+          });
+        }
+        // Check continuous blade intersection against all unsliced fruits in this dojo
+        this.sliceFruitsNearSegment(z, z.prevBladeX, z.prevBladeY, z.bladeX, z.bladeY);
+      } else {
+        z.bladeActive = false;
+      }
+
+      // 2. Tap / Keyboard / Gamepad Katana Sweep Slash
       const tapped = this.input.justPressed(z.id) || this.input.justAction(z.id);
       if (tapped && z.stunTimer <= 0) {
         this.performKatanaSwipe(z);
@@ -150,7 +228,7 @@ export class SwipeNinjaBlitzGame extends BaseGame {
       const f = this.fruits[i];
       f.x += f.vx * dt;
       f.y += f.vy * dt;
-      f.vy += 320 * dt; // Gravity arc
+      f.vy += 320 * dt;
       f.rotation += f.rotSpeed * dt;
 
       const z = this.zones.find((zn) => zn.id === f.ownerId);
@@ -162,6 +240,19 @@ export class SwipeNinjaBlitzGame extends BaseGame {
       }
     }
 
+    // Update sliced fruit halves
+    for (let i = this.halves.length - 1; i >= 0; i--) {
+      const h = this.halves[i];
+      h.x += h.vx * dt;
+      h.y += h.vy * dt;
+      h.vy += 420 * dt;
+      h.angle += h.vRot * dt;
+      h.alpha -= dt * 1.4;
+      if (h.alpha <= 0) {
+        this.halves.splice(i, 1);
+      }
+    }
+
     // Update slash trails
     for (let i = this.slashes.length - 1; i >= 0; i--) {
       this.slashes[i].alpha -= dt * 3.8;
@@ -170,9 +261,9 @@ export class SwipeNinjaBlitzGame extends BaseGame {
       }
     }
 
-    // Check 25-point target or round timer
+    // Check 30-point target or round timer
     for (const z of this.zones) {
-      if (z.score >= 25) {
+      if (z.score >= 30) {
         this.winnerId = z.id;
         this.isFinished = true;
         return;
@@ -189,34 +280,124 @@ export class SwipeNinjaBlitzGame extends BaseGame {
     }
   }
 
+  private distToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const lenSq = dx * dx + dy * dy;
+    if (lenSq < 0.001) return Math.hypot(px - x1, py - y1);
+    const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lenSq));
+    return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+  }
+
+  private sliceFruitsNearSegment(z: NinjaZone, x1: number, y1: number, x2: number, y2: number): void {
+    const myFruits = this.fruits.filter((f) => f.ownerId === z.id && !f.sliced);
+    let slicedCount = 0;
+
+    for (const f of myFruits) {
+      const d = this.distToSegment(f.x, f.y, x1, y1, x2, y2);
+      if (d <= f.radius + 26) {
+        if (f.kind === 'bomb') {
+          // Only trigger bomb if directly hit within radius + 8
+          if (d <= f.radius + 8) {
+            this.triggerBombHit(z, f);
+            return;
+          }
+          continue;
+        }
+        this.sliceSingleFruit(z, f);
+        slicedCount++;
+      }
+    }
+
+    if (slicedCount >= 2) {
+      z.score += 1;
+      this.audio.playChime();
+      this.particles.showFloatingText(`🔥 ${slicedCount}X SWIPE BLITZ! +1`, z.x + z.w / 2, z.y + z.h * 0.35, '#FBBF24', 18);
+    } else if (slicedCount === 1) {
+      this.audio.playSpike();
+    }
+  }
+
+  private sliceSingleFruit(z: NinjaZone, f: FlyingFruit): void {
+    f.sliced = true;
+    const pts = f.kind === 'golden_mango' ? 3 : 1;
+    z.score += pts;
+    z.combo++;
+
+    // Spawn 2 flying sliced halves!
+    for (const side of [-1, 1] as const) {
+      this.halves.push({
+        x: f.x + side * 6,
+        y: f.y,
+        vx: f.vx + side * (75 + Math.random() * 45),
+        vy: f.vy - 60,
+        radius: f.radius,
+        color: f.color,
+        innerColor: f.innerColor,
+        angle: f.rotation,
+        vRot: side * (4 + Math.random() * 4),
+        side,
+        alpha: 1.0
+      });
+    }
+
+    this.slashes.push({
+      x1: f.x - 36,
+      y1: f.y + 22,
+      x2: f.x + 36,
+      y2: f.y - 22,
+      color: z.colorLight,
+      alpha: 1.0
+    });
+    this.particles.spawnExplosion(f.x, f.y, f.innerColor, 14);
+    this.particles.showFloatingText(
+      pts > 1 ? `🥭 GOLDEN SLICE! +${pts}` : `⚔️ +${pts}`,
+      f.x,
+      f.y - 14,
+      pts > 1 ? '#FDE047' : z.colorLight,
+      16
+    );
+  }
+
+  private triggerBombHit(z: NinjaZone, b: FlyingFruit): void {
+    b.sliced = true;
+    z.score = Math.max(0, z.score - 2);
+    z.combo = 0;
+    z.stunTimer = 0.85;
+    this.audio.playExplosion();
+    this.particles.spawnExplosion(b.x, b.y, '#EF4444', 24);
+    this.particles.shake(0.35);
+    this.particles.showFloatingText('💣 BOMB SLICED! -2', b.x, b.y - 16, '#EF4444', 18);
+  }
+
   private spawnFruitForZone(z: NinjaZone): void {
     const roll = Math.random();
     let kind: FlyingFruit['kind'] = 'watermelon';
     let color = '#22C55E';
     let innerColor = '#EF4444';
-    let radius = 20;
+    let radius = 21;
 
-    if (roll < 0.18) {
+    if (roll < 0.16) {
       kind = 'bomb';
       color = '#1E293B';
       innerColor = '#EF4444';
       radius = 19;
-    } else if (roll < 0.36) {
+    } else if (roll < 0.35) {
       kind = 'golden_mango';
       color = '#F59E0B';
       innerColor = '#FDE047';
-      radius = 18;
+      radius = 19;
     } else if (roll < 0.65) {
       kind = 'cyber_berry';
       color = '#06B6D4';
       innerColor = '#A855F7';
-      radius = 19;
+      radius = 20;
     }
 
-    const startX = z.x + z.w * (0.2 + Math.random() * 0.6);
+    const startX = z.x + z.w * (0.18 + Math.random() * 0.64);
     const startY = z.y + z.h - 12;
-    const targetX = z.x + z.w * 0.5 + (Math.random() - 0.5) * (z.w * 0.35);
-    const peakH = z.h * (0.58 + Math.random() * 0.24);
+    const targetX = z.x + z.w * 0.5 + (Math.random() - 0.5) * (z.w * 0.38);
+    const peakH = z.h * (0.58 + Math.random() * 0.25);
     const vy = -Math.sqrt(2 * 320 * peakH);
     const flightTime = Math.abs(vy / 320);
     const vx = (targetX - startX) / Math.max(0.4, flightTime);
@@ -241,34 +422,14 @@ export class SwipeNinjaBlitzGame extends BaseGame {
     this.audio.playWhoosh();
     const myFruits = this.fruits.filter((f) => f.ownerId === z.id && !f.sliced);
 
-    // Prioritize ripe fruits near apex; if only a bomb is near center, risk hitting it!
-    const goodFruits = myFruits.filter((f) => f.kind !== 'bomb' && f.y < z.y + z.h - 28);
-    const bombs = myFruits.filter((f) => f.kind === 'bomb' && f.y < z.y + z.h * 0.65);
+    const goodFruits = myFruits.filter((f) => f.kind !== 'bomb' && f.y < z.y + z.h - 24);
+    const bombs = myFruits.filter((f) => f.kind === 'bomb' && f.y < z.y + z.h * 0.62);
 
     if (goodFruits.length > 0) {
       let slicedCount = 0;
       for (const f of goodFruits.slice(0, 3)) {
-        f.sliced = true;
+        this.sliceSingleFruit(z, f);
         slicedCount++;
-        const pts = f.kind === 'golden_mango' ? 3 : 1;
-        z.score += pts;
-        z.combo++;
-        this.slashes.push({
-          x1: f.x - 36,
-          y1: f.y + 22,
-          x2: f.x + 36,
-          y2: f.y - 22,
-          color: z.colorLight,
-          alpha: 1.0
-        });
-        this.particles.spawnExplosion(f.x, f.y, f.innerColor, 14);
-        this.particles.showFloatingText(
-          pts > 1 ? `🥭 GOLDEN SLICE! +${pts}` : `⚔️ +${pts}`,
-          f.x,
-          f.y - 14,
-          pts > 1 ? '#FDE047' : z.colorLight,
-          16
-        );
       }
       if (slicedCount >= 2) {
         z.score += 1;
@@ -278,26 +439,17 @@ export class SwipeNinjaBlitzGame extends BaseGame {
         this.audio.playSpike();
       }
     } else if (bombs.length > 0) {
-      const b = bombs[0];
-      b.sliced = true;
-      z.score = Math.max(0, z.score - 2);
-      z.combo = 0;
-      z.stunTimer = 0.9;
-      this.audio.playExplosion();
-      this.particles.spawnExplosion(b.x, b.y, '#EF4444', 24);
-      this.particles.shake(0.4);
-      this.particles.showFloatingText('💣 BOMB SLICED! -2', b.x, b.y - 16, '#EF4444', 18);
+      this.triggerBombHit(z, bombs[0]);
     } else {
-      // Empty air slash visual
       const cx = z.x + z.w / 2;
       const cy = z.y + z.h / 2;
       this.slashes.push({
-        x1: cx - 40,
-        y1: cy + 20,
-        x2: cx + 40,
-        y2: cy - 20,
+        x1: cx - 44,
+        y1: cy + 22,
+        x2: cx + 44,
+        y2: cy - 22,
         color: '#94A3B8',
-        alpha: 0.7
+        alpha: 0.75
       });
     }
   }
@@ -330,7 +482,6 @@ export class SwipeNinjaBlitzGame extends BaseGame {
     ctx.fillStyle = '#090D16';
     ctx.fillRect(0, 0, width, height);
 
-    // Render each player's dojo slicing quadrant
     for (const z of this.zones) {
       ctx.save();
       ctx.beginPath();
@@ -343,21 +494,19 @@ export class SwipeNinjaBlitzGame extends BaseGame {
       ctx.fillStyle = grad;
       ctx.fillRect(z.x, z.y, z.w, z.h);
 
-      // Zone border
       ctx.strokeStyle = z.color;
       ctx.lineWidth = 3;
       ctx.strokeRect(z.x + 2, z.y + 2, z.w - 4, z.h - 4);
 
-      // Score & Combo Banner
       ctx.fillStyle = z.colorLight;
       ctx.font = '900 14px Montserrat, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(`${z.name}: ${z.score}/25`, z.x + 12, z.y + 24);
+      ctx.fillText(`${z.name}: ${z.score}/30`, z.x + 14, z.y + 24);
 
       if (z.combo >= 2) {
         ctx.fillStyle = '#FBBF24';
         ctx.font = '800 11px Montserrat, sans-serif';
-        ctx.fillText(`🔥 ${z.combo}x STREAK`, z.x + 12, z.y + 42);
+        ctx.fillText(`🔥 ${z.combo}x STREAK`, z.x + 14, z.y + 42);
       }
 
       if (z.stunTimer > 0) {
@@ -367,6 +516,29 @@ export class SwipeNinjaBlitzGame extends BaseGame {
         ctx.fillText('💥 STUNNED!', z.x + z.w / 2, z.y + z.h / 2);
       }
 
+      ctx.restore();
+    }
+
+    // Render sliced fruit halves
+    for (const h of this.halves) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, h.alpha);
+      ctx.translate(h.x, h.y);
+      ctx.rotate(h.angle);
+      ctx.beginPath();
+      ctx.arc(0, 0, h.radius, h.side > 0 ? -Math.PI / 2 : Math.PI / 2, h.side > 0 ? Math.PI / 2 : (Math.PI * 3) / 2);
+      ctx.closePath();
+      ctx.fillStyle = h.color;
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(0, 0, h.radius * 0.62, h.side > 0 ? -Math.PI / 2 : Math.PI / 2, h.side > 0 ? Math.PI / 2 : (Math.PI * 3) / 2);
+      ctx.closePath();
+      ctx.fillStyle = h.innerColor;
+      ctx.fill();
       ctx.restore();
     }
 
