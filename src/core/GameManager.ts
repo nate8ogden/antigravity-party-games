@@ -2940,7 +2940,7 @@ export class GameManager {
       const levelParam = params.get('level');
       if (levelParam) {
         const parsedLvl = parseInt(levelParam, 10);
-        if (!isNaN(parsedLvl) && parsedLvl >= 1 && parsedLvl <= 30) {
+        if (!isNaN(parsedLvl) && parsedLvl >= 0 && parsedLvl <= 30) {
           this.lodeRunnerLevel = parsedLvl;
         }
       }
@@ -8102,20 +8102,25 @@ export class GameManager {
       }
     } else if (game.id === 'sumo_lode_runner') {
       this.sumoHitboxes = [];
-      const bp = SUMO_LODE_LEVELS[this.lodeRunnerLevel - 1] || SUMO_LODE_LEVELS[0];
+      const bp = this.lodeRunnerLevel <= 0 ? SUMO_LODE_TUTORIAL_LEVEL : (SUMO_LODE_LEVELS[this.lodeRunnerLevel - 1] || SUMO_LODE_LEVELS[0]);
       const topY = artY + artH + 64;
 
       this.ctx.fillStyle = '#0F172A';
-      this.ctx.font = '900 12.5px Montserrat, sans-serif';
+      this.ctx.font = '900 12px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
+      const headerTxt =
+        this.lodeRunnerLevel === 0
+          ? `🎓 STARTING STAGE: TUTORIAL — ${bp.title.toUpperCase()} (STEP-BY-STEP GUIDE)`
+          : `🎌 STARTING STAGE: ${this.lodeRunnerLevel}/30 — ${bp.title.toUpperCase()} (${bp.guardCount} ONI)`;
       this.ctx.fillText(
-        `🎌 STARTING STAGE: ${this.lodeRunnerLevel}/30 — ${bp.title.toUpperCase()} (${bp.guardCount} ONI)`,
+        headerTxt,
         modalX + modalW / 2,
         topY
       );
 
-      // Chapter & Stage Selector Pills
-      const stageOpts = [
+      // Chapter & Stage Selector Pills (including Stage 0 Tutorial Dojo)
+      const stageOpts: { label: string; val?: number; step?: number }[] = [
+        { label: '🎓 Dojo', val: 0 },
         { label: 'Lv 1', val: 1 },
         { label: 'Lv 7', val: 7 },
         { label: 'Lv 13', val: 13 },
@@ -8127,14 +8132,14 @@ export class GameManager {
       ];
 
       const rowW = modalW - 48;
-      const pillGap = 5;
+      const pillGap = 4;
       const pillW = (rowW - pillGap * (stageOpts.length - 1)) / stageOpts.length;
       const pillH = 25;
       const pillY = topY + 10;
 
       stageOpts.forEach((opt, oIdx) => {
         const pillX = modalX + 24 + oIdx * (pillW + pillGap);
-        const isSelected = opt.val === this.lodeRunnerLevel;
+        const isSelected = opt.val !== undefined && opt.val === this.lodeRunnerLevel;
 
         this.sumoHitboxes.push({
           id: `lode_lvl_${opt.label}`,
@@ -8143,10 +8148,10 @@ export class GameManager {
           w: pillW,
           h: pillH,
           action: () => {
-            if (opt.val) {
+            if (opt.val !== undefined) {
               this.lodeRunnerLevel = opt.val;
             } else if (opt.step) {
-              this.lodeRunnerLevel = Math.max(1, Math.min(30, this.lodeRunnerLevel + opt.step));
+              this.lodeRunnerLevel = Math.max(0, Math.min(30, this.lodeRunnerLevel + opt.step));
             }
             this.audio.playTap();
           }
@@ -8164,7 +8169,7 @@ export class GameManager {
           isSelected ? 1.5 : 1
         );
         this.ctx.fillStyle = isSelected ? '#FFFFFF' : '#334155';
-        this.ctx.font = '800 9.5px Montserrat, sans-serif';
+        this.ctx.font = '800 9px Montserrat, sans-serif';
         this.ctx.textAlign = 'center';
         this.ctx.fillText(opt.label, pillX + pillW / 2, pillY + 16);
         this.ctx.restore();
@@ -8220,7 +8225,7 @@ export class GameManager {
     const playText = game.id === 'skyline_sumo' && this.sumoMode === 'no_limit'
       ? `▶ START SPEEDRUN [${this.sumoTargetMeters}m]`
       : game.id === 'sumo_lode_runner'
-      ? `▶ PLAY STAGE ${this.lodeRunnerLevel}/30 [Space / Enter]`
+      ? (this.lodeRunnerLevel === 0 ? '▶ START TUTORIAL DOJO [Space / Enter]' : `▶ PLAY STAGE ${this.lodeRunnerLevel}/30 [Space / Enter]`)
       : '▶ PLAY GAME [Space / Enter]';
 
     this.ctx.fillStyle = '#FFFFFF';
