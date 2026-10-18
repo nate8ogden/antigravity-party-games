@@ -310,8 +310,8 @@ export class PowerPathClashGame extends BaseGame {
 
         // Check player movement inputs to pick Left/Right or advance
         const rawSteer = this.input.getRawSteer(p.id);
-        const steer = Math.abs(rawSteer) > 0 ? rawSteer : this.input.getSteer(p.id);
-        const justAction = this.input.justAction(p.id) || this.input.justPressed(p.id);
+        const isBot = p.type.startsWith('bot_');
+        const justAction = this.input.justAction(p.id) || (isBot && this.input.justPressed(p.id));
         const justUp = this.input.justUp(p.id);
 
         if (steer < -0.3) {

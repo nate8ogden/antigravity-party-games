@@ -314,10 +314,11 @@ export class CursedClocktowerPendulumGame extends BaseGame {
       if (s.closeCallCooldown > 0) s.closeCallCooldown = Math.max(0, s.closeCallCooldown - safeDt);
 
       const steerX = this.input.getSteer(s.id);
-      const throttle = this.input.getThrottle(s.id); // +1 up, -1 down
-      const pressed = this.input.isPressed(s.id);
+      const throttle = this.input.getThrottle(s.id);
+      const isBot = s.config.type.startsWith('bot_');
+      const pressed = this.input.isActionPressed(s.id) || (isBot && this.input.isPressed(s.id));
 
-      if (!s.config.type.startsWith('bot_')) {
+      if (!isBot) {
         // Holding Action (or Down) crouches safely beneath the pendulum while charging your Chronos Vault!
         if (pressed || throttle < -0.35) {
           s.isDucking = true;
@@ -872,6 +873,15 @@ export class CursedClocktowerPendulumGame extends BaseGame {
 
   public isRoundOver(): boolean {
     return this.isOver;
+  }
+
+  public handlePointerDown(x: number, y: number, _width: number, height: number): boolean {
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.audio.playTap();
+      return true;
+    }
+    return false;
   }
 
   public getScore(playerId: PlayerId): number {
