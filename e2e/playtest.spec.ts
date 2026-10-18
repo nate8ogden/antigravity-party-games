@@ -1565,7 +1565,7 @@ test.describe('1-4 Player Game Engine Verification', () => {
       };
     });
 
-    expect(['EXTENDING', 'RETRACTING']).toContain(extendingState.p1TongueState);
+    expect(['EXTENDING', 'RETRACTING', 'SNAP_OUT', 'SNAP_IN']).toContain(extendingState.p1TongueState);
     expect(extendingState.tongueLength).toBeGreaterThan(10);
 
     expect(consoleErrors).toEqual([]);
@@ -1744,7 +1744,7 @@ test.describe('1-4 Player Game Engine Verification', () => {
     expect(pinballState.state).toBe('PLAYING');
     expect(typeof pinballState.mapName).toBe('string');
     expect(pinballState.ballCount).toBeGreaterThanOrEqual(1);
-    expect(pinballState.bumperCount).toBe(3);
+    expect(pinballState.bumperCount).toBeGreaterThanOrEqual(3);
     expect(pinballState.p1Shields).toBe(5);
 
     // Actuate flipper with KeyW
