@@ -158,8 +158,8 @@ export class CloudPersistenceManager {
   public getEffectiveRating(gameId: string): number {
     const r = this.getRecord(gameId);
     if (r.userRating > 0) {
-      // Blend user rating prominently so player's own rating immediately influences ranking
-      const blended = (r.communityRating * Math.min(10, r.ratingCount) + r.userRating * 5) / (Math.min(10, r.ratingCount) + 5);
+      // Blend user rating prominently so player's own rating immediately drives Top Rated ranking
+      const blended = r.userRating * 0.92 + r.communityRating * 0.08;
       return Number(blended.toFixed(2));
     }
     return r.communityRating;

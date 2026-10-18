@@ -8696,10 +8696,10 @@ export class GameManager {
     if (game.id === 'skyline_sumo' || game.id === 'sumo_lode_runner') {
       this.sumoHitboxes.push({
         id: 'sumo_play_btn',
-        x: btnX,
-        y: btnY,
-        w: btnW,
-        h: btnH,
+        x: btnX - 10,
+        y: btnY - 14,
+        w: btnW + 20,
+        h: btnH + 22,
         action: () => {
           this.audio.playTap();
           this.startGame(game.id);
@@ -11712,12 +11712,12 @@ export class GameManager {
           }
         }
 
-        // Play button click
+        // Play button click (with generous touch padding)
         const btnW = 280;
         const btnH = 44;
         const btnX = modalX + modalW / 2 - btnW / 2;
         const btnY = modalY + modalH - 62;
-        if (x >= btnX && x <= btnX + btnW && y >= btnY && y <= btnY + btnH) {
+        if (x >= btnX - 10 && x <= btnX + btnW + 10 && y >= btnY - 14 && y <= btnY + btnH + 8) {
           this.audio.playTap();
           this.startGame(GAME_CATALOG[this.modalGameIndex].id);
           return;
