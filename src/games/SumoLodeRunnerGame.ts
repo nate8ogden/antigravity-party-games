@@ -3495,12 +3495,14 @@ export class SumoLodeRunnerGame extends BaseGame {
   public render(ctx: CanvasRenderingContext2D, width: number, height: number): void {
     this.lastWidth = width;
     this.lastHeight = height;
+    this.hudHitboxes.length = 0;
+
     ctx.save();
     const now = performance.now() * 0.001;
     const biome = this.getCurrentBiome();
     const bp = this.getLevelBlueprint();
     const layout = this.getGridLayout(width, height);
-    const { originX, originY, tileW, tileH, totalW, totalH } = layout;
+    const { originX, originY, tileW, tileH, totalW, totalH, viewX, viewY, viewW, viewH, isTouchDeck } = layout;
 
     // 1. Atmospheric Biome Backdrop
     const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
@@ -3508,6 +3510,15 @@ export class SumoLodeRunnerGame extends BaseGame {
     bgGrad.addColorStop(1, biome.bgBottom);
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
+
+    // Clip arena viewport when zoomed camera is larger than screen viewport
+    const needsClip = totalW > viewW + 2 || totalH > viewH + 2;
+    if (needsClip) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(viewX, viewY, viewW, viewH);
+      ctx.clip();
+    }
 
     // Traditional Dojo Timber Pillars & Glowing Chōchin Lanterns in background
     ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
@@ -3547,7 +3558,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     }
 
     // 2b. Render Live Dig Target Reticles for Players
-    this.renderDigTargetReticles(ctx, originX, originY, tileW, tileH, now);
+    this.renderDigTargetReticles(ctx, originX, originY, tileW, tileH, now, isTouchDeck);
 
     // 3. Render Dug Brick Pits & Regeneration Warning Animations
     for (let i = 0; i < this.dugBricks.length; i++) {
@@ -3656,42 +3667,61 @@ export class SumoLodeRunnerGame extends BaseGame {
       this.drawSumoRunner(ctx, r, rx, ry, Math.min(tileW, tileH) * 0.5, now);
     }
 
+    if (needsClip) {
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(253, 224, 71, 0.28)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(viewX, viewY, viewW, viewH);
+    }
+
     // 7b. Interactive Tutorial Overlay & Step-by-Step World Callouts (Stage 0) or Stage Hint Banner
     if (this.currentLevel === 0) {
-      this.renderTutorialOverlay(ctx, width, originX, originY, tileW, tileH, now);
+      this.renderTutorialOverlay(ctx, width, originX, originY, tileW, tileH, viewX, viewY, viewW, isTouchDeck, now);
     } else if (bp.hint && this.stageHintTimer > 0) {
-      this.renderStageHintBanner(ctx, width, originY, bp.hint, Math.min(1, this.stageHintTimer));
+      this.renderStageHintBanner(ctx, width, originY, viewY, bp.hint, Math.min(1, this.stageHintTimer));
+    }
+
+    // 7c. Dedicated iPhone / Mobile Arcade Touch Control Deck
+    if (isTouchDeck) {
+      this.renderTouchControlDeck(ctx, width, height, layout, biome);
+    } else {
+      this.digLeftZone.w = 0;
+      this.digRightZone.w = 0;
     }
 
     // 8. Render Top & Bottom Classic-Modern Sumo Lode Runner HUD Bar
     this.renderLodeRunnerHUD(ctx, width, height, bp, biome);
 
-    // 9. Stage Clear Banner Overlay
+    // 9. Stage Clear Banner Overlay (auto-scaled for iPhone & desktop)
     if (this.levelClearBannerTimer > 0) {
       ctx.save();
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-      ctx.fillRect(width / 2 - 220, height / 2 - 48, 440, 96);
+      const clearW = Math.min(440, width - 20);
+      const clearH = 92;
+      const clearX = (width - clearW) / 2;
+      const clearY = viewY + viewH / 2 - clearH / 2;
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+      ctx.fillRect(clearX, clearY, clearW, clearH);
       ctx.strokeStyle = '#FACC15';
       ctx.lineWidth = 2.5;
-      ctx.strokeRect(width / 2 - 220, height / 2 - 48, 440, 96);
+      ctx.strokeRect(clearX, clearY, clearW, clearH);
 
       ctx.fillStyle = '#FDE047';
-      ctx.font = '900 21px Montserrat, sans-serif';
+      ctx.font = width < 440 ? '900 16px Montserrat, sans-serif' : '900 21px Montserrat, sans-serif';
       ctx.textAlign = 'center';
       const clearTitle =
         this.currentLevel === 0
           ? '🎓 TRAINING DOJO COMPLETE! 🎓'
           : `🎌 STAGE ${this.currentLevel} COMPLETE! 🎌`;
-      ctx.fillText(clearTitle, width / 2, height / 2 - 10);
+      ctx.fillText(clearTitle, width / 2, clearY + 38, clearW - 16);
 
       ctx.fillStyle = '#F8FAFC';
-      ctx.font = '700 13px Montserrat, sans-serif';
+      ctx.font = width < 440 ? '700 11.5px Montserrat, sans-serif' : '700 13px Montserrat, sans-serif';
       const nextBp = this.getLevelBlueprint(this.currentLevel + 1);
       const nextMsg =
         this.currentLevel < SUMO_LODE_LEVELS.length
           ? `Advancing to Stage ${this.currentLevel + 1}: ${nextBp.title}...`
           : `ALL ${SUMO_LODE_LEVELS.length} YOKOZUNA STAGES CONQUERED!`;
-      ctx.fillText(nextMsg, width / 2, height / 2 + 22);
+      ctx.fillText(nextMsg, width / 2, clearY + 68, clearW - 16);
       ctx.restore();
     }
 
@@ -3707,7 +3737,8 @@ export class SumoLodeRunnerGame extends BaseGame {
     originY: number,
     tileW: number,
     tileH: number,
-    now: number
+    now: number,
+    isTouchDeck: boolean = false
   ): void {
     for (const r of this.runners.values()) {
       if (r.state === 'DEAD' || r.state === 'FALL' || r.state === 'ROPE') continue;
@@ -3736,7 +3767,7 @@ export class SumoLodeRunnerGame extends BaseGame {
         ctx.fillStyle = '#FDE047';
         ctx.font = '800 7.5px Montserrat, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('DIG [SPACE]', bx + tileW / 2, by + tileH - 3);
+        ctx.fillText(isTouchDeck ? (dir < 0 ? 'DIG L' : 'DIG R') : 'DIG [SPACE]', bx + tileW / 2, by + tileH - 3);
       }
       ctx.restore();
     }
@@ -3752,6 +3783,10 @@ export class SumoLodeRunnerGame extends BaseGame {
     originY: number,
     tileW: number,
     tileH: number,
+    viewX: number,
+    viewY: number,
+    viewW: number,
+    isTouchDeck: boolean,
     now: number
   ): void {
     // Identify tutorial golds by coordinates:
@@ -3766,8 +3801,8 @@ export class SumoLodeRunnerGame extends BaseGame {
     const pRow = p1 ? Math.round(p1.y) : 14;
 
     let stepNum = 5;
-    let bannerTitle = 'STEP 5/5: CLIMB THE GOLDEN ESCAPE LADDER TO GRADUATE!';
-    let bannerSub = 'Climb the revealed Golden Ladder (S) at the top-center all the way to ▲ EXIT ▲!';
+    let bannerTitle = 'STEP 5/5: CLIMB THE GOLDEN ESCAPE LADDER!';
+    let bannerSub = 'Climb the revealed Golden Ladder (S) at top-center all the way to ▲ EXIT ▲!';
     let targetCol = 13;
     let targetRow = 1;
     let targetLabel = '▲ CLIMB EXIT!';
@@ -3778,17 +3813,28 @@ export class SumoLodeRunnerGame extends BaseGame {
     if (gStep1 && !gStep1.collected) {
       stepNum = 1;
       bannerTitle = 'STEP 1/5: MOVE & CLIMB BAMBOO LADDERS';
-      bannerSub = 'Use [WASD / Arrows] to climb the Bamboo Ladder (H) and collect the 1st Gold Pot!';
+      bannerSub = isTouchDeck
+        ? 'Use Left D-Pad (▲/▼/◀/▶) to climb the Bamboo Ladder (H) & grab the 1st Gold!'
+        : 'Use [WASD / Arrows] to climb the Bamboo Ladder (H) and collect the 1st Gold Pot!';
       targetCol = 6;
       targetRow = 10;
       targetLabel = '1. GRAB GOLD!';
     } else if (gStep2 && !gStep2.collected) {
       stepNum = 2;
       bannerTitle = 'STEP 2/5: EXCAVATE DOHYŌ CLAY BRICKS';
-      bannerSub = 'Stand at (10,10) left of the buried Gold & press [SPACE / E / ENTER] to dig the brick (#)!';
+      bannerSub = isTouchDeck
+        ? 'Stand at (10,10) left of buried Gold & tap [⛏️ DIG R] to excavate the brick (#)!'
+        : 'Stand at (10,10) left of the buried Gold & press [SPACE / E / ENTER] to dig the brick (#)!';
       targetCol = 11;
       targetRow = 11;
-      targetLabel = pCol === 10 && pRow === 10 ? '⚡ PRESS [SPACE / E] TO DIG!' : '2. DIG BRICK [SPACE]';
+      targetLabel =
+        pCol === 10 && pRow === 10
+          ? isTouchDeck
+            ? '⚡ TAP [⛏️ DIG R] NOW!'
+            : '⚡ PRESS [SPACE / E] TO DIG!'
+          : isTouchDeck
+            ? '2. TAP [⛏️ DIG R]'
+            : '2. DIG BRICK [SPACE]';
       if (pCol === 10 && pRow === 10) highlightColor = '#FDE047';
 
       // Draw subtle standing-spot guide at (10, 10) so player sees diagonal dig geometry
@@ -3799,36 +3845,42 @@ export class SumoLodeRunnerGame extends BaseGame {
       ctx.setLineDash([]);
     } else if (gStep3 && !gStep3.collected) {
       stepNum = 3;
-      bannerTitle = 'STEP 3/5: SHIMMY ACROSS SACRED ROPES (MANDATORY)';
-      bannerSub = 'Climb the center ladder to the Sacred Rope (-), shimmy RIGHT to col 20 & press DOWN [S / ▼]!';
+      bannerTitle = 'STEP 3/5: SHIMMY ACROSS SACRED ROPES';
+      bannerSub = isTouchDeck
+        ? 'Climb center ladder to Sacred Rope (-), shimmy RIGHT to col 20 & press ▼ DOWN!'
+        : 'Climb the center ladder to the Sacred Rope (-), shimmy RIGHT to col 20 & press DOWN [S / ▼]!';
       targetCol = 20;
       targetRow = 7;
       const onRopeAtDrop = pRow === 7 && pCol === 20;
-      targetLabel = onRopeAtDrop ? '⚡ PRESS DOWN [S / ▼] NOW!' : '3. DROP OFF ROPE [S/▼]!';
+      targetLabel = onRopeAtDrop ? '⚡ PRESS DOWN [▼] NOW!' : '3. DROP OFF ROPE [▼]!';
       if (onRopeAtDrop) highlightColor = '#FDE047';
 
       // Draw pulsing vertical drop-arrow column from rope (20, 7) down to Gold #3 at (20, 9)
       const dropX = originX + 20.5 * tileW;
-      ctx.strokeStyle = 'rgba(253, 224, 71, 0.75)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([4, 3]);
-      ctx.beginPath();
-      ctx.moveTo(dropX, originY + 7.5 * tileH);
-      ctx.lineTo(dropX, originY + 9.2 * tileH);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#FDE047';
-      ctx.font = '900 10px Montserrat, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('▼', dropX, originY + 8.6 * tileH + Math.sin(now * 8) * 2);
+      if (dropX >= viewX && dropX <= viewX + viewW) {
+        ctx.strokeStyle = 'rgba(253, 224, 71, 0.75)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(dropX, originY + 7.5 * tileH);
+        ctx.lineTo(dropX, originY + 9.2 * tileH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#FDE047';
+        ctx.font = '900 10px Montserrat, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('▼', dropX, originY + 8.6 * tileH + Math.sin(now * 8) * 2);
+      }
     } else if (gStep4 && !gStep4.collected) {
       stepNum = 4;
       const guard = this.guards[0];
       const isGuardTrapped = guard && guard.state === 'TRAPPED';
-      bannerTitle = 'STEP 4/5: TRAP THE ONI GUARD & WALK OVER ITS HEAD';
+      bannerTitle = 'STEP 4/5: TRAP ONI GUARD & WALK OVER HEAD';
       bannerSub = isGuardTrapped
-        ? 'Oni is trapped! Walk safely across its head to the left ladder (col 14) & climb to the Gold!'
-        : 'Press [SPACE / Q / E] to dig a trap hole for the Oni Guard, walk over its head & climb to the Gold!';
+        ? 'Oni is trapped! Walk safely across its head to the left ladder (col 14) & climb to Gold!'
+        : isTouchDeck
+          ? 'Tap [⛏️ DIG L / DIG R] to trap the Oni Guard, walk over its head & climb to the Gold!'
+          : 'Press [SPACE / Q / E] to dig a trap hole for the Oni Guard, walk over its head & climb to the Gold!';
       targetCol = 18;
       targetRow = 2;
       targetLabel = isGuardTrapped ? '✓ ONI TRAPPED! WALK OVER & CLIMB!' : '4. TRAP GUARD & GRAB!';
@@ -3839,16 +3891,19 @@ export class SumoLodeRunnerGame extends BaseGame {
     const tx = originX + (targetCol + 0.5) * tileW;
     const ty = originY + targetRow * tileH - 8 + Math.sin(now * 6) * 3;
 
-    // Pulsing highlight ring around target tile
-    ctx.strokeStyle = highlightColor;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(originX + targetCol * tileW - 2, originY + targetRow * tileH - 2, tileW + 4, tileH + 4);
+    // Pulsing highlight ring around target tile if visible inside viewport
+    if (tx >= viewX - tileW && tx <= viewX + viewW + tileW) {
+      ctx.strokeStyle = highlightColor;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(originX + targetCol * tileW - 2, originY + targetRow * tileH - 2, tileW + 4, tileH + 4);
+    }
 
-    // Callout pill
-    ctx.font = '900 9.5px Montserrat, sans-serif';
-    const pillW = Math.max(96, ctx.measureText(targetLabel).width + 16);
-    const pillX = Math.max(originX + 4, Math.min(originX + GRID_COLS * tileW - pillW - 4, tx - pillW / 2));
-    const pillY = Math.max(originY + 28, ty - 22);
+    // Callout pill clamped cleanly inside screen viewport so even when zoomed it guides the player!
+    ctx.font = '900 9px Montserrat, sans-serif';
+    const rawLabel = tx < viewX + 12 ? `◀ ${targetLabel}` : tx > viewX + viewW - 12 ? `${targetLabel} ▶` : targetLabel;
+    const pillW = Math.min(viewW - 12, Math.max(94, ctx.measureText(rawLabel).width + 14));
+    const pillX = Math.max(viewX + 4, Math.min(viewX + viewW - pillW - 4, tx - pillW / 2));
+    const pillY = Math.max(originY + 6, ty - 22);
 
     ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
     ctx.fillRect(pillX, pillY, pillW, 18);
@@ -3858,26 +3913,26 @@ export class SumoLodeRunnerGame extends BaseGame {
 
     ctx.fillStyle = highlightColor;
     ctx.textAlign = 'center';
-    ctx.fillText(targetLabel, pillX + pillW / 2, pillY + 12.5);
+    ctx.fillText(rawLabel, pillX + pillW / 2, pillY + 12.5, pillW - 8);
 
-    // Top-of-arena coaching banner
-    const bannerW = Math.min(width - 32, 680);
+    // Top-of-arena coaching banner (placed above Row 0 when vertical space permits)
+    const bannerW = Math.min(width - 12, 680);
     const bannerX = (width - bannerW) / 2;
-    const bannerY = originY + 2;
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
-    ctx.fillRect(bannerX, bannerY, bannerW, 36);
+    const bannerY = originY - viewY >= 36 ? viewY + 2 : originY + 2;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    ctx.fillRect(bannerX, bannerY, bannerW, 35);
     ctx.strokeStyle = stepNum === 5 ? '#FACC15' : '#38BDF8';
-    ctx.lineWidth = 1.8;
-    ctx.strokeRect(bannerX, bannerY, bannerW, 36);
+    ctx.lineWidth = 1.6;
+    ctx.strokeRect(bannerX, bannerY, bannerW, 35);
 
     ctx.fillStyle = stepNum === 5 ? '#FDE047' : '#38BDF8';
-    ctx.font = '900 11px Montserrat, sans-serif';
+    ctx.font = width < 480 ? '900 10px Montserrat, sans-serif' : '900 11px Montserrat, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`🎓 ${bannerTitle}`, width / 2, bannerY + 14);
+    ctx.fillText(`🎓 ${bannerTitle}`, width / 2, bannerY + 13.5, bannerW - 12);
 
     ctx.fillStyle = '#F8FAFC';
-    ctx.font = '700 10px Montserrat, sans-serif';
-    ctx.fillText(bannerSub, width / 2, bannerY + 29);
+    ctx.font = width < 480 ? '700 9px Montserrat, sans-serif' : '700 10px Montserrat, sans-serif';
+    ctx.fillText(bannerSub, width / 2, bannerY + 28, bannerW - 12);
     ctx.restore();
   }
 
@@ -3885,24 +3940,25 @@ export class SumoLodeRunnerGame extends BaseGame {
     ctx: CanvasRenderingContext2D,
     width: number,
     originY: number,
+    viewY: number,
     hint: string,
     alpha: number
   ): void {
     ctx.save();
     ctx.globalAlpha = Math.min(0.95, alpha);
-    const bannerW = Math.min(width - 40, 640);
+    const bannerW = Math.min(width - 12, 640);
     const bannerX = (width - bannerW) / 2;
-    const bannerY = originY + 2;
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.86)';
+    const bannerY = originY - viewY >= 24 ? originY - 24 : originY + 2;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
     ctx.fillRect(bannerX, bannerY, bannerW, 22);
     ctx.strokeStyle = '#FACC15';
     ctx.lineWidth = 1.2;
     ctx.strokeRect(bannerX, bannerY, bannerW, 22);
 
     ctx.fillStyle = '#FEF08A';
-    ctx.font = '800 10px Montserrat, sans-serif';
+    ctx.font = width < 480 ? '800 9px Montserrat, sans-serif' : '800 10px Montserrat, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`💡 ${hint}`, width / 2, bannerY + 14.5);
+    ctx.fillText(`💡 ${hint}`, width / 2, bannerY + 14.5, bannerW - 12);
     ctx.restore();
   }
 
@@ -4090,6 +4146,265 @@ export class SumoLodeRunnerGame extends BaseGame {
     ctx.restore();
   }
 
+  private renderTouchControlDeck(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    layout: {
+      isPhonePortrait: boolean;
+      isPhoneLandscape: boolean;
+      touchDeckH: number;
+    },
+    biome: BiomePalette
+  ): void {
+    const totalStages = SUMO_LODE_LEVELS.length;
+    ctx.save();
+
+    if (layout.isPhonePortrait) {
+      const deckH = layout.touchDeckH;
+      const deckY = height - 26 - deckH;
+
+      // Control Deck Chassis Background
+      const deckGrad = ctx.createLinearGradient(0, deckY, 0, deckY + deckH);
+      deckGrad.addColorStop(0, 'rgba(15, 23, 42, 0.95)');
+      deckGrad.addColorStop(1, 'rgba(2, 6, 23, 0.98)');
+      ctx.fillStyle = deckGrad;
+      ctx.fillRect(0, deckY, width, deckH);
+
+      ctx.strokeStyle = biome.brickLight;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, deckY);
+      ctx.lineTo(width, deckY);
+      ctx.stroke();
+
+      // Top Utility Pill Bar inside Touch Deck (6 quick buttons)
+      const utilY = deckY + 6;
+      const utilH = 24;
+      const padX = 8;
+      const gap = 5;
+      const pillCount = 6;
+      const pillW = Math.floor((width - padX * 2 - gap * (pillCount - 1)) / pillCount);
+
+      const pills: { id: string; label: string; bg: string; fg: string; action: () => void }[] = [
+        {
+          id: 'deck_zoom',
+          label: this.mobileZoomCam ? '🔍 ZOOM' : '🗺️ FULL',
+          bg: this.mobileZoomCam ? '#0369A1' : '#334155',
+          fg: '#E0F2FE',
+          action: () => {
+            this.mobileZoomCam = !this.mobileZoomCam;
+            this.tileCacheDirty = true;
+            this.audio.playMenuTick();
+          }
+        },
+        {
+          id: 'deck_tut',
+          label: '🎓 DOJO',
+          bg: this.currentLevel === 0 ? '#0284C7' : '#1E293B',
+          fg: '#E0F2FE',
+          action: () => {
+            this.audio.playMenuTick();
+            this.loadLevel(0);
+          }
+        },
+        {
+          id: 'deck_prev',
+          label: '◀ PREV',
+          bg: this.currentLevel > 0 ? '#334155' : '#1E293B',
+          fg: '#F8FAFC',
+          action: () => {
+            if (this.currentLevel > 0) {
+              this.audio.playMenuTick();
+              this.loadLevel(this.currentLevel - 1);
+            }
+          }
+        },
+        {
+          id: 'deck_next',
+          label: 'NEXT ▶',
+          bg: this.currentLevel < totalStages ? '#334155' : '#1E293B',
+          fg: '#F8FAFC',
+          action: () => {
+            if (this.currentLevel < totalStages) {
+              this.audio.playMenuTick();
+              this.loadLevel(this.currentLevel + 1);
+            }
+          }
+        },
+        {
+          id: 'deck_retry',
+          label: '↻ RETRY',
+          bg: '#7F1D1D',
+          fg: '#FCA5A5',
+          action: () => {
+            this.audio.playTap();
+            this.loadLevel(this.currentLevel);
+          }
+        },
+        {
+          id: 'deck_solo',
+          label: this.soloMode ? '👤 1P' : '🤖+CPU',
+          bg: this.soloMode ? '#15803D' : '#4338CA',
+          fg: '#F8FAFC',
+          action: () => {
+            this.toggleSoloMode();
+          }
+        }
+      ];
+
+      for (let i = 0; i < pills.length; i++) {
+        const p = pills[i];
+        const px = padX + i * (pillW + gap);
+        ctx.fillStyle = p.bg;
+        ctx.beginPath();
+        ctx.roundRect(px, utilY, pillW, utilH, 6);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.fillStyle = p.fg;
+        ctx.font = '800 8.5px Montserrat, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(p.label, px + pillW / 2, utilY + 15, pillW - 4);
+        this.hudHitboxes.push({ id: p.id, x: px, y: utilY, w: pillW, h: utilH, action: p.action });
+      }
+
+      // Main Lower Control Area: Left 4-Way D-Pad & Right Dig L / Dig R Arcade Buttons
+      const mainTop = utilY + utilH + 6;
+      const mainH = deckH - (mainTop - deckY) - 4;
+      const dpadR = Math.min(58, Math.floor(mainH * 0.46));
+      const dpadCX = Math.max(dpadR + 16, Math.floor(width * 0.23));
+      const dpadCY = mainTop + Math.floor(mainH * 0.5);
+      this.dpadZone = { cx: dpadCX, cy: dpadCY, r: dpadR };
+      this.drawArcadeDpad(ctx, dpadCX, dpadCY, dpadR);
+
+      // Right Side: Large Dedicated ⛏️ DIG LEFT & ⛏️ DIG RIGHT Arcade Buttons
+      const btnAreaX = Math.floor(width * 0.47);
+      const btnAreaW = width - btnAreaX - 10;
+      const digBtnW = Math.floor((btnAreaW - 10) / 2);
+      const digBtnH = Math.min(106, mainH - 12);
+      const digBtnY = dpadCY - Math.floor(digBtnH / 2);
+
+      this.digLeftZone = { x: btnAreaX, y: digBtnY, w: digBtnW, h: digBtnH };
+      this.digRightZone = { x: btnAreaX + digBtnW + 10, y: digBtnY, w: digBtnW, h: digBtnH };
+      this.drawDigButton(ctx, this.digLeftZone, '⛏️ DIG L', '↙ LEFT BRICK', this.digLeftPressed);
+      this.drawDigButton(ctx, this.digRightZone, '⛏️ DIG R', '↘ RIGHT BRICK', this.digRightPressed);
+    } else {
+      // Landscape Phone Mode: Left Gutter D-Pad & Right Gutter Stacked Dig L / Dig R Buttons
+      const dpadR = 44;
+      const dpadCX = 52;
+      const dpadCY = height - 26 - 62;
+      this.dpadZone = { cx: dpadCX, cy: dpadCY, r: dpadR };
+      this.drawArcadeDpad(ctx, dpadCX, dpadCY, dpadR);
+
+      const digW = 88;
+      const digH = 52;
+      const digX = width - digW - 8;
+      const digL_Y = height - 26 - digH * 2 - 14;
+      const digR_Y = height - 26 - digH - 6;
+      this.digLeftZone = { x: digX, y: digL_Y, w: digW, h: digH };
+      this.digRightZone = { x: digX, y: digR_Y, w: digW, h: digH };
+      this.drawDigButton(ctx, this.digLeftZone, '⛏️ DIG L', '↙ BRICK', this.digLeftPressed);
+      this.drawDigButton(ctx, this.digRightZone, '⛏️ DIG R', '↘ BRICK', this.digRightPressed);
+    }
+
+    ctx.restore();
+  }
+
+  private drawArcadeDpad(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
+    ctx.save();
+    // Outer recessed circular well
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.92)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, r + 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    const armW = Math.round(r * 0.56);
+    const armL = Math.round(r * 0.92);
+
+    // Up Arm
+    ctx.fillStyle = this.virtualDpadThrottle > 0 ? '#38BDF8' : '#334155';
+    ctx.beginPath();
+    ctx.roundRect(cx - armW / 2, cy - armL, armW, armL, 6);
+    ctx.fill();
+
+    // Down Arm
+    ctx.fillStyle = this.virtualDpadThrottle < 0 ? '#38BDF8' : '#334155';
+    ctx.beginPath();
+    ctx.roundRect(cx - armW / 2, cy, armW, armL, 6);
+    ctx.fill();
+
+    // Left Arm
+    ctx.fillStyle = this.virtualDpadSteer < 0 ? '#38BDF8' : '#334155';
+    ctx.beginPath();
+    ctx.roundRect(cx - armL, cy - armW / 2, armL, armW, 6);
+    ctx.fill();
+
+    // Right Arm
+    ctx.fillStyle = this.virtualDpadSteer > 0 ? '#38BDF8' : '#334155';
+    ctx.beginPath();
+    ctx.roundRect(cx, cy - armW / 2, armL, armW, 6);
+    ctx.fill();
+
+    // Center hub
+    ctx.fillStyle = '#1E293B';
+    ctx.beginPath();
+    ctx.arc(cx, cy, armW * 0.38, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Directional Arrows
+    ctx.fillStyle = '#F8FAFC';
+    ctx.font = '900 12px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('▲', cx, cy - armL * 0.62);
+    ctx.fillText('▼', cx, cy + armL * 0.62);
+    ctx.fillText('◀', cx - armL * 0.62, cy);
+    ctx.fillText('▶', cx + armL * 0.62, cy);
+    ctx.restore();
+  }
+
+  private drawDigButton(
+    ctx: CanvasRenderingContext2D,
+    box: { x: number; y: number; w: number; h: number },
+    title: string,
+    sub: string,
+    active: boolean
+  ): void {
+    ctx.save();
+    const grad = ctx.createLinearGradient(box.x, box.y, box.x, box.y + box.h);
+    if (active) {
+      grad.addColorStop(0, '#FACC15');
+      grad.addColorStop(1, '#EA580C');
+    } else {
+      grad.addColorStop(0, '#B45309');
+      grad.addColorStop(1, '#7C2D12');
+    }
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(box.x, box.y, box.w, box.h, 12);
+    ctx.fill();
+
+    ctx.strokeStyle = active ? '#FEF08A' : '#F59E0B';
+    ctx.lineWidth = active ? 2.5 : 1.8;
+    ctx.stroke();
+
+    ctx.fillStyle = '#FEF9C3';
+    ctx.font = box.h < 65 ? '900 11px Montserrat, sans-serif' : '900 13px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(title, box.x + box.w / 2, box.y + box.h * 0.44, box.w - 8);
+
+    ctx.fillStyle = '#FED7AA';
+    ctx.font = '800 8.5px Montserrat, sans-serif';
+    ctx.fillText(sub, box.x + box.w / 2, box.y + box.h * 0.72, box.w - 8);
+    ctx.restore();
+  }
+
   private renderLodeRunnerHUD(
     ctx: CanvasRenderingContext2D,
     width: number,
@@ -4097,10 +4412,8 @@ export class SumoLodeRunnerGame extends BaseGame {
     bp: LevelBlueprint,
     biome: BiomePalette
   ): void {
-    this.hudHitboxes.length = 0;
-
     const barY = height - 26;
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
     ctx.fillRect(0, barY, width, 26);
     ctx.strokeStyle = biome.brickLight;
     ctx.lineWidth = 1.5;
@@ -4115,6 +4428,57 @@ export class SumoLodeRunnerGame extends BaseGame {
 
     const btnY = barY + 3;
     const btnH = 20;
+
+    // Compact iPhone / Mobile Status Bar Layout (when width < 720)
+    if (width < 720) {
+      ctx.textAlign = 'left';
+      ctx.fillStyle = remainingGold === 0 ? '#4ADE80' : '#FACC15';
+      ctx.font = '900 9px Montserrat, sans-serif';
+      const livesLabel = this.currentLevel === 0 ? '∞' : String(this.teamLives);
+      const goldText =
+        remainingGold === 0
+          ? '✨ ESCAPE OPEN!'
+          : `🪙 ${totalGold - remainingGold}/${totalGold} ❤️${livesLabel}`;
+      ctx.fillText(goldText, 8, btnY + 13.5);
+
+      // Center Stage Label
+      ctx.fillStyle = '#FDE047';
+      ctx.font = '900 9px Montserrat, sans-serif';
+      ctx.textAlign = 'center';
+      const shortStage =
+        this.currentLevel === 0
+          ? 'STAGE 0: TRAINING DOJO'
+          : `STAGE ${this.currentLevel}/${totalStages}: ${bp.title.toUpperCase()}`;
+      ctx.fillText(shortStage, width * 0.5, btnY + 13.5, Math.max(110, width - 190));
+
+      // Right BGM toggle pill + Score
+      const bgmW = 38;
+      const bgmX = width - bgmW - 64;
+      ctx.fillStyle = this.musicEnabled ? '#0F766E' : '#334155';
+      ctx.fillRect(bgmX, btnY, bgmW, btnH);
+      ctx.fillStyle = this.musicEnabled ? '#5EEAD4' : '#94A3B8';
+      ctx.font = '800 8px Montserrat, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(this.musicEnabled ? '🎵ON' : '🔇OFF', bgmX + bgmW / 2, btnY + 13.5);
+      this.hudHitboxes.push({
+        id: 'toggle_bgm',
+        x: bgmX,
+        y: btnY,
+        w: bgmW,
+        h: btnH,
+        action: () => {
+          this.musicEnabled = !this.musicEnabled;
+          this.audio.playMenuTick();
+        }
+      });
+
+      const p1Score = this.runners.get(0)?.score ?? 0;
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#38BDF8';
+      ctx.font = '800 9px Montserrat, sans-serif';
+      ctx.fillText(`P1:${p1Score}`, width - 6, btnY + 13.5);
+      return;
+    }
 
     // Left Status: Gold Remaining & Lives
     ctx.textAlign = 'left';
