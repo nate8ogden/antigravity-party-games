@@ -5542,10 +5542,23 @@ export class GameManager {
     }
 
     if (this.isModalOpen) {
+      const modalGame = GAME_CATALOG[this.modalGameIndex];
       if (key === 'Escape') {
         this.closeGameModal();
       } else if (key === 'Enter' || key === ' ') {
-        this.startGame(GAME_CATALOG[this.modalGameIndex].id);
+        this.startGame(modalGame.id);
+      } else if (modalGame?.id === 'sumo_lode_runner') {
+        if (key === 'ArrowLeft' || key === '[') {
+          this.lodeRunnerLevel = Math.max(0, this.lodeRunnerLevel - 1);
+          this.audio.playTap();
+        } else if (key === 'ArrowRight' || key === ']') {
+          this.lodeRunnerLevel = Math.min(SUMO_LODE_LEVELS.length, this.lodeRunnerLevel + 1);
+          this.audio.playTap();
+        } else if (key === 'b' || key === 'B') {
+          this.lodeRunnerSoloMode = !this.lodeRunnerSoloMode;
+          this.setPlayerCount(this.lodeRunnerSoloMode ? 0 : 1);
+          this.audio.playTap();
+        }
       }
       return;
     }
@@ -6911,7 +6924,7 @@ export class GameManager {
 
       // Universal Match Anti-Stalemate Watchdog: ensure no standard round can stall indefinitely
       this.matchElapsedSeconds += effectiveDt;
-      const isUnlimitedMode = (this.activeGame as any)?.isNoTimeLimit === true;
+      const isUnlimitedMode = (this.activeGame as any)?.isNoTimeLimit === true || (this.activeGame as any)?.isMultiRound === true;
       if (!isUnlimitedMode && this.matchElapsedSeconds >= 65.0) {
         if (!this.activeGame.isFinished) {
           this.activeGame.isFinished = true;
@@ -8243,16 +8256,16 @@ export class GameManager {
       this.ctx.fillText('👥 2P CO-OP / VS CPU BOT', mode2X + modeW / 2, modeY + 16.5);
       this.ctx.restore();
 
-      // ROW 2: Chapter Quick-Jump Pills (Dojo 0 | 1983 1-10 | Ch 2 11-16 | Ch 3 17-22 | Ch 4 23-34 | Ch 5 35-40)
+      // ROW 2: Chapter Quick-Jump Pills (Dojo 0 | 1983 1-10 | Ch 2 11-16 | Ch 3 17-22 | Ch 4 23-28 | Ch 5 29-40)
       const chapY = modeY + 32;
       const chapH = 24;
       const chapOpts: { label: string; startLvl: number; endLvl: number }[] = [
         { label: '🎓 Dojo (0)', startLvl: 0, endLvl: 0 },
         { label: '1983 (1-10)', startLvl: 1, endLvl: 10 },
-        { label: 'Ch 2 (11-18)', startLvl: 11, endLvl: 18 },
-        { label: 'Ch 3 (19-26)', startLvl: 19, endLvl: 26 },
-        { label: 'Ch 4 (27-33)', startLvl: 27, endLvl: 33 },
-        { label: 'Ch 5 (34-40)', startLvl: 34, endLvl: 40 }
+        { label: 'Ch 2 (11-16)', startLvl: 11, endLvl: 16 },
+        { label: 'Ch 3 (17-22)', startLvl: 17, endLvl: 22 },
+        { label: 'Ch 4 (23-28)', startLvl: 23, endLvl: 28 },
+        { label: 'Ch 5 (29-40)', startLvl: 29, endLvl: 40 }
       ];
       const chapGap = 4;
       const chapW = (rowW - chapGap * (chapOpts.length - 1)) / chapOpts.length;

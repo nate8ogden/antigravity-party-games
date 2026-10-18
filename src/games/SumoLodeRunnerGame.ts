@@ -1547,15 +1547,35 @@ export class SumoLodeRunnerGame extends BaseGame {
     super.destroy();
   }
 
-  private spawnActiveRunners(): void {
+  private spawnActiveRunners(preserveStats: boolean = false): void {
+    const prevStats = new Map<PlayerId, { score: number; goldCollected: number; guardsTrapped: number; levelsCleared: number }>();
+    if (preserveStats) {
+      for (const [id, r] of this.runners.entries()) {
+        prevStats.set(id, {
+          score: r.score,
+          goldCollected: r.goldCollected,
+          guardsTrapped: r.guardsTrapped,
+          levelsCleared: r.levelsCleared
+        });
+      }
+    }
+
     this.runners.clear();
-    const active = this.getActivePlayers();
+    let active = this.getActivePlayers();
     const humanCount = active.filter((p) => p.type === 'human').length;
+
+    // If the user toggled +CPU Partner ON (!this.soloMode) while in 1P Solo lobby mode, enable P2 as a CPU partner
+    if (!this.soloMode && humanCount === 1 && active.length === 1 && this.players[1]) {
+      this.players[1].type = 'bot_normal';
+      active = this.getActivePlayers();
+    }
+
     // In 1P Solo Mode (when only 1 human player is playing), filter out CPU bots so the player can solve puzzles stress-free!
     const filtered = this.soloMode && humanCount === 1 ? active.filter((p) => p.type === 'human') : active;
     const list = filtered.length > 0 ? filtered : active;
 
     list.forEach((p) => {
+      const saved = prevStats.get(p.id);
       this.runners.set(p.id, {
         id: p.id,
         x: 10,
@@ -1570,10 +1590,10 @@ export class SumoLodeRunnerGame extends BaseGame {
         respawnTimer: 0,
         invulnTimer: 1.5,
         animPhase: 0,
-        score: 0,
-        goldCollected: 0,
-        guardsTrapped: 0,
-        levelsCleared: 0,
+        score: saved ? saved.score : 0,
+        goldCollected: saved ? saved.goldCollected : 0,
+        guardsTrapped: saved ? saved.guardsTrapped : 0,
+        levelsCleared: saved ? saved.levelsCleared : 0,
         dropFromRopeCooldown: 0
       });
     });
@@ -1883,9 +1903,11 @@ export class SumoLodeRunnerGame extends BaseGame {
   }
 
   public getCurrentBiome(): BiomePalette {
-    if (this.currentLevel <= 0) return BIOME_PALETTES[0];
-    const chapterIdx = Math.min(4, Math.floor((this.currentLevel - 1) / 8));
-    return BIOME_PALETTES[chapterIdx];
+    if (this.currentLevel <= 10) return BIOME_PALETTES[0];
+    if (this.currentLevel <= 16) return BIOME_PALETTES[1];
+    if (this.currentLevel <= 22) return BIOME_PALETTES[2];
+    if (this.currentLevel <= 34) return BIOME_PALETTES[3];
+    return BIOME_PALETTES[4];
   }
 
   /**
@@ -1893,9 +1915,17 @@ export class SumoLodeRunnerGame extends BaseGame {
    */
   private triggerMusicEvent(mood: 'positive' | 'negative' | 'escape', duration: number = 2.4): void {
     if (this.escapeRevealed && mood !== 'negative') {
+      if (this.bgmMood !== 'escape') {
+        this.bgmStepIndex = 0;
+        this.bgmStepTimer = 0.01;
+      }
       this.bgmMood = 'escape';
       this.bgmMoodTimer = 999;
       return;
+    }
+    if (this.bgmMood !== mood && (mood === 'positive' || mood === 'escape')) {
+      this.bgmStepIndex = 0;
+      this.bgmStepTimer = 0.01;
     }
     this.bgmMood = mood;
     this.bgmMoodTimer = Math.max(this.bgmMoodTimer, duration);
@@ -1907,9 +1937,16 @@ export class SumoLodeRunnerGame extends BaseGame {
   public toggleSoloMode(): void {
     this.soloMode = !this.soloMode;
     this.audio.playMenuTick();
-    // Preserve P1 score/position if toggling live, or respawn runners cleanly on current stage
-    this.spawnActiveRunners();
+    // Preserve P1 score/stats and respawn runners cleanly on current stage
+    this.spawnActiveRunners(true);
     this.loadLevel(this.currentLevel);
+    this.particles.showFloatingText(
+      this.soloMode ? '👤 1P SOLO MODE (NO CPU)' : '🤖 CPU PARTNER ENABLED!',
+      this.lastWidth / 2,
+      78,
+      this.soloMode ? '#4ADE80' : '#38BDF8',
+      16
+    );
   }
 
   /**
