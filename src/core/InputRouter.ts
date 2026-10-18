@@ -1227,25 +1227,25 @@ export class InputRouter {
       if (this.activePlayerMask[botPid] && this.humanPlayerMask[botPid]) {
         const isPressed = this.states[botPid].pressed;
         const c = this.playerColors[botPid];
-        ctx.fillStyle = isPressed ? 'rgba(239, 68, 68, 0.24)' : 'rgba(15, 23, 42, 0.58)';
+        ctx.fillStyle = isPressed ? 'rgba(239, 68, 68, 0.28)' : 'rgba(15, 23, 42, 0.65)';
         ctx.strokeStyle = c;
         ctx.lineWidth = isPressed ? 2.5 : 1.5;
-        const padW = this.controlMode === 'directional' ? Math.min(240, w * 0.52) : Math.min(310, w * 0.72);
-        const padH = 34;
-        const padX = 14;
-        const padY = h - padH - 10;
+        const padW = this.controlMode === 'directional' ? Math.min(240, w * 0.52) : Math.min(320, w * 0.84);
+        const padH = this.controlMode === 'directional' ? 36 : 42;
+        const padX = this.controlMode === 'directional' ? 14 : (w - padW) / 2;
+        const padY = h - padH - 14;
         ctx.beginPath();
         ctx.roundRect(padX, padY, padW, padH, 10);
         ctx.fill();
         ctx.stroke();
 
         ctx.fillStyle = '#F8FAFC';
-        ctx.font = '800 10px Montserrat, sans-serif';
+        ctx.font = '800 10.5px Montserrat, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(
-          this.controlMode === 'single_button' ? `📱 P${botPid + 1} TOUCH: TAP / HOLD / DRAG` : `🕹️ P${botPid + 1} DRAG THUMBSTICK`,
+          this.controlMode === 'single_button' ? `📱 P${botPid + 1}: TAP ANYWHERE ON YOUR SIDE` : `🕹️ P${botPid + 1} DRAG THUMBSTICK`,
           padX + padW / 2,
-          padY + 21
+          padY + padH / 2 + 3.5
         );
 
         if (this.controlMode === 'directional') {
@@ -1257,7 +1257,7 @@ export class InputRouter {
           ctx.fill();
           ctx.stroke();
           ctx.fillStyle = '#FFFFFF';
-          ctx.fillText(`⚡ P${botPid + 1} ACTION`, actX + actW / 2, padY + 21);
+          ctx.fillText(`⚡ P${botPid + 1} ACTION`, actX + actW / 2, padY + padH / 2 + 3.5);
         }
       }
 
@@ -1265,14 +1265,14 @@ export class InputRouter {
       if (this.activePlayerMask[topPid] && this.humanPlayerMask[topPid]) {
         const isPressed = this.states[topPid].pressed;
         const c = this.playerColors[topPid];
-        ctx.fillStyle = isPressed ? 'rgba(59, 130, 246, 0.24)' : 'rgba(15, 23, 42, 0.58)';
+        ctx.fillStyle = isPressed ? 'rgba(59, 130, 246, 0.28)' : 'rgba(15, 23, 42, 0.65)';
         ctx.strokeStyle = c;
         ctx.lineWidth = isPressed ? 2.5 : 1.5;
-        const padW = this.controlMode === 'directional' ? Math.min(240, w * 0.52) : Math.min(310, w * 0.72);
-        const padH = 32;
+        const padW = this.controlMode === 'directional' ? Math.min(240, w * 0.52) : Math.min(320, w * 0.84);
+        const padH = this.controlMode === 'directional' ? 36 : 42;
         // Top player's thumbstick is placed under their left hand (screen right)
         const padX = this.controlMode === 'directional' ? w - padW - 14 : (w - padW) / 2;
-        const padY = 46;
+        const padY = 16;
         ctx.beginPath();
         ctx.roundRect(padX, padY, padW, padH, 10);
         ctx.fill();
@@ -1282,11 +1282,11 @@ export class InputRouter {
         ctx.translate(padX + padW / 2, padY + padH / 2);
         ctx.rotate(Math.PI); // Rotate 180° so text faces top player sitting opposite
         ctx.fillStyle = '#F8FAFC';
-        ctx.font = '800 10px Montserrat, sans-serif';
+        ctx.font = '800 10.5px Montserrat, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(
-          this.controlMode === 'single_button' ? `📱 P${topPid + 1} TOP: TAP / HOLD / DRAG` : `🕹️ P${topPid + 1} THUMBSTICK`,
+          this.controlMode === 'single_button' ? `📱 P${topPid + 1}: TAP ANYWHERE ON YOUR SIDE` : `🕹️ P${topPid + 1} THUMBSTICK`,
           0,
           0
         );
@@ -1306,7 +1306,7 @@ export class InputRouter {
           ctx.translate(actX + actW / 2, padY + padH / 2);
           ctx.rotate(Math.PI); // Rotate 180° so text faces top player sitting opposite
           ctx.fillStyle = '#FFFFFF';
-          ctx.font = '800 10px Montserrat, sans-serif';
+          ctx.font = '800 10.5px Montserrat, sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(`⚡ P${topPid + 1} ACTION`, 0, 0);
@@ -1316,27 +1316,27 @@ export class InputRouter {
     } else {
       // 4-Corner Touch Pads for 3P / 4P Phone Mode
       const corners: { pid: PlayerId; x: number; y: number; label: string }[] = [
-        { pid: 0, x: 14, y: 46, label: 'P1 TOUCH' },
-        { pid: 1, x: w - 118, y: 46, label: 'P2 TOUCH' },
-        { pid: 2, x: 14, y: h - 42, label: 'P3 TOUCH' },
-        { pid: 3, x: w - 118, y: h - 42, label: 'P4 TOUCH' }
+        { pid: 0, x: 14, y: 16, label: 'P1 TOUCH' },
+        { pid: 1, x: w - 124, y: 16, label: 'P2 TOUCH' },
+        { pid: 2, x: 14, y: h - 50, label: 'P3 TOUCH' },
+        { pid: 3, x: w - 124, y: h - 50, label: 'P4 TOUCH' }
       ];
       for (const cn of corners) {
         if (!this.activePlayerMask[cn.pid] || !this.humanPlayerMask[cn.pid]) continue;
         const active = this.states[cn.pid].pressed;
         const c = this.playerColors[cn.pid];
-        ctx.fillStyle = active ? c : 'rgba(15, 23, 42, 0.58)';
+        ctx.fillStyle = active ? c : 'rgba(15, 23, 42, 0.65)';
         ctx.strokeStyle = c;
         ctx.lineWidth = active ? 2.5 : 1.5;
         ctx.beginPath();
-        ctx.roundRect(cn.x, cn.y, 104, 30, 9);
+        ctx.roundRect(cn.x, cn.y, 110, 34, 10);
         ctx.fill();
         ctx.stroke();
 
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = '800 10px Montserrat, sans-serif';
+        ctx.font = '800 10.5px Montserrat, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(this.controlMode === 'directional' ? `⚡ P${cn.pid + 1} ACT` : `📱 ${cn.label}`, cn.x + 52, cn.y + 19);
+        ctx.fillText(this.controlMode === 'directional' ? `⚡ P${cn.pid + 1} ACT` : `📱 ${cn.label}`, cn.x + 55, cn.y + 21);
       }
     }
     ctx.restore();

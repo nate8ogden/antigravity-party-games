@@ -7720,10 +7720,10 @@ export class GameManager {
     const activePlayerCount = this.players.filter((p) => p.type !== 'disabled').length;
 
     // Card sizing
-    const cardW = 195;
-    const cardH = 205;
-    const gap = 16;
-    const cols = Math.max(1, Math.floor((galleryW + gap) / (cardW + gap)));
+    const cols = this.getGalleryCols();
+    const gap = w < 600 ? 10 : 16;
+    const cardW = w < 600 ? Math.floor((galleryW - (cols - 1) * gap) / cols) : 195;
+    const cardH = w < 600 ? Math.round(cardW * 1.05) : 205;
     const totalGridW = cols * cardW + (cols - 1) * gap;
     const startX = galleryX + Math.max(0, (galleryW - totalGridW) / 2);
     const rows = Math.ceil(displayedGames.length / cols);
@@ -10378,18 +10378,52 @@ export class GameManager {
 
     // Corner player HUD status pills with high-contrast frosted backing
     const isOrbital = this.activeGame instanceof OrbitalSlingshotGame;
+    const isPhone = this.deviceMode === 'phone';
+    const activeCount = this.players.filter((p) => p.type !== 'disabled').length;
+
     const hudPositions = [
-      { x: 18, y: 22, align: 'left' as const, p: this.players[0], keys: isOrbital ? 'W / Space' : 'WASD + Space' },
-      { x: w - 18, y: 22, align: 'right' as const, p: this.players[1], keys: isOrbital ? '↑ / Enter' : 'Arrows + Enter' },
-      { x: 18, y: h - 22, align: 'left' as const, p: this.players[2], keys: isOrbital ? 'I / U' : 'C / IJKL' },
-      { x: w - 18, y: h - 22, align: 'right' as const, p: this.players[3], keys: isOrbital ? '8 / 0' : 'M / Numpad' }
+      {
+        x: 18,
+        y: isPhone && activeCount <= 2 ? h - 24 : 22,
+        align: 'left' as const,
+        p: this.players[0],
+        keys: isOrbital ? 'W / Space' : 'WASD + Space',
+        rotate180: false
+      },
+      {
+        x: w - 18,
+        y: 22,
+        align: 'right' as const,
+        p: this.players[1],
+        keys: isOrbital ? '↑ / Enter' : 'Arrows + Enter',
+        rotate180: isPhone && activeCount <= 2
+      },
+      {
+        x: 18,
+        y: h - 22,
+        align: 'left' as const,
+        p: this.players[2],
+        keys: isOrbital ? 'I / U' : 'C / IJKL',
+        rotate180: false
+      },
+      {
+        x: w - 18,
+        y: h - 22,
+        align: 'right' as const,
+        p: this.players[3],
+        keys: isOrbital ? '8 / 0' : 'M / Numpad',
+        rotate180: false
+      }
     ];
 
     for (const hp of hudPositions) {
       if (hp.p.type === 'disabled') continue;
 
       this.ctx.save();
-      const pillText = `${hp.p.name} [${hp.keys}]`;
+      const isBot = hp.p.type.startsWith('bot_');
+      const pillText = isPhone
+        ? (isBot ? `${hp.p.name} [BOT]` : `${hp.p.name} (${hp.p.score}★)`)
+        : `${hp.p.name} [${hp.keys}]`;
       this.ctx.font = '900 11px Montserrat, sans-serif';
       const textW = this.ctx.measureText(pillText).width;
       
@@ -10401,13 +10435,18 @@ export class GameManager {
       const pillX = hp.align === 'left' ? hp.x : hp.x - pillW;
       const pillY = hp.y - pillH / 2;
 
+      if (hp.rotate180) {
+        this.ctx.translate(pillX + pillW / 2, pillY + pillH / 2);
+        this.ctx.rotate(Math.PI);
+        this.ctx.translate(-(pillX + pillW / 2), -(pillY + pillH / 2));
+      }
+
       // High-contrast frosted dark pill with 3D bevel
       this.drawRoundedRect(pillX, pillY + 2, pillW, pillH, 15, hp.p.colorDark);
       this.drawRoundedRect(pillX, pillY, pillW, pillH, 15, 'rgba(15, 23, 42, 0.90)', hp.p.color, 1.8);
 
       // Render miniature vector mascot inside HUD pill
       const charX = hp.align === 'left' ? pillX + 18 : pillX + pillW - 18;
-      const isBot = hp.p.type.startsWith('bot_');
       drawCharacter(this.ctx, charX, pillY + pillH / 2, 11, hp.p.id, isBot, 'idle', performance.now() * 0.001);
 
       // Clear readable white text clipped safely within pill bounds
@@ -10597,10 +10636,13 @@ export class GameManager {
 
     // Active Game Title & Quick Control Banner above the countdown
     if (this.activeGame) {
-      const gameMeta = GAME_CATALOG[this.selectedGameIndex];
+      const activeMeta = this.activeGameId
+        ? GAME_CATALOG.find((g) => g.id === this.activeGameId)
+        : null;
+      const gameMeta = activeMeta || GAME_CATALOG[this.selectedGameIndex];
       if (gameMeta) {
-        const bannerW = Math.min(480, w * 0.85);
-        const bannerH = 58;
+        const bannerW = Math.min(480, w * 0.90);
+        const bannerH = 62;
         const bannerX = w / 2 - bannerW / 2;
         const bannerY = h / 2 - 130;
 
@@ -10608,17 +10650,38 @@ export class GameManager {
         this.ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
         this.ctx.shadowBlur = 16;
         this.ctx.shadowOffsetY = 4;
-        this.drawRoundedRect(bannerX, bannerY, bannerW, bannerH, 12, 'rgba(15, 23, 42, 0.92)', '#38BDF8', 1.5);
+        this.drawRoundedRect(bannerX, bannerY, bannerW, bannerH, 12, 'rgba(15, 23, 42, 0.94)', '#38BDF8', 1.5);
         this.ctx.restore();
 
         this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.font = '900 18px Montserrat, sans-serif';
+        this.ctx.font = '900 17px Montserrat, sans-serif';
         this.ctx.textAlign = 'center';
-        this.ctx.fillText(gameMeta.title.toUpperCase(), w / 2, bannerY + 25);
+        this.ctx.fillText(gameMeta.title.toUpperCase(), w / 2, bannerY + 24);
 
+        // Responsive mobile action prompt
         this.ctx.fillStyle = '#86EFAC';
+        let promptText = `🎮 ${gameMeta.controlPrompt}`;
+        if (this.deviceMode === 'phone') {
+          const isSingle = (this.input as any)?.controlMode === 'single_button';
+          promptText = isSingle
+            ? '📱 TAP ANYWHERE ON YOUR HALF TO ACTION'
+            : '🕹️ DRAG THUMBSTICK  •  ⚡ TAP ACTION BUTTON';
+        }
+
+        const maxTextW = bannerW - 20;
         this.ctx.font = 'bold 11px Montserrat, sans-serif';
-        this.ctx.fillText(`🎮 ${gameMeta.controlPrompt}`, w / 2, bannerY + 45);
+        let textW = this.ctx.measureText(promptText).width;
+        if (textW > maxTextW) {
+          this.ctx.font = 'bold 9.5px Montserrat, sans-serif';
+          textW = this.ctx.measureText(promptText).width;
+          if (textW > maxTextW) {
+            while (promptText.length > 10 && this.ctx.measureText(promptText + '...').width > maxTextW) {
+              promptText = promptText.slice(0, -4);
+            }
+            promptText += '...';
+          }
+        }
+        this.ctx.fillText(promptText, w / 2, bannerY + 47);
       }
     }
 
