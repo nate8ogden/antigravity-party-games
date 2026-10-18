@@ -2221,6 +2221,7 @@ export class SumoLodeRunnerGame extends BaseGame {
       this.escapeRevealed = true;
       this.escapeFlashTimer = 1.2;
       this.tileCacheDirty = true;
+      this.audio.playSecretChime();
       this.audio.playFanfare();
       this.triggerMusicEvent('escape', 999);
       this.particles.showFloatingText('⚡ ESCAPE LADDER REVEALED! CLIMB TO TOP!', width / 2, originY + 28, '#FDE047', 20);
@@ -2404,15 +2405,27 @@ export class SumoLodeRunnerGame extends BaseGame {
       const floorSupport = this.isTileSupported(col, row) && (onLadder || r.y >= row - 0.08);
       const supported = onLadder || onRope || floorSupport;
 
-      // Reveal false brick if player steps or falls through a trapdoor
+      // Reveal false brick if player steps or falls through a trapdoor (with Zelda/Broderbund secret discovery chime!)
       const belowRow = Math.min(GRID_ROWS - 1, row + 1);
-      if (this.gridMem[belowRow * GRID_COLS + col] === TILE_TRAPDOOR) {
-        this.trapdoorRevealed[belowRow * GRID_COLS + col] = 1;
+      const belowIdx = belowRow * GRID_COLS + col;
+      if (this.gridMem[belowIdx] === TILE_TRAPDOOR && this.trapdoorRevealed[belowIdx] === 0) {
+        this.trapdoorRevealed[belowIdx] = 1;
         this.tileCacheDirty = true;
+        const tx = originX + (col + 0.5) * tileW;
+        const ty = originY + (belowRow + 0.5) * tileH;
+        this.audio.playSecretChime();
+        this.triggerMusicEvent('positive', 1.8);
+        this.particles.spawnSparks(tx, ty, '#38BDF8', 10);
+        this.particles.showFloatingText('✨ SECRET PASSAGE!', tx, ty - 10, '#38BDF8', 12);
       }
-      if (currentTile === TILE_TRAPDOOR) {
+      if (currentTile === TILE_TRAPDOOR && this.trapdoorRevealed[cellIdx] === 0) {
         this.trapdoorRevealed[cellIdx] = 1;
         this.tileCacheDirty = true;
+        const tx = originX + (col + 0.5) * tileW;
+        const ty = originY + (row + 0.5) * tileH;
+        this.audio.playSecretChime();
+        this.triggerMusicEvent('positive', 1.8);
+        this.particles.spawnSparks(tx, ty, '#38BDF8', 10);
       }
 
       if (!supported) {
@@ -2535,13 +2548,21 @@ export class SumoLodeRunnerGame extends BaseGame {
       if (!g.collected && g.carriedByGuardId === null && g.col === col && g.row === row) {
         g.collected = true;
         runner.goldCollected++;
-        runner.score += Math.round(250 * this.activeMutator.scoreMultiplier);
+        const isFreefall = runner.state === 'FALL';
+        const basePts = isFreefall ? 300 : 250;
+        const earned = Math.round(basePts * this.activeMutator.scoreMultiplier);
+        runner.score += earned;
         const px = originX + (col + 0.5) * tileW;
         const py = originY + (row + 0.5) * tileH;
         this.audio.playCoin();
-        this.triggerMusicEvent('positive', 2.4);
-        this.particles.spawnSparks(px, py, '#FDE047', 12);
-        this.particles.showFloatingText('+250 GOLD!', px, py - 12, '#FDE047', 13);
+        this.triggerMusicEvent('positive', isFreefall ? 2.8 : 2.4);
+        this.particles.spawnSparks(px, py, '#FDE047', isFreefall ? 18 : 12);
+        if (isFreefall) {
+          this.particles.spawnSparks(px, py, '#38BDF8', 8);
+          this.particles.showFloatingText(`⚡ +${earned} FREEFALL GOLD!`, px, py - 14, '#38BDF8', 13);
+        } else {
+          this.particles.showFloatingText(`+${earned} GOLD!`, px, py - 12, '#FDE047', 13);
+        }
       }
     }
 
@@ -3489,12 +3510,19 @@ export class SumoLodeRunnerGame extends BaseGame {
     const gStep3 = this.golds.find((g) => g.col === 20 && g.row === 9);
     const gStep4 = this.golds.find((g) => g.col === 18 && g.row === 2);
 
+    const p1 = this.runners.get(0) || Array.from(this.runners.values())[0];
+    const pCol = p1 ? Math.round(p1.x) : 3;
+    const pRow = p1 ? Math.round(p1.y) : 14;
+
     let stepNum = 5;
     let bannerTitle = 'STEP 5/5: CLIMB THE GOLDEN ESCAPE LADDER TO GRADUATE!';
     let bannerSub = 'Climb the revealed Golden Ladder (S) at the top-center all the way to ▲ EXIT ▲!';
     let targetCol = 13;
     let targetRow = 1;
     let targetLabel = '▲ CLIMB EXIT!';
+    let highlightColor = '#4ADE80';
+
+    ctx.save();
 
     if (gStep1 && !gStep1.collected) {
       stepNum = 1;
@@ -3506,33 +3534,62 @@ export class SumoLodeRunnerGame extends BaseGame {
     } else if (gStep2 && !gStep2.collected) {
       stepNum = 2;
       bannerTitle = 'STEP 2/5: EXCAVATE DOHYŌ CLAY BRICKS';
-      bannerSub = 'Stand on the ledge at left of the buried Gold & press [SPACE / E / ENTER] to dig the brick (#)!';
+      bannerSub = 'Stand at (10,10) left of the buried Gold & press [SPACE / E / ENTER] to dig the brick (#)!';
       targetCol = 11;
       targetRow = 11;
-      targetLabel = '2. DIG BRICK [SPACE]';
+      targetLabel = pCol === 10 && pRow === 10 ? '⚡ PRESS [SPACE / E] TO DIG!' : '2. DIG BRICK [SPACE]';
+      if (pCol === 10 && pRow === 10) highlightColor = '#FDE047';
+
+      // Draw subtle standing-spot guide at (10, 10) so player sees diagonal dig geometry
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]);
+      ctx.strokeRect(originX + 10 * tileW + 1, originY + 10 * tileH + 1, tileW - 2, tileH - 2);
+      ctx.setLineDash([]);
     } else if (gStep3 && !gStep3.collected) {
       stepNum = 3;
-      bannerTitle = 'STEP 3/5: SHIMMY ACROSS SACRED ROPES';
-      bannerSub = 'Climb the center ladder to the Sacred Rope (-), move RIGHT over the Gold & press DOWN [S / ▼]!';
+      bannerTitle = 'STEP 3/5: SHIMMY ACROSS SACRED ROPES (MANDATORY)';
+      bannerSub = 'Climb the center ladder to the Sacred Rope (-), shimmy RIGHT to col 20 & press DOWN [S / ▼]!';
       targetCol = 20;
       targetRow = 7;
-      targetLabel = '3. PRESS DOWN [S/▼] HERE!';
+      const onRopeAtDrop = pRow === 7 && pCol === 20;
+      targetLabel = onRopeAtDrop ? '⚡ PRESS DOWN [S / ▼] NOW!' : '3. DROP OFF ROPE [S/▼]!';
+      if (onRopeAtDrop) highlightColor = '#FDE047';
+
+      // Draw pulsing vertical drop-arrow column from rope (20, 7) down to Gold #3 at (20, 9)
+      const dropX = originX + 20.5 * tileW;
+      ctx.strokeStyle = 'rgba(253, 224, 71, 0.75)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(dropX, originY + 7.5 * tileH);
+      ctx.lineTo(dropX, originY + 9.2 * tileH);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#FDE047';
+      ctx.font = '900 10px Montserrat, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('▼', dropX, originY + 8.6 * tileH + Math.sin(now * 8) * 2);
     } else if (gStep4 && !gStep4.collected) {
       stepNum = 4;
+      const guard = this.guards[0];
+      const isGuardTrapped = guard && guard.state === 'TRAPPED';
       bannerTitle = 'STEP 4/5: TRAP THE ONI GUARD & WALK OVER ITS HEAD';
-      bannerSub = 'Press [SPACE / Q / E] to dig a trap hole for the Oni Guard, walk over its head & climb to the Gold!';
+      bannerSub = isGuardTrapped
+        ? 'Oni is trapped! Walk safely across its head to the left ladder (col 14) & climb to the Gold!'
+        : 'Press [SPACE / Q / E] to dig a trap hole for the Oni Guard, walk over its head & climb to the Gold!';
       targetCol = 18;
       targetRow = 2;
-      targetLabel = '4. TRAP GUARD & GRAB!';
+      targetLabel = isGuardTrapped ? '✓ ONI TRAPPED! WALK OVER & CLIMB!' : '4. TRAP GUARD & GRAB!';
+      if (isGuardTrapped) highlightColor = '#FDE047';
     }
 
     // Draw floating world callout badge + bouncing pointer at target tile
     const tx = originX + (targetCol + 0.5) * tileW;
     const ty = originY + targetRow * tileH - 8 + Math.sin(now * 6) * 3;
 
-    ctx.save();
     // Pulsing highlight ring around target tile
-    ctx.strokeStyle = '#4ADE80';
+    ctx.strokeStyle = highlightColor;
     ctx.lineWidth = 2;
     ctx.strokeRect(originX + targetCol * tileW - 2, originY + targetRow * tileH - 2, tileW + 4, tileH + 4);
 
@@ -3544,11 +3601,11 @@ export class SumoLodeRunnerGame extends BaseGame {
 
     ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
     ctx.fillRect(pillX, pillY, pillW, 18);
-    ctx.strokeStyle = '#4ADE80';
+    ctx.strokeStyle = highlightColor;
     ctx.lineWidth = 1.5;
     ctx.strokeRect(pillX, pillY, pillW, 18);
 
-    ctx.fillStyle = '#4ADE80';
+    ctx.fillStyle = highlightColor;
     ctx.textAlign = 'center';
     ctx.fillText(targetLabel, pillX + pillW / 2, pillY + 12.5);
 
