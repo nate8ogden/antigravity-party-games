@@ -1441,9 +1441,110 @@ export class SumoLodeRunnerGame extends BaseGame {
   private keyDownHandler: ((e: KeyboardEvent) => void) | null = null;
   private keyUpHandler: ((e: KeyboardEvent) => void) | null = null;
   private canvasClickHandler: ((e: MouseEvent) => void) | null = null;
+  private mouseMoveHandler: ((e: MouseEvent) => void) | null = null;
+  private mouseUpHandler: ((e: MouseEvent) => void) | null = null;
+  private touchStartHandler: ((e: TouchEvent) => void) | null = null;
+  private touchMoveHandler: ((e: TouchEvent) => void) | null = null;
+  private touchEndHandler: ((e: TouchEvent) => void) | null = null;
 
-  // Clickable HUD Hitboxes for Level Navigation
+  // Smart Mobile Follow-Cam & Dedicated iPhone Arcade Touch Control Deck State
+  private mobileZoomCam: boolean = true;
+  private camFocusX: number = 13.5;
+  private camFocusY: number = 10;
+  private virtualDpadSteer: number = 0;
+  private virtualDpadThrottle: number = 0;
+  private virtualDigDir: -1 | 1 | null = null;
+  private digLeftPressed: boolean = false;
+  private digRightPressed: boolean = false;
+  private activeDeckTouches: Map<number, 'dpad' | 'digL' | 'digR' | 'hud'> = new Map();
+  private dpadZone: { cx: number; cy: number; r: number } = { cx: 84, cy: 710, r: 56 };
+  private digLeftZone: { x: number; y: number; w: number; h: number } = { x: 0, y: 0, w: 0, h: 0 };
+  private digRightZone: { x: number; y: number; w: number; h: number } = { x: 0, y: 0, w: 0, h: 0 };
+
+  // Clickable HUD Hitboxes for Level Navigation & Mobile Controls
   private hudHitboxes: { id: string; x: number; y: number; w: number; h: number; action: () => void }[] = [];
+
+  private isTouchDeckVisible(width: number, height: number): boolean {
+    const isPhonePortrait = width < 640 && height > width;
+    const isPhoneLandscape = width < 930 && height < 480;
+    return isPhonePortrait || isPhoneLandscape || this.input?.deviceMode === 'phone';
+  }
+
+  private updateDpadFromPoint(cx: number, cy: number): void {
+    const dx = cx - this.dpadZone.cx;
+    const dy = cy - this.dpadZone.cy;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 8) {
+      this.virtualDpadSteer = 0;
+      this.virtualDpadThrottle = 0;
+      return;
+    }
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+    this.virtualDpadSteer = absX > 9 && absX >= absY * 0.55 ? Math.sign(dx) : 0;
+    this.virtualDpadThrottle = absY > 9 && absY >= absX * 0.55 ? -Math.sign(dy) : 0;
+  }
+
+  private processDeckPointerDown(pointerId: number, cx: number, cy: number): boolean {
+    if (this.isFinished) return false;
+    for (let i = 0; i < this.hudHitboxes.length; i++) {
+      const box = this.hudHitboxes[i];
+      if (cx >= box.x && cx <= box.x + box.w && cy >= box.y && cy <= box.y + box.h) {
+        this.activeDeckTouches.set(pointerId, 'hud');
+        box.action();
+        return true;
+      }
+    }
+    if (this.isTouchDeckVisible(this.lastWidth, this.lastHeight)) {
+      const dl = this.digLeftZone;
+      if (dl.w > 0 && cx >= dl.x && cx <= dl.x + dl.w && cy >= dl.y && cy <= dl.y + dl.h) {
+        this.activeDeckTouches.set(pointerId, 'digL');
+        this.digLeftPressed = true;
+        this.virtualDigDir = -1;
+        return true;
+      }
+      const dr = this.digRightZone;
+      if (dr.w > 0 && cx >= dr.x && cx <= dr.x + dr.w && cy >= dr.y && cy <= dr.y + dr.h) {
+        this.activeDeckTouches.set(pointerId, 'digR');
+        this.digRightPressed = true;
+        this.virtualDigDir = 1;
+        return true;
+      }
+      if (Math.hypot(cx - this.dpadZone.cx, cy - this.dpadZone.cy) <= this.dpadZone.r * 1.38) {
+        this.activeDeckTouches.set(pointerId, 'dpad');
+        this.updateDpadFromPoint(cx, cy);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private processDeckPointerMove(pointerId: number, cx: number, cy: number): void {
+    const role = this.activeDeckTouches.get(pointerId);
+    if (role === 'dpad') {
+      this.updateDpadFromPoint(cx, cy);
+    }
+  }
+
+  private processDeckPointerUp(pointerId: number): void {
+    const role = this.activeDeckTouches.get(pointerId);
+    if (!role) return;
+    this.activeDeckTouches.delete(pointerId);
+    if (role === 'dpad') {
+      let stillHoldingDpad = false;
+      for (const r of this.activeDeckTouches.values()) {
+        if (r === 'dpad') stillHoldingDpad = true;
+      }
+      if (!stillHoldingDpad) {
+        this.virtualDpadSteer = 0;
+        this.virtualDpadThrottle = 0;
+      }
+    } else if (role === 'digL') {
+      this.digLeftPressed = false;
+    } else if (role === 'digR') {
+      this.digRightPressed = false;
+    }
+  }
 
   public setStartingLevel(level: number): void {
     this.currentLevel = Math.max(0, Math.min(SUMO_LODE_LEVELS.length, Math.floor(level)));
@@ -1482,6 +1583,9 @@ export class SumoLodeRunnerGame extends BaseGame {
     this.lastWidth = width;
     this.lastHeight = height;
     this.initWasmKernel();
+    if (this.input) {
+      this.input.suppressPhoneOverlay = this.isTouchDeckVisible(width, height);
+    }
 
     // Load saved level progress
     try {
@@ -1496,7 +1600,7 @@ export class SumoLodeRunnerGame extends BaseGame {
       // ignore storage errors
     }
 
-    // Bind dedicated Lode Runner hotkeys
+    // Bind dedicated Lode Runner hotkeys & multi-touch Arcade Deck listeners
     if (!this.keyDownHandler && typeof window !== 'undefined') {
       this.keyDownHandler = (e: KeyboardEvent) => {
         if (!this.rawKeys.has(e.code)) {
@@ -1511,39 +1615,99 @@ export class SumoLodeRunnerGame extends BaseGame {
       window.addEventListener('keyup', this.keyUpHandler);
 
       const canvas = this.input.getCanvas();
-      this.canvasClickHandler = (e: MouseEvent) => {
-        if (this.isFinished) return;
+      const toCanvasCoords = (clientX: number, clientY: number) => {
         const rect = canvas.getBoundingClientRect();
         const scaleX = this.lastWidth / Math.max(1, rect.width);
         const scaleY = this.lastHeight / Math.max(1, rect.height);
-        const cx = (e.clientX - rect.left) * scaleX;
-        const cy = (e.clientY - rect.top) * scaleY;
-        for (let i = 0; i < this.hudHitboxes.length; i++) {
-          const box = this.hudHitboxes[i];
-          if (cx >= box.x && cx <= box.x + box.w && cy >= box.y && cy <= box.y + box.h) {
-            box.action();
-            break;
+        return {
+          cx: (clientX - rect.left) * scaleX,
+          cy: (clientY - rect.top) * scaleY
+        };
+      };
+
+      this.canvasClickHandler = (e: MouseEvent) => {
+        const { cx, cy } = toCanvasCoords(e.clientX, e.clientY);
+        this.processDeckPointerDown(-999, cx, cy);
+      };
+      this.mouseMoveHandler = (e: MouseEvent) => {
+        if (!this.activeDeckTouches.has(-999)) return;
+        const { cx, cy } = toCanvasCoords(e.clientX, e.clientY);
+        this.processDeckPointerMove(-999, cx, cy);
+      };
+      this.mouseUpHandler = () => {
+        this.processDeckPointerUp(-999);
+      };
+
+      this.touchStartHandler = (e: TouchEvent) => {
+        let handled = false;
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          const t = e.changedTouches[i];
+          const { cx, cy } = toCanvasCoords(t.clientX, t.clientY);
+          if (this.processDeckPointerDown(t.identifier, cx, cy)) {
+            handled = true;
+          }
+        }
+        if (handled) {
+          e.stopPropagation();
+        }
+      };
+      this.touchMoveHandler = (e: TouchEvent) => {
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          const t = e.changedTouches[i];
+          if (this.activeDeckTouches.has(t.identifier)) {
+            const { cx, cy } = toCanvasCoords(t.clientX, t.clientY);
+            this.processDeckPointerMove(t.identifier, cx, cy);
           }
         }
       };
+      this.touchEndHandler = (e: TouchEvent) => {
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          const t = e.changedTouches[i];
+          this.processDeckPointerUp(t.identifier);
+        }
+      };
+
       canvas.addEventListener('mousedown', this.canvasClickHandler);
+      window.addEventListener('mousemove', this.mouseMoveHandler);
+      window.addEventListener('mouseup', this.mouseUpHandler);
+      canvas.addEventListener('touchstart', this.touchStartHandler, { passive: true, capture: true });
+      window.addEventListener('touchmove', this.touchMoveHandler, { passive: true });
+      window.addEventListener('touchend', this.touchEndHandler, { passive: true });
+      window.addEventListener('touchcancel', this.touchEndHandler, { passive: true });
     }
 
     this.reset(width, height);
   }
 
   public override destroy(): void {
+    if (this.input) {
+      this.input.suppressPhoneOverlay = false;
+    }
     if (typeof window !== 'undefined') {
       if (this.keyDownHandler) window.removeEventListener('keydown', this.keyDownHandler);
       if (this.keyUpHandler) window.removeEventListener('keyup', this.keyUpHandler);
+      if (this.mouseMoveHandler) window.removeEventListener('mousemove', this.mouseMoveHandler);
+      if (this.mouseUpHandler) window.removeEventListener('mouseup', this.mouseUpHandler);
+      if (this.touchMoveHandler) window.removeEventListener('touchmove', this.touchMoveHandler);
+      if (this.touchEndHandler) {
+        window.removeEventListener('touchend', this.touchEndHandler);
+        window.removeEventListener('touchcancel', this.touchEndHandler);
+      }
       const canvas = this.input?.getCanvas();
-      if (canvas && this.canvasClickHandler) {
-        canvas.removeEventListener('mousedown', this.canvasClickHandler);
+      if (canvas) {
+        if (this.canvasClickHandler) canvas.removeEventListener('mousedown', this.canvasClickHandler);
+        if (this.touchStartHandler) canvas.removeEventListener('touchstart', this.touchStartHandler, { capture: true } as EventListenerOptions);
       }
     }
     this.keyDownHandler = null;
     this.keyUpHandler = null;
     this.canvasClickHandler = null;
+    this.mouseMoveHandler = null;
+    this.mouseUpHandler = null;
+    this.touchStartHandler = null;
+    this.touchMoveHandler = null;
+    this.touchEndHandler = null;
+    this.activeDeckTouches.clear();
     super.destroy();
   }
 
@@ -1698,6 +1862,10 @@ export class SumoLodeRunnerGame extends BaseGame {
       runner.respawnTimer = 0;
       runner.invulnTimer = 1.5;
       runner.dropFromRopeCooldown = 0;
+      if (pIdx === 0) {
+        this.camFocusX = runner.x;
+        this.camFocusY = runner.y;
+      }
       pIdx++;
     }
 
@@ -2113,9 +2281,19 @@ export class SumoLodeRunnerGame extends BaseGame {
   public update(dt: number, width: number, height: number): void {
     this.lastWidth = width;
     this.lastHeight = height;
+    if (this.input) {
+      this.input.suppressPhoneOverlay = this.isTouchDeckVisible(width, height);
+    }
     if (this.isFinished) return;
 
     const clampedDt = Math.min(dt, 0.05);
+    const p1 = this.runners.get(0) || Array.from(this.runners.values())[0];
+    if (p1 && p1.state !== 'DEAD') {
+      const camLerp = 1 - Math.exp(-10 * clampedDt);
+      this.camFocusX += (p1.x - this.camFocusX) * camLerp;
+      this.camFocusY += (p1.y - this.camFocusY) * camLerp;
+    }
+
     if (this.currentLevel > 0) {
       this.roundTimer = Math.max(0, this.roundTimer - clampedDt);
     }
@@ -2455,9 +2633,15 @@ export class SumoLodeRunnerGame extends BaseGame {
       }
 
       // Read directional & dig inputs (use justAction without justPressed so touch joystick movement doesn't auto-dig)
-      const steer = this.input.getSteer(r.id);
-      const throttle = this.input.getThrottle(r.id);
+      let steer = this.input.getSteer(r.id);
+      let throttle = this.input.getThrottle(r.id);
       const justAct = this.input.justAction(r.id);
+
+      // Dedicated iPhone Arcade Touch Control Deck D-Pad override for Player 1
+      if (r.id === 0 && (this.virtualDpadSteer !== 0 || this.virtualDpadThrottle !== 0)) {
+        steer = this.virtualDpadSteer;
+        throttle = this.virtualDpadThrottle;
+      }
 
       const moveX = Math.abs(steer) > 0.25 ? Math.sign(steer) : 0;
       const moveY = Math.abs(throttle) > 0.25 ? -Math.sign(throttle) : 0; // -1 = UP, +1 = DOWN
@@ -2466,11 +2650,18 @@ export class SumoLodeRunnerGame extends BaseGame {
         r.facing = moveX as -1 | 1;
       }
 
-      // Check dedicated Dig Left / Dig Right hotkeys OR Action button
+      // Check dedicated Dig Left / Dig Right hotkeys, Touch Deck Dig buttons, OR Action button
       let wantDigDir: -1 | 1 | 0 | null = null;
       if (r.id === 0) {
-        if (this.justRawKeys.has('KeyQ') || this.justRawKeys.has('KeyZ')) wantDigDir = -1;
-        else if (this.justRawKeys.has('KeyE') || this.justRawKeys.has('KeyX') || this.justRawKeys.has('KeyC')) wantDigDir = 1;
+        if (this.virtualDigDir !== null) {
+          wantDigDir = this.virtualDigDir;
+          r.facing = this.virtualDigDir;
+          this.virtualDigDir = null;
+        } else if (this.justRawKeys.has('KeyQ') || this.justRawKeys.has('KeyZ')) {
+          wantDigDir = -1;
+        } else if (this.justRawKeys.has('KeyE') || this.justRawKeys.has('KeyX') || this.justRawKeys.has('KeyC')) {
+          wantDigDir = 1;
+        }
       } else if (r.id === 1) {
         if (this.justRawKeys.has('Comma') || this.justRawKeys.has('Slash') || this.justRawKeys.has('ShiftRight')) wantDigDir = -1;
         else if (this.justRawKeys.has('Period')) wantDigDir = 1;
@@ -3078,20 +3269,76 @@ export class SumoLodeRunnerGame extends BaseGame {
   }
 
   private getGridLayout(width: number, height: number) {
-    const topMargin = 54;
-    const bottomMargin = 28;
-    const sideMargin = 20;
-    const availW = Math.max(320, width - sideMargin * 2);
-    const availH = Math.max(240, height - topMargin - bottomMargin);
+    const isPhonePortrait = width < 640 && height > width;
+    const isPhoneLandscape = width < 930 && height < 480;
+    const isTouchDeck = isPhonePortrait || isPhoneLandscape || this.input?.deviceMode === 'phone';
 
-    const tileW = Math.floor(availW / GRID_COLS);
-    const tileH = Math.floor(availH / GRID_ROWS);
-    const totalW = tileW * GRID_COLS;
-    const totalH = tileH * GRID_ROWS;
-    const originX = Math.floor((width - totalW) / 2);
-    const originY = topMargin + Math.floor((availH - totalH) / 2);
+    const topMargin = width < 640 || height < 480 ? 44 : 54;
+    const touchDeckH = isPhonePortrait ? Math.min(188, Math.max(158, Math.floor(height * 0.215))) : 0;
+    const bottomMargin = 26 + touchDeckH;
+    const sideMargin = isPhonePortrait ? 4 : isPhoneLandscape ? 104 : 20;
 
-    return { originX, originY, tileW, tileH, totalW, totalH };
+    const viewW = Math.max(240, width - sideMargin * 2);
+    const viewH = Math.max(180, height - topMargin - bottomMargin);
+    const viewX = Math.floor((width - viewW) / 2);
+    const viewY = topMargin;
+
+    let tileW: number;
+    let tileH: number;
+    let totalW: number;
+    let totalH: number;
+    let originX: number;
+    let originY: number;
+
+    if (isPhonePortrait && this.mobileZoomCam) {
+      const baseTileW = Math.max(12, Math.floor(viewW / GRID_COLS));
+      tileW = Math.max(19, Math.min(23, Math.round(baseTileW * 1.58)));
+      const bannerPad = this.currentLevel === 0 ? 42 : 14;
+      const maxTileH = Math.max(16, Math.floor((viewH - bannerPad) / GRID_ROWS));
+      tileH = Math.max(18, Math.min(maxTileH, Math.round(tileW * 1.22)));
+      totalW = tileW * GRID_COLS;
+      totalH = tileH * GRID_ROWS;
+
+      const targetOriginX = viewX + viewW * 0.5 - (this.camFocusX + 0.5) * tileW;
+      originX =
+        totalW > viewW
+          ? Math.round(Math.max(viewX + viewW - totalW, Math.min(viewX, targetOriginX)))
+          : Math.floor((width - totalW) / 2);
+
+      const topOffset = this.currentLevel === 0 ? 38 : 6;
+      const targetOriginY = viewY + topOffset + (viewH - topOffset) * 0.5 - (this.camFocusY + 0.5) * tileH;
+      originY =
+        totalH > viewH - topOffset
+          ? Math.round(Math.max(viewY + viewH - totalH, Math.min(viewY + topOffset, targetOriginY)))
+          : viewY + topOffset + Math.floor((viewH - topOffset - totalH) / 2);
+    } else {
+      tileW = Math.max(12, Math.floor(viewW / GRID_COLS));
+      const rawTileH = Math.max(12, Math.floor(viewH / GRID_ROWS));
+      // Prevent extreme vertical stretching on portrait screens when full-map view is selected
+      tileH = isPhonePortrait ? Math.min(rawTileH, Math.round(tileW * 1.45)) : rawTileH;
+      totalW = tileW * GRID_COLS;
+      totalH = tileH * GRID_ROWS;
+      originX = Math.floor((width - totalW) / 2);
+      const topOffset = isPhonePortrait && this.currentLevel === 0 ? 20 : 0;
+      originY = viewY + topOffset + Math.floor((viewH - topOffset - totalH) / 2);
+    }
+
+    return {
+      originX,
+      originY,
+      tileW,
+      tileH,
+      totalW,
+      totalH,
+      viewX,
+      viewY,
+      viewW,
+      viewH,
+      isPhonePortrait,
+      isPhoneLandscape,
+      isTouchDeck,
+      touchDeckH
+    };
   }
 
   /**

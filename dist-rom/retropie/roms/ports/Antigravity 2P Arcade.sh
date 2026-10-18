@@ -39,4 +39,4 @@ exec "$BROWSER" \
   --autoplay-policy=no-user-gesture-required \
   --no-first-run \
   --disable-infobars \
-  -- disable-session-crashed-bubble
+  --disable-session-crashed-bubble
