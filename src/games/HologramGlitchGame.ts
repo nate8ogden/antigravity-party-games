@@ -313,12 +313,13 @@ export class HologramGlitchGame extends BaseGame {
 
       const pCfg = this.getPlayer(a.id);
       const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(a.id);
 
-      if (this.input.justAction(a.id) || (isBot && this.input.justPressed(a.id))) {
+      if (this.input.justAction(a.id) || (isBot && this.input.justPressed(a.id)) || (!hasSteer && !isBot && this.input.justPressed(a.id))) {
         this.purgeNearestHolo(a);
       }
 
-      const holding = this.input.isActionPressed(a.id) || (isBot && this.input.isPressed(a.id));
+      const holding = this.input.isActionPressed(a.id) || (isBot && this.input.isPressed(a.id)) || (!hasSteer && !isBot && this.input.isPressed(a.id));
       if (holding) {
         a.charging = true;
         a.charge += dt * 0.84;

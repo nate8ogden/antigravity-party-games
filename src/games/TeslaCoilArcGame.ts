@@ -311,8 +311,9 @@ export class TeslaCoilArcGame extends BaseGame {
 
       const pCfg = this.getPlayer(h.id);
       const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(h.id);
 
-      if (beamDiff < 0.22 && (this.input.justAction(h.id) || (isBot && this.input.justPressed(h.id)))) {
+      if (beamDiff < 0.22 && (this.input.justAction(h.id) || (isBot && this.input.justPressed(h.id)) || (!hasSteer && !isBot && this.input.justPressed(h.id)))) {
         h.combo = Math.min(3, h.combo + 1);
         h.comboTimer = 4.0;
         const pts = Math.round(55 * h.combo * (this.suddenDeath ? 2 : 1));
@@ -338,7 +339,7 @@ export class TeslaCoilArcGame extends BaseGame {
       }
 
       // Hold-to-charge Faraday Arc Discharge & Electro-Surge Shunt (72%–98% Sweet Spot)
-      const holding = this.input.isActionPressed(h.id) || (isBot && this.input.isPressed(h.id));
+      const holding = this.input.isActionPressed(h.id) || (isBot && this.input.isPressed(h.id)) || (!hasSteer && !isBot && this.input.isPressed(h.id));
       if (holding) {
         h.charging = true;
         h.charge += dt * 0.82;

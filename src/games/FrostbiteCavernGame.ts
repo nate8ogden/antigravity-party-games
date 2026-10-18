@@ -338,14 +338,18 @@ export class FrostbiteCavernGame extends BaseGame {
       const speedMult = (underdog ? 1.18 : 1.0) * (s.overchargeTimer > 0 ? 0.55 : 1.0);
 
       if (p && !p.type.startsWith('bot_')) {
+        const hasSteer = this.input.hasSteer(s.id);
         const move = { x: this.input.getSteer(s.id), y: -this.input.getThrottle(s.id) };
         if (Math.hypot(move.x, move.y) > 0.08) {
           s.vx += move.x * 780 * speedMult * safeDt;
           s.vy += move.y * 780 * speedMult * safeDt;
           s.angle = Math.atan2(move.y, move.x);
+        } else if (!hasSteer && this.input.isPressed(s.id) && s.charge === 0) {
+          s.vx += Math.cos(s.angle) * 450 * speedMult * safeDt;
+          s.vy += Math.sin(s.angle) * 450 * speedMult * safeDt;
         }
 
-        const holding = this.input.isActionPressed(s.id);
+        const holding = this.input.isActionPressed(s.id) || (!hasSteer && this.input.isPressed(s.id));
         if (holding && s.overchargeTimer <= 0) {
           s.isHolding = true;
           s.charge = Math.min(1.15, s.charge + safeDt * 0.85);
@@ -360,7 +364,7 @@ export class FrostbiteCavernGame extends BaseGame {
             this.executePickaxeStrike(s, 72);
           }
           s.charge = 0;
-        } else if (this.input.justAction(s.id)) {
+        } else if (this.input.justAction(s.id) || (!hasSteer && this.input.justPressed(s.id))) {
           this.executePickaxeStrike(s, 72);
         }
       }

@@ -286,13 +286,14 @@ export class MonocycleDerbyGame extends BaseGame {
 
       const pCfg = this.getPlayer(r.id);
       const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(r.id);
 
-      if ((this.input.justAction(r.id) || (isBot && this.input.justPressed(r.id))) && r.z <= 0) {
+      if ((this.input.justAction(r.id) || (isBot && this.input.justPressed(r.id)) || (!hasSteer && !isBot && this.input.justPressed(r.id))) && r.z <= 0) {
         r.vz = 235;
         this.audio.playWhoosh();
       }
 
-      const holding = this.input.isActionPressed(r.id) || (isBot && this.input.isPressed(r.id));
+      const holding = this.input.isActionPressed(r.id) || (isBot && this.input.isPressed(r.id)) || (!hasSteer && !isBot && this.input.isPressed(r.id));
       if (holding) {
         r.charging = true;
         r.charge += dt * 0.84;

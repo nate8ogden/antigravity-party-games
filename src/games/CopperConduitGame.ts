@@ -336,12 +336,13 @@ export class CopperConduitGame extends BaseGame {
 
       const pCfg = this.getPlayer(s.id);
       const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(s.id);
 
-      if (this.input.justAction(s.id) || (isBot && this.input.justPressed(s.id))) {
+      if (this.input.justAction(s.id) || (isBot && this.input.justPressed(s.id)) || (!hasSteer && !isBot && this.input.justPressed(s.id))) {
         this.alignNearestCrucible(s, width, height);
       }
 
-      const holding = this.input.isActionPressed(s.id) || (isBot && this.input.isPressed(s.id));
+      const holding = this.input.isActionPressed(s.id) || (isBot && this.input.isPressed(s.id)) || (!hasSteer && !isBot && this.input.isPressed(s.id));
       if (holding) {
         s.charging = true;
         s.charge += dt * 0.84;

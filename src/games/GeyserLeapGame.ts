@@ -387,14 +387,18 @@ export class GeyserLeapGame extends BaseGame {
       const speedMult = (underdog ? 1.18 : 1.0) * (h.overchargeTimer > 0 ? 0.55 : 1.0);
 
       if (p && !p.type.startsWith('bot_')) {
+        const hasSteer = this.input.hasSteer(h.id);
         const move = { x: this.input.getSteer(h.id), y: -this.input.getThrottle(h.id) };
         if (Math.hypot(move.x, move.y) > 0.08) {
           h.vx += move.x * 760 * speedMult * safeDt;
           h.vy += move.y * 760 * speedMult * safeDt;
           h.angle = Math.atan2(move.y, move.x);
+        } else if (!hasSteer && this.input.isPressed(h.id) && h.charge === 0) {
+          h.vx += Math.cos(h.angle) * 450 * speedMult * safeDt;
+          h.vy += Math.sin(h.angle) * 450 * speedMult * safeDt;
         }
 
-        const holding = this.input.isActionPressed(h.id);
+        const holding = this.input.isActionPressed(h.id) || (!hasSteer && this.input.isPressed(h.id));
         if (holding && h.overchargeTimer <= 0) {
           h.isHolding = true;
           h.charge = Math.min(1.15, h.charge + safeDt * 0.85);
@@ -409,7 +413,7 @@ export class GeyserLeapGame extends BaseGame {
             this.executeFoxHop(h);
           }
           h.charge = 0;
-        } else if (this.input.justAction(h.id)) {
+        } else if (this.input.justAction(h.id) || (!hasSteer && this.input.justPressed(h.id))) {
           this.executeFoxHop(h);
         }
       }

@@ -368,14 +368,18 @@ export class PolarIceFishingGame extends BaseGame {
       const speedMult = (underdog ? 1.18 : 1.0) * (f.overchargeTimer > 0 ? 0.5 : 1.0);
 
       if (p && !p.type.startsWith('bot_')) {
+        const hasSteer = this.input.hasSteer(f.id);
         const move = { x: this.input.getSteer(f.id), y: -this.input.getThrottle(f.id) };
         if (Math.hypot(move.x, move.y) > 0.08) {
           f.vx += move.x * 760 * speedMult * safeDt;
           f.vy += move.y * 760 * speedMult * safeDt;
           f.angle = Math.atan2(move.y, move.x);
+        } else if (!hasSteer && this.input.isPressed(f.id) && f.charge === 0) {
+          f.vx += Math.cos(f.angle) * 480 * speedMult * safeDt;
+          f.vy += Math.sin(f.angle) * 480 * speedMult * safeDt;
         }
 
-        const holding = this.input.isActionPressed(f.id);
+        const holding = this.input.isActionPressed(f.id) || (!hasSteer && this.input.isPressed(f.id));
         if (holding && f.overchargeTimer <= 0) {
           f.isHolding = true;
           f.charge = Math.min(1.15, f.charge + safeDt * 0.85);
@@ -390,7 +394,7 @@ export class PolarIceFishingGame extends BaseGame {
             this.executeHookStrike(f, false);
           }
           f.charge = 0;
-        } else if (this.input.justAction(f.id)) {
+        } else if (this.input.justAction(f.id) || (!hasSteer && this.input.justPressed(f.id))) {
           this.executeHookStrike(f, false);
         }
       }

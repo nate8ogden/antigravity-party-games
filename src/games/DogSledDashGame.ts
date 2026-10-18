@@ -358,13 +358,16 @@ export class DogSledDashGame extends BaseGame {
         (m.overchargeTimer > 0 ? 0.55 : 1.0);
 
       if (p && !p.type.startsWith('bot_')) {
+        const hasSteer = this.input.hasSteer(m.id);
         const move = { x: this.input.getSteer(m.id), y: -this.input.getThrottle(m.id) };
         if (Math.hypot(move.x, move.y) > 0.08) {
           m.vx += move.x * 740 * speedMult * safeDt;
           m.vy += move.y * 740 * speedMult * safeDt;
+        } else if (!hasSteer && this.input.isPressed(m.id) && m.charge === 0) {
+          m.vx += 380 * speedMult * safeDt;
         }
 
-        const holding = this.input.isActionPressed(m.id);
+        const holding = this.input.isActionPressed(m.id) || (!hasSteer && this.input.isPressed(m.id));
         if (holding && m.overchargeTimer <= 0) {
           m.isHolding = true;
           m.charge = Math.min(1.15, m.charge + safeDt * 0.85);
@@ -379,7 +382,7 @@ export class DogSledDashGame extends BaseGame {
             this.executeMushLeap(m);
           }
           m.charge = 0;
-        } else if (this.input.justAction(m.id)) {
+        } else if (this.input.justAction(m.id) || (!hasSteer && this.input.justPressed(m.id))) {
           this.executeMushLeap(m);
         }
       }

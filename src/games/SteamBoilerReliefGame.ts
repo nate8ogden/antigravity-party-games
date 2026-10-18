@@ -434,15 +434,16 @@ export class SteamBoilerReliefGame extends BaseGame {
 
       const pCfg = this.getPlayer(eng.id);
       const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(eng.id);
 
       // Tap interaction: Wrench Vent or Coal Stoke
-      if (this.input.justAction(eng.id) || (isBot && this.input.justPressed(eng.id))) {
+      if (this.input.justAction(eng.id) || (isBot && this.input.justPressed(eng.id)) || (!hasSteer && !isBot && this.input.justPressed(eng.id))) {
         eng.wrenchSwing = 1.0;
         this.interactWithNearestBoiler(eng, width, height);
       }
 
       // Hold-to-charge Super-Steam Whistle Blast & Boiler Shunt (72%–98% Sweet Spot)
-      const holding = this.input.isActionPressed(eng.id) || (isBot && this.input.isPressed(eng.id));
+      const holding = this.input.isActionPressed(eng.id) || (isBot && this.input.isPressed(eng.id)) || (!hasSteer && !isBot && this.input.isPressed(eng.id));
       if (holding) {
         eng.charging = true;
         eng.charge += dt * 0.82;

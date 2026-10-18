@@ -386,14 +386,18 @@ export class MammothStampedeGame extends BaseGame {
       const speedMult = (underdog ? 1.18 : 1.0) * (r.overchargeTimer > 0 ? 0.55 : 1.0);
 
       if (p && !p.type.startsWith('bot_')) {
+        const hasSteer = this.input.hasSteer(r.id);
         const move = { x: this.input.getSteer(r.id), y: -this.input.getThrottle(r.id) };
         if (Math.hypot(move.x, move.y) > 0.08) {
           r.vx += move.x * 760 * speedMult * safeDt;
           r.vy += move.y * 760 * speedMult * safeDt;
           r.angle = Math.atan2(move.y, move.x);
+        } else if (!hasSteer && this.input.isPressed(r.id) && r.charge === 0) {
+          r.vx += Math.cos(r.angle) * 450 * speedMult * safeDt;
+          r.vy += Math.sin(r.angle) * 450 * speedMult * safeDt;
         }
 
-        const holding = this.input.isActionPressed(r.id);
+        const holding = this.input.isActionPressed(r.id) || (!hasSteer && this.input.isPressed(r.id));
         if (holding && r.overchargeTimer <= 0) {
           r.isHolding = true;
           r.charge = Math.min(1.15, r.charge + safeDt * 0.85);
@@ -408,7 +412,7 @@ export class MammothStampedeGame extends BaseGame {
             this.executeSpearVault(r);
           }
           r.charge = 0;
-        } else if (this.input.justAction(r.id)) {
+        } else if (this.input.justAction(r.id) || (!hasSteer && this.input.justPressed(r.id))) {
           this.executeSpearVault(r);
         }
       }

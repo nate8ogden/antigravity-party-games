@@ -350,12 +350,13 @@ export class PressureGaugeLockGame extends BaseGame {
 
       const pCfg = this.getPlayer(c.id);
       const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(c.id);
 
-      if (this.input.justAction(c.id) || (isBot && this.input.justPressed(c.id))) {
+      if (this.input.justAction(c.id) || (isBot && this.input.justPressed(c.id)) || (!hasSteer && !isBot && this.input.justPressed(c.id))) {
         this.pickNearestVault(c, width, height);
       }
 
-      const holding = this.input.isActionPressed(c.id) || (isBot && this.input.isPressed(c.id));
+      const holding = this.input.isActionPressed(c.id) || (isBot && this.input.isPressed(c.id)) || (!hasSteer && !isBot && this.input.isPressed(c.id));
       if (holding) {
         c.charging = true;
         c.charge += dt * 0.84;

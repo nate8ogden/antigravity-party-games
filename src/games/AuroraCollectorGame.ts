@@ -352,18 +352,23 @@ export class AuroraCollectorGame extends BaseGame {
       const speedMult = (underdog ? 1.18 : 1.0) * (g.overchargeTimer > 0 ? 0.55 : 1.0);
 
       if (p && !p.type.startsWith('bot_')) {
+        const hasSteer = this.input.hasSteer(g.id);
         const move = { x: this.input.getSteer(g.id), y: -this.input.getThrottle(g.id) };
         if (Math.hypot(move.x, move.y) > 0.08) {
           g.vx += move.x * 780 * speedMult * safeDt;
           g.vy += move.y * 780 * speedMult * safeDt;
           g.angle = Math.atan2(move.y, move.x) * 0.35;
+        } else if (!hasSteer && this.input.isPressed(g.id) && g.charge === 0) {
+          g.vy -= 420 * speedMult * safeDt;
+          g.vx += 180 * speedMult * safeDt;
+          g.angle = -0.25;
         } else {
           // Gentle gravity glide when not steering vertically
           g.vy += 120 * safeDt;
           g.angle *= Math.pow(0.08, safeDt);
         }
 
-        const holding = this.input.isActionPressed(g.id);
+        const holding = this.input.isActionPressed(g.id) || (!hasSteer && this.input.isPressed(g.id));
         if (holding && g.overchargeTimer <= 0) {
           g.isHolding = true;
           g.charge = Math.min(1.15, g.charge + safeDt * 0.85);
@@ -378,7 +383,7 @@ export class AuroraCollectorGame extends BaseGame {
             this.executeWingGust(g);
           }
           g.charge = 0;
-        } else if (this.input.justAction(g.id)) {
+        } else if (this.input.justAction(g.id) || (!hasSteer && this.input.justPressed(g.id))) {
           this.executeWingGust(g);
         }
       }
