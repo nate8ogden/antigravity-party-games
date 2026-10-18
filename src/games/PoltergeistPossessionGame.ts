@@ -338,10 +338,11 @@ export class PoltergeistPossessionGame extends BaseGame {
       if (m.shuntCooldown > 0) m.shuntCooldown = Math.max(0, m.shuntCooldown - safeDt);
       if (m.stunTimer > 0) m.stunTimer = Math.max(0, m.stunTimer - safeDt);
 
-      const steerX = this.input.getSteer(m.id);
-      const steerY = -this.input.getThrottle(m.id);
+      const hasSteer = this.input.hasSteer(m.id);
+      const steerX = hasSteer ? this.input.getSteer(m.id) : 0;
+      const steerY = hasSteer ? -this.input.getThrottle(m.id) : 0;
       const isBot = m.config.type.startsWith('bot_');
-      const actionHeld = !isBot ? this.input.isActionPressed(m.id) : this.input.isPressed(m.id);
+      const actionHeld = this.input.isActionPressed(m.id) || (isBot && this.input.isPressed(m.id)) || (!hasSteer && !isBot && this.input.isPressed(m.id));
 
       // Hold-to-Charge vs Quick Tap Hurl
       if (actionHeld) {

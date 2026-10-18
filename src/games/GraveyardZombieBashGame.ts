@@ -343,11 +343,12 @@ export class GraveyardZombieBashGame extends BaseGame {
       if (k.shuntCooldown > 0) k.shuntCooldown = Math.max(0, k.shuntCooldown - safeDt);
       if (k.stunTimer > 0) k.stunTimer = Math.max(0, k.stunTimer - safeDt);
 
-      const steerX = this.input.getSteer(k.id);
-      const steerY = -this.input.getThrottle(k.id);
+      const hasSteer = this.input.hasSteer(k.id);
+      const steerX = hasSteer ? this.input.getSteer(k.id) : 0;
+      const steerY = hasSteer ? -this.input.getThrottle(k.id) : 0;
       const isBot = k.config.type.startsWith('bot_');
-      const actionHeld = !isBot ? this.input.isActionPressed(k.id) : this.input.isPressed(k.id);
-      const actionJustPressed = !isBot ? this.input.justAction(k.id) : this.input.justPressed(k.id);
+      const actionHeld = this.input.isActionPressed(k.id) || (isBot && this.input.isPressed(k.id)) || (!hasSteer && !isBot && this.input.isPressed(k.id));
+      const actionJustPressed = this.input.justAction(k.id) || (isBot && this.input.justPressed(k.id)) || (!hasSteer && !isBot && this.input.justPressed(k.id));
 
       // Hold-to-charge vs Quick Tap Shovel Bash
       if (actionHeld && k.stunTimer <= 0) {

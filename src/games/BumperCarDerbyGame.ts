@@ -240,6 +240,7 @@ export class BumperCarDerbyGame extends BaseGame {
 
       const cfg = this.getPlayer(c.id);
       const isBot = cfg ? cfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(c.id);
 
       if (!isBot && c.stunTimer <= 0) {
         const move = { x: this.input.getSteer(c.id), y: -this.input.getThrottle(c.id) };
@@ -249,7 +250,7 @@ export class BumperCarDerbyGame extends BaseGame {
           const accel = c.underdog ? 720 : 620;
           c.vx += (move.x / mag) * accel * dt;
           c.vy += (move.y / mag) * accel * dt;
-        } else if (this.input.justAction(c.id) || (isBot && this.input.justPressed(c.id))) {
+        } else if (this.input.justAction(c.id) || (isBot && this.input.justPressed(c.id)) || (!hasSteer && this.input.justPressed(c.id))) {
           // Active directional snap: tap to pivot 45 deg, double-tap for 180 turnaround!
           if (this.timeElapsed - c.lastTapTime < 0.28) {
             c.angle += Math.PI;
@@ -263,7 +264,11 @@ export class BumperCarDerbyGame extends BaseGame {
         }
       }
 
-      const holding = c.stunTimer <= 0 && (this.input.isActionPressed(c.id) || (isBot && this.input.isPressed(c.id)));
+      const holding = c.stunTimer <= 0 && (
+        this.input.isActionPressed(c.id) ||
+        (isBot && this.input.isPressed(c.id)) ||
+        (!hasSteer && !isBot && this.input.isPressed(c.id))
+      );
       if (holding) {
         c.charge = Math.min(1.2, c.charge + dt * 1.15);
         c.wasHolding = true;

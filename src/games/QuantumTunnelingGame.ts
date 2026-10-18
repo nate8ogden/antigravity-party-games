@@ -239,7 +239,13 @@ export class QuantumTunnelingGame extends BaseGame {
         r.phased = false;
       }
 
-      const holding = r.stunTimer <= 0 && (this.input.isActionPressed(r.id) || (this.getPlayer(r.id)?.type.startsWith('bot_') && this.input.isPressed(r.id)));
+      const isBot = this.getPlayer(r.id)?.type.startsWith('bot_');
+      const hasSteer = this.input.hasSteer(r.id);
+      const holding = r.stunTimer <= 0 && (
+        this.input.isActionPressed(r.id) ||
+        (isBot && this.input.isPressed(r.id)) ||
+        (!hasSteer && !isBot && this.input.isPressed(r.id))
+      );
       const wasPhased = r.phased;
 
       if (holding && r.phaseEnergy > 0.05) {
@@ -271,7 +277,7 @@ export class QuantumTunnelingGame extends BaseGame {
         });
       }
 
-      const throttle = -this.input.getThrottle(r.id) || this.input.getSteer(r.id);
+      const throttle = hasSteer ? (-this.input.getThrottle(r.id) || this.input.getSteer(r.id)) : 0;
       if (Math.abs(throttle) > 0.1 && r.stunTimer <= 0) {
         r.vy += throttle * 750 * dt;
       } else if (r.phased) {

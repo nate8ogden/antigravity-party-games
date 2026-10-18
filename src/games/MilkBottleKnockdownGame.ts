@@ -247,9 +247,15 @@ export class MilkBottleKnockdownGame extends BaseGame {
       p.underdog = maxScore - p.score >= 120;
       if (p.stunTimer > 0) p.stunTimer -= dt;
 
-      const steer = this.input.getSteer(p.id);
+      const pCfg = this.getPlayer(p.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(p.id);
+
+      const steer = hasSteer ? this.input.getSteer(p.id) : 0;
       if (Math.abs(steer) > 0.1 && p.stunTimer <= 0) {
         p.vx += steer * (p.underdog ? 680 : 560) * dt;
+      } else if (!hasSteer && p.stunTimer <= 0) {
+        p.vx += p.aimDir * (p.underdog ? 260 : 200) * dt;
       }
 
       p.aimAngle += p.aimDir * 1.45 * dt;
@@ -261,10 +267,11 @@ export class MilkBottleKnockdownGame extends BaseGame {
         p.aimDir = 1;
       }
 
-      const pCfg = this.getPlayer(p.id);
-      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
-
-      const holding = p.stunTimer <= 0 && (this.input.isActionPressed(p.id) || (isBot && this.input.isPressed(p.id)));
+      const holding = p.stunTimer <= 0 && (
+        this.input.isActionPressed(p.id) ||
+        (isBot && this.input.isPressed(p.id)) ||
+        (!hasSteer && !isBot && this.input.isPressed(p.id))
+      );
       if (holding) {
         p.charge += dt * 1.1;
         p.wasHolding = true;

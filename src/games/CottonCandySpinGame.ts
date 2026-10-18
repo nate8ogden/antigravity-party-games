@@ -252,6 +252,7 @@ export class CottonCandySpinGame extends BaseGame {
 
       const cfg = this.getPlayer(s.id);
       const isBot = cfg ? cfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(s.id);
 
       if (!isBot && s.stunTimer <= 0) {
         const move = { x: this.input.getSteer(s.id), y: -this.input.getThrottle(s.id) };
@@ -261,7 +262,7 @@ export class CottonCandySpinGame extends BaseGame {
           const accel = s.underdog ? 740 : 620;
           s.vx += (move.x / mag) * accel * dt;
           s.vy += (move.y / mag) * accel * dt;
-        } else if (this.input.justAction(s.id)) {
+        } else if (this.input.justAction(s.id) || (isBot && this.input.justPressed(s.id)) || (!hasSteer && this.input.justPressed(s.id))) {
           s.angle += Math.PI / 4;
           s.vx += Math.cos(s.angle) * 165;
           s.vy += Math.sin(s.angle) * 165;
@@ -269,7 +270,11 @@ export class CottonCandySpinGame extends BaseGame {
         }
       }
 
-      const holding = s.stunTimer <= 0 && this.input.isActionPressed(s.id);
+      const holding = s.stunTimer <= 0 && (
+        this.input.isActionPressed(s.id) ||
+        (isBot && this.input.isPressed(s.id)) ||
+        (!hasSteer && !isBot && this.input.isPressed(s.id))
+      );
       if (holding) {
         s.charge = Math.min(1.1, s.charge + dt * 1.15);
         s.wasHolding = true;

@@ -270,9 +270,13 @@ export class RingTossFrenzyGame extends BaseGame {
       t.underdog = maxScore - t.score >= 120;
       if (t.stunTimer > 0) t.stunTimer -= dt;
 
-      const steer = this.input.getSteer(t.id);
+      const isBot = this.getPlayer(t.id)?.type.startsWith('bot_');
+      const hasSteer = this.input.hasSteer(t.id);
+      const steer = hasSteer ? this.input.getSteer(t.id) : 0;
       if (Math.abs(steer) > 0.1 && t.stunTimer <= 0) {
         t.vx += steer * (t.underdog ? 680 : 560) * dt;
+      } else if (!hasSteer && t.stunTimer <= 0) {
+        t.vx += t.aimDir * (t.underdog ? 280 : 220) * dt;
       }
 
       // Sweep aim reticle toward turntable
@@ -286,7 +290,11 @@ export class RingTossFrenzyGame extends BaseGame {
         t.aimDir = 1;
       }
 
-      const holding = t.stunTimer <= 0 && (this.input.isActionPressed(t.id) || (this.getPlayer(t.id)?.type.startsWith('bot_') && this.input.isPressed(t.id)));
+      const holding = t.stunTimer <= 0 && (
+        this.input.isActionPressed(t.id) ||
+        (isBot && this.input.isPressed(t.id)) ||
+        (!hasSteer && !isBot && this.input.isPressed(t.id))
+      );
       if (holding) {
         t.charge += dt * 1.05;
         t.wasHolding = true;

@@ -284,6 +284,7 @@ export class DroneSwarmDefenseGame extends BaseGame {
 
       const cfg = this.getPlayer(p.id);
       const isBot = cfg ? cfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(p.id);
 
       if (!isBot && p.stunTimer <= 0) {
         const move = { x: this.input.getSteer(p.id), y: -this.input.getThrottle(p.id) };
@@ -311,7 +312,11 @@ export class DroneSwarmDefenseGame extends BaseGame {
         }
       }
 
-      const holding = p.stunTimer <= 0 && (this.input.isActionPressed(p.id) || (isBot && this.input.isPressed(p.id)));
+      const holding = p.stunTimer <= 0 && (
+        this.input.isActionPressed(p.id) ||
+        (isBot && this.input.isPressed(p.id)) ||
+        (!hasSteer && !isBot && this.input.isPressed(p.id))
+      );
       if (holding) {
         p.charge += dt * 0.95;
         p.wasHolding = true;

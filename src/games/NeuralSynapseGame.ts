@@ -253,6 +253,7 @@ export class NeuralSynapseGame extends BaseGame {
 
       const pCfg = this.getPlayer(f.id);
       const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(f.id);
 
       if (!isBot && f.stunTimer <= 0) {
         const move = { x: this.input.getSteer(f.id), y: -this.input.getThrottle(f.id) };
@@ -262,7 +263,7 @@ export class NeuralSynapseGame extends BaseGame {
           f.vx += (move.x / mag) * accel * dt;
           f.vy += (move.y / mag) * accel * dt;
           f.angle = Math.atan2(move.y, move.x);
-        } else if (this.input.justAction(f.id) || (isBot && this.input.justPressed(f.id))) {
+        } else if (this.input.justAction(f.id) || (isBot && this.input.justPressed(f.id)) || (!hasSteer && this.input.justPressed(f.id))) {
           f.angle += Math.PI / 4;
           f.vx += Math.cos(f.angle) * 140;
           f.vy += Math.sin(f.angle) * 140;
@@ -270,7 +271,11 @@ export class NeuralSynapseGame extends BaseGame {
         }
       }
 
-      const holding = f.stunTimer <= 0 && (this.input.isActionPressed(f.id) || (isBot && this.input.isPressed(f.id)));
+      const holding = f.stunTimer <= 0 && (
+        this.input.isActionPressed(f.id) ||
+        (isBot && this.input.isPressed(f.id)) ||
+        (!hasSteer && !isBot && this.input.isPressed(f.id))
+      );
       if (holding) {
         f.charge = Math.min(1.2, f.charge + dt * 1.15);
         f.wasHolding = true;
