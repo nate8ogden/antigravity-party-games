@@ -114,27 +114,27 @@ test.describe('1-4 Player Game Engine Verification', () => {
 
     // 1. Click should trigger pause immediately
     await pauseBtn.click();
-    await page.waitForTimeout(100);
-    let isPaused = await page.evaluate(() => (window as unknown as { __GAME_STATE__?: { state: string } }).__GAME_STATE__?.state === 'PAUSED');
-    expect(isPaused).toBe(true);
+    await expect.poll(async () => {
+      return await page.evaluate(() => (window as unknown as { __GAME_STATE__?: { state: string } }).__GAME_STATE__?.state === 'PAUSED');
+    }).toBe(true);
 
     // 2. Second click should resume immediately
     await pauseBtn.click();
-    await page.waitForTimeout(100);
-    isPaused = await page.evaluate(() => (window as unknown as { __GAME_STATE__?: { state: string } }).__GAME_STATE__?.state === 'PAUSED');
-    expect(isPaused).toBe(false);
+    await expect.poll(async () => {
+      return await page.evaluate(() => (window as unknown as { __GAME_STATE__?: { state: string } }).__GAME_STATE__?.state === 'PAUSED');
+    }).toBe(false);
 
     // 3. Pressing 'Escape' key should toggle pause
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(100);
-    isPaused = await page.evaluate(() => (window as unknown as { __GAME_STATE__?: { state: string } }).__GAME_STATE__?.state === 'PAUSED');
-    expect(isPaused).toBe(true);
+    await expect.poll(async () => {
+      return await page.evaluate(() => (window as unknown as { __GAME_STATE__?: { state: string } }).__GAME_STATE__?.state === 'PAUSED');
+    }).toBe(true);
 
     // 4. Pressing 'p' key should resume
     await page.keyboard.press('KeyP');
-    await page.waitForTimeout(100);
-    isPaused = await page.evaluate(() => (window as unknown as { __GAME_STATE__?: { state: string } }).__GAME_STATE__?.state === 'PAUSED');
-    expect(isPaused).toBe(false);
+    await expect.poll(async () => {
+      return await page.evaluate(() => (window as unknown as { __GAME_STATE__?: { state: string } }).__GAME_STATE__?.state === 'PAUSED');
+    }).toBe(false);
   });
 
   test('Autonomous Cup Tournament progression', async ({ page }) => {
