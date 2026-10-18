@@ -2104,7 +2104,7 @@ test.describe('1-4 Player Game Engine Verification', () => {
           wasm: {
             isNativeWasmActive: () => boolean;
             distSq: (x1: number, y1: number, x2: number, y2: number) => number;
-            runBenchmark: (count?: number, iters?: number) => { wasmMs: number; jsMs: number; speedupRatio: number; nativeWasmActive: boolean };
+            runBenchmark: (count?: number, iters?: number) => { wasmTimeMs: number; jsTimeMs: number; speedupFactor: number; wasmActive: boolean };
           };
         };
       }).__GAME_MANAGER__;
@@ -2121,7 +2121,7 @@ test.describe('1-4 Player Game Engine Verification', () => {
     expect(wasmResult).not.toBeNull();
     expect(wasmResult?.nativeActive).toBe(true);
     expect(wasmResult?.distSq34).toBe(25);
-    expect(wasmResult?.bench.nativeWasmActive).toBe(true);
+    expect(wasmResult?.bench.wasmActive).toBe(true);
 
     // 2. Verify Cloud Persistence (Ratings, Saves, High Scores) & Lobby Ranking Sort Modes
     const cloudRankingResult = await page.evaluate(() => {
@@ -2139,9 +2139,9 @@ test.describe('1-4 Player Game Engine Verification', () => {
       }).__GAME_MANAGER__;
       if (!gm) return null;
 
-      // Rate 'tanks' 5 stars, bookmark 'sumo', and record a 9999 high score on 'hovercraft'
+      // Rate 'tanks' 5 stars, bookmark 'skyline_sumo', and record a 9999 high score on 'hovercraft'
       gm.rateGame('tanks', 5);
-      const savedSumo = gm.toggleSaveGame('sumo');
+      const savedSumo = gm.toggleSaveGame('skyline_sumo');
       gm.cloud.recordRoundComplete('hovercraft', 9999, true, 12.5);
 
       // Sort by Saved
@@ -2170,7 +2170,7 @@ test.describe('1-4 Player Game Engine Verification', () => {
 
     expect(cloudRankingResult?.tanksRating).toBe(5);
     expect(cloudRankingResult?.savedSumo).toBe(true);
-    expect(cloudRankingResult?.savedList).toContain('sumo');
+    expect(cloudRankingResult?.savedList[0]).toBe('skyline_sumo');
     expect(cloudRankingResult?.highScoreTop).toBe('hovercraft');
     expect(cloudRankingResult?.ratingIncludesTanks).toBe(true);
     expect(consoleErrors).toEqual([]);
