@@ -2579,6 +2579,34 @@ export interface GameSettings {
   shakeLevel: 'full' | 'reduced' | 'off';
 }
 
+export function detectInitialDeviceMode(): DevicePlatformMode {
+  if (typeof window === 'undefined') return 'computer';
+
+  // 1. Explicit query parameter override (?mode=phone or ?device=phone)
+  const params = new URLSearchParams(window.location.search);
+  const modeParam = params.get('mode') || params.get('device') || params.get('platform');
+  if (modeParam === 'phone' || modeParam === 'mobile') return 'phone';
+  if (modeParam === 'computer' || modeParam === 'desktop') return 'computer';
+
+  // 2. Touch capability & pointer characteristics
+  const hasTouch = (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) || ('ontouchstart' in window);
+  const isCoarse = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+  const hasNoHover = typeof window.matchMedia === 'function' && window.matchMedia('(hover: none)').matches;
+
+  // 3. User-Agent mobile heuristics (Android, iPhone, iPad, iPod, etc.)
+  const ua = (typeof navigator !== 'undefined' && navigator.userAgent) || '';
+  const isMobileUA = /Android|iPhone|iPad|iPod|Mobile|Silk|BlackBerry|Opera Mini/i.test(ua);
+
+  // 4. Viewport constraint
+  const minDim = Math.min(window.innerWidth || 1024, window.innerHeight || 768);
+  const isCompact = minDim <= 840;
+
+  if (hasTouch && (isCoarse || hasNoHover || isMobileUA || isCompact)) {
+    return 'phone';
+  }
+  return 'computer';
+}
+
 export class GameManager {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -2591,10 +2619,11 @@ export class GameManager {
   public players: PlayerConfig[] = [];
   public selectedGameIndex: number = 0;
   public activeGame: BaseGame | null = null;
+  public activeGameId: MinigameId | null = null;
   public currentRoundResult: RoundResult | null = null;
 
   // Device Platform Mode (Computer vs Phone) & 4P Split-Screen Bracket State
-  public deviceMode: DevicePlatformMode = 'computer';
+  public deviceMode: DevicePlatformMode = detectInitialDeviceMode();
   public deviceModePillHitbox: { x: number; y: number; w: number; h: number } | null = null;
   public secondarySplitGame: BaseGame | null = null;
   public splitBracketStage: 'none' | 'semis' | 'final' = 'none';
@@ -2712,6 +2741,21 @@ export class GameManager {
     this.audio = new AudioEngine();
     this.particles = new ParticleSystem();
     this.input = new InputRouter(this.canvas);
+
+    // Apply auto-detected phone mode to input router and DOM elements
+    if (this.deviceMode === 'phone') {
+      this.input.setDeviceMode('phone');
+      if (typeof document !== 'undefined') {
+        const btnComp = document.getElementById('btn-mode-computer');
+        const btnPhone = document.getElementById('btn-mode-phone');
+        if (btnComp && btnPhone) {
+          btnComp.classList.remove('active');
+          btnPhone.classList.add('active');
+        }
+        document.body.classList.add('phone-platform-mode');
+        document.body.classList.add('phone-mode');
+      }
+    }
 
     // Initialize ambient bokeh motes for luxury arcade lobby
     const moteColors = ['#EF4444', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#38BDF8'];
@@ -2855,6 +2899,13 @@ export class GameManager {
     const speedParam = params.get('speed');
     const autoParam = params.get('auto');
     const autostartParam = params.get('autostart');
+    const devParam = params.get('device') || params.get('mode') || params.get('platform');
+
+    if (devParam === 'phone' || devParam === 'mobile') {
+      this.setDeviceMode('phone');
+    } else if (devParam === 'computer' || devParam === 'desktop') {
+      this.setDeviceMode('computer');
+    }
 
     if (diffParam === 'easy') this.setGlobalDifficulty('bot_easy');
     else if (diffParam === 'hard') this.setGlobalDifficulty('bot_hard');
@@ -5219,9 +5270,11 @@ export class GameManager {
       this.syncInputActivePlayers();
     }
     this.catalogFilterDirty = true;
-    this.selectedGameIndex = 0;
-    this.scrollY = 0;
-    this.targetScrollY = 0;
+    if (this.state === 'LOBBY') {
+      this.selectedGameIndex = 0;
+      this.scrollY = 0;
+      this.targetScrollY = 0;
+    }
 
     if (typeof document !== 'undefined') {
       const btnComp = document.getElementById('btn-mode-computer');
@@ -5231,6 +5284,7 @@ export class GameManager {
         btnPhone.classList.toggle('active', mode === 'phone');
       }
       document.body.classList.toggle('phone-platform-mode', mode === 'phone');
+      document.body.classList.toggle('phone-mode', mode === 'phone');
     }
 
     this.audio.playTap();
@@ -5277,9 +5331,11 @@ export class GameManager {
       }
     }
     this.catalogFilterDirty = true;
-    this.selectedGameIndex = 0;
-    this.scrollY = 0;
-    this.targetScrollY = 0;
+    if (this.state === 'LOBBY') {
+      this.selectedGameIndex = 0;
+      this.scrollY = 0;
+      this.targetScrollY = 0;
+    }
     this.syncInputActivePlayers();
   }
 
@@ -5304,6 +5360,9 @@ export class GameManager {
 
   public getGalleryCols(): number {
     const w = this.logicalWidth;
+    if (w < 600) {
+      return 2;
+    }
     const isDesktop = w >= 1100;
     const galleryW = isDesktop ? w - 396 : w - 32;
     const cardW = 195;
@@ -6430,6 +6489,7 @@ export class GameManager {
   }
 
   public startGame(gameId: MinigameId, isSplitFinal: boolean = false) {
+    this.activeGameId = gameId;
     if (gameId === 'sumo_lode_runner' && this.activeGame instanceof SumoLodeRunnerGame) {
       this.lodeRunnerLevel = this.activeGame.currentLevel;
     }

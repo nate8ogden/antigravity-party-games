@@ -452,11 +452,7 @@ body.in-game .util-btn {
 }
 
 body.in-game .device-toggle-bar {
-  top: 6px;
-  right: 10px;
-  opacity: 0.82;
-  transform: scale(0.92);
-  transform-origin: top right;
+  display: none !important;
 }
 
 @media (max-width: 720px) {

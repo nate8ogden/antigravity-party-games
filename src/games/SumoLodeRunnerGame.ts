@@ -202,37 +202,313 @@ export const SUMO_LODE_TUTORIAL_LEVEL: LevelBlueprint = {
     '.............S..............',
     '.............S..............',
     '.............S....$.........',
-    '@@@@@@@@@@@@HS##########H@@@',
-    '............H...........H...',
-    '............H.....E.....H...',
-    '............H###########H...',
-    '............H-----------H...',
+    '@@@@@@@@@@@@HSH#########@@@@',
+    '..............H.............',
+    '..............H...E.........',
+    '..............##########H...',
+    '............H---------..H...',
     '............H...........H...',
     '............H.......$...H...',
-    '......$.....H..##########...',
-    '....#####H###..H............',
-    '....H....H.$#..H............',
-    '....H....H.##..H............',
-    '..P.H..Q.H.....H............',
+    '......$.....H.....@@@@@@@...',
+    '....#####H###...............',
+    '....H....H.$#...............',
+    '....H....H.X#...............',
+    '..P.H..Q.H..................',
     '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
   ]
 };
 
 /**
- * 30 Hand-Crafted Sumo Lode Runner Levels (28 cols x 16 rows each).
+ * 40 Hand-Crafted Sumo Lode Runner Levels (28 cols x 16 rows each).
+ * - Stages 1–10: Inspired by Original 1983 Broderbund Lode Runner level designs
+ * - Stages 11–40: Expanded Edo, Bamboo, Frost, Magma & Imperial Castle campaigns with 1983 & 1994 dynamics
  */
 export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   // =========================================================================
-  // CHAPTER 1: EDO KOKUGIKAN DOJO (Levels 1 - 6)
+  // CHAPTER 1: 1983 BRODERBUND HERITAGE DOJO (Levels 1 - 10)
   // =========================================================================
   {
     level: 1,
-    title: 'Dohyō Initiate',
-    hint: 'Collect all 9 Gold Pots to reveal the Escape Ladder (S) at the top! Press [SPACE / Q / E] to dig bricks.',
+    title: '1983 Classic: First Strike',
+    hint: 'Inspired by Original Lode Runner Stage 1! Climb ladders, cross the rope bridge, and dig bricks [SPACE / Q / E].',
+    guardCount: 1,
+    guardSpeed: 2.35,
+    holeDuration: 8.8,
+    trapDuration: 5.0,
+    rows: [
+      '.............S..............',
+      '.............S..............',
+      '....$........S.......$......',
+      '#############S####H#########',
+      '.............S....H.........',
+      '.......H##########H.........',
+      '.......H----------H....E....',
+      '.......H..........#######H##',
+      '.......H...$.............H..',
+      '##H###########...........H..',
+      '..H......................H..',
+      '..H....$.............$...H..',
+      '..H..#####H#######H#####.H..',
+      '..H.......H.......H......H..',
+      '..H...P...H...$...H..Q...H..',
+      '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
+    ]
+  },
+  {
+    level: 2,
+    title: '1983 Classic: Rope & Freefall',
+    hint: 'Shimmy out along the Sacred Ropes (-) and press DOWN [S / ▼] above floating mid-air Gold to snatch it as you fall!',
     guardCount: 1,
     guardSpeed: 2.45,
     holeDuration: 8.5,
     trapDuration: 4.8,
+    rows: [
+      '.............S..............',
+      '.............S..............',
+      '..$..........S...........$..',
+      '###H---------S----------H###',
+      '...H....................H...',
+      '...H.....$........$.....H...',
+      '...H.........E..........H...',
+      '...H...#####H..H#####...H...',
+      '...H........H..H........H...',
+      '...H---..$..H..H..$..---H...',
+      '...H........H..H........H...',
+      '...H..#######..#######..H...',
+      '...H..H..............H..H...',
+      '...H..H...$......$...H..H...',
+      '...H..H...P......Q...H..H...',
+      '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
+    ]
+  },
+  {
+    level: 3,
+    title: '1983 Classic: Bedrock & Clay',
+    hint: 'Dark Stone (@) cannot be dug! Lure the Oni Guard onto Clay Bricks (#) to trap it, and dig into the 2 side vaults.',
+    guardCount: 1,
+    guardSpeed: 2.55,
+    holeDuration: 8.2,
+    trapDuration: 4.6,
+    rows: [
+      '.............S..............',
+      '.............S..............',
+      '..$..........S...........$..',
+      '####H@@@@@@@HS@@@@@@@H######',
+      '....H.......H........H......',
+      '....H..$....H...E..$.H......',
+      '....#######.H..#######......',
+      '....H.......H........H......',
+      '....H..###..H...###..H......',
+      '....H..#$#..H...#$#..H......',
+      '....H..#X#..H...#X#..H......',
+      '..$.H.......H........H..$...',
+      '#####H@@@@@@H@@@@@@@H#######',
+      '.....H..............H.......',
+      '.....H...P......Q...H.......',
+      '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
+    ]
+  },
+  {
+    level: 4,
+    title: '1983 Classic: Secret Chimney',
+    hint: 'False Bricks (X) look like solid walls with a hairline crack — drop straight through the central chimney for Gold!',
+    guardCount: 2,
+    guardSpeed: 2.65,
+    holeDuration: 8.0,
+    trapDuration: 4.5,
+    rows: [
+      '.............S..............',
+      '.............S..............',
+      '..$....E.....S.....E.....$..',
+      '#####H######XSX######H######',
+      '.....H......X.X......H......',
+      '.....H..$...$.$...$..H......',
+      '.....H.#####X.X#####.H......',
+      '.....H......$.$......H......',
+      '.....H..###X###X###..H......',
+      '.....H..H..$...$..H..H......',
+      '.....H..H#########H..H......',
+      '..$..H..H.........H..H..$...',
+      '######..H..#####..H..#######',
+      '........H..H...H..H.........',
+      '....P...H..H...H..H...Q.....',
+      '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
+    ]
+  },
+  {
+    level: 5,
+    title: '1983 Classic: Twin Pagodas',
+    hint: 'Cross between the Twin Pagodas using the high rope, or excavate the brick vaults on the middle terraces!',
+    guardCount: 2,
+    guardSpeed: 2.75,
+    holeDuration: 7.8,
+    trapDuration: 4.4,
+    rows: [
+      '.............S..............',
+      '.............S..............',
+      '...$.........S..........$...',
+      '..H####H-----S-----H#####H..',
+      '..H....H...........H.....H..',
+      '..H.E..H...$...$...H..E..H..',
+      '..H#####..#######..#####.H..',
+      '..H.......H.....H........H..',
+      '..H..###..H..$..H..###...H..',
+      '..H..#$#..H.###.H..#$#...H..',
+      '..H..#X#..H.#$#.H..#X#...H..',
+      '..H.......H.#X#.H........H..',
+      '..H#######H.....H########H..',
+      '..H.......H.....H........H..',
+      '..H...P...H.....H...Q....H..',
+      '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
+    ]
+  },
+  {
+    level: 6,
+    title: '1983 Classic: Skyfall Columns',
+    hint: 'Dig the brick (#) directly above each vertical column of mid-air Gold, then jump through the hole to collect them all!',
+    guardCount: 2,
+    guardSpeed: 2.85,
+    holeDuration: 7.8,
+    trapDuration: 4.3,
+    rows: [
+      '.............S..............',
+      '.............S..............',
+      '....$........S........$.....',
+      '##H##########S##########H###',
+      '..H.....................H...',
+      '..H...$......E......$...H...',
+      '..H......................H..',
+      '..H...$.............$...H...',
+      '..H......H#######H......H...',
+      '..H######H.......H######H...',
+      '..H......H...$...H......H...',
+      '..H..E...H..###..H......H...',
+      '..H######H..#$#..H######H...',
+      '..H......H..#X#..H......H...',
+      '..H..P...H.......H...Q..H...',
+      '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
+    ]
+  },
+  {
+    level: 7,
+    title: '1983 Classic: Zig-Zag Switchback',
+    hint: 'Dig holes in the long brick decks to drop down a floor fast—or trap pursuing Oni Guards behind you!',
+    guardCount: 2,
+    guardSpeed: 2.95,
+    holeDuration: 7.6,
+    trapDuration: 4.2,
+    rows: [
+      '.............S..............',
+      '.............S..............',
+      '..$....E.....S..........$...',
+      '######################H#####',
+      '......................H.....',
+      '....$........$........H.$...',
+      '####H#######################',
+      '....H.......................',
+      '..$.H........E........$.....',
+      '######################H#####',
+      '......................H.....',
+      '....$........$........H.$...',
+      '####H#######################',
+      '....H.......................',
+      '....H....P.......Q..........',
+      '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
+    ]
+  },
+  {
+    level: 8,
+    title: '1983 Classic: The 2-1 Staircase',
+    hint: 'To dig 2 layers deep: dig TWO adjacent bricks on the top row, step into the first hole, and dig the brick below!',
+    guardCount: 2,
+    guardSpeed: 3.0,
+    holeDuration: 8.0,
+    trapDuration: 4.2,
+    rows: [
+      '.............S..............',
+      '.............S..............',
+      '..$....E.....S.....E....$...',
+      '#####H#######S#######H######',
+      '.....H.......S.......H......',
+      '.....H..###########..H......',
+      '.....H..###$###$###..H......',
+      '.....H..###X###X###..H......',
+      '..$..H...............H..$...',
+      '####H########H########H#####',
+      '....H........H........H.....',
+      '....H..#####.H.#####..H.....',
+      '....H..##$##.H.##$##..H.....',
+      '....H..##X##.H.##X##..H.....',
+      '....H...P....H....Q...H.....',
+      '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
+    ]
+  },
+  {
+    level: 9,
+    title: '1983 Classic: Guardhouse Pit',
+    hint: 'Use the overhead Sacred Rope to cross above the central Oni Guardhouse, or bait them out onto the brick wings!',
+    guardCount: 2,
+    guardSpeed: 3.05,
+    holeDuration: 7.5,
+    trapDuration: 4.1,
+    rows: [
+      '.............S..............',
+      '.............S..............',
+      '..$..........S..........$...',
+      '####H--------S--------H#####',
+      '....H........S........H.....',
+      '....H..$.....S.....$..H.....',
+      '....H.####H#####H####.H.....',
+      '....H.H...H..$..H...H.H.....',
+      '....H.H.$ H.E.E.H $.H.H.....',
+      '....H.H###H#####H###H.H.....',
+      '....H.H.............H.H.....',
+      '..$.H.H..$.......$..H.H.$...',
+      '#####.H.###########.H.######',
+      '......H.............H.......',
+      '....P.H.............H.Q.....',
+      '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
+    ]
+  },
+  {
+    level: 10,
+    title: '1983 Classic: Stepped Pyramid',
+    hint: 'Climb the stepped pyramid slopes and excavate into the Pharaoh-Sumo inner chamber!',
+    guardCount: 2,
+    guardSpeed: 3.1,
+    holeDuration: 7.5,
+    trapDuration: 4.0,
+    rows: [
+      '.............S..............',
+      '.............S..............',
+      '..........$..S..$...........',
+      '.........H###S###H..........',
+      '.......$.H...S...H.$........',
+      '......H###..###..###H.......',
+      '....$.H....##$##....H.$.....',
+      '...H###...###X###...###H....',
+      '.$.H.....##$###$##.....H.$..',
+      'H###....###X###X###....###H.',
+      'H......E...........E......H.',
+      'H..$...................$..H.',
+      'H.H#####################H.H.',
+      'H.H.....................H.H.',
+      'H.H......P.......Q......H.H.',
+      '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
+    ]
+  },
+
+  // =========================================================================
+  // CHAPTER 2: EDO KOKUGIKAN DOJO (Levels 11 - 16)
+  // =========================================================================
+  {
+    level: 11,
+    title: 'Dohyō Initiate',
+    hint: 'Collect all 9 Gold Pots to reveal the Escape Ladder (S) at the top!',
+    guardCount: 2,
+    guardSpeed: 3.12,
+    holeDuration: 7.4,
+    trapDuration: 4.0,
     rows: [
       '.............S..............',
       '.............S..............',
@@ -245,7 +521,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '.......H..H.....H..H....$...',
       '####H######.....######H#####',
       '....H.................H.....',
-      '....H...$.........$...H.....',
+      '....H...$....E....$...H.....',
       '....#########H#########.....',
       '.............H..............',
       '..$....P.....H.....Q.....$..',
@@ -253,23 +529,23 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 2,
+    level: 12,
     title: 'Twin Torii Towers',
-    hint: 'Shimmy across Sacred Ropes (-) and press DOWN [S / ▼] to drop off at any point!',
-    guardCount: 1,
-    guardSpeed: 2.65,
-    holeDuration: 8.0,
-    trapDuration: 4.5,
+    hint: 'Drop from the upper Sacred Ropes (-) through the floating mid-air Gold!',
+    guardCount: 2,
+    guardSpeed: 3.15,
+    holeDuration: 7.3,
+    trapDuration: 4.0,
     rows: [
       '.............S..............',
       '.............S..............',
       '..$....E.....S...........$..',
       '#####H#######S#######H######',
       '.....H-------.-------H......',
-      '.....H...............H......',
       '.....H...$.......$...H......',
+      '.....H...............H......',
       '.....H..H#########H..H......',
-      '..$..H..H.........H..H..$...',
+      '..$..H..H....E....H..H..$...',
       '####H#..H...$.$...H..#H#####',
       '....H...H..H###H..H...H.....',
       '....H...H..H...H..H...H.....',
@@ -280,13 +556,12 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 3,
+    level: 13,
     title: 'Sacred Rope Crossing',
-    hint: 'Trap Oni Guards in dug holes! You can run safely across the head of a trapped guard.',
     guardCount: 2,
-    guardSpeed: 2.8,
-    holeDuration: 7.5,
-    trapDuration: 4.2,
+    guardSpeed: 3.2,
+    holeDuration: 7.2,
+    trapDuration: 3.9,
     rows: [
       '.............S..............',
       '.............S..............',
@@ -307,13 +582,12 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 4,
+    level: 14,
     title: 'The Stepping Stone Pit',
-    hint: 'Dig the top brick above buried Gold! A False Brick Trapdoor (X) below lets you fall safely out.',
     guardCount: 2,
-    guardSpeed: 2.95,
-    holeDuration: 7.4,
-    trapDuration: 4.0,
+    guardSpeed: 3.25,
+    holeDuration: 7.2,
+    trapDuration: 3.9,
     rows: [
       '.............S..............',
       '.............S..............',
@@ -334,13 +608,12 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 5,
+    level: 15,
     title: "Trickster's Trapdoor",
-    hint: 'False Bricks (X) have subtle cracks and drop you straight through to hidden rooms below!',
     guardCount: 2,
-    guardSpeed: 3.05,
-    holeDuration: 7.2,
-    trapDuration: 3.9,
+    guardSpeed: 3.3,
+    holeDuration: 7.1,
+    trapDuration: 3.8,
     rows: [
       '.............S..............',
       '.............S..............',
@@ -361,11 +634,10 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 6,
+    level: 16,
     title: 'Staircase Excavation',
-    hint: 'Dig from the side of each brick pillar to drop through the buried Gold and Trapdoor below!',
     guardCount: 2,
-    guardSpeed: 3.15,
+    guardSpeed: 3.35,
     holeDuration: 7.0,
     trapDuration: 3.8,
     rows: [
@@ -389,13 +661,13 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
 
   // =========================================================================
-  // CHAPTER 2: ARASHIYAMA BAMBOO SHRINE (Levels 7 - 12)
+  // CHAPTER 3: ARASHIYAMA BAMBOO SHRINE (Levels 17 - 22)
   // =========================================================================
   {
-    level: 7,
+    level: 17,
     title: 'Bamboo Labyrinth',
     guardCount: 3,
-    guardSpeed: 3.3,
+    guardSpeed: 3.4,
     holeDuration: 6.8,
     trapDuration: 3.6,
     rows: [
@@ -418,10 +690,10 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 8,
+    level: 18,
     title: 'The Hanging Gardens',
     guardCount: 3,
-    guardSpeed: 3.4,
+    guardSpeed: 3.45,
     holeDuration: 6.7,
     trapDuration: 3.5,
     rows: [
@@ -429,12 +701,12 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '.............S..............',
       '..$..........S..........$...',
       '###H---------S---------H####',
-      '...H...................H....',
+      '...H....$.........$....H....',
       '...H...$....E....$.....H....',
       '...H..#####H.H#####....H....',
       '...H-------H.H-------..H....',
-      '...H.......H.H.........H....',
       '...H..$....H.H....$....H....',
+      '...H.......H.H.........H....',
       '...H.H####.H.H.####H...H....',
       '...H.H...E.H.H.E...H...H....',
       '...H.H.H#########H.H...H....',
@@ -444,7 +716,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 9,
+    level: 19,
     title: 'Oni Bridge Puzzle',
     guardCount: 3,
     guardSpeed: 3.5,
@@ -470,7 +742,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 10,
+    level: 20,
     title: 'Three-Story Dig',
     guardCount: 3,
     guardSpeed: 3.55,
@@ -496,7 +768,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 11,
+    level: 21,
     title: 'Shrine of Illusions',
     guardCount: 3,
     guardSpeed: 3.6,
@@ -522,7 +794,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 12,
+    level: 22,
     title: 'Emerald Pagoda',
     guardCount: 3,
     guardSpeed: 3.65,
@@ -549,10 +821,10 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
 
   // =========================================================================
-  // CHAPTER 3: HOKKAIDO FROST ONSEN (Levels 13 - 18)
+  // CHAPTER 4: HOKKAIDO FROST ONSEN (Levels 23 - 28)
   // =========================================================================
   {
-    level: 13,
+    level: 23,
     title: 'Glacial Tiers',
     guardCount: 4,
     guardSpeed: 3.7,
@@ -578,7 +850,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 14,
+    level: 24,
     title: 'Frozen Waterfall',
     guardCount: 4,
     guardSpeed: 3.75,
@@ -604,7 +876,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 15,
+    level: 25,
     title: 'The Ice Vaults',
     guardCount: 4,
     guardSpeed: 3.8,
@@ -630,7 +902,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 16,
+    level: 26,
     title: 'Rope & Chasm Gauntlet',
     guardCount: 4,
     guardSpeed: 3.85,
@@ -641,7 +913,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '.............S..............',
       '..$..........S..........$...',
       '##H----------S----------H###',
-      '..H.....................H...',
+      '..H......$.......$......H...',
       '..H...$......$......$...H...',
       '..H..###----###----###..H...',
       '..H....E...........E....H...',
@@ -656,7 +928,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 17,
+    level: 27,
     title: 'Double Trapdoor Drop',
     guardCount: 4,
     guardSpeed: 3.9,
@@ -682,7 +954,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 18,
+    level: 28,
     title: 'Blizzard Bastion',
     guardCount: 4,
     guardSpeed: 3.95,
@@ -709,10 +981,10 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
   },
 
   // =========================================================================
-  // CHAPTER 4: KAGOSHIMA MAGMA FORGE (Levels 19 - 24)
+  // CHAPTER 5: KAGOSHIMA MAGMA FORGE & IMPERIAL CASTLE (Levels 29 - 40)
   // =========================================================================
   {
-    level: 19,
+    level: 29,
     title: 'The Iron Foundry',
     guardCount: 4,
     guardSpeed: 4.05,
@@ -738,7 +1010,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 20,
+    level: 30,
     title: 'Crucible of Timing',
     guardCount: 5,
     guardSpeed: 4.1,
@@ -764,7 +1036,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 21,
+    level: 31,
     title: 'Deep Magma Excavation',
     guardCount: 5,
     guardSpeed: 4.15,
@@ -790,7 +1062,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 22,
+    level: 32,
     title: 'Suspended Anvils',
     guardCount: 5,
     guardSpeed: 4.2,
@@ -801,7 +1073,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '.............S..............',
       '..$..........S..........$...',
       '##H----------S----------H###',
-      '..H.....................H...',
+      '..H....$...........$....H...',
       '..H..$....$.....$....$..H...',
       '..H.@H@..@@H...H@@..@H@.H...',
       '..H..H----H-----H----H..H...',
@@ -816,7 +1088,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 23,
+    level: 33,
     title: 'Furnace Maze',
     guardCount: 5,
     guardSpeed: 4.25,
@@ -842,7 +1114,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 24,
+    level: 34,
     title: 'Caldera Rim',
     guardCount: 5,
     guardSpeed: 4.3,
@@ -867,12 +1139,8 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
     ]
   },
-
-  // =========================================================================
-  // CHAPTER 5: IMPERIAL GOLDEN CASTLE (Levels 25 - 30)
-  // =========================================================================
   {
-    level: 25,
+    level: 35,
     title: "Shogun's Courtyard",
     guardCount: 5,
     guardSpeed: 4.4,
@@ -898,7 +1166,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 26,
+    level: 36,
     title: 'The Gauntlet of Ropes',
     guardCount: 5,
     guardSpeed: 4.45,
@@ -909,7 +1177,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '.............S..............',
       '..$..........S..........$...',
       '##H----------S----------H###',
-      '..H....$...........$....H...',
+      '..H....$.....$.....$....H...',
       '..H---###---------###---H...',
       '..H....E.....$.....E....H...',
       '..H---------###---------H...',
@@ -924,7 +1192,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 27,
+    level: 37,
     title: 'Master Excavator',
     guardCount: 6,
     guardSpeed: 4.5,
@@ -950,7 +1218,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 28,
+    level: 38,
     title: 'Trapdoor Matrix',
     guardCount: 6,
     guardSpeed: 4.55,
@@ -976,7 +1244,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 29,
+    level: 39,
     title: "Yokozuna's Trial",
     guardCount: 6,
     guardSpeed: 4.6,
@@ -1002,7 +1270,7 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
     ]
   },
   {
-    level: 30,
+    level: 40,
     title: 'Imperial Grand Dohyō',
     guardCount: 6,
     guardSpeed: 4.7,
