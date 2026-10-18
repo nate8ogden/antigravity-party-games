@@ -1034,4 +1034,85 @@ export class AudioEngine {
     osc.start(t);
     osc.stop(t + 0.22);
   }
+
+  /**
+   * Synthesizes a single retro chiptune note (NES Pulse / Triangle / Sine / Sawtooth)
+   * with crisp attack/decay envelope and optional pitch slide or vibrato.
+   */
+  public playChiptuneVoice(
+    freq: number,
+    duration: number,
+    waveType: OscillatorType = 'square',
+    gainLevel: number = 0.05,
+    pan: number = 0,
+    slideToFreq?: number
+  ) {
+    if (this.muted || !this.sfxEnabled || freq <= 20) return;
+    this.initContext();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+    const dest = this.createPanner(pan);
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = waveType;
+    osc.frequency.setValueAtTime(freq, t);
+    if (slideToFreq && slideToFreq > 20) {
+      osc.frequency.exponentialRampToValueAtTime(slideToFreq, t + duration * 0.85);
+    }
+
+    const safeDur = Math.max(0.03, duration);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(gainLevel, t + Math.min(0.012, safeDur * 0.2));
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + safeDur);
+
+    osc.connect(gain);
+    gain.connect(dest);
+
+    osc.start(t);
+    osc.stop(t + safeDur + 0.01);
+  }
+
+  /**
+   * Synthesizes a soft retro NES / Edo-taiko percussion hit ('taiko' | 'hat' | 'snare')
+   */
+  public playChiptunePercussion(kind: 'taiko' | 'hat' | 'snare', gainLevel: number = 0.04) {
+    if (this.muted || !this.sfxEnabled) return;
+    this.initContext();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+    const dest = this.getDestination();
+
+    if (kind === 'taiko') {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(115, t);
+      osc.frequency.exponentialRampToValueAtTime(46, t + 0.09);
+      gain.gain.setValueAtTime(gainLevel * 1.4, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+      osc.connect(gain);
+      gain.connect(dest);
+      osc.start(t);
+      osc.stop(t + 0.11);
+    } else {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'square';
+      const startF = kind === 'snare' ? 280 : 1650;
+      const endF = kind === 'snare' ? 95 : 920;
+      const dur = kind === 'snare' ? 0.065 : 0.032;
+      osc.frequency.setValueAtTime(startF, t);
+      osc.frequency.exponentialRampToValueAtTime(endF, t + dur);
+      gain.gain.setValueAtTime(gainLevel * 0.55, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(gain);
+      gain.connect(dest);
+      osc.start(t);
+      osc.stop(t + dur + 0.01);
+    }
+  }
 }
+
