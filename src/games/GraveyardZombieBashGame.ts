@@ -345,11 +345,12 @@ export class GraveyardZombieBashGame extends BaseGame {
 
       const steerX = this.input.getSteer(k.id);
       const steerY = -this.input.getThrottle(k.id);
-      const pressed = this.input.isPressed(k.id);
-      const justPressed = this.input.justPressed(k.id);
+      const isBot = k.config.type.startsWith('bot_');
+      const actionHeld = !isBot ? this.input.isActionPressed(k.id) : this.input.isPressed(k.id);
+      const actionJustPressed = !isBot ? this.input.justAction(k.id) : this.input.justPressed(k.id);
 
       // Hold-to-charge vs Quick Tap Shovel Bash
-      if (pressed && k.stunTimer <= 0) {
+      if (actionHeld && k.stunTimer <= 0) {
         k.pressDuration += safeDt;
         if (k.pressDuration > 0.16) {
           k.isCharging = true;
@@ -367,9 +368,9 @@ export class GraveyardZombieBashGame extends BaseGame {
         k.charge = 0;
         k.pressDuration = 0;
       }
-      k.wasPressed = pressed;
+      k.wasPressed = actionHeld;
 
-      if (justPressed && k.stunTimer <= 0) {
+      if (actionJustPressed && k.stunTimer <= 0 && !k.isCharging) {
         this.executeShovelSwing(k);
       }
 
@@ -971,5 +972,14 @@ export class GraveyardZombieBashGame extends BaseGame {
         ? `${sorted[0].config.name} whacked ${sorted[0].bashes} targets (${sorted[0].score} pts)!`
         : 'Courtyard Bash Complete!'
     };
+  }
+
+  public handlePointerDown(x: number, y: number, _width: number, height: number): boolean {
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.audio.playSelect();
+      return true;
+    }
+    return false;
   }
 }

@@ -338,10 +338,10 @@ export class GargoyleStoneStareGame extends BaseGame {
       if (!c.config.type.startsWith('bot_')) {
         const steerX = this.input.getSteer(c.id);
         const throttle = this.input.getThrottle(c.id); // +1 up, -1 down
-        const pressed = this.input.isPressed(c.id);
+        const actionHeld = this.input.isActionPressed(c.id);
 
         // Hold-to-charge Stone-Quake Vault
-        if (pressed) {
+        if (actionHeld) {
           c.pressDuration += safeDt;
           if (c.pressDuration > 0.18) {
             c.isCharging = true;
@@ -355,13 +355,13 @@ export class GargoyleStoneStareGame extends BaseGame {
           c.charge = 0;
           c.pressDuration = 0;
         }
-        c.wasPressed = pressed;
+        c.wasPressed = actionHeld;
 
         // Determine climbing & horizontal movement:
         // Players climb whenever they press Up, press Action, OR steer Left/Right!
         // Releasing all controls freezes them solid into a Granite Statue!
         const hasDirectional = Math.abs(steerX) > 0.08 || Math.abs(throttle) > 0.08;
-        const wantsToMove = (hasDirectional || pressed) && c.zappedTimer <= 0;
+        const wantsToMove = (hasDirectional || actionHeld) && c.zappedTimer <= 0;
 
         if (wantsToMove) {
           c.isStoneStatue = false;
@@ -1052,5 +1052,14 @@ export class GargoyleStoneStareGame extends BaseGame {
         ? `${sorted[0].config.name} rang the Summit Bell ${sorted[0].bellsRung}x (${sorted[0].score} pts)!`
         : 'Cathedral Belfry Showdown!'
     };
+  }
+
+  public handlePointerDown(x: number, y: number, _width: number, height: number): boolean {
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.audio.playSelect();
+      return true;
+    }
+    return false;
   }
 }

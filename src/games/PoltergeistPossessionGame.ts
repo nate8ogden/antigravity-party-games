@@ -340,10 +340,11 @@ export class PoltergeistPossessionGame extends BaseGame {
 
       const steerX = this.input.getSteer(m.id);
       const steerY = -this.input.getThrottle(m.id);
-      const pressed = this.input.isPressed(m.id);
+      const isBot = m.config.type.startsWith('bot_');
+      const actionHeld = !isBot ? this.input.isActionPressed(m.id) : this.input.isPressed(m.id);
 
       // Hold-to-Charge vs Quick Tap Hurl
-      if (pressed) {
+      if (actionHeld) {
         m.pressDuration += safeDt;
         if (m.pressDuration > 0.16) {
           m.isCharging = true;
@@ -364,7 +365,7 @@ export class PoltergeistPossessionGame extends BaseGame {
         m.charge = 0;
         m.pressDuration = 0;
       }
-      m.wasPressed = pressed;
+      m.wasPressed = actionHeld;
 
       if (!m.config.type.startsWith('bot_')) {
         let moveX = steerX;
@@ -1103,5 +1104,14 @@ export class PoltergeistPossessionGame extends BaseGame {
         ? `${sorted[0].config.name} scored ${sorted[0].score} pts (${sorted[0].hits} hits)!`
         : 'Toyroom Complete!'
     };
+  }
+
+  public handlePointerDown(x: number, y: number, _width: number, height: number): boolean {
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.audio.playSelect();
+      return true;
+    }
+    return false;
   }
 }

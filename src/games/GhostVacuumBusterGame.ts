@@ -302,10 +302,11 @@ export class GhostVacuumBusterGame extends BaseGame {
 
       const steerX = this.input.getSteer(b.id);
       const steerY = -this.input.getThrottle(b.id);
-      const pressed = this.input.isPressed(b.id);
+      const isBot = b.config.type.startsWith('bot_');
+      const actionHeld = !isBot ? this.input.isActionPressed(b.id) : this.input.isPressed(b.id);
 
       // Hold-to-Charge Proton Overdrive Snap-Trap
-      if (pressed && b.stunTimer <= 0) {
+      if (actionHeld && b.stunTimer <= 0) {
         b.pressDuration += safeDt;
         b.isVacuuming = true;
         if (b.pressDuration > 0.18) {
@@ -323,7 +324,7 @@ export class GhostVacuumBusterGame extends BaseGame {
         // while pressing/holding boosts suction cone power by 2x!
         b.isVacuuming = b.stunTimer <= 0;
       }
-      b.wasPressed = pressed;
+      b.wasPressed = actionHeld;
 
       if (!b.config.type.startsWith('bot_') && b.stunTimer <= 0) {
         let moveX = steerX;
@@ -334,8 +335,8 @@ export class GhostVacuumBusterGame extends BaseGame {
           const dx = bestGhost.x - b.x;
           const dy = bestGhost.y - b.y;
           const d = Math.hypot(dx, dy) || 1;
-          moveX = (dx / d) * (pressed ? 0.85 : 0.48);
-          moveY = (dy / d) * (pressed ? 0.85 : 0.48);
+          moveX = (dx / d) * (actionHeld ? 0.85 : 0.48);
+          moveY = (dy / d) * (actionHeld ? 0.85 : 0.48);
         }
 
         const len = Math.hypot(moveX, moveY);
@@ -369,8 +370,8 @@ export class GhostVacuumBusterGame extends BaseGame {
 
       // Apply Proton Suction Cone to Ghosts
       if (b.isVacuuming && b.stunTimer <= 0) {
-        const coneRange = pressed || b.overdriveTimer > 0 ? 235 : 175;
-        const pullStrength = (pressed ? 420 : 250) * (b.overdriveTimer > 0 ? 1.65 : 1.0) * (b.underdogActive ? 1.2 : 1.0);
+        const coneRange = actionHeld || b.overdriveTimer > 0 ? 235 : 175;
+        const pullStrength = (actionHeld ? 420 : 250) * (b.overdriveTimer > 0 ? 1.65 : 1.0) * (b.underdogActive ? 1.2 : 1.0);
 
         for (const g of this.ghosts) {
           const dx = g.x - b.x;
@@ -919,5 +920,14 @@ export class GhostVacuumBusterGame extends BaseGame {
         ? `${sorted[0].config.name} trapped ${sorted[0].captured} ghosts (${sorted[0].score} pts)!`
         : 'Containment Complete!'
     };
+  }
+
+  public handlePointerDown(x: number, y: number, _width: number, height: number): boolean {
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.audio.playSelect();
+      return true;
+    }
+    return false;
   }
 }

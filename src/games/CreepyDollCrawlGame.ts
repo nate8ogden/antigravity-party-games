@@ -290,11 +290,12 @@ export class CreepyDollCrawlGame extends BaseGame {
 
       const steerX = this.input.getSteer(r.id);
       const steerY = -this.input.getThrottle(r.id);
-      const pressed = this.input.isPressed(r.id);
+      const isBot = r.config.type.startsWith('bot_');
+      const actionHeld = !isBot ? this.input.isActionPressed(r.id) : this.input.isPressed(r.id);
 
       // Hold-to-Wind Mainspring vs Quick Tap Hop-Boost
-      if (!r.config.type.startsWith('bot_')) {
-        if (pressed) {
+      if (!isBot) {
+        if (actionHeld) {
           r.pressDuration += safeDt;
           r.isCharging = true;
           r.charge = Math.min(1, r.charge + safeDt * 0.92);
@@ -307,7 +308,7 @@ export class CreepyDollCrawlGame extends BaseGame {
           r.charge = 0;
           r.pressDuration = 0;
         }
-        r.wasPressed = pressed;
+        r.wasPressed = actionHeld;
 
         // Vertical lane weaving works via Up/Down OR Left/Right steering!
         let laneSteer = Math.abs(steerY) > 0.08 ? steerY : steerX;
@@ -826,5 +827,14 @@ export class CreepyDollCrawlGame extends BaseGame {
         ? `${sorted[0].config.name} completed ${sorted[0].lapsCompleted} laps (${sorted[0].score} pts)!`
         : 'Toy Derby Complete!'
     };
+  }
+
+  public handlePointerDown(x: number, y: number, _width: number, height: number): boolean {
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.audio.playSelect();
+      return true;
+    }
+    return false;
   }
 }
