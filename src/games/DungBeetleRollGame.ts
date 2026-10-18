@@ -203,7 +203,11 @@ export class DungBeetleRollGame extends BaseGame {
 
       const sx = this.input.getSteer(b.id);
       const sy = this.input.getThrottle(b.id);
-      const isHold = this.input.isActionPressed(b.id);
+      const pCfg = this.getPlayer(b.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(b.id);
+
+      const isHold = this.input.isActionPressed(b.id) || (isBot && this.input.isPressed(b.id)) || (!hasSteer && !isBot && this.input.isPressed(b.id));
 
       const accel = 1350 * (b.underdog ? 1.15 : 1.0) * (b.boulderBoostTimer > 0 ? 1.35 : 1.0);
       b.vx += sx * accel * dt;
@@ -427,7 +431,28 @@ export class DungBeetleRollGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
+    const midX = width / 2;
+    const active = this.beetles.filter((b) => {
+      const pCfg = this.getPlayer(b.id);
+      return pCfg && !pCfg.type.startsWith('bot_');
+    });
+    const beetle = active.find((b) => (b.id === 0 ? x < midX : x >= midX)) || active[0];
+    if (beetle && beetle.stunTimer <= 0) {
+      const dx = x - beetle.x;
+      const dy = y - beetle.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      beetle.vx += (dx / dist) * 440;
+      beetle.vy += (dy / dist) * 440;
+      this.audio.playTap();
+      return true;
+    }
     return false;
   }
 }

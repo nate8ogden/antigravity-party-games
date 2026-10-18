@@ -198,7 +198,10 @@ export class GrasshopperHighJumpGame extends BaseGame {
       if (h.calloutTimer > 0) h.calloutTimer = Math.max(0, h.calloutTimer - dt);
 
       const steer = this.input.getSteer(h.id);
-      const isHold = this.input.isActionPressed(h.id) || this.input.isPressed(h.id);
+      const pCfg = this.getPlayer(h.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(h.id);
+      const isHold = this.input.isActionPressed(h.id) || (isBot && this.input.isPressed(h.id)) || (!hasSteer && !isBot && this.input.isPressed(h.id));
 
       // Aim parabolic trajectory arc with Left/Right steering
       h.aimAngle = Math.max(-Math.PI * 0.78, Math.min(-Math.PI * 0.22, h.aimAngle + steer * 2.2 * dt));
@@ -394,7 +397,29 @@ export class GrasshopperHighJumpGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
+    const midX = width / 2;
+    const active = this.hoppers.filter((h) => {
+      const pCfg = this.getPlayer(h.id);
+      return pCfg && !pCfg.type.startsWith('bot_');
+    });
+    const hopper = active.find((h) => (h.id === 0 ? x < midX : x >= midX)) || active[0];
+    if (hopper && hopper.grounded) {
+      hopper.aimAngle = Math.atan2(y - hopper.y, x - hopper.x);
+      hopper.aimAngle = Math.max(-Math.PI * 0.78, Math.min(-Math.PI * 0.22, hopper.aimAngle));
+      const speed = 560;
+      hopper.vx = Math.cos(hopper.aimAngle) * speed;
+      hopper.vy = Math.sin(hopper.aimAngle) * speed;
+      hopper.grounded = false;
+      this.audio.playTap();
+      return true;
+    }
     return false;
   }
 }

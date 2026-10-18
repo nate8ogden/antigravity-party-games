@@ -434,8 +434,9 @@ export class CauldronWitchBrewGame extends BaseGame {
       const steerY = -this.input.getThrottle(a.id);
       const pCfg = this.getPlayer(a.id);
       const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
-      const pressed = this.input.isActionPressed(a.id) || (isBot && this.input.isPressed(a.id));
-      const justPressed = this.input.justAction(a.id) || (isBot && this.input.justPressed(a.id));
+      const hasSteer = this.input.hasSteer(a.id);
+      const pressed = this.input.isActionPressed(a.id) || (isBot && this.input.isPressed(a.id)) || (!hasSteer && !isBot && this.input.isPressed(a.id));
+      const justPressed = this.input.justAction(a.id) || (isBot && this.input.justPressed(a.id)) || (!hasSteer && !isBot && this.input.justPressed(a.id));
 
       // Hold-to-charge tracking
       if (pressed) {

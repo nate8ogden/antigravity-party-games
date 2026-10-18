@@ -250,8 +250,9 @@ export class RollerCoasterBrakeGame extends BaseGame {
       }
 
       const steer = this.input.getSteer(c.id);
-      const justTap = this.input.justAction(c.id) || (this.input.justPressed(c.id) && Math.abs(steer) < 0.2);
-      const isHold = this.input.isActionPressed(c.id);
+      const isBot = this.getPlayer(c.id)?.type.startsWith('bot_');
+      const justTap = this.input.justAction(c.id) || (!isBot && this.input.justPressed(c.id) && Math.abs(steer) < 0.2);
+      const isHold = this.input.isActionPressed(c.id) || (isBot && this.input.isPressed(c.id));
 
       // Lateral rail switching with zero dead-zone and snappy damping
       const latAccel = 7.5 * (c.underdog ? 1.15 : 1.0);

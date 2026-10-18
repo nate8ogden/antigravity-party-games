@@ -185,9 +185,10 @@ export class BambooPoleVaultGame extends BaseGame {
       const steer = this.input.getSteer(v.id);
       const pCfg = this.getPlayer(v.id);
       const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(v.id);
 
-      const justTap = this.input.justAction(v.id) || (isBot && this.input.justPressed(v.id));
-      const isHold = this.input.isActionPressed(v.id) || (isBot && this.input.isPressed(v.id));
+      const justTap = this.input.justAction(v.id) || (isBot && this.input.justPressed(v.id)) || (!hasSteer && !isBot && this.input.justPressed(v.id));
+      const isHold = this.input.isActionPressed(v.id) || (isBot && this.input.isPressed(v.id)) || (!hasSteer && !isBot && this.input.isPressed(v.id));
 
       if (v.phase === 'runway') {
         v.vx = Math.min(340, v.vx + (260 + Math.max(0, steer) * 140) * (v.underdog ? 1.15 : 1.0) * dt);
@@ -399,7 +400,29 @@ export class BambooPoleVaultGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
+    const midX = width / 2;
+    const active = this.vaulters.filter((v) => {
+      const pCfg = this.getPlayer(v.id);
+      return pCfg && !pCfg.type.startsWith('bot_');
+    });
+    const vaulter = active.find((v) => (v.id === 0 ? x < midX : x >= midX)) || active[0];
+    if (vaulter) {
+      if (vaulter.phase === 'runway') {
+        vaulter.vx = Math.min(380, vaulter.vx + 65);
+        this.audio.playTap();
+      } else {
+        vaulter.vx += (x > vaulter.x ? 1 : -1) * 120;
+        this.audio.playTap();
+      }
+      return true;
+    }
     return false;
   }
 }

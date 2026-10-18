@@ -318,10 +318,11 @@ export class PenguinSlideGame extends BaseGame {
         let releaseAction = false;
 
         if (!p.type.startsWith('bot_')) {
+          const hasSteer = this.input.hasSteer(p.id);
           steer = this.input.getSteer(p.id);
-          tapSwitch = this.input.justPressed(p.id);
-          holdAction = this.input.isActionPressed(p.id) || this.input.isPressed(p.id);
-          releaseAction = this.input.justReleased(p.id);
+          tapSwitch = this.input.justAction(p.id) || (!hasSteer && this.input.justPressed(p.id));
+          holdAction = this.input.isActionPressed(p.id) || (!hasSteer && this.input.isPressed(p.id));
+          releaseAction = this.input.justReleased(p.id) || (!holdAction && r.chargeRatio > 0);
 
           if (Math.abs(steer) > 0.5 && r.laneCooldown <= 0) {
             const nextLane = Math.max(0, Math.min(2, r.lane + (steer > 0 ? 1 : -1)));

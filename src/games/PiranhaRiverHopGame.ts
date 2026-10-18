@@ -242,9 +242,10 @@ export class PiranhaRiverHopGame extends BaseGame {
       const sy = this.input.getThrottle(h.id);
       const pCfg = this.getPlayer(h.id);
       const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(h.id);
 
-      const justTap = this.input.justAction(h.id) || (isBot && this.input.justPressed(h.id));
-      const isHold = this.input.isActionPressed(h.id) || (isBot && this.input.isPressed(h.id));
+      const justTap = this.input.justAction(h.id) || (isBot && this.input.justPressed(h.id)) || (!hasSteer && !isBot && this.input.justPressed(h.id));
+      const isHold = this.input.isActionPressed(h.id) || (isBot && this.input.isPressed(h.id)) || (!hasSteer && !isBot && this.input.isPressed(h.id));
 
       const accel = 1350 * (h.underdog ? 1.15 : 1.0);
       h.vx += sx * accel * dt;
@@ -517,7 +518,28 @@ export class PiranhaRiverHopGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
+    const midX = width / 2;
+    const active = this.hoppers.filter((h) => {
+      const pCfg = this.getPlayer(h.id);
+      return pCfg && !pCfg.type.startsWith('bot_');
+    });
+    const hopper = active.find((h) => (h.id === 0 ? x < midX : x >= midX)) || active[0];
+    if (hopper && hopper.bittenTimer <= 0) {
+      const dx = x - hopper.x;
+      const dy = y - hopper.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      hopper.vx += (dx / dist) * 440;
+      hopper.vy += (dy / dist) * 440;
+      this.audio.playTap();
+      return true;
+    }
     return false;
   }
 }

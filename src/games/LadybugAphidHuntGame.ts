@@ -233,7 +233,11 @@ export class LadybugAphidHuntGame extends BaseGame {
 
       const sx = this.input.getSteer(l.id);
       const sy = this.input.getThrottle(l.id);
-      const isHold = this.input.isActionPressed(l.id);
+      const pCfg = this.getPlayer(l.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(l.id);
+
+      const isHold = this.input.isActionPressed(l.id) || (isBot && this.input.isPressed(l.id)) || (!hasSteer && !isBot && this.input.isPressed(l.id));
 
       const accel = 1400 * (l.underdog ? 1.15 : 1.0);
       l.vx += (sx * accel + this.leafTiltX * 210) * dt;
@@ -605,6 +609,11 @@ export class LadybugAphidHuntGame extends BaseGame {
 
   public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
     if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
     const midX = width / 2;
     const midY = height / 2;
     const pid: PlayerId = x < midX ? (y < midY ? 0 : 2) : (y < midY ? 1 : 3);

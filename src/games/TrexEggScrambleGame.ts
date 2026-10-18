@@ -232,7 +232,11 @@ export class TrexEggScrambleGame extends BaseGame {
 
       const sx = this.input.getSteer(r.id);
       const sy = this.input.getThrottle(r.id);
-      const isHold = this.input.isActionPressed(r.id);
+      const pCfg = this.getPlayer(r.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(r.id);
+
+      const isHold = this.input.isActionPressed(r.id) || (isBot && this.input.isPressed(r.id)) || (!hasSteer && !isBot && this.input.isPressed(r.id));
 
       const accel = 1350 * (r.underdog ? 1.15 : 1.0);
       r.vx += sx * accel * dt;
@@ -517,6 +521,11 @@ export class TrexEggScrambleGame extends BaseGame {
 
   public handlePointerDown(x: number, y: number, _width: number, _height: number): boolean {
     if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
     const p1 = this.raiders.find(r => r.id === 0);
     if (!p1 || p1.roaredTimer > 0) return false;
 

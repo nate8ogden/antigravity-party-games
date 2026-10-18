@@ -424,14 +424,18 @@ export class WalrusBaskGame extends BaseGame {
       const speedMult = (underdog ? 1.18 : 1.0) * (w.overchargeTimer > 0 ? 0.55 : 1.0);
 
       if (p && !p.type.startsWith('bot_')) {
+        const hasSteer = this.input.hasSteer(w.id);
         const move = { x: this.input.getSteer(w.id), y: -this.input.getThrottle(w.id) };
         if (Math.hypot(move.x, move.y) > 0.08) {
           w.vx += move.x * 680 * speedMult * safeDt;
           w.vy += move.y * 680 * speedMult * safeDt;
           w.angle = Math.atan2(move.y, move.x);
+        } else if (!hasSteer && this.input.isPressed(w.id) && w.charge === 0) {
+          w.vx += Math.cos(w.angle) * 450 * speedMult * safeDt;
+          w.vy += Math.sin(w.angle) * 450 * speedMult * safeDt;
         }
 
-        const holding = this.input.isActionPressed(w.id);
+        const holding = this.input.isActionPressed(w.id) || (!hasSteer && this.input.isPressed(w.id));
         if (holding && w.overchargeTimer <= 0) {
           w.isHolding = true;
           w.charge = Math.min(1.15, w.charge + safeDt * 0.82);
@@ -446,7 +450,7 @@ export class WalrusBaskGame extends BaseGame {
             this.executeTuskLunge(w, Math.max(0.5, w.charge));
           }
           w.charge = 0;
-        } else if (this.input.justAction(w.id)) {
+        } else if (this.input.justAction(w.id) || (!hasSteer && this.input.justPressed(w.id))) {
           this.executeTuskLunge(w, 0.65);
         }
       }

@@ -218,8 +218,9 @@ export class DunkClownTankGame extends BaseGame {
       }
 
       const steer = this.input.getSteer(p.id);
-      const justTap = this.input.justPressed(p.id) || this.input.justAction(p.id);
-      const isHold = this.input.isActionPressed(p.id) || this.input.isPressed(p.id);
+      const hasSteer = this.input.hasSteer(p.id);
+      const justTap = this.input.justAction(p.id) || (p.isBot && this.input.justPressed(p.id)) || (!hasSteer && !p.isBot && this.input.justPressed(p.id));
+      const isHold = this.input.isActionPressed(p.id) || (p.isBot && this.input.isPressed(p.id)) || (!hasSteer && !p.isBot && this.input.isPressed(p.id));
 
       p.vx += steer * 1500 * (p.underdog ? 1.15 : 1.0) * dt;
       p.vx *= Math.pow(0.06, dt);
@@ -497,7 +498,32 @@ export class DunkClownTankGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    // Top HUD area tap cycles theme
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
+    // Touch on pitcher's half pitches or steers
+    const midX = width / 2;
+    const active = this.pitchers.filter((p) => !p.isBot);
+    const pitcher = active.find((p) => (p.id === 0 ? x < midX : x >= midX)) || active[0];
+    if (pitcher && pitcher.stunTimer <= 0) {
+      this.balls.push({
+        ownerId: pitcher.id,
+        color: pitcher.color,
+        x: pitcher.x,
+        y: pitcher.y - 24,
+        vx: (x - pitcher.x) * 1.5,
+        vy: -580,
+        fastball: false,
+        active: true,
+      });
+      this.audio.playTap();
+      return true;
+    }
     return false;
   }
 }

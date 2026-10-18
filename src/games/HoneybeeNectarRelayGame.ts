@@ -228,7 +228,11 @@ export class HoneybeeNectarRelayGame extends BaseGame {
 
       const sx = this.input.getSteer(b.id);
       const sy = this.input.getThrottle(b.id);
-      const isHold = this.input.isActionPressed(b.id);
+      const pCfg = this.getPlayer(b.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(b.id);
+
+      const isHold = this.input.isActionPressed(b.id) || (isBot && this.input.isPressed(b.id)) || (!hasSteer && !isBot && this.input.isPressed(b.id));
 
       // Direct 2D flight (eliminated passive auto-rotation!)
       const accel = 1400 * (b.underdog ? 1.15 : 1.0) * (b.queenBoostTimer > 0 ? 1.35 : 1.0);
@@ -588,6 +592,11 @@ export class HoneybeeNectarRelayGame extends BaseGame {
 
   public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
     if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
     const midX = width / 2;
     const midY = height / 2;
     const pid: PlayerId = x < midX ? (y < midY ? 0 : 2) : (y < midY ? 1 : 3);

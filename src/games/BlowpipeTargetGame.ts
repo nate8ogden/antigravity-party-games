@@ -212,9 +212,10 @@ export class BlowpipeTargetGame extends BaseGame {
       const steer = this.input.getSteer(h.id);
       const pCfg = this.getPlayer(h.id);
       const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(h.id);
 
-      const justTap = this.input.justAction(h.id) || (isBot && this.input.justPressed(h.id));
-      const isHold = this.input.isActionPressed(h.id) || (isBot && this.input.isPressed(h.id));
+      const justTap = this.input.justAction(h.id) || (isBot && this.input.justPressed(h.id)) || (!hasSteer && !isBot && this.input.justPressed(h.id));
+      const isHold = this.input.isActionPressed(h.id) || (isBot && this.input.isPressed(h.id)) || (!hasSteer && !isBot && this.input.isPressed(h.id));
 
       h.vx += steer * 1450 * (h.underdog ? 1.15 : 1.0) * dt;
       h.vx *= Math.pow(0.06, dt);
@@ -457,7 +458,32 @@ export class BlowpipeTargetGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
+    const midX = width / 2;
+    const active = this.hunters.filter((h) => {
+      const pCfg = this.getPlayer(h.id);
+      return pCfg && !pCfg.type.startsWith('bot_');
+    });
+    const hunter = active.find((h) => (h.id === 0 ? x < midX : x >= midX)) || active[0];
+    if (hunter && hunter.stunTimer <= 0) {
+      this.darts.push({
+        ownerId: hunter.id,
+        x: hunter.x,
+        y: hunter.y - 24,
+        vy: -680,
+        sonic: false,
+        active: true,
+      });
+      hunter.vx += (x - hunter.x) * 1.5;
+      this.audio.playTap();
+      return true;
+    }
     return false;
   }
 }

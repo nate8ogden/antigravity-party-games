@@ -236,8 +236,9 @@ export class VineSwingCanopyGame extends BaseGame {
       if (s.stunTimer > 0) s.stunTimer = Math.max(0, s.stunTimer - dt);
 
       const steer = this.input.getSteer(s.id);
-      const justTap = this.input.justAction(s.id);
-      const isHold = this.input.isActionPressed(s.id);
+      const hasSteer = this.input.hasSteer(s.id);
+      const justTap = this.input.justAction(s.id) || (s.isBot && this.input.justPressed(s.id)) || (!hasSteer && !s.isBot && this.input.justPressed(s.id));
+      const isHold = this.input.isActionPressed(s.id) || (s.isBot && this.input.isPressed(s.id)) || (!hasSteer && !s.isBot && this.input.isPressed(s.id));
 
       if (s.vineId !== null) {
         const v = this.vines.find((item) => item.id === s.vineId);
@@ -521,8 +522,13 @@ export class VineSwingCanopyGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(x: number, _y: number, _width: number, _height: number): boolean {
+  public handlePointerDown(x: number, y: number, _width: number, _height: number): boolean {
     if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
     const p1 = this.swingers.find(s => s.id === 0);
     if (!p1 || p1.stunTimer > 0) return false;
 

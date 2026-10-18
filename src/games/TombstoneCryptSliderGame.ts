@@ -331,8 +331,9 @@ export class TombstoneCryptSliderGame extends BaseGame {
       const steerX = this.input.getSteer(e.id);
       const steerY = -this.input.getThrottle(e.id);
       const isBot = e.config.type.startsWith('bot_');
-      const pressed = this.input.isActionPressed(e.id) || (isBot && this.input.isPressed(e.id));
-      const justPressed = this.input.justAction(e.id) || (isBot && this.input.justPressed(e.id));
+      const hasSteer = this.input.hasSteer(e.id);
+      const pressed = this.input.isActionPressed(e.id) || (isBot && this.input.isPressed(e.id)) || (!hasSteer && !isBot && this.input.isPressed(e.id));
+      const justPressed = this.input.justAction(e.id) || (isBot && this.input.justPressed(e.id)) || (!hasSteer && !isBot && this.input.justPressed(e.id));
 
       // Hold-to-Charge Seismic Slab Launch
       if (pressed && e.stunTimer <= 0) {

@@ -211,8 +211,12 @@ export class PterodactylGlideGame extends BaseGame {
 
       const sx = this.input.getSteer(f.id);
       const sy = this.input.getThrottle(f.id);
-      const justTap = this.input.justAction(f.id);
-      const isHold = this.input.isActionPressed(f.id);
+      const pCfg = this.getPlayer(f.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(f.id);
+
+      const justTap = this.input.justAction(f.id) || (isBot && this.input.justPressed(f.id)) || (!hasSteer && !isBot && this.input.justPressed(f.id));
+      const isHold = this.input.isActionPressed(f.id) || (isBot && this.input.isPressed(f.id)) || (!hasSteer && !isBot && this.input.isPressed(f.id));
 
       // Gravity + Wing Flap / Steer
       f.vy += 320 * dt;
@@ -458,6 +462,11 @@ export class PterodactylGlideGame extends BaseGame {
 
   public handlePointerDown(x: number, y: number, _width: number, _height: number): boolean {
     if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
     const p1 = this.flyers.find(f => f.id === 0);
     if (!p1 || p1.stunTimer > 0) return false;
 

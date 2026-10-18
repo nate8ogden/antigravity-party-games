@@ -315,14 +315,18 @@ export class AutomatorAssemblyGame extends BaseGame {
       t.y += t.vy * dt;
       this.clampToymaker(t, width, height);
 
+      const pCfg = this.getPlayer(t.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = Math.abs(move.x) > 0.05 || Math.abs(move.y) > 0.05;
+
       // Tap: Hydraulic Stamp Hammer
-      if (this.input.justPressed(t.id) || this.input.justAction(t.id)) {
+      if (this.input.justAction(t.id) || (isBot && this.input.justPressed(t.id)) || (!hasSteer && !isBot && this.input.justPressed(t.id))) {
         t.hammerAnim = 1.0;
         this.stampNearestUnit(t);
       }
 
       // Hold-to-charge Master Windup Overdrive & Forge Shunt (72%–98% Sweet Spot)
-      const holding = this.input.isActionPressed(t.id) || this.input.isPressed(t.id);
+      const holding = this.input.isActionPressed(t.id) || (isBot && this.input.isPressed(t.id));
       if (holding) {
         t.charging = true;
         t.charge += dt * 0.82;

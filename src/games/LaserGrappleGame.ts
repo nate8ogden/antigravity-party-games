@@ -301,7 +301,8 @@ export class LaserGrappleGame extends BaseGame {
         p.tetheredAnchor = null;
       }
 
-      const holding = p.stunTimer <= 0 && (this.input.isActionPressed(p.id) || this.input.isPlayerTetherDown(p.id));
+      const isBot = this.getPlayer(p.id)?.type.startsWith('bot_');
+      const holding = p.stunTimer <= 0 && (this.input.isActionPressed(p.id) || (isBot && this.input.isPressed(p.id)) || this.input.isPlayerTetherDown(p.id));
       const steer = this.input.getSteer(p.id);
 
       if (holding) {

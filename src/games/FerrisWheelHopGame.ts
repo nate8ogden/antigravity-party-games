@@ -265,8 +265,10 @@ export class FerrisWheelHopGame extends BaseGame {
       if (h.stunTimer > 0) h.stunTimer = Math.max(0, h.stunTimer - dt);
 
       const steer = this.input.getSteer(h.id);
-      const justTap = this.input.justPressed(h.id) || this.input.justAction(h.id);
-      const isHold = this.input.isActionPressed(h.id) || this.input.isPressed(h.id);
+      const isBot = this.getPlayer(h.id)?.type.startsWith('bot_');
+      const hasSteer = Math.abs(steer) > 0.15;
+      const justTap = this.input.justAction(h.id) || (isBot && this.input.justPressed(h.id)) || (!hasSteer && !isBot && this.input.justPressed(h.id));
+      const isHold = this.input.isActionPressed(h.id) || (isBot && this.input.isPressed(h.id));
 
       if (h.attachedGondolaId !== null) {
         const g = this.gondolas.find((item) => item.id === h.attachedGondolaId);
@@ -600,7 +602,20 @@ export class FerrisWheelHopGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number, _height: number): boolean {
+    if (y <= 46) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playSelect();
+      return true;
+    }
+    const p1 = this.hoppers[0];
+    if (p1 && p1.stunTimer <= 0) {
+      p1.attachedGondolaId = null;
+      p1.vy = -540;
+      p1.vx = x < width * 0.5 ? -140 : 140;
+      this.audio.playWhoosh();
+      return true;
+    }
     return false;
   }
 }

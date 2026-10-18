@@ -205,8 +205,12 @@ export class FireflyNightBeaconGame extends BaseGame {
 
       const sx = this.input.getSteer(f.id);
       const sy = this.input.getThrottle(f.id);
-      const justTap = this.input.justAction(f.id);
-      const isHold = this.input.isActionPressed(f.id);
+      const pCfg = this.getPlayer(f.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(f.id);
+
+      const justTap = this.input.justAction(f.id) || (isBot && this.input.justPressed(f.id)) || (!hasSteer && !isBot && this.input.justPressed(f.id));
+      const isHold = this.input.isActionPressed(f.id) || (isBot && this.input.isPressed(f.id)) || (!hasSteer && !isBot && this.input.isPressed(f.id));
 
       const accel = 1350 * (f.underdog ? 1.15 : 1.0);
       f.vx += sx * accel * dt;
@@ -433,7 +437,30 @@ export class FireflyNightBeaconGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
+    const midX = width / 2;
+    const active = this.fireflies.filter((f) => {
+      const pCfg = this.getPlayer(f.id);
+      return pCfg && !pCfg.type.startsWith('bot_');
+    });
+    const firefly = active.find((f) => (f.id === 0 ? x < midX : x >= midX)) || active[0];
+    if (firefly && firefly.stunTimer <= 0) {
+      const dx = x - firefly.x;
+      const dy = y - firefly.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      firefly.vx += (dx / dist) * 440;
+      firefly.vy += (dy / dist) * 440;
+      firefly.flashGlowTimer = 0.4;
+      this.checkRingSync(firefly, Math.hypot(firefly.x - width * 0.5, firefly.y - height * 0.54), false);
+      this.audio.playTap();
+      return true;
+    }
     return false;
   }
 }

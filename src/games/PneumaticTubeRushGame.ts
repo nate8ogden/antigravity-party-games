@@ -305,13 +305,16 @@ export class PneumaticTubeRushGame extends BaseGame {
       d.y += d.vy * dt;
       this.clampDispatcher(d, width, height);
 
+      const pCfg = this.getPlayer(d.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(d.id);
       // Tap: Pneumatic Suction Pulse (diverts nitro away or snatches capsules in 62px)
-      if (this.input.justAction(d.id)) {
+      if (this.input.justAction(d.id) || (isBot && this.input.justPressed(d.id)) || (!hasSteer && !isBot && this.input.justPressed(d.id))) {
         this.triggerSuctionPulse(d);
       }
 
       // Hold-to-charge Turbo Suction Vortex & Pressure Shunt (72%–98% Sweet Spot)
-      const holding = this.input.isActionPressed(d.id);
+      const holding = this.input.isActionPressed(d.id) || (isBot && this.input.isPressed(d.id));
       if (holding) {
         d.charging = true;
         d.charge += dt * 0.84;

@@ -181,6 +181,16 @@ export class BalloonDartClownGame extends BaseGame {
       this.audio.playTap();
       return true;
     }
+    const midX = width / 2;
+    const active = Array.from(this.shooters.values()).filter((s) => {
+      const p = this.getPlayer(s.id);
+      return p && !p.type.startsWith('bot_');
+    });
+    const shooter = active.find((s) => (s.id === 0 ? x < midX : x >= midX)) || active[0];
+    if (shooter && shooter.stunTimer <= 0) {
+      this.fireDartAtReticle(shooter, width * 0.5, 340);
+      return true;
+    }
     return false;
   }
 
@@ -276,7 +286,10 @@ export class BalloonDartClownGame extends BaseGame {
         s.reticleDir = 1;
       }
 
-      const holding = s.stunTimer <= 0 && (this.input.isActionPressed(s.id) || this.input.isPressed(s.id));
+      const pCfg = this.getPlayer(s.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(s.id);
+      const holding = s.stunTimer <= 0 && (this.input.isActionPressed(s.id) || (isBot && this.input.isPressed(s.id)) || (!hasSteer && !isBot && this.input.isPressed(s.id)));
       if (holding) {
         s.charge = Math.min(1.0, s.charge + dt * 1.2);
         s.wasHolding = true;
@@ -537,6 +550,7 @@ export class BalloonDartClownGame extends BaseGame {
       mvpHighlight: winnerId ? `Player ${winnerId} popped the Jackpot Wheel!` : 'Balloon dart shootout complete!',
     };
   }
+
 
   public destroy(): void {
     if (typeof window !== 'undefined' && this.keyHandler) {

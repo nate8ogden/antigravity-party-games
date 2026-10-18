@@ -279,9 +279,10 @@ export class SpaceElevatorGame extends BaseGame {
       c.speed = Math.max(120, c.speed - 38 * clampedDt);
 
       if (p && !p.type.startsWith('bot_')) {
+        const hasSteer = this.input.hasSteer(c.id);
         const steer = this.input.getSteer(c.id);
-        const holding = this.input.isActionPressed(c.id);
-        const justPressed = this.input.justAction(c.id);
+        const holding = this.input.isActionPressed(c.id) || (!hasSteer && this.input.isPressed(c.id));
+        const justPressed = this.input.justAction(c.id) || (!hasSteer && this.input.justPressed(c.id));
         const released = this.input.justReleased(c.id) || (!holding && c.charging);
 
         if (c.staggerTimer <= 0) {

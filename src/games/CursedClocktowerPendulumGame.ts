@@ -316,7 +316,8 @@ export class CursedClocktowerPendulumGame extends BaseGame {
       const steerX = this.input.getSteer(s.id);
       const throttle = this.input.getThrottle(s.id);
       const isBot = s.config.type.startsWith('bot_');
-      const pressed = this.input.isActionPressed(s.id) || (isBot && this.input.isPressed(s.id));
+      const hasSteer = this.input.hasSteer(s.id);
+      const pressed = this.input.isActionPressed(s.id) || (isBot && this.input.isPressed(s.id)) || (!hasSteer && !isBot && this.input.isPressed(s.id));
 
       if (!isBot) {
         // Holding Action (or Down) crouches safely beneath the pendulum while charging your Chronos Vault!

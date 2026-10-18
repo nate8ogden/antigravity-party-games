@@ -209,7 +209,8 @@ export class CentipedeSlalomGame extends BaseGame {
       const steer = this.input.getSteer(r.id);
       const pCfg = this.getPlayer(r.id);
       const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
-      const isHold = this.input.isActionPressed(r.id) || (isBot && this.input.isPressed(r.id));
+      const hasSteer = this.input.hasSteer(r.id);
+      const isHold = this.input.isActionPressed(r.id) || (isBot && this.input.isPressed(r.id)) || (!hasSteer && !isBot && this.input.isPressed(r.id));
 
       // Direct lateral slalom carving (eliminated passive circle rotation!)
       r.vx += steer * 1550 * (r.underdog ? 1.15 : 1.0) * (r.turboTimer > 0 ? 1.35 : 1.0) * dt;
@@ -421,7 +422,24 @@ export class CentipedeSlalomGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
+    const midX = width / 2;
+    const active = this.racers.filter((r) => {
+      const pCfg = this.getPlayer(r.id);
+      return pCfg && !pCfg.type.startsWith('bot_');
+    });
+    const racer = active.find((r) => (r.id === 0 ? x < midX : x >= midX)) || active[0];
+    if (racer && racer.stunTimer <= 0) {
+      racer.vx += (x > racer.x ? 1 : -1) * 380;
+      this.audio.playTap();
+      return true;
+    }
     return false;
   }
 }

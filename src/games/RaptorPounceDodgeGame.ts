@@ -256,8 +256,12 @@ export class RaptorPounceDodgeGame extends BaseGame {
 
       const sx = this.input.getSteer(s.id);
       const sy = this.input.getThrottle(s.id);
-      const justTap = this.input.justAction(s.id);
-      const isHold = this.input.isActionPressed(s.id);
+      const pCfg = this.getPlayer(s.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(s.id);
+
+      const justTap = this.input.justAction(s.id) || (isBot && this.input.justPressed(s.id)) || (!hasSteer && !isBot && this.input.justPressed(s.id));
+      const isHold = this.input.isActionPressed(s.id) || (isBot && this.input.isPressed(s.id)) || (!hasSteer && !isBot && this.input.isPressed(s.id));
 
       const accel = 1350 * (s.underdog ? 1.15 : 1.0);
       s.vx += sx * accel * dt;
@@ -490,6 +494,11 @@ export class RaptorPounceDodgeGame extends BaseGame {
 
   public handlePointerDown(x: number, y: number, _width: number, _height: number): boolean {
     if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
     const p1 = this.survivors.find(s => s.id === 0);
     if (!p1 || p1.stunTimer > 0) return false;
 

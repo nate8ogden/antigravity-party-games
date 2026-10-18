@@ -323,11 +323,12 @@ export class OuijaSpiritBoardGame extends BaseGame {
       }
 
       const isBot = p.type.startsWith('bot_');
+      const hasSteer = this.input.hasSteer(ps.id);
       const speedMult = ps.isUnderdog ? 1.22 : 1.0;
       const steer = this.input.getSteer(ps.id);
       const throttle = this.input.getThrottle(ps.id);
-      const holding = this.input.isActionPressed(ps.id) || (isBot && this.input.isPressed(ps.id));
-      const justPressed = this.input.justAction(ps.id) || (isBot && this.input.justPressed(ps.id));
+      const holding = this.input.isActionPressed(ps.id) || (isBot && this.input.isPressed(ps.id)) || (!hasSteer && !isBot && this.input.isPressed(ps.id));
+      const justPressed = this.input.justAction(ps.id) || (isBot && this.input.justPressed(ps.id)) || (!hasSteer && !isBot && this.input.justPressed(ps.id));
       const released = this.input.justReleased(ps.id) || (!holding && ps.charging);
 
       const accel = 640 * speedMult;

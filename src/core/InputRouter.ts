@@ -129,6 +129,10 @@ export class InputRouter {
     return this.controlMode;
   }
 
+  public hasSteer(_pid?: PlayerId): boolean {
+    return this.controlMode === 'directional';
+  }
+
   public setDeviceMode(mode: 'computer' | 'phone') {
     this.deviceMode = mode;
   }

@@ -310,14 +310,15 @@ export class DysonSphereCollectorGame extends BaseGame {
       let releaseAction = false;
 
       if (!p.type.startsWith('bot_')) {
+        const hasSteer = this.input.hasSteer(p.id);
         steer = this.input.getSteer(p.id);
-        if (this.input.justPressed(p.id)) {
+        if (this.input.justAction(p.id) || (!hasSteer && this.input.justPressed(p.id))) {
           d.dir *= -1;
           d.angVel = d.dir * 2.15 * speedMult;
           this.audio.playTap();
         }
-        holdAction = this.input.isActionPressed(p.id) || this.input.isPressed(p.id);
-        releaseAction = this.input.justReleased(p.id);
+        holdAction = this.input.isActionPressed(p.id) || (!hasSteer && this.input.isPressed(p.id));
+        releaseAction = this.input.justReleased(p.id) || (!holdAction && d.chargeRatio > 0);
       } else {
         steer = d.dir;
         holdAction = d.aiShouldHold;

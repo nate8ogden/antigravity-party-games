@@ -208,7 +208,8 @@ export class AntColonyHaulGame extends BaseGame {
       const sy = this.input.getThrottle(a.id);
       const pCfg = this.getPlayer(a.id);
       const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
-      const isHold = this.input.isActionPressed(a.id) || (isBot && this.input.isPressed(a.id));
+      const hasSteer = this.input.hasSteer(a.id);
+      const isHold = this.input.isActionPressed(a.id) || (isBot && this.input.isPressed(a.id)) || (!hasSteer && !isBot && this.input.isPressed(a.id));
 
       const accel = 1350 * (a.underdog ? 1.15 : 1.0) * (a.herculesTimer > 0 ? 1.35 : 1.0);
       a.vx += sx * accel * dt;
@@ -434,7 +435,28 @@ export class AntColonyHaulGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
+    const midX = width / 2;
+    const active = this.ants.filter((a) => {
+      const pCfg = this.getPlayer(a.id);
+      return pCfg && !pCfg.type.startsWith('bot_');
+    });
+    const ant = active.find((a) => (a.id === 0 ? x < midX : x >= midX)) || active[0];
+    if (ant && ant.stunTimer <= 0) {
+      const dx = x - ant.x;
+      const dy = y - ant.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      ant.vx += (dx / dist) * 440;
+      ant.vy += (dy / dist) * 440;
+      this.audio.playTap();
+      return true;
+    }
     return false;
   }
 }

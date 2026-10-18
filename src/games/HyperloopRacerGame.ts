@@ -222,7 +222,10 @@ export class HyperloopRacerGame extends BaseGame {
         p.speed = 0.7;
         p.heat = Math.max(0, p.heat - dt * 65);
       } else {
-        const holding = this.input.isActionPressed(p.id) || this.input.isPressed(p.id);
+        const isBot = this.getPlayer(p.id)?.type.startsWith('bot_');
+        const steer = this.input.getSteer(p.id);
+        const hasSteer = Math.abs(steer) > 0.08;
+        const holding = this.input.isActionPressed(p.id) || (isBot && this.input.isPressed(p.id)) || (!hasSteer && !isBot && this.input.isPressed(p.id));
         if (holding) {
           p.heat += dt * 62;
           p.wasHolding = true;

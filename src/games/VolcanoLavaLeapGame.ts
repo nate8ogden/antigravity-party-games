@@ -222,7 +222,11 @@ export class VolcanoLavaLeapGame extends BaseGame {
 
       const sx = this.input.getSteer(h.id);
       const sy = this.input.getThrottle(h.id);
-      const isHold = this.input.isActionPressed(h.id);
+      const pCfg = this.getPlayer(h.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(h.id);
+
+      const isHold = this.input.isActionPressed(h.id) || (isBot && this.input.isPressed(h.id)) || (!hasSteer && !isBot && this.input.isPressed(h.id));
 
       const accel = 1350 * (h.underdog ? 1.15 : 1.0);
       h.vx += sx * accel * dt;
@@ -449,6 +453,11 @@ export class VolcanoLavaLeapGame extends BaseGame {
 
   public handlePointerDown(x: number, y: number, _width: number, _height: number): boolean {
     if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
     const p1 = this.hoppers.find(h => h.id === 0);
     if (!p1 || p1.singedTimer > 0) return false;
 

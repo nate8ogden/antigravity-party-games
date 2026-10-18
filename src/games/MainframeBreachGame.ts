@@ -299,11 +299,15 @@ export class MainframeBreachGame extends BaseGame {
       r.y += r.vy * dt;
       this.clampRunner(r, width, height);
 
-      if ((this.input.justPressed(r.id) || this.input.justAction(r.id)) && r.cooldown <= 0) {
+      const pCfg = this.getPlayer(r.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = Math.abs(move.x) > 0.05 || Math.abs(move.y) > 0.05;
+
+      if ((this.input.justAction(r.id) || (isBot && this.input.justPressed(r.id)) || (!hasSteer && !isBot && this.input.justPressed(r.id))) && r.cooldown <= 0) {
         this.fireDataPacket(r, cx, cy, false);
       }
 
-      const holding = this.input.isActionPressed(r.id) || this.input.isPressed(r.id);
+      const holding = this.input.isActionPressed(r.id) || (isBot && this.input.isPressed(r.id));
       if (holding) {
         r.charging = true;
         r.charge += dt * 0.84;

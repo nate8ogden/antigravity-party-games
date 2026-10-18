@@ -305,15 +305,16 @@ export class BlizzardBeaconGame extends BaseGame {
       let releaseAction = false;
 
       if (!p.type.startsWith('bot_')) {
+        const hasSteer = this.input.hasSteer(p.id);
         steer = this.input.getSteer(p.id);
-        if (this.input.justPressed(p.id)) {
+        if (this.input.justAction(p.id) || (!hasSteer && this.input.justPressed(p.id))) {
           k.dir *= -1;
           k.vx = k.dir * 240 * speedMult;
           k.furnaceHeat = Math.min(100, k.furnaceHeat + 18);
           this.audio.playTap();
         }
-        holdAction = this.input.isActionPressed(p.id) || this.input.isPressed(p.id);
-        releaseAction = this.input.justReleased(p.id);
+        holdAction = this.input.isActionPressed(p.id) || (!hasSteer && this.input.isPressed(p.id));
+        releaseAction = this.input.justReleased(p.id) || (!holdAction && k.chargeRatio > 0);
       } else {
         const dx = k.aiTargetX - k.x;
         if (Math.abs(dx) > 14) {

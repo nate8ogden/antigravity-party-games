@@ -200,9 +200,10 @@ export class QuicksandEscapeGame extends BaseGame {
       const steer = this.input.getSteer(e.id);
       const pCfg = this.getPlayer(e.id);
       const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(e.id);
 
-      const justTap = this.input.justAction(e.id) || (isBot && this.input.justPressed(e.id));
-      const isHold = this.input.isActionPressed(e.id) || (isBot && this.input.isPressed(e.id));
+      const justTap = this.input.justAction(e.id) || (isBot && this.input.justPressed(e.id)) || (!hasSteer && !isBot && this.input.justPressed(e.id));
+      const isHold = this.input.isActionPressed(e.id) || (isBot && this.input.isPressed(e.id)) || (!hasSteer && !isBot && this.input.isPressed(e.id));
 
       // Quicksand suction pulls downward
       e.vy += 260 * dt;
@@ -408,7 +409,26 @@ export class QuicksandEscapeGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
+    const midX = width / 2;
+    const active = this.escapees.filter((e) => {
+      const pCfg = this.getPlayer(e.id);
+      return pCfg && !pCfg.type.startsWith('bot_');
+    });
+    const escapee = active.find((e) => (e.id === 0 ? x < midX : x >= midX)) || active[0];
+    if (escapee && escapee.mudStunTimer <= 0) {
+      escapee.vy = -320;
+      escapee.vx += (x - escapee.x) * 1.5;
+      escapee.score += 15;
+      this.audio.playTap();
+      return true;
+    }
     return false;
   }
 }

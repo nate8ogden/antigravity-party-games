@@ -202,8 +202,12 @@ export class CaterpillarInchwormGame extends BaseGame {
       }
 
       const sx = this.input.getSteer(w.id);
-      const justTap = this.input.justAction(w.id);
-      const isHold = this.input.isActionPressed(w.id);
+      const pCfg = this.getPlayer(w.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(w.id);
+
+      const justTap = this.input.justAction(w.id) || (isBot && this.input.justPressed(w.id)) || (!hasSteer && !isBot && this.input.justPressed(w.id));
+      const isHold = this.input.isActionPressed(w.id) || (isBot && this.input.isPressed(w.id)) || (!hasSteer && !isBot && this.input.isPressed(w.id));
 
       // Accordion scrunch movement along branches + gravity when airborne
       if (w.grounded) {
@@ -449,6 +453,11 @@ export class CaterpillarInchwormGame extends BaseGame {
 
   public handlePointerDown(x: number, y: number, _width: number, _height: number): boolean {
     if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
     const p1 = this.worms.find(w => w.id === 0);
     if (!p1 || p1.stunTimer > 0) return false;
 

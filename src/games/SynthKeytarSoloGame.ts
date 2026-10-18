@@ -273,8 +273,10 @@ export class SynthKeytarSoloGame extends BaseGame {
       r.angle += r.angVel * dt;
       r.angVel *= 0.88;
 
+      const steer = this.input.getSteer(r.id);
+      const hasSteer = Math.abs(steer) > 0.1;
       const justStruck =
-        r.stunTimer <= 0 && (this.input.justPressed(r.id) || this.input.justAction(r.id));
+        r.stunTimer <= 0 && (this.input.justAction(r.id) || (isBot && this.input.justPressed(r.id)) || (!hasSteer && !isBot && this.input.justPressed(r.id)));
       if (justStruck) {
         this.strikeKeytarChord(r, cx, cy, strikeRadius);
       }

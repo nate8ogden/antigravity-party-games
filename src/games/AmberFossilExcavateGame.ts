@@ -203,8 +203,12 @@ export class AmberFossilExcavateGame extends BaseGame {
 
       const sx = this.input.getSteer(d.id);
       const sy = this.input.getThrottle(d.id);
-      const justTap = this.input.justPressed(d.id) || this.input.justAction(d.id);
-      const isHold = this.input.isActionPressed(d.id) || this.input.isPressed(d.id);
+      const pCfg = this.getPlayer(d.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const hasSteer = this.input.hasSteer(d.id);
+
+      const justTap = this.input.justAction(d.id) || (isBot && this.input.justPressed(d.id)) || (!hasSteer && !isBot && this.input.justPressed(d.id));
+      const isHold = this.input.isActionPressed(d.id) || (isBot && this.input.isPressed(d.id)) || (!hasSteer && !isBot && this.input.isPressed(d.id));
 
       const accel = 1350 * (d.underdog ? 1.15 : 1.0);
       d.vx += sx * accel * dt;
@@ -434,7 +438,29 @@ export class AmberFossilExcavateGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+  public handlePointerDown(x: number, y: number, width: number, height: number): boolean {
+    if (this.isFinished) return false;
+    if (y <= 48) {
+      this.themeIdx = (this.themeIdx + 1) % THEME_KEYS.length;
+      this.audio.playTap();
+      return true;
+    }
+    const midX = width / 2;
+    const active = this.diggers.filter((d) => {
+      const pCfg = this.getPlayer(d.id);
+      return pCfg && !pCfg.type.startsWith('bot_');
+    });
+    const digger = active.find((d) => (d.id === 0 ? x < midX : x >= midX)) || active[0];
+    if (digger && digger.stunTimer <= 0) {
+      const dx = x - digger.x;
+      const dy = y - digger.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      digger.vx += (dx / dist) * 440;
+      digger.vy += (dy / dist) * 440;
+      this.chiselNearby(digger, width, height, 75, false);
+      this.audio.playTap();
+      return true;
+    }
     return false;
   }
 }
