@@ -239,8 +239,11 @@ export class FortuneTellerTarotGame extends BaseGame {
 
       const sx = this.input.getSteer(a.id);
       const sy = this.input.getThrottle(a.id);
-      const justTap = this.input.justPressed(a.id) || this.input.justAction(a.id);
-      const isHold = this.input.isActionPressed(a.id) || this.input.isPressed(a.id);
+      const pCfg = this.getPlayer(a.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+
+      const justTap = this.input.justAction(a.id) || (isBot && this.input.justPressed(a.id));
+      const isHold = this.input.isActionPressed(a.id) || (isBot && this.input.isPressed(a.id));
 
       const accel = 1350 * (a.underdog ? 1.15 : 1.0);
       a.vx += sx * accel * dt;

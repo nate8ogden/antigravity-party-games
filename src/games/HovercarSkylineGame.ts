@@ -258,12 +258,15 @@ export class HovercarSkylineGame extends BaseGame {
       c.y += c.vy * dt;
       this.clampCar(c, width, height);
 
-      if (this.input.justPressed(c.id) || this.input.justAction(c.id)) {
+      const pCfg = this.getPlayer(c.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+
+      if (this.input.justAction(c.id) || (isBot && this.input.justPressed(c.id))) {
         c.vx += 180;
         this.audio.playWhoosh();
       }
 
-      const holding = this.input.isActionPressed(c.id) || this.input.isPressed(c.id);
+      const holding = this.input.isActionPressed(c.id) || (isBot && this.input.isPressed(c.id));
       if (holding) {
         c.charging = true;
         c.charge += dt * 0.84;

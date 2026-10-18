@@ -262,7 +262,7 @@ export class NeuralSynapseGame extends BaseGame {
           f.vx += (move.x / mag) * accel * dt;
           f.vy += (move.y / mag) * accel * dt;
           f.angle = Math.atan2(move.y, move.x);
-        } else if (this.input.justPressed(f.id) || this.input.justAction(f.id)) {
+        } else if (this.input.justAction(f.id) || (isBot && this.input.justPressed(f.id))) {
           f.angle += Math.PI / 4;
           f.vx += Math.cos(f.angle) * 140;
           f.vy += Math.sin(f.angle) * 140;
@@ -270,7 +270,7 @@ export class NeuralSynapseGame extends BaseGame {
         }
       }
 
-      const holding = f.stunTimer <= 0 && (this.input.isActionPressed(f.id) || this.input.isPressed(f.id));
+      const holding = f.stunTimer <= 0 && (this.input.isActionPressed(f.id) || (isBot && this.input.isPressed(f.id)));
       if (holding) {
         f.charge = Math.min(1.2, f.charge + dt * 1.15);
         f.wasHolding = true;

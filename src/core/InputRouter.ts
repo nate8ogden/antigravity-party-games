@@ -38,7 +38,23 @@ interface TouchTrack {
   originY: number;
   currentX: number;
   currentY: number;
+  prevX: number;
+  prevY: number;
+  vx: number;
+  vy: number;
   startTime: number;
+}
+
+export interface TouchPointerState {
+  active: boolean;
+  x: number;
+  y: number;
+  originX: number;
+  originY: number;
+  dx: number;
+  dy: number;
+  vx: number;
+  vy: number;
 }
 
 export class InputRouter {
@@ -49,6 +65,10 @@ export class InputRouter {
   public finalPlayerIds: [PlayerId, PlayerId] = [0, 1];
   public isInGame: boolean = false;
   public activePlayerMask: Record<PlayerId, boolean> = { 0: true, 1: true, 2: false, 3: false };
+  public humanPlayerMask: Record<PlayerId, boolean> = { 0: true, 1: false, 2: false, 3: false };
+
+  private prevDiscreteSteer: Record<PlayerId, number> = { 0: 0, 1: 0, 2: 0, 3: 0 };
+  private prevDiscreteThrottle: Record<PlayerId, number> = { 0: 0, 1: 0, 2: 0, 3: 0 };
 
   private states: Record<PlayerId, DetailedInputState> = {
     0: { pressed: false, justPressed: false, justReleased: false, pressStartTime: 0, holdDuration: 0, steer: 0, throttle: 0, rawSteer: 0, rawThrottle: 0, action: false, justAction: false, justUp: false, justDown: false, justLeft: false, justRight: false },
@@ -113,8 +133,11 @@ export class InputRouter {
     this.deviceMode = mode;
   }
 
-  public setActivePlayerMask(mask: Record<PlayerId, boolean>) {
+  public setActivePlayerMask(mask: Record<PlayerId, boolean>, humanMask?: Record<PlayerId, boolean>) {
     this.activePlayerMask = mask;
+    if (humanMask) {
+      this.humanPlayerMask = humanMask;
+    }
   }
 
   public setPhoneTouchLayout(layout: '4p_corners' | '2p_faceoff' | '2p_final', finalPlayers?: [PlayerId, PlayerId]) {
@@ -122,6 +145,45 @@ export class InputRouter {
     if (finalPlayers) {
       this.finalPlayerIds = finalPlayers;
     }
+  }
+
+  public getTouchPointer(pid: PlayerId): TouchPointerState | null {
+    let chosen: TouchTrack | null = null;
+    for (const track of this.activeTouches.values()) {
+      if (track.pid === pid) {
+        chosen = track;
+        if (track.role === 'joystick') break;
+      }
+    }
+    if (!chosen) return null;
+    return {
+      active: true,
+      x: chosen.currentX,
+      y: chosen.currentY,
+      originX: chosen.originX,
+      originY: chosen.originY,
+      dx: chosen.currentX - chosen.originX,
+      dy: chosen.currentY - chosen.originY,
+      vx: chosen.vx,
+      vy: chosen.vy
+    };
+  }
+
+  public getAllActiveTouches(): { id: number; pid: PlayerId; x: number; y: number; originX: number; originY: number; vx: number; vy: number }[] {
+    const list: { id: number; pid: PlayerId; x: number; y: number; originX: number; originY: number; vx: number; vy: number }[] = [];
+    for (const [id, t] of this.activeTouches.entries()) {
+      list.push({
+        id,
+        pid: t.pid,
+        x: t.currentX,
+        y: t.currentY,
+        originX: t.originX,
+        originY: t.originY,
+        vx: t.vx,
+        vy: t.vy
+      });
+    }
+    return list;
   }
 
   public getCanvas(): HTMLCanvasElement {
@@ -224,6 +286,10 @@ export class InputRouter {
               originY: clientY,
               currentX: clientX,
               currentY: clientY,
+              prevX: clientX,
+              prevY: clientY,
+              vx: 0,
+              vy: 0,
               startTime: now
             });
             this.triggerAction(pid);
@@ -238,6 +304,10 @@ export class InputRouter {
                 originY: clientY,
                 currentX: clientX,
                 currentY: clientY,
+                prevX: clientX,
+                prevY: clientY,
+                vx: 0,
+                vy: 0,
                 startTime: now
               });
               this.joysticks[pid] = {
@@ -258,6 +328,10 @@ export class InputRouter {
                 originY: clientY,
                 currentX: clientX,
                 currentY: clientY,
+                prevX: clientX,
+                prevY: clientY,
+                vx: 0,
+                vy: 0,
                 startTime: now
               });
               this.triggerAction(pid);
@@ -275,12 +349,29 @@ export class InputRouter {
         const touch = e.changedTouches[i];
         const track = this.activeTouches.get(touch.identifier);
         if (track) {
-          track.currentX = touch.clientX - rect.left;
-          track.currentY = touch.clientY - rect.top;
+          const nx = touch.clientX - rect.left;
+          const ny = touch.clientY - rect.top;
+          track.vx = (nx - track.currentX) * 60;
+          track.vy = (ny - track.currentY) * 60;
+          track.prevX = track.currentX;
+          track.prevY = track.currentY;
+          track.currentX = nx;
+          track.currentY = ny;
           if (track.role === 'joystick') {
             const joy = this.joysticks[track.pid];
             joy.currentX = track.currentX;
             joy.currentY = track.currentY;
+          } else if (this.controlMode === 'single_button') {
+            const dist = Math.hypot(track.currentX - track.originX, track.currentY - track.originY);
+            if (dist > 6) {
+              const joy = this.joysticks[track.pid];
+              joy.active = true;
+              joy.originX = track.originX;
+              joy.originY = track.originY;
+              joy.currentX = track.currentX;
+              joy.currentY = track.currentY;
+              joy.opacity = 1.0;
+            }
           }
         }
       }
@@ -294,18 +385,23 @@ export class InputRouter {
         const track = this.activeTouches.get(touch.identifier);
         if (track) {
           if (track.role === 'joystick') {
-            // Quick tap detection (< 220ms and drag distance < 14px) triggers an action tap!
+            // Quick tap detection (< 240ms and drag distance < 16px) triggers an action tap!
             const duration = performance.now() - track.startTime;
             const travel = Math.hypot(track.currentX - track.originX, track.currentY - track.originY);
-            if (duration < 220 && travel < 14) {
+            if (duration < 240 && travel < 16) {
               this.triggerAction(track.pid);
             }
             this.joysticks[track.pid].active = false;
             this.touchSteer[track.pid] = 0;
             this.touchThrottle[track.pid] = 0;
           } else {
+            this.joysticks[track.pid].active = false;
             this.touchSteer[track.pid] = 0;
             this.touchThrottle[track.pid] = 0;
+            const s = this.states[track.pid];
+            s.action = false;
+            s.justReleased = true;
+            s.holdDuration = (performance.now() - track.startTime) / 1000;
           }
           this.activeTouches.delete(touch.identifier);
           this.checkPlayerRelease(track.pid);
@@ -320,9 +416,7 @@ export class InputRouter {
         const touch = e.changedTouches[i];
         const track = this.activeTouches.get(touch.identifier);
         if (track) {
-          if (track.role === 'joystick') {
-            this.joysticks[track.pid].active = false;
-          }
+          this.joysticks[track.pid].active = false;
           this.touchSteer[track.pid] = 0;
           this.touchThrottle[track.pid] = 0;
           this.activeTouches.delete(touch.identifier);
@@ -353,6 +447,10 @@ export class InputRouter {
             originY: clientY,
             currentX: clientX,
             currentY: clientY,
+            prevX: clientX,
+            prevY: clientY,
+            vx: 0,
+            vy: 0,
             startTime: now
           });
           this.triggerAction(pid);
@@ -364,6 +462,10 @@ export class InputRouter {
             originY: clientY,
             currentX: clientX,
             currentY: clientY,
+            prevX: clientX,
+            prevY: clientY,
+            vx: 0,
+            vy: 0,
             startTime: now
           });
           this.joysticks[pid] = {
@@ -384,12 +486,29 @@ export class InputRouter {
       const track = this.activeTouches.get(-999);
       if (track) {
         const rect = this.canvas.getBoundingClientRect();
-        track.currentX = e.clientX - rect.left;
-        track.currentY = e.clientY - rect.top;
+        const nx = e.clientX - rect.left;
+        const ny = e.clientY - rect.top;
+        track.vx = (nx - track.currentX) * 60;
+        track.vy = (ny - track.currentY) * 60;
+        track.prevX = track.currentX;
+        track.prevY = track.currentY;
+        track.currentX = nx;
+        track.currentY = ny;
         if (track.role === 'joystick') {
           const joy = this.joysticks[track.pid];
           joy.currentX = track.currentX;
           joy.currentY = track.currentY;
+        } else if (this.controlMode === 'single_button') {
+          const dist = Math.hypot(track.currentX - track.originX, track.currentY - track.originY);
+          if (dist > 6) {
+            const joy = this.joysticks[track.pid];
+            joy.active = true;
+            joy.originX = track.originX;
+            joy.originY = track.originY;
+            joy.currentX = track.currentX;
+            joy.currentY = track.currentY;
+            joy.opacity = 1.0;
+          }
         }
         this.recalculateTouchInputs();
       }
@@ -401,10 +520,16 @@ export class InputRouter {
         if (track.role === 'joystick') {
           const duration = performance.now() - track.startTime;
           const travel = Math.hypot(track.currentX - track.originX, track.currentY - track.originY);
-          if (duration < 220 && travel < 14) {
+          if (duration < 240 && travel < 16) {
             this.triggerAction(track.pid);
           }
           this.joysticks[track.pid].active = false;
+        } else {
+          this.joysticks[track.pid].active = false;
+          const s = this.states[track.pid];
+          s.action = false;
+          s.justReleased = true;
+          s.holdDuration = (performance.now() - track.startTime) / 1000;
         }
         this.touchSteer[track.pid] = 0;
         this.touchThrottle[track.pid] = 0;
@@ -419,36 +544,71 @@ export class InputRouter {
     const midX = width / 2;
     const midY = height / 2;
 
-    // Check center Safe Pause deadzone (~9% of canvas dimensions)
-    const deadzoneRadius = Math.min(width, height) * 0.09;
+    // Compact center Safe Pause deadzone (~5.2% of min canvas dimension, max 32px)
+    const deadzoneRadius = Math.min(32, Math.min(width, height) * 0.052);
     const dx = x - midX;
     const dy = y - midY;
     if (Math.hypot(dx, dy) < deadzoneRadius) {
       return null;
     }
 
-    if (this.deviceMode === 'phone') {
-      if (this.phoneTouchLayout === '2p_faceoff') {
-        // 2-Player Face-to-Face Phone Layout: Top Half = Player 2 (pid 1), Bottom Half = Player 1 (pid 0)
-        // If Player 2 is a bot (1P vs AI mode), allow Player 1 to use the bottom half or left/right
-        const pid: PlayerId = y < midY ? (this.activePlayerMask[1] ? 1 : 0) : 0;
-        const isActionZone = this.controlMode === 'directional' && x > width * 0.70;
+    // Count active human players so solo / 2P touch never gets swallowed by bot or disabled quadrants!
+    const humanIds = ([0, 1, 2, 3] as PlayerId[]).filter((id) => this.humanPlayerMask[id] && this.activePlayerMask[id]);
+
+    // 1. Solo Human Player (1P vs AI Bots): Entire screen belongs to that human player!
+    if (humanIds.length === 1) {
+      const pid = humanIds[0];
+      const isActionZone = this.deviceMode === 'phone' && this.controlMode === 'directional' && x > width * 0.66 && y > height * 0.58;
+      return { pid, isActionZone };
+    }
+
+    // 2. Grand Final of 4P Split-Bracket
+    if (this.deviceMode === 'phone' && this.phoneTouchLayout === '2p_final') {
+      const topPid = this.finalPlayerIds[0];
+      const botPid = this.finalPlayerIds[1];
+      let pid: PlayerId = y < midY ? topPid : botPid;
+      if (!this.humanPlayerMask[pid]) {
+        pid = this.humanPlayerMask[botPid] ? botPid : topPid;
+      }
+      const isActionZone = this.controlMode === 'directional' && x > width * 0.66;
+      return { pid, isActionZone };
+    }
+
+    // 3. 2-Player Mode (e.g. P1 vs P2 human)
+    if (humanIds.length === 2 && this.phoneTouchLayout !== '4p_corners') {
+      if (this.deviceMode === 'phone') {
+        // 2-Player Face-to-Face Phone Layout: Top Half = P2 (humanIds[1]), Bottom Half = P1 (humanIds[0])
+        const pid: PlayerId = y < midY ? humanIds[1] : humanIds[0];
+        const isActionZone = this.controlMode === 'directional' && x > width * 0.66;
         return { pid, isActionZone };
-      } else if (this.phoneTouchLayout === '2p_final') {
-        // Grand Final of 4P Split-Bracket: Top Half = Top Semifinal Winner, Bottom Half = Bottom Semifinal Winner
-        const pid: PlayerId = y < midY ? this.finalPlayerIds[0] : this.finalPlayerIds[1];
-        const isActionZone = this.controlMode === 'directional' && x > width * 0.70;
-        return { pid, isActionZone };
+      } else {
+        // Computer / Tablet Landscape 2P: Left Half = P1, Right Half = P2 across full height
+        const pid: PlayerId = x < midX ? humanIds[0] : humanIds[1];
+        return { pid };
       }
     }
 
+    // 4. 3P / 4P Quadrant Layout (Top-Left = P1, Top-Right = P2, Bottom-Left = P3, Bottom-Right = P4)
     let pid: PlayerId;
     if (x < midX) {
       pid = y < midY ? 0 : 2;
     } else {
       pid = y < midY ? 1 : 3;
     }
-    return { pid };
+    if (!this.activePlayerMask[pid] && humanIds.length > 0) {
+      // Fallback to nearest active human on the same side
+      if (x < midX && this.humanPlayerMask[0]) pid = 0;
+      else if (x >= midX && this.humanPlayerMask[1]) pid = 1;
+      else pid = humanIds[0];
+    }
+    const isCornerActionPad =
+      this.deviceMode === 'phone' &&
+      this.controlMode === 'directional' &&
+      ((pid === 0 && x < 122 && y < 82) ||
+        (pid === 1 && x > width - 122 && y < 82) ||
+        (pid === 2 && x < 122 && y > height - 82) ||
+        (pid === 3 && x > width - 122 && y > height - 82));
+    return { pid, isActionZone: isCornerActionPad };
   }
 
   private recalculateTouchInputs() {
@@ -464,13 +624,13 @@ export class InputRouter {
           hasActiveTouch = true;
           if (track.role === 'action') {
             anyActionTouch = true;
-            // Hybrid Single-Button + Drag Steer support: if dragging finger > 8px while holding in single_button mode, also populate steer/throttle!
+            // Hybrid Single-Button + Drag Steer support: if dragging finger > 6px while holding in single_button mode, also populate steer/throttle!
             if (this.controlMode === 'single_button') {
               const dx = track.currentX - track.originX;
               const dy = track.currentY - track.originY;
               const dist = Math.hypot(dx, dy);
-              const deadzone = 8;
-              const maxRadius = 42;
+              const deadzone = 6;
+              const maxRadius = 40;
               if (dist > deadzone) {
                 const clamped = Math.min(dist, maxRadius);
                 const norm = (clamped - deadzone) / (maxRadius - deadzone);
@@ -486,8 +646,8 @@ export class InputRouter {
             const dx = track.currentX - track.originX;
             const dy = track.currentY - track.originY;
             const dist = Math.hypot(dx, dy);
-            const deadzone = 5;
-            const maxRadius = 45;
+            const deadzone = 4;
+            const maxRadius = 42;
 
             if (dist > deadzone) {
               const clamped = Math.min(dist, maxRadius);
@@ -564,6 +724,11 @@ export class InputRouter {
     s.rawSteer = this.keyboardSteer[pid];
     s.rawThrottle = this.keyboardThrottle[pid];
 
+    if (up) s.justUp = true;
+    if (down) s.justDown = true;
+    if (left) s.justLeft = true;
+    if (right) s.justRight = true;
+
     const anyDirection = up || down || left || right;
 
     if (this.controlMode === 'single_button') {
@@ -574,11 +739,6 @@ export class InputRouter {
         this.checkPlayerRelease(pid);
       }
     } else {
-      if (up) s.justUp = true;
-      if (down) s.justDown = true;
-      if (left) s.justLeft = true;
-      if (right) s.justRight = true;
-
       const wasAction = this.keyboardAction[pid];
       this.keyboardAction[pid] = action;
 
@@ -624,8 +784,14 @@ export class InputRouter {
     const s = this.states[pid];
     s.action = true;
     s.justAction = true;
-    this.actionBufferTimer[pid] = 0.12; // 120ms action buffer / coyote window
-    this.press(pid);
+    s.justPressed = true; // Ensure Action button fires justPressed even while Virtual Joystick is held!
+    this.actionBufferTimer[pid] = 0.14; // 140ms action buffer / coyote window
+    this.pressBufferTimer[pid] = 0.14;
+    if (!s.pressed) {
+      s.pressed = true;
+      s.pressStartTime = performance.now();
+      s.holdDuration = 0;
+    }
     this.triggerHaptic(12);
   }
 
@@ -634,7 +800,7 @@ export class InputRouter {
     if (!s.pressed) {
       s.pressed = true;
       s.justPressed = true;
-      this.pressBufferTimer[pid] = 0.12;
+      this.pressBufferTimer[pid] = 0.14;
       s.pressStartTime = performance.now();
       s.holdDuration = 0;
     }
@@ -915,8 +1081,19 @@ export class InputRouter {
       targetSteer = Math.max(-1, Math.min(1, targetSteer));
       targetThrottle = Math.max(-1, Math.min(1, targetThrottle));
 
-      s.rawSteer = Math.round(targetSteer);
-      s.rawThrottle = Math.round(targetThrottle);
+      const discSteer = targetSteer > 0.36 ? 1 : targetSteer < -0.36 ? -1 : 0;
+      const discThrottle = targetThrottle > 0.36 ? 1 : targetThrottle < -0.36 ? -1 : 0;
+
+      if (discSteer === 1 && this.prevDiscreteSteer[pid] !== 1) s.justRight = true;
+      if (discSteer === -1 && this.prevDiscreteSteer[pid] !== -1) s.justLeft = true;
+      if (discThrottle === 1 && this.prevDiscreteThrottle[pid] !== 1) s.justUp = true;
+      if (discThrottle === -1 && this.prevDiscreteThrottle[pid] !== -1) s.justDown = true;
+
+      this.prevDiscreteSteer[pid] = discSteer;
+      this.prevDiscreteThrottle[pid] = discThrottle;
+
+      s.rawSteer = discSteer;
+      s.rawThrottle = discThrottle;
 
       // Smooth interpolation
       s.steer += (targetSteer - s.steer) * smoothingFactor;
@@ -931,6 +1108,12 @@ export class InputRouter {
       if (!joy.active && joy.opacity > 0) {
         joy.opacity = Math.max(0, joy.opacity - dt * 4.5);
       }
+    }
+
+    // Decay touch velocity frame-by-frame if stationary
+    for (const track of this.activeTouches.values()) {
+      track.vx *= 0.75;
+      track.vy *= 0.75;
     }
 
     // Update ripples
@@ -963,15 +1146,15 @@ export class InputRouter {
       const botPid: PlayerId = this.phoneTouchLayout === '2p_final' ? this.finalPlayerIds[1] : 0;
 
       // Bottom Player Touch Bar
-      if (this.activePlayerMask[botPid]) {
+      if (this.activePlayerMask[botPid] && this.humanPlayerMask[botPid]) {
         const isPressed = this.states[botPid].pressed;
         const c = this.playerColors[botPid];
-        ctx.fillStyle = isPressed ? 'rgba(239, 68, 68, 0.22)' : 'rgba(15, 23, 42, 0.55)';
+        ctx.fillStyle = isPressed ? 'rgba(239, 68, 68, 0.24)' : 'rgba(15, 23, 42, 0.58)';
         ctx.strokeStyle = c;
         ctx.lineWidth = isPressed ? 2.5 : 1.5;
-        const padW = Math.min(280, w * 0.42);
-        const padH = 32;
-        const padX = 16;
+        const padW = this.controlMode === 'directional' ? Math.min(240, w * 0.52) : Math.min(310, w * 0.72);
+        const padH = 34;
+        const padX = 14;
         const padY = h - padH - 10;
         ctx.beginPath();
         ctx.roundRect(padX, padY, padW, padH, 10);
@@ -982,34 +1165,34 @@ export class InputRouter {
         ctx.font = '800 10px Montserrat, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(
-          this.controlMode === 'single_button' ? `📱 P${botPid + 1} TOUCH ZONE (TAP / HOLD / DRAG)` : `🕹️ P${botPid + 1} DRAG TO MOVE`,
+          this.controlMode === 'single_button' ? `📱 P${botPid + 1} TOUCH: TAP / HOLD / DRAG` : `🕹️ P${botPid + 1} DRAG THUMBSTICK`,
           padX + padW / 2,
-          padY + 20
+          padY + 21
         );
 
         if (this.controlMode === 'directional') {
-          const actW = Math.min(140, w * 0.25);
-          const actX = w - actW - 16;
-          ctx.fillStyle = this.states[botPid].action ? c : 'rgba(15, 23, 42, 0.68)';
+          const actW = Math.min(148, w * 0.30);
+          const actX = w - actW - 14;
+          ctx.fillStyle = this.states[botPid].action ? c : 'rgba(15, 23, 42, 0.75)';
           ctx.beginPath();
           ctx.roundRect(actX, padY, actW, padH, 10);
           ctx.fill();
           ctx.stroke();
           ctx.fillStyle = '#FFFFFF';
-          ctx.fillText(`⚡ P${botPid + 1} ACTION`, actX + actW / 2, padY + 20);
+          ctx.fillText(`⚡ P${botPid + 1} ACTION`, actX + actW / 2, padY + 21);
         }
       }
 
-      // Top Player Touch Bar (if human active)
-      if (this.activePlayerMask[topPid]) {
+      // Top Player Touch Bar (only if human active!)
+      if (this.activePlayerMask[topPid] && this.humanPlayerMask[topPid]) {
         const isPressed = this.states[topPid].pressed;
         const c = this.playerColors[topPid];
-        ctx.fillStyle = isPressed ? 'rgba(59, 130, 246, 0.22)' : 'rgba(15, 23, 42, 0.55)';
+        ctx.fillStyle = isPressed ? 'rgba(59, 130, 246, 0.24)' : 'rgba(15, 23, 42, 0.58)';
         ctx.strokeStyle = c;
         ctx.lineWidth = isPressed ? 2.5 : 1.5;
-        const padW = Math.min(280, w * 0.42);
-        const padH = 30;
-        const padX = 16;
+        const padW = this.controlMode === 'directional' ? Math.min(240, w * 0.52) : Math.min(310, w * 0.72);
+        const padH = 32;
+        const padX = 14;
         const padY = 46;
         ctx.beginPath();
         ctx.roundRect(padX, padY, padW, padH, 10);
@@ -1020,21 +1203,21 @@ export class InputRouter {
         ctx.font = '800 10px Montserrat, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(
-          this.controlMode === 'single_button' ? `📱 P${topPid + 1} TOP TOUCH ZONE (TAP / HOLD)` : `🕹️ P${topPid + 1} TOP DRAG MOVE`,
+          this.controlMode === 'single_button' ? `📱 P${topPid + 1} TOP: TAP / HOLD / DRAG` : `🕹️ P${topPid + 1} TOP THUMBSTICK`,
           padX + padW / 2,
-          padY + 19
+          padY + 20
         );
 
         if (this.controlMode === 'directional') {
-          const actW = Math.min(140, w * 0.25);
-          const actX = w - actW - 16;
-          ctx.fillStyle = this.states[topPid].action ? c : 'rgba(15, 23, 42, 0.68)';
+          const actW = Math.min(148, w * 0.30);
+          const actX = w - actW - 14;
+          ctx.fillStyle = this.states[topPid].action ? c : 'rgba(15, 23, 42, 0.75)';
           ctx.beginPath();
           ctx.roundRect(actX, padY, actW, padH, 10);
           ctx.fill();
           ctx.stroke();
           ctx.fillStyle = '#FFFFFF';
-          ctx.fillText(`⚡ P${topPid + 1} ACTION`, actX + actW / 2, padY + 19);
+          ctx.fillText(`⚡ P${topPid + 1} ACTION`, actX + actW / 2, padY + 20);
         }
       }
     } else {
@@ -1046,7 +1229,7 @@ export class InputRouter {
         { pid: 3, x: w - 118, y: h - 42, label: 'P4 TOUCH' }
       ];
       for (const cn of corners) {
-        if (!this.activePlayerMask[cn.pid]) continue;
+        if (!this.activePlayerMask[cn.pid] || !this.humanPlayerMask[cn.pid]) continue;
         const active = this.states[cn.pid].pressed;
         const c = this.playerColors[cn.pid];
         ctx.fillStyle = active ? c : 'rgba(15, 23, 42, 0.58)';
@@ -1060,7 +1243,7 @@ export class InputRouter {
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '800 10px Montserrat, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`📱 ${cn.label}`, cn.x + 52, cn.y + 19);
+        ctx.fillText(this.controlMode === 'directional' ? `⚡ P${cn.pid + 1} ACT` : `📱 ${cn.label}`, cn.x + 52, cn.y + 19);
       }
     }
     ctx.restore();

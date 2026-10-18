@@ -519,7 +519,7 @@ export class LandscapeArtilleryGame extends BaseGame {
       }
 
       // 3. Action button: Hold to pull back, release to fire
-      const isAction = this.input.isActionPressed(activeP.id) || this.input.isPressed(activeP.id);
+      const isAction = this.input.isActionPressed(activeP.id);
       if (isAction) {
         activeP.isPullingBack = true;
         activeP.pullBackTime += dt;

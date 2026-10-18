@@ -240,8 +240,11 @@ export class PiranhaRiverHopGame extends BaseGame {
 
       const sx = this.input.getSteer(h.id);
       const sy = this.input.getThrottle(h.id);
-      const justTap = this.input.justPressed(h.id) || this.input.justAction(h.id);
-      const isHold = this.input.isActionPressed(h.id) || this.input.isPressed(h.id);
+      const pCfg = this.getPlayer(h.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+
+      const justTap = this.input.justAction(h.id) || (isBot && this.input.justPressed(h.id));
+      const isHold = this.input.isActionPressed(h.id) || (isBot && this.input.isPressed(h.id));
 
       const accel = 1350 * (h.underdog ? 1.15 : 1.0);
       h.vx += sx * accel * dt;

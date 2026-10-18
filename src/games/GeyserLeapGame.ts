@@ -394,7 +394,7 @@ export class GeyserLeapGame extends BaseGame {
           h.angle = Math.atan2(move.y, move.x);
         }
 
-        const holding = this.input.isActionPressed(h.id) || this.input.isPressed(h.id);
+        const holding = this.input.isActionPressed(h.id);
         if (holding && h.overchargeTimer <= 0) {
           h.isHolding = true;
           h.charge = Math.min(1.15, h.charge + safeDt * 0.85);
@@ -409,7 +409,7 @@ export class GeyserLeapGame extends BaseGame {
             this.executeFoxHop(h);
           }
           h.charge = 0;
-        } else if (this.input.justPressed(h.id) || this.input.justAction(h.id)) {
+        } else if (this.input.justAction(h.id)) {
           this.executeFoxHop(h);
         }
       }
@@ -931,4 +931,12 @@ export class GeyserLeapGame extends BaseGame {
     ctx.restore();
   }
 
+  public handlePointerDown(x: number, y: number, _width: number, height: number): boolean {
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.audio.playTap();
+      return true;
+    }
+    return false;
+  }
 }

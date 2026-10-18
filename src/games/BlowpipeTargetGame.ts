@@ -210,8 +210,11 @@ export class BlowpipeTargetGame extends BaseGame {
       }
 
       const steer = this.input.getSteer(h.id);
-      const justTap = this.input.justPressed(h.id) || this.input.justAction(h.id);
-      const isHold = this.input.isActionPressed(h.id) || this.input.isPressed(h.id);
+      const pCfg = this.getPlayer(h.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+
+      const justTap = this.input.justAction(h.id) || (isBot && this.input.justPressed(h.id));
+      const isHold = this.input.isActionPressed(h.id) || (isBot && this.input.isPressed(h.id));
 
       h.vx += steer * 1450 * (h.underdog ? 1.15 : 1.0) * dt;
       h.vx *= Math.pow(0.06, dt);

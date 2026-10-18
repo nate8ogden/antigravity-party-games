@@ -322,12 +322,13 @@ export class OuijaSpiritBoardGame extends BaseGame {
         return;
       }
 
+      const isBot = p.type.startsWith('bot_');
       const speedMult = ps.isUnderdog ? 1.22 : 1.0;
       const steer = this.input.getSteer(ps.id);
       const throttle = this.input.getThrottle(ps.id);
-      const holding = this.input.isActionPressed(ps.id) || this.input.isPressed(ps.id);
-      const justPressed = this.input.justPressed(ps.id) || this.input.justAction(ps.id);
-      const released = this.input.justReleased(ps.id);
+      const holding = this.input.isActionPressed(ps.id) || (isBot && this.input.isPressed(ps.id));
+      const justPressed = this.input.justAction(ps.id) || (isBot && this.input.justPressed(ps.id));
+      const released = this.input.justReleased(ps.id) || (!holding && ps.charging);
 
       const accel = 640 * speedMult;
       if (Math.abs(steer) > 0.1 || Math.abs(throttle) > 0.1) {
@@ -349,7 +350,6 @@ export class OuijaSpiritBoardGame extends BaseGame {
         ps.charge = 0;
       }
 
-      const isBot = p.type.startsWith('bot_');
       if (!isBot) {
         if (holding && ps.charging && ps.overchargeLockout <= 0) {
           ps.charge += clampedDt * 0.88;

@@ -393,7 +393,7 @@ export class ClockworkCogsGame extends BaseGame {
           s.angle = Math.atan2(move.y, move.x);
         }
 
-        const holding = this.input.isActionPressed(s.id) || this.input.isPressed(s.id);
+        const holding = this.input.isActionPressed(s.id);
         if (holding && s.overchargeTimer <= 0) {
           s.isHolding = true;
           s.charge = Math.min(1.15, s.charge + safeDt * 0.85);
@@ -408,7 +408,7 @@ export class ClockworkCogsGame extends BaseGame {
             this.executeSpannerMesh(s, false);
           }
           s.charge = 0;
-        } else if (this.input.justPressed(s.id) || this.input.justAction(s.id)) {
+        } else if (this.input.justAction(s.id)) {
           this.executeSpannerMesh(s, false);
         }
       }
@@ -894,4 +894,12 @@ export class ClockworkCogsGame extends BaseGame {
     ctx.restore();
   }
 
+  public handlePointerDown(x: number, y: number, _width: number, height: number): boolean {
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.audio.playTap();
+      return true;
+    }
+    return false;
+  }
 }

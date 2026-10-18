@@ -261,7 +261,10 @@ export class MilkBottleKnockdownGame extends BaseGame {
         p.aimDir = 1;
       }
 
-      const holding = p.stunTimer <= 0 && (this.input.isActionPressed(p.id) || this.input.isPressed(p.id));
+      const pCfg = this.getPlayer(p.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+
+      const holding = p.stunTimer <= 0 && (this.input.isActionPressed(p.id) || (isBot && this.input.isPressed(p.id)));
       if (holding) {
         p.charge += dt * 1.1;
         p.wasHolding = true;

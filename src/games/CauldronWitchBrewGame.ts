@@ -432,8 +432,10 @@ export class CauldronWitchBrewGame extends BaseGame {
 
       const steerX = this.input.getSteer(a.id);
       const steerY = -this.input.getThrottle(a.id);
-      const pressed = this.input.isPressed(a.id);
-      const justPressed = this.input.justPressed(a.id);
+      const pCfg = this.getPlayer(a.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const pressed = this.input.isActionPressed(a.id) || (isBot && this.input.isPressed(a.id));
+      const justPressed = this.input.justAction(a.id) || (isBot && this.input.justPressed(a.id));
 
       // Hold-to-charge tracking
       if (pressed) {
@@ -1289,6 +1291,16 @@ export class CauldronWitchBrewGame extends BaseGame {
 
   public isRoundOver(): boolean {
     return this.isOver;
+  }
+
+  public handlePointerDown(x: number, y: number, _width: number, height: number): boolean {
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.cauldronColor = THEMES[this.themeIndex].liquidBase;
+      this.audio.playTap();
+      return true;
+    }
+    return false;
   }
 
   public getScore(playerId: PlayerId): number {

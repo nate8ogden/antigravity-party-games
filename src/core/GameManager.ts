@@ -5356,7 +5356,13 @@ export class GameManager {
       2: this.players[2]?.type !== 'disabled',
       3: this.players[3]?.type !== 'disabled'
     };
-    this.input.setActivePlayerMask(mask);
+    const humanMask: Record<PlayerId, boolean> = {
+      0: this.players[0]?.type === 'human',
+      1: this.players[1]?.type === 'human',
+      2: this.players[2]?.type === 'human',
+      3: this.players[3]?.type === 'human'
+    };
+    this.input.setActivePlayerMask(mask, humanMask);
     const activeCount = this.players.filter((p) => p.type !== 'disabled').length;
     if (this.splitBracketStage === 'final' && this.splitBracketTopWinner !== null && this.splitBracketBotWinner !== null) {
       this.input.setPhoneTouchLayout('2p_final', [this.splitBracketTopWinner, this.splitBracketBotWinner]);
@@ -6605,7 +6611,6 @@ export class GameManager {
       'spam_click_showdown',
       'thumb_war_wrestle',
       'swipe_ninja_blitz',
-      'tabletop_air_hockey',
       'tap_tug_overdrive',
       'neon_lightcycles',
       'micro_gp',
@@ -11343,6 +11348,11 @@ export class GameManager {
             return;
           }
         }
+      }
+    } else if (this.state === 'PLAYING') {
+      if (this.activeGame && typeof (this.activeGame as any).handlePointerDown === 'function') {
+        const handled = (this.activeGame as any).handlePointerDown(x, y, w, h);
+        if (handled) return;
       }
     } else if (this.state === 'PAUSED') {
       const btnW = 115;

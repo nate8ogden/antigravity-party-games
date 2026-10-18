@@ -375,7 +375,7 @@ export class PolarIceFishingGame extends BaseGame {
           f.angle = Math.atan2(move.y, move.x);
         }
 
-        const holding = this.input.isActionPressed(f.id) || this.input.isPressed(f.id);
+        const holding = this.input.isActionPressed(f.id);
         if (holding && f.overchargeTimer <= 0) {
           f.isHolding = true;
           f.charge = Math.min(1.15, f.charge + safeDt * 0.85);
@@ -390,7 +390,7 @@ export class PolarIceFishingGame extends BaseGame {
             this.executeHookStrike(f, false);
           }
           f.charge = 0;
-        } else if (this.input.justPressed(f.id) || this.input.justAction(f.id)) {
+        } else if (this.input.justAction(f.id)) {
           this.executeHookStrike(f, false);
         }
       }
@@ -1014,4 +1014,12 @@ export class PolarIceFishingGame extends BaseGame {
     ctx.restore();
   }
 
+  public handlePointerDown(x: number, y: number, _width: number, height: number): boolean {
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.audio.playTap();
+      return true;
+    }
+    return false;
+  }
 }

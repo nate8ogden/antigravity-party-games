@@ -363,7 +363,7 @@ export class AuroraCollectorGame extends BaseGame {
           g.angle *= Math.pow(0.08, safeDt);
         }
 
-        const holding = this.input.isActionPressed(g.id) || this.input.isPressed(g.id);
+        const holding = this.input.isActionPressed(g.id);
         if (holding && g.overchargeTimer <= 0) {
           g.isHolding = true;
           g.charge = Math.min(1.15, g.charge + safeDt * 0.85);
@@ -378,7 +378,7 @@ export class AuroraCollectorGame extends BaseGame {
             this.executeWingGust(g);
           }
           g.charge = 0;
-        } else if (this.input.justPressed(g.id) || this.input.justAction(g.id)) {
+        } else if (this.input.justAction(g.id)) {
           this.executeWingGust(g);
         }
       }
@@ -961,4 +961,12 @@ export class AuroraCollectorGame extends BaseGame {
     ctx.restore();
   }
 
+  public handlePointerDown(x: number, y: number, _width: number, height: number): boolean {
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.audio.playTap();
+      return true;
+    }
+    return false;
+  }
 }

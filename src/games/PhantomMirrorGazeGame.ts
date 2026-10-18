@@ -374,9 +374,9 @@ export class PhantomMirrorGazeGame extends BaseGame {
 
       if (!isBot) {
         const steer = this.input.getSteer(h.id);
-        const holding = this.input.isActionPressed(h.id) || this.input.isPressed(h.id);
-        const justPressed = this.input.justPressed(h.id) || this.input.justAction(h.id);
-        const released = this.input.justReleased(h.id);
+        const holding = this.input.isActionPressed(h.id);
+        const justPressed = this.input.justAction(h.id);
+        const released = this.input.justReleased(h.id) || (!holding && h.charging);
 
         if (Math.abs(steer) > 0.12) {
           h.moveDir = steer >= 0 ? 1 : -1;

@@ -249,7 +249,7 @@ export class BumperCarDerbyGame extends BaseGame {
           const accel = c.underdog ? 720 : 620;
           c.vx += (move.x / mag) * accel * dt;
           c.vy += (move.y / mag) * accel * dt;
-        } else if (this.input.justPressed(c.id) || this.input.justAction(c.id)) {
+        } else if (this.input.justAction(c.id) || (isBot && this.input.justPressed(c.id))) {
           // Active directional snap: tap to pivot 45 deg, double-tap for 180 turnaround!
           if (this.timeElapsed - c.lastTapTime < 0.28) {
             c.angle += Math.PI;
@@ -263,7 +263,7 @@ export class BumperCarDerbyGame extends BaseGame {
         }
       }
 
-      const holding = c.stunTimer <= 0 && (this.input.isActionPressed(c.id) || this.input.isPressed(c.id));
+      const holding = c.stunTimer <= 0 && (this.input.isActionPressed(c.id) || (isBot && this.input.isPressed(c.id)));
       if (holding) {
         c.charge = Math.min(1.2, c.charge + dt * 1.15);
         c.wasHolding = true;

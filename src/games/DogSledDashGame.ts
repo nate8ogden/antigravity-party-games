@@ -364,7 +364,7 @@ export class DogSledDashGame extends BaseGame {
           m.vy += move.y * 740 * speedMult * safeDt;
         }
 
-        const holding = this.input.isActionPressed(m.id) || this.input.isPressed(m.id);
+        const holding = this.input.isActionPressed(m.id);
         if (holding && m.overchargeTimer <= 0) {
           m.isHolding = true;
           m.charge = Math.min(1.15, m.charge + safeDt * 0.85);
@@ -379,7 +379,7 @@ export class DogSledDashGame extends BaseGame {
             this.executeMushLeap(m);
           }
           m.charge = 0;
-        } else if (this.input.justPressed(m.id) || this.input.justAction(m.id)) {
+        } else if (this.input.justAction(m.id)) {
           this.executeMushLeap(m);
         }
       }
@@ -965,4 +965,12 @@ export class DogSledDashGame extends BaseGame {
     ctx.restore();
   }
 
+  public handlePointerDown(x: number, y: number, _width: number, height: number): boolean {
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.audio.playTap();
+      return true;
+    }
+    return false;
+  }
 }

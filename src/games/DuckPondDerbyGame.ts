@@ -256,7 +256,7 @@ export class DuckPondDerbyGame extends BaseGame {
           a.aimDir = 1;
         }
 
-        if (a.stunTimer <= 0 && (this.input.justPressed(a.id) || this.input.justAction(a.id) || this.input.isPressed(a.id))) {
+        if (a.stunTimer <= 0 && (this.input.justPressed(a.id) || this.input.justAction(a.id))) {
           a.state = 'extending';
           this.audio.playWhoosh();
         }

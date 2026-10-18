@@ -206,7 +206,9 @@ export class AntColonyHaulGame extends BaseGame {
 
       const sx = this.input.getSteer(a.id);
       const sy = this.input.getThrottle(a.id);
-      const isHold = this.input.isActionPressed(a.id) || this.input.isPressed(a.id);
+      const pCfg = this.getPlayer(a.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const isHold = this.input.isActionPressed(a.id) || (isBot && this.input.isPressed(a.id));
 
       const accel = 1350 * (a.underdog ? 1.15 : 1.0) * (a.herculesTimer > 0 ? 1.35 : 1.0);
       a.vx += sx * accel * dt;

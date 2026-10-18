@@ -207,7 +207,9 @@ export class CentipedeSlalomGame extends BaseGame {
       }
 
       const steer = this.input.getSteer(r.id);
-      const isHold = this.input.isActionPressed(r.id) || this.input.isPressed(r.id);
+      const pCfg = this.getPlayer(r.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+      const isHold = this.input.isActionPressed(r.id) || (isBot && this.input.isPressed(r.id));
 
       // Direct lateral slalom carving (eliminated passive circle rotation!)
       r.vx += steer * 1550 * (r.underdog ? 1.15 : 1.0) * (r.turboTimer > 0 ? 1.35 : 1.0) * dt;

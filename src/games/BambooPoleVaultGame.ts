@@ -183,8 +183,11 @@ export class BambooPoleVaultGame extends BaseGame {
       }
 
       const steer = this.input.getSteer(v.id);
-      const justTap = this.input.justPressed(v.id) || this.input.justAction(v.id);
-      const isHold = this.input.isActionPressed(v.id) || this.input.isPressed(v.id);
+      const pCfg = this.getPlayer(v.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+
+      const justTap = this.input.justAction(v.id) || (isBot && this.input.justPressed(v.id));
+      const isHold = this.input.isActionPressed(v.id) || (isBot && this.input.isPressed(v.id));
 
       if (v.phase === 'runway') {
         v.vx = Math.min(340, v.vx + (260 + Math.max(0, steer) * 140) * (v.underdog ? 1.15 : 1.0) * dt);

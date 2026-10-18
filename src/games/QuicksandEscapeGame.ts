@@ -198,8 +198,11 @@ export class QuicksandEscapeGame extends BaseGame {
       if (e.mudStunTimer > 0) e.mudStunTimer = Math.max(0, e.mudStunTimer - dt);
 
       const steer = this.input.getSteer(e.id);
-      const justTap = this.input.justPressed(e.id) || this.input.justAction(e.id);
-      const isHold = this.input.isActionPressed(e.id) || this.input.isPressed(e.id);
+      const pCfg = this.getPlayer(e.id);
+      const isBot = pCfg ? pCfg.type.startsWith('bot_') : false;
+
+      const justTap = this.input.justAction(e.id) || (isBot && this.input.justPressed(e.id));
+      const isHold = this.input.isActionPressed(e.id) || (isBot && this.input.isPressed(e.id));
 
       // Quicksand suction pulls downward
       e.vy += 260 * dt;

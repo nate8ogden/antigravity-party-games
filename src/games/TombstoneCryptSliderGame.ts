@@ -330,8 +330,9 @@ export class TombstoneCryptSliderGame extends BaseGame {
 
       const steerX = this.input.getSteer(e.id);
       const steerY = -this.input.getThrottle(e.id);
-      const pressed = this.input.isPressed(e.id);
-      const justPressed = this.input.justPressed(e.id);
+      const isBot = e.config.type.startsWith('bot_');
+      const pressed = this.input.isActionPressed(e.id) || (isBot && this.input.isPressed(e.id));
+      const justPressed = this.input.justAction(e.id) || (isBot && this.input.justPressed(e.id));
 
       // Hold-to-Charge Seismic Slab Launch
       if (pressed && e.stunTimer <= 0) {
@@ -900,6 +901,15 @@ export class TombstoneCryptSliderGame extends BaseGame {
 
   public isRoundOver(): boolean {
     return this.isOver;
+  }
+
+  public handlePointerDown(x: number, y: number, _width: number, height: number): boolean {
+    if (x >= 20 && x <= 190 && y >= height - 44 && y <= height - 12) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.audio.playTap();
+      return true;
+    }
+    return false;
   }
 
   public getScore(playerId: PlayerId): number {
