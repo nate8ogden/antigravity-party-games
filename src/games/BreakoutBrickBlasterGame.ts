@@ -398,10 +398,11 @@ export class BreakoutBrickBlasterGame extends BaseGame {
       if (ps.stunTimer > 0) ps.stunTimer -= dt;
 
       const steer = ps.stunTimer > 0 ? 0 : this.input.getSteer(p.id);
-      const isPressed = ps.stunTimer <= 0 && this.input.isPressed(p.id);
+      const isBot = p.type.startsWith('bot_');
+      const actionHeld = ps.stunTimer <= 0 && (this.input.isActionPressed(p.id) || (isBot && this.input.isPressed(p.id)));
 
       // Hold-to-charge Supernova Smash Volley & Magnetic Shunt (72% - 98%)
-      if (isPressed) {
+      if (actionHeld) {
         ps.isCharging = true;
         ps.charge = Math.min(1.0, ps.charge + dt * 0.9);
       } else if (ps.isCharging) {
@@ -651,7 +652,12 @@ export class BreakoutBrickBlasterGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+  public handlePointerDown(x: number, y: number, _width: number, _height: number): boolean {
+    if (y <= 42 && x <= 260) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.audio.playSelect();
+      return true;
+    }
     return false;
   }
 }

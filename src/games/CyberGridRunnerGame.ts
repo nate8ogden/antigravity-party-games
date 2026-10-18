@@ -336,15 +336,14 @@ export class CyberGridRunnerGame extends BaseGame {
 
       const steer = this.input.getSteer(p.id);
       const throttle = this.input.getThrottle(p.id);
-      const isPressed = this.input.isPressed(p.id);
-      const isAction = this.input.justAction(p.id);
+      const isBot = p.type.startsWith('bot_');
+      const isAction = this.input.justAction(p.id) || (isBot && this.input.justPressed(p.id));
 
       if (isAction && !ps.isBoosting) {
         this.triggerPlayerBoost(ps);
       }
 
       // Check if trailing behind leader (Catch-up slipstream for humans!)
-      const isBot = p.type.startsWith('bot_');
       let isTrailing = false;
       if (!isBot) {
         for (const other of this.playersState.values()) {
@@ -374,17 +373,7 @@ export class CyberGridRunnerGame extends BaseGame {
         const targetVy = Math.sin(targetAngle) * currentSpeedLimit;
         ps.vx += (targetVx - ps.vx) * Math.min(1, dt * accelRate);
         ps.vy += (targetVy - ps.vy) * Math.min(1, dt * accelRate);
-      } else if (isPressed) {
-        // Single Button Arcade: HOLD drives forward in current heading!
-        const targetVx = Math.cos(ps.angle) * currentSpeedLimit;
-        const targetVy = Math.sin(ps.angle) * currentSpeedLimit;
-        ps.vx += (targetVx - ps.vx) * Math.min(1, dt * accelRate);
-        ps.vy += (targetVy - ps.vy) * Math.min(1, dt * accelRate);
       } else {
-        // Single Button Arcade: RELEASE smoothly steers in a scan arc
-        if (!isBot) {
-          ps.angle += dt * 2.8;
-        }
         // Hover drift friction
         ps.vx *= Math.pow(0.92, dt * 60);
         ps.vy *= Math.pow(0.92, dt * 60);
@@ -1012,5 +1001,25 @@ export class CyberGridRunnerGame extends BaseGame {
     );
 
     ctx.restore();
+  }
+
+  public handlePointerDown(x: number, y: number, _width: number, height: number): boolean {
+    // Theme toggle pill at bottom left
+    if (x >= 20 && x <= 360 && y >= height - 48) {
+      this.themeIndex = (this.themeIndex + 1) % this.themes.length;
+      this.currentMapName = this.themes[this.themeIndex].name;
+      this.audio.playSelect();
+      return true;
+    }
+    // Touch Boost button
+    const b = this.touchBtnRect;
+    if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) {
+      const p1 = this.playersState.get(0);
+      if (p1) {
+        this.triggerPlayerBoost(p1);
+        return true;
+      }
+    }
+    return false;
   }
 }

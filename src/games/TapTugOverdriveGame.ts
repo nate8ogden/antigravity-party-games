@@ -72,6 +72,10 @@ export class TapTugOverdriveGame extends BaseGame {
     const cy = height / 2 + 10;
     const r = Math.min(width, height) * 0.35;
     if (count <= 2) {
+      if (this.input.deviceMode === 'phone' || height > width) {
+        // Phone 2P Face-to-Face: Player 1 (idx 0) at Bottom, Player 2 (idx 1) at Top!
+        return idx === 0 ? { x: cx, y: cy + r } : { x: cx, y: cy - r };
+      }
       return idx === 0 ? { x: cx - r, y: cy } : { x: cx + r, y: cy };
     }
     const angles = [-Math.PI * 0.75, -Math.PI * 0.25, Math.PI * 0.75, Math.PI * 0.25];
@@ -90,10 +94,10 @@ export class TapTugOverdriveGame extends BaseGame {
     this.surgeTimer -= dt;
     if (this.surgeTimer <= 0) {
       this.surgeActive = !this.surgeActive;
-      this.surgeTimer = this.surgeActive ? 1.3 : 2.1;
+      this.surgeTimer = this.surgeActive ? 1.4 : 2.0;
       if (this.surgeActive) {
         this.audio.playBoost();
-        this.particles.showFloatingText('⚡ 2X OVERDRIVE SURGE! MASH TAP! ⚡', width / 2, 74, '#FBBF24', 19);
+        this.particles.showFloatingText('⚡ 2X OVERDRIVE SURGE! MASH OR SWIPE! ⚡', width / 2, 74, '#FBBF24', 19);
       }
     }
 
@@ -104,8 +108,11 @@ export class TapTugOverdriveGame extends BaseGame {
       n.anchorY = pos.y;
 
       const tapped = this.input.justPressed(n.id) || this.input.justAction(n.id);
+      const justReleased = this.input.justReleased(n.id);
+      const holdDur = this.input.getHoldDuration(n.id);
+
       if (tapped) {
-        const pullStrength = this.surgeActive ? 22 : 12;
+        const pullStrength = this.surgeActive ? 24 : 13;
         const dx = n.anchorX - this.coreX;
         const dy = n.anchorY - this.coreY;
         const dist = Math.hypot(dx, dy) || 1;
@@ -116,11 +123,24 @@ export class TapTugOverdriveGame extends BaseGame {
 
         this.audio.playRopeTension(0.5);
         this.particles.spawnSparks(this.coreX, this.coreY, n.colorLight, 6);
+      } else if (justReleased && holdDur >= 0.28) {
+        // Charged Tractor Beam Yank on release after holding or swiping!
+        const yankBonus = Math.min(34, 16 + holdDur * 28) * (this.surgeActive ? 1.5 : 1.0);
+        const dx = n.anchorX - this.coreX;
+        const dy = n.anchorY - this.coreY;
+        const dist = Math.hypot(dx, dy) || 1;
+        this.coreX += (dx / dist) * yankBonus;
+        this.coreY += (dy / dist) * yankBonus;
+        n.energy += 3;
+        n.taps += 2;
+        this.audio.playBoost();
+        this.particles.spawnSparks(this.coreX, this.coreY, '#FDE047', 12);
+        this.particles.showFloatingText('⚡ TRACTOR YANK!', this.coreX, this.coreY - 18, n.colorLight, 15);
       }
 
       // Check if plasma core reached this player's reactor node!
       const distToNode = Math.hypot(n.anchorX - this.coreX, n.anchorY - this.coreY);
-      if (distToNode <= 34) {
+      if (distToNode <= 36) {
         n.energy += 25;
         this.winnerId = n.id;
         this.audio.playExplosion();
@@ -132,7 +152,6 @@ export class TapTugOverdriveGame extends BaseGame {
 
     if (this.roundTimer <= 0) {
       this.roundTimer = 0;
-      // Closest node to the plasma core wins!
       const sorted = [...this.nodes].sort((a, b) => {
         const da = Math.hypot(a.anchorX - this.coreX, a.anchorY - this.coreY);
         const db = Math.hypot(b.anchorX - this.coreX, b.anchorY - this.coreY);
@@ -159,7 +178,7 @@ export class TapTugOverdriveGame extends BaseGame {
     n.botTimer -= dt;
     if (n.botTimer > 0) return;
 
-    const tapInterval = difficulty === 'bot_hard' ? 0.095 : difficulty === 'bot_normal' ? 0.145 : 0.21;
+    const tapInterval = difficulty === 'bot_hard' ? 0.105 : difficulty === 'bot_normal' ? 0.155 : 0.22;
     n.botTimer = tapInterval + Math.random() * 0.04;
     this.input.triggerBotPress(botId);
   }

@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 const LOCAL_URL = 'http://localhost:5173/';
 
 async function skipCountdown(page: any) {
+  await page.waitForFunction(() => (window as any).__SHARKS_AND_MINNOWS_DEBUG__ !== undefined, { timeout: 8000 }).catch(() => {});
   await page.evaluate(() => {
     const gm = (window as any).__GAME_MANAGER__;
     if (gm) {

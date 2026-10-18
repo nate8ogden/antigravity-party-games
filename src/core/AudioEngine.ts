@@ -140,6 +140,10 @@ export class AudioEngine {
     osc.stop(t + 0.05);
   }
 
+  public playSelect() {
+    this.playTap();
+  }
+
   public playCountdown(isFinal: boolean) {
     if (this.muted || !this.sfxEnabled) return;
     this.initContext();

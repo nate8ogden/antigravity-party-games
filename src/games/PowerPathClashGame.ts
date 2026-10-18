@@ -51,6 +51,7 @@ export class PowerPathClashGame extends BaseGame {
   private clashTimer: number = 0;
   private winnerPlayerId: PlayerId | null = null;
   private autoAdvanceTimer: number = 25.0; // timer for path phase
+  private fastClash: boolean = false;
 
   constructor(
     players: PlayerConfig[],
@@ -74,6 +75,7 @@ export class PowerPathClashGame extends BaseGame {
     this.clashTimer = 0;
     this.winnerPlayerId = null;
     this.autoAdvanceTimer = 25.0;
+    this.fastClash = false;
     this.playerStates.clear();
     this.towerFloors.clear();
 
@@ -120,8 +122,12 @@ export class PowerPathClashGame extends BaseGame {
         selectChoice: (id: PlayerId, optionIndex: number) => {
           this.handlePlayerSelect(id, optionIndex);
         },
-        forceClash: () => {
+        forceClash: (fast: boolean = true) => {
+          this.fastClash = fast;
           this.startClashIntro();
+          if (fast) {
+            this.phaseTimer = 0.05;
+          }
         },
         setPower: (id: PlayerId, power: number) => {
           const ps = this.playerStates.get(id);
@@ -440,9 +446,9 @@ export class PowerPathClashGame extends BaseGame {
     this.phaseTimer -= dt;
     if (this.phaseTimer <= 0) {
       this.gamePhase = 'clash_combat';
-      this.phaseTimer = 2.4;
+      this.phaseTimer = this.fastClash ? 0.05 : 2.4;
       this.clashStrikes = 0;
-      this.clashTimer = 0.35;
+      this.clashTimer = this.fastClash ? 0.01 : 0.35;
     }
   }
 
@@ -457,7 +463,7 @@ export class PowerPathClashGame extends BaseGame {
     // Multi-strike clash impacts
     if (this.clashTimer <= 0 && this.clashStrikes < 5) {
       this.clashStrikes++;
-      this.clashTimer = 0.38;
+      this.clashTimer = this.fastClash ? 0.01 : 0.38;
 
       const strikeX = width / 2 + (Math.random() - 0.5) * 60;
       const strikeY = height / 2 + (Math.random() - 0.5) * 40;
@@ -476,7 +482,7 @@ export class PowerPathClashGame extends BaseGame {
     if (this.phaseTimer <= 0) {
       // Determine winner: highest damage person wins no matter what!
       this.gamePhase = 'clash_finisher';
-      this.phaseTimer = 2.5;
+      this.phaseTimer = this.fastClash ? 0.08 : 2.5;
 
       const power0 = p0?.power || 0;
       const power1 = p1?.power || 0;

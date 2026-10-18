@@ -258,14 +258,15 @@ export class LaserDiscDanceGame extends BaseGame {
 
       const steer = ps.stunTimer > 0 ? 0 : this.input.getSteer(p.id);
       const throttle = ps.stunTimer > 0 ? 0 : this.input.getThrottle(p.id);
-      const isPressed = ps.stunTimer <= 0 && this.input.isPressed(p.id);
+      const isBot = p.type.startsWith('bot_');
+      const actionHeld = ps.stunTimer <= 0 && (this.input.isActionPressed(p.id) || (isBot && this.input.isPressed(p.id)));
 
       const moveSpeed = 760 * (ps.underdog ? 1.18 : 1.0);
       ps.vx += steer * moveSpeed * dt;
       ps.vy += -throttle * moveSpeed * dt;
 
       // Hold-to-charge Bass-Drop Moonwalk & Boogie Shunt (72% - 98%)
-      if (isPressed) {
+      if (actionHeld) {
         ps.isCharging = true;
         ps.charge = Math.min(1.0, ps.charge + dt * 0.92);
       } else if (ps.isCharging) {
@@ -519,7 +520,12 @@ export class LaserDiscDanceGame extends BaseGame {
     };
   }
 
-  public handlePointerDown(_x: number, _y: number, _width: number, _height: number): boolean {
+  public handlePointerDown(x: number, y: number, _width: number, _height: number): boolean {
+    if (y <= 42 && x <= 260) {
+      this.themeIndex = (this.themeIndex + 1) % THEMES.length;
+      this.audio.playSelect();
+      return true;
+    }
     return false;
   }
 }

@@ -199,21 +199,26 @@ export class SynthDrumPadGame extends BaseGame {
 
       const steer = this.input.getSteer(p.id);
       const throttle = this.input.getThrottle(p.id);
-      const justPressed = this.input.justPressed(p.id) || this.input.justAction(p.id);
+      const isBot = p.type.startsWith('bot_');
+      const justAction = this.input.justAction(p.id) || (isBot && this.input.justPressed(p.id));
 
       // Directional Pad Selection (Gamepad thumbsticks, D-Pad, Arrow keys, WASD)
       if (steer < -0.3 && throttle > 0.3) ps.padIndex = 0; // KICK (Top-Left)
       else if (steer > 0.3 && throttle > 0.3) ps.padIndex = 1; // SNARE (Top-Right)
       else if (steer < -0.3 && throttle < -0.3) ps.padIndex = 2; // HI-HAT (Bottom-Left)
       else if (steer > 0.3 && throttle < -0.3) ps.padIndex = 3; // MID TOM (Bottom-Right)
-      else if (justPressed && steer === 0 && throttle === 0) {
+      else if (throttle > 0.4) ps.padIndex = steer < 0 ? 0 : 1;
+      else if (throttle < -0.4) ps.padIndex = steer < 0 ? 2 : 3;
+      else if (steer < -0.4) ps.padIndex = 0;
+      else if (steer > 0.4) ps.padIndex = 1;
+      else if (justAction && !isBot && steer === 0 && throttle === 0) {
         // Accessibility / 1-Button Party Mode:
         // If tapping without directional steering, automatically strike the active sequenced rhythm pad!
         ps.padIndex = this.rhythmPattern[this.currentStep];
       }
 
       // Strike Check
-      if (justPressed) {
+      if (justAction) {
         this.handlePlayerStrike(p, ps);
       }
     }
@@ -713,5 +718,21 @@ export class SynthDrumPadGame extends BaseGame {
         ? `Player ${winnerId + 1} dominated the 808 synth beat with perfect rhythm timing!`
         : 'The groove battle concluded!'
     };
+  }
+
+  public handlePointerDown(x: number, y: number, width: number, _height: number): boolean {
+    const pad = this.pads.find(p => x >= p.x && x <= p.x + p.w && y >= p.y && y <= p.y + p.h);
+    if (!pad) return false;
+
+    const activeHumans = this.getActivePlayers().filter(p => !p.type.startsWith('bot_'));
+    if (activeHumans.length === 0) return false;
+
+    const human = activeHumans.length === 1 ? activeHumans[0] : (x < width / 2 ? activeHumans[0] : activeHumans[1]);
+    const ps = this.playersState.get(human.id);
+    if (!ps) return false;
+
+    ps.padIndex = pad.id;
+    this.handlePlayerStrike(human, ps);
+    return true;
   }
 }

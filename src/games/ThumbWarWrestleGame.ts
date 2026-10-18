@@ -142,29 +142,52 @@ export class ThumbWarWrestleGame extends BaseGame {
         continue;
       }
 
-      const steer = this.input.getSteer(f.id);
+      const isBot = this.players.find((p) => p.id === f.id)?.type.startsWith('bot_') ?? false;
+      let steer = this.input.getSteer(f.id);
+      let throttle = this.input.getThrottle(f.id);
       const justTapped = this.input.justPressed(f.id) || this.input.justAction(f.id);
+      const justReleased = this.input.justReleased(f.id);
       const holding = this.input.isPressed(f.id) || this.input.isActionPressed(f.id);
 
-      const weaveOffset = Math.sin(this.ringPhase * 1.8 + f.id * 1.7) * 0.24 + steer * 0.35;
+      // Direct touch pointer steering for ultra-responsive phone thumb control
+      const touchPtr = !isBot ? this.input.getTouchPointer(f.id) : null;
+      if (touchPtr && (Math.abs(touchPtr.dx) > 4 || Math.abs(touchPtr.dy) > 4)) {
+        steer = Math.max(-1, Math.min(1, touchPtr.dx / 38));
+        throttle = Math.max(-1, Math.min(1, -touchPtr.dy / 38));
+      }
+
+      // Compute lateral weave angle from player's thumb drag / steer input
+      const isBottomPlayer = Math.sin(baseAngle) > 0;
+      const lateralInput = isBottomPlayer ? -steer : steer;
+      const forwardInput = isBottomPlayer ? throttle : -throttle;
+
+      const weaveOffset =
+        Math.abs(steer) > 0.08
+          ? lateralInput * 0.58
+          : Math.sin(this.ringPhase * 1.6 + f.id * 1.7) * 0.18;
       f.angle = centerAngle + weaveOffset;
 
-      if (justTapped && f.cooldown <= 0 && !f.isLunging) {
+      // Trigger Pin Lunge on tap OR on quick release after positioning
+      if ((justTapped || (justReleased && f.stamina >= 25)) && f.cooldown <= 0 && !f.isLunging) {
         f.isLunging = true;
-        f.lungeTimer = 0.26;
-        f.cooldown = 0.42;
+        f.lungeTimer = 0.28;
+        f.cooldown = 0.36;
+        f.stamina = Math.max(0, f.stamina - 22);
         this.audio.playWhoosh();
       }
 
+      f.stamina = Math.min(100, f.stamina + dt * 38);
+
       if (f.isLunging) {
         f.lungeTimer -= dt;
-        const maxReach = ringR * 0.98;
-        f.extendDist = 42 + Math.sin(Math.max(0, 1 - f.lungeTimer / 0.26) * Math.PI) * (maxReach - 42);
+        const maxReach = ringR * 1.04;
+        f.extendDist = 42 + Math.sin(Math.max(0, 1 - f.lungeTimer / 0.28) * Math.PI) * (maxReach - 42);
         if (f.lungeTimer <= 0) {
           f.isLunging = false;
         }
       } else if (holding) {
-        f.extendDist += (ringR * 0.68 - f.extendDist) * Math.min(1, dt * 10);
+        const desiredReach = ringR * Math.max(0.38, Math.min(0.92, 0.72 + forwardInput * 0.22));
+        f.extendDist += (desiredReach - f.extendDist) * Math.min(1, dt * 14);
       } else {
         f.extendDist += (44 - f.extendDist) * Math.min(1, dt * 10);
       }
@@ -173,7 +196,7 @@ export class ThumbWarWrestleGame extends BaseGame {
       f.thumbY = f.baseY + Math.sin(f.angle) * f.extendDist;
     }
 
-    // Check thumb-on-thumb pin collisions in the center ring
+    // Check thumb-on-thumb pin collisions & grapple holds in the center ring
     for (let i = 0; i < this.fighters.length; i++) {
       for (let j = i + 1; j < this.fighters.length; j++) {
         const a = this.fighters[i];
@@ -184,7 +207,7 @@ export class ThumbWarWrestleGame extends BaseGame {
         const dy = b.thumbY - a.thumbY;
         const dist = Math.hypot(dx, dy);
 
-        if (dist < 44) {
+        if (dist < 48) {
           const midX = (a.thumbX + b.thumbX) / 2;
           const midY = (a.thumbY + b.thumbY) / 2;
           const bonusPts = this.isGoldStrikeWindow ? 2 : 1;
@@ -193,6 +216,7 @@ export class ThumbWarWrestleGame extends BaseGame {
             a.score += bonusPts;
             b.pinnedTimer = 0.85;
             a.isLunging = false;
+            a.pinProgress = 0;
             this.audio.playHitStopThud();
             this.particles.spawnExplosion(midX, midY, a.color, 18);
             this.particles.shake(0.35);
@@ -207,6 +231,7 @@ export class ThumbWarWrestleGame extends BaseGame {
             b.score += bonusPts;
             a.pinnedTimer = 0.85;
             b.isLunging = false;
+            b.pinProgress = 0;
             this.audio.playHitStopThud();
             this.particles.spawnExplosion(midX, midY, b.color, 18);
             this.particles.shake(0.35);
@@ -220,11 +245,36 @@ export class ThumbWarWrestleGame extends BaseGame {
           } else if (a.isLunging && b.isLunging) {
             a.isLunging = false;
             b.isLunging = false;
-            a.cooldown = 0.35;
-            b.cooldown = 0.35;
+            a.cooldown = 0.3;
+            b.cooldown = 0.3;
             this.audio.playBounce();
             this.particles.spawnSparks(midX, midY, '#FBBF24', 20);
             this.particles.showFloatingText('💥 THUMB CLASH!', midX, midY - 16, '#FBBF24', 16);
+          } else {
+            // Sustained Grapple Hold: whoever is extending further & holding builds Pin Progress!
+            const aHold = this.input.isPressed(a.id);
+            const bHold = this.input.isPressed(b.id);
+            if (aHold && !bHold) {
+              a.pinProgress += dt * 2.4;
+              if (a.pinProgress >= 1.0) {
+                a.pinProgress = 0;
+                a.score += bonusPts;
+                b.pinnedTimer = 0.8;
+                this.audio.playHitStopThud();
+                this.particles.spawnExplosion(midX, midY, a.color, 16);
+                this.particles.showFloatingText(`👍 HOLD PIN! +${bonusPts}`, midX, midY - 18, a.colorLight, 17);
+              }
+            } else if (bHold && !aHold) {
+              b.pinProgress += dt * 2.4;
+              if (b.pinProgress >= 1.0) {
+                b.pinProgress = 0;
+                b.score += bonusPts;
+                a.pinnedTimer = 0.8;
+                this.audio.playHitStopThud();
+                this.particles.spawnExplosion(midX, midY, b.color, 16);
+                this.particles.showFloatingText(`👍 HOLD PIN! +${bonusPts}`, midX, midY - 18, b.colorLight, 17);
+              }
+            }
           }
         }
       }
