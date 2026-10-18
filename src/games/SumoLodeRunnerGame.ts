@@ -296,9 +296,9 @@ export const SUMO_LODE_LEVELS: LevelBlueprint[] = [
       '####H@@@@@@@HS@@@@@@@H######',
       '....H.......H........H......',
       '....H..$....H...E..$.H......',
-      '....#######.H.########......',
+      '....#######.H.#######H......',
       '....H.......H........H......',
-      '....H..###..H...###..H......',
+      '....H#######H########H......',
       '....H..#$#..H...#$#..H......',
       '....H..#X#..H...#X#..H......',
       '..$.H.......H........H..$...',
@@ -1375,18 +1375,27 @@ const BFS_DIRS: readonly { dx: number; dy: number }[] = [
 ];
 
 export class SumoLodeRunnerGame extends BaseGame {
-  // Multi-round / 30-level campaign flags so GameManager does not cut off at 65s
+  // Multi-round / 40-level campaign flags so GameManager does not cut off at 65s
   public isMultiRound: boolean = true;
   public isNoTimeLimit: boolean = false;
 
-  // Current Level (0 = Interactive Tutorial Dojo, 1..30 = Campaign Stages)
+  // Current Level (0 = Interactive Tutorial Dojo, 1..40 = Campaign Stages)
   public currentLevel: number = 0;
   public maxUnlockedLevel: number = 1;
   public teamLives: number = 5;
+  // 1-Player Solo Puzzle Mode (when true & 1 human player is active, disables the CPU partner so you can solve puzzles stress-free)
+  public soloMode: boolean = true;
   private levelClearBannerTimer: number = 0;
   private stageHintTimer: number = 0;
   private escapeRevealed: boolean = false;
   private escapeFlashTimer: number = 0;
+
+  // Dynamic Procedural Soundtrack State (inspired by Lode Runner, Super Mario Bros. & Legend of Zelda)
+  public musicEnabled: boolean = true;
+  private bgmStepIndex: number = 0;
+  private bgmStepTimer: number = 0;
+  private bgmMood: 'normal' | 'positive' | 'negative' | 'escape' = 'normal';
+  private bgmMoodTimer: number = 0;
 
   // Dynamic Viewport Dimensions for Resize-Safe Mouse Hitboxes
   private lastWidth: number = 960;
@@ -1426,7 +1435,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     timer: 0
   };
 
-  // Direct keyboard listener for dedicated Dig Left (Q/Z), Dig Right (E/X/C), and Level Select ([ / ] / T / R)
+  // Direct keyboard listener for dedicated Dig Left (Q/Z), Dig Right (E/X/C), and Level Select ([ / ] / T / R / B / M)
   private rawKeys: Set<string> = new Set();
   private justRawKeys: Set<string> = new Set();
   private keyDownHandler: ((e: KeyboardEvent) => void) | null = null;
@@ -1437,7 +1446,11 @@ export class SumoLodeRunnerGame extends BaseGame {
   private hudHitboxes: { id: string; x: number; y: number; w: number; h: number; action: () => void }[] = [];
 
   public setStartingLevel(level: number): void {
-    this.currentLevel = Math.max(0, Math.min(30, Math.floor(level)));
+    this.currentLevel = Math.max(0, Math.min(SUMO_LODE_LEVELS.length, Math.floor(level)));
+  }
+
+  public setSoloMode(solo: boolean): void {
+    this.soloMode = solo;
   }
 
   public getLevelBlueprint(levelNum: number = this.currentLevel): LevelBlueprint {
@@ -1475,7 +1488,7 @@ export class SumoLodeRunnerGame extends BaseGame {
       const saved = localStorage.getItem('antigravity_sumo_lode_unlocked');
       if (saved) {
         const parsed = parseInt(saved, 10);
-        if (!isNaN(parsed) && parsed >= 1 && parsed <= 30) {
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= SUMO_LODE_LEVELS.length) {
           this.maxUnlockedLevel = parsed;
         }
       }
@@ -1534,19 +1547,15 @@ export class SumoLodeRunnerGame extends BaseGame {
     super.destroy();
   }
 
-  public reset(width: number, height: number): void {
-    this.lastWidth = width;
-    this.lastHeight = height;
-    this.initWasmKernel();
-    this.activeMutator = { ...DEFAULT_MUTATOR };
-    this.particles.clear();
-    this.isFinished = false;
-    this.roundTimer = 180;
-    this.teamLives = 5;
+  private spawnActiveRunners(): void {
     this.runners.clear();
-
     const active = this.getActivePlayers();
-    active.forEach((p) => {
+    const humanCount = active.filter((p) => p.type === 'human').length;
+    // In 1P Solo Mode (when only 1 human player is playing), filter out CPU bots so the player can solve puzzles stress-free!
+    const filtered = this.soloMode && humanCount === 1 ? active.filter((p) => p.type === 'human') : active;
+    const list = filtered.length > 0 ? filtered : active;
+
+    list.forEach((p) => {
       this.runners.set(p.id, {
         id: p.id,
         x: 10,
@@ -1568,12 +1577,23 @@ export class SumoLodeRunnerGame extends BaseGame {
         dropFromRopeCooldown: 0
       });
     });
+  }
 
+  public reset(width: number, height: number): void {
+    this.lastWidth = width;
+    this.lastHeight = height;
+    this.initWasmKernel();
+    this.activeMutator = { ...DEFAULT_MUTATOR };
+    this.particles.clear();
+    this.isFinished = false;
+    this.roundTimer = 180;
+    this.teamLives = 5;
+    this.spawnActiveRunners();
     this.loadLevel(this.currentLevel);
   }
 
   public loadLevel(levelNum: number): void {
-    this.currentLevel = Math.max(0, Math.min(30, levelNum));
+    this.currentLevel = Math.max(0, Math.min(SUMO_LODE_LEVELS.length, levelNum));
     const bp = this.getLevelBlueprint(this.currentLevel);
 
     this.gridMem.fill(TILE_EMPTY);
@@ -1589,6 +1609,8 @@ export class SumoLodeRunnerGame extends BaseGame {
     this.teamLives = 5; // Fresh 5 lives per stage (infinite in Stage 0 Tutorial)
     this.roundTimer = 180; // Fresh 3-minute timer per stage
     this.tileCacheDirty = true;
+    this.bgmMood = 'normal';
+    this.bgmMoodTimer = 0;
 
     const pSpawns: { col: number; row: number }[] = [];
     const qSpawns: { col: number; row: number }[] = [];

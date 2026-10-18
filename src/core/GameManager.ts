@@ -2588,20 +2588,17 @@ export function detectInitialDeviceMode(): DevicePlatformMode {
   if (modeParam === 'phone' || modeParam === 'mobile') return 'phone';
   if (modeParam === 'computer' || modeParam === 'desktop') return 'computer';
 
-  // 2. Touch capability & pointer characteristics
-  const hasTouch = (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) || ('ontouchstart' in window);
-  const isCoarse = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
-  const hasNoHover = typeof window.matchMedia === 'function' && window.matchMedia('(hover: none)').matches;
-
-  // 3. User-Agent mobile heuristics (Android, iPhone, iPad, iPod, etc.)
+  // 2. User-Agent mobile heuristics (covers Android, Pixel, iPhone, iPad, iPod, etc.)
   const ua = (typeof navigator !== 'undefined' && navigator.userAgent) || '';
   const isMobileUA = /Android|iPhone|iPad|iPod|Mobile|Silk|BlackBerry|Opera Mini/i.test(ua);
 
-  // 4. Viewport constraint
-  const minDim = Math.min(window.innerWidth || 1024, window.innerHeight || 768);
-  const isCompact = minDim <= 840;
+  // 3. Pointer & screen characteristics
+  const isCoarse = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+  const isTouchScreen = (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) || ('ontouchstart' in window);
+  const isSmallPhoneScreen = window.innerWidth <= 600 || window.innerHeight <= 600;
 
-  if (hasTouch && (isCoarse || hasNoHover || isMobileUA || isCompact)) {
+  // Real mobile phones have mobile UA or coarse touch pointer on a compact screen
+  if (isMobileUA || (isCoarse && isSmallPhoneScreen) || (isTouchScreen && isSmallPhoneScreen)) {
     return 'phone';
   }
   return 'computer';
@@ -6762,7 +6759,7 @@ export class GameManager {
         state: this.state,
         game: this.activeGame,
         roundTimer: this.activeGame?.roundTimer,
-        selectedGame: GAME_CATALOG[this.selectedGameIndex]?.id
+        selectedGame: this.activeGameId || GAME_CATALOG[this.selectedGameIndex]?.id
       };
     }
 
