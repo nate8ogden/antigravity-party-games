@@ -773,8 +773,8 @@ export class SnowballFightGame extends BaseGame {
         const dist = Math.hypot(dx, dy);
         if (dist < r) {
           if (dist > 0.01) {
-            ps.x = closestX + (dx / dist) * r;
-            ps.y = closestY + (dy / dist) * r;
+            ps.x = closestX + (dx / (dist || 0.001)) * r;
+            ps.y = closestY + (dy / (dist || 0.001)) * r;
           } else {
             ps.x += (ps.x < midX ? -1 : 1) * 2;
           }

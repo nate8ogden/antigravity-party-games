@@ -234,8 +234,8 @@ export class DungBeetleRollGame extends BaseGame {
               const dx = other.x - b.x;
               const dy = other.y - b.y;
               const d = Math.max(1, Math.hypot(dx, dy));
-              other.vx += (dx / d) * 560;
-              other.vy += (dy / d) * 560;
+              other.vx += (dx / (d || 0.001)) * 560;
+              other.vy += (dy / (d || 0.001)) * 560;
               other.ballRadius = Math.max(18, other.ballRadius - 6);
               b.score += 70;
               this.showCallout(b, 'SPHERE SMASH SHUNT +70!');
@@ -322,8 +322,8 @@ export class DungBeetleRollGame extends BaseGame {
       const dx = best.x - bot.x;
       const dy = best.y - bot.y;
       const d = Math.max(1, Math.hypot(dx, dy));
-      bot.vx += (dx / d) * 1100 * dt;
-      bot.vy += (dy / d) * 1100 * dt;
+      bot.vx += (dx / (d || 0.001)) * 1100 * dt;
+      bot.vy += (dy / (d || 0.001)) * 1100 * dt;
     }
 
     const hold = !bot.holding || bot.charge < bot.botChargeGoal;
@@ -448,8 +448,8 @@ export class DungBeetleRollGame extends BaseGame {
       const dx = x - beetle.x;
       const dy = y - beetle.y;
       const dist = Math.max(1, Math.hypot(dx, dy));
-      beetle.vx += (dx / dist) * 440;
-      beetle.vy += (dy / dist) * 440;
+      beetle.vx += (dx / (dist || 0.001)) * 440;
+      beetle.vy += (dy / (dist || 0.001)) * 440;
       this.audio.playTap();
       return true;
     }

@@ -321,8 +321,8 @@ export class AutomatorAssemblyGame extends BaseGame {
         const dx = targetX - t.x;
         const dy = targetY - t.y;
         const len = Math.hypot(dx, dy) || 1;
-        t.facingX = dx / len;
-        t.facingY = dy / len;
+        t.facingX = dx / (len || 0.001);
+        t.facingY = dy / (len || 0.001);
         t.vx += t.facingX * accel * 0.72 * dt;
         t.vy += t.facingY * accel * 0.72 * dt;
       }

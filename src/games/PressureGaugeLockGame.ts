@@ -341,8 +341,8 @@ export class PressureGaugeLockGame extends BaseGame {
         const dist = Math.hypot(dx, dy);
         const minDist = v.radius + 18;
         if (dist < minDist && dist > 0.001) {
-          c.x = v.x + (dx / dist) * minDist;
-          c.y = v.y + (dy / dist) * minDist;
+          c.x = v.x + (dx / (dist || 0.001)) * minDist;
+          c.y = v.y + (dy / (dist || 0.001)) * minDist;
         }
       }
 

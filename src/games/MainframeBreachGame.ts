@@ -314,8 +314,8 @@ export class MainframeBreachGame extends BaseGame {
         const dx = targetX - r.x;
         const dy = targetY - r.y;
         const d = Math.hypot(dx, dy) || 1;
-        r.vx += (dx / d) * accel * 0.72 * dt;
-        r.vy += (dy / d) * accel * 0.72 * dt;
+        r.vx += (dx / (d || 0.001)) * accel * 0.72 * dt;
+        r.vy += (dy / (d || 0.001)) * accel * 0.72 * dt;
       }
 
       r.vx *= 0.86;
@@ -479,8 +479,8 @@ export class MainframeBreachGame extends BaseGame {
     this.packets.push({
       x: r.x,
       y: r.y,
-      vx: (dx / len) * speed,
-      vy: (dy / len) * speed,
+      vx: (dx / (len || 0.001)) * speed,
+      vy: (dy / (len || 0.001)) * speed,
       ownerId: r.id,
       piercing,
       life: 1.8,

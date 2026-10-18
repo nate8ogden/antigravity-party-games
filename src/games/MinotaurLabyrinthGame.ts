@@ -541,7 +541,7 @@ export class MinotaurLabyrinthGame extends BaseGame {
       const dx = cn.x - tNode.x;
       const dy = cn.y - tNode.y;
       const len = Math.hypot(dx, dy) || 1;
-      const dot = (dx / len) * steer + (dy / len) * throttle;
+      const dot = (dx / (len || 0.001)) * steer + (dy / (len || 0.001)) * throttle;
       if (dot > bestDot) {
         bestDot = dot;
         bestConn = c;

@@ -361,8 +361,8 @@ export class TombstoneCryptSliderGame extends BaseGame {
             const dx = target.x - e.x;
             const dy = target.y - e.y;
             const d = Math.hypot(dx, dy) || 1;
-            moveX = (dx / d) * 0.72;
-            moveY = (dy / d) * 0.72;
+            moveX = (dx / (d || 0.001)) * 0.72;
+            moveY = (dy / (d || 0.001)) * 0.72;
           }
         }
 
@@ -523,8 +523,8 @@ export class TombstoneCryptSliderGame extends BaseGame {
       const dx = e.x - v.x;
       const dy = e.y - v.y;
       const d = Math.hypot(dx, dy) || 1;
-      e.vx = (dx / d) * 380;
-      e.vy = (dy / d) * 380;
+      e.vx = (dx / (d || 0.001)) * 380;
+      e.vy = (dy / (d || 0.001)) * 380;
       this.triggerScreenShake(5);
       this.spawnParticles(v.x, v.y, '#a855f7', 16);
       this.spawnPopup(v.x, v.y - 24, 'BEETLE TRAP! -15', '#c084fc');
@@ -571,8 +571,8 @@ export class TombstoneCryptSliderGame extends BaseGame {
       const dy = e.y - rel.y;
       const d = Math.hypot(dx, dy) || 1;
       if (d <= radius * 1.2) {
-        rel.vx = (dx / d) * 320;
-        rel.vy = (dy / d) * 320;
+        rel.vx = (dx / (d || 0.001)) * 320;
+        rel.vy = (dy / (d || 0.001)) * 320;
       }
     }
 
@@ -584,8 +584,8 @@ export class TombstoneCryptSliderGame extends BaseGame {
       const d = Math.hypot(dx, dy) || 1;
       if (d <= radius) {
         const push = isSweetSpot ? 540 : 320;
-        other.vx += (dx / d) * push;
-        other.vy += (dy / d) * push;
+        other.vx += (dx / (d || 0.001)) * push;
+        other.vy += (dy / (d || 0.001)) * push;
         if (isSweetSpot) {
           other.stunTimer = 0.45;
           this.spawnPopup(other.x, other.y - 28, 'VAULT SHUNT!', '#facc15');
@@ -620,8 +620,8 @@ export class TombstoneCryptSliderGame extends BaseGame {
       const dx = target.x - bot.x;
       const dy = target.y - bot.y;
       const d = Math.hypot(dx, dy) || 1;
-      bot.facingX = dx / d;
-      bot.facingY = dy / d;
+      bot.facingX = dx / (d || 0.001);
+      bot.facingY = dy / (d || 0.001);
       bot.vx += bot.facingX * 1160 * skill * dt;
       bot.vy += bot.facingY * 1160 * skill * dt;
 

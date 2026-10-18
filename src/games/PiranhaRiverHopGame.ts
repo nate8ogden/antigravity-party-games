@@ -278,8 +278,8 @@ export class PiranhaRiverHopGame extends BaseGame {
               const dx = other.x - h.x;
               const dy = other.y - h.y;
               const d = Math.max(1, Math.hypot(dx, dy));
-              other.vx += (dx / d) * 520;
-              other.vy += (dy / d) * 520;
+              other.vx += (dx / (d || 0.001)) * 520;
+              other.vy += (dy / (d || 0.001)) * 520;
               h.score += 70;
               this.showCallout(h, 'RIVER SPLASH SHUNT +70!');
               this.audio.playBounce();
@@ -535,8 +535,8 @@ export class PiranhaRiverHopGame extends BaseGame {
       const dx = x - hopper.x;
       const dy = y - hopper.y;
       const dist = Math.max(1, Math.hypot(dx, dy));
-      hopper.vx += (dx / dist) * 440;
-      hopper.vy += (dy / dist) * 440;
+      hopper.vx += (dx / (dist || 0.001)) * 440;
+      hopper.vy += (dy / (dist || 0.001)) * 440;
       this.audio.playTap();
       return true;
     }

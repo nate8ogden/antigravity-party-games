@@ -439,8 +439,8 @@ export class SubmarineTorpedoGame extends BaseGame {
         const minDist = pillar.radius + 18;
         if (dist < minDist && dist > 0) {
           const push = minDist - dist;
-          sub.x += (dx / dist) * push;
-          sub.y += (dy / dist) * push;
+          sub.x += (dx / (dist || 0.001)) * push;
+          sub.y += (dy / (dist || 0.001)) * push;
           sub.vx *= 0.4;
           sub.vy *= 0.4;
           this.audio.playBounce();

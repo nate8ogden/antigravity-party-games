@@ -253,8 +253,8 @@ export class VolcanoLavaLeapGame extends BaseGame {
               const dx = other.x - h.x;
               const dy = other.y - h.y;
               const d = Math.max(1, Math.hypot(dx, dy));
-              other.vx += (dx / d) * 540;
-              other.vy += (dy / d) * 540;
+              other.vx += (dx / (d || 0.001)) * 540;
+              other.vy += (dy / (d || 0.001)) * 540;
               h.score += 70;
               this.showCallout(h, 'BASALT SHOCK SHUNT +70!');
               this.audio.playBounce();
@@ -338,8 +338,8 @@ export class VolcanoLavaLeapGame extends BaseGame {
       dx = best.x - bot.x;
       dy = best.y - bot.y;
       const d = Math.max(1, Math.hypot(dx, dy));
-      bot.vx += (dx / d) * 1100 * dt;
-      bot.vy += (dy / d) * 1100 * dt;
+      bot.vx += (dx / (d || 0.001)) * 1100 * dt;
+      bot.vy += (dy / (d || 0.001)) * 1100 * dt;
     }
 
     const hold = !bot.holding || bot.charge < bot.botChargeGoal;
@@ -464,8 +464,8 @@ export class VolcanoLavaLeapGame extends BaseGame {
     const dx = x - p1.x;
     const dy = y - p1.y;
     const d = Math.max(1, Math.hypot(dx, dy));
-    p1.vx += (dx / d) * 480;
-    p1.vy += (dy / d) * 480;
+    p1.vx += (dx / (d || 0.001)) * 480;
+    p1.vy += (dy / (d || 0.001)) * 480;
     this.audio.playTap();
     return true;
   }

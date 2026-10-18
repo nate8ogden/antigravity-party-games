@@ -343,8 +343,8 @@ export class HauntedMansionGame extends BaseGame {
             g.illuminatedTimer = 0.25;
             // If charging Proton Vacuum, reel the ghost closer into capture range!
             if (h.isCharging) {
-              g.x -= (dx / dist) * 95 * dt;
-              g.y -= (dy / dist) * 95 * dt;
+              g.x -= (dx / (dist || 0.001)) * 95 * dt;
+              g.y -= (dy / (dist || 0.001)) * 95 * dt;
             }
           }
         }
@@ -495,8 +495,8 @@ export class HauntedMansionGame extends BaseGame {
       if (dist > 0 && dist <= (isSweetSpot ? 220 : 140)) {
         const ang = Math.atan2(dy, dx);
         if (Math.abs(this.normalizeAngleDiff(ang, h.aimAngle)) <= halfCone) {
-          other.vx += (dx / dist) * (isSweetSpot ? 320 : 180);
-          other.vy += (dy / dist) * (isSweetSpot ? 320 : 180);
+          other.vx += (dx / (dist || 0.001)) * (isSweetSpot ? 320 : 180);
+          other.vy += (dy / (dist || 0.001)) * (isSweetSpot ? 320 : 180);
           other.stunTimer = isSweetSpot ? 0.5 : 0.25;
           const shuntPts = isSweetSpot ? 75 : 35;
           h.score += shuntPts;

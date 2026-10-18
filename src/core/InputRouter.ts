@@ -896,19 +896,24 @@ export class InputRouter {
   }
 
   public setBotInput(pid: PlayerId, pressed: boolean, steer: number = 0, throttle: number = 0, action: boolean = false) {
-    this.botOverrides[pid] = { pressed, steer, throttle, action };
+    const safeSteer = Number.isFinite(steer) ? Math.max(-1, Math.min(1, steer)) : 0;
+    const safeThrottle = Number.isFinite(throttle) ? Math.max(-1, Math.min(1, throttle)) : 0;
+    const safePressed = Boolean(pressed);
+    const safeAction = Boolean(action);
+
+    this.botOverrides[pid] = { pressed: safePressed, steer: safeSteer, throttle: safeThrottle, action: safeAction };
     const s = this.states[pid];
-    if (pressed || action) {
+    if (safePressed || safeAction) {
       if (!s.pressed) this.press(pid);
     } else {
       if (s.pressed) this.release(pid);
     }
-    s.steer = steer;
-    s.throttle = throttle;
-    s.rawSteer = Math.sign(steer);
-    s.rawThrottle = Math.sign(throttle);
-    s.action = action;
-    if (action) {
+    s.steer = safeSteer;
+    s.throttle = safeThrottle;
+    s.rawSteer = Math.sign(safeSteer);
+    s.rawThrottle = Math.sign(safeThrottle);
+    s.action = safeAction;
+    if (safeAction) {
       s.justAction = true;
       this.actionBufferTimer[pid] = 0.12;
     }

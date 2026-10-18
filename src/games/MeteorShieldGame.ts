@@ -494,8 +494,8 @@ export class MeteorShieldGame extends BaseGame {
     this.meteors.push({
       x: sx,
       y: sy,
-      vx: (dx / dist) * baseSpeed,
-      vy: (dy / dist) * baseSpeed,
+      vx: (dx / (dist || 0.001)) * baseSpeed,
+      vy: (dy / (dist || 0.001)) * baseSpeed,
       radius: isTitan ? 16 : 9,
       speed: baseSpeed,
       ownerId: null,

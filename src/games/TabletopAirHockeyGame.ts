@@ -196,8 +196,8 @@ export class TabletopAirHockeyGame extends BaseGame {
         const maxTrackSpeed = 1450;
         if (dist > 1) {
           const step = Math.min(dist, maxTrackSpeed * dt);
-          const nx = (dx / dist) * step;
-          const ny = (dy / dist) * step;
+          const nx = (dx / (dist || 0.001)) * step;
+          const ny = (dy / (dist || 0.001)) * step;
           m.vx = nx / Math.max(0.001, dt);
           m.vy = ny / Math.max(0.001, dt);
           m.x += nx;
@@ -218,8 +218,8 @@ export class TabletopAirHockeyGame extends BaseGame {
           const dx = this.puckX - m.x;
           const dy = this.puckY - m.y;
           const d = Math.hypot(dx, dy) || 1;
-          m.vx = (dx / d) * 740;
-          m.vy = (dy / d) * 740;
+          m.vx = (dx / (d || 0.001)) * 740;
+          m.vy = (dy / (d || 0.001)) * 740;
           this.audio.playFlipper();
         }
 

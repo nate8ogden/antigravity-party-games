@@ -508,8 +508,8 @@ export class DeepSeaHarpoonGame extends BaseGame {
 
         const reelSpeed = (pod.isSweetSpotShot ? 650 : 420);
         if (dist > 15) {
-          pod.harpoonX += (dx / dist) * reelSpeed * dt;
-          pod.harpoonY += (dy / dist) * reelSpeed * dt;
+          pod.harpoonX += (dx / (dist || 0.001)) * reelSpeed * dt;
+          pod.harpoonY += (dy / (dist || 0.001)) * reelSpeed * dt;
         } else {
           // Spear successfully banked into diver pod!
           pod.harpoonState = 'idle';

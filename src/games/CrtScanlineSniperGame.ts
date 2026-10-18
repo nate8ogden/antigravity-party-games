@@ -274,8 +274,8 @@ export class CrtScanlineSniperGame extends BaseGame {
           const dx = bestT.x - ps.x;
           const dy = bestT.y - ps.y;
           const d = Math.hypot(dx, dy) || 1;
-          ps.vx += (dx / d) * 720 * speedMult * dt;
-          ps.vy += (dy / d) * 720 * speedMult * dt;
+          ps.vx += (dx / (d || 0.001)) * 720 * speedMult * dt;
+          ps.vy += (dy / (d || 0.001)) * 720 * speedMult * dt;
         }
       }
 

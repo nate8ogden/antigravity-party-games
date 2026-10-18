@@ -323,8 +323,8 @@ export class GravityGolfGame extends BaseGame {
 
           const massMultiplier = this.suddenDeathTriggered ? 1.35 : 1.0;
           const force = (pl.mass * massMultiplier) / distSq;
-          b.vx += (dx / dist) * force * dt;
-          b.vy += (dy / dist) * force * dt;
+          b.vx += (dx / (dist || 0.001)) * force * dt;
+          b.vy += (dy / (dist || 0.001)) * force * dt;
 
           // Planet surface bounce
           if (dist < pl.radius + b.radius) {

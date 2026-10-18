@@ -251,8 +251,8 @@ export class BubbleSoccerGame extends BaseGame {
           const dx = this.ball.x - b.x;
           const dy = this.ball.y - b.y;
           const dist = Math.hypot(dx, dy) || 1;
-          this.ball.vx = (dx / dist) * power;
-          this.ball.vy = (dy / dist) * power;
+          this.ball.vx = (dx / (dist || 0.001)) * power;
+          this.ball.vy = (dy / (dist || 0.001)) * power;
           this.lastKickedByPlayerId = pid;
         }
       },

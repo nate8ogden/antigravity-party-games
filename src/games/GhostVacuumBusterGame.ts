@@ -336,8 +336,8 @@ export class GhostVacuumBusterGame extends BaseGame {
           const dx = bestGhost.x - b.x;
           const dy = bestGhost.y - b.y;
           const d = Math.hypot(dx, dy) || 1;
-          moveX = (dx / d) * (actionHeld ? 0.85 : 0.48);
-          moveY = (dy / d) * (actionHeld ? 0.85 : 0.48);
+          moveX = (dx / (d || 0.001)) * (actionHeld ? 0.85 : 0.48);
+          moveY = (dy / (d || 0.001)) * (actionHeld ? 0.85 : 0.48);
         }
 
         const len = Math.hypot(moveX, moveY);
@@ -384,8 +384,8 @@ export class GhostVacuumBusterGame extends BaseGame {
             if (diff <= 0.62) {
               g.pulledBy = b.id;
               const resist = g.kind === 'golden_king' ? 0.68 : 1.0;
-              g.vx -= (dx / d) * pullStrength * resist * safeDt;
-              g.vy -= (dy / d) * pullStrength * resist * safeDt;
+              g.vx -= (dx / (d || 0.001)) * pullStrength * resist * safeDt;
+              g.vy -= (dy / (d || 0.001)) * pullStrength * resist * safeDt;
             }
           }
         }
@@ -537,8 +537,8 @@ export class GhostVacuumBusterGame extends BaseGame {
         const diff = Math.abs(this.normalizeAngle(Math.atan2(dy, dx) - b.aimAngle));
         if (diff <= 0.75) {
           const yank = isSweetSpot ? 340 : 210;
-          g.vx = -(dx / d) * yank;
-          g.vy = -(dy / d) * yank;
+          g.vx = -(dx / (d || 0.001)) * yank;
+          g.vy = -(dy / (d || 0.001)) * yank;
         }
       }
     }
@@ -552,8 +552,8 @@ export class GhostVacuumBusterGame extends BaseGame {
       const d = Math.hypot(dx, dy) || 1;
       if (d <= shuntRadius) {
         const push = isSweetSpot ? 540 : 320;
-        other.vx += (dx / d) * push;
-        other.vy += (dy / d) * push;
+        other.vx += (dx / (d || 0.001)) * push;
+        other.vy += (dy / (d || 0.001)) * push;
         if (isSweetSpot) {
           other.stunTimer = 0.45;
           this.spawnPopup(other.x, other.y - 28, 'PROTON SHUNT!', '#4ade80');
@@ -592,16 +592,16 @@ export class GhostVacuumBusterGame extends BaseGame {
       bot.isVacuuming = true;
 
       if (d > 95) {
-        bot.vx += (dx / d) * 1050 * skill * dt;
-        bot.vy += (dy / d) * 1050 * skill * dt;
+        bot.vx += (dx / (d || 0.001)) * 1050 * skill * dt;
+        bot.vy += (dy / (d || 0.001)) * 1050 * skill * dt;
       }
 
       // Apply bot suction pull
       if (d <= 210) {
         const pull = 360 * skill;
         target.pulledBy = bot.id;
-        target.vx -= (dx / d) * pull * dt;
-        target.vy -= (dy / d) * pull * dt;
+        target.vx -= (dx / (d || 0.001)) * pull * dt;
+        target.vy -= (dy / (d || 0.001)) * pull * dt;
       }
 
       if (difficulty !== 'bot_easy' && d < 185 && bot.shuntCooldown <= 0 && Math.random() < dt * 0.7) {

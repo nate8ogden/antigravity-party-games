@@ -1135,8 +1135,8 @@ export class DroneDeliveryGame extends BaseGame {
     const dx = x - p1.x;
     const dy = y - p1.y;
     const d = Math.max(1, Math.hypot(dx, dy));
-    p1.vx += (dx / d) * 220;
-    p1.vy += (dy / d) * 220;
+    p1.vx += (dx / (d || 0.001)) * 220;
+    p1.vy += (dy / (d || 0.001)) * 220;
     this.audio.playTap();
     return true;
   }

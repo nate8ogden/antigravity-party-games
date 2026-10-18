@@ -291,8 +291,8 @@ export class OrnithopterFlockGame extends BaseGame {
         const dx = targetX - f.x;
         const dy = targetY - f.y;
         const d = Math.hypot(dx, dy) || 1;
-        f.vx += (dx / d) * accel * 0.65 * dt;
-        f.vy += (dy / d) * accel * 0.65 * dt + 50 * dt;
+        f.vx += (dx / (d || 0.001)) * accel * 0.65 * dt;
+        f.vy += (dy / (d || 0.001)) * accel * 0.65 * dt + 50 * dt;
       } else {
         f.vy += 95 * dt;
       }

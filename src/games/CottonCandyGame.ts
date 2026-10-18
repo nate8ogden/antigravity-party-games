@@ -355,8 +355,8 @@ export class CottonCandyGame extends BaseGame {
           const pullRadius = ps.isCharging ? (ps.isUnderdog ? 140 : 110) : (ps.isUnderdog ? 75 : 55);
           if (d > 4 && d < pullRadius && drop.y < tip.y + 40) {
             const pullForce = ps.isCharging ? 380 : 180;
-            drop.vx += (dx / d) * pullForce * dt;
-            drop.vy += (dy / d) * (pullForce * 0.75) * dt;
+            drop.vx += (dx / (d || 0.001)) * pullForce * dt;
+            drop.vy += (dy / (d || 0.001)) * (pullForce * 0.75) * dt;
           }
         }
       }

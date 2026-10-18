@@ -420,8 +420,8 @@ export class DragonTamerGame extends BaseGame {
 
           const pullSpd = leader.isUnderdog ? 250 : 200;
           if (dist > 30) {
-            d.vx += (dx / dist) * pullSpd * dt;
-            d.vy += (dy / dist) * pullSpd * dt;
+            d.vx += (dx / (dist || 0.001)) * pullSpd * dt;
+            d.vy += (dy / (dist || 0.001)) * pullSpd * dt;
           }
 
           // Check penning

@@ -260,8 +260,8 @@ export class HoneybeeNectarRelayGame extends BaseGame {
               const dx = other.x - b.x;
               const dy = other.y - b.y;
               const d = Math.max(1, Math.hypot(dx, dy));
-              other.vx += (dx / d) * 520;
-              other.vy += (dy / d) * 520;
+              other.vx += (dx / (d || 0.001)) * 520;
+              other.vy += (dy / (d || 0.001)) * 520;
               b.score += 70;
               this.showCallout(b, 'BUZZ-SHOCK SHUNT +70!');
               this.audio.playBounce();
@@ -361,8 +361,8 @@ export class HoneybeeNectarRelayGame extends BaseGame {
       dx = best.x - bot.x;
       dy = best.y - bot.y;
       const d = Math.max(1, Math.hypot(dx, dy));
-      bot.vx += (dx / d) * 1100 * dt;
-      bot.vy += (dy / d) * 1100 * dt;
+      bot.vx += (dx / (d || 0.001)) * 1100 * dt;
+      bot.vy += (dy / (d || 0.001)) * 1100 * dt;
     }
 
     const hold = !bot.holding || bot.charge < bot.botChargeGoal;
@@ -608,8 +608,8 @@ export class HoneybeeNectarRelayGame extends BaseGame {
     const dy = y - b.y;
     const dist = Math.hypot(dx, dy);
     if (dist > 10) {
-      b.vx += (dx / dist) * 750;
-      b.vy += (dy / dist) * 750;
+      b.vx += (dx / (dist || 0.001)) * 750;
+      b.vy += (dy / (dist || 0.001)) * 750;
       b.queenBoostTimer = 1.0;
       this.audio.playBoost();
     }

@@ -799,8 +799,8 @@ export class SkylineSumoGame extends BaseGame {
 
       const flightSpeed = 440;
       if (dist > 1) {
-        this.rescuerX += (dx / dist) * Math.min(flightSpeed * dt, Math.abs(dx));
-        this.rescuerY += (dy / dist) * Math.min(flightSpeed * dt, Math.abs(dy));
+        this.rescuerX += (dx / (dist || 0.001)) * Math.min(flightSpeed * dt, Math.abs(dx));
+        this.rescuerY += (dy / (dist || 0.001)) * Math.min(flightSpeed * dt, Math.abs(dy));
       }
 
       climber.x = this.rescuerX;

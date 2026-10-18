@@ -116,8 +116,8 @@ export class TapTugOverdriveGame extends BaseGame {
         const dx = n.anchorX - this.coreX;
         const dy = n.anchorY - this.coreY;
         const dist = Math.hypot(dx, dy) || 1;
-        this.coreX += (dx / dist) * pullStrength;
-        this.coreY += (dy / dist) * pullStrength;
+        this.coreX += (dx / (dist || 0.001)) * pullStrength;
+        this.coreY += (dy / (dist || 0.001)) * pullStrength;
         n.energy += this.surgeActive ? 2 : 1;
         n.taps += 1;
 
@@ -129,8 +129,8 @@ export class TapTugOverdriveGame extends BaseGame {
         const dx = n.anchorX - this.coreX;
         const dy = n.anchorY - this.coreY;
         const dist = Math.hypot(dx, dy) || 1;
-        this.coreX += (dx / dist) * yankBonus;
-        this.coreY += (dy / dist) * yankBonus;
+        this.coreX += (dx / (dist || 0.001)) * yankBonus;
+        this.coreY += (dy / (dist || 0.001)) * yankBonus;
         n.energy += 3;
         n.taps += 2;
         this.audio.playBoost();

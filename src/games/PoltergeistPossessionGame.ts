@@ -379,18 +379,18 @@ export class PoltergeistPossessionGame extends BaseGame {
               const dx = bestProp.x - m.x;
               const dy = bestProp.y - m.y;
               const d = Math.hypot(dx, dy) || 1;
-              moveX = (dx / d) * 0.72;
-              moveY = (dy / d) * 0.72;
+              moveX = (dx / (d || 0.001)) * 0.72;
+              moveY = (dy / (d || 0.001)) * 0.72;
             }
           } else {
             const bestTarget = this.findBestTargetPoint(m.x, m.y, cx, cy);
             const dx = bestTarget.x - m.x;
             const dy = bestTarget.y - m.y;
             const d = Math.hypot(dx, dy) || 1;
-            m.aimX = dx / d;
-            m.aimY = dy / d;
-            moveX = (dx / d) * 0.55;
-            moveY = (dy / d) * 0.55;
+            m.aimX = dx / (d || 0.001);
+            m.aimY = dy / (d || 0.001);
+            moveX = (dx / (d || 0.001)) * 0.55;
+            moveY = (dy / (d || 0.001)) * 0.55;
           }
         }
 
@@ -700,8 +700,8 @@ export class PoltergeistPossessionGame extends BaseGame {
       const d = Math.hypot(dx, dy) || 1;
       if (d <= radius) {
         const push = isSweetSpot ? 540 : 320;
-        other.vx += (dx / d) * push;
-        other.vy += (dy / d) * push;
+        other.vx += (dx / (d || 0.001)) * push;
+        other.vy += (dy / (d || 0.001)) * push;
         if (isSweetSpot) {
           other.stunTimer = 0.45;
           this.spawnPopup(other.x, other.y - 28, 'GRAVITY SHUNT!', '#c084fc');
@@ -738,8 +738,8 @@ export class PoltergeistPossessionGame extends BaseGame {
       const dx = target.x - bot.x;
       const dy = target.y - bot.y;
       const d = Math.hypot(dx, dy) || 1;
-      bot.aimX = dx / d;
-      bot.aimY = dy / d;
+      bot.aimX = dx / (d || 0.001);
+      bot.aimY = dy / (d || 0.001);
       bot.vx += bot.aimX * 980 * skill * dt;
       bot.vy += bot.aimY * 980 * skill * dt;
 
@@ -754,8 +754,8 @@ export class PoltergeistPossessionGame extends BaseGame {
       const dx = bestProp.x - bot.x;
       const dy = bestProp.y - bot.y;
       const d = Math.hypot(dx, dy) || 1;
-      bot.aimX = dx / d;
-      bot.aimY = dy / d;
+      bot.aimX = dx / (d || 0.001);
+      bot.aimY = dy / (d || 0.001);
       bot.vx += bot.aimX * 1120 * skill * dt;
       bot.vy += bot.aimY * 1120 * skill * dt;
     }

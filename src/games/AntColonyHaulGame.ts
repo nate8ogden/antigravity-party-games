@@ -236,8 +236,8 @@ export class AntColonyHaulGame extends BaseGame {
               const dx = other.x - a.x;
               const dy = other.y - a.y;
               const d = Math.max(1, Math.hypot(dx, dy));
-              other.vx += (dx / d) * 520;
-              other.vy += (dy / d) * 520;
+              other.vx += (dx / (d || 0.001)) * 520;
+              other.vy += (dy / (d || 0.001)) * 520;
               other.carryingItem = false;
               a.score += 70;
               this.showCallout(a, 'MANDIBLE SHUNT +70!');
@@ -331,8 +331,8 @@ export class AntColonyHaulGame extends BaseGame {
     const dx = tx - bot.x;
     const dy = ty - bot.y;
     const d = Math.max(1, Math.hypot(dx, dy));
-    bot.vx += (dx / d) * 1100 * dt;
-    bot.vy += (dy / d) * 1100 * dt;
+    bot.vx += (dx / (d || 0.001)) * 1100 * dt;
+    bot.vy += (dy / (d || 0.001)) * 1100 * dt;
 
     const hold = !bot.holding || bot.charge < bot.botChargeGoal;
     this.input.setBotState(botId, hold);
@@ -452,8 +452,8 @@ export class AntColonyHaulGame extends BaseGame {
       const dx = x - ant.x;
       const dy = y - ant.y;
       const dist = Math.max(1, Math.hypot(dx, dy));
-      ant.vx += (dx / dist) * 440;
-      ant.vy += (dy / dist) * 440;
+      ant.vx += (dx / (dist || 0.001)) * 440;
+      ant.vy += (dy / (dist || 0.001)) * 440;
       this.audio.playTap();
       return true;
     }

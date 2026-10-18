@@ -474,8 +474,8 @@ export class CauldronWitchBrewGame extends BaseGame {
           const dx = cx - a.x;
           const dy = cy - a.y;
           const d = Math.hypot(dx, dy) || 1;
-          moveX = (dx / d) * 0.72;
-          moveY = (dy / d) * 0.72;
+          moveX = (dx / (d || 0.001)) * 0.72;
+          moveY = (dy / (d || 0.001)) * 0.72;
         } else if (this.floorIngredients.length > 0) {
           let best = this.floorIngredients[0];
           let bestScore = -1e9;
@@ -492,8 +492,8 @@ export class CauldronWitchBrewGame extends BaseGame {
           const dx = best.x - a.x;
           const dy = best.y - a.y;
           const d = Math.hypot(dx, dy) || 1;
-          moveX = (dx / d) * 0.68;
-          moveY = (dy / d) * 0.68;
+          moveX = (dx / (d || 0.001)) * 0.68;
+          moveY = (dy / (d || 0.001)) * 0.68;
         }
       }
 

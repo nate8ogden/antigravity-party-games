@@ -282,8 +282,8 @@ export class FortuneTellerTarotGame extends BaseGame {
               const dx = other.x - a.x;
               const dy = other.y - a.y;
               const d = Math.max(1, Math.hypot(dx, dy));
-              other.vx += (dx / d) * 520;
-              other.vy += (dy / d) * 520;
+              other.vx += (dx / (d || 0.001)) * 520;
+              other.vy += (dy / (d || 0.001)) * 520;
               a.score += 70;
               this.showCallout(a, 'ASTRAL PRISM SHUNT +70!');
               this.audio.playBounce();
@@ -304,8 +304,8 @@ export class FortuneTellerTarotGame extends BaseGame {
           const dx = match.x - a.x;
           const dy = match.y - a.y;
           const d = Math.max(1, Math.hypot(dx, dy));
-          a.vx += (dx / d) * 380;
-          a.vy += (dy / d) * 380;
+          a.vx += (dx / (d || 0.001)) * 380;
+          a.vy += (dy / (d || 0.001)) * 380;
           this.audio.playTap();
         }
       }
@@ -391,8 +391,8 @@ export class FortuneTellerTarotGame extends BaseGame {
       const dx = best.x - bot.x;
       const dy = best.y - bot.y;
       const d = Math.max(1, Math.hypot(dx, dy));
-      bot.vx += (dx / d) * 1150 * dt;
-      bot.vy += (dy / d) * 1150 * dt;
+      bot.vx += (dx / (d || 0.001)) * 1150 * dt;
+      bot.vy += (dy / (d || 0.001)) * 1150 * dt;
     }
 
     const shouldHold = (bestD < 145 && !bot.holding) || (bot.holding && bot.charge < bot.botChargeGoal);
@@ -559,8 +559,8 @@ export class FortuneTellerTarotGame extends BaseGame {
       const dx = x - astronomer.x;
       const dy = y - astronomer.y;
       const dist = Math.max(1, Math.hypot(dx, dy));
-      astronomer.vx += (dx / dist) * 440;
-      astronomer.vy += (dy / dist) * 440;
+      astronomer.vx += (dx / (dist || 0.001)) * 440;
+      astronomer.vy += (dy / (dist || 0.001)) * 440;
       this.audio.playTap();
       return true;
     }

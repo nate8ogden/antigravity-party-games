@@ -282,8 +282,8 @@ export class SwatFlyGame extends BaseGame {
           ins.stateTimer = ins.landDuration;
         } else {
           const speed = ins.type === 'golden_fly' ? 280 : ins.type === 'wasp' ? 160 : 210;
-          ins.x += (dx / dist) * speed * dt + Math.sin(ins.flutterPhase) * 1.8;
-          ins.y += (dy / dist) * speed * dt + Math.cos(ins.flutterPhase) * 1.8;
+          ins.x += (dx / (dist || 0.001)) * speed * dt + Math.sin(ins.flutterPhase) * 1.8;
+          ins.y += (dy / (dist || 0.001)) * speed * dt + Math.cos(ins.flutterPhase) * 1.8;
         }
       } else if (ins.state === 'landed') {
         ins.stateTimer -= dt;
@@ -330,8 +330,8 @@ export class SwatFlyGame extends BaseGame {
             const dy = nearest.y - sw.y;
             const d = Math.hypot(dx, dy);
             if (d > 10) {
-              sw.x += (dx / d) * 260 * dt;
-              sw.y += (dy / d) * 260 * dt;
+              sw.x += (dx / (d || 0.001)) * 260 * dt;
+              sw.y += (dy / (d || 0.001)) * 260 * dt;
             }
           }
         }
@@ -489,8 +489,8 @@ export class SwatFlyGame extends BaseGame {
     const dist = Math.hypot(dx, dy);
 
     if (dist > 8) {
-      sw.x += (dx / dist) * moveSpeed * dt;
-      sw.y += (dy / dist) * moveSpeed * dt;
+      sw.x += (dx / (dist || 0.001)) * moveSpeed * dt;
+      sw.y += (dy / (dist || 0.001)) * moveSpeed * dt;
     }
 
     const swatRange = difficulty === 'bot_hard' ? 26 : difficulty === 'bot_normal' ? 30 : 36;

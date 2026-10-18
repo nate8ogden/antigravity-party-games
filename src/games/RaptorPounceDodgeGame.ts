@@ -293,8 +293,8 @@ export class RaptorPounceDodgeGame extends BaseGame {
               const dx = other.x - s.x;
               const dy = other.y - s.y;
               const d = Math.max(1, Math.hypot(dx, dy));
-              other.vx += (dx / d) * 520;
-              other.vy += (dy / d) * 520;
+              other.vx += (dx / (d || 0.001)) * 520;
+              other.vy += (dy / (d || 0.001)) * 520;
               s.score += 70;
               this.showCallout(s, 'RAPTOR BAIT SHUNT +70!');
               this.audio.playBounce();
@@ -380,8 +380,8 @@ export class RaptorPounceDodgeGame extends BaseGame {
       dx = bestRelic.x - bot.x;
       dy = bestRelic.y - bot.y;
       const d = Math.max(1, Math.hypot(dx, dy));
-      bot.vx += (dx / d) * 1100 * dt;
-      bot.vy += (dy / d) * 1100 * dt;
+      bot.vx += (dx / (d || 0.001)) * 1100 * dt;
+      bot.vy += (dy / (d || 0.001)) * 1100 * dt;
     }
     // Dodge danger zones
     for (const p of this.pounces) {
@@ -505,8 +505,8 @@ export class RaptorPounceDodgeGame extends BaseGame {
     const dx = x - p1.x;
     const dy = y - p1.y;
     const d = Math.max(1, Math.hypot(dx, dy));
-    p1.vx += (dx / d) * 480;
-    p1.vy += (dy / d) * 480;
+    p1.vx += (dx / (d || 0.001)) * 480;
+    p1.vy += (dy / (d || 0.001)) * 480;
     p1.rollInvulnTimer = 0.45;
     this.audio.playTap();
     return true;

@@ -341,8 +341,8 @@ export class TurfWhackGame extends BaseGame {
               const dy = targetHole.y - m.y;
               const d = Math.hypot(dx, dy);
               if (d > 10) {
-                m.x += (dx / d) * 280 * dt;
-                m.y += (dy / d) * 280 * dt;
+                m.x += (dx / (d || 0.001)) * 280 * dt;
+                m.y += (dy / (d || 0.001)) * 280 * dt;
               }
             }
           }
@@ -616,8 +616,8 @@ export class TurfWhackGame extends BaseGame {
     const dist = Math.hypot(dx, dy);
 
     if (dist > 8) {
-      m.x += (dx / dist) * glideSpeed * dt;
-      m.y += (dy / dist) * glideSpeed * dt;
+      m.x += (dx / (dist || 0.001)) * glideSpeed * dt;
+      m.y += (dy / (dist || 0.001)) * glideSpeed * dt;
     }
 
     // Within striking range (with wide swing, range is 64px)

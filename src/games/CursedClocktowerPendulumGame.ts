@@ -528,8 +528,8 @@ export class CursedClocktowerPendulumGame extends BaseGame {
         const dy = s.y - 40 - g.y;
         const d = Math.hypot(dx, dy) || 1;
         if (d <= 210) {
-          g.vx += (dx / d) * 260;
-          g.vy += (dy / d) * 260;
+          g.vx += (dx / (d || 0.001)) * 260;
+          g.vy += (dy / (d || 0.001)) * 260;
         }
       }
 

@@ -241,8 +241,8 @@ export class AmberFossilExcavateGame extends BaseGame {
               const dx = other.x - d.x;
               const dy = other.y - d.y;
               const dist = Math.max(1, Math.hypot(dx, dy));
-              other.vx += (dx / dist) * 520;
-              other.vy += (dy / dist) * 520;
+              other.vx += (dx / (dist || 0.001)) * 520;
+              other.vy += (dy / (dist || 0.001)) * 520;
               d.score += 70;
               this.showCallout(d, 'QUARRY TREMOR SHUNT +70!');
               this.audio.playBounce();
@@ -339,8 +339,8 @@ export class AmberFossilExcavateGame extends BaseGame {
       const dx = best.x - bot.x;
       const dy = best.y - bot.y;
       const dist = Math.max(1, Math.hypot(dx, dy));
-      bot.vx += (dx / dist) * 1100 * dt;
-      bot.vy += (dy / dist) * 1100 * dt;
+      bot.vx += (dx / (dist || 0.001)) * 1100 * dt;
+      bot.vy += (dy / (dist || 0.001)) * 1100 * dt;
     }
 
     const hold = (bestD < 130 && !bot.holding) || (bot.holding && bot.charge < bot.botChargeGoal);
@@ -455,8 +455,8 @@ export class AmberFossilExcavateGame extends BaseGame {
       const dx = x - digger.x;
       const dy = y - digger.y;
       const dist = Math.max(1, Math.hypot(dx, dy));
-      digger.vx += (dx / dist) * 440;
-      digger.vy += (dy / dist) * 440;
+      digger.vx += (dx / (dist || 0.001)) * 440;
+      digger.vy += (dy / (dist || 0.001)) * 440;
       this.chiselNearby(digger, width, height, 75, false);
       this.audio.playTap();
       return true;

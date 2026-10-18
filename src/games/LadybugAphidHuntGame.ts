@@ -264,8 +264,8 @@ export class LadybugAphidHuntGame extends BaseGame {
               const dx = other.x - l.x;
               const dy = other.y - l.y;
               const d = Math.max(1, Math.hypot(dx, dy));
-              other.vx += (dx / d) * 620;
-              other.vy += (dy / d) * 620;
+              other.vx += (dx / (d || 0.001)) * 620;
+              other.vy += (dy / (d || 0.001)) * 620;
               l.score += 70;
               this.showCallout(l, 'LEAF SUMO SHUNT +70!');
               this.audio.playBounce();
@@ -349,8 +349,8 @@ export class LadybugAphidHuntGame extends BaseGame {
       dx = best.x - bot.x;
       dy = best.y - bot.y;
       const d = Math.max(1, Math.hypot(dx, dy));
-      bot.vx += (dx / d) * 1100 * dt;
-      bot.vy += (dy / d) * 1100 * dt;
+      bot.vx += (dx / (d || 0.001)) * 1100 * dt;
+      bot.vy += (dy / (d || 0.001)) * 1100 * dt;
     }
 
     const hold = !bot.holding || bot.charge < bot.botChargeGoal;
@@ -625,8 +625,8 @@ export class LadybugAphidHuntGame extends BaseGame {
     const dy = y - l.y;
     const dist = Math.hypot(dx, dy);
     if (dist > 10) {
-      l.vx += (dx / dist) * 750;
-      l.vy += (dy / dist) * 750;
+      l.vx += (dx / (dist || 0.001)) * 750;
+      l.vy += (dy / (dist || 0.001)) * 750;
       l.flutterTimer = 1.0;
       this.audio.playBoost();
     }

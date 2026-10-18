@@ -341,8 +341,8 @@ export class OuijaSpiritBoardGame extends BaseGame {
         const dx = targetNode.x - ps.x;
         const dy = targetNode.y - ps.y;
         const dist = Math.hypot(dx, dy) || 1;
-        ps.vx += (dx / dist) * accel * 0.85 * clampedDt;
-        ps.vy += (dy / dist) * accel * 0.85 * clampedDt;
+        ps.vx += (dx / (dist || 0.001)) * accel * 0.85 * clampedDt;
+        ps.vy += (dy / (dist || 0.001)) * accel * 0.85 * clampedDt;
         ps.angle = Math.atan2(dy, dx);
       }
 
@@ -529,8 +529,8 @@ export class OuijaSpiritBoardGame extends BaseGame {
       const dx = targetNode.x - ps.x;
       const dy = targetNode.y - ps.y;
       const dist = Math.hypot(dx, dy) || 1;
-      ps.vx = (dx / dist) * 340;
-      ps.vy = (dy / dist) * 340;
+      ps.vx = (dx / (dist || 0.001)) * 340;
+      ps.vy = (dy / (dist || 0.001)) * 340;
     }
 
     // Gravity Lens Shunt against nearby rival Astro-Compasses!
@@ -540,8 +540,8 @@ export class OuijaSpiritBoardGame extends BaseGame {
       const dy = other.y - ps.y;
       const dist = Math.hypot(dx, dy);
       if (dist > 0 && dist <= 165) {
-        other.vx = (dx / dist) * 320;
-        other.vy = (dy / dist) * 320;
+        other.vx = (dx / (dist || 0.001)) * 320;
+        other.vy = (dy / (dist || 0.001)) * 320;
         other.stunTimer = Math.max(other.stunTimer, 0.7);
         const shuntPts = 45 * sdMult;
         ps.score += shuntPts;

@@ -693,8 +693,8 @@ export class SteamBoilerReliefGame extends BaseGame {
     const dy = bot.botTargetY - bot.y;
     const dist = Math.hypot(dx, dy);
     const moveScale = dist > 14 ? 1 : 0;
-    const steerX = dist > 1 ? (dx / dist) * moveScale : 0;
-    const throttleY = dist > 1 ? -(dy / dist) * moveScale : 0;
+    const steerX = dist > 1 ? (dx / (dist || 0.001)) * moveScale : 0;
+    const throttleY = dist > 1 ? -(dy / (dist || 0.001)) * moveScale : 0;
     const actor: any = (this as any).engineers?.get(botId) || (this as any).zeppelins?.get(botId) || (this as any).harvesters?.get(botId) || (this as any).toymakers?.get(botId) || (this as any).dispatchers?.get(botId) || (this as any).flyers?.get(botId);
     if (actor) {
       actor.vx += steerX * 620 * dt;

@@ -455,11 +455,11 @@ export class TeslaCoilArcGame extends BaseGame {
     const dy = h.y - cy;
     const dist = Math.hypot(dx, dy);
     if (dist < 48 && dist > 0.001) {
-      h.x = cx + (dx / dist) * 48;
-      h.y = cy + (dy / dist) * 48;
+      h.x = cx + (dx / (dist || 0.001)) * 48;
+      h.y = cy + (dy / (dist || 0.001)) * 48;
     } else if (dist > arenaR) {
-      h.x = cx + (dx / dist) * arenaR;
-      h.y = cy + (dy / dist) * arenaR;
+      h.x = cx + (dx / (dist || 0.001)) * arenaR;
+      h.y = cy + (dy / (dist || 0.001)) * arenaR;
     }
   }
 

@@ -386,8 +386,8 @@ export class GraveyardZombieBashGame extends BaseGame {
             const dx = bestMound.x - k.x;
             const dy = bestMound.y - k.y;
             const d = Math.hypot(dx, dy) || 1;
-            moveX = (dx / d) * 0.72;
-            moveY = (dy / d) * 0.72;
+            moveX = (dx / (d || 0.001)) * 0.72;
+            moveY = (dy / (d || 0.001)) * 0.72;
           }
         }
 
@@ -501,10 +501,10 @@ export class GraveyardZombieBashGame extends BaseGame {
       const dx = near.x - k.x;
       const dy = near.y - k.y;
       const d = Math.hypot(dx, dy) || 1;
-      k.facingX = dx / d;
-      k.facingY = dy / d;
-      k.vx += (dx / d) * 230;
-      k.vy += (dy / d) * 230;
+      k.facingX = dx / (d || 0.001);
+      k.facingY = dy / (d || 0.001);
+      k.vx += (dx / (d || 0.001)) * 230;
+      k.vy += (dy / (d || 0.001)) * 230;
     }
 
     for (const m of this.mounds) {
@@ -554,8 +554,8 @@ export class GraveyardZombieBashGame extends BaseGame {
       const d = Math.hypot(dx, dy) || 1;
       if (d <= radius) {
         const push = isSweetSpot ? 540 : 320;
-        other.vx += (dx / d) * push;
-        other.vy += (dy / d) * push;
+        other.vx += (dx / (d || 0.001)) * push;
+        other.vy += (dy / (d || 0.001)) * push;
         if (isSweetSpot) {
           other.stunTimer = 0.45;
           this.spawnPopup(other.x, other.y - 28, 'SHOCKWAVE SHUNT!', '#fb923c');
@@ -613,8 +613,8 @@ export class GraveyardZombieBashGame extends BaseGame {
       const dx = target.x - bot.x;
       const dy = target.y - bot.y;
       const d = Math.hypot(dx, dy) || 1;
-      bot.facingX = dx / d;
-      bot.facingY = dy / d;
+      bot.facingX = dx / (d || 0.001);
+      bot.facingY = dy / (d || 0.001);
       bot.vx += bot.facingX * 1180 * skill * dt;
       bot.vy += bot.facingY * 1180 * skill * dt;
 

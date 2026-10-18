@@ -247,8 +247,8 @@ export class FireflyNightBeaconGame extends BaseGame {
               const dx = other.x - f.x;
               const dy = other.y - f.y;
               const d = Math.max(1, Math.hypot(dx, dy));
-              other.vx += (dx / d) * 520;
-              other.vy += (dy / d) * 520;
+              other.vx += (dx / (d || 0.001)) * 520;
+              other.vy += (dy / (d || 0.001)) * 520;
               f.score += 70;
               this.showCallout(f, 'DAZZLE SHUNT +70!');
               this.audio.playBounce();
@@ -454,8 +454,8 @@ export class FireflyNightBeaconGame extends BaseGame {
       const dx = x - firefly.x;
       const dy = y - firefly.y;
       const dist = Math.max(1, Math.hypot(dx, dy));
-      firefly.vx += (dx / dist) * 440;
-      firefly.vy += (dy / dist) * 440;
+      firefly.vx += (dx / (dist || 0.001)) * 440;
+      firefly.vy += (dy / (dist || 0.001)) * 440;
       firefly.flashGlowTimer = 0.4;
       this.checkRingSync(firefly, Math.hypot(firefly.x - width * 0.5, firefly.y - height * 0.54), false);
       this.audio.playTap();

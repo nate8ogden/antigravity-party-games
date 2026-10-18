@@ -842,8 +842,8 @@ export class SharksAndMinnowsGame extends BaseGame {
       }
 
       if (dist > 5) {
-        hs.vx = (dx / dist) * speed;
-        hs.vy = (dy / dist) * speed;
+        hs.vx = (dx / (dist || 0.001)) * speed;
+        hs.vy = (dy / (dist || 0.001)) * speed;
         hs.angle = Math.atan2(dy, dx);
       }
     } else {

@@ -318,8 +318,8 @@ export class PneumaticTubeRushGame extends BaseGame {
         const dx = targetX - d.x;
         const dy = targetY - d.y;
         const len = Math.hypot(dx, dy) || 1;
-        d.facingX = dx / len;
-        d.facingY = dy / len;
+        d.facingX = dx / (len || 0.001);
+        d.facingY = dy / (len || 0.001);
         d.vx += d.facingX * accel * 0.72 * dt;
         d.vy += d.facingY * accel * 0.72 * dt;
       }

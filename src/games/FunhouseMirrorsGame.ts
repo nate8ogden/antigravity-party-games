@@ -520,8 +520,8 @@ export class FunhouseMirrorsGame extends BaseGame {
       const dy = other.y - caster.y;
       const d = Math.hypot(dx, dy);
       if (d > 0 && d <= 98) {
-        other.vx += (dx / d) * 280;
-        other.vy += (dy / d) * 280;
+        other.vx += (dx / (d || 0.001)) * 280;
+        other.vy += (dy / (d || 0.001)) * 280;
         other.staggerTimer = 0.45;
         caster.score += 45;
         caster.shunts += 1;
