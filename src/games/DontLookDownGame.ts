@@ -123,7 +123,7 @@ export class DontLookDownGame extends BaseGame {
   public init(width: number, height: number): void {
     this.lastWidth = width;
     this.lastHeight = height;
-    this.roundTimer = 90.0;
+    this.roundTimer = 300.0;
     this.isFinished = false;
     this.isSuddenDeath = false;
     this.suddenDeathFlashTimer = 0;

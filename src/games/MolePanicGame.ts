@@ -103,6 +103,10 @@ export class MolePanicGame extends BaseGame {
   private playersState: Map<PlayerId, MolePlayer> = new Map();
   private burrows: MoleBurrow[] = [];
   public currentTheme: MoleTheme = 'carnival';
+  public get currentMapName(): string {
+    const cfg = THEME_CONFIGS.find((t) => t.id === this.currentTheme);
+    return cfg ? cfg.name : 'Carnival Fairground';
+  }
   private spawnInterval: number = 0.7;
   private spawnTimer: number = 0;
   private suddenDeathAnnounced: boolean = false;

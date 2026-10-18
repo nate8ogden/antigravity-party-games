@@ -146,6 +146,10 @@ interface FrogPlayer {
 
 export class ChompFrogsGame extends BaseGame {
   public pondTheme: PondTheme = 'emerald';
+  public get currentMapName(): string {
+    const theme = THEME_CONFIGS.find((t) => t.id === this.pondTheme);
+    return theme ? theme.name : 'Emerald Oasis 🌿';
+  }
   private lilyPads: LilyPad[] = [];
   private insects: Insect[] = [];
   private ripples: WaterRipple[] = [];

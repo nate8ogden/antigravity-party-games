@@ -137,8 +137,11 @@ export class MazeEscapeGame extends BaseGame {
   private gemCounter: number = 0;
   private relicRespawnTimer: number = 0;
 
-  // Theme & Layout Controls
   public mapTheme: MazeTheme = 'crypt';
+  public get currentMapName(): string {
+    const theme = THEME_CONFIGS.find((t) => t.id === this.mapTheme);
+    return theme ? theme.name : 'Ancient Crypt 🏛️';
+  }
   private lastWidth: number = 960;
   private lastHeight: number = 540;
   private keydownListener: ((e: KeyboardEvent) => void) | null = null;

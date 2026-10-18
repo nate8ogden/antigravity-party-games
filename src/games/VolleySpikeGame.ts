@@ -123,8 +123,11 @@ export class VolleySpikeGame extends BaseGame {
   private serveTimer: number = 0;
   private gravity: number = 720;
 
-  // Theme & Layout Controls
   public mapTheme: VolleyTheme = 'sunset';
+  public get currentMapName(): string {
+    const theme = THEME_CONFIGS.find((t) => t.id === this.mapTheme);
+    return theme ? theme.name : 'Neon Sunset Beach 🌅';
+  }
   private lastWidth: number = 960;
   private lastHeight: number = 540;
   private keydownListener: ((e: KeyboardEvent) => void) | null = null;

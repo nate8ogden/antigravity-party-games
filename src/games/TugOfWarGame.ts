@@ -93,8 +93,11 @@ export class TugOfWarGame extends BaseGame {
   private pitBottomY: number = 0;
   private winningTeam: 'LEFT' | 'RIGHT' | null = null;
 
-  // Theme & Layout Controls
   public mapTheme: TugTheme = 'magma';
+  public get currentMapName(): string {
+    const theme = THEME_CONFIGS.find((t) => t.id === this.mapTheme);
+    return theme ? theme.name : 'Volcanic Magma Pit 🔥';
+  }
   private lastWidth: number = 960;
   private lastHeight: number = 540;
   private keydownListener: ((e: KeyboardEvent) => void) | null = null;

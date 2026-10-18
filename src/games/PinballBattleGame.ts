@@ -127,6 +127,10 @@ export class PinballBattleGame extends BaseGame {
   private bumpers: PinballBumper[] = [];
   private slingshots: SlingshotKicker[] = [];
   public currentTheme: PinballTheme = 'arcade';
+  public get currentMapName(): string {
+    const cfg = THEME_CONFIGS.find((t) => t.id === this.currentTheme);
+    return cfg ? cfg.name : 'Neon Arcade';
+  }
   private ballCounter: number = 0;
   private multiballSpawned: boolean = false;
   private suddenDeathAnnounced: boolean = false;

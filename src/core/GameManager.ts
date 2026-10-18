@@ -5674,11 +5674,6 @@ export class GameManager {
         return;
       }
 
-      if (key === 't' || key === 'T') {
-        this.openTrophies();
-        return;
-      }
-
       // Keyboard Grid Navigation in Catalog
       const displayed = this.getFilteredCatalog();
       if (displayed.length > 0) {
