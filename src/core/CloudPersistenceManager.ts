@@ -33,6 +33,8 @@ export interface FirebaseConfig {
 
 const STORAGE_KEY = 'antigravity_cloud_stats_v1';
 const FIREBASE_URL_KEY = 'antigravity_firebase_db_url';
+// Default production Firebase Realtime Database URL for GitHub Pages (can be overridden by VITE_FIREBASE_DATABASE_URL or ?firebaseUrl=)
+const DEFAULT_FIREBASE_DB_URL = '';
 
 // Deterministic hash for seeding realistic initial community ratings & save counts
 function hashString(str: string): number {
@@ -72,10 +74,15 @@ export class CloudPersistenceManager {
   private detectFirebaseConfig(): void {
     try {
       if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const queryUrl = params.get('firebaseUrl') || params.get('firebase');
+        if (queryUrl && queryUrl.startsWith('https://')) {
+          localStorage.setItem(FIREBASE_URL_KEY, queryUrl.replace(/\/$/, ''));
+        }
         const winCfg = (window as unknown as { __FIREBASE_CONFIG__?: FirebaseConfig }).__FIREBASE_CONFIG__;
         const storedUrl = localStorage.getItem(FIREBASE_URL_KEY);
         const envUrl = (import.meta as unknown as { env?: Record<string, string> })?.env?.VITE_FIREBASE_DATABASE_URL;
-        const url = winCfg?.databaseURL || storedUrl || envUrl || null;
+        const url = queryUrl || winCfg?.databaseURL || storedUrl || envUrl || DEFAULT_FIREBASE_DB_URL || null;
         if (url && url.startsWith('https://')) {
           this.firebaseDatabaseUrl = url.replace(/\/$/, '');
           this.syncStatus = 'offline_cached';
@@ -348,23 +355,51 @@ export class CloudPersistenceManager {
 
   /**
    * Asynchronous non-blocking Firebase Realtime Database REST push
+   * Performs a read-merge-write so concurrent GitHub Pages players never overwrite higher global scores
    */
   private async pushRecordToFirebase(rec: GameStatsRecord): Promise<void> {
     if (!this.firebaseDatabaseUrl || typeof fetch === 'undefined') return;
     try {
       this.syncStatus = 'syncing';
-      const res = await fetch(`${this.firebaseDatabaseUrl}/antigravity_cloud/games/${encodeURIComponent(rec.gameId)}.json`, {
+      const endpoint = `${this.firebaseDatabaseUrl}/antigravity_cloud/games/${encodeURIComponent(rec.gameId)}.json`;
+
+      // Fetch latest cloud snapshot for this game before merging
+      let remote: Partial<GameStatsRecord> | null = null;
+      try {
+        const getRes = await fetch(endpoint, { method: 'GET', headers: { 'Accept': 'application/json' } });
+        if (getRes.ok) {
+          remote = await getRes.json();
+        }
+      } catch {
+        // Proceed with local record if GET fails
+      }
+
+      const remoteHighScore = typeof remote?.highScore === 'number' ? remote.highScore : 0;
+      const mergedHighScore = Math.max(remoteHighScore, rec.highScore);
+      if (mergedHighScore > rec.highScore) {
+        rec.highScore = mergedHighScore;
+      }
+
+      const remoteCount = typeof remote?.ratingCount === 'number' ? remote.ratingCount : rec.ratingCount;
+      const remoteRating = typeof remote?.communityRating === 'number' ? remote.communityRating : rec.communityRating;
+      const mergedRating = rec.userRating > 0
+        ? Number((((remoteRating * Math.max(1, remoteCount)) + rec.userRating) / (Math.max(1, remoteCount) + 1)).toFixed(2))
+        : remoteRating;
+      rec.communityRating = mergedRating;
+
+      const res = await fetch(endpoint, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          communityRating: this.getEffectiveRating(rec.gameId),
-          ratingCount: rec.ratingCount,
-          saveCount: rec.saveCount,
-          highScore: rec.highScore,
-          plays: rec.plays,
+          communityRating: mergedRating,
+          ratingCount: Math.max(remoteCount, rec.ratingCount),
+          saveCount: Math.max(typeof remote?.saveCount === 'number' ? remote.saveCount : 0, rec.saveCount),
+          highScore: mergedHighScore,
+          plays: Math.max(typeof remote?.plays === 'number' ? remote.plays : 0, rec.plays),
           updatedAt: Date.now()
         })
       });
+      this.saveToLocal();
       this.syncStatus = res.ok ? 'synced' : 'offline_cached';
       if (res.ok) this.lastSyncedAt = Date.now();
     } catch {

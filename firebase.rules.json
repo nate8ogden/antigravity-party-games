@@ -1,0 +1,13 @@
+{
+  "rules": {
+    "antigravity_cloud": {
+      "games": {
+        ".read": true,
+        "$gameId": {
+          ".write": true,
+          ".validate": "newData.hasChildren(['communityRating', 'ratingCount', 'saveCount', 'highScore']) && newData.child('communityRating').isNumber() && newData.child('communityRating').val() >= 1 && newData.child('communityRating').val() <= 5 && newData.child('highScore').isNumber() && (!data.exists() || newData.child('highScore').val() >= data.child('highScore').val())"
+        }
+      }
+    }
+  }
+}

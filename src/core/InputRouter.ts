@@ -64,6 +64,7 @@ export class InputRouter {
   public phoneTouchLayout: '4p_corners' | '2p_faceoff' | '2p_final' = '4p_corners';
   public finalPlayerIds: [PlayerId, PlayerId] = [0, 1];
   public isInGame: boolean = false;
+  public suppressPhoneOverlay: boolean = false;
   public activePlayerMask: Record<PlayerId, boolean> = { 0: true, 1: true, 2: false, 3: false };
   public humanPlayerMask: Record<PlayerId, boolean> = { 0: true, 1: false, 2: false, 3: false };
 
@@ -1219,10 +1220,12 @@ export class InputRouter {
   }
 
   public render(ctx: CanvasRenderingContext2D) {
-    if (this.deviceMode === 'phone' && this.isInGame) {
+    if (this.deviceMode === 'phone' && this.isInGame && !this.suppressPhoneOverlay) {
       this.renderPhoneControlsOverlay(ctx);
     }
-    this.renderJoysticks(ctx);
+    if (!this.suppressPhoneOverlay) {
+      this.renderJoysticks(ctx);
+    }
     this.renderRipples(ctx);
   }
 
@@ -1517,6 +1520,7 @@ export class InputRouter {
       this.joysticks[i as PlayerId].active = false;
       this.joysticks[i as PlayerId].opacity = 0;
     }
+    this.suppressPhoneOverlay = false;
     this.activeTouches.clear();
     this.activeKeys.clear();
     this.ripples = [];
