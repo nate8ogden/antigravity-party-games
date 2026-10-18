@@ -1875,6 +1875,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     const py = gridOriginY + (digRow + 0.5) * tileH;
     const biome = this.getCurrentBiome();
     this.audio.playLaser(this.audio.getPlayerPan(runner.id));
+    this.triggerMusicEvent('positive', 1.4);
     this.particles.spawnSparks(px, py, biome.brickLight, 10);
     // Ceremonial Shio-maki salt crystals on Shiko Stomp dig
     this.particles.spawnSparks(px, py - 4, '#F8FAFC', 4);
@@ -1883,8 +1884,189 @@ export class SumoLodeRunnerGame extends BaseGame {
 
   public getCurrentBiome(): BiomePalette {
     if (this.currentLevel <= 0) return BIOME_PALETTES[0];
-    const chapterIdx = Math.min(4, Math.floor((this.currentLevel - 1) / 6));
+    const chapterIdx = Math.min(4, Math.floor((this.currentLevel - 1) / 8));
     return BIOME_PALETTES[chapterIdx];
+  }
+
+  /**
+   * Shifts the procedural chiptune soundtrack mood on positive or negative game actions.
+   */
+  private triggerMusicEvent(mood: 'positive' | 'negative' | 'escape', duration: number = 2.4): void {
+    if (this.escapeRevealed && mood !== 'negative') {
+      this.bgmMood = 'escape';
+      this.bgmMoodTimer = 999;
+      return;
+    }
+    this.bgmMood = mood;
+    this.bgmMoodTimer = Math.max(this.bgmMoodTimer, duration);
+  }
+
+  /**
+   * Toggles 1P Solo Mode (No CPU) vs +CPU Partner during gameplay.
+   */
+  public toggleSoloMode(): void {
+    this.soloMode = !this.soloMode;
+    this.audio.playMenuTick();
+    // Preserve P1 score/position if toggling live, or respawn runners cleanly on current stage
+    this.spawnActiveRunners();
+    this.loadLevel(this.currentLevel);
+  }
+
+  /**
+   * 3-Voice Procedural Chiptune Sequencer inspired by Hudson/Broderbund NES Lode Runner,
+   * Super Mario Bros. (syncopated pulse-wave bounce & walking triangle bass), and
+   * The Legend of Zelda (heroic 4th/5th overworld intervals & dungeon tension).
+   * Dynamically shifts melody, harmony, and tempo when positive or negative actions occur!
+   */
+  private updateSoundtrack(dt: number): void {
+    if (!this.musicEnabled || this.isFinished) return;
+
+    if (this.bgmMoodTimer > 0) {
+      this.bgmMoodTimer = Math.max(0, this.bgmMoodTimer - dt);
+      if (this.bgmMoodTimer <= 0) {
+        this.bgmMood = this.escapeRevealed ? 'escape' : 'normal';
+      }
+    } else if (this.escapeRevealed) {
+      this.bgmMood = 'escape';
+    } else {
+      // Check if any Oni Guard is dangerously close to an alive player -> automatic 'negative' tension shift
+      let guardDanger = false;
+      for (const r of this.runners.values()) {
+        if (r.state === 'DEAD') continue;
+        for (let i = 0; i < this.guards.length; i++) {
+          const g = this.guards[i];
+          if (g.state === 'TRAPPED') continue;
+          const dist = Math.abs(g.x - r.x) + Math.abs(g.y - r.y) * 1.5;
+          if (dist < 3.4) {
+            guardDanger = true;
+            break;
+          }
+        }
+        if (guardDanger) break;
+      }
+      this.bgmMood = guardDanger ? 'negative' : 'normal';
+    }
+
+    // Step duration (16th-note groove): faster during escape or danger, bouncy during positive flourish
+    const stepDuration =
+      this.bgmMood === 'escape'
+        ? 0.125
+        : this.bgmMood === 'negative'
+          ? 0.135
+          : this.bgmMood === 'positive'
+            ? 0.14
+            : 0.16;
+
+    this.bgmStepTimer -= dt;
+    if (this.bgmStepTimer > 0) return;
+    this.bgmStepTimer += stepDuration;
+
+    const step = this.bgmStepIndex % 32;
+    this.bgmStepIndex = (this.bgmStepIndex + 1) % 32;
+
+    // 32-step Melodic Tables (Hz, 0 = rest):
+    // Normal: Mix of Lode Runner's playful 8-bit stepping motif + Mario syncopated cadence + Zelda heroic fifths
+    const NORMAL_MELODY: readonly number[] = [
+      523.25, 659.25, 0, 659.25, 0, 523.25, 659.25, 0,
+      783.99, 0, 0, 0, 392.00, 0, 0, 0,
+      440.00, 0, 587.33, 0, 659.25, 783.99, 698.46, 587.33,
+      523.25, 0, 392.00, 440.00, 523.25, 0, 0, 0
+    ];
+    const NORMAL_BASS: readonly number[] = [
+      130.81, 0, 196.00, 0, 261.63, 0, 196.00, 0,
+      196.00, 0, 146.83, 0, 98.00, 0, 123.47, 0,
+      110.00, 0, 164.81, 0, 174.61, 0, 146.83, 0,
+      130.81, 0, 196.00, 0, 130.81, 98.00, 130.81, 0
+    ];
+
+    // Positive Action Shift (Gold collected, brick dug, or Oni trapped): Bright Lydian/Major heroic Mario+Zelda flourish!
+    const POSITIVE_MELODY: readonly number[] = [
+      587.33, 783.99, 880.00, 1046.50, 0, 880.00, 1046.50, 1174.66,
+      1318.51, 0, 1046.50, 0, 783.99, 880.00, 1046.50, 0,
+      659.25, 783.99, 987.77, 1174.66, 0, 987.77, 1174.66, 1318.51,
+      1567.98, 0, 1318.51, 1046.50, 1174.66, 0, 783.99, 0
+    ];
+    const POSITIVE_BASS: readonly number[] = [
+      196.00, 293.66, 392.00, 293.66, 220.00, 329.63, 440.00, 329.63,
+      261.63, 392.00, 523.25, 392.00, 196.00, 293.66, 392.00, 0,
+      164.81, 246.94, 329.63, 246.94, 196.00, 293.66, 392.00, 293.66,
+      261.63, 0, 196.00, 0, 261.63, 392.00, 523.25, 0
+    ];
+
+    // Negative Action Shift (Oni Guard close pursuit, gold stolen, or player caught): Tense Phrygian/Diminished dungeon alarm!
+    const NEGATIVE_MELODY: readonly number[] = [
+      440.00, 466.16, 440.00, 392.00, 440.00, 554.37, 523.25, 466.16,
+      440.00, 0, 329.63, 349.23, 329.63, 293.66, 329.63, 0,
+      493.88, 523.25, 493.88, 440.00, 493.88, 622.25, 587.33, 523.25,
+      440.00, 329.63, 261.63, 246.94, 220.00, 0, 440.00, 0
+    ];
+    const NEGATIVE_BASS: readonly number[] = [
+      110.00, 110.00, 116.54, 110.00, 110.00, 138.59, 130.81, 116.54,
+      110.00, 0, 82.41, 87.31, 82.41, 73.42, 82.41, 0,
+      123.47, 123.47, 130.81, 123.47, 110.00, 110.00, 98.00, 87.31,
+      82.41, 0, 110.00, 0, 82.41, 110.00, 82.41, 0
+    ];
+
+    // Escape Revealed Shift: Triumphant ascending Zelda/Lode Runner victory climb anthem!
+    const ESCAPE_MELODY: readonly number[] = [
+      523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50, 1318.51, 0,
+      587.33, 739.99, 880.00, 1174.66, 880.00, 1174.66, 1479.98, 0,
+      659.25, 783.99, 987.77, 1318.51, 1174.66, 1318.51, 1567.98, 0,
+      1046.50, 0, 783.99, 1046.50, 1318.51, 0, 1046.50, 0
+    ];
+    const ESCAPE_BASS: readonly number[] = [
+      130.81, 196.00, 261.63, 196.00, 130.81, 196.00, 261.63, 196.00,
+      146.83, 220.00, 293.66, 220.00, 146.83, 220.00, 293.66, 220.00,
+      164.81, 246.94, 329.63, 246.94, 196.00, 293.66, 392.00, 293.66,
+      261.63, 196.00, 130.81, 196.00, 261.63, 0, 130.81, 0
+    ];
+
+    const leadTable =
+      this.bgmMood === 'escape'
+        ? ESCAPE_MELODY
+        : this.bgmMood === 'positive'
+          ? POSITIVE_MELODY
+          : this.bgmMood === 'negative'
+            ? NEGATIVE_MELODY
+            : NORMAL_MELODY;
+    const bassTable =
+      this.bgmMood === 'escape'
+        ? ESCAPE_BASS
+        : this.bgmMood === 'positive'
+          ? POSITIVE_BASS
+          : this.bgmMood === 'negative'
+            ? NEGATIVE_BASS
+            : NORMAL_BASS;
+
+    // Slight pitch transposition by chapter so later chapters feel fresh
+    const chapterSemitones = this.currentLevel <= 0 ? 0 : Math.min(4, Math.floor((this.currentLevel - 1) / 10));
+    const pitchMul = Math.pow(2, chapterSemitones / 12);
+
+    const leadFreq = leadTable[step] * pitchMul;
+    const bassFreq = bassTable[step] * pitchMul;
+
+    if (leadFreq > 0) {
+      const wave: OscillatorType = this.bgmMood === 'negative' ? 'sawtooth' : 'square';
+      const slide = this.bgmMood === 'positive' && step % 2 === 1 ? leadFreq * 1.06 : undefined;
+      this.audio.playChiptuneVoice(leadFreq, stepDuration * 0.85, wave, 0.022, -0.12, slide);
+      // Add harmonic fifth shimmer on positive / escape moods
+      if ((this.bgmMood === 'positive' || this.bgmMood === 'escape') && step % 2 === 0) {
+        this.audio.playChiptuneVoice(leadFreq * 1.5, stepDuration * 0.65, 'triangle', 0.014, 0.18);
+      }
+    }
+
+    if (bassFreq > 0) {
+      this.audio.playChiptuneVoice(bassFreq, stepDuration * 0.92, 'triangle', 0.032, 0.08);
+    }
+
+    // Chiptune Taiko & Hi-Hat Percussion Groove
+    if (step % 4 === 0) {
+      this.audio.playChiptunePercussion('kick', this.bgmMood === 'negative' ? 0.032 : 0.024);
+    } else if (step % 4 === 2) {
+      this.audio.playChiptunePercussion(this.bgmMood === 'negative' ? 'snare' : 'hat', 0.018);
+    } else if (this.bgmMood !== 'normal' && step % 2 === 1) {
+      this.audio.playChiptunePercussion('hat', 0.012);
+    }
   }
 
   public update(dt: number, width: number, height: number): void {
@@ -1900,14 +2082,17 @@ export class SumoLodeRunnerGame extends BaseGame {
       this.stageHintTimer = Math.max(0, this.stageHintTimer - clampedDt);
     }
 
-    // Handle quick keyboard level navigation ([ / ] / T / R)
+    // Update dynamic reactive background soundtrack
+    this.updateSoundtrack(clampedDt);
+
+    // Handle quick keyboard level navigation & toggles ([ / ] / T / R / B / M)
     if (this.justRawKeys.has('BracketLeft') || this.justRawKeys.has('PageDown')) {
       if (this.currentLevel > 0) {
         this.audio.playMenuTick();
         this.loadLevel(this.currentLevel - 1);
       }
     } else if (this.justRawKeys.has('BracketRight') || this.justRawKeys.has('PageUp')) {
-      if (this.currentLevel < 30) {
+      if (this.currentLevel < SUMO_LODE_LEVELS.length) {
         this.audio.playMenuTick();
         this.loadLevel(this.currentLevel + 1);
       }
@@ -1917,6 +2102,11 @@ export class SumoLodeRunnerGame extends BaseGame {
     } else if (this.justRawKeys.has('KeyR')) {
       this.audio.playTap();
       this.loadLevel(this.currentLevel);
+    } else if (this.justRawKeys.has('KeyB')) {
+      this.toggleSoloMode();
+    } else if (this.justRawKeys.has('KeyM')) {
+      this.musicEnabled = !this.musicEnabled;
+      this.audio.playMenuTick();
     }
 
     if (this.escapeFlashTimer > 0) {
@@ -1927,7 +2117,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     if (this.levelClearBannerTimer > 0) {
       this.levelClearBannerTimer -= clampedDt;
       if (this.levelClearBannerTimer <= 0) {
-        if (this.currentLevel < 30) {
+        if (this.currentLevel < SUMO_LODE_LEVELS.length) {
           this.currentLevel++;
           if (this.currentLevel > this.maxUnlockedLevel) {
             this.maxUnlockedLevel = this.currentLevel;
@@ -1939,7 +2129,7 @@ export class SumoLodeRunnerGame extends BaseGame {
           }
           this.loadLevel(this.currentLevel);
         } else {
-          // Completed all 30 levels!
+          // Completed all 40 levels!
           this.isFinished = true;
           this.audio.playFanfare();
         }
@@ -1974,7 +2164,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     const remainingGold = this.getRemainingGoldCount();
     const totalGold = this.golds.length;
 
-    // Spawn Bonus Yokozuna Onigiri when 50% of gold is collected (Stages 1..30)
+    // Spawn Bonus Yokozuna Onigiri when 50% of gold is collected (Stages 1..40)
     if (
       this.currentLevel > 0 &&
       !this.bonusItem.spawnedThisLevel &&
@@ -1995,6 +2185,7 @@ export class SumoLodeRunnerGame extends BaseGame {
       this.escapeFlashTimer = 1.2;
       this.tileCacheDirty = true;
       this.audio.playFanfare();
+      this.triggerMusicEvent('escape', 999);
       this.particles.showFloatingText('⚡ ESCAPE LADDER REVEALED! CLIMB TO TOP!', width / 2, originY + 28, '#FDE047', 20);
     }
 
@@ -2072,6 +2263,7 @@ export class SumoLodeRunnerGame extends BaseGame {
               creditPlayer.score += 250;
             }
             this.audio.playExplosion();
+            this.triggerMusicEvent('positive', 2.8);
             this.particles.spawnSparks(px, py, '#F59E0B', 14);
             this.particles.showFloatingText('+250 ONI CRUSHED!', px, py - 14, '#FBBF24', 14);
           }
@@ -2128,6 +2320,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     const px = originX + (runner.x + 0.5) * tileW;
     const py = originY + (runner.y + 0.5) * tileH;
     this.audio.playStun();
+    this.triggerMusicEvent('negative', 3.0);
     this.particles.addTrauma(0.22);
     this.particles.spawnExplosion(px, py, '#EF4444', 18);
     this.particles.showFloatingText(reason, px, py - 16, '#EF4444', 14);
@@ -2309,6 +2502,7 @@ export class SumoLodeRunnerGame extends BaseGame {
         const px = originX + (col + 0.5) * tileW;
         const py = originY + (row + 0.5) * tileH;
         this.audio.playCoin();
+        this.triggerMusicEvent('positive', 2.4);
         this.particles.spawnSparks(px, py, '#FDE047', 12);
         this.particles.showFloatingText('+250 GOLD!', px, py - 12, '#FDE047', 13);
       }
@@ -2321,6 +2515,7 @@ export class SumoLodeRunnerGame extends BaseGame {
       const px = originX + (col + 0.5) * tileW;
       const py = originY + (row + 0.5) * tileH;
       this.audio.playFanfare();
+      this.triggerMusicEvent('positive', 3.5);
       this.particles.spawnSparks(px, py, '#FFFFFF', 16);
       this.particles.showFloatingText('🍙 +800 ONIGIRI BONUS!', px, py - 14, '#4ADE80', 15);
     }
@@ -2436,6 +2631,7 @@ export class SumoLodeRunnerGame extends BaseGame {
         const px = originX + (col + 0.5) * tileW;
         const py = originY + (row + 0.5) * tileH;
         this.audio.playBounce();
+        this.triggerMusicEvent('positive', 2.4);
         this.particles.spawnSparks(px, py, '#38BDF8', 8);
         this.particles.showFloatingText('+75 TRAPPED!', px, py - 12, '#38BDF8', 12);
         continue;
@@ -2477,6 +2673,7 @@ export class SumoLodeRunnerGame extends BaseGame {
               gold.carriedByGuardId = g.id;
               g.carryingGoldId = gold.id;
               g.goldHoldTimer = 4.5 + Math.random() * 3.0;
+              this.triggerMusicEvent('negative', 1.8);
               break;
             }
           }
@@ -2490,15 +2687,15 @@ export class SumoLodeRunnerGame extends BaseGame {
         }
       }
 
-      // 5. In Stage 0 Tutorial, keep the trainee Oni Guard patrolling its upper platform (cols 14..22, row 5)
+      // 5. In Stage 0 Tutorial, keep the trainee Oni Guard patrolling its upper platform (cols 15..22, row 5)
       if (this.currentLevel === 0) {
         if (g.moveDirX === 0) g.moveDirX = 1;
         const nextX = g.x + g.moveDirX * guardSpeed * dt;
         if (nextX > 22) {
           g.x = 22;
           g.moveDirX = -1;
-        } else if (nextX < 14) {
-          g.x = 14;
+        } else if (nextX < 15) {
+          g.x = 15;
           g.moveDirX = 1;
         } else {
           g.x = nextX;
@@ -2802,6 +2999,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     const list = Array.from(this.runners.values()).sort((a, b) => b.score - a.score);
     const winner = list[0];
     const winnerId = winner ? winner.id : null;
+    const totalStages = SUMO_LODE_LEVELS.length;
 
     return {
       winnerId,
@@ -2812,8 +3010,8 @@ export class SumoLodeRunnerGame extends BaseGame {
       })),
       mvpHighlight:
         winnerId !== null
-          ? `${this.players[winnerId].name} REACHED STAGE ${this.currentLevel}/30 WITH ${winner.score} PTS (${winner.goldCollected} GOLD)!`
-          : `REACHED STAGE ${this.currentLevel}/30 IN SUMO LODE RUNNER!`
+          ? `${this.players[winnerId].name} REACHED STAGE ${this.currentLevel}/${totalStages} WITH ${winner.score} PTS (${winner.goldCollected} GOLD)!`
+          : `REACHED STAGE ${this.currentLevel}/${totalStages} IN SUMO LODE RUNNER!`
     };
   }
 
@@ -3181,9 +3379,9 @@ export class SumoLodeRunnerGame extends BaseGame {
       ctx.font = '700 13px Montserrat, sans-serif';
       const nextBp = this.getLevelBlueprint(this.currentLevel + 1);
       const nextMsg =
-        this.currentLevel < 30
+        this.currentLevel < SUMO_LODE_LEVELS.length
           ? `Advancing to Stage ${this.currentLevel + 1}: ${nextBp.title}...`
-          : 'ALL 30 YOKOZUNA STAGES CONQUERED!';
+          : `ALL ${SUMO_LODE_LEVELS.length} YOKOZUNA STAGES CONQUERED!`;
       ctx.fillText(nextMsg, width / 2, height / 2 + 22);
       ctx.restore();
     }
@@ -3568,49 +3766,52 @@ export class SumoLodeRunnerGame extends BaseGame {
 
     const remainingGold = this.getRemainingGoldCount();
     const totalGold = this.golds.length;
+    const totalStages = SUMO_LODE_LEVELS.length;
 
     const btnY = barY + 3;
     const btnH = 20;
 
-    // Left Status: Gold Remaining, Lives & Stage Title (left of the center floating controls dock)
+    // Left Status: Gold Remaining & Lives
     ctx.textAlign = 'left';
     ctx.fillStyle = remainingGold === 0 ? '#4ADE80' : '#FACC15';
-    ctx.font = '900 10px Montserrat, sans-serif';
+    ctx.font = '900 9.5px Montserrat, sans-serif';
     const livesLabel = this.currentLevel === 0 ? '∞' : String(this.teamLives);
     const goldText =
       remainingGold === 0
-        ? '✨ ALL GOLD COLLECTED! CLIMB UP!'
-        : `🪙 GOLD: ${totalGold - remainingGold}/${totalGold}  ❤️ LIVES: ${livesLabel}`;
-    ctx.fillText(goldText, 12, btnY + 14);
+        ? '✨ ESCAPE LADDER OPEN!'
+        : `🪙 ${totalGold - remainingGold}/${totalGold}  ❤️ ${livesLabel}`;
+    ctx.fillText(goldText, 10, btnY + 13.5);
 
     // Stage Title & Biome Label positioned cleanly between Gold status and center dock
     ctx.fillStyle = '#FDE047';
-    ctx.font = '900 10px Montserrat, sans-serif';
+    ctx.font = '900 9.5px Montserrat, sans-serif';
     ctx.textAlign = 'right';
     const stageHeader =
       this.currentLevel === 0
         ? `STAGE 0 (DOJO): ${bp.title.toUpperCase()}`
-        : `STAGE ${this.currentLevel}/30: ${bp.title.toUpperCase()}`;
-    ctx.fillText(stageHeader, width / 2 - 105, btnY + 14);
+        : `STAGE ${this.currentLevel}/${totalStages}: ${bp.title.toUpperCase()}`;
+    ctx.fillText(stageHeader, width / 2 - 102, btnY + 13.5);
 
-    // Right of center dock: Interactive Stage Controls (🎓 DOJO [T] | ◀ | ▶ | ↻ RETRY [R])
-    const tutBtnX = width / 2 + 104;
-    const prevBtnX = tutBtnX + 64;
-    const nextBtnX = prevBtnX + 28;
-    const retryBtnX = nextBtnX + 28;
+    // Right of center dock: Interactive Stage Controls (🎓 DOJO | ◀ | ▶ | ↻ RETRY | 👤 SOLO/CPU [B] | 🎵 BGM [M])
+    const tutBtnX = width / 2 + 100;
+    const prevBtnX = tutBtnX + 54;
+    const nextBtnX = prevBtnX + 24;
+    const retryBtnX = nextBtnX + 24;
+    const soloBtnX = retryBtnX + 52;
+    const bgmBtnX = soloBtnX + 66;
 
     // Tutorial Quick-Jump Button [T]
     ctx.fillStyle = this.currentLevel === 0 ? '#0284C7' : '#1E293B';
-    ctx.fillRect(tutBtnX, btnY, 60, btnH);
+    ctx.fillRect(tutBtnX, btnY, 50, btnH);
     ctx.fillStyle = '#E0F2FE';
-    ctx.font = '800 9px Montserrat, sans-serif';
+    ctx.font = '800 8.5px Montserrat, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('🎓 DOJO [T]', tutBtnX + 30, btnY + 13.5);
+    ctx.fillText('🎓 DOJO', tutBtnX + 25, btnY + 13.5);
     this.hudHitboxes.push({
       id: 'lvl_tut',
       x: tutBtnX,
       y: btnY,
-      w: 60,
+      w: 50,
       h: btnH,
       action: () => {
         this.audio.playMenuTick();
@@ -3620,16 +3821,16 @@ export class SumoLodeRunnerGame extends BaseGame {
 
     // Prev Level Button
     ctx.fillStyle = this.currentLevel > 0 ? '#334155' : '#1E293B';
-    ctx.fillRect(prevBtnX, btnY, 24, btnH);
+    ctx.fillRect(prevBtnX, btnY, 21, btnH);
     ctx.fillStyle = '#F8FAFC';
-    ctx.font = '900 10px Montserrat, sans-serif';
+    ctx.font = '900 9.5px Montserrat, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('◀', prevBtnX + 12, btnY + 14);
+    ctx.fillText('◀', prevBtnX + 10.5, btnY + 13.5);
     this.hudHitboxes.push({
       id: 'lvl_prev',
       x: prevBtnX,
       y: btnY,
-      w: 24,
+      w: 21,
       h: btnH,
       action: () => {
         if (this.currentLevel > 0) {
@@ -3640,18 +3841,18 @@ export class SumoLodeRunnerGame extends BaseGame {
     });
 
     // Next Level Button
-    ctx.fillStyle = this.currentLevel < 30 ? '#334155' : '#1E293B';
-    ctx.fillRect(nextBtnX, btnY, 24, btnH);
+    ctx.fillStyle = this.currentLevel < totalStages ? '#334155' : '#1E293B';
+    ctx.fillRect(nextBtnX, btnY, 21, btnH);
     ctx.fillStyle = '#F8FAFC';
-    ctx.fillText('▶', nextBtnX + 12, btnY + 14);
+    ctx.fillText('▶', nextBtnX + 10.5, btnY + 13.5);
     this.hudHitboxes.push({
       id: 'lvl_next',
       x: nextBtnX,
       y: btnY,
-      w: 24,
+      w: 21,
       h: btnH,
       action: () => {
-        if (this.currentLevel < 30) {
+        if (this.currentLevel < totalStages) {
           this.audio.playMenuTick();
           this.loadLevel(this.currentLevel + 1);
         }
@@ -3660,15 +3861,15 @@ export class SumoLodeRunnerGame extends BaseGame {
 
     // Instant Retry Button [R]
     ctx.fillStyle = '#7F1D1D';
-    ctx.fillRect(retryBtnX, btnY, 58, btnH);
+    ctx.fillRect(retryBtnX, btnY, 48, btnH);
     ctx.fillStyle = '#FCA5A5';
-    ctx.font = '800 9px Montserrat, sans-serif';
-    ctx.fillText('↻ RETRY [R]', retryBtnX + 29, btnY + 13.5);
+    ctx.font = '800 8.5px Montserrat, sans-serif';
+    ctx.fillText('↻ RETRY', retryBtnX + 24, btnY + 13.5);
     this.hudHitboxes.push({
       id: 'lvl_retry',
       x: retryBtnX,
       y: btnY,
-      w: 58,
+      w: 48,
       h: btnH,
       action: () => {
         this.audio.playTap();
@@ -3676,13 +3877,49 @@ export class SumoLodeRunnerGame extends BaseGame {
       }
     });
 
+    // 1P Solo / +CPU Partner Toggle Button [B]
+    ctx.fillStyle = this.soloMode ? '#15803D' : '#4338CA';
+    ctx.fillRect(soloBtnX, btnY, 62, btnH);
+    ctx.fillStyle = '#F8FAFC';
+    ctx.font = '800 8px Montserrat, sans-serif';
+    ctx.fillText(this.soloMode ? '👤 1P SOLO' : '🤖 +CPU [B]', soloBtnX + 31, btnY + 13.5);
+    this.hudHitboxes.push({
+      id: 'toggle_solo',
+      x: soloBtnX,
+      y: btnY,
+      w: 62,
+      h: btnH,
+      action: () => {
+        this.toggleSoloMode();
+      }
+    });
+
+    // Dynamic Soundtrack Toggle Button [M]
+    ctx.fillStyle = this.musicEnabled ? '#0F766E' : '#334155';
+    ctx.fillRect(bgmBtnX, btnY, 52, btnH);
+    ctx.fillStyle = this.musicEnabled ? '#5EEAD4' : '#94A3B8';
+    ctx.font = '800 8px Montserrat, sans-serif';
+    ctx.fillText(this.musicEnabled ? '🎵 BGM' : '🔇 BGM', bgmBtnX + 26, btnY + 13.5);
+    this.hudHitboxes.push({
+      id: 'toggle_bgm',
+      x: bgmBtnX,
+      y: btnY,
+      w: 52,
+      h: btnH,
+      action: () => {
+        this.musicEnabled = !this.musicEnabled;
+        this.audio.playMenuTick();
+      }
+    });
+
     // Right Status: Player Scores & Wasm Engine Badge
     ctx.textAlign = 'right';
     const p1Score = this.runners.get(0)?.score ?? 0;
-    const p2Score = this.runners.get(1)?.score ?? 0;
+    const p2Runner = this.runners.get(1);
     const wasmTag = this.wasmActive ? '⚡WASM' : '⚡JIT';
     ctx.fillStyle = '#38BDF8';
-    ctx.font = '800 10px Montserrat, sans-serif';
-    ctx.fillText(`P1: ${p1Score} • P2: ${p2Score} [${wasmTag}]`, width - 12, btnY + 14);
+    ctx.font = '800 9px Montserrat, sans-serif';
+    const scoreText = p2Runner ? `P1:${p1Score} P2:${p2Runner.score} [${wasmTag}]` : `P1:${p1Score} [${wasmTag}]`;
+    ctx.fillText(scoreText, width - 8, btnY + 13.5);
   }
 }

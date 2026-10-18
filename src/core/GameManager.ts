@@ -284,11 +284,11 @@ export const GAME_CATALOG: MinigameMetadata[] = [
   {
     id: 'sumo_lode_runner',
     title: 'Sumo Lode Runner',
-    tagline: '30-Stage Dohyō Gold Heist & Trap Puzzle',
+    tagline: '40-Stage Dohyō Gold Heist & Trap Puzzle',
     category: 'Action',
     icon: '[G-261]',
-    instructions: 'Collect all Golden Chanko chests across 30 progressive dojo stages to reveal the Escape Ladder! Climb bamboo ladders, shimmy across shimenawa ropes, and blast diagonal Dohyō clay pits (Q/E or Space/Enter) to trap Oni-Sumo guards and walk across their heads!',
-    controlPrompt: 'Move/Climb: WASD / Arrows • Dig Left/Right: Q & E / Space / Enter • [ / ]: Stage Select'
+    instructions: 'Collect all Golden Chanko chests across 40 classic & modern Dohyō stages to unlock the Escape Ladder! Dig diagonal clay pits [Space / Q / E] to trap Oni-Sumo guards and walk across their heads.',
+    controlPrompt: 'Move/Climb: WASD / Arrows • Dig: Space / Q / E • Stage: [ / ]'
   },
   {
     id: 'tanks',
@@ -2655,6 +2655,7 @@ export class GameManager {
   public sumoMode: 'standard' | 'no_limit' = 'standard';
   public sumoTargetMeters: number = 250;
   public lodeRunnerLevel: number = 0;
+  public lodeRunnerSoloMode: boolean = true;
   public sumoHitboxes: Array<{ id: string; x: number; y: number; w: number; h: number; action: () => void }> = [];
   public selectedCategory: string = 'ALL';
   public categoryPillBoxes: { id: string; x: number; y: number; w: number; h: number; type: 'category' | 'random' | 'cup' }[] = [];
@@ -2988,9 +2989,15 @@ export class GameManager {
       const levelParam = params.get('level');
       if (levelParam) {
         const parsedLvl = parseInt(levelParam, 10);
-        if (!isNaN(parsedLvl) && parsedLvl >= 0 && parsedLvl <= 30) {
+        if (!isNaN(parsedLvl) && parsedLvl >= 0 && parsedLvl <= SUMO_LODE_LEVELS.length) {
           this.lodeRunnerLevel = parsedLvl;
         }
+      }
+      const soloParam = params.get('solo');
+      if (soloParam === 'false' || soloParam === '0') {
+        this.lodeRunnerSoloMode = false;
+      } else if (soloParam === 'true' || soloParam === '1') {
+        this.lodeRunnerSoloMode = true;
       }
 
       const idx = GAME_CATALOG.findIndex((g) => g.id === gameParam);
@@ -5313,19 +5320,28 @@ export class GameManager {
   }
 
   public setPlayerCount(count: number) {
-    // 1P: P1 Human, P2 Bot (using global difficulty), P3/P4 Disabled
-    // 2P: P1 Human, P2 Human, P3/P4 Disabled
-    // 3P: P1, P2, P3 Human, P4 Disabled
-    // 4P: P1, P2, P3, P4 Human
-    if (count === 1) {
+    // 0: 1P SOLO (P1 Human only, no CPU bots!)
+    // 1: 1P V AI (P1 Human, P2 Bot using global difficulty, P3/P4 Disabled)
+    // 2: 2P (P1 Human, P2 Human, P3/P4 Disabled)
+    // 3: 3P (P1, P2, P3 Human, P4 Disabled)
+    // 4: 4P (P1, P2, P3, P4 Human)
+    if (count === 0) {
+      this.players[0].type = 'human';
+      this.players[1].type = 'disabled';
+      this.players[2].type = 'disabled';
+      this.players[3].type = 'disabled';
+      this.lodeRunnerSoloMode = true;
+    } else if (count === 1) {
       this.players[0].type = 'human';
       this.players[1].type = this.globalBotDifficulty;
       this.players[2].type = 'disabled';
       this.players[3].type = 'disabled';
+      this.lodeRunnerSoloMode = false;
     } else {
       for (let i = 0; i < 4; i++) {
         this.players[i].type = i < count ? 'human' : 'disabled';
       }
+      this.lodeRunnerSoloMode = false;
     }
     this.catalogFilterDirty = true;
     if (this.state === 'LOBBY') {
@@ -6461,6 +6477,7 @@ export class GameManager {
         break;
       case 'sumo_lode_runner': {
         const lodeGame = new SumoLodeRunnerGame(this.players, this.input, this.audio, this.particles);
+        lodeGame.setSoloMode(this.lodeRunnerSoloMode);
         lodeGame.setStartingLevel(this.lodeRunnerLevel);
         this.activeGame = lodeGame;
         break;
@@ -7379,26 +7396,29 @@ export class GameManager {
         : `${currentDisplayedCount} Minigames  •  1-4 Players & Bots  •  Tournament Cup`;
     this.ctx.fillText(subText, w / 2, 58);
 
-    // At startup or when playing 1 Human vs AI bot(s), Tab 1 ("1 PLAYER V AI") is selected
+    // At startup or when playing 1 Human vs AI bot(s), Tab 1 ("1P V AI") is selected; when 1 Human only (no bots), Tab 0 ("1P SOLO") is selected
     let selectedTabCount = activeCount;
     if (humanCount === 1 && botCount >= 1) {
       selectedTabCount = 1;
+    } else if (humanCount === 1 && botCount === 0) {
+      selectedTabCount = 0;
     } else if (botCount === 0) {
       selectedTabCount = humanCount;
     }
 
     const tabY = 82;
-    const maxTabsW = Math.min(500, w - 32);
-    const tabGap = 8;
-    const tabW = Math.max(50, Math.floor((maxTabsW - 3 * tabGap) / 4));
-    const totalTabsW = 4 * tabW + 3 * tabGap;
+    const maxTabsW = Math.min(580, w - 32);
+    const tabGap = 7;
+    const tabW = Math.max(46, Math.floor((maxTabsW - 4 * tabGap) / 5));
+    const totalTabsW = 5 * tabW + 4 * tabGap;
     const tabsStartX = (w - totalTabsW) / 2;
 
     const tabs = [
-      { count: 1, label: tabW < 75 ? '1P' : (tabW < 112 ? '1P V AI' : '1 PLAYER V AI') },
-      { count: 2, label: tabW < 75 ? '2P' : '2 PLAYERS' },
-      { count: 3, label: tabW < 75 ? '3P' : '3 PLAYERS' },
-      { count: 4, label: tabW < 75 ? '4P' : '4 PLAYERS' }
+      { count: 0, label: tabW < 72 ? '1P SOLO' : '👤 1P SOLO' },
+      { count: 1, label: tabW < 72 ? '1P V AI' : '🤖 1P V AI' },
+      { count: 2, label: tabW < 72 ? '2P' : '2 PLAYERS' },
+      { count: 3, label: tabW < 72 ? '3P' : '3 PLAYERS' },
+      { count: 4, label: tabW < 72 ? '4P' : '4 PLAYERS' }
     ];
 
     tabs.forEach((tab, idx) => {
@@ -7429,7 +7449,7 @@ export class GameManager {
       this.ctx.restore();
 
       this.ctx.fillStyle = isSelected ? '#FFFFFF' : '#334155';
-      this.ctx.font = '900 11px Montserrat, sans-serif';
+      this.ctx.font = '900 10.5px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
       this.ctx.fillText(tab.label, tabX + tabW / 2, tabY + 17);
     });
@@ -7489,7 +7509,7 @@ export class GameManager {
 
     // 5. Category Filter Tabs & Quick Action Buttons (Auto-Wrapping Responsive Design)
     this.categoryPillBoxes = [];
-    const isNarrow = w < 780;
+    const isNarrow = w < 820;
     const catBarY = 148;
     const categories: { id: string; label: string; icon: string }[] = [
       { id: 'ALL', label: `ALL (${currentDisplayedCount})`, icon: '🎮' },
@@ -7502,14 +7522,15 @@ export class GameManager {
     ];
 
     if (!isNarrow) {
-      const catW = 56;
+      const catW = 64;
+      const allPillW = 78;
       const catGap = 5;
-      const totalPillsW = 66 + 6 * (catW + catGap) + 12 + 84 + 6 + 92 + 6 + 90;
+      const totalPillsW = allPillW + 6 * (catW + catGap) + 12 + 86 + 6 + 88 + 6 + 94;
       let curX = Math.max(16, w / 2 - totalPillsW / 2);
 
       categories.forEach((cat) => {
         const isSel = this.selectedCategory.toUpperCase() === cat.id.toUpperCase();
-        const pillW = cat.id === 'ALL' ? 66 : catW;
+        const pillW = cat.id === 'ALL' ? allPillW : catW;
         this.categoryPillBoxes.push({ id: cat.id, x: curX, y: catBarY, w: pillW, h: 22, type: 'category' });
 
         this.ctx.save();
@@ -7527,9 +7548,9 @@ export class GameManager {
         this.ctx.restore();
 
         this.ctx.fillStyle = isSel ? '#FFFFFF' : '#475569';
-        this.ctx.font = '900 9px Montserrat, sans-serif';
+        this.ctx.font = '900 9.5px Montserrat, sans-serif';
         this.ctx.textAlign = 'center';
-        this.ctx.fillText(cat.label, curX + pillW / 2, catBarY + 15);
+        this.ctx.fillText(cat.label, curX + pillW / 2, catBarY + 14.5);
 
         curX += pillW + catGap;
       });
@@ -7537,7 +7558,7 @@ export class GameManager {
       curX += 6;
 
       // 🎲 RANDOM MINIGAME BUTTON (Tactile Violet 3D Button)
-      const randW = 84;
+      const randW = 86;
       this.categoryPillBoxes.push({ id: 'RANDOM', x: curX, y: catBarY, w: randW, h: 22, type: 'random' });
       this.ctx.save();
       this.ctx.shadowColor = 'rgba(139, 92, 246, 0.4)';
@@ -7558,7 +7579,7 @@ export class GameManager {
       curX += randW + 6;
 
       // 🏆 CUP TOURNAMENT BUTTON (Tactile Gold 3D Button)
-      const cupW = 92;
+      const cupW = 88;
       this.categoryPillBoxes.push({ id: 'CUP', x: curX, y: catBarY, w: cupW, h: 22, type: 'cup' });
       this.ctx.save();
       this.ctx.shadowColor = 'rgba(245, 158, 11, 0.4)';
@@ -7582,7 +7603,7 @@ export class GameManager {
       const searchLabel = this.searchQuery ? `🔍 "${this.searchQuery}" [✕]` : (this.isSearchFocused ? '🔍 TYPE... [Esc]' : '🔍 SEARCH [/]');
       this.ctx.font = '900 10px Montserrat, sans-serif';
       const sTextW = this.ctx.measureText(searchLabel).width;
-      const searchW = Math.max(90, sTextW + 18);
+      const searchW = Math.max(94, sTextW + 18);
       this.categoryPillBoxes.push({ id: 'SEARCH', x: curX, y: catBarY, w: searchW, h: 22, type: 'category' });
 
       this.ctx.save();
@@ -7830,20 +7851,12 @@ export class GameManager {
 
       // Floating Category Pill (Top-Left overlay on artwork with 2.5D tactile drop edge)
       const catColor = catColors[game.category] || '#0284C7';
-      this.drawRoundedRect(cardX + 12, cardY + 13.5, 54, 18, 5, '#0F172A');
-      this.drawRoundedRect(cardX + 12, cardY + 12, 54, 18, 5, catColor);
+      this.drawRoundedRect(cardX + 12, cardY + 13.5, 62, 18, 5, '#0F172A');
+      this.drawRoundedRect(cardX + 12, cardY + 12, 62, 18, 5, catColor);
       this.ctx.fillStyle = '#FFFFFF';
       this.ctx.font = '900 8.5px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText(game.category.toUpperCase(), cardX + 39, cardY + 24.5);
-
-      // Floating ID Badge (Top-Right overlay on artwork with 2.5D tactile drop edge)
-      this.drawRoundedRect(cardX + cardW - 54, cardY + 13.5, 42, 18, 5, '#000000');
-      this.drawRoundedRect(cardX + cardW - 54, cardY + 12, 42, 18, 5, 'rgba(15, 23, 42, 0.88)', 'rgba(255, 255, 255, 0.40)', 1);
-      this.ctx.fillStyle = '#38BDF8';
-      this.ctx.font = '900 9px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(game.icon, cardX + cardW - 33, cardY + 24.5);
+      this.ctx.fillText(game.category.toUpperCase(), cardX + 43, cardY + 24.5);
 
       // Phone Mode Compatibility Badge along bottom of artwork when Phone toggle is active
       if (this.deviceMode === 'phone') {
@@ -7921,8 +7934,10 @@ export class GameManager {
     this.ctx.fillRect(0, 0, w, h);
 
     // Modal Card sizing
-    const modalW = Math.min(540, w * 0.9);
-    const modalH = (game.id === 'skyline_sumo') ? Math.min(575, h * 0.95) : Math.min(545, h * 0.92);
+    const modalW = Math.min(560, w * 0.92);
+    const modalH = (game.id === 'skyline_sumo' || game.id === 'sumo_lode_runner')
+      ? Math.min(585, h * 0.95)
+      : Math.min(545, h * 0.92);
     const modalX = w / 2 - modalW / 2;
     const modalY = h / 2 - modalH / 2;
 
@@ -7938,7 +7953,7 @@ export class GameManager {
     this.drawRoundedRect(modalX, modalY, modalW, modalH, 18, '#FFFFFF', '#CBD5E1', 2);
     this.ctx.restore();
 
-    // Top Header Strip: Category Pill & Game Icon Badge & Close Button
+    // Top Header Strip: Category Pill & Mode Pill & Close Button
     const catColors: Record<string, string> = {
       Action: '#DC2626',
       Physics: '#7C3AED',
@@ -7948,16 +7963,18 @@ export class GameManager {
       Puzzle: '#0284C7'
     };
     const catColor = catColors[game.category] || '#0284C7';
-    this.drawRoundedRect(modalX + 16, modalY + 12, 72, 22, 6, catColor);
+    this.drawRoundedRect(modalX + 16, modalY + 12, 76, 22, 6, catColor);
     this.ctx.fillStyle = '#FFFFFF';
     this.ctx.font = '900 10px Montserrat, sans-serif';
     this.ctx.textAlign = 'center';
-    this.ctx.fillText(game.category.toUpperCase(), modalX + 52, modalY + 26.5);
+    this.ctx.fillText(game.category.toUpperCase(), modalX + 54, modalY + 26.5);
 
-    this.drawRoundedRect(modalX + 94, modalY + 12, 62, 22, 6, '#F1F5F9', '#CBD5E1', 1);
+    const headerSubPill = game.id === 'sumo_lode_runner' ? '40 STAGES + DOJO' : '1–4P ARCADE';
+    const subPillW = game.id === 'sumo_lode_runner' ? 118 : 88;
+    this.drawRoundedRect(modalX + 98, modalY + 12, subPillW, 22, 6, '#F1F5F9', '#CBD5E1', 1);
     this.ctx.fillStyle = '#0284C7';
-    this.ctx.font = '900 10px Montserrat, sans-serif';
-    this.ctx.fillText(game.icon, modalX + 125, modalY + 26.5);
+    this.ctx.font = '900 9.5px Montserrat, sans-serif';
+    this.ctx.fillText(headerSubPill, modalX + 98 + subPillW / 2, modalY + 26.5);
 
     // Close Button "✕" (Tactile circle in top-right header, completely clear of artwork)
     const closeBtnX = modalX + modalW - 24;
@@ -7981,8 +7998,8 @@ export class GameManager {
     this.ctx.fillText('✕', closeBtnX, closeBtnY + 4.5);
 
     // Hero Full-Art banner with rounded clipping (Placed cleanly below header)
-    const artY = modalY + 42;
-    const artH = 145;
+    const artY = modalY + 40;
+    const artH = game.id === 'sumo_lode_runner' ? 116 : 142;
     this.ctx.save();
     this.ctx.beginPath();
     if (this.ctx.roundRect) {
@@ -8014,24 +8031,24 @@ export class GameManager {
     this.ctx.stroke();
     this.ctx.restore();
 
-    // Game Title & Tagline
+    // Game Title & Tagline (Auto-fit title & tagline so they never overflow)
     this.ctx.fillStyle = '#0F172A';
-    this.ctx.font = '900 24px Montserrat, sans-serif';
+    this.ctx.font = game.id === 'sumo_lode_runner' ? '900 21px Montserrat, sans-serif' : '900 23px Montserrat, sans-serif';
     this.ctx.textAlign = 'center';
-    this.ctx.fillText(game.title, modalX + modalW / 2, artY + artH + 30);
+    this.ctx.fillText(game.title, modalX + modalW / 2, artY + artH + 26);
 
     this.ctx.fillStyle = '#0284C7';
-    this.ctx.font = 'bold 13px Montserrat, sans-serif';
-    this.ctx.fillText(game.tagline, modalX + modalW / 2, artY + artH + 48);
+    this.ctx.font = 'bold 12px Montserrat, sans-serif';
+    this.ctx.fillText(game.tagline, modalX + modalW / 2, artY + artH + 43);
 
-    // How to Play Instructions or Sumo Custom Mode Config
+    // How to Play Instructions or Custom Mode Config
     if (game.id === 'skyline_sumo') {
       this.sumoHitboxes = [];
 
       // Mode Selector Tabs (Standard 60s vs Just For Fun No Limit)
       const tabW = (modalW - 56) / 2;
       const tabH = 32;
-      const tabY = artY + artH + 60;
+      const tabY = artY + artH + 56;
       const tab1X = modalX + 24;
       const tab2X = tab1X + tabW + 8;
 
@@ -8079,7 +8096,6 @@ export class GameManager {
         this.ctx.textAlign = 'center';
         this.ctx.fillText(`🎯 CHOOSE TARGET ALTITUDE TO REACH: ${this.sumoTargetMeters}m`, modalX + modalW / 2, altY + 12);
 
-        // Quick Altitude Buttons: 100m, 250m, 500m, 1000m, -50m, +50m, Custom
         const btnOptions = [
           { label: '100m', val: 100 },
           { label: '250m', val: 250 },
@@ -8145,123 +8161,234 @@ export class GameManager {
           this.ctx.restore();
         });
 
-        // Speedrun helper note
         this.ctx.fillStyle = '#64748B';
         this.ctx.font = '600 11px sans-serif';
         this.ctx.textAlign = 'center';
         this.ctx.fillText('⏱ Live stopwatch counts your climb. First to conquer the summit wins!', modalX + modalW / 2, pillY + 38);
       } else {
-        // Standard instructions
         this.ctx.fillStyle = '#334155';
-        this.ctx.font = '13.5px sans-serif';
+        this.ctx.font = '13px sans-serif';
         this.ctx.textAlign = 'center';
-        this.wrapText(game.instructions, modalX + modalW / 2, tabY + 48, modalW - 48, 18);
+        this.wrapText(game.instructions, modalX + modalW / 2, tabY + 48, modalW - 48, 17);
       }
     } else if (game.id === 'sumo_lode_runner') {
       this.sumoHitboxes = [];
+      const totalLevels = SUMO_LODE_LEVELS.length;
       const bp = this.lodeRunnerLevel <= 0 ? SUMO_LODE_TUTORIAL_LEVEL : (SUMO_LODE_LEVELS[this.lodeRunnerLevel - 1] || SUMO_LODE_LEVELS[0]);
-      const topY = artY + artH + 64;
-
-      this.ctx.fillStyle = '#0F172A';
-      this.ctx.font = '900 12px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      const headerTxt =
-        this.lodeRunnerLevel === 0
-          ? `🎓 STARTING STAGE: TUTORIAL — ${bp.title.toUpperCase()} (STEP-BY-STEP GUIDE)`
-          : `🎌 STARTING STAGE: ${this.lodeRunnerLevel}/30 — ${bp.title.toUpperCase()} (${bp.guardCount} ONI)`;
-      this.ctx.fillText(
-        headerTxt,
-        modalX + modalW / 2,
-        topY
-      );
-
-      // Chapter & Stage Selector Pills (including Stage 0 Tutorial Dojo)
-      const stageOpts: { label: string; val?: number; step?: number }[] = [
-        { label: '🎓 Dojo', val: 0 },
-        { label: 'Lv 1', val: 1 },
-        { label: 'Lv 7', val: 7 },
-        { label: 'Lv 13', val: 13 },
-        { label: 'Lv 19', val: 19 },
-        { label: 'Lv 25', val: 25 },
-        { label: 'Lv 30', val: 30 },
-        { label: '− 1', step: -1 },
-        { label: '+ 1', step: 1 }
-      ];
-
       const rowW = modalW - 48;
-      const pillGap = 4;
-      const pillW = (rowW - pillGap * (stageOpts.length - 1)) / stageOpts.length;
-      const pillH = 25;
-      const pillY = topY + 10;
 
-      stageOpts.forEach((opt, oIdx) => {
-        const pillX = modalX + 24 + oIdx * (pillW + pillGap);
-        const isSelected = opt.val !== undefined && opt.val === this.lodeRunnerLevel;
+      // ROW 1: 1P SOLO (NO CPU) vs 2P CO-OP / VS CPU Mode Toggle
+      const modeY = artY + artH + 52;
+      const modeH = 26;
+      const modeW = (rowW - 8) / 2;
+      const mode1X = modalX + 24;
+      const mode2X = mode1X + modeW + 8;
+
+      this.sumoHitboxes.push({
+        id: 'lode_mode_solo',
+        x: mode1X,
+        y: modeY,
+        w: modeW,
+        h: modeH,
+        action: () => {
+          this.lodeRunnerSoloMode = true;
+          this.setPlayerCount(0);
+          this.audio.playTap();
+        }
+      });
+      this.sumoHitboxes.push({
+        id: 'lode_mode_2p',
+        x: mode2X,
+        y: modeY,
+        w: modeW,
+        h: modeH,
+        action: () => {
+          this.lodeRunnerSoloMode = false;
+          if (this.players.filter((p) => p.type !== 'disabled').length < 2) {
+            this.setPlayerCount(1);
+          }
+          this.audio.playTap();
+        }
+      });
+
+      this.ctx.save();
+      this.drawRoundedRect(
+        mode1X,
+        modeY,
+        modeW,
+        modeH,
+        6,
+        this.lodeRunnerSoloMode ? '#16A34A' : '#F8FAFC',
+        this.lodeRunnerSoloMode ? '#86EFAC' : '#CBD5E1',
+        this.lodeRunnerSoloMode ? 1.5 : 1
+      );
+      this.ctx.fillStyle = this.lodeRunnerSoloMode ? '#FFFFFF' : '#475569';
+      this.ctx.font = '900 10px Montserrat, sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText('👤 1P SOLO PUZZLE (NO CPU)', mode1X + modeW / 2, modeY + 16.5);
+
+      this.drawRoundedRect(
+        mode2X,
+        modeY,
+        modeW,
+        modeH,
+        6,
+        !this.lodeRunnerSoloMode ? '#0284C7' : '#F8FAFC',
+        !this.lodeRunnerSoloMode ? '#38BDF8' : '#CBD5E1',
+        !this.lodeRunnerSoloMode ? 1.5 : 1
+      );
+      this.ctx.fillStyle = !this.lodeRunnerSoloMode ? '#FFFFFF' : '#475569';
+      this.ctx.font = '900 10px Montserrat, sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText('👥 2P CO-OP / VS CPU BOT', mode2X + modeW / 2, modeY + 16.5);
+      this.ctx.restore();
+
+      // ROW 2: Chapter Quick-Jump Pills (Dojo 0 | 1983 1-10 | Ch 2 11-16 | Ch 3 17-22 | Ch 4 23-34 | Ch 5 35-40)
+      const chapY = modeY + 32;
+      const chapH = 24;
+      const chapOpts: { label: string; startLvl: number; endLvl: number }[] = [
+        { label: '🎓 Dojo (0)', startLvl: 0, endLvl: 0 },
+        { label: '1983 (1-10)', startLvl: 1, endLvl: 10 },
+        { label: 'Ch 2 (11-18)', startLvl: 11, endLvl: 18 },
+        { label: 'Ch 3 (19-26)', startLvl: 19, endLvl: 26 },
+        { label: 'Ch 4 (27-33)', startLvl: 27, endLvl: 33 },
+        { label: 'Ch 5 (34-40)', startLvl: 34, endLvl: 40 }
+      ];
+      const chapGap = 4;
+      const chapW = (rowW - chapGap * (chapOpts.length - 1)) / chapOpts.length;
+
+      chapOpts.forEach((ch, cIdx) => {
+        const cx = modalX + 24 + cIdx * (chapW + chapGap);
+        const isCurrentChap = this.lodeRunnerLevel >= ch.startLvl && this.lodeRunnerLevel <= ch.endLvl;
 
         this.sumoHitboxes.push({
-          id: `lode_lvl_${opt.label}`,
-          x: pillX,
-          y: pillY,
-          w: pillW,
-          h: pillH,
+          id: `lode_chap_${ch.label}`,
+          x: cx,
+          y: chapY,
+          w: chapW,
+          h: chapH,
           action: () => {
-            if (opt.val !== undefined) {
-              this.lodeRunnerLevel = opt.val;
-            } else if (opt.step) {
-              this.lodeRunnerLevel = Math.max(0, Math.min(30, this.lodeRunnerLevel + opt.step));
-            }
+            this.lodeRunnerLevel = ch.startLvl;
             this.audio.playTap();
           }
         });
 
         this.ctx.save();
         this.drawRoundedRect(
-          pillX,
-          pillY,
-          pillW,
-          pillH,
+          cx,
+          chapY,
+          chapW,
+          chapH,
           6,
-          isSelected ? '#0284C7' : '#F8FAFC',
-          isSelected ? '#38BDF8' : '#CBD5E1',
-          isSelected ? 1.5 : 1
+          isCurrentChap ? '#0F172A' : '#F1F5F9',
+          isCurrentChap ? '#38BDF8' : '#CBD5E1',
+          isCurrentChap ? 1.5 : 1
         );
-        this.ctx.fillStyle = isSelected ? '#FFFFFF' : '#334155';
-        this.ctx.font = '800 9px Montserrat, sans-serif';
+        this.ctx.fillStyle = isCurrentChap ? '#38BDF8' : '#334155';
+        this.ctx.font = '800 8.5px Montserrat, sans-serif';
         this.ctx.textAlign = 'center';
-        this.ctx.fillText(opt.label, pillX + pillW / 2, pillY + 16);
+        this.ctx.fillText(ch.label, cx + chapW / 2, chapY + 15.5);
         this.ctx.restore();
       });
 
-      this.ctx.fillStyle = '#334155';
-      this.ctx.font = '12.5px sans-serif';
+      // ROW 3: Stage Stepper Bar [ ◀ PREV ]  Stage X/40: Title (N Oni)  [ NEXT ▶ ]
+      const stepY = chapY + 30;
+      const stepH = 28;
+      const navBtnW = 68;
+      const prevX = modalX + 24;
+      const nextX = modalX + modalW - 24 - navBtnW;
+      const infoX = prevX + navBtnW + 6;
+      const infoW = nextX - infoX - 6;
+
+      this.sumoHitboxes.push({
+        id: 'lode_stage_prev',
+        x: prevX,
+        y: stepY,
+        w: navBtnW,
+        h: stepH,
+        action: () => {
+          this.lodeRunnerLevel = Math.max(0, this.lodeRunnerLevel - 1);
+          this.audio.playTap();
+        }
+      });
+      this.sumoHitboxes.push({
+        id: 'lode_stage_next',
+        x: nextX,
+        y: stepY,
+        w: navBtnW,
+        h: stepH,
+        action: () => {
+          this.lodeRunnerLevel = Math.min(totalLevels, this.lodeRunnerLevel + 1);
+          this.audio.playTap();
+        }
+      });
+
+      this.ctx.save();
+      this.drawRoundedRect(prevX, stepY, navBtnW, stepH, 6, '#F8FAFC', '#94A3B8', 1.2);
+      this.drawRoundedRect(nextX, stepY, navBtnW, stepH, 6, '#F8FAFC', '#94A3B8', 1.2);
+      this.ctx.fillStyle = '#0F172A';
+      this.ctx.font = '900 10px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
-      this.wrapText(game.instructions, modalX + modalW / 2, pillY + 42, modalW - 48, 16);
+      this.ctx.fillText('◀ PREV', prevX + navBtnW / 2, stepY + 18);
+      this.ctx.fillText('NEXT ▶', nextX + navBtnW / 2, stepY + 18);
+
+      // Center Stage Info Pill
+      this.drawRoundedRect(infoX, stepY, infoW, stepH, 6, '#EFF6FF', '#93C5FD', 1.2);
+      this.ctx.fillStyle = '#1E3A8A';
+      const stageDesc =
+        this.lodeRunnerLevel === 0
+          ? `🎓 Stage 0: ${bp.title} (Guided Tutorial)`
+          : `🎌 Stage ${this.lodeRunnerLevel}/${totalLevels}: ${bp.title} (${bp.guardCount} Oni)`;
+      let stgFont = 10.5;
+      this.ctx.font = `900 ${stgFont}px Montserrat, sans-serif`;
+      while (this.ctx.measureText(stageDesc).width > infoW - 14 && stgFont > 8) {
+        stgFont -= 0.5;
+        this.ctx.font = `900 ${stgFont}px Montserrat, sans-serif`;
+      }
+      this.ctx.fillText(stageDesc, infoX + infoW / 2, stepY + 18);
+      this.ctx.restore();
+
+      // ROW 4: Concise 2-line instructions cleanly above CONTROLS box
+      this.ctx.fillStyle = '#334155';
+      this.ctx.font = '11.5px sans-serif';
+      this.ctx.textAlign = 'center';
+      this.wrapText(game.instructions, modalX + modalW / 2, stepY + 44, modalW - 48, 14.5);
     } else {
       // Standard Instructions
       this.ctx.fillStyle = '#334155';
-      this.ctx.font = '13.5px sans-serif';
-      this.wrapText(game.instructions, modalX + modalW / 2, artY + artH + 72, modalW - 48, 18);
+      this.ctx.font = '13px sans-serif';
+      this.ctx.textAlign = 'center';
+      this.wrapText(game.instructions, modalX + modalW / 2, artY + artH + 68, modalW - 48, 17);
     }
 
-    // Controls Prompt Box (High-contrast mint container)
+    // Controls Prompt Box (High-contrast mint container, auto-fitted so text never touches mascots)
     const ctrlY = modalY + modalH - 114;
     this.drawRoundedRect(modalX + 24, ctrlY, modalW - 48, 30, 8, '#F0FDF4', '#86EFAC', 1.5);
     this.ctx.fillStyle = '#166534';
-    this.ctx.font = '900 11px Montserrat, sans-serif';
-    this.ctx.fillText(`CONTROLS: ${game.controlPrompt}`, modalX + modalW / 2, ctrlY + 19);
+    this.ctx.textAlign = 'center';
+    const ctrlText = `CONTROLS: ${game.controlPrompt}`;
+    const maxCtrlTextW = modalW - 142; // Keep clear of flanking mascots at modalX + 44 and modalX + modalW - 44
+    let ctrlFont = 10.5;
+    this.ctx.font = `900 ${ctrlFont}px Montserrat, sans-serif`;
+    while (this.ctx.measureText(ctrlText).width > maxCtrlTextW && ctrlFont > 7.5) {
+      ctrlFont -= 0.5;
+      this.ctx.font = `900 ${ctrlFont}px Montserrat, sans-serif`;
+    }
+    this.ctx.fillText(ctrlText, modalX + modalW / 2, ctrlY + 19);
 
     // Player Mascots flanking the controls box
     const isBotP2 = this.players[1].type.startsWith('bot_');
-    drawCharacter(this.ctx, modalX + 44, ctrlY + 15, 14, 0, false, 'happy', performance.now() * 0.001);
-    drawCharacter(this.ctx, modalX + modalW - 44, ctrlY + 15, 14, 1, isBotP2, 'happy', performance.now() * 0.001);
+    drawCharacter(this.ctx, modalX + 44, ctrlY + 15, 13, 0, false, 'happy', performance.now() * 0.001);
+    drawCharacter(this.ctx, modalX + modalW - 44, ctrlY + 15, 13, 1, isBotP2, 'happy', performance.now() * 0.001);
 
     // Player Key Shortcuts Badge
     this.ctx.fillStyle = '#64748B';
-    this.ctx.font = '600 11px sans-serif';
-    this.ctx.fillText('P1: [WASD / Space]  •  P2: [Arrows / Enter]  •  Touch Corners', modalX + modalW / 2, ctrlY + 44);
+    this.ctx.font = '600 10.5px sans-serif';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText('P1: [WASD / Q,E]  •  P2: [Arrows / , .]  •  Touch Controls Ready', modalX + modalW / 2, ctrlY + 44);
 
     // Play Button (Sitting cleanly with margin above bottom card bevel)
-    const btnW = 260;
+    const btnW = 280;
     const btnH = 44;
     const btnX = modalX + modalW / 2 - btnW / 2;
     const btnY = modalY + modalH - 62;
@@ -8282,11 +8409,11 @@ export class GameManager {
     const playText = game.id === 'skyline_sumo' && this.sumoMode === 'no_limit'
       ? `▶ START SPEEDRUN [${this.sumoTargetMeters}m]`
       : game.id === 'sumo_lode_runner'
-      ? (this.lodeRunnerLevel === 0 ? '▶ START TUTORIAL DOJO [Space / Enter]' : `▶ PLAY STAGE ${this.lodeRunnerLevel}/30 [Space / Enter]`)
+      ? (this.lodeRunnerLevel === 0 ? '▶ START TUTORIAL DOJO [Space]' : `▶ PLAY STAGE ${this.lodeRunnerLevel}/${SUMO_LODE_LEVELS.length} [Space]`)
       : '▶ PLAY GAME [Space / Enter]';
 
     this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.font = '900 14.5px Montserrat, sans-serif';
+    this.ctx.font = '900 14px Montserrat, sans-serif';
     this.ctx.textAlign = 'center';
     this.ctx.fillText(playText, modalX + modalW / 2, btnY + 27);
 
@@ -11206,8 +11333,10 @@ export class GameManager {
       // If modal is open, handle modal buttons / closing
       if (this.isModalOpen) {
         const game = GAME_CATALOG[this.modalGameIndex];
-        const modalW = Math.min(540, w * 0.9);
-        const modalH = (game?.id === 'skyline_sumo') ? Math.min(575, h * 0.95) : Math.min(545, h * 0.92);
+        const modalW = Math.min(560, w * 0.92);
+        const modalH = (game?.id === 'skyline_sumo' || game?.id === 'sumo_lode_runner')
+          ? Math.min(585, h * 0.95)
+          : Math.min(545, h * 0.92);
         const modalX = w / 2 - modalW / 2;
         const modalY = h / 2 - modalH / 2;
 
@@ -11230,7 +11359,7 @@ export class GameManager {
         }
 
         // Play button click
-        const btnW = 260;
+        const btnW = 280;
         const btnH = 44;
         const btnX = modalX + modalW / 2 - btnW / 2;
         const btnY = modalY + modalH - 62;
@@ -11488,8 +11617,10 @@ export class GameManager {
 
     if (this.isModalOpen) {
       const game = GAME_CATALOG[this.modalGameIndex];
-      const modalW = Math.min(540, w * 0.9);
-      const modalH = (game?.id === 'skyline_sumo') ? Math.min(575, h * 0.95) : Math.min(545, h * 0.92);
+      const modalW = Math.min(560, w * 0.92);
+      const modalH = (game?.id === 'skyline_sumo' || game?.id === 'sumo_lode_runner')
+        ? Math.min(585, h * 0.95)
+        : Math.min(545, h * 0.92);
       const modalX = w / 2 - modalW / 2;
       const modalY = h / 2 - modalH / 2;
       const closeBtnX = modalX + modalW - 24;
@@ -11506,7 +11637,7 @@ export class GameManager {
           }
         }
       }
-      const btnW = 260;
+      const btnW = 280;
       const btnH = 44;
       const btnX = modalX + modalW / 2 - btnW / 2;
       const btnY = modalY + modalH - 62;

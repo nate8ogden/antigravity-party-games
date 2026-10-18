@@ -1075,9 +1075,9 @@ export class AudioEngine {
   }
 
   /**
-   * Synthesizes a soft retro NES / Edo-taiko percussion hit ('taiko' | 'hat' | 'snare')
+   * Synthesizes a soft retro NES / Edo-taiko percussion hit ('taiko' | 'kick' | 'hat' | 'snare')
    */
-  public playChiptunePercussion(kind: 'taiko' | 'hat' | 'snare', gainLevel: number = 0.04) {
+  public playChiptunePercussion(kind: 'taiko' | 'kick' | 'hat' | 'snare', gainLevel: number = 0.04) {
     if (this.muted || !this.sfxEnabled) return;
     this.initContext();
     if (!this.ctx) return;
@@ -1085,7 +1085,7 @@ export class AudioEngine {
     const t = this.ctx.currentTime;
     const dest = this.getDestination();
 
-    if (kind === 'taiko') {
+    if (kind === 'taiko' || kind === 'kick') {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = 'triangle';
