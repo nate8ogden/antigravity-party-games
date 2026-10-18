@@ -206,6 +206,30 @@ export class LandscapeArtilleryGame extends BaseGame {
     window.addEventListener('pointerup', this.boundPointerUp);
   }
 
+  public handlePointerDown(x: number, y: number, w: number = 960, h: number = 600): boolean {
+    if (this.isFinished || this.turnState !== 'AIMING') return false;
+    const activeP = this.getActivePlayer();
+    if (!activeP || !activeP.alive) return false;
+
+    const worldX = (x - w / 2) / this.camera.zoom + this.camera.x;
+    const worldY = (y - h / 2) / this.camera.zoom + this.camera.y;
+
+    const dx = worldX - activeP.x;
+    const dy = worldY - (activeP.y - 14);
+    if (Math.hypot(dx, dy) > 20) {
+      const angleRad = Math.atan2(-dy, dx);
+      let angleDeg = (angleRad * 180) / Math.PI;
+      if (angleDeg < 0) angleDeg += 360;
+      activeP.aimAngleDeg = Math.max(10, Math.min(170, angleDeg));
+      activeP.facing = activeP.aimAngleDeg <= 90 ? 1 : -1;
+      const pullDist = Math.min(180, Math.hypot(dx, dy));
+      activeP.power = Math.max(0.3, Math.min(1.0, pullDist / 140));
+      this.fireShot(activeP);
+      return true;
+    }
+    return false;
+  }
+
   public override destroy(): void {
     super.destroy();
     if (typeof window !== 'undefined') {
@@ -501,17 +525,20 @@ export class LandscapeArtilleryGame extends BaseGame {
       this.updateBots(dt, width, height);
     } else {
       // Human Keyboard Controls
-      // 1. Aim Left/Right: Steer shifts angle
-      const steer = this.input.getSteer(activeP.id);
+      const hasSteer = this.input.hasSteer(activeP.id);
+      const steer = hasSteer ? this.input.getSteer(activeP.id) : 0;
       if (steer !== 0) {
         // Adjust angle in degrees (steer right: decreases angle towards right 10°, steer left: increases angle towards 170°)
         activeP.aimAngleDeg -= steer * 55 * dt;
         activeP.aimAngleDeg = Math.max(10, Math.min(170, activeP.aimAngleDeg));
         activeP.facing = activeP.aimAngleDeg <= 90 ? 1 : -1;
+      } else if (!hasSteer) {
+        activeP.aimAngleDeg = 90 + Math.sin(this.stateTimer * 1.5) * 65;
+        activeP.facing = activeP.aimAngleDeg <= 90 ? 1 : -1;
       }
 
       // 2. Power Pull-Back: Throttle Down pulls back (+power), Throttle Up pushes forward (-power)
-      const throttle = this.input.getThrottle(activeP.id); // +1 up, -1 down
+      const throttle = hasSteer ? this.input.getThrottle(activeP.id) : 0; // +1 up, -1 down
       if (throttle !== 0) {
         // Pull back increases power
         activeP.power -= throttle * 0.45 * dt;
@@ -519,7 +546,7 @@ export class LandscapeArtilleryGame extends BaseGame {
       }
 
       // 3. Action button: Hold to pull back, release to fire
-      const isAction = this.input.isActionPressed(activeP.id);
+      const isAction = this.input.isActionPressed(activeP.id) || (!hasSteer && this.input.isPressed(activeP.id));
       if (isAction) {
         activeP.isPullingBack = true;
         activeP.pullBackTime += dt;
@@ -538,7 +565,7 @@ export class LandscapeArtilleryGame extends BaseGame {
       }
 
       // 4. Instant Action Trigger (if just pressed and not dragging)
-      if (this.input.justAction(activeP.id) && !activeP.isPullingBack) {
+      if ((this.input.justAction(activeP.id) || (!hasSteer && this.input.justPressed(activeP.id))) && !activeP.isPullingBack) {
         this.input.consumeAction(activeP.id);
         this.fireShot(activeP);
         return;

@@ -179,6 +179,34 @@ export class SharksAndMinnowsGame extends BaseGame {
     }
   }
 
+  public handlePointerDown(x: number, y: number, w: number = 800, h: number = 600): boolean {
+    if (y >= h - 55 && x <= 420) {
+      this.cycleMode();
+      return true;
+    }
+    if (y <= 55) {
+      this.cycleMode();
+      return true;
+    }
+    const s0 = this.swimmers.get(0);
+    if (s0 && s0.isAlive && !s0.hasCrossed) {
+      const dx = x - s0.x;
+      const dy = y - s0.y;
+      s0.angle = Math.atan2(dy, dx);
+      if (s0.role === 'minnow' && s0.dashCooldown <= 0) {
+        s0.dashDuration = 0.35;
+        s0.dashCooldown = 1.4;
+        this.audio.playTone(740, 0.08, 'sine');
+      } else if (s0.role === 'shark' && s0.lungeCooldown <= 0) {
+        s0.lungeDuration = 0.40;
+        s0.lungeCooldown = 1.6;
+        this.audio.playTone(320, 0.12, 'sawtooth');
+      }
+      return true;
+    }
+    return false;
+  }
+
   public cycleMode(): void {
     const curIdx = this.modeList.indexOf(this.gameMode);
     const nextIdx = (curIdx + 1) % this.modeList.length;
@@ -529,21 +557,25 @@ export class SharksAndMinnowsGame extends BaseGame {
       }
 
       // Input handling (Directional + 1-Button)
-      const steer = this.input.getSteer(p.id);
-      const throttle = this.input.getThrottle(p.id);
+      const isBot = p.type.startsWith('bot_');
+      const hasSteer = this.input.hasSteer(p.id);
+      const steer = hasSteer ? this.input.getSteer(p.id) : 0;
+      const throttle = hasSteer ? this.input.getThrottle(p.id) : 0;
       const isPressed = this.input.isPressed(p.id);
-      const isAction = this.input.isActionPressed(p.id) || this.input.justAction(p.id);
+      const isAction = this.input.isActionPressed(p.id) || this.input.justAction(p.id) || (isBot && this.input.justPressed(p.id));
 
       // Dash (Minnow) or Lunge (Shark)
       if (s.role === 'minnow') {
-        if ((isAction || (isPressed && Math.hypot(steer, throttle) === 0)) && s.dashCooldown <= 0 && s.stunTimer <= 0) {
+        const wantsDash = isAction || (!hasSteer && !isBot && isPressed && Math.hypot(steer, throttle) === 0);
+        if (wantsDash && s.dashCooldown <= 0 && s.stunTimer <= 0) {
           s.dashDuration = 0.35;
           s.dashCooldown = 1.4;
           this.audio.playTone(740, 0.08, 'sine');
           this.particles.spawnSparks(s.x, s.y, '#38BDF8', 8);
         }
       } else if (s.role === 'shark') {
-        if (isAction && s.lungeCooldown <= 0 && s.stunTimer <= 0) {
+        const wantsLunge = isAction || (!hasSteer && !isBot && isPressed && Math.hypot(steer, throttle) === 0);
+        if (wantsLunge && s.lungeCooldown <= 0 && s.stunTimer <= 0) {
           s.lungeDuration = 0.40;
           s.lungeCooldown = 1.6;
           this.audio.playTone(320, 0.12, 'sawtooth');
@@ -566,7 +598,7 @@ export class SharksAndMinnowsGame extends BaseGame {
         if (Math.random() < 0.26) {
           this.particles.spawnSparks(s.x, s.y, s.role === 'shark' ? '#93C5FD' : '#E0F2FE', 2);
         }
-      } else if (isPressed && this.waveState !== 'announcing') {
+      } else if ((!hasSteer || isBot) && isPressed && this.waveState !== 'announcing') {
         // 1-Button: HOLD propels in current heading
         s.vx = Math.cos(s.angle) * speed;
         s.vy = Math.sin(s.angle) * speed;

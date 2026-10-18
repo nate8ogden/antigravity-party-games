@@ -317,14 +317,19 @@ export class PowerPathClashGame extends BaseGame {
         // Check player movement inputs to pick Left/Right or advance
         const rawSteer = this.input.getRawSteer(p.id);
         const steer = Math.abs(rawSteer) > 0 ? rawSteer : this.input.getSteer(p.id);
+        const hasSteer = this.input.hasSteer(p.id);
         const isBot = p.type.startsWith('bot_');
-        const justAction = this.input.justAction(p.id) || (isBot && this.input.justPressed(p.id));
+        const justAction = this.input.justAction(p.id) || (isBot && this.input.justPressed(p.id)) || (!hasSteer && !isBot && this.input.justPressed(p.id));
         const justUp = this.input.justUp(p.id);
 
-        if (steer < -0.3) {
-          ps.selectedOptionIndex = 0;
-        } else if (steer > 0.3) {
-          ps.selectedOptionIndex = 1;
+        if (hasSteer) {
+          if (steer < -0.3) {
+            ps.selectedOptionIndex = 0;
+          } else if (steer > 0.3) {
+            ps.selectedOptionIndex = 1;
+          }
+        } else if (!isBot) {
+          ps.selectedOptionIndex = Math.floor(this.phaseTimer / 1.2) % 2;
         }
 
         // Advance through current door on Action or Up key
