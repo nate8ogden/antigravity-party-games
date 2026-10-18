@@ -291,10 +291,15 @@ export class PacMazeChompGame extends BaseGame {
 
       ps.mouthAngle = Math.abs(Math.sin((45 - this.roundTimer) * 14)) * 0.42 + 0.06;
 
-      const steer = ps.stunTimer > 0 ? 0 : this.input.getSteer(p.id);
-      const throttle = ps.stunTimer > 0 ? 0 : this.input.getThrottle(p.id);
       const isBot = p.type.startsWith('bot_');
-      const actionHeld = ps.stunTimer <= 0 && (this.input.isActionPressed(p.id) || (isBot && this.input.isPressed(p.id)));
+      const hasSteer = this.input.hasSteer(p.id);
+      const steer = (ps.stunTimer > 0 || (!hasSteer && !isBot)) ? 0 : this.input.getSteer(p.id);
+      const throttle = (ps.stunTimer > 0 || (!hasSteer && !isBot)) ? 0 : this.input.getThrottle(p.id);
+      const actionHeld = ps.stunTimer <= 0 && (
+        this.input.isActionPressed(p.id) ||
+        (isBot && this.input.isPressed(p.id)) ||
+        (!hasSteer && !isBot && this.input.isPressed(p.id))
+      );
 
       // Hold-to-charge Waka-Warp Dash & Sonic Siren Shunt (72% - 98%)
       if (actionHeld) {

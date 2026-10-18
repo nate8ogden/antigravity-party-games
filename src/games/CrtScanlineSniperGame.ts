@@ -254,14 +254,30 @@ export class CrtScanlineSniperGame extends BaseGame {
       if (ps.stunTimer > 0) ps.stunTimer -= dt;
       if (ps.cooldown > 0) ps.cooldown -= dt;
 
-      const steer = ps.stunTimer > 0 ? 0 : this.input.getSteer(p.id);
-      const throttle = ps.stunTimer > 0 ? 0 : this.input.getThrottle(p.id);
       const isBot = p.type.startsWith('bot_');
-      const actionHeld = ps.stunTimer <= 0 && (this.input.isActionPressed(p.id) || (isBot && this.input.isPressed(p.id)));
+      const hasSteer = this.input.hasSteer(p.id);
+      const steer = (ps.stunTimer > 0 || (!hasSteer && !isBot)) ? 0 : this.input.getSteer(p.id);
+      const throttle = (ps.stunTimer > 0 || (!hasSteer && !isBot)) ? 0 : this.input.getThrottle(p.id);
+      const actionHeld = ps.stunTimer <= 0 && (
+        this.input.isActionPressed(p.id) ||
+        (isBot && this.input.isPressed(p.id)) ||
+        (!hasSteer && !isBot && this.input.isPressed(p.id))
+      );
 
       const speedMult = ps.underdog ? 1.18 : 1.0;
       ps.vx += steer * 980 * speedMult * dt;
       ps.vy += -throttle * 980 * speedMult * dt;
+
+      if (!hasSteer && !isBot && ps.stunTimer <= 0) {
+        const bestT = this.targets.find(t => t.type !== 'DECOY_SKUNK');
+        if (bestT) {
+          const dx = bestT.x - ps.x;
+          const dy = bestT.y - ps.y;
+          const d = Math.hypot(dx, dy) || 1;
+          ps.vx += (dx / d) * 720 * speedMult * dt;
+          ps.vy += (dy / d) * 720 * speedMult * dt;
+        }
+      }
 
       // Hold-to-charge Zapper Chain-Lightning Shot & Recoil Shunt (72% - 98%)
       if (actionHeld) {

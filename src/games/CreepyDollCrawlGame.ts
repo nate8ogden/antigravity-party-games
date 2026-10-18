@@ -288,10 +288,11 @@ export class CreepyDollCrawlGame extends BaseGame {
       if (r.overdriveTimer > 0) r.overdriveTimer = Math.max(0, r.overdriveTimer - safeDt);
       if (r.glueTimer > 0) r.glueTimer = Math.max(0, r.glueTimer - safeDt);
 
-      const steerX = this.input.getSteer(r.id);
-      const steerY = -this.input.getThrottle(r.id);
+      const hasSteer = this.input.hasSteer(r.id);
+      const steerX = hasSteer ? this.input.getSteer(r.id) : 0;
+      const steerY = hasSteer ? -this.input.getThrottle(r.id) : 0;
       const isBot = r.config.type.startsWith('bot_');
-      const actionHeld = !isBot ? this.input.isActionPressed(r.id) : this.input.isPressed(r.id);
+      const actionHeld = this.input.isActionPressed(r.id) || (isBot && this.input.isPressed(r.id)) || (!hasSteer && !isBot && this.input.isPressed(r.id));
 
       // Hold-to-Wind Mainspring vs Quick Tap Hop-Boost
       if (!isBot) {

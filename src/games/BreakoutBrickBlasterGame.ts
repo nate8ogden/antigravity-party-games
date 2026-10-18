@@ -397,9 +397,14 @@ export class BreakoutBrickBlasterGame extends BaseGame {
       if (ps.wideTimer > 0) ps.wideTimer -= dt;
       if (ps.stunTimer > 0) ps.stunTimer -= dt;
 
-      const steer = ps.stunTimer > 0 ? 0 : this.input.getSteer(p.id);
       const isBot = p.type.startsWith('bot_');
-      const actionHeld = ps.stunTimer <= 0 && (this.input.isActionPressed(p.id) || (isBot && this.input.isPressed(p.id)));
+      const hasSteer = this.input.hasSteer(p.id);
+      const steer = (ps.stunTimer > 0 || (!hasSteer && !isBot)) ? 0 : this.input.getSteer(p.id);
+      const actionHeld = ps.stunTimer <= 0 && (
+        this.input.isActionPressed(p.id) ||
+        (isBot && this.input.isPressed(p.id)) ||
+        (!hasSteer && !isBot && this.input.isPressed(p.id))
+      );
 
       // Hold-to-charge Supernova Smash Volley & Magnetic Shunt (72% - 98%)
       if (actionHeld) {

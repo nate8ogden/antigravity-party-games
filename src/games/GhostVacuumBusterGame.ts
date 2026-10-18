@@ -300,10 +300,11 @@ export class GhostVacuumBusterGame extends BaseGame {
       if (b.shuntCooldown > 0) b.shuntCooldown = Math.max(0, b.shuntCooldown - safeDt);
       if (b.stunTimer > 0) b.stunTimer = Math.max(0, b.stunTimer - safeDt);
 
-      const steerX = this.input.getSteer(b.id);
-      const steerY = -this.input.getThrottle(b.id);
+      const hasSteer = this.input.hasSteer(b.id);
+      const steerX = hasSteer ? this.input.getSteer(b.id) : 0;
+      const steerY = hasSteer ? -this.input.getThrottle(b.id) : 0;
       const isBot = b.config.type.startsWith('bot_');
-      const actionHeld = !isBot ? this.input.isActionPressed(b.id) : this.input.isPressed(b.id);
+      const actionHeld = this.input.isActionPressed(b.id) || (isBot && this.input.isPressed(b.id)) || (!hasSteer && !isBot && this.input.isPressed(b.id));
 
       // Hold-to-Charge Proton Overdrive Snap-Trap
       if (actionHeld && b.stunTimer <= 0) {

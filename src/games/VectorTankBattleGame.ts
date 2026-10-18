@@ -314,14 +314,21 @@ export class VectorTankBattleGame extends BaseGame {
       if (ps.stunTimer > 0) ps.stunTimer -= dt;
       if (ps.cooldown > 0) ps.cooldown -= dt;
 
-      const steer = ps.stunTimer > 0 ? 0 : this.input.getSteer(p.id);
-      const throttle = ps.stunTimer > 0 ? 0 : this.input.getThrottle(p.id);
       const isBot = p.type.startsWith('bot_');
-      const actionHeld = ps.stunTimer <= 0 && (this.input.isActionPressed(p.id) || (isBot && this.input.isPressed(p.id)));
+      const hasSteer = this.input.hasSteer(p.id);
+      const steer = (ps.stunTimer > 0 || (!hasSteer && !isBot)) ? 0 : this.input.getSteer(p.id);
+      const throttle = (ps.stunTimer > 0 || (!hasSteer && !isBot)) ? 0 : this.input.getThrottle(p.id);
+      const actionHeld = ps.stunTimer <= 0 && (
+        this.input.isActionPressed(p.id) ||
+        (isBot && this.input.isPressed(p.id)) ||
+        (!hasSteer && !isBot && this.input.isPressed(p.id))
+      );
 
       // Responsive turret rotation & drive
       if (Math.abs(steer) > 0.08) {
         ps.angle += steer * 3.6 * dt;
+      } else if (!hasSteer && !isBot && ps.stunTimer <= 0) {
+        ps.angle += dt * 2.4;
       }
 
       const speedMult = ps.underdog ? 1.18 : 1.0;

@@ -336,9 +336,10 @@ export class GargoyleStoneStareGame extends BaseGame {
       if (c.zappedTimer > 0) c.zappedTimer = Math.max(0, c.zappedTimer - safeDt);
 
       if (!c.config.type.startsWith('bot_')) {
-        const steerX = this.input.getSteer(c.id);
-        const throttle = this.input.getThrottle(c.id); // +1 up, -1 down
-        const actionHeld = this.input.isActionPressed(c.id);
+        const hasSteer = this.input.hasSteer(c.id);
+        const steerX = hasSteer ? this.input.getSteer(c.id) : 0;
+        const throttle = hasSteer ? this.input.getThrottle(c.id) : 0; // +1 up, -1 down
+        const actionHeld = this.input.isActionPressed(c.id) || (!hasSteer && this.input.isPressed(c.id));
 
         // Hold-to-charge Stone-Quake Vault
         if (actionHeld) {

@@ -334,10 +334,11 @@ export class CyberGridRunnerGame extends BaseGame {
         }
       }
 
-      const steer = this.input.getSteer(p.id);
-      const throttle = this.input.getThrottle(p.id);
       const isBot = p.type.startsWith('bot_');
-      const isAction = this.input.justAction(p.id) || (isBot && this.input.justPressed(p.id));
+      const hasSteer = this.input.hasSteer(p.id);
+      const steer = hasSteer ? this.input.getSteer(p.id) : 0;
+      const throttle = hasSteer ? this.input.getThrottle(p.id) : 0;
+      const isAction = this.input.justAction(p.id) || (isBot && this.input.justPressed(p.id)) || (!hasSteer && !isBot && this.input.justPressed(p.id));
 
       if (isAction && !ps.isBoosting) {
         this.triggerPlayerBoost(ps);
@@ -371,6 +372,11 @@ export class CyberGridRunnerGame extends BaseGame {
 
         const targetVx = Math.cos(targetAngle) * currentSpeedLimit;
         const targetVy = Math.sin(targetAngle) * currentSpeedLimit;
+        ps.vx += (targetVx - ps.vx) * Math.min(1, dt * accelRate);
+        ps.vy += (targetVy - ps.vy) * Math.min(1, dt * accelRate);
+      } else if (!hasSteer && !isBot) {
+        const targetVx = Math.cos(ps.angle) * currentSpeedLimit * 0.75;
+        const targetVy = Math.sin(ps.angle) * currentSpeedLimit * 0.75;
         ps.vx += (targetVx - ps.vx) * Math.min(1, dt * accelRate);
         ps.vy += (targetVy - ps.vy) * Math.min(1, dt * accelRate);
       } else {

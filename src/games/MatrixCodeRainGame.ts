@@ -330,9 +330,14 @@ export class MatrixCodeRainGame extends BaseGame {
       if (ps.stunTimer > 0) ps.stunTimer -= dt;
       if (ps.bulletTimeTimer > 0) ps.bulletTimeTimer -= dt;
 
-      const steer = ps.stunTimer > 0 ? 0 : this.input.getSteer(p.id);
       const isBot = p.type.startsWith('bot_');
-      const actionHeld = ps.stunTimer <= 0 && (this.input.isActionPressed(p.id) || (isBot && this.input.isPressed(p.id)));
+      const hasSteer = this.input.hasSteer(p.id);
+      const steer = (ps.stunTimer > 0 || (!hasSteer && !isBot)) ? 0 : this.input.getSteer(p.id);
+      const actionHeld = ps.stunTimer <= 0 && (
+        this.input.isActionPressed(p.id) ||
+        (isBot && this.input.isPressed(p.id)) ||
+        (!hasSteer && !isBot && this.input.isPressed(p.id))
+      );
 
       // Hold-to-charge Neo Bullet-Time Surge & Glitch-Spike Shunt (72% - 98%)
       if (actionHeld) {

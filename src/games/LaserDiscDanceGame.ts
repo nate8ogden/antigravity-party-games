@@ -256,14 +256,28 @@ export class LaserDiscDanceGame extends BaseGame {
 
       if (ps.stunTimer > 0) ps.stunTimer -= dt;
 
-      const steer = ps.stunTimer > 0 ? 0 : this.input.getSteer(p.id);
-      const throttle = ps.stunTimer > 0 ? 0 : this.input.getThrottle(p.id);
       const isBot = p.type.startsWith('bot_');
-      const actionHeld = ps.stunTimer <= 0 && (this.input.isActionPressed(p.id) || (isBot && this.input.isPressed(p.id)));
+      const hasSteer = this.input.hasSteer(p.id);
+      const steer = (ps.stunTimer > 0 || (!hasSteer && !isBot)) ? 0 : this.input.getSteer(p.id);
+      const throttle = (ps.stunTimer > 0 || (!hasSteer && !isBot)) ? 0 : this.input.getThrottle(p.id);
+      const actionHeld = ps.stunTimer <= 0 && (
+        this.input.isActionPressed(p.id) ||
+        (isBot && this.input.isPressed(p.id)) ||
+        (!hasSteer && !isBot && this.input.isPressed(p.id))
+      );
 
       const moveSpeed = 760 * (ps.underdog ? 1.18 : 1.0);
       ps.vx += steer * moveSpeed * dt;
       ps.vy += -throttle * moveSpeed * dt;
+
+      if (!hasSteer && !isBot && ps.stunTimer <= 0) {
+        const activePad = this.pads.find((pad) => pad.dir === this.activeDir);
+        if (activePad) {
+          const ang = Math.atan2(activePad.y - ps.y, activePad.x - ps.x);
+          ps.vx += Math.cos(ang) * moveSpeed * 0.72 * dt;
+          ps.vy += Math.sin(ang) * moveSpeed * 0.72 * dt;
+        }
+      }
 
       // Hold-to-charge Bass-Drop Moonwalk & Boogie Shunt (72% - 98%)
       if (actionHeld) {
