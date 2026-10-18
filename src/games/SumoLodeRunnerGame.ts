@@ -1,4 +1,4 @@
-import { BaseGame } from './BaseGame';
+import { BaseGame, DEFAULT_MUTATOR } from './BaseGame';
 import { PlayerId, RoundResult } from '../core/Types';
 
 /**
@@ -1270,6 +1270,8 @@ export class SumoLodeRunnerGame extends BaseGame {
     this.lastWidth = width;
     this.lastHeight = height;
     this.initWasmKernel();
+    this.activeMutator = { ...DEFAULT_MUTATOR };
+    this.particles.clear();
     this.isFinished = false;
     this.roundTimer = 180;
     this.teamLives = 5;
@@ -3277,12 +3279,35 @@ export class SumoLodeRunnerGame extends BaseGame {
     const remainingGold = this.getRemainingGoldCount();
     const totalGold = this.golds.length;
 
-    const tutBtnX = width / 2 - 245;
-    const prevBtnX = width / 2 - 180;
-    const nextBtnX = width / 2 + 125;
-    const retryBtnX = width / 2 + 156;
     const btnY = barY + 3;
     const btnH = 20;
+
+    // Left Status: Gold Remaining, Lives & Stage Title (left of the center floating controls dock)
+    ctx.textAlign = 'left';
+    ctx.fillStyle = remainingGold === 0 ? '#4ADE80' : '#FACC15';
+    ctx.font = '900 10px Montserrat, sans-serif';
+    const livesLabel = this.currentLevel === 0 ? '∞' : String(this.teamLives);
+    const goldText =
+      remainingGold === 0
+        ? '✨ ALL GOLD COLLECTED! CLIMB UP!'
+        : `🪙 GOLD: ${totalGold - remainingGold}/${totalGold}  ❤️ LIVES: ${livesLabel}`;
+    ctx.fillText(goldText, 12, btnY + 14);
+
+    // Stage Title & Biome Label positioned cleanly between Gold status and center dock
+    ctx.fillStyle = '#FDE047';
+    ctx.font = '900 10px Montserrat, sans-serif';
+    ctx.textAlign = 'right';
+    const stageHeader =
+      this.currentLevel === 0
+        ? `STAGE 0 (DOJO): ${bp.title.toUpperCase()}`
+        : `STAGE ${this.currentLevel}/30: ${bp.title.toUpperCase()}`;
+    ctx.fillText(stageHeader, width / 2 - 105, btnY + 14);
+
+    // Right of center dock: Interactive Stage Controls (🎓 DOJO [T] | ◀ | ▶ | ↻ RETRY [R])
+    const tutBtnX = width / 2 + 104;
+    const prevBtnX = tutBtnX + 64;
+    const nextBtnX = prevBtnX + 28;
+    const retryBtnX = nextBtnX + 28;
 
     // Tutorial Quick-Jump Button [T]
     ctx.fillStyle = this.currentLevel === 0 ? '#0284C7' : '#1E293B';
@@ -3324,16 +3349,6 @@ export class SumoLodeRunnerGame extends BaseGame {
       }
     });
 
-    // Stage Title & Biome Label
-    ctx.fillStyle = '#FDE047';
-    ctx.font = '900 10.5px Montserrat, sans-serif';
-    ctx.textAlign = 'center';
-    const stageHeader =
-      this.currentLevel === 0
-        ? `STAGE 0 (TUTORIAL): ${bp.title.toUpperCase()}`
-        : `STAGE ${this.currentLevel}/30: ${bp.title.toUpperCase()}`;
-    ctx.fillText(stageHeader, width / 2 - 15, btnY + 14);
-
     // Next Level Button
     ctx.fillStyle = this.currentLevel < 30 ? '#334155' : '#1E293B';
     ctx.fillRect(nextBtnX, btnY, 24, btnH);
@@ -3370,17 +3385,6 @@ export class SumoLodeRunnerGame extends BaseGame {
         this.loadLevel(this.currentLevel);
       }
     });
-
-    // Left Status: Gold Remaining & Lives
-    ctx.textAlign = 'left';
-    ctx.fillStyle = remainingGold === 0 ? '#4ADE80' : '#FACC15';
-    ctx.font = '900 10px Montserrat, sans-serif';
-    const livesLabel = this.currentLevel === 0 ? '∞' : String(this.teamLives);
-    const goldText =
-      remainingGold === 0
-        ? '✨ ALL GOLD COLLECTED! CLIMB UP!'
-        : `🪙 GOLD: ${totalGold - remainingGold}/${totalGold}  ❤️ LIVES: ${livesLabel}`;
-    ctx.fillText(goldText, 12, btnY + 14);
 
     // Right Status: Player Scores & Wasm Engine Badge
     ctx.textAlign = 'right';
