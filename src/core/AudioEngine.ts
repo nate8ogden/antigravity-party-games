@@ -1114,5 +1114,37 @@ export class AudioEngine {
       osc.stop(t + dur + 0.01);
     }
   }
+
+  /**
+   * Classic 8-note Zelda / Broderbund mystery discovery arpeggio chime
+   * Played when discovering a hidden false-brick passage or revealing the escape ladder!
+   */
+  public playSecretChime() {
+    if (this.muted || !this.sfxEnabled) return;
+    this.initContext();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+    const dest = this.getDestination();
+    // G5, F#5, D#5, A4, G#4, E5, G#5, C6
+    const notes = [783.99, 739.99, 622.25, 440.0, 415.3, 659.25, 830.61, 1046.5];
+    const step = 0.068;
+
+    notes.forEach((freq, idx) => {
+      const start = t + idx * step;
+      const dur = idx === notes.length - 1 ? 0.24 : 0.075;
+      const osc = this.ctx!.createOscillator();
+      const gain = this.ctx!.createGain();
+      osc.type = idx % 2 === 0 ? 'square' : 'triangle';
+      osc.frequency.setValueAtTime(freq, start);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.linearRampToValueAtTime(0.055, start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+      osc.connect(gain);
+      gain.connect(dest);
+      osc.start(start);
+      osc.stop(start + dur + 0.01);
+    });
+  }
 }
 
