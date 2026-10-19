@@ -8812,11 +8812,13 @@ export class GameManager {
       { label: '75%', val: 0.75 },
       { label: '100%', val: 1.0 }
     ];
-    const volPillW = 58;
+    const labelOffset = modalW < 440 ? 114 : 140;
+    const availRowW = Math.max(180, modalW - labelOffset - 20);
+    const volPillW = Math.min(58, Math.floor((availRowW - 4 * 5) / 5));
     const volPillH = 24;
-    const volStartX = modalX + 140;
+    const volStartX = modalX + labelOffset;
     volOptions.forEach((opt, idx) => {
-      const px = volStartX + idx * (volPillW + 6);
+      const px = volStartX + idx * (volPillW + 5);
       const isSel = Math.abs(this.settings.masterVolume - opt.val) < 0.05;
 
       this.ctx.save();
@@ -8835,9 +8837,7 @@ export class GameManager {
       this.ctx.restore();
 
       this.ctx.fillStyle = isSel ? '#FFFFFF' : '#475569';
-      this.ctx.font = '900 10px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(opt.label, px + volPillW / 2, curY + 16);
+      this.drawFittedButtonText(opt.label, px + volPillW / 2, curY + 16, volPillW - 6, 10, 7.5);
 
       this.settingsHitBoxes.push({
         id: `vol_${opt.val}`,
@@ -8864,7 +8864,7 @@ export class GameManager {
       { label: '✓ ON', val: true },
       { label: '✕ OFF', val: false }
     ];
-    const sfxW = 68;
+    const sfxW = Math.min(68, Math.floor((availRowW - 8) / 2));
     sfxOptions.forEach((opt, idx) => {
       const px = volStartX + idx * (sfxW + 8);
       const isSel = this.settings.sfxEnabled === opt.val;
@@ -8882,9 +8882,7 @@ export class GameManager {
       this.ctx.restore();
 
       this.ctx.fillStyle = isSel ? '#FFFFFF' : '#475569';
-      this.ctx.font = '900 10px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(opt.label, px + sfxW / 2, curY + 16);
+      this.drawFittedButtonText(opt.label, px + sfxW / 2, curY + 16, sfxW - 6, 10, 7.5);
 
       this.settingsHitBoxes.push({
         id: `sfx_${opt.val}`,
@@ -8927,7 +8925,7 @@ export class GameManager {
       { label: '1.3x FAST', val: 1.3 },
       { label: '1.6x TURBO', val: 1.6 }
     ];
-    const spdW = 96;
+    const spdW = Math.min(96, Math.floor((availRowW - 12) / 3));
     speedOptions.forEach((opt, idx) => {
       const px = volStartX + idx * (spdW + 6);
       const isSel = Math.abs(this.settings.gameSpeed - opt.val) < 0.05;
@@ -8942,9 +8940,7 @@ export class GameManager {
       this.ctx.restore();
 
       this.ctx.fillStyle = isSel ? '#FFFFFF' : '#475569';
-      this.ctx.font = '900 10px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(opt.label, px + spdW / 2, curY + 16);
+      this.drawFittedButtonText(opt.label, px + spdW / 2, curY + 16, spdW - 6, 10, 7.0);
 
       this.settingsHitBoxes.push({
         id: `spd_${opt.val}`,
@@ -8968,7 +8964,7 @@ export class GameManager {
     this.ctx.fillText('Cup Goal Points:', modalX + 26, curY + 16);
 
     const goalOptions = [3, 5, 7, 10];
-    const goalW = 68;
+    const goalW = Math.min(68, Math.floor((availRowW - 18) / 4));
     goalOptions.forEach((pts, idx) => {
       const px = volStartX + idx * (goalW + 6);
       const isSel = this.settings.tournamentGoal === pts;
@@ -8983,9 +8979,7 @@ export class GameManager {
       this.ctx.restore();
 
       this.ctx.fillStyle = isSel ? '#FFFFFF' : '#475569';
-      this.ctx.font = '900 10px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(`${pts} PTS`, px + goalW / 2, curY + 16);
+      this.drawFittedButtonText(`${pts} PTS`, px + goalW / 2, curY + 16, goalW - 6, 10, 7.5);
 
       this.settingsHitBoxes.push({
         id: `goal_${pts}`,
@@ -9013,7 +9007,7 @@ export class GameManager {
       { label: 'REDUCED', val: 'reduced' },
       { label: 'OFF', val: 'off' }
     ];
-    const shkW = 96;
+    const shkW = Math.min(96, Math.floor((availRowW - 12) / 3));
     shakeOptions.forEach((opt, idx) => {
       const px = volStartX + idx * (shkW + 6);
       const isSel = this.settings.shakeLevel === opt.val;
@@ -9028,9 +9022,7 @@ export class GameManager {
       this.ctx.restore();
 
       this.ctx.fillStyle = isSel ? '#FFFFFF' : '#475569';
-      this.ctx.font = '900 10px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(opt.label, px + shkW / 2, curY + 16);
+      this.drawFittedButtonText(opt.label, px + shkW / 2, curY + 16, shkW - 6, 10, 7.5);
 
       this.settingsHitBoxes.push({
         id: `shk_${opt.val}`,
@@ -9063,27 +9055,25 @@ export class GameManager {
     this.ctx.fillStyle = '#475569';
     this.ctx.font = '900 10px Montserrat, sans-serif';
     this.ctx.textAlign = 'left';
-    this.ctx.fillText('⌨️ CONTROLS & SHORTCUTS REFERENCE', modalX + 36, curY + 18);
+    this.ctx.fillText('⌨️ CONTROLS & SHORTCUTS REFERENCE', modalX + 36, curY + 18, modalW - 72);
 
     this.ctx.fillStyle = '#334155';
     this.ctx.font = '600 10.5px monospace';
-    this.ctx.fillText('P1: [WASD + Space]  •  P2: [Arrows + Enter]  •  P3: [IJKL + C]  •  P4: [Numpad / M]', modalX + 36, curY + 36);
+    this.ctx.fillText('P1: [WASD + Space]  •  P2: [Arrows + Enter]  •  P3: [IJKL + C]  •  P4: [Numpad / M]', modalX + 36, curY + 36, modalW - 72);
     this.ctx.fillStyle = '#64748B';
-    this.ctx.fillText('Shortcuts: [Esc / P] Pause  •  [R] Random  •  [T] Cup  •  [O / S] Settings', modalX + 36, curY + 52);
+    this.ctx.fillText('Shortcuts: [Esc / P] Pause  •  [R] Random  •  [T] Cup  •  [O / S] Settings', modalX + 36, curY + 52, modalW - 72);
 
     // SECTION 4: 🔄 DATA ACTIONS
     curY += refH + 10;
-    const resetScoreW = 186;
-    const resetDefW = 150;
+    const resetScoreW = Math.min(186, Math.floor((modalW - 58) * 0.55));
+    const resetDefW = Math.min(150, Math.floor((modalW - 58) * 0.45));
     const resetH = 26;
 
     // Reset Scores button
     this.drawRoundedRect(modalX + 24, curY + 2, resetScoreW, resetH, 6, '#CBD5E1');
     this.drawRoundedRect(modalX + 24, curY, resetScoreW, resetH, 6, '#F8FAFC', '#94A3B8', 1.2);
     this.ctx.fillStyle = '#334155';
-    this.ctx.font = '900 10px Montserrat, sans-serif';
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText('🔄 RESET TOURNAMENT SCORES', modalX + 24 + resetScoreW / 2, curY + 17);
+    this.drawFittedButtonText('🔄 RESET TOURNAMENT SCORES', modalX + 24 + resetScoreW / 2, curY + 17, resetScoreW - 10, 10, 7.0);
     this.settingsHitBoxes.push({
       id: 'reset_scores',
       action: () => this.resetScores(),
@@ -9097,7 +9087,7 @@ export class GameManager {
     this.drawRoundedRect(modalX + 24 + resetScoreW + 10, curY + 2, resetDefW, resetH, 6, '#CBD5E1');
     this.drawRoundedRect(modalX + 24 + resetScoreW + 10, curY, resetDefW, resetH, 6, '#F8FAFC', '#94A3B8', 1.2);
     this.ctx.fillStyle = '#334155';
-    this.ctx.fillText('↩ RESTORE DEFAULTS', modalX + 24 + resetScoreW + 10 + resetDefW / 2, curY + 17);
+    this.drawFittedButtonText('↩ RESTORE DEFAULTS', modalX + 24 + resetScoreW + 10 + resetDefW / 2, curY + 17, resetDefW - 10, 10, 7.0);
     this.settingsHitBoxes.push({
       id: 'restore_defaults',
       action: () => this.restoreDefaultSettings(),
@@ -9108,7 +9098,7 @@ export class GameManager {
     });
 
     // BOTTOM BUTTON: ✓ SAVE & CLOSE [Esc / Enter]
-    const saveBtnW = 230;
+    const saveBtnW = Math.min(240, modalW - 48);
     const saveBtnH = 40;
     const saveBtnX = modalX + modalW / 2 - saveBtnW / 2;
     const saveBtnY = modalY + modalH - 50;
@@ -9125,9 +9115,7 @@ export class GameManager {
     this.ctx.restore();
 
     this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.font = '900 13px Montserrat, sans-serif';
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText('✓ SAVE & CLOSE [Esc / Enter]', saveBtnX + saveBtnW / 2, saveBtnY + 25);
+    this.drawFittedButtonText('✓ SAVE & CLOSE [Esc / Enter]', saveBtnX + saveBtnW / 2, saveBtnY + 25, saveBtnW - 14, 13, 9.0);
 
     this.settingsHitBoxes.push({
       id: 'save_close',
@@ -11170,8 +11158,7 @@ export class GameManager {
     this.ctx.restore();
 
     this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.font = '900 12px Montserrat, sans-serif';
-    this.ctx.fillText('▶ RESUME [P]', resumeX + btnW / 2, btnY + 26);
+    this.drawFittedButtonText('▶ RESUME [P]', resumeX + btnW / 2, btnY + 26, btnW - 10, 11.5, 8.5);
 
     // Settings 2.5D Button
     this.ctx.save();
@@ -11185,8 +11172,7 @@ export class GameManager {
     this.ctx.restore();
 
     this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.font = '900 12px Montserrat, sans-serif';
-    this.ctx.fillText('⚙️ SETTINGS [S]', settingsX + btnW / 2, btnY + 26);
+    this.drawFittedButtonText('⚙️ SETTINGS [S]', settingsX + btnW / 2, btnY + 26, btnW - 10, 11.5, 8.5);
 
     // Lobby 2.5D Button
     this.ctx.save();
@@ -11200,8 +11186,7 @@ export class GameManager {
     this.ctx.restore();
 
     this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.font = '900 12px Montserrat, sans-serif';
-    this.ctx.fillText('⌂ LOBBY [Esc]', lobbyX + btnW / 2, btnY + 26);
+    this.drawFittedButtonText('⌂ LOBBY [Esc]', lobbyX + btnW / 2, btnY + 26, btnW - 10, 11.5, 8.5);
   }
 
   private renderRoundOverOverlay() {
@@ -11319,9 +11304,8 @@ export class GameManager {
     this.ctx.restore();
 
     this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.font = '900 12px Montserrat, sans-serif';
     const nextBtnText = this.isTournament ? '🏆 NEXT CUP MATCH [Space]' : '🔄 REMATCH [Space]';
-    this.ctx.fillText(nextBtnText, rematchX + btnW / 2, btnY + 26);
+    this.drawFittedButtonText(nextBtnText, rematchX + btnW / 2, btnY + 26, btnW - 12, 12, 8.5);
 
     // Menu 2.5D Button
     this.ctx.save();
@@ -11336,8 +11320,7 @@ export class GameManager {
     this.ctx.restore();
 
     this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.font = '900 12px Montserrat, sans-serif';
-    this.ctx.fillText('⌂ LOBBY [Esc]', menuX + menuW / 2, btnY + 26);
+    this.drawFittedButtonText('⌂ LOBBY [Esc]', menuX + menuW / 2, btnY + 26, menuW - 10, 12, 8.5);
 
     // Post-Match Rate & Save Strip below Rematch/Lobby buttons
     const curGame = GAME_CATALOG[this.selectedGameIndex];
