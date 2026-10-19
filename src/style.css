@@ -426,16 +426,17 @@ body.in-game .util-btn {
   color: #94A3B8;
   font-family: 'Montserrat', sans-serif;
   font-weight: 900;
-  font-size: 9.5px;
-  letter-spacing: 0.2px;
-  padding: 5px 6px;
-  flex: 1 1 0;
+  font-size: 9px;
+  letter-spacing: 0px;
+  padding: 5px 5px;
+  flex: 1 1 auto;
   text-align: center;
   border-radius: 7px;
   cursor: pointer;
   transition: all 0.16s ease;
   touch-action: manipulation;
   white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .device-toggle-btn:hover {

@@ -442,8 +442,7 @@ export class CloudPersistenceManager {
           ratingCount: newRatingCount,
           saveCount: mergedSaveCount,
           highScore: mergedHighScore,
-          plays: mergedPlays,
-          updatedAt: Date.now()
+          plays: mergedPlays
         })
       });
 
