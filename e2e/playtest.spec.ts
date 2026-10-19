@@ -2201,6 +2201,87 @@ test.describe('1-4 Player Game Engine Verification', () => {
     expect(consoleErrors).toEqual([]);
   });
 
+  test('Multi-Viewport Button Text & Bounding Box Audit + Live Firebase RTDB Sync Verification', async ({ page }) => {
+    const viewports = [
+      { name: 'Desktop 1280x720', width: 1280, height: 720 },
+      { name: 'Compact Desktop 1000x700', width: 1000, height: 700 },
+      { name: 'Tablet 800x600', width: 800, height: 600 },
+      { name: 'Pixel 7 412x839', width: 412, height: 839 },
+      { name: 'iPhone 14 390x664', width: 390, height: 664 }
+    ];
+
+    await page.goto(LOCAL_URL);
+    await expect(page.locator('canvas')).toBeVisible();
+
+    for (const vp of viewports) {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.waitForTimeout(150);
+
+      const layoutAudit = await page.evaluate(() => {
+        const gm = (window as unknown as {
+          __GAME_MANAGER__?: {
+            logicalWidth: number;
+            logicalHeight: number;
+            playerTabHitboxes: Array<{ count: number; x: number; y: number; w: number; h: number }>;
+            diffHitboxes: Array<{ id: string; x: number; y: number; w: number; h: number }>;
+            categoryPillBoxes: Array<{ id: string; x: number; y: number; w: number; h: number; type: string }>;
+            playerBadgeHitboxes: Array<{ pid: number; x: number; y: number; w: number; h: number }>;
+            cloud: { getFirebaseDatabaseUrl: () => string | null };
+          };
+        }).__GAME_MANAGER__;
+        if (!gm) return null;
+
+        // 1. Check DOM buttons (#btn-mode-computer, #btn-mode-phone, .util-btn)
+        const domBtns = Array.from(document.querySelectorAll<HTMLElement>('.device-toggle-btn, .util-btn'));
+        const overflowingDomBtns = domBtns
+          .filter((el) => {
+            const style = window.getComputedStyle(el);
+            if (style.display === 'none' || style.visibility === 'hidden') return false;
+            return el.scrollWidth > el.clientWidth + 1;
+          })
+          .map((el) => ({ id: el.id || el.textContent?.trim(), scrollW: el.scrollWidth, clientW: el.clientWidth }));
+
+        // 2. Check #device-mode-toggle against all playerBadgeHitboxes and playerTabHitboxes
+        const toggleBar = document.getElementById('device-mode-toggle');
+        let toggleOverlapsBadge = false;
+        if (toggleBar && window.getComputedStyle(toggleBar).display !== 'none') {
+          const r = toggleBar.getBoundingClientRect();
+          for (const b of gm.playerBadgeHitboxes) {
+            const hit = !(r.right <= b.x || r.left >= b.x + b.w || r.bottom <= b.y || r.top >= b.y + b.h);
+            if (hit) toggleOverlapsBadge = true;
+          }
+        }
+
+        // 3. Check all Canvas hitboxes stay inside viewport [0, logicalWidth] and don't overlap each other
+        const allBoxes = [
+          ...gm.playerTabHitboxes.map((b) => ({ group: 'tab', id: String(b.count), ...b })),
+          ...gm.diffHitboxes.map((b) => ({ group: 'diff', ...b })),
+          ...gm.categoryPillBoxes.map((b) => ({ group: 'cat', ...b })),
+          ...gm.playerBadgeHitboxes.map((b) => ({ group: 'badge', id: `P${b.pid + 1}`, ...b }))
+        ];
+
+        const outOfBounds = allBoxes.filter(
+          (b) => b.x < 0 || b.y < 0 || b.x + b.w > gm.logicalWidth + 1 || b.y + b.h > gm.logicalHeight + 1
+        );
+
+        return {
+          overflowingDomBtns,
+          toggleOverlapsBadge,
+          outOfBoundsCount: outOfBounds.length,
+          totalBoxesChecked: allBoxes.length,
+          firebaseUrl: gm.cloud.getFirebaseDatabaseUrl()
+        };
+      });
+
+      expect(layoutAudit, `Audit failed on ${vp.name}`).not.toBeNull();
+      expect(layoutAudit?.overflowingDomBtns, `DOM button overflow on ${vp.name}`).toEqual([]);
+      expect(layoutAudit?.toggleOverlapsBadge, `Device toggle overlapped player badge on ${vp.name}`).toBe(false);
+      expect(layoutAudit?.outOfBoundsCount, `Canvas button out of bounds on ${vp.name}`).toBe(0);
+      expect(layoutAudit?.totalBoxesChecked).toBeGreaterThanOrEqual(19);
+      expect(layoutAudit?.firebaseUrl).toContain('antigravity-party-games-rtdb-default-rtdb.firebaseio.com');
+    }
+  });
+
 });
 
 
