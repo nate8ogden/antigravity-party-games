@@ -400,19 +400,21 @@ body.in-game .util-btn {
 /* Top Computer / Phone Device Mode Toggle Bar */
 .device-toggle-bar {
   position: absolute;
-  top: 8px;
-  right: 14px;
+  top: 86px;
+  right: 18px;
+  width: 168px;
+  justify-content: space-between;
   z-index: 35;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px;
-  background: rgba(15, 23, 42, 0.90);
+  gap: 2px;
+  padding: 3px;
+  background: rgba(15, 23, 42, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-radius: 999px;
+  border-radius: 10px;
   border: 1.5px solid rgba(56, 189, 248, 0.45);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.22);
   pointer-events: auto;
   touch-action: manipulation;
 }
@@ -424,10 +426,12 @@ body.in-game .util-btn {
   color: #94A3B8;
   font-family: 'Montserrat', sans-serif;
   font-weight: 900;
-  font-size: 11px;
-  letter-spacing: 0.4px;
-  padding: 6px 12px;
-  border-radius: 999px;
+  font-size: 9.5px;
+  letter-spacing: 0.2px;
+  padding: 5px 6px;
+  flex: 1 1 0;
+  text-align: center;
+  border-radius: 7px;
   cursor: pointer;
   transition: all 0.16s ease;
   touch-action: manipulation;
@@ -455,6 +459,23 @@ body.modal-open .device-toggle-bar {
   display: none !important;
 }
 
+@media (max-width: 999px) {
+  .device-toggle-bar {
+    top: 6px;
+    right: 10px;
+    width: auto;
+    border-radius: 999px;
+    padding: 3px;
+    gap: 3px;
+  }
+  .device-toggle-btn {
+    flex: initial;
+    font-size: 9.5px;
+    padding: 4px 9px;
+    border-radius: 999px;
+  }
+}
+
 @media (max-width: 720px) {
   .device-toggle-bar {
     top: 4px;
@@ -463,8 +484,8 @@ body.modal-open .device-toggle-bar {
     gap: 2px;
   }
   .device-toggle-btn {
-    font-size: 9px;
-    padding: 4px 7px;
+    font-size: 8.5px;
+    padding: 3.5px 6.5px;
   }
 }
 

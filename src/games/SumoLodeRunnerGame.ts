@@ -4292,16 +4292,119 @@ export class SumoLodeRunnerGame extends BaseGame {
       this.drawDigButton(ctx, this.digLeftZone, '⛏️ DIG L', '↙ LEFT BRICK', this.digLeftPressed);
       this.drawDigButton(ctx, this.digRightZone, '⛏️ DIG R', '↘ RIGHT BRICK', this.digRightPressed);
     } else {
-      // Landscape Phone Mode: Left Gutter D-Pad & Right Gutter Stacked Dig L / Dig R Buttons
+      // Landscape Phone Mode: Left Gutter D-Pad & Right Gutter Stacked Dig L / Dig R Buttons + Quick Utility Pills
       const dpadR = 44;
       const dpadCX = 52;
       const dpadCY = height - 26 - 62;
       this.dpadZone = { cx: dpadCX, cy: dpadCY, r: dpadR };
       this.drawArcadeDpad(ctx, dpadCX, dpadCY, dpadR);
 
+      // Left Gutter Quick Pills above D-Pad (🎓 DOJO | ↻ RETRY)
+      const lpW = 86;
+      const lpH = 24;
+      const lpX = 9;
+      const dojoY = 48;
+      const retryY = 78;
+      ctx.fillStyle = this.currentLevel === 0 ? '#0284C7' : '#1E293B';
+      ctx.beginPath();
+      ctx.roundRect(lpX, dojoY, lpW, lpH, 6);
+      ctx.fill();
+      ctx.fillStyle = '#E0F2FE';
+      ctx.font = '800 8.5px Montserrat, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('🎓 DOJO', lpX + lpW / 2, dojoY + 15);
+      this.hudHitboxes.push({
+        id: 'land_tut',
+        x: lpX,
+        y: dojoY,
+        w: lpW,
+        h: lpH,
+        action: () => {
+          this.audio.playMenuTick();
+          this.loadLevel(0);
+        }
+      });
+
+      ctx.fillStyle = '#7F1D1D';
+      ctx.beginPath();
+      ctx.roundRect(lpX, retryY, lpW, lpH, 6);
+      ctx.fill();
+      ctx.fillStyle = '#FCA5A5';
+      ctx.fillText('↻ RETRY', lpX + lpW / 2, retryY + 15);
+      this.hudHitboxes.push({
+        id: 'land_retry',
+        x: lpX,
+        y: retryY,
+        w: lpW,
+        h: lpH,
+        action: () => {
+          this.audio.playTap();
+          this.loadLevel(this.currentLevel);
+        }
+      });
+
+      // Right Gutter Quick Pills above Dig Buttons (◀ | ▶ | 👤 1P)
       const digW = 88;
       const digH = 52;
       const digX = width - digW - 8;
+      const navW = 41;
+      ctx.fillStyle = this.currentLevel > 0 ? '#334155' : '#1E293B';
+      ctx.beginPath();
+      ctx.roundRect(digX, dojoY, navW, lpH, 6);
+      ctx.fill();
+      ctx.fillStyle = '#F8FAFC';
+      ctx.fillText('◀', digX + navW / 2, dojoY + 15);
+      this.hudHitboxes.push({
+        id: 'land_prev',
+        x: digX,
+        y: dojoY,
+        w: navW,
+        h: lpH,
+        action: () => {
+          if (this.currentLevel > 0) {
+            this.audio.playMenuTick();
+            this.loadLevel(this.currentLevel - 1);
+          }
+        }
+      });
+
+      ctx.fillStyle = this.currentLevel < totalStages ? '#334155' : '#1E293B';
+      ctx.beginPath();
+      ctx.roundRect(digX + navW + 6, dojoY, navW, lpH, 6);
+      ctx.fill();
+      ctx.fillStyle = '#F8FAFC';
+      ctx.fillText('▶', digX + navW + 6 + navW / 2, dojoY + 15);
+      this.hudHitboxes.push({
+        id: 'land_next',
+        x: digX + navW + 6,
+        y: dojoY,
+        w: navW,
+        h: lpH,
+        action: () => {
+          if (this.currentLevel < totalStages) {
+            this.audio.playMenuTick();
+            this.loadLevel(this.currentLevel + 1);
+          }
+        }
+      });
+
+      ctx.fillStyle = this.soloMode ? '#15803D' : '#4338CA';
+      ctx.beginPath();
+      ctx.roundRect(digX, retryY, digW, lpH, 6);
+      ctx.fill();
+      ctx.fillStyle = '#F8FAFC';
+      ctx.fillText(this.soloMode ? '👤 1P SOLO' : '🤖 +CPU', digX + digW / 2, retryY + 15);
+      this.hudHitboxes.push({
+        id: 'land_solo',
+        x: digX,
+        y: retryY,
+        w: digW,
+        h: lpH,
+        action: () => {
+          this.toggleSoloMode();
+        }
+      });
+
       const digL_Y = height - 26 - digH * 2 - 14;
       const digR_Y = height - 26 - digH - 6;
       this.digLeftZone = { x: digX, y: digL_Y, w: digW, h: digH };
@@ -4311,6 +4414,10 @@ export class SumoLodeRunnerGame extends BaseGame {
     }
 
     ctx.restore();
+  }
+
+  public override drawMutatorHUD(): void {
+    // Sumo Lode Runner uses deterministic puzzle physics without random mutator pills overlapping the top timer
   }
 
   private drawArcadeDpad(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
@@ -4429,8 +4536,8 @@ export class SumoLodeRunnerGame extends BaseGame {
     const btnY = barY + 3;
     const btnH = 20;
 
-    // Compact iPhone / Mobile Status Bar Layout (when width < 720)
-    if (width < 720) {
+    // Compact iPhone / Mobile Status Bar Layout (when width < 920 or Touch Deck active)
+    if (width < 920 || this.isTouchDeckVisible(width, height)) {
       ctx.textAlign = 'left';
       ctx.fillStyle = remainingGold === 0 ? '#4ADE80' : '#FACC15';
       ctx.font = '900 9px Montserrat, sans-serif';

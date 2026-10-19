@@ -7511,11 +7511,13 @@ export class GameManager {
     const currentDisplayedCount = this.getFilteredCatalog().length;
 
     // Center Title Header (Unobstructed, zero overlap with desktop player cards or mobile borders)
+    const titleY = w < 560 ? 50 : 42;
+    const subY = w < 560 ? 64 : 58;
     this.ctx.save();
     this.ctx.fillStyle = '#0F172A';
     this.ctx.font = w < 500 ? '900 15px Montserrat, sans-serif' : (w < 720 ? '900 18px Montserrat, sans-serif' : '900 20px Montserrat, sans-serif');
     this.ctx.textAlign = 'center';
-    this.ctx.fillText('ANTIGRAVITY PARTY GAMES', w / 2, 42);
+    this.ctx.fillText('ANTIGRAVITY PARTY GAMES', w / 2, titleY);
     this.ctx.restore();
 
     // Center Subtitle
@@ -7526,7 +7528,7 @@ export class GameManager {
       this.deviceMode === 'phone'
         ? `📱 PHONE MODE (${currentDisplayedCount} Games)  •  ${activeCount >= 3 ? '4-Corner Touch + 1v1 Top/Bot → Final' : '1-2P Face-to-Face & Touch'}`
         : `${currentDisplayedCount} Minigames  •  1-4 Players & Bots  •  Tournament Cup`;
-    this.ctx.fillText(subText, w / 2, 58);
+    this.ctx.fillText(subText, w / 2, subY);
 
     // At startup or when playing 1 Human vs AI bot(s), Tab 1 ("1P V AI") is selected; when 1 Human only (no bots), Tab 0 ("1P SOLO") is selected
     let selectedTabCount = activeCount;
@@ -8152,7 +8154,7 @@ export class GameManager {
     // Modal Card sizing
     const modalW = Math.min(560, w * 0.92);
     const modalH = (game.id === 'skyline_sumo' || game.id === 'sumo_lode_runner')
-      ? Math.min(585, h * 0.95)
+      ? (w < 460 && h >= 540 ? Math.min(502, h * 0.92) : Math.min(585, h * 0.95))
       : Math.min(545, h * 0.92);
     const modalX = w / 2 - modalW / 2;
     const modalY = h / 2 - modalH / 2;
@@ -10796,10 +10798,11 @@ export class GameManager {
     // Corner player HUD status pills with high-contrast frosted backing
     const isOrbital = this.activeGame instanceof OrbitalSlingshotGame;
     const isPhone = this.deviceMode === 'phone';
+    const isCustomTouchDeck = Boolean(this.input.suppressPhoneOverlay);
     const activeCount = this.players.filter((p) => p.type !== 'disabled').length;
-    const isPhone2P = isPhone && activeCount <= 2;
+    const isPhone2P = isPhone && activeCount <= 2 && !isCustomTouchDeck;
 
-    const hudPositions = [
+    const hudPositions = isCustomTouchDeck ? [] : [
       {
         x: 18,
         y: isPhone2P ? h - 70 : 22,
@@ -11079,7 +11082,9 @@ export class GameManager {
         // Responsive mobile action prompt
         this.ctx.fillStyle = '#86EFAC';
         let promptText = `🎮 ${gameMeta.controlPrompt}`;
-        if (this.deviceMode === 'phone') {
+        if (this.input.suppressPhoneOverlay) {
+          promptText = '🕹️ LEFT D-PAD TO MOVE/CLIMB  •  ⛏️ TAP DIG L / DIG R';
+        } else if (this.deviceMode === 'phone') {
           const isSingle = (this.input as any)?.controlMode === 'single_button';
           promptText = isSingle
             ? '📱 TAP ANYWHERE ON YOUR HALF TO ACTION'

@@ -2173,6 +2173,31 @@ test.describe('1-4 Player Game Engine Verification', () => {
     expect(cloudRankingResult?.savedList[0]).toBe('skyline_sumo');
     expect(cloudRankingResult?.highScoreTop).toBe('hovercraft');
     expect(cloudRankingResult?.ratingIncludesTanks).toBe(true);
+
+    // 3. Verify #device-mode-toggle does NOT overlap Player 2's lobby badge
+    const overlapCheck = await page.evaluate(() => {
+      const toggleEl = document.getElementById('device-mode-toggle');
+      const gm = (window as unknown as {
+        __GAME_MANAGER__?: { playerBadgeHitboxes: Array<{ pid: number; x: number; y: number; w: number; h: number }> };
+      }).__GAME_MANAGER__;
+      if (!toggleEl || !gm) return null;
+      const tRect = toggleEl.getBoundingClientRect();
+      const p2 = gm.playerBadgeHitboxes.find((b) => b.pid === 1);
+      if (!p2) return null;
+      const intersects = !(
+        tRect.right <= p2.x ||
+        tRect.left >= p2.x + p2.w ||
+        tRect.bottom <= p2.y ||
+        tRect.top >= p2.y + p2.h
+      );
+      return {
+        intersects,
+        toggleTop: Math.round(tRect.top),
+        p2Bottom: Math.round(p2.y + p2.h)
+      };
+    });
+    expect(overlapCheck?.intersects).toBe(false);
+    expect(overlapCheck?.toggleTop).toBeGreaterThanOrEqual(overlapCheck?.p2Bottom ?? 0);
     expect(consoleErrors).toEqual([]);
   });
 
