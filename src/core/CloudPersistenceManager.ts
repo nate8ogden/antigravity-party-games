@@ -33,8 +33,16 @@ export interface FirebaseConfig {
 
 const STORAGE_KEY = 'antigravity_cloud_stats_v1';
 const FIREBASE_URL_KEY = 'antigravity_firebase_db_url';
+const AUTH_STORAGE_KEY = 'antigravity_firebase_auth_v1';
 // Default production Firebase Realtime Database URL for GitHub Pages (can be overridden by VITE_FIREBASE_DATABASE_URL or ?firebaseUrl=)
 const DEFAULT_FIREBASE_DB_URL = 'https://antigravity-party-games-rtdb-default-rtdb.firebaseio.com';
+
+interface CachedAuthSession {
+  idToken: string;
+  refreshToken?: string;
+  expiresAt: number;
+  uid?: string;
+}
 
 // Deterministic hash for seeding realistic initial community ratings & save counts
 function hashString(str: string): number {
@@ -50,6 +58,12 @@ export class CloudPersistenceManager {
   private static instance: CloudPersistenceManager;
   private records: Record<string, GameStatsRecord> = {};
   private firebaseDatabaseUrl: string | null = null;
+  private firebaseApiKey: string | null = null;
+  private idToken: string | null = null;
+  private refreshToken: string | null = null;
+  private tokenExpiresAt: number = 0;
+  private authPromise: Promise<string | null> | null = null;
+  private writeDebounceTimers: Map<string, number> = new Map();
   public syncStatus: 'local_only' | 'syncing' | 'synced' | 'offline_cached' = 'local_only';
   public lastSyncedAt: number | null = null;
 
@@ -87,6 +101,8 @@ export class CloudPersistenceManager {
           this.firebaseDatabaseUrl = url.replace(/\/$/, '');
           this.syncStatus = 'offline_cached';
         }
+        const envKey = (import.meta as unknown as { env?: Record<string, string> })?.env?.VITE_FIREBASE_API_KEY;
+        this.firebaseApiKey = winCfg?.apiKey || envKey || null;
       }
     } catch {
       // Ignore storage access errors in restricted frames
@@ -183,7 +199,7 @@ export class CloudPersistenceManager {
     }
     rec.userRating = clamped;
     this.saveToLocal();
-    this.pushRecordToFirebase(rec);
+    this.debouncedPush(rec);
     return rec;
   }
 
@@ -199,7 +215,7 @@ export class CloudPersistenceManager {
     rec.saved = !rec.saved;
     rec.saveCount = Math.max(0, rec.saveCount + (rec.saved ? 1 : -1));
     this.saveToLocal();
-    this.pushRecordToFirebase(rec);
+    this.debouncedPush(rec);
     return rec.saved;
   }
 
@@ -236,7 +252,7 @@ export class CloudPersistenceManager {
     }
 
     this.saveToLocal();
-    this.pushRecordToFirebase(rec);
+    this.debouncedPush(rec);
     return { isNewHighScore, record: rec };
   }
 
@@ -313,13 +329,111 @@ export class CloudPersistenceManager {
   }
 
   /**
+   * Acquires or refreshes a Firebase Anonymous Auth ID token using the Web API key
+   */
+  public async getAuthToken(): Promise<string | null> {
+    if (this.idToken && Date.now() < this.tokenExpiresAt - 60000) {
+      return this.idToken;
+    }
+    if (this.authPromise) {
+      return this.authPromise;
+    }
+    this.authPromise = (async () => {
+      try {
+        if (typeof localStorage !== 'undefined') {
+          const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+          if (raw) {
+            const cached: CachedAuthSession = JSON.parse(raw);
+            if (cached?.idToken && typeof cached.expiresAt === 'number' && Date.now() < cached.expiresAt - 60000) {
+              this.idToken = cached.idToken;
+              this.refreshToken = cached.refreshToken || null;
+              this.tokenExpiresAt = cached.expiresAt;
+              return this.idToken;
+            }
+            if (cached?.refreshToken && this.firebaseApiKey) {
+              const refreshRes = await fetch(`https://securetoken.googleapis.com/v1/token?key=${this.firebaseApiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `grant_type=refresh_token&refresh_token=${encodeURIComponent(cached.refreshToken)}`
+              });
+              if (refreshRes.ok) {
+                const refreshed = await refreshRes.json();
+                this.idToken = refreshed.id_token;
+                this.refreshToken = refreshed.refresh_token || cached.refreshToken;
+                this.tokenExpiresAt = Date.now() + (parseInt(refreshed.expires_in, 10) || 3600) * 1000;
+                localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
+                  idToken: this.idToken,
+                  refreshToken: this.refreshToken,
+                  expiresAt: this.tokenExpiresAt,
+                  uid: refreshed.user_id
+                }));
+                return this.idToken;
+              }
+            }
+          }
+        }
+
+        if (this.firebaseApiKey) {
+          const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${this.firebaseApiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ returnSecureToken: true })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            this.idToken = data.idToken;
+            this.refreshToken = data.refreshToken;
+            this.tokenExpiresAt = Date.now() + (parseInt(data.expiresIn, 10) || 3600) * 1000;
+            if (typeof localStorage !== 'undefined') {
+              localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
+                idToken: this.idToken,
+                refreshToken: this.refreshToken,
+                expiresAt: this.tokenExpiresAt,
+                uid: data.localId
+              }));
+            }
+            return this.idToken;
+          }
+        }
+      } catch {
+        // Network/offline error - proceed gracefully
+      } finally {
+        this.authPromise = null;
+      }
+      return this.idToken;
+    })();
+    return this.authPromise;
+  }
+
+  /**
+   * Debounces push requests per game to prevent request flooding
+   */
+  private debouncedPush(rec: GameStatsRecord): void {
+    if (typeof window === 'undefined') {
+      this.pushRecordToFirebase(rec);
+      return;
+    }
+    const timer = this.writeDebounceTimers.get(rec.gameId);
+    if (timer) {
+      window.clearTimeout(timer);
+    }
+    const newTimer = window.setTimeout(() => {
+      this.writeDebounceTimers.delete(rec.gameId);
+      this.pushRecordToFirebase(rec);
+    }, 350);
+    this.writeDebounceTimers.set(rec.gameId, newTimer);
+  }
+
+  /**
    * Asynchronous non-blocking Firebase Realtime Database REST pull
    */
   public async pullFromFirebase(): Promise<void> {
     if (!this.firebaseDatabaseUrl || typeof fetch === 'undefined') return;
     try {
       this.syncStatus = 'syncing';
-      const res = await fetch(`${this.firebaseDatabaseUrl}/antigravity_cloud/games.json`, {
+      const authToken = await this.getAuthToken();
+      const authQuery = authToken ? `?auth=${encodeURIComponent(authToken)}` : '';
+      const res = await fetch(`${this.firebaseDatabaseUrl}/antigravity_cloud/games.json${authQuery}`, {
         method: 'GET',
         headers: { 'Accept': 'application/json' }
       });
@@ -343,6 +457,9 @@ export class CloudPersistenceManager {
           if (typeof cloudRec.saveCount === 'number' && cloudRec.saveCount > local.saveCount) {
             local.saveCount = cloudRec.saveCount;
           }
+          if (typeof cloudRec.plays === 'number' && cloudRec.plays > local.plays) {
+            local.plays = cloudRec.plays;
+          }
         }
         this.saveToLocal();
       }
@@ -355,13 +472,15 @@ export class CloudPersistenceManager {
 
   /**
    * Asynchronous non-blocking Firebase Realtime Database REST push
-   * Performs a read-merge-write so concurrent GitHub Pages players never overwrite higher global scores
+   * Uses authenticated write, defensive bounds sanitization, and read-merge-write
    */
   private async pushRecordToFirebase(rec: GameStatsRecord): Promise<void> {
     if (!this.firebaseDatabaseUrl || typeof fetch === 'undefined') return;
     try {
       this.syncStatus = 'syncing';
-      const endpoint = `${this.firebaseDatabaseUrl}/antigravity_cloud/games/${encodeURIComponent(rec.gameId)}.json`;
+      const authToken = await this.getAuthToken();
+      const authQuery = authToken ? `?auth=${encodeURIComponent(authToken)}` : '';
+      const endpoint = `${this.firebaseDatabaseUrl}/antigravity_cloud/games/${encodeURIComponent(rec.gameId)}.json${authQuery}`;
 
       // Fetch latest cloud snapshot for this game before merging
       let remote: Partial<GameStatsRecord> | null = null;
@@ -374,28 +493,52 @@ export class CloudPersistenceManager {
         // Proceed with local record if GET fails
       }
 
-      const remoteHighScore = typeof remote?.highScore === 'number' ? remote.highScore : 0;
-      const mergedHighScore = Math.max(remoteHighScore, rec.highScore);
-      if (mergedHighScore > rec.highScore) {
-        rec.highScore = mergedHighScore;
-      }
+      const remoteHighScore = typeof remote?.highScore === 'number' && remote.highScore >= 0 ? remote.highScore : 0;
+      // Sanitize score to bounded integer [0, 5000000] and delta <= 500,000
+      const sanitizedLocalScore = Math.max(0, Math.min(5000000, Math.round(rec.highScore)));
+      const mergedHighScore = Math.min(
+        remoteHighScore + 500000,
+        Math.max(remoteHighScore, sanitizedLocalScore)
+      );
+      rec.highScore = mergedHighScore;
 
-      const remoteCount = typeof remote?.ratingCount === 'number' ? remote.ratingCount : rec.ratingCount;
-      const remoteRating = typeof remote?.communityRating === 'number' ? remote.communityRating : rec.communityRating;
-      const mergedRating = rec.userRating > 0
+      const remoteCount = typeof remote?.ratingCount === 'number' && remote.ratingCount >= 0 ? remote.ratingCount : rec.ratingCount;
+      const remoteRating = typeof remote?.communityRating === 'number' && remote.communityRating >= 1 && remote.communityRating <= 5
+        ? remote.communityRating
+        : rec.communityRating;
+
+      // Rate limit ratingCount increment to at most +1 from remote
+      const newRatingCount = Math.max(remoteCount, Math.min(remoteCount + 1, rec.ratingCount));
+      rec.ratingCount = newRatingCount;
+
+      let mergedRating = rec.userRating > 0
         ? Number((((remoteRating * Math.max(1, remoteCount)) + rec.userRating) / (Math.max(1, remoteCount) + 1)).toFixed(2))
         : remoteRating;
+      // Clamp community rating to [1.0, 5.0]
+      mergedRating = Math.max(1.0, Math.min(5.0, Number(mergedRating.toFixed(2))));
+      // Anti-swing: prevent drastic rating jumps if established count >= 5
+      if (remoteCount >= 5 && Math.abs(mergedRating - remoteRating) > 1.0) {
+        mergedRating = Number((remoteRating + Math.sign(mergedRating - remoteRating) * 0.5).toFixed(2));
+      }
       rec.communityRating = mergedRating;
+
+      const remoteSaveCount = typeof remote?.saveCount === 'number' && remote.saveCount >= 0 ? remote.saveCount : 0;
+      const mergedSaveCount = Math.max(0, Math.min(remoteSaveCount + 1, Math.max(remoteSaveCount - 1, rec.saveCount)));
+      rec.saveCount = mergedSaveCount;
+
+      const remotePlays = typeof remote?.plays === 'number' && remote.plays >= 0 ? remote.plays : 0;
+      const mergedPlays = Math.max(remotePlays, Math.min(remotePlays + 5, rec.plays));
+      rec.plays = mergedPlays;
 
       const res = await fetch(endpoint, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           communityRating: mergedRating,
-          ratingCount: Math.max(remoteCount, rec.ratingCount),
-          saveCount: Math.max(typeof remote?.saveCount === 'number' ? remote.saveCount : 0, rec.saveCount),
+          ratingCount: newRatingCount,
+          saveCount: mergedSaveCount,
           highScore: mergedHighScore,
-          plays: Math.max(typeof remote?.plays === 'number' ? remote.plays : 0, rec.plays),
+          plays: mergedPlays,
           updatedAt: Date.now()
         })
       });
