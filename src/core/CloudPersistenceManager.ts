@@ -34,7 +34,7 @@ export interface FirebaseConfig {
 const STORAGE_KEY = 'antigravity_cloud_stats_v1';
 const FIREBASE_URL_KEY = 'antigravity_firebase_db_url';
 // Default production Firebase Realtime Database URL for GitHub Pages (can be overridden by VITE_FIREBASE_DATABASE_URL or ?firebaseUrl=)
-const DEFAULT_FIREBASE_DB_URL = '';
+const DEFAULT_FIREBASE_DB_URL = 'https://antigravity-party-games-rtdb-default-rtdb.firebaseio.com';
 
 // Deterministic hash for seeding realistic initial community ratings & save counts
 function hashString(str: string): number {
