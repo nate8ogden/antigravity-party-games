@@ -459,7 +459,7 @@ body.modal-open .device-toggle-bar {
   display: none !important;
 }
 
-@media (max-width: 999px) {
+@media (max-width: 1179px) {
   .device-toggle-bar {
     top: 6px;
     right: 10px;

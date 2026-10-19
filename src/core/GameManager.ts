@@ -7561,12 +7561,13 @@ export class GameManager {
     this.ctx.restore();
 
     // Center Subtitle
+    const isTabletScreen = w >= 600 && w < 1180;
     this.ctx.fillStyle = this.deviceMode === 'phone' ? '#0284C7' : '#64748B';
     this.ctx.font = w < 500 ? '700 9.5px Montserrat, sans-serif' : (w < 720 ? '700 10.5px Montserrat, sans-serif' : '700 11.5px Montserrat, sans-serif');
     this.ctx.textAlign = 'center';
     const subText =
       this.deviceMode === 'phone'
-        ? `📱 PHONE MODE (${currentDisplayedCount} Games)  •  ${activeCount >= 3 ? '4-Corner Touch + 1v1 Top/Bot → Final' : '1-2P Face-to-Face & Touch'}`
+        ? `${isTabletScreen ? '📱 TABLET & TOUCH MODE' : '📱 PHONE MODE'} (${currentDisplayedCount} Games)  •  ${activeCount >= 3 ? '4-Corner Touch + 1v1 Top/Bot → Final' : '1-2P Face-to-Face & Touch'}`
         : `${currentDisplayedCount} Minigames  •  1-4 Players & Bots  •  Tournament Cup`;
     this.ctx.fillText(subText, w / 2, subY);
 
@@ -7683,7 +7684,8 @@ export class GameManager {
 
     // 5. Category Filter Tabs & Quick Action Buttons (Auto-Wrapping Responsive Design)
     this.categoryPillBoxes = [];
-    const isNarrow = w < 820;
+    const galleryLayout = this.getGalleryLayout(w, h);
+    const isNarrow = galleryLayout.isNarrowHeader;
     const catBarY = 148;
     const categories: { id: string; label: string; icon: string }[] = [
       { id: 'ALL', label: `ALL (${currentDisplayedCount})`, icon: '🎮' },
@@ -7833,9 +7835,9 @@ export class GameManager {
       this.ctx.textAlign = 'center';
       this.ctx.fillText(searchLabel, curX + searchW / 2, catBarY + 14.5);
     } else {
-      // Mobile / Narrow: Row 1 has Categories
+      // Mobile / Narrow / Tablet Portrait: Row 1 has Categories
       const catGap = 4;
-      const totalCatW = Math.min(w - 24, 600);
+      const totalCatW = Math.min(w - 24, 620);
       const catW = Math.max(38, Math.floor((totalCatW - 6 * catGap) / 7));
       let curX = (w - (7 * catW + 6 * catGap)) / 2;
 
@@ -7857,7 +7859,7 @@ export class GameManager {
         this.ctx.fillStyle = isSel ? '#FFFFFF' : '#475569';
         this.ctx.font = '900 8.5px Montserrat, sans-serif';
         this.ctx.textAlign = 'center';
-        const label = catW < 52 ? (cat.id === 'ALL' ? 'ALL' : cat.label.slice(0, 3)) : (cat.id === 'ALL' ? 'ALL' : cat.label);
+        const label = catW < 52 ? (cat.id === 'ALL' ? 'ALL' : cat.label.slice(0, 3)) : (cat.id === 'ALL' ? `ALL (${currentDisplayedCount})` : cat.label);
         this.ctx.fillText(label, curX + catW / 2, catBarY + 14.5);
         curX += catW + catGap;
       });
@@ -7865,7 +7867,7 @@ export class GameManager {
       // Narrow Row 2: Actions (RANDOM, CUP, RANK, SEARCH)
       const actionY = 175;
       const actGap = 6;
-      const btnW = Math.min(92, Math.floor((w - 28 - 3 * actGap) / 4));
+      const btnW = Math.min(115, Math.floor((w - 28 - 3 * actGap) / 4));
       const totalActW = 4 * btnW + 3 * actGap;
       let actX = (w - totalActW) / 2;
 
@@ -7914,7 +7916,7 @@ export class GameManager {
       this.ctx.fillStyle = activeSort.color;
       this.ctx.font = '900 8.5px Montserrat, sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText(activeSort.shortLabel, actX + btnW / 2, actionY + 14.5);
+      this.ctx.fillText(btnW >= 100 ? activeSort.label : activeSort.shortLabel, actX + btnW / 2, actionY + 14.5);
       actX += btnW + actGap;
 
       // 🔍 SEARCH
@@ -7942,8 +7944,7 @@ export class GameManager {
     this.renderCornerPlayerBadges();
 
     // 7. Center Scrollable Game Gallery (Filtered Custom Art Squares)
-    const galleryY = isNarrow ? 206 : 178;
-    this.renderScrollableGallery(w, h, galleryY);
+    this.renderScrollableGallery(w, h, galleryLayout.galleryY);
 
     // 8. "How to Play" Pop-up Modal (When a game square is selected)
     if (this.isModalOpen) {
@@ -7951,22 +7952,12 @@ export class GameManager {
     }
   }
 
-  private renderScrollableGallery(w: number, h: number, galleryY: number = 178) {
-    const isDesktop = w >= 1000;
-    const galleryH = h - galleryY - (isDesktop ? 86 : 98);
-    const galleryX = isDesktop ? 198 : 16;
-    const galleryW = isDesktop ? w - 396 : w - 32;
+  private renderScrollableGallery(w: number, h: number, _galleryYArg: number = 178) {
+    const { galleryX, galleryY, galleryW, galleryH, cols, gap, cardW, cardH, startX } = this.getGalleryLayout(w, h);
 
     const displayedGames = this.getFilteredCatalog();
     const activePlayerCount = this.players.filter((p) => p.type !== 'disabled').length;
 
-    // Card sizing
-    const cols = this.getGalleryCols();
-    const gap = w < 600 ? 10 : 16;
-    const cardW = w < 600 ? Math.floor((galleryW - (cols - 1) * gap) / cols) : 195;
-    const cardH = w < 600 ? Math.round(cardW * 1.05) : 205;
-    const totalGridW = cols * cardW + (cols - 1) * gap;
-    const startX = galleryX + Math.max(0, (galleryW - totalGridW) / 2);
     const rows = Math.ceil(displayedGames.length / cols);
     const totalContentH = rows * cardH + (rows - 1) * gap + 85;
 
@@ -10682,7 +10673,7 @@ export class GameManager {
       'Numpad / M'
     ];
 
-    if (w >= 1000) {
+    if (w >= 1180) {
       // Desktop: 4 luxury corner cards in side margins
       const badgeW = 168;
       const badgeH = 62;
@@ -11872,20 +11863,10 @@ export class GameManager {
       }
 
       // 4. Check scrollable game gallery cards (opens instructions modal)
-      const galleryY = w < 780 ? 206 : 178;
-      const isDesktop = w >= 1000;
-      const galleryH = h - galleryY - (isDesktop ? 86 : 98);
-      const galleryX = isDesktop ? 198 : 16;
-      const galleryW = isDesktop ? w - 396 : w - 32;
+      const { galleryX, galleryY, galleryW, galleryH, cols, gap, cardW, cardH, startX } = this.getGalleryLayout(w, h);
 
       if (x >= galleryX && x <= galleryX + galleryW && y >= galleryY && y <= galleryY + galleryH) {
         const displayedGames = this.getFilteredCatalog();
-        const cardW = 195;
-        const cardH = 205;
-        const gap = 16;
-        const cols = Math.max(1, Math.floor((galleryW + gap) / (cardW + gap)));
-        const totalGridW = cols * cardW + (cols - 1) * gap;
-        const startX = galleryX + Math.max(0, (galleryW - totalGridW) / 2);
 
         for (let idx = 0; idx < displayedGames.length; idx++) {
           const col = idx % cols;
@@ -12141,20 +12122,10 @@ export class GameManager {
       }
 
       // Gallery cards
-      const galleryY = w < 780 ? 206 : 178;
-      const isDesktop = w >= 1000;
-      const galleryH = h - galleryY - (isDesktop ? 86 : 98);
-      const galleryX = isDesktop ? 198 : 16;
-      const galleryW = isDesktop ? w - 396 : w - 32;
+      const { galleryX, galleryY, galleryW, galleryH, cols, gap, cardW, cardH, startX } = this.getGalleryLayout(w, h);
 
       if (x >= galleryX && x <= galleryX + galleryW && y >= galleryY && y <= galleryY + galleryH) {
         const displayedGames = this.getFilteredCatalog();
-        const cardW = 195;
-        const cardH = 205;
-        const gap = 16;
-        const cols = this.getGalleryCols();
-        const totalGridW = cols * cardW + (cols - 1) * gap;
-        const startX = galleryX + Math.max(0, (galleryW - totalGridW) / 2);
 
         for (let idx = 0; idx < displayedGames.length; idx++) {
           const col = idx % cols;
