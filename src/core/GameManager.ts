@@ -7624,9 +7624,7 @@ export class GameManager {
       this.ctx.restore();
 
       this.ctx.fillStyle = isSelected ? '#FFFFFF' : '#334155';
-      this.ctx.font = '900 10.5px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(tab.label, tabX + tabW / 2, tabY + 17);
+      this.drawFittedButtonText(tab.label, tabX + tabW / 2, tabY + 17, tabW - 8, 10.5, 7.5);
     });
 
     // 4. Global AI Difficulty Bar (Responsive Segmented Tactile Switch)
@@ -7678,8 +7676,7 @@ export class GameManager {
       this.ctx.restore();
 
       this.ctx.fillStyle = isSelected ? '#FFFFFF' : '#475569';
-      this.ctx.font = '900 11px Montserrat, sans-serif';
-      this.ctx.fillText(`${opt.icon} ${opt.label}`, optX + diffW / 2, diffY + 17);
+      this.drawFittedButtonText(`${opt.icon} ${opt.label}`, optX + diffW / 2, diffY + 17, diffW - 8, 11, 8.0);
     });
 
     // 5. Category Filter Tabs & Quick Action Buttons (Auto-Wrapping Responsive Design)
@@ -7707,13 +7704,13 @@ export class GameManager {
     const activeSort = sortMeta[this.catalogSortMode] || sortMeta.default;
 
     if (!isNarrow) {
-      const catW = 60;
-      const allPillW = 74;
+      const catW = 62;
+      const allPillW = 76;
       const catGap = 4;
-      const randW = 82;
+      const randW = 84;
       const cupW = 78;
-      const sortW = 104;
-      const searchBaseW = 90;
+      const sortW = 108;
+      const searchBaseW = 92;
       const totalPillsW = allPillW + 6 * (catW + catGap) + 10 + randW + 5 + cupW + 5 + sortW + 5 + searchBaseW;
       let curX = Math.max(16, w / 2 - totalPillsW / 2);
 
@@ -7737,9 +7734,7 @@ export class GameManager {
         this.ctx.restore();
 
         this.ctx.fillStyle = isSel ? '#FFFFFF' : '#475569';
-        this.ctx.font = '900 9.5px Montserrat, sans-serif';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText(cat.label, curX + pillW / 2, catBarY + 14.5);
+        this.drawFittedButtonText(cat.label, curX + pillW / 2, catBarY + 14.5, pillW - 8, 9.5, 7.5);
 
         curX += pillW + catGap;
       });
@@ -7760,9 +7755,7 @@ export class GameManager {
       this.ctx.restore();
 
       this.ctx.fillStyle = '#FFFFFF';
-      this.ctx.font = '900 9.5px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText('🎲 RANDOM', curX + randW / 2, catBarY + 14.5);
+      this.drawFittedButtonText('🎲 RANDOM', curX + randW / 2, catBarY + 14.5, randW - 8, 9.5, 7.5);
 
       curX += randW + 5;
 
@@ -7780,9 +7773,7 @@ export class GameManager {
       this.ctx.restore();
 
       this.ctx.fillStyle = '#FFFFFF';
-      this.ctx.font = '900 9.5px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText('🏆 CUP', curX + cupW / 2, catBarY + 14.5);
+      this.drawFittedButtonText('🏆 CUP', curX + cupW / 2, catBarY + 14.5, cupW - 8, 9.5, 7.5);
 
       curX += cupW + 5;
 
@@ -7802,9 +7793,7 @@ export class GameManager {
       }
       this.ctx.restore();
       this.ctx.fillStyle = activeSort.color;
-      this.ctx.font = '900 9px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(activeSort.label, curX + sortW / 2, catBarY + 14.5);
+      this.drawFittedButtonText(activeSort.label, curX + sortW / 2, catBarY + 14.5, sortW - 8, 9.0, 7.0);
 
       curX += sortW + 5;
 
@@ -7831,9 +7820,7 @@ export class GameManager {
         this.ctx.fillStyle = '#475569';
       }
       this.ctx.restore();
-      this.ctx.font = '900 9.5px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(searchLabel, curX + searchW / 2, catBarY + 14.5);
+      this.drawFittedButtonText(searchLabel, curX + searchW / 2, catBarY + 14.5, searchW - 8, 9.5, 7.5);
     } else {
       // Mobile / Narrow / Tablet Portrait: Row 1 has Categories
       const catGap = 4;
@@ -7857,10 +7844,8 @@ export class GameManager {
         this.ctx.restore();
 
         this.ctx.fillStyle = isSel ? '#FFFFFF' : '#475569';
-        this.ctx.font = '900 8.5px Montserrat, sans-serif';
-        this.ctx.textAlign = 'center';
-        const label = catW < 52 ? (cat.id === 'ALL' ? 'ALL' : cat.label.slice(0, 3)) : (cat.id === 'ALL' ? `ALL (${currentDisplayedCount})` : cat.label);
-        this.ctx.fillText(label, curX + catW / 2, catBarY + 14.5);
+        const label = catW < 52 ? (cat.id === 'ALL' ? 'ALL' : cat.label.slice(0, 3)) : (cat.id === 'ALL' ? (catW < 64 ? 'ALL' : `ALL (${currentDisplayedCount})`) : cat.label);
+        this.drawFittedButtonText(label, curX + catW / 2, catBarY + 14.5, catW - 6, 8.5, 6.5);
         curX += catW + catGap;
       });
 
@@ -7881,9 +7866,7 @@ export class GameManager {
       this.drawRoundedRect(actX, actionY, btnW, 21, 6, randGrad, '#C4B5FD', 1.5);
       this.ctx.restore();
       this.ctx.fillStyle = '#FFFFFF';
-      this.ctx.font = '900 8.5px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText('🎲 RANDOM', actX + btnW / 2, actionY + 14.5);
+      this.drawFittedButtonText('🎲 RANDOM', actX + btnW / 2, actionY + 14.5, btnW - 8, 8.5, 6.5);
       actX += btnW + actGap;
 
       // 🏆 CUP
@@ -7896,9 +7879,7 @@ export class GameManager {
       this.drawRoundedRect(actX, actionY, btnW, 21, 6, cupGrad, '#FDE68A', 1.5);
       this.ctx.restore();
       this.ctx.fillStyle = '#FFFFFF';
-      this.ctx.font = '900 8.5px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText('🏆 CUP', actX + btnW / 2, actionY + 14.5);
+      this.drawFittedButtonText('🏆 CUP', actX + btnW / 2, actionY + 14.5, btnW - 8, 8.5, 6.5);
       actX += btnW + actGap;
 
       // ⭐ RANK
@@ -7914,9 +7895,7 @@ export class GameManager {
       }
       this.ctx.restore();
       this.ctx.fillStyle = activeSort.color;
-      this.ctx.font = '900 8.5px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(btnW >= 100 ? activeSort.label : activeSort.shortLabel, actX + btnW / 2, actionY + 14.5);
+      this.drawFittedButtonText(btnW >= 100 ? activeSort.label : activeSort.shortLabel, actX + btnW / 2, actionY + 14.5, btnW - 8, 8.5, 6.5);
       actX += btnW + actGap;
 
       // 🔍 SEARCH
@@ -7935,9 +7914,7 @@ export class GameManager {
         this.ctx.fillStyle = '#475569';
       }
       this.ctx.restore();
-      this.ctx.font = '900 8.5px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(sLabel, actX + btnW / 2, actionY + 14.5);
+      this.drawFittedButtonText(sLabel, actX + btnW / 2, actionY + 14.5, btnW - 8, 8.5, 6.5);
     }
 
     // 6. Corner Player Badges
@@ -11595,7 +11572,7 @@ export class GameManager {
     }
 
     // Back to Menu 2.5D Button
-    const btnW = 180;
+    const btnW = 216;
     const btnH = 44;
     const btnX = cx - btnW / 2;
     const btnY = basePodiumY + 25;
@@ -11612,9 +11589,27 @@ export class GameManager {
     this.ctx.restore();
 
     this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.font = '900 13px Montserrat, sans-serif';
+    this.drawFittedButtonText('⌂ MAIN MENU [Space / Esc]', cx, btnY + 27, btnW - 14, 12.5, 9.0);
+  }
+
+  private drawFittedButtonText(
+    text: string,
+    centerX: number,
+    y: number,
+    maxW: number,
+    baseFontPx: number,
+    minFontPx: number = 7.0,
+    weight: string = '900'
+  ) {
     this.ctx.textAlign = 'center';
-    this.ctx.fillText('⌂ MAIN MENU [Space / Esc]', cx, btnY + 27);
+    let sz = baseFontPx;
+    this.ctx.font = `${weight} ${sz}px Montserrat, sans-serif`;
+    while (this.ctx.measureText(text).width > maxW && sz > minFontPx) {
+      sz = Math.max(minFontPx, sz - 0.5);
+      this.ctx.font = `${weight} ${sz}px Montserrat, sans-serif`;
+      if (sz <= minFontPx) break;
+    }
+    this.ctx.fillText(text, centerX, y, Math.max(8, maxW));
   }
 
   private wrapText(text: string, x: number, y: number, maxWidth: number, lineHeight: number) {
