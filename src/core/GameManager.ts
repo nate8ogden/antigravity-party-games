@@ -2584,23 +2584,28 @@ export interface GameSettings {
 export function detectInitialDeviceMode(): DevicePlatformMode {
   if (typeof window === 'undefined') return 'computer';
 
-  // 1. Explicit query parameter override (?mode=phone or ?device=phone)
+  // 1. Explicit query parameter override (?mode=phone or ?device=phone or ?mode=tablet)
   const params = new URLSearchParams(window.location.search);
   const modeParam = params.get('mode') || params.get('device') || params.get('platform');
-  if (modeParam === 'phone' || modeParam === 'mobile') return 'phone';
+  if (modeParam === 'phone' || modeParam === 'mobile' || modeParam === 'tablet' || modeParam === 'ipad') return 'phone';
   if (modeParam === 'computer' || modeParam === 'desktop') return 'computer';
 
-  // 2. User-Agent mobile heuristics (covers Android, Pixel, iPhone, iPad, iPod, etc.)
+  // 2. User-Agent mobile & tablet heuristics (covers Android, Pixel, iPhone, iPad, iPod, etc.)
   const ua = (typeof navigator !== 'undefined' && navigator.userAgent) || '';
   const isMobileUA = /Android|iPhone|iPad|iPod|Mobile|Silk|BlackBerry|Opera Mini/i.test(ua);
+  // iPadOS 13+ Safari reports desktop MacIntel user-agent with maxTouchPoints > 1
+  const isIPadOS =
+    typeof navigator !== 'undefined' &&
+    (/Macintosh|MacIntel/i.test(ua) || navigator.platform === 'MacIntel') &&
+    navigator.maxTouchPoints > 1;
 
   // 3. Pointer & screen characteristics
   const isCoarse = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
   const isTouchScreen = (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) || ('ontouchstart' in window);
-  const isSmallPhoneScreen = window.innerWidth <= 600 || window.innerHeight <= 600;
+  const isPhoneOrTabletScreen = window.innerWidth <= 1024 || window.innerHeight <= 1024;
 
-  // Real mobile phones have mobile UA or coarse touch pointer on a compact screen
-  if (isMobileUA || (isCoarse && isSmallPhoneScreen) || (isTouchScreen && isSmallPhoneScreen)) {
+  // Phones and Touch Tablets (iPad) default to Touch/Mobile mode
+  if (isMobileUA || isIPadOS || (isCoarse && isTouchScreen) || (isTouchScreen && isPhoneOrTabletScreen && isCoarse)) {
     return 'phone';
   }
   return 'computer';
@@ -5417,23 +5422,58 @@ export class GameManager {
     return isNowSaved;
   }
 
-  public getGalleryCols(): number {
-    const w = this.logicalWidth;
+  public getGalleryLayout(w: number = this.logicalWidth, h: number = this.logicalHeight) {
+    const isNarrowHeader = w < 920;
+    const galleryY = isNarrowHeader ? 206 : 178;
+    const isDesktopSideCards = w >= 1180;
+    const galleryH = Math.max(120, h - galleryY - (isDesktopSideCards ? 86 : 98));
+    const galleryX = isDesktopSideCards ? 198 : 16;
+    const galleryW = Math.max(240, isDesktopSideCards ? w - 396 : w - 32);
+
+    let cols: number;
+    let gap: number;
+    let cardW: number;
+    let cardH: number;
+
     if (w < 600) {
-      return 2;
+      cols = 2;
+      gap = 10;
+      cardW = Math.floor((galleryW - (cols - 1) * gap) / cols);
+      cardH = Math.round(cardW * 1.05);
+    } else {
+      gap = 16;
+      const targetCardW = 195;
+      cols = Math.max(2, Math.floor((galleryW + gap) / (targetCardW + gap)));
+      cardW = Math.min(222, Math.floor((galleryW - (cols - 1) * gap) / cols));
+      cardH = 205;
     }
-    const isDesktop = w >= 1100;
-    const galleryW = isDesktop ? w - 396 : w - 32;
-    const cardW = 195;
-    const gap = 16;
-    return Math.max(1, Math.floor((galleryW + gap) / (cardW + gap)));
+
+    const totalGridW = cols * cardW + (cols - 1) * gap;
+    const startX = galleryX + Math.max(0, Math.floor((galleryW - totalGridW) / 2));
+
+    return {
+      isNarrowHeader,
+      isDesktopSideCards,
+      galleryX,
+      galleryY,
+      galleryW,
+      galleryH,
+      cols,
+      gap,
+      cardW,
+      cardH,
+      totalGridW,
+      startX
+    };
+  }
+
+  public getGalleryCols(): number {
+    return this.getGalleryLayout().cols;
   }
 
   public scrollToGame(index: number) {
-    const cols = this.getGalleryCols();
+    const { cols, cardH, gap } = this.getGalleryLayout();
     const row = Math.floor(index / cols);
-    const cardH = 205;
-    const gap = 16;
     const targetY = row * (cardH + gap);
     this.targetScrollY = Math.max(0, Math.min(this.maxScrollY, targetY - 40));
   }

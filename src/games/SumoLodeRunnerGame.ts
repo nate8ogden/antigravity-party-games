@@ -1447,8 +1447,9 @@ export class SumoLodeRunnerGame extends BaseGame {
   private touchMoveHandler: ((e: TouchEvent) => void) | null = null;
   private touchEndHandler: ((e: TouchEvent) => void) | null = null;
 
-  // Smart Mobile Follow-Cam & Dedicated iPhone Arcade Touch Control Deck State
-  private mobileZoomCam: boolean = true;
+  // Smart Mobile Follow-Cam & Dedicated Phone/Tablet Arcade Touch Control Deck State
+  private mobileZoomCam: boolean = false;
+  private hasSeenTouchInput: boolean = false;
   private camFocusX: number = 13.5;
   private camFocusY: number = 10;
   private virtualDpadSteer: number = 0;
@@ -1465,9 +1466,19 @@ export class SumoLodeRunnerGame extends BaseGame {
   private hudHitboxes: { id: string; x: number; y: number; w: number; h: number; action: () => void }[] = [];
 
   private isTouchDeckVisible(width: number, height: number): boolean {
-    const isPhonePortrait = width < 640 && height > width;
-    const isPhoneLandscape = width < 930 && height < 480;
-    return isPhonePortrait || isPhoneLandscape || this.input?.deviceMode === 'phone';
+    const isPhoneOrTabletPortrait = height > width && width <= 1024;
+    const isPhoneLandscape = width < 960 && height < 540;
+    const isCoarseTouchDevice =
+      typeof window !== 'undefined' &&
+      ((typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches) ||
+        (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 1 && Math.min(width, height) <= 1024));
+    return (
+      isPhoneOrTabletPortrait ||
+      isPhoneLandscape ||
+      isCoarseTouchDevice ||
+      this.hasSeenTouchInput ||
+      this.input?.deviceMode === 'phone'
+    );
   }
 
   private updateDpadFromPoint(cx: number, cy: number): void {
@@ -1582,6 +1593,8 @@ export class SumoLodeRunnerGame extends BaseGame {
   public init(width: number, height: number): void {
     this.lastWidth = width;
     this.lastHeight = height;
+    // Default Smart Zoom Follow-Cam ON for narrow portrait phones (< 600px), and Full Map ON for tablets/iPads & desktops
+    this.mobileZoomCam = width < 600 && height > width;
     this.initWasmKernel();
     if (this.input) {
       this.input.suppressPhoneOverlay = this.isTouchDeckVisible(width, height);
@@ -1639,6 +1652,7 @@ export class SumoLodeRunnerGame extends BaseGame {
       };
 
       this.touchStartHandler = (e: TouchEvent) => {
+        this.hasSeenTouchInput = true;
         let handled = false;
         for (let i = 0; i < e.changedTouches.length; i++) {
           const t = e.changedTouches[i];
@@ -3269,19 +3283,34 @@ export class SumoLodeRunnerGame extends BaseGame {
   }
 
   private getGridLayout(width: number, height: number) {
-    const isPhonePortrait = width < 640 && height > width;
-    const isPhoneLandscape = width < 930 && height < 480;
-    const isTouchDeck = isPhonePortrait || isPhoneLandscape || this.input?.deviceMode === 'phone';
+    const isPhonePortrait = width < 600 && height > width;
+    const isTouchDeck = this.isTouchDeckVisible(width, height);
+    // Short landscape phones (height < 540) use left/right side gutters; Portrait phones and all Tablets/iPads (Portrait & Landscape) use a Bottom Control Deck
+    const isSideGutterDeck = isTouchDeck && width > height && height < 540;
+    const isBottomDeck = isTouchDeck && !isSideGutterDeck;
 
-    const topMargin = width < 640 || height < 480 ? 44 : 54;
-    const touchDeckH = isPhonePortrait ? Math.min(188, Math.max(158, Math.floor(height * 0.215))) : 0;
+    const topMargin = height < 500 ? 44 : 50;
+    let touchDeckH = 0;
+    if (isBottomDeck) {
+      if (width < 600) {
+        touchDeckH = Math.min(184, Math.max(156, Math.floor(height * 0.21)));
+      } else if (height > width) {
+        touchDeckH = Math.min(186, Math.max(156, Math.floor(height * 0.165)));
+      } else {
+        touchDeckH = Math.min(148, Math.max(132, Math.floor(height * 0.18)));
+      }
+    }
+
     const bottomMargin = 26 + touchDeckH;
-    const sideMargin = isPhonePortrait ? 4 : isPhoneLandscape ? 104 : 20;
+    const sideMargin = isSideGutterDeck ? 104 : width < 600 ? 4 : 16;
 
     const viewW = Math.max(240, width - sideMargin * 2);
     const viewH = Math.max(180, height - topMargin - bottomMargin);
     const viewX = Math.floor((width - viewW) / 2);
     const viewY = topMargin;
+
+    const bannerReserve = this.currentLevel === 0 ? 38 : 6;
+    const availGridH = Math.max(150, viewH - bannerReserve);
 
     let tileW: number;
     let tileH: number;
@@ -3290,12 +3319,11 @@ export class SumoLodeRunnerGame extends BaseGame {
     let originX: number;
     let originY: number;
 
-    if (isPhonePortrait && this.mobileZoomCam) {
+    if (isBottomDeck && this.mobileZoomCam) {
       const baseTileW = Math.max(12, Math.floor(viewW / GRID_COLS));
-      tileW = Math.max(19, Math.min(23, Math.round(baseTileW * 1.58)));
-      const bannerPad = this.currentLevel === 0 ? 42 : 14;
-      const maxTileH = Math.max(16, Math.floor((viewH - bannerPad) / GRID_ROWS));
-      tileH = Math.max(18, Math.min(maxTileH, Math.round(tileW * 1.22)));
+      tileW = Math.max(20, Math.min(42, Math.round(baseTileW * (width < 600 ? 1.58 : 1.38))));
+      const maxTileH = Math.max(16, Math.floor(availGridH / GRID_ROWS));
+      tileH = Math.max(18, Math.min(maxTileH, Math.round(tileW * 1.18)));
       totalW = tileW * GRID_COLS;
       totalH = tileH * GRID_ROWS;
 
@@ -3305,22 +3333,22 @@ export class SumoLodeRunnerGame extends BaseGame {
           ? Math.round(Math.max(viewX + viewW - totalW, Math.min(viewX, targetOriginX)))
           : Math.floor((width - totalW) / 2);
 
-      const topOffset = this.currentLevel === 0 ? 38 : 6;
-      const targetOriginY = viewY + topOffset + (viewH - topOffset) * 0.5 - (this.camFocusY + 0.5) * tileH;
+      const targetOriginY = viewY + bannerReserve + availGridH * 0.5 - (this.camFocusY + 0.5) * tileH;
       originY =
-        totalH > viewH - topOffset
-          ? Math.round(Math.max(viewY + viewH - totalH, Math.min(viewY + topOffset, targetOriginY)))
-          : viewY + topOffset + Math.floor((viewH - topOffset - totalH) / 2);
+        totalH > availGridH
+          ? Math.round(Math.max(viewY + viewH - totalH, Math.min(viewY + bannerReserve, targetOriginY)))
+          : viewY + bannerReserve + Math.floor((availGridH - totalH) / 2);
     } else {
-      tileW = Math.max(12, Math.floor(viewW / GRID_COLS));
-      const rawTileH = Math.max(12, Math.floor(viewH / GRID_ROWS));
-      // Prevent extreme vertical stretching on portrait screens when full-map view is selected
-      tileH = isPhonePortrait ? Math.min(rawTileH, Math.round(tileW * 1.45)) : rawTileH;
+      const rawTileW = Math.max(10, Math.floor(viewW / GRID_COLS));
+      const rawTileH = Math.max(10, Math.floor(availGridH / GRID_ROWS));
+      // Lock tile aspect ratio across all computers, tablets (iPad Portrait & Landscape), and phones so tiles and sprites never squash or stretch
+      const maxHeightAspect = isPhonePortrait ? 1.36 : 1.22;
+      tileW = Math.min(rawTileW, Math.round(rawTileH * 1.25));
+      tileH = Math.min(rawTileH, Math.round(tileW * maxHeightAspect));
       totalW = tileW * GRID_COLS;
       totalH = tileH * GRID_ROWS;
       originX = Math.floor((width - totalW) / 2);
-      const topOffset = isPhonePortrait && this.currentLevel === 0 ? 20 : 0;
-      originY = viewY + topOffset + Math.floor((viewH - topOffset - totalH) / 2);
+      originY = viewY + bannerReserve + Math.floor((availGridH - totalH) / 2);
     }
 
     return {
@@ -3335,7 +3363,8 @@ export class SumoLodeRunnerGame extends BaseGame {
       viewW,
       viewH,
       isPhonePortrait,
-      isPhoneLandscape,
+      isBottomDeck,
+      isSideGutterDeck,
       isTouchDeck,
       touchDeckH
     };
@@ -3672,6 +3701,11 @@ export class SumoLodeRunnerGame extends BaseGame {
       ctx.strokeStyle = 'rgba(253, 224, 71, 0.28)';
       ctx.lineWidth = 1.5;
       ctx.strokeRect(viewX, viewY, viewW, viewH);
+    } else {
+      // Crisp Edo Castle stage frame around the aspect-ratio-locked 28x16 board
+      ctx.strokeStyle = 'rgba(253, 224, 71, 0.35)';
+      ctx.lineWidth = 1.8;
+      ctx.strokeRect(originX - 1, originY - 1, totalW + 2, totalH + 2);
     }
 
     // 7b. Interactive Tutorial Overlay & Step-by-Step World Callouts (Stage 0) or Stage Hint Banner
@@ -3681,7 +3715,7 @@ export class SumoLodeRunnerGame extends BaseGame {
       this.renderStageHintBanner(ctx, width, originY, viewY, bp.hint, Math.min(1, this.stageHintTimer));
     }
 
-    // 7c. Dedicated iPhone / Mobile Arcade Touch Control Deck
+    // 7c. Dedicated Phone / Tablet Arcade Touch Control Deck
     if (isTouchDeck) {
       this.renderTouchControlDeck(ctx, width, height, layout, biome);
     } else {
@@ -3692,7 +3726,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     // 8. Render Top & Bottom Classic-Modern Sumo Lode Runner HUD Bar
     this.renderLodeRunnerHUD(ctx, width, height, bp, biome);
 
-    // 9. Stage Clear Banner Overlay (auto-scaled for iPhone & desktop)
+    // 9. Stage Clear Banner Overlay (auto-scaled for iPhone, iPad & desktop)
     if (this.levelClearBannerTimer > 0) {
       ctx.save();
       const clearW = Math.min(440, width - 20);
@@ -3915,10 +3949,10 @@ export class SumoLodeRunnerGame extends BaseGame {
     ctx.textAlign = 'center';
     ctx.fillText(rawLabel, pillX + pillW / 2, pillY + 12.5, pillW - 8);
 
-    // Top-of-arena coaching banner (placed above Row 0 when vertical space permits)
+    // Top-of-arena coaching banner (anchored directly above Row 0 when vertical space permits)
     const bannerW = Math.min(width - 12, 680);
     const bannerX = (width - bannerW) / 2;
-    const bannerY = originY - viewY >= 36 ? viewY + 2 : originY + 2;
+    const bannerY = originY - viewY >= 38 ? originY - 38 : viewY + 2;
     ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
     ctx.fillRect(bannerX, bannerY, bannerW, 35);
     ctx.strokeStyle = stepNum === 5 ? '#FACC15' : '#38BDF8';
@@ -4152,7 +4186,8 @@ export class SumoLodeRunnerGame extends BaseGame {
     height: number,
     layout: {
       isPhonePortrait: boolean;
-      isPhoneLandscape: boolean;
+      isBottomDeck: boolean;
+      isSideGutterDeck: boolean;
       touchDeckH: number;
     },
     biome: BiomePalette
@@ -4160,7 +4195,7 @@ export class SumoLodeRunnerGame extends BaseGame {
     const totalStages = SUMO_LODE_LEVELS.length;
     ctx.save();
 
-    if (layout.isPhonePortrait) {
+    if (layout.isBottomDeck) {
       const deckH = layout.touchDeckH;
       const deckY = height - 26 - deckH;
 
@@ -4178,13 +4213,14 @@ export class SumoLodeRunnerGame extends BaseGame {
       ctx.lineTo(width, deckY);
       ctx.stroke();
 
-      // Top Utility Pill Bar inside Touch Deck (6 quick buttons)
+      // Top Utility Pill Bar inside Touch Deck (6 quick buttons, centered up to 680px on tablets)
       const utilY = deckY + 6;
-      const utilH = 24;
-      const padX = 8;
-      const gap = 5;
+      const utilH = width >= 640 ? 25 : 24;
+      const gap = width >= 640 ? 6 : 5;
       const pillCount = 6;
-      const pillW = Math.floor((width - padX * 2 - gap * (pillCount - 1)) / pillCount);
+      const maxBarW = Math.min(width - 16, 680);
+      const barStartX = Math.floor((width - maxBarW) / 2);
+      const pillW = Math.floor((maxBarW - gap * (pillCount - 1)) / pillCount);
 
       const pills: { id: string; label: string; bg: string; fg: string; action: () => void }[] = [
         {
@@ -4255,7 +4291,7 @@ export class SumoLodeRunnerGame extends BaseGame {
 
       for (let i = 0; i < pills.length; i++) {
         const p = pills[i];
-        const px = padX + i * (pillW + gap);
+        const px = barStartX + i * (pillW + gap);
         ctx.fillStyle = p.bg;
         ctx.beginPath();
         ctx.roundRect(px, utilY, pillW, utilH, 6);
@@ -4265,32 +4301,76 @@ export class SumoLodeRunnerGame extends BaseGame {
         ctx.stroke();
 
         ctx.fillStyle = p.fg;
-        ctx.font = '800 8.5px Montserrat, sans-serif';
+        ctx.font = width >= 640 ? '800 9.5px Montserrat, sans-serif' : '800 8.5px Montserrat, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(p.label, px + pillW / 2, utilY + 15, pillW - 4);
+        ctx.fillText(p.label, px + pillW / 2, utilY + (width >= 640 ? 16 : 15), pillW - 4);
         this.hudHitboxes.push({ id: p.id, x: px, y: utilY, w: pillW, h: utilH, action: p.action });
       }
 
       // Main Lower Control Area: Left 4-Way D-Pad & Right Dig L / Dig R Arcade Buttons
       const mainTop = utilY + utilH + 6;
       const mainH = deckH - (mainTop - deckY) - 4;
-      const dpadR = Math.min(58, Math.floor(mainH * 0.46));
-      const dpadCX = Math.max(dpadR + 16, Math.floor(width * 0.23));
+      const dpadR = Math.min(58, Math.max(40, Math.floor(mainH * 0.45)));
+      // Anchor D-Pad comfortably in bottom-left thumb zone on both Phone and Tablet/iPad
+      const dpadCX = width < 600 ? Math.max(dpadR + 16, Math.floor(width * 0.23)) : Math.min(132, dpadR + 34);
       const dpadCY = mainTop + Math.floor(mainH * 0.5);
       this.dpadZone = { cx: dpadCX, cy: dpadCY, r: dpadR };
       this.drawArcadeDpad(ctx, dpadCX, dpadCY, dpadR);
 
-      // Right Side: Large Dedicated ⛏️ DIG LEFT & ⛏️ DIG RIGHT Arcade Buttons
-      const btnAreaX = Math.floor(width * 0.47);
-      const btnAreaW = width - btnAreaX - 10;
+      // Right Side: Large Dedicated ⛏️ DIG LEFT & ⛏️ DIG RIGHT Arcade Buttons anchored in bottom-right thumb zone
+      const btnAreaW = width < 600 ? width - Math.floor(width * 0.47) - 10 : Math.min(300, Math.floor(width * 0.40));
+      const rightPad = width < 600 ? 10 : Math.min(30, Math.floor(width * 0.03));
+      const btnAreaX = width - btnAreaW - rightPad;
       const digBtnW = Math.floor((btnAreaW - 10) / 2);
-      const digBtnH = Math.min(106, mainH - 12);
+      const digBtnH = Math.min(98, mainH - 10);
       const digBtnY = dpadCY - Math.floor(digBtnH / 2);
 
       this.digLeftZone = { x: btnAreaX, y: digBtnY, w: digBtnW, h: digBtnH };
       this.digRightZone = { x: btnAreaX + digBtnW + 10, y: digBtnY, w: digBtnW, h: digBtnH };
       this.drawDigButton(ctx, this.digLeftZone, '⛏️ DIG L', '↙ LEFT BRICK', this.digLeftPressed);
       this.drawDigButton(ctx, this.digRightZone, '⛏️ DIG R', '↘ RIGHT BRICK', this.digRightPressed);
+
+      // On Tablet / iPad viewports (width >= 660), render a sleek Center Tactical Dojo Readout between Left D-Pad and Right Dig Buttons
+      const centerLeft = dpadCX + dpadR + 24;
+      const centerRight = btnAreaX - 18;
+      const centerW = centerRight - centerLeft;
+      if (centerW >= 180) {
+        const bp = this.getLevelBlueprint();
+        const cardH = Math.min(76, mainH - 14);
+        const cardY = dpadCY - Math.floor(cardH / 2);
+        ctx.fillStyle = 'rgba(30, 41, 59, 0.72)';
+        ctx.beginPath();
+        ctx.roundRect(centerLeft, cardY, centerW, cardH, 10);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        ctx.fillStyle = '#FDE047';
+        ctx.font = '900 11px Montserrat, sans-serif';
+        ctx.textAlign = 'center';
+        const stgTitle =
+          this.currentLevel === 0
+            ? '🎓 STAGE 0: YOKOZUNA TRAINING DOJO'
+            : `🎌 STAGE ${this.currentLevel}/${totalStages}: ${bp.title.toUpperCase()} (${biome.name.toUpperCase()})`;
+        ctx.fillText(stgTitle, centerLeft + centerW / 2, cardY + 22, centerW - 16);
+
+        ctx.fillStyle = '#E2E8F0';
+        ctx.font = '700 9.5px Montserrat, sans-serif';
+        const hintLine = bp.hint
+          ? `💡 ${bp.hint}`
+          : '🕹️ Left D-Pad: Move, Climb Ladders & Drop off Ropes (▼) • Right: Dig Left / Right Bricks';
+        ctx.fillText(hintLine, centerLeft + centerW / 2, cardY + 44, centerW - 16);
+
+        ctx.fillStyle = '#94A3B8';
+        ctx.font = '700 8.5px Montserrat, sans-serif';
+        ctx.fillText(
+          '🕹️ Left Thumb: 4-Way D-Pad   •   ⛏️ Right Thumb: Instant Directional Shiko Stomp Dig',
+          centerLeft + centerW / 2,
+          cardY + 62,
+          centerW - 16
+        );
+      }
     } else {
       // Landscape Phone Mode: Left Gutter D-Pad & Right Gutter Stacked Dig L / Dig R Buttons + Quick Utility Pills
       const dpadR = 44;
