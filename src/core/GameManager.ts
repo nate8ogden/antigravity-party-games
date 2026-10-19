@@ -8070,27 +8070,21 @@ export class GameManager {
         1
       );
       this.ctx.fillStyle = '#FDE047';
-      this.ctx.font = '900 8.5px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(ratingBadgeText, rBadgeX + rBadgeW / 2, cardY + 24.5);
+      this.drawFittedButtonText(ratingBadgeText, rBadgeX + rBadgeW / 2, cardY + 24.5, rBadgeW - 6, 8.5, 6.5);
 
       // Phone Mode Compatibility Badge or High Score Pill along bottom of artwork
       if (this.deviceMode === 'phone') {
         const badge = getPhoneModeBadge(game.id, activePlayerCount);
         this.drawRoundedRect(cardX + 12, cardY + artH - 14, cardW - 24, 16, 4, badge.bg, 'rgba(255,255,255,0.35)', 1);
         this.ctx.fillStyle = badge.color;
-        this.ctx.font = '900 8px Montserrat, sans-serif';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText(badge.label, cardX + cardW / 2, cardY + artH - 3);
+        this.drawFittedButtonText(badge.label, cardX + cardW / 2, cardY + artH - 3, cardW - 30, 8.0, 6.5);
       } else if (cloudStats.highScore > 0 || this.catalogSortMode === 'highscore' || this.catalogSortMode === 'most_played') {
         const statText = this.catalogSortMode === 'most_played'
           ? `🔥 ${cloudStats.plays} PLAYS • ${cloudStats.wins}W`
           : `🏆 HI-SCORE: ${cloudStats.highScore} (${cloudStats.wins}W)`;
         this.drawRoundedRect(cardX + 12, cardY + artH - 14, cardW - 24, 16, 4, 'rgba(15, 23, 42, 0.82)', '#38BDF8', 1);
         this.ctx.fillStyle = '#BAE6FD';
-        this.ctx.font = '900 8px Montserrat, sans-serif';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText(statText, cardX + cardW / 2, cardY + artH - 3);
+        this.drawFittedButtonText(statText, cardX + cardW / 2, cardY + artH - 3, cardW - 30, 8.0, 6.5);
       }
 
       // Game Title (Clean, centered, auto-fit font to card width)
@@ -8128,8 +8122,7 @@ export class GameManager {
       howToPlayGrad.addColorStop(1, '#DCFCE7');
       this.drawRoundedRect(cardX + 10, btnY, cardW - 20, btnH, 6, howToPlayGrad, '#4ADE80', 1.3);
       this.ctx.fillStyle = '#15803D';
-      this.ctx.font = '900 10.5px Montserrat, sans-serif';
-      this.ctx.fillText('HOW TO PLAY ▶', cardX + cardW / 2, btnY + 15);
+      this.drawFittedButtonText('HOW TO PLAY ▶', cardX + cardW / 2, btnY + 15, cardW - 28, 10.5, 7.5);
     }
 
     this.ctx.restore();
@@ -8191,16 +8184,13 @@ export class GameManager {
     const catColor = catColors[game.category] || '#0284C7';
     this.drawRoundedRect(modalX + 16, modalY + 12, 72, 22, 6, catColor);
     this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.font = '900 9.5px Montserrat, sans-serif';
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText(game.category.toUpperCase(), modalX + 52, modalY + 26.5);
+    this.drawFittedButtonText(game.category.toUpperCase(), modalX + 52, modalY + 26.5, 64, 9.5, 7.5);
 
     const headerSubPill = game.id === 'sumo_lode_runner' ? '40 STAGES' : '1–4P ARCADE';
     const subPillW = game.id === 'sumo_lode_runner' ? 84 : 84;
     this.drawRoundedRect(modalX + 94, modalY + 12, subPillW, 22, 6, '#F1F5F9', '#CBD5E1', 1);
     this.ctx.fillStyle = '#0284C7';
-    this.ctx.font = '900 9px Montserrat, sans-serif';
-    this.ctx.fillText(headerSubPill, modalX + 94 + subPillW / 2, modalY + 26.5);
+    this.drawFittedButtonText(headerSubPill, modalX + 94 + subPillW / 2, modalY + 26.5, subPillW - 8, 9.0, 7.5);
 
     // Interactive 1–5 Star Rating + ❤️ Save Controls in Modal Header
     const cloudStats = this.cloud.getGameStats(game.id);
@@ -8252,9 +8242,7 @@ export class GameManager {
         1.2
       );
       this.ctx.fillStyle = cloudStats.saved ? '#BE185D' : '#475569';
-      this.ctx.font = '900 9px Montserrat, sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(cloudStats.saved ? '❤️ SAVED' : '🤍 SAVE', saveBtnX + saveBtnW / 2, modalY + 26.5);
+      this.drawFittedButtonText(cloudStats.saved ? '❤️ SAVED' : '🤍 SAVE', saveBtnX + saveBtnW / 2, modalY + 26.5, saveBtnW - 8, 9.0, 7.0);
       this.modalCloudHitboxes.push({
         x: saveBtnX,
         y: modalY + 10,
@@ -8691,7 +8679,7 @@ export class GameManager {
     this.ctx.fillText('P1: [WASD / Q,E]  •  P2: [Arrows / , .]  •  iPhone Touch Deck Ready', modalX + modalW / 2, ctrlY + 44, modalW - 32);
 
     // Play Button (Sitting cleanly with margin above bottom card bevel)
-    const btnW = 280;
+    const btnW = Math.min(280, modalW - 32);
     const btnH = 44;
     const btnX = modalX + modalW / 2 - btnW / 2;
     const btnY = modalY + modalH - 62;
@@ -8716,9 +8704,7 @@ export class GameManager {
       : '▶ PLAY GAME [Space / Enter]';
 
     this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.font = '900 14px Montserrat, sans-serif';
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText(playText, modalX + modalW / 2, btnY + 27);
+    this.drawFittedButtonText(playText, modalX + modalW / 2, btnY + 27, btnW - 16, 14, 9.5);
 
     if (game.id === 'skyline_sumo' || game.id === 'sumo_lode_runner') {
       this.sumoHitboxes.push({
@@ -10768,9 +10754,7 @@ export class GameManager {
         if (isDisabled) {
           this.drawRoundedRect(chipX, dockY, chipW, dockH, 6, '#F8FAFC', '#CBD5E1', 1);
           this.ctx.fillStyle = '#94A3B8';
-          this.ctx.font = '700 9.5px Montserrat, sans-serif';
-          this.ctx.textAlign = 'center';
-          this.ctx.fillText(`+ P${idx + 1}`, chipX + chipW / 2, dockY + 17.5);
+          this.drawFittedButtonText(`+ P${idx + 1}`, chipX + chipW / 2, dockY + 17.5, chipW - 8, 9.5, 7.0, '700');
         } else {
           this.ctx.shadowColor = 'rgba(15, 23, 42, 0.08)';
           this.ctx.shadowBlur = 4;
@@ -10787,9 +10771,7 @@ export class GameManager {
           const isBot = p.type.startsWith('bot_');
           const chipLabel = isBot ? `P${idx + 1}: ${p.type.replace('bot_', '').slice(0, 3).toUpperCase()}` : `P${idx + 1}: ME`;
           this.ctx.fillStyle = '#0F172A';
-          this.ctx.font = '800 9px Montserrat, sans-serif';
-          this.ctx.textAlign = 'center';
-          this.ctx.fillText(chipLabel, chipX + chipW / 2 + 3, dockY + 16.5);
+          this.drawFittedButtonText(chipLabel, chipX + chipW / 2 + 3, dockY + 16.5, chipW - 14, 9.0, 6.5, '800');
         }
         this.ctx.restore();
       });
