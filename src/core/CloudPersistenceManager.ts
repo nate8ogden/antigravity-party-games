@@ -33,16 +33,8 @@ export interface FirebaseConfig {
 
 const STORAGE_KEY = 'antigravity_cloud_stats_v1';
 const FIREBASE_URL_KEY = 'antigravity_firebase_db_url';
-const AUTH_STORAGE_KEY = 'antigravity_firebase_auth_v1';
 // Default production Firebase Realtime Database URL for GitHub Pages (can be overridden by VITE_FIREBASE_DATABASE_URL or ?firebaseUrl=)
 const DEFAULT_FIREBASE_DB_URL = 'https://antigravity-party-games-rtdb-default-rtdb.firebaseio.com';
-
-interface CachedAuthSession {
-  idToken: string;
-  refreshToken?: string;
-  expiresAt: number;
-  uid?: string;
-}
 
 // Deterministic hash for seeding realistic initial community ratings & save counts
 function hashString(str: string): number {
@@ -58,11 +50,6 @@ export class CloudPersistenceManager {
   private static instance: CloudPersistenceManager;
   private records: Record<string, GameStatsRecord> = {};
   private firebaseDatabaseUrl: string | null = null;
-  private firebaseApiKey: string | null = null;
-  private idToken: string | null = null;
-  private refreshToken: string | null = null;
-  private tokenExpiresAt: number = 0;
-  private authPromise: Promise<string | null> | null = null;
   private writeDebounceTimers: Map<string, number> = new Map();
   public syncStatus: 'local_only' | 'syncing' | 'synced' | 'offline_cached' = 'local_only';
   public lastSyncedAt: number | null = null;
@@ -101,8 +88,6 @@ export class CloudPersistenceManager {
           this.firebaseDatabaseUrl = url.replace(/\/$/, '');
           this.syncStatus = 'offline_cached';
         }
-        const envKey = (import.meta as unknown as { env?: Record<string, string> })?.env?.VITE_FIREBASE_API_KEY;
-        this.firebaseApiKey = winCfg?.apiKey || envKey || null;
       }
     } catch {
       // Ignore storage access errors in restricted frames
@@ -329,83 +314,6 @@ export class CloudPersistenceManager {
   }
 
   /**
-   * Acquires or refreshes a Firebase Anonymous Auth ID token using the Web API key
-   */
-  public async getAuthToken(): Promise<string | null> {
-    if (this.idToken && Date.now() < this.tokenExpiresAt - 60000) {
-      return this.idToken;
-    }
-    if (this.authPromise) {
-      return this.authPromise;
-    }
-    this.authPromise = (async () => {
-      try {
-        if (typeof localStorage !== 'undefined') {
-          const raw = localStorage.getItem(AUTH_STORAGE_KEY);
-          if (raw) {
-            const cached: CachedAuthSession = JSON.parse(raw);
-            if (cached?.idToken && typeof cached.expiresAt === 'number' && Date.now() < cached.expiresAt - 60000) {
-              this.idToken = cached.idToken;
-              this.refreshToken = cached.refreshToken || null;
-              this.tokenExpiresAt = cached.expiresAt;
-              return this.idToken;
-            }
-            if (cached?.refreshToken && this.firebaseApiKey) {
-              const refreshRes = await fetch(`https://securetoken.googleapis.com/v1/token?key=${this.firebaseApiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `grant_type=refresh_token&refresh_token=${encodeURIComponent(cached.refreshToken)}`
-              });
-              if (refreshRes.ok) {
-                const refreshed = await refreshRes.json();
-                this.idToken = refreshed.id_token;
-                this.refreshToken = refreshed.refresh_token || cached.refreshToken;
-                this.tokenExpiresAt = Date.now() + (parseInt(refreshed.expires_in, 10) || 3600) * 1000;
-                localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
-                  idToken: this.idToken,
-                  refreshToken: this.refreshToken,
-                  expiresAt: this.tokenExpiresAt,
-                  uid: refreshed.user_id
-                }));
-                return this.idToken;
-              }
-            }
-          }
-        }
-
-        if (this.firebaseApiKey) {
-          const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${this.firebaseApiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ returnSecureToken: true })
-          });
-          if (res.ok) {
-            const data = await res.json();
-            this.idToken = data.idToken;
-            this.refreshToken = data.refreshToken;
-            this.tokenExpiresAt = Date.now() + (parseInt(data.expiresIn, 10) || 3600) * 1000;
-            if (typeof localStorage !== 'undefined') {
-              localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
-                idToken: this.idToken,
-                refreshToken: this.refreshToken,
-                expiresAt: this.tokenExpiresAt,
-                uid: data.localId
-              }));
-            }
-            return this.idToken;
-          }
-        }
-      } catch {
-        // Network/offline error - proceed gracefully
-      } finally {
-        this.authPromise = null;
-      }
-      return this.idToken;
-    })();
-    return this.authPromise;
-  }
-
-  /**
    * Debounces push requests per game to prevent request flooding
    */
   private debouncedPush(rec: GameStatsRecord): void {
@@ -431,9 +339,7 @@ export class CloudPersistenceManager {
     if (!this.firebaseDatabaseUrl || typeof fetch === 'undefined') return;
     try {
       this.syncStatus = 'syncing';
-      const authToken = await this.getAuthToken();
-      const authQuery = authToken ? `?auth=${encodeURIComponent(authToken)}` : '';
-      const res = await fetch(`${this.firebaseDatabaseUrl}/antigravity_cloud/games.json${authQuery}`, {
+      const res = await fetch(`${this.firebaseDatabaseUrl}/antigravity_cloud/games.json`, {
         method: 'GET',
         headers: { 'Accept': 'application/json' }
       });
@@ -472,15 +378,13 @@ export class CloudPersistenceManager {
 
   /**
    * Asynchronous non-blocking Firebase Realtime Database REST push
-   * Uses authenticated write, defensive bounds sanitization, and read-merge-write
+   * Uses defensive bounds sanitization, read-merge-write, and retry on concurrency collision
    */
-  private async pushRecordToFirebase(rec: GameStatsRecord): Promise<void> {
+  private async pushRecordToFirebase(rec: GameStatsRecord, retryCount = 0): Promise<void> {
     if (!this.firebaseDatabaseUrl || typeof fetch === 'undefined') return;
     try {
       this.syncStatus = 'syncing';
-      const authToken = await this.getAuthToken();
-      const authQuery = authToken ? `?auth=${encodeURIComponent(authToken)}` : '';
-      const endpoint = `${this.firebaseDatabaseUrl}/antigravity_cloud/games/${encodeURIComponent(rec.gameId)}.json${authQuery}`;
+      const endpoint = `${this.firebaseDatabaseUrl}/antigravity_cloud/games/${encodeURIComponent(rec.gameId)}.json`;
 
       // Fetch latest cloud snapshot for this game before merging
       let remote: Partial<GameStatsRecord> | null = null;
@@ -494,10 +398,10 @@ export class CloudPersistenceManager {
       }
 
       const remoteHighScore = typeof remote?.highScore === 'number' && remote.highScore >= 0 ? remote.highScore : 0;
-      // Sanitize score to bounded integer [0, 5000000] and delta <= 500,000
+      // Sanitize score to bounded integer [0, 5000000] and delta <= 100,000
       const sanitizedLocalScore = Math.max(0, Math.min(5000000, Math.round(rec.highScore)));
       const mergedHighScore = Math.min(
-        remoteHighScore + 500000,
+        remoteHighScore + 100000,
         Math.max(remoteHighScore, sanitizedLocalScore)
       );
       rec.highScore = mergedHighScore;
@@ -517,8 +421,8 @@ export class CloudPersistenceManager {
       // Clamp community rating to [1.0, 5.0]
       mergedRating = Math.max(1.0, Math.min(5.0, Number(mergedRating.toFixed(2))));
       // Anti-swing: prevent drastic rating jumps if established count >= 5
-      if (remoteCount >= 5 && Math.abs(mergedRating - remoteRating) > 1.0) {
-        mergedRating = Number((remoteRating + Math.sign(mergedRating - remoteRating) * 0.5).toFixed(2));
+      if (remoteCount >= 5 && Math.abs(mergedRating - remoteRating) > 0.25) {
+        mergedRating = Number((remoteRating + Math.sign(mergedRating - remoteRating) * 0.2).toFixed(2));
       }
       rec.communityRating = mergedRating;
 
@@ -542,6 +446,17 @@ export class CloudPersistenceManager {
           updatedAt: Date.now()
         })
       });
+
+      if (!res.ok && retryCount < 1) {
+        // Concurrency collision retry with latest remote state
+        if (typeof window !== 'undefined') {
+          window.setTimeout(() => {
+            this.pushRecordToFirebase(rec, retryCount + 1);
+          }, 200);
+        }
+        return;
+      }
+
       this.saveToLocal();
       this.syncStatus = res.ok ? 'synced' : 'offline_cached';
       if (res.ok) this.lastSyncedAt = Date.now();

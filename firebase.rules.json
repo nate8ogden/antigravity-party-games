@@ -9,24 +9,24 @@
         ".read": true,
         "$gameId": {
           ".write": true,
-          ".validate": "$gameId.length >= 2 && $gameId.length <= 40 && $gameId.matches(/^[a-z0-9_]+$/) && newData.hasChildren(['communityRating', 'ratingCount', 'saveCount', 'highScore']) && (!data.exists() || !data.child('ratingCount').exists() || data.child('ratingCount').val() < 5 || (newData.child('communityRating').val() - data.child('communityRating').val() <= 1.2 && data.child('communityRating').val() - newData.child('communityRating').val() <= 1.2))",
+          ".validate": "$gameId.length >= 2 && $gameId.length <= 40 && $gameId.matches(/^[a-z0-9_]+$/) && newData.hasChildren(['communityRating', 'ratingCount', 'saveCount', 'highScore']) && (!data.exists() || !data.child('ratingCount').exists() || (data.child('ratingCount').val() < 5 ? (newData.child('communityRating').val() - data.child('communityRating').val() <= 0.8 && data.child('communityRating').val() - newData.child('communityRating').val() <= 0.8) : (newData.child('communityRating').val() - data.child('communityRating').val() <= 0.25 && data.child('communityRating').val() - newData.child('communityRating').val() <= 0.25)))",
           "communityRating": {
-            ".validate": "newData.isNumber() && newData.val() >= 1.0 && newData.val() <= 5.0"
+            ".validate": "newData.isNumber() && newData.val() >= 1.0 && newData.val() <= 5.0 && (!data.exists() || (newData.val() >= 3.0 && newData.val() <= 5.0))"
           },
           "ratingCount": {
-            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 === 0 && newData.val() <= 10000000 && (!data.exists() || (newData.val() >= data.val() && newData.val() <= data.val() + 2))"
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 === 0 && newData.val() <= 10000000 && (!data.exists() ? newData.val() <= 250 : (newData.val() >= data.val() && newData.val() <= data.val() + 2))"
           },
           "saveCount": {
-            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 === 0 && newData.val() <= 10000000 && (!data.exists() || (newData.val() >= data.val() - 1 && newData.val() <= data.val() + 2))"
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 === 0 && newData.val() <= 10000000 && (!data.exists() ? newData.val() <= 100 : (newData.val() >= data.val() - 1 && newData.val() <= data.val() + 2))"
           },
           "highScore": {
-            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 === 0 && newData.val() <= 5000000 && (!data.exists() || (newData.val() >= data.val() && newData.val() - data.val() <= 500000))"
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 === 0 && newData.val() <= 5000000 && (!data.exists() ? newData.val() <= 50000 : (newData.val() >= data.val() && newData.val() - data.val() <= 100000))"
           },
           "plays": {
-            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 === 0 && newData.val() <= 10000000 && (!data.exists() || (newData.val() >= data.val() && newData.val() <= data.val() + 10))"
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 === 0 && newData.val() <= 10000000 && (!data.exists() ? newData.val() <= 50 : (newData.val() >= data.val() && newData.val() <= data.val() + 5))"
           },
           "updatedAt": {
-            ".validate": "newData.isNumber() && newData.val() <= now + 300000 && (!data.exists() || newData.val() >= data.val())"
+            ".validate": "newData.isNumber() && newData.val() <= now + 120000 && (!data.exists() || newData.val() >= data.val())"
           },
           "$other": {
             ".validate": false
