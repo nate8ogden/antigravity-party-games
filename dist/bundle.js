@@ -1,4 +1,4 @@
-/* Retro Arcade Studio — Self-Contained Universal Bundle (file:// & http:// compatible) */
+/* Retro Arcade Studio — Self-Contained Universal Bundle (file://, http://, and https:// compatible) */
 (function() {
 "use strict";
 
@@ -796,6 +796,731 @@ class Vector2 {
 
 
 
+// === src/engine/CloudPersistence.js ===
+/**
+ * CloudPersistence.js
+ * Unified Firebase Realtime Database Cloud Sync + Arcade Emulator Save State Engine
+ * + Hardware DIP Switch Store + Achievement & Telemetry System.
+ *
+ * Uses the exact same Firebase Realtime Database setup and validation schema as
+ * Antigravity Party Games (`https://antigravity-party-games-rtdb-default-rtdb.firebaseio.com/antigravity_cloud/games`).
+ */
+
+const STORAGE_KEY = 'antigravity_cloud_stats_v1';
+const FIREBASE_URL_KEY = 'antigravity_firebase_db_url';
+const DEFAULT_FIREBASE_DB_URL = 'https://antigravity-party-games-rtdb-default-rtdb.firebaseio.com';
+const SAVE_STATE_PREFIX = 'retro_arcade_savestate_v1_';
+const DIP_STORAGE_KEY = 'retro_arcade_dip_switches_v1';
+const ACHIEVEMENTS_STORAGE_KEY = 'retro_arcade_achievements_v1';
+const INITIALS_STORAGE_KEY = 'retro_arcade_champion_initials_v1';
+
+function hashString(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+const FLAGSHIP_IDS = new Set([
+  'loderunner',
+  'digdug',
+  'donkeykong',
+  'sumo',
+  'pacman',
+  'frogger',
+  'galaga',
+  'spaceinvaders'
+]);
+class CloudPersistenceManager {
+  constructor() {
+    this.records = {};
+    this.firebaseDatabaseUrl = null;
+    this.writeDebounceTimers = new Map();
+    this.syncStatus = 'local_only'; // 'local_only' | 'syncing' | 'synced' | 'offline_cached'
+    this.lastSyncedAt = null;
+    this.sortMode = 'default'; // 'default' | 'rating' | 'highscore' | 'saved' | 'most_played'
+
+    this.detectFirebaseConfig();
+    this.loadFromLocal();
+    if (this.firebaseDatabaseUrl) {
+      this.pullFromFirebase();
+    }
+    if (typeof window !== 'undefined') {
+      window.__CLOUD_PERSISTENCE__ = this;
+    }
+  }
+
+  static getInstance() {
+    if (!CloudPersistenceManager._instance) {
+      CloudPersistenceManager._instance = new CloudPersistenceManager();
+    }
+    return CloudPersistenceManager._instance;
+  }
+
+  detectFirebaseConfig() {
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location ? window.location.search : '');
+        const queryUrl = params.get('firebaseUrl') || params.get('firebase');
+        if (queryUrl && queryUrl.startsWith('https://')) {
+          localStorage.setItem(FIREBASE_URL_KEY, queryUrl.replace(/\/$/, ''));
+        }
+        const winCfg = window.__FIREBASE_CONFIG__;
+        const storedUrl = localStorage.getItem(FIREBASE_URL_KEY);
+        const url =
+          queryUrl ||
+          (winCfg && winCfg.databaseURL) ||
+          storedUrl ||
+          DEFAULT_FIREBASE_DB_URL ||
+          null;
+        if (url && url.startsWith('https://')) {
+          this.firebaseDatabaseUrl = url.replace(/\/$/, '');
+          this.syncStatus = 'offline_cached';
+        }
+      }
+    } catch (_) {}
+  }
+
+  createDefaultRecord(gameId) {
+    const id = String(gameId || '').toLowerCase();
+    const h = hashString(id);
+    const isFlagship = FLAGSHIP_IDS.has(id);
+    const baseRating = isFlagship ? 4.8 + (h % 2) * 0.1 : 4.2 + (h % 75) / 100;
+    const ratingCount = isFlagship ? 160 + (h % 90) : 28 + (h % 85);
+    const saveCount = Math.round(ratingCount * (0.35 + ((h >> 4) % 30) / 100));
+    const defaultHi = isFlagship ? 15000 + (h % 15) * 1000 : 11000 + (h % 12) * 1000;
+
+    return {
+      gameId: id,
+      userRating: 0,
+      communityRating: Number(baseRating.toFixed(1)),
+      ratingCount,
+      saved: false,
+      saveCount,
+      highScore: defaultHi,
+      holder: 'ACE',
+      wins: 0,
+      plays: 0,
+      fastestWinSec: null,
+      lastPlayedAt: 0
+    };
+  }
+
+  initializeCatalog(gameIds = []) {
+    for (const id of gameIds) {
+      const key = String(id).toLowerCase();
+      if (!this.records[key]) {
+        this.records[key] = this.createDefaultRecord(key);
+      }
+    }
+  }
+
+  getRecord(gameId) {
+    const key = String(gameId || '').toLowerCase();
+    if (!this.records[key]) {
+      this.records[key] = this.createDefaultRecord(key);
+    }
+    return this.records[key];
+  }
+
+  getEffectiveRating(gameId) {
+    const r = this.getRecord(gameId);
+    if (r.userRating > 0) {
+      const blended = r.userRating * 0.92 + r.communityRating * 0.08;
+      return Number(blended.toFixed(2));
+    }
+    return r.communityRating;
+  }
+
+  rateGame(gameId, stars) {
+    const clamped = Math.max(1, Math.min(5, Math.round(Number(stars) || 5)));
+    const rec = this.getRecord(gameId);
+    if (rec.userRating === 0) {
+      rec.ratingCount += 1;
+    }
+    rec.userRating = clamped;
+    this.saveToLocal();
+    this.debouncedPush(rec);
+    return rec;
+  }
+
+  cycleGameRating(gameId) {
+    const rec = this.getRecord(gameId);
+    const next = rec.userRating >= 5 ? 1 : (rec.userRating || 4) + 1;
+    return this.rateGame(gameId, next);
+  }
+
+  toggleSaveGame(gameId) {
+    const rec = this.getRecord(gameId);
+    rec.saved = !rec.saved;
+    rec.saveCount = Math.max(0, rec.saveCount + (rec.saved ? 1 : -1));
+    this.saveToLocal();
+    this.debouncedPush(rec);
+    return rec.saved;
+  }
+
+  recordPlay(gameId) {
+    const rec = this.getRecord(gameId);
+    rec.plays = (rec.plays || 0) + 1;
+    rec.lastPlayedAt = Date.now();
+    this.saveToLocal();
+    this.debouncedPush(rec);
+    return rec;
+  }
+
+  recordScore(gameId, scorePoints, holderInitials = null) {
+    const rec = this.getRecord(gameId);
+    const numeric = Math.max(0, Math.floor(Number(scorePoints) || 0));
+    const isNewHighScore = numeric > rec.highScore;
+    if (isNewHighScore) {
+      rec.highScore = numeric;
+      if (holderInitials) {
+        rec.holder = String(holderInitials).toUpperCase().slice(0, 3);
+      }
+      this.saveToLocal();
+      this.debouncedPush(rec);
+    } else if (holderInitials && numeric === rec.highScore) {
+      rec.holder = String(holderInitials).toUpperCase().slice(0, 3);
+      this.saveToLocal();
+    }
+    return { isNewHighScore, record: rec };
+  }
+
+  sortCatalog(games, mode = this.sortMode) {
+    if (!mode || mode === 'default') return games;
+    const copy = [...games];
+    if (mode === 'saved') {
+      const userSaved = copy.filter((g) => this.getRecord(g.id).saved);
+      if (userSaved.length > 0) return userSaved;
+      return copy.sort((a, b) => this.getRecord(b.id).saveCount - this.getRecord(a.id).saveCount);
+    }
+    if (mode === 'rating') {
+      return copy.sort((a, b) => {
+        const diff = this.getEffectiveRating(b.id) - this.getEffectiveRating(a.id);
+        if (Math.abs(diff) > 0.001) return diff;
+        return this.getRecord(b.id).ratingCount - this.getRecord(a.id).ratingCount;
+      });
+    }
+    if (mode === 'highscore') {
+      return copy.sort((a, b) => this.getRecord(b.id).highScore - this.getRecord(a.id).highScore);
+    }
+    if (mode === 'most_played') {
+      return copy.sort((a, b) => {
+        const ra = this.getRecord(a.id);
+        const rb = this.getRecord(b.id);
+        if (rb.plays !== ra.plays) return rb.plays - ra.plays;
+        return rb.saveCount - ra.saveCount;
+      });
+    }
+    return copy;
+  }
+
+  loadFromLocal() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          this.records = parsed;
+        }
+      }
+    } catch (_) {}
+  }
+
+  saveToLocal() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.records));
+    } catch (_) {}
+  }
+
+  debouncedPush(rec) {
+    if (typeof window === 'undefined') {
+      this.pushRecordToFirebase(rec);
+      return;
+    }
+    const timer = this.writeDebounceTimers.get(rec.gameId);
+    if (timer) window.clearTimeout(timer);
+    const newTimer = window.setTimeout(() => {
+      this.writeDebounceTimers.delete(rec.gameId);
+      this.pushRecordToFirebase(rec);
+    }, 350);
+    this.writeDebounceTimers.set(rec.gameId, newTimer);
+  }
+
+  async pullFromFirebase() {
+    if (!this.firebaseDatabaseUrl || typeof fetch === 'undefined') return;
+    try {
+      this.syncStatus = 'syncing';
+      const res = await fetch(`${this.firebaseDatabaseUrl}/antigravity_cloud/games.json`, {
+        method: 'GET',
+        headers: { Accept: 'application/json' }
+      });
+      if (!res.ok) {
+        this.syncStatus = 'offline_cached';
+        return;
+      }
+      const cloudData = await res.json();
+      if (cloudData && typeof cloudData === 'object') {
+        for (const [gameId, cloudRec] of Object.entries(cloudData)) {
+          if (!cloudRec || typeof cloudRec !== 'object') continue;
+          const local = this.getRecord(gameId);
+          if (typeof cloudRec.highScore === 'number' && cloudRec.highScore > local.highScore) {
+            local.highScore = cloudRec.highScore;
+          }
+          if (typeof cloudRec.communityRating === 'number') {
+            local.communityRating = cloudRec.communityRating;
+          }
+          if (typeof cloudRec.ratingCount === 'number' && cloudRec.ratingCount > local.ratingCount) {
+            local.ratingCount = cloudRec.ratingCount;
+          }
+          if (typeof cloudRec.saveCount === 'number' && cloudRec.saveCount > local.saveCount) {
+            local.saveCount = cloudRec.saveCount;
+          }
+          if (typeof cloudRec.plays === 'number' && cloudRec.plays > local.plays) {
+            local.plays = cloudRec.plays;
+          }
+        }
+        this.saveToLocal();
+      }
+      this.syncStatus = 'synced';
+      this.lastSyncedAt = Date.now();
+    } catch (_) {
+      this.syncStatus = 'offline_cached';
+    }
+  }
+
+  async pushRecordToFirebase(rec, retryCount = 0) {
+    if (!this.firebaseDatabaseUrl || typeof fetch === 'undefined') return;
+    try {
+      this.syncStatus = 'syncing';
+      const endpoint = `${this.firebaseDatabaseUrl}/antigravity_cloud/games/${encodeURIComponent(rec.gameId)}.json`;
+
+      let remote = null;
+      try {
+        const getRes = await fetch(endpoint, {
+          method: 'GET',
+          headers: { Accept: 'application/json' }
+        });
+        if (getRes.ok) {
+          remote = await getRes.json();
+        }
+      } catch (_) {}
+
+      const remoteExists = !!(remote && typeof remote === 'object' && typeof remote.highScore === 'number');
+      const remoteHighScore = remoteExists && remote.highScore >= 0 ? remote.highScore : 0;
+      const sanitizedLocalScore = Math.max(0, Math.min(5000000, Math.round(rec.highScore)));
+      const maxInitialScore = remoteExists ? remoteHighScore + 100000 : 50000;
+      const mergedHighScore = Math.min(maxInitialScore, Math.max(remoteHighScore, sanitizedLocalScore));
+      rec.highScore = Math.max(rec.highScore, mergedHighScore);
+
+      const remoteCount =
+        remoteExists && typeof remote.ratingCount === 'number' && remote.ratingCount >= 0
+          ? remote.ratingCount
+          : Math.min(250, rec.ratingCount);
+      const remoteRating =
+        remoteExists &&
+        typeof remote.communityRating === 'number' &&
+        remote.communityRating >= 1 &&
+        remote.communityRating <= 5
+          ? remote.communityRating
+          : Math.max(3.0, Math.min(5.0, rec.communityRating));
+
+      const newRatingCount = remoteExists
+        ? Math.max(remoteCount, Math.min(remoteCount + 1, rec.ratingCount))
+        : Math.min(250, Math.max(1, rec.ratingCount));
+      rec.ratingCount = newRatingCount;
+
+      let mergedRating =
+        rec.userRating > 0
+          ? Number(
+              (
+                (remoteRating * Math.max(1, remoteCount) + rec.userRating) /
+                (Math.max(1, remoteCount) + 1)
+              ).toFixed(2)
+            )
+          : remoteRating;
+      mergedRating = Math.max(3.0, Math.min(5.0, Number(mergedRating.toFixed(2))));
+      if (remoteExists && remoteCount >= 5 && Math.abs(mergedRating - remoteRating) > 0.25) {
+        mergedRating = Number(
+          (remoteRating + Math.sign(mergedRating - remoteRating) * 0.2).toFixed(2)
+        );
+      }
+      rec.communityRating = mergedRating;
+
+      const remoteSaveCount =
+        remoteExists && typeof remote.saveCount === 'number' && remote.saveCount >= 0
+          ? remote.saveCount
+          : Math.min(100, rec.saveCount);
+      const mergedSaveCount = remoteExists
+        ? Math.max(0, Math.min(remoteSaveCount + 1, Math.max(remoteSaveCount - 1, rec.saveCount)))
+        : Math.min(100, Math.max(0, rec.saveCount));
+      rec.saveCount = mergedSaveCount;
+
+      const remotePlays =
+        remoteExists && typeof remote.plays === 'number' && remote.plays >= 0 ? remote.plays : 0;
+      const mergedPlays = remoteExists
+        ? Math.max(remotePlays, Math.min(remotePlays + 5, rec.plays))
+        : Math.min(50, Math.max(1, rec.plays));
+      rec.plays = mergedPlays;
+
+      const res = await fetch(endpoint, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          communityRating: mergedRating,
+          ratingCount: newRatingCount,
+          saveCount: mergedSaveCount,
+          highScore: mergedHighScore,
+          plays: mergedPlays
+        })
+      });
+
+      if (!res.ok && retryCount < 1 && typeof window !== 'undefined') {
+        window.setTimeout(() => this.pushRecordToFirebase(rec, retryCount + 1), 200);
+        return;
+      }
+
+      this.saveToLocal();
+      this.syncStatus = res.ok ? 'synced' : 'offline_cached';
+      if (res.ok) this.lastSyncedAt = Date.now();
+    } catch (_) {
+      this.syncStatus = 'offline_cached';
+    }
+  }
+}
+const cloudPersistence = CloudPersistenceManager.getInstance();
+
+/**
+ * Deep State Serializer for Arcade Emulator Save States & Real-Time Rewind Ring Buffer
+ */
+const EXCLUDED_GAME_KEYS = new Set([
+  'renderer',
+  'input',
+  'audio',
+  'wasm',
+  'ctx',
+  'displayCanvas',
+  'bufferCanvas'
+]);
+class SaveStateManager {
+  static serializeValue(val, seen = new WeakSet(), depth = 0) {
+    if (val === null || val === undefined) return val;
+    const t = typeof val;
+    if (t === 'number' || t === 'string' || t === 'boolean') return val;
+    if (t === 'function') return undefined;
+    if (depth > 9) return null;
+
+    if (typeof val === 'object') {
+      if (seen.has(val)) return undefined;
+      // Handle DOM / Canvas / Audio nodes safely
+      if (
+        (typeof Element !== 'undefined' && val instanceof Element) ||
+        (typeof AudioNode !== 'undefined' && val instanceof AudioNode)
+      ) {
+        return undefined;
+      }
+
+      seen.add(val);
+
+      if (val instanceof Vector2 || (val.constructor && val.constructor.name === 'Vector2')) {
+        return { __type: 'Vector2', x: val.x, y: val.y };
+      }
+      if (val instanceof Map) {
+        const entries = [];
+        for (const [k, v] of val.entries()) {
+          entries.push([k, SaveStateManager.serializeValue(v, seen, depth + 1)]);
+        }
+        return { __type: 'Map', entries };
+      }
+      if (val instanceof Set) {
+        const values = [];
+        for (const v of val.values()) {
+          values.push(SaveStateManager.serializeValue(v, seen, depth + 1));
+        }
+        return { __type: 'Set', values };
+      }
+      if (val instanceof Uint8Array) {
+        return { __type: 'Uint8Array', data: Array.from(val) };
+      }
+      if (val instanceof Float32Array) {
+        return { __type: 'Float32Array', data: Array.from(val) };
+      }
+      if (Array.isArray(val)) {
+        return val.map((item) => SaveStateManager.serializeValue(item, seen, depth + 1));
+      }
+
+      const out = {};
+      for (const key of Object.keys(val)) {
+        if (EXCLUDED_GAME_KEYS.has(key)) continue;
+        const sv = SaveStateManager.serializeValue(val[key], seen, depth + 1);
+        if (sv !== undefined) {
+          out[key] = sv;
+        }
+      }
+      return out;
+    }
+    return undefined;
+  }
+
+  static deserializeValue(val) {
+    if (val === null || val === undefined) return val;
+    if (typeof val !== 'object') return val;
+
+    if (Array.isArray(val)) {
+      return val.map((item) => SaveStateManager.deserializeValue(item));
+    }
+
+    if (val.__type === 'Vector2') {
+      return new Vector2(val.x, val.y);
+    }
+    if (val.__type === 'Map') {
+      const m = new Map();
+      if (Array.isArray(val.entries)) {
+        for (const [k, v] of val.entries) {
+          m.set(k, SaveStateManager.deserializeValue(v));
+        }
+      }
+      return m;
+    }
+    if (val.__type === 'Set') {
+      const s = new Set();
+      if (Array.isArray(val.values)) {
+        for (const v of val.values) {
+          s.add(SaveStateManager.deserializeValue(v));
+        }
+      }
+      return s;
+    }
+    if (val.__type === 'Uint8Array') {
+      return new Uint8Array(val.data || []);
+    }
+    if (val.__type === 'Float32Array') {
+      return new Float32Array(val.data || []);
+    }
+
+    const out = {};
+    for (const key of Object.keys(val)) {
+      out[key] = SaveStateManager.deserializeValue(val[key]);
+    }
+    return out;
+  }
+
+  static captureSnapshot(game) {
+    if (!game) return null;
+    const seen = new WeakSet();
+    const state = {};
+    for (const key of Object.keys(game)) {
+      if (EXCLUDED_GAME_KEYS.has(key)) continue;
+      const serialized = SaveStateManager.serializeValue(game[key], seen, 0);
+      if (serialized !== undefined) {
+        state[key] = serialized;
+      }
+    }
+    return {
+      gameId: game.id,
+      title: game.title,
+      score: game.score || 0,
+      level: game.level || 1,
+      lives: game.lives || 3,
+      timestamp: Date.now(),
+      state
+    };
+  }
+
+  static restoreSnapshot(game, snapshot) {
+    if (!game || !snapshot || !snapshot.state) return false;
+    const restored = SaveStateManager.deserializeValue(snapshot.state);
+    for (const key of Object.keys(restored)) {
+      if (EXCLUDED_GAME_KEYS.has(key)) continue;
+      game[key] = restored[key];
+    }
+    return true;
+  }
+
+  static saveToSlot(game, slot = 1) {
+    if (!game || !game.id) return null;
+    const snap = SaveStateManager.captureSnapshot(game);
+    if (!snap) return null;
+    const storageKey = `${SAVE_STATE_PREFIX}${game.id}_slot_${slot}`;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(snap));
+    } catch (_) {}
+    return snap;
+  }
+
+  static loadFromSlot(game, slot = 1) {
+    if (!game || !game.id) return null;
+    const storageKey = `${SAVE_STATE_PREFIX}${game.id}_slot_${slot}`;
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return null;
+      const snap = JSON.parse(raw);
+      if (SaveStateManager.restoreSnapshot(game, snap)) {
+        return snap;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  static getSlotMeta(gameId, slot = 1) {
+    const storageKey = `${SAVE_STATE_PREFIX}${String(gameId || '').toLowerCase()}_slot_${slot}`;
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return null;
+      const snap = JSON.parse(raw);
+      return {
+        slot,
+        score: snap.score || 0,
+        level: snap.level || 1,
+        lives: snap.lives || 3,
+        timestamp: snap.timestamp || 0
+      };
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
+/**
+ * Hardware DIP Switch Store (Lives, Difficulty, Free Play, Rapid Fire)
+ */
+const DEFAULT_DIP = {
+  startingLives: 3, // 2 | 3 | 5
+  difficulty: 'NORMAL', // 'EASY' | 'NORMAL' | 'HARD'
+  freePlay: false, // Infinite lives regeneration
+  rapidFire: false // 15 Hz auto-fire on Action A/B
+};
+class DipSwitchStore {
+  static get() {
+    try {
+      const raw = localStorage.getItem(DIP_STORAGE_KEY);
+      if (!raw) return { ...DEFAULT_DIP };
+      return { ...DEFAULT_DIP, ...JSON.parse(raw) };
+    } catch (_) {
+      return { ...DEFAULT_DIP };
+    }
+  }
+
+  static save(next) {
+    const merged = { ...DipSwitchStore.get(), ...next };
+    try {
+      localStorage.setItem(DIP_STORAGE_KEY, JSON.stringify(merged));
+    } catch (_) {}
+    return merged;
+  }
+
+  static getDifficultyScale() {
+    const d = DipSwitchStore.get().difficulty;
+    if (d === 'EASY') return 0.85;
+    if (d === 'HARD') return 1.22;
+    return 1.0;
+  }
+}
+
+/**
+ * Champion 3-Letter Initials Store
+ */
+class InitialsStore {
+  static getLastInitials() {
+    try {
+      return localStorage.getItem(INITIALS_STORAGE_KEY) || 'ACE';
+    } catch (_) {
+      return 'ACE';
+    }
+  }
+
+  static setLastInitials(initials) {
+    const clean = String(initials || 'ACE')
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, 'A')
+      .padEnd(3, 'A')
+      .slice(0, 3);
+    try {
+      localStorage.setItem(INITIALS_STORAGE_KEY, clean);
+    } catch (_) {}
+    return clean;
+  }
+}
+
+/**
+ * In-Studio Achievement Badges & Toast Notification Manager
+ */
+const ACHIEVEMENT_DEFS = [
+  { id: 'first_coin', title: 'FIRST QUARTER INSERTED', desc: 'Launch your first classic arcade cabinet' },
+  { id: 'high_roller', title: 'TWIN GALAXIES CONTENDER', desc: 'Score over 25,000 points in any cabinet' },
+  { id: 'stage_veteran', title: 'STAGE 3 MASTER', desc: 'Reach Level 3 or higher in any cabinet' },
+  { id: 'time_traveler', title: 'CHRONO REWINDER', desc: 'Use the Rewind Time-Machine buffer' },
+  { id: 'save_master', title: 'EMULATOR ARCHIVIST', desc: 'Save or Load an Emulator Save State' },
+  { id: 'arcade_critic', title: 'COMMUNITY CRITIC', desc: 'Rate or Bookmark a game in Cloud Sync' },
+  { id: 'crt_connoisseur', title: 'PHOSPHOR CONNOISSEUR', desc: 'Cycle through CRT Monitor Shader presets' },
+  { id: 'cabinet_tour', title: 'ARCADE FLOOR TOURIST', desc: 'Play 5 different classic cabinets' }
+];
+class AchievementManager {
+  constructor() {
+    this.unlocked = new Set();
+    this.playedGames = new Set();
+    this.activeToasts = [];
+    this.load();
+  }
+
+  load() {
+    try {
+      const raw = localStorage.getItem(ACHIEVEMENTS_STORAGE_KEY);
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) {
+          arr.forEach((id) => this.unlocked.add(id));
+        }
+      }
+    } catch (_) {}
+  }
+
+  save() {
+    try {
+      localStorage.setItem(ACHIEVEMENTS_STORAGE_KEY, JSON.stringify(Array.from(this.unlocked)));
+    } catch (_) {}
+  }
+
+  unlock(id, audio = null) {
+    if (this.unlocked.has(id)) return false;
+    const def = ACHIEVEMENT_DEFS.find((a) => a.id === id);
+    if (!def) return false;
+    this.unlocked.add(id);
+    this.save();
+    this.pushToast(`🏆 ${def.title}`, def.desc, '#FFD700');
+    if (audio && typeof audio.playPowerUp === 'function') {
+      audio.playPowerUp();
+    }
+    return true;
+  }
+
+  pushToast(title, subtitle = '', color = '#00F0FF') {
+    this.activeToasts.push({
+      title,
+      subtitle,
+      color,
+      timer: 3.2,
+      maxTimer: 3.2
+    });
+    if (this.activeToasts.length > 3) {
+      this.activeToasts.shift();
+    }
+  }
+
+  update(dt) {
+    for (let i = this.activeToasts.length - 1; i >= 0; i--) {
+      this.activeToasts[i].timer -= dt;
+      if (this.activeToasts[i].timer <= 0) {
+        this.activeToasts.splice(i, 1);
+      }
+    }
+  }
+}
+const achievementManager = new AchievementManager();
+
+
 // === src/ui/TouchControls.js ===
 /**
  * TouchControls.js
@@ -1201,7 +1926,8 @@ class TouchControls {
 /**
  * Input.js
  * Unified Input Event Controller handling physical keyboard, mouse/pointer,
- * canvas swipe/tap gestures, and mobile touch overlay controls simultaneously.
+ * canvas swipe/tap gestures, W3C Gamepad API, Rapid-Fire Auto-Turbo latch,
+ * Attract-Mode Demo AI inputs, and mobile touch overlay controls simultaneously.
  */
 class InputManager {
   constructor(canvas = null) {
@@ -1255,6 +1981,23 @@ class InputManager {
       axisY: 0
     };
 
+    this.attractState = {
+      active: false,
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      actionA: false,
+      actionB: false
+    };
+
+    this.rawKeysDown = new Set();
+    this.rawKeysJustPressed = new Set();
+
+    // Hardware Rapid-Fire Turbo Auto-Fire (15 Hz pulse when held)
+    this.turboEnabled = false;
+    this._turboTick = 0;
+
     this.prevState = { ...this.virtualState };
     // Edge-latched presses so rapid keydown+keyup between frames is never missed
     this.latchedPress = {
@@ -1282,6 +2025,7 @@ class InputManager {
     this.onPauseCallback = null;
     this.onMenuCallback = null;
     this.onFirstInteraction = null;
+    this.onUserActivity = null;
     this._interacted = false;
 
     this.initKeyboard();
@@ -1297,6 +2041,9 @@ class InputManager {
       if (typeof this.onFirstInteraction === 'function') {
         this.onFirstInteraction();
       }
+    }
+    if (typeof this.onUserActivity === 'function') {
+      this.onUserActivity();
     }
   }
 
@@ -1329,6 +2076,11 @@ class InputManager {
         return;
       }
       this._notifyInteraction();
+      if (!this.rawKeysDown.has(e.code)) {
+        this.rawKeysJustPressed.add(e.code);
+      }
+      this.rawKeysDown.add(e.code);
+
       const action = this._keyMap[e.code];
       if (action) {
         e.preventDefault();
@@ -1347,6 +2099,7 @@ class InputManager {
     };
 
     this._onKeyUp = (e) => {
+      this.rawKeysDown.delete(e.code);
       const action = this._keyMap[e.code];
       if (action) {
         this.keyState[action] = false;
@@ -1504,6 +2257,36 @@ class InputManager {
     this.syncVirtualState();
   }
 
+  setAttractInput(up, down, left, right, actionA, actionB) {
+    this.attractState.active = true;
+    if (actionA && !this.attractState.actionA) this.latchedPress.actionA = true;
+    if (actionB && !this.attractState.actionB) this.latchedPress.actionB = true;
+    if (up && !this.attractState.up) this.latchedPress.up = true;
+    if (down && !this.attractState.down) this.latchedPress.down = true;
+    if (left && !this.attractState.left) this.latchedPress.left = true;
+    if (right && !this.attractState.right) this.latchedPress.right = true;
+
+    this.attractState.up = !!up;
+    this.attractState.down = !!down;
+    this.attractState.left = !!left;
+    this.attractState.right = !!right;
+    this.attractState.actionA = !!actionA;
+    this.attractState.actionB = !!actionB;
+    this.syncVirtualState();
+  }
+
+  clearAttractInput() {
+    if (!this.attractState.active) return;
+    this.attractState.active = false;
+    this.attractState.up = false;
+    this.attractState.down = false;
+    this.attractState.left = false;
+    this.attractState.right = false;
+    this.attractState.actionA = false;
+    this.attractState.actionB = false;
+    this.syncVirtualState();
+  }
+
   triggerPause() {
     this._notifyInteraction();
     this.latchedPress.pause = true;
@@ -1521,6 +2304,19 @@ class InputManager {
   }
 
   pollGamepads() {
+    // Handle Rapid-Fire Turbo Auto-Fire Oscillator (15 Hz pulse)
+    if (this.turboEnabled) {
+      this._turboTick = (this._turboTick + 1) % 4;
+      if (this._turboTick === 0) {
+        if (this.keyState.actionA || this.touchState.actionA || this.gamepadState.actionA) {
+          this.latchedPress.actionA = true;
+        }
+        if (this.keyState.actionB || this.touchState.actionB || this.gamepadState.actionB) {
+          this.latchedPress.actionB = true;
+        }
+      }
+    }
+
     if (typeof navigator === 'undefined' || typeof navigator.getGamepads !== 'function') {
       return;
     }
@@ -1570,6 +2366,10 @@ class InputManager {
       }
     }
 
+    if (up || down || left || right || actionA || actionB) {
+      this._notifyInteraction();
+    }
+
     if (up && !this.gamepadState.up) this.latchedPress.up = true;
     if (down && !this.gamepadState.down) this.latchedPress.down = true;
     if (left && !this.gamepadState.left) this.latchedPress.left = true;
@@ -1599,12 +2399,42 @@ class InputManager {
   }
 
   syncVirtualState() {
-    this.virtualState.up = !!(this.keyState.up || this.touchState.up || this.gamepadState.up);
-    this.virtualState.down = !!(this.keyState.down || this.touchState.down || this.gamepadState.down);
-    this.virtualState.left = !!(this.keyState.left || this.touchState.left || this.gamepadState.left);
-    this.virtualState.right = !!(this.keyState.right || this.touchState.right || this.gamepadState.right);
-    this.virtualState.actionA = !!(this.keyState.actionA || this.touchState.actionA || this.gamepadState.actionA);
-    this.virtualState.actionB = !!(this.keyState.actionB || this.touchState.actionB || this.gamepadState.actionB);
+    this.virtualState.up = !!(
+      this.keyState.up ||
+      this.touchState.up ||
+      this.gamepadState.up ||
+      (this.attractState.active && this.attractState.up)
+    );
+    this.virtualState.down = !!(
+      this.keyState.down ||
+      this.touchState.down ||
+      this.gamepadState.down ||
+      (this.attractState.active && this.attractState.down)
+    );
+    this.virtualState.left = !!(
+      this.keyState.left ||
+      this.touchState.left ||
+      this.gamepadState.left ||
+      (this.attractState.active && this.attractState.left)
+    );
+    this.virtualState.right = !!(
+      this.keyState.right ||
+      this.touchState.right ||
+      this.gamepadState.right ||
+      (this.attractState.active && this.attractState.right)
+    );
+    this.virtualState.actionA = !!(
+      this.keyState.actionA ||
+      this.touchState.actionA ||
+      this.gamepadState.actionA ||
+      (this.attractState.active && this.attractState.actionA)
+    );
+    this.virtualState.actionB = !!(
+      this.keyState.actionB ||
+      this.touchState.actionB ||
+      this.gamepadState.actionB ||
+      (this.attractState.active && this.attractState.actionB)
+    );
     this.virtualState.pause = !!(this.keyState.pause || this.gamepadState.pause);
     this.virtualState.menu = !!(this.keyState.menu || this.gamepadState.menu);
   }
@@ -1618,6 +2448,14 @@ class InputManager {
 
   isDown(action) {
     return !!this.virtualState[action];
+  }
+
+  isKeyDown(code) {
+    return this.rawKeysDown.has(code);
+  }
+
+  isKeyJustPressed(code) {
+    return this.rawKeysJustPressed.has(code);
   }
 
   isJustPressed(action) {
@@ -1671,6 +2509,7 @@ class InputManager {
       this.prevState[k] = this.virtualState[k];
       this.latchedPress[k] = false;
     }
+    this.rawKeysJustPressed.clear();
     this.pointer.justPressed = false;
     this.pointer.justReleased = false;
   }
@@ -1682,6 +2521,9 @@ class InputManager {
       this.prevState[k] = false;
       this.latchedPress[k] = false;
     }
+    this.rawKeysDown.clear();
+    this.rawKeysJustPressed.clear();
+    this.clearAttractInput();
     this.touchState.up = false;
     this.touchState.down = false;
     this.touchState.left = false;
@@ -3440,23 +4282,77 @@ class AudioSynth {
  *   [ Barrel Distortion Shader ] (Curvature coefficient: 0.05)
  *          │
  *          ▼
- *   [ Bloom / Chromatic Aberration ] (R/B separation: 1.5px)
+ *   [ Bloom / Chromatic Aberration / Phosphor Tint ] (R/B separation: 1.5px)
  *          │
  *          ▼
  *   [ Final Display Screen ]
  */
+const CRT_PRESETS = [
+  {
+    id: 'trinitron',
+    label: 'TRINITRON',
+    enabled: true,
+    scanlineOpacity: 0.15,
+    curvature: 0.05,
+    aberrationPx: 1.5,
+    bloomIntensity: 0.28,
+    colorMode: 0 // Full RGB
+  },
+  {
+    id: 'bubble',
+    label: 'ARCADE BUBBLE',
+    enabled: true,
+    scanlineOpacity: 0.22,
+    curvature: 0.10,
+    aberrationPx: 2.3,
+    bloomIntensity: 0.40,
+    colorMode: 0
+  },
+  {
+    id: 'green',
+    label: 'GREEN P1',
+    enabled: true,
+    scanlineOpacity: 0.19,
+    curvature: 0.06,
+    aberrationPx: 0.6,
+    bloomIntensity: 0.36,
+    colorMode: 1 // P1 Green Vector Monitor
+  },
+  {
+    id: 'amber',
+    label: 'AMBER P3',
+    enabled: true,
+    scanlineOpacity: 0.19,
+    curvature: 0.06,
+    aberrationPx: 0.6,
+    bloomIntensity: 0.36,
+    colorMode: 2 // P3 Amber Monitor
+  },
+  {
+    id: 'off',
+    label: 'RAW PIXEL',
+    enabled: false,
+    scanlineOpacity: 0.0,
+    curvature: 0.0,
+    aberrationPx: 0.0,
+    bloomIntensity: 0.0,
+    colorMode: 0
+  }
+];
 class CRTOverlay {
   constructor(displayCanvas, sourceCanvas) {
     this.displayCanvas = displayCanvas;
     this.sourceCanvas = sourceCanvas;
     this.enabled = true;
+    this.presetIndex = 0;
 
     // Exact shader parameters from Section 3 specification
     this.params = {
       scanlineOpacity: 0.15, // 15% dark opacity alternate horizontal lines
       curvature: 0.05,       // Curvature coefficient: 0.05
       aberrationPx: 1.5,     // R/B separation: 1.5px
-      bloomIntensity: 0.28   // Neon phosphor bloom pass
+      bloomIntensity: 0.28,  // Neon phosphor bloom pass
+      colorMode: 0           // 0 = RGB, 1 = Green Phosphor, 2 = Amber Phosphor
     };
 
     this.gl = null;
@@ -3466,6 +4362,23 @@ class CRTOverlay {
     this.fallbackCtx = null;
 
     this._initWebGL();
+  }
+
+  getPresetLabel() {
+    const p = CRT_PRESETS[this.presetIndex] || CRT_PRESETS[0];
+    return p.label;
+  }
+
+  cyclePreset() {
+    this.presetIndex = (this.presetIndex + 1) % CRT_PRESETS.length;
+    const p = CRT_PRESETS[this.presetIndex];
+    this.enabled = p.enabled;
+    this.params.scanlineOpacity = p.scanlineOpacity;
+    this.params.curvature = p.curvature;
+    this.params.aberrationPx = p.aberrationPx;
+    this.params.bloomIntensity = p.bloomIntensity;
+    this.params.colorMode = p.colorMode;
+    return p;
   }
 
   _initWebGL() {
@@ -3508,6 +4421,7 @@ class CRTOverlay {
         uniform float uCurvature;
         uniform float uAberrationPx;
         uniform float uBloomIntensity;
+        uniform float uColorMode;
         uniform float uEnabled;
 
         // Barrel Distortion Shader (Curvature coefficient: 0.05)
@@ -3549,6 +4463,15 @@ class CRTOverlay {
           vec3 avgGlow = (b1 + b2 + b3 + b4) * 0.25;
           float luma = dot(avgGlow, vec3(0.299, 0.587, 0.114));
           color += avgGlow * smoothstep(0.25, 0.85, luma) * uBloomIntensity;
+
+          // Optional Monochrome Phosphor Monitor Emulation (P1 Green / P3 Amber)
+          if (uColorMode > 0.5 && uColorMode < 1.5) {
+            float yLuma = dot(color, vec3(0.299, 0.587, 0.114));
+            color = vec3(yLuma * 0.18, min(1.0, yLuma * 1.18 + 0.03), yLuma * 0.36);
+          } else if (uColorMode >= 1.5) {
+            float yLuma = dot(color, vec3(0.299, 0.587, 0.114));
+            color = vec3(min(1.0, yLuma * 1.22 + 0.04), yLuma * 0.72, yLuma * 0.12);
+          }
 
           // 4. Scanline Overlay Shader (15% dark opacity alternate horizontal lines)
           float row = floor(uv.y * uResolution.y);
@@ -3614,6 +4537,7 @@ class CRTOverlay {
         uCurvature: gl.getUniformLocation(program, 'uCurvature'),
         uAberrationPx: gl.getUniformLocation(program, 'uAberrationPx'),
         uBloomIntensity: gl.getUniformLocation(program, 'uBloomIntensity'),
+        uColorMode: gl.getUniformLocation(program, 'uColorMode'),
         uEnabled: gl.getUniformLocation(program, 'uEnabled')
       };
     } catch (_) {
@@ -3640,8 +4564,7 @@ class CRTOverlay {
   }
 
   toggle() {
-    this.enabled = !this.enabled;
-    return this.enabled;
+    return this.cyclePreset().enabled;
   }
 
   render() {
@@ -3673,6 +4596,7 @@ class CRTOverlay {
       gl.uniform1f(this.uniforms.uCurvature, this.params.curvature);
       gl.uniform1f(this.uniforms.uAberrationPx, this.params.aberrationPx);
       gl.uniform1f(this.uniforms.uBloomIntensity, this.params.bloomIntensity);
+      gl.uniform1f(this.uniforms.uColorMode, this.params.colorMode || 0.0);
       gl.uniform1f(this.uniforms.uEnabled, this.enabled ? 1.0 : 0.0);
 
       gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -3696,7 +4620,8 @@ class CRTOverlay {
  * Renderer.js
  * Core 16:9 Scalable Viewport & 2D-to-WebGL Framebuffer Renderer for Retro Arcade Studio.
  * Coordinates offscreen 2D canvas drawing, particle/shake effects, pixel-art sprite matrices,
- * HighScore LocalStorage persistence, and the WebGL CRT Post-Processing pipeline.
+ * HighScore LocalStorage + Firebase Cloud Sync persistence, 3-Initial Champion Entry,
+ * Rewind VHS overlay, Achievement Toasts, and the WebGL CRT Post-Processing pipeline.
  */
 const PALETTE = {
   BG: '#0B0F19',     // Deep space background
@@ -3719,6 +4644,7 @@ const FONTS = {
 };
 
 const HIGHSCORE_STORAGE_KEY = 'retro_arcade_studio_highscores_v1';
+const HOLDERS_STORAGE_KEY = 'retro_arcade_studio_holders_v1';
 
 const DEFAULT_HIGHSCORES = {
   loderunner: 12500,
@@ -3754,12 +4680,24 @@ class HighScoreStore {
   static loadAll() {
     try {
       const raw = localStorage.getItem(HIGHSCORE_STORAGE_KEY);
+      let scores;
       if (!raw) {
         localStorage.setItem(HIGHSCORE_STORAGE_KEY, JSON.stringify(DEFAULT_HIGHSCORES));
-        return { ...DEFAULT_HIGHSCORES };
+        scores = { ...DEFAULT_HIGHSCORES };
+      } else {
+        const parsed = JSON.parse(raw);
+        scores = { ...DEFAULT_HIGHSCORES, ...parsed };
       }
-      const parsed = JSON.parse(raw);
-      return { ...DEFAULT_HIGHSCORES, ...parsed };
+      // Merge with Firebase Cloud Persistence records
+      for (const id of Object.keys(scores)) {
+        const cloudRec = cloudPersistence.getRecord(id);
+        if (cloudRec.highScore > scores[id]) {
+          scores[id] = cloudRec.highScore;
+        } else if (scores[id] > cloudRec.highScore) {
+          cloudRec.highScore = scores[id];
+        }
+      }
+      return scores;
     } catch (_) {
       return { ...DEFAULT_HIGHSCORES };
     }
@@ -3768,29 +4706,62 @@ class HighScoreStore {
   static get(gameId) {
     const key = String(gameId || '').toLowerCase();
     const all = HighScoreStore.loadAll();
-    return all[key] || 5000;
+    const cloudRec = cloudPersistence.getRecord(key);
+    return Math.max(all[key] || 5000, cloudRec.highScore || 0);
   }
 
-  static submit(gameId, score) {
+  static getHolder(gameId) {
+    const key = String(gameId || '').toLowerCase();
+    try {
+      const raw = localStorage.getItem(HOLDERS_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed[key]) return parsed[key];
+      }
+    } catch (_) {}
+    const cloudRec = cloudPersistence.getRecord(key);
+    return cloudRec.holder || 'ACE';
+  }
+
+  static setHolder(gameId, initials) {
+    const key = String(gameId || '').toLowerCase();
+    const clean = InitialsStore.setLastInitials(initials);
+    try {
+      const raw = localStorage.getItem(HOLDERS_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      parsed[key] = clean;
+      localStorage.setItem(HOLDERS_STORAGE_KEY, JSON.stringify(parsed));
+    } catch (_) {}
+    const cloudRec = cloudPersistence.getRecord(key);
+    cloudRec.holder = clean;
+    cloudPersistence.saveToLocal();
+    return clean;
+  }
+
+  static submit(gameId, score, holderInitials = null) {
     const key = String(gameId || '').toLowerCase();
     const numeric = Math.floor(Number(score) || 0);
     const all = HighScoreStore.loadAll();
     const prev = all[key] || 0;
     const isNew = numeric > prev;
+    const initials = holderInitials || InitialsStore.getLastInitials();
     if (isNew) {
       all[key] = numeric;
       try {
         localStorage.setItem(HIGHSCORE_STORAGE_KEY, JSON.stringify(all));
-      } catch (_) {
-        // Ignore storage quota errors
-      }
+      } catch (_) {}
+      HighScoreStore.setHolder(key, initials);
     } else {
-      // Ensure storage key is initialized even if score didn't beat default
       try {
         if (!localStorage.getItem(HIGHSCORE_STORAGE_KEY)) {
           localStorage.setItem(HIGHSCORE_STORAGE_KEY, JSON.stringify(all));
         }
       } catch (_) {}
+    }
+    // Sync to Firebase Cloud Persistence
+    cloudPersistence.recordScore(key, Math.max(prev, numeric), isNew ? initials : null);
+    if (numeric >= 25000) {
+      achievementManager.unlock('high_roller');
     }
     return { highScore: Math.max(prev, numeric), isNew };
   }
@@ -3800,7 +4771,8 @@ class Renderer {
     this.width = 960;
     this.height = 540;
     this.displayCanvas = displayCanvas;
-    this.viewportContainer = viewportContainer || (displayCanvas ? displayCanvas.parentElement : null);
+    this.viewportContainer =
+      viewportContainer || (displayCanvas ? displayCanvas.parentElement : null);
 
     // Offscreen 2D framebuffer where all games draw
     this.bufferCanvas = document.createElement('canvas');
@@ -3820,6 +4792,14 @@ class Renderer {
 
     this.shakeTime = 0;
     this.shakeIntensity = 0;
+    this.flashAlpha = 0;
+    this.rewinding = false;
+    this.attractMode = false;
+    this.timeScale = 1.0;
+
+    // 3-Initial Champion Entry State on Game Over
+    this.initialsChars = InitialsStore.getLastInitials().split('');
+    this.initialsCursor = 0;
 
     this.resizeViewport();
     this._onResize = () => this.resizeViewport();
@@ -3833,31 +4813,33 @@ class Renderer {
   resizeViewport() {
     if (!this.displayCanvas || !this.viewportContainer) return;
     const rect = this.viewportContainer.getBoundingClientRect();
-    const touchEl = typeof document !== 'undefined' ? document.getElementById('arcade-touch-overlay') : null;
+    const touchEl =
+      typeof document !== 'undefined' ? document.getElementById('arcade-touch-overlay') : null;
     const touchVisible = !!(touchEl && touchEl.classList.contains('visible'));
     const winW = window.innerWidth || rect.width || 960;
     const winH = window.innerHeight || rect.height || 540;
     const isPortrait = winH >= winW;
-    const isPhoneLandscape = !isPortrait && winH <= 500 && touchVisible;
+    const isPhoneLandscape = !isPortrait && winH <= 520 && touchVisible;
 
-    let reservedBottom = 0;
     let reservedSides = 0;
-
-    if (touchVisible) {
-      if (isPortrait) {
-        reservedBottom = winW <= 520 ? 186 : 196;
-      } else if (isPhoneLandscape) {
-        // In compact phone landscape, D-Pad and Action A/B sit in left/right gutters
-        reservedSides = Math.min(250, Math.max(180, winW * 0.26));
-        reservedBottom = 8;
-      } else {
-        // Tablet / desktop touch preview in landscape
-        reservedBottom = 168;
-      }
+    if (isPhoneLandscape) {
+      // In compact phone landscape, D-Pad and Action A/B sit in left/right gutters
+      reservedSides = Math.min(240, Math.max(170, winW * 0.25));
     }
 
-    const availW = Math.max(220, rect.width - 12 - reservedSides);
-    const availH = Math.max(130, rect.height - 12 - reservedBottom);
+    // Note: CSS padding-bottom on .arcade-viewport already reserves bottom touch space when needed,
+    // so we measure the inner content box of .arcade-viewport directly to avoid double-subtracting!
+    const style =
+      typeof window !== 'undefined' && window.getComputedStyle
+        ? window.getComputedStyle(this.viewportContainer)
+        : null;
+    const padTop = style ? parseFloat(style.paddingTop) || 0 : 6;
+    const padBot = style ? parseFloat(style.paddingBottom) || 0 : 6;
+    const padLeft = style ? parseFloat(style.paddingLeft) || 0 : 6;
+    const padRight = style ? parseFloat(style.paddingRight) || 0 : 6;
+
+    const availW = Math.max(200, rect.width - padLeft - padRight - reservedSides - 6);
+    const availH = Math.max(120, rect.height - padTop - padBot - 6);
     const targetAspect = 16 / 9;
 
     let drawW = availW;
@@ -3876,6 +4858,10 @@ class Renderer {
     this.shakeTime = Math.max(this.shakeTime, duration);
   }
 
+  triggerFlash(alpha = 0.85) {
+    this.flashAlpha = alpha;
+  }
+
   beginFrame(dt = 0.016) {
     const ctx = this.ctx;
     ctx.save();
@@ -3891,10 +4877,102 @@ class Renderer {
         this.shakeIntensity = 0;
       }
     }
+
+    if (this.flashAlpha > 0) {
+      this.flashAlpha = Math.max(0, this.flashAlpha - dt * 2.8);
+    }
+
+    achievementManager.update(dt);
   }
 
   endFrame() {
-    this.ctx.restore();
+    const ctx = this.ctx;
+    ctx.restore();
+
+    // 1. Rewind Time-Machine VHS Scan Bar Overlay
+    if (this.rewinding) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(0, 240, 255, 0.14)';
+      ctx.fillRect(0, 0, this.width, this.height);
+      const barY = ((performance.now() * 0.45) % this.height);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+      ctx.fillRect(0, barY, this.width, 18);
+      this.drawText('⏪ REWINDING TIME-MACHINE', this.width / 2, 74, {
+        font: FONTS.HEADER,
+        size: 16,
+        color: PALETTE.CYAN,
+        align: 'center',
+        glow: 14
+      });
+      ctx.restore();
+    }
+
+    // 2. Attract Mode Demo Banner
+    if (this.attractMode) {
+      const blink = Math.floor(performance.now() / 420) % 2 === 0;
+      ctx.save();
+      ctx.fillStyle = 'rgba(11, 15, 25, 0.82)';
+      ctx.strokeStyle = PALETTE.GOLD;
+      ctx.lineWidth = 2;
+      ctx.fillRect(190, 488, 580, 36);
+      ctx.strokeRect(190, 488, 580, 36);
+      if (blink) {
+        this.drawText(
+          '🎬 ATTRACT DEMO MODE — PRESS ANY KEY OR TAP TO INSERT COIN',
+          this.width / 2,
+          511,
+          {
+            font: FONTS.HEADER,
+            size: 10.5,
+            color: PALETTE.GOLD,
+            align: 'center',
+            glow: 10
+          }
+        );
+      }
+      ctx.restore();
+    }
+
+    // 3. Achievement & Emulator Save State Toast Notifications
+    if (achievementManager.activeToasts.length > 0) {
+      ctx.save();
+      achievementManager.activeToasts.forEach((t, idx) => {
+        const y = 46 + idx * 52;
+        const x = this.width - 332;
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+        ctx.strokeStyle = t.color || PALETTE.GOLD;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = t.color || PALETTE.GOLD;
+        ctx.shadowBlur = 12;
+        ctx.fillRect(x, y, 320, 44);
+        ctx.strokeRect(x, y, 320, 44);
+        ctx.shadowBlur = 0;
+
+        this.drawText(t.title, x + 12, y + 19, {
+          font: FONTS.HEADER,
+          size: 9.5,
+          color: t.color || PALETTE.GOLD
+        });
+        if (t.subtitle) {
+          this.drawText(t.subtitle, x + 12, y + 36, {
+            font: FONTS.BODY,
+            size: 11,
+            color: PALETTE.WHITE,
+            bold: false
+          });
+        }
+      });
+      ctx.restore();
+    }
+
+    // 4. Screenshot Shutter Flash
+    if (this.flashAlpha > 0) {
+      ctx.save();
+      ctx.fillStyle = `rgba(255, 255, 255, ${this.flashAlpha.toFixed(2)})`;
+      ctx.fillRect(0, 0, this.width, this.height);
+      ctx.restore();
+    }
+
     this.crt.render();
   }
 
@@ -3937,16 +5015,21 @@ class Renderer {
     ctx.restore();
   }
 
-  drawText(text, x, y, {
-    font = FONTS.HUD,
-    size = 16,
-    color = PALETTE.WHITE,
-    align = 'left',
-    baseline = 'alphabetic',
-    glow = 0,
-    glowColor = null,
-    bold = true
-  } = {}) {
+  drawText(
+    text,
+    x,
+    y,
+    {
+      font = FONTS.HUD,
+      size = 16,
+      color = PALETTE.WHITE,
+      align = 'left',
+      baseline = 'alphabetic',
+      glow = 0,
+      glowColor = null,
+      bold = true
+    } = {}
+  ) {
     const ctx = this.ctx;
     ctx.save();
     ctx.font = `${bold ? '700 ' : ''}${size}px ${font}`;
@@ -4024,13 +5107,19 @@ class Renderer {
       color: PALETTE.WHITE
     });
 
-    // HIGH SCORE
-    this.drawText(`HI: ${String(Math.floor(Math.max(score, highScore))).padStart(6, '0')}`, 455, 25, {
-      font: FONTS.HUD,
-      size: 16,
-      color: PALETTE.GOLD,
-      glow: 6
-    });
+    // HIGH SCORE + Champion Initials
+    const holder = InitialsStore.getLastInitials();
+    this.drawText(
+      `HI(${holder}): ${String(Math.floor(Math.max(score, highScore))).padStart(6, '0')}`,
+      435,
+      25,
+      {
+        font: FONTS.HUD,
+        size: 15,
+        color: PALETTE.GOLD,
+        glow: 6
+      }
+    );
 
     // Level / Wave
     this.drawText(`LV:${level}`, 640, 25, {
@@ -4040,9 +5129,9 @@ class Renderer {
     });
 
     if (extraLabel) {
-      this.drawText(extraLabel, 720, 25, {
+      this.drawText(extraLabel, 710, 25, {
         font: FONTS.HUD,
-        size: 14,
+        size: 13.5,
         color: PALETTE.CYAN
       });
     }
@@ -4066,22 +5155,25 @@ class Renderer {
   /**
    * Standard state overlay for MENU, PAUSED, and GAMEOVER states
    */
-  drawStateOverlay(state, {
-    title = '',
-    subtitle = '',
-    controls = 'ARROWS/WASD: MOVE  |  Z/SPACE: ACTION A  |  X/SHIFT: ACTION B  |  P: PAUSE',
-    score = 0,
-    highScore = 0,
-    accent = PALETTE.CYAN
-  } = {}) {
+  drawStateOverlay(
+    state,
+    {
+      title = '',
+      subtitle = '',
+      controls = 'ARROWS/WASD: MOVE  |  Z/SPACE: ACTION A  |  X/SHIFT: ACTION B  |  P: PAUSE',
+      score = 0,
+      highScore = 0,
+      accent = PALETTE.CYAN
+    } = {}
+  ) {
     if (state === 'PLAYING') return;
     const ctx = this.ctx;
     ctx.save();
     ctx.fillStyle = 'rgba(11, 15, 25, 0.80)';
     ctx.fillRect(0, 38, this.width, this.height - 38);
 
-    const boxW = 620;
-    const boxH = 270;
+    const boxW = 640;
+    const boxH = 290;
     const bx = (this.width - boxW) / 2;
     const by = (this.height - boxH) / 2 + 10;
 
@@ -4125,57 +5217,106 @@ class Renderer {
         glow: 10
       });
       ctx.globalAlpha = 1;
-      this.drawText(`RECORD HIGH SCORE: ${String(highScore).padStart(6, '0')}`, this.width / 2, by + 242, {
-        font: FONTS.HUD,
-        size: 14,
-        color: PALETTE.MUTED,
-        align: 'center'
-      });
+      this.drawText(
+        `RECORD HIGH SCORE: ${String(highScore).padStart(6, '0')} (${InitialsStore.getLastInitials()})`,
+        this.width / 2,
+        by + 248,
+        {
+          font: FONTS.HUD,
+          size: 14,
+          color: PALETTE.MUTED,
+          align: 'center'
+        }
+      );
     } else if (state === 'PAUSED') {
-      this.drawText('SYSTEM PAUSED', this.width / 2, by + 72, {
+      this.drawText('SYSTEM PAUSED', this.width / 2, by + 64, {
         font: FONTS.HEADER,
         size: 24,
         color: PALETTE.GOLD,
         align: 'center',
         glow: 12
       });
-      this.drawText(controls, this.width / 2, by + 130, {
+      this.drawText(controls, this.width / 2, by + 118, {
         font: FONTS.BODY,
         size: 13,
         color: PALETTE.WHITE,
         align: 'center'
       });
+      this.drawText(
+        '[F5] SAVE STATE  |  [F8] LOAD STATE  |  [.] FRAME STEP  |  [R] REWIND',
+        this.width / 2,
+        158 + by,
+        {
+          font: FONTS.HUD,
+          size: 13,
+          color: PALETTE.GOLD,
+          align: 'center'
+        }
+      );
       ctx.globalAlpha = pulse;
-      this.drawText('PRESS [P / SPACE / Z] TO RESUME  |  [BACKSPACE] STUDIO LOBBY', this.width / 2, by + 195, {
-        font: FONTS.HUD,
-        size: 15,
-        color: PALETTE.CYAN,
-        align: 'center'
-      });
+      this.drawText(
+        'PRESS [P / SPACE / Z] TO RESUME  |  [BACKSPACE] STUDIO LOBBY',
+        this.width / 2,
+        by + 218,
+        {
+          font: FONTS.HUD,
+          size: 15,
+          color: PALETTE.CYAN,
+          align: 'center'
+        }
+      );
       ctx.globalAlpha = 1;
     } else if (state === 'GAMEOVER') {
-      this.drawText('GAME OVER', this.width / 2, by + 62, {
+      this.drawText('GAME OVER', this.width / 2, by + 54, {
         font: FONTS.HEADER,
-        size: 26,
+        size: 25,
         color: PALETTE.PINK,
         align: 'center',
         glow: 14
       });
-      this.drawText(`FINAL SCORE: ${String(Math.floor(score)).padStart(6, '0')}`, this.width / 2, by + 115, {
-        font: FONTS.HUD,
-        size: 20,
-        color: PALETTE.WHITE,
-        align: 'center'
-      });
-      this.drawText(`HIGH SCORE: ${String(Math.floor(Math.max(score, highScore))).padStart(6, '0')}`, this.width / 2, by + 150, {
-        font: FONTS.HUD,
-        size: 16,
-        color: PALETTE.GOLD,
-        align: 'center',
-        glow: 8
-      });
+      this.drawText(
+        `FINAL SCORE: ${String(Math.floor(score)).padStart(6, '0')}   •   HI: ${String(
+          Math.floor(Math.max(score, highScore))
+        ).padStart(6, '0')}`,
+        this.width / 2,
+        by + 98,
+        {
+          font: FONTS.HUD,
+          size: 18,
+          color: PALETTE.WHITE,
+          align: 'center'
+        }
+      );
+
+      // 3-Initial Arcade Champion Selector
+      const chars = this.initialsChars || ['A', 'C', 'E'];
+      this.drawText(
+        `CHAMPION INITIALS (UP/DOWN LETTER, LEFT/RIGHT SLOT):  [${chars[0]}] [${chars[1]}] [${chars[2]}]`,
+        this.width / 2,
+        by + 142,
+        {
+          font: FONTS.HUD,
+          size: 15,
+          color: PALETTE.GOLD,
+          align: 'center',
+          glow: 8
+        }
+      );
+
+      this.drawText(
+        'PRESS [F8] TO LOAD SAVED STATE OR HOLD [R] TO REWIND!',
+        this.width / 2,
+        by + 182,
+        {
+          font: FONTS.HUD,
+          size: 13,
+          color: PALETTE.CYAN,
+          align: 'center'
+        }
+      );
+
       ctx.globalAlpha = pulse;
-      this.drawText('PRESS [SPACE / Z / TAP] TO PLAY AGAIN', this.width / 2, by + 205, {
+      this.drawText('PRESS [SPACE / Z / TAP] TO PLAY AGAIN', this.width / 2, by + 226, {
         font: FONTS.HEADER,
         size: 13,
         color: PALETTE.GREEN,
@@ -4183,9 +5324,9 @@ class Renderer {
         glow: 8
       });
       ctx.globalAlpha = 1;
-      this.drawText('OR CLICK [STUDIO LOBBY] TO SWITCH CABINETS', this.width / 2, by + 240, {
+      this.drawText('OR CLICK [STUDIO LOBBY] TO SWITCH CABINETS', this.width / 2, by + 260, {
         font: FONTS.BODY,
-        size: 13,
+        size: 12.5,
         color: PALETTE.MUTED,
         align: 'center'
       });
@@ -4203,7 +5344,8 @@ class Renderer {
  * Interactive Canvas & Studio Lobby Menu for Retro Arcade Studio.
  * Supports switching between the 8 Flagship Core Games and 20 Expanded Vault Classics
  * via Keyboard/D-Pad, Mouse Pointer, or Touch Tap, while displaying persisted High Scores,
- * Mechanics Focus, Control Paradigm, and Modern Enhancements.
+ * Firebase Cloud Star Ratings (1-5 ★), Favorite Bookmarks (♥), Emulator Save Slots,
+ * Catalog Sorting, Mechanics Focus, Control Paradigm, and Modern Enhancements.
  */
 const GAME_CATALOG = [
   // === 8 CORE ARCHETYPES ===
@@ -4211,6 +5353,7 @@ const GAME_CATALOG = [
     id: 'loderunner',
     title: 'Vault Runner',
     category: 'core',
+    genre: 'Platform',
     accent: PALETTE.GOLD,
     mechanics: '28x16 Grid, Brick Digging, A* AI Traps',
     controls: '4-Way D-Pad + Left(Z) / Right(X) Dig',
@@ -4220,6 +5363,7 @@ const GAME_CATALOG = [
     id: 'digdug',
     title: 'Sub-Terra Driller',
     category: 'core',
+    genre: 'Action',
     accent: PALETTE.ORANGE,
     mechanics: 'Freeform Tunneling, 4-Stage Pump, Rock Drop',
     controls: '4-Way D-Pad + Pump Harpoon (Z/Space)',
@@ -4229,8 +5373,9 @@ const GAME_CATALOG = [
     id: 'donkeykong',
     title: 'Girder Titan',
     category: 'core',
+    genre: 'Platform',
     accent: PALETTE.PINK,
-    mechanics: '5° Slanted Girders, Jump Timing, Barrels',
+    mechanics: '4 Classic Stages (Girders, Conveyor, Elevators, Rivets)',
     controls: '4-Way Climb/Move + Jump (Z/Space)',
     enhancements: '30/70 barrel RNG, Hammer smash mode'
   },
@@ -4238,6 +5383,7 @@ const GAME_CATALOG = [
     id: 'sumo',
     title: 'Dohyo Clash',
     category: 'core',
+    genre: 'Sports',
     accent: PALETTE.RED,
     mechanics: 'Center-of-Mass Ring Physics, Stamina Drag',
     controls: 'Analogue/D-Pad + Shove(Z) / Slap & Evade(X)',
@@ -4247,8 +5393,9 @@ const GAME_CATALOG = [
     id: 'pacman',
     title: 'Neon Chomper',
     category: 'core',
+    genre: 'Maze',
     accent: PALETTE.GOLD,
-    mechanics: '4-Specter Target Tile AI, Fright Multipliers',
+    mechanics: '4 Classic Mazes, 4-Specter AI, Fright Multipliers',
     controls: '4-Way D-Pad / Swipe + Variant Toggle (X)',
     enhancements: 'Dynamic maze color shift, fruit cycles'
   },
@@ -4256,6 +5403,7 @@ const GAME_CATALOG = [
     id: 'frogger',
     title: 'Cyber Hopper',
     category: 'core',
+    genre: 'Action',
     accent: PALETTE.GREEN,
     mechanics: 'Discrete Grid Hops, 60s Timer, River Logs',
     controls: '4-Way D-Pad / Tap-to-Leap Direction',
@@ -4265,6 +5413,7 @@ const GAME_CATALOG = [
     id: 'galaga',
     title: 'Star Squadron',
     category: 'core',
+    genre: 'Shooter',
     accent: PALETTE.CYAN,
     mechanics: 'Bezier Flight Paths, Tractor Beam Rescue',
     controls: 'Left/Right Move + Dual Fire (Z/Space)',
@@ -4274,6 +5423,7 @@ const GAME_CATALOG = [
     id: 'spaceinvaders',
     title: 'Cosmic Armada',
     category: 'core',
+    genre: 'Shooter',
     accent: PALETTE.GREEN,
     mechanics: '5x11 Fleet March, Accelerating Tempo, UFO',
     controls: 'Left/Right Move + Laser Cannon (Z/Space)',
@@ -4285,6 +5435,7 @@ const GAME_CATALOG = [
     id: 'asteroids',
     title: 'Meteor Vector',
     category: 'expanded',
+    genre: 'Shooter',
     accent: PALETTE.CYAN,
     mechanics: 'Vector wrap-around, ship inertia, rock split',
     controls: 'Rotate + Thrust(Up) + Fire(Z) + Hyper(X)',
@@ -4294,6 +5445,7 @@ const GAME_CATALOG = [
     id: 'centipede',
     title: 'Mycelium Crawler',
     category: 'expanded',
+    genre: 'Shooter',
     accent: PALETTE.GREEN,
     mechanics: 'Segmented winding chain, mushroom grid',
     controls: '4-Way Bottom Zone + Rapid Blaster (Z)',
@@ -4303,6 +5455,7 @@ const GAME_CATALOG = [
     id: 'defender',
     title: 'Horizon Vanguard',
     category: 'expanded',
+    genre: 'Shooter',
     accent: PALETTE.PINK,
     mechanics: 'Side-scrolling radar, colonist rescue',
     controls: 'Thrust/Move + Laser(Z) + Smart Bomb(X)',
@@ -4312,8 +5465,9 @@ const GAME_CATALOG = [
     id: 'arkanoid',
     title: 'Prism Breaker',
     category: 'expanded',
+    genre: 'Action',
     accent: PALETTE.CYAN,
-    mechanics: 'Paddle reflection physics, multi-hit bricks',
+    mechanics: '6 Brick Fortresses, paddle reflection physics',
     controls: 'Left/Right Prism Paddle + Launch/Laser(Z)',
     enhancements: 'Expand, Multiball & Laser power capsules'
   },
@@ -4321,6 +5475,7 @@ const GAME_CATALOG = [
     id: 'paperboy',
     title: 'Courier Dash',
     category: 'expanded',
+    genre: 'Action',
     accent: PALETTE.GOLD,
     mechanics: 'Isometric street navigation, parcel throws',
     controls: 'Steer/Speed + Throw Parcel (Z)',
@@ -4330,6 +5485,7 @@ const GAME_CATALOG = [
     id: 'joust',
     title: 'Sky Lancer',
     category: 'expanded',
+    genre: 'Platform',
     accent: PALETTE.ORANGE,
     mechanics: 'Flapping flight momentum, lance altitude',
     controls: 'Left/Right + Flap Wings (Z/Up)',
@@ -4339,6 +5495,7 @@ const GAME_CATALOG = [
     id: 'qbert',
     title: 'Iso Hop',
     category: 'expanded',
+    genre: 'Platform',
     accent: PALETTE.ORANGE,
     mechanics: 'Isometric pyramid hops, serpent chase AI',
     controls: '4-Way Diagonal Pyramid Hops',
@@ -4348,6 +5505,7 @@ const GAME_CATALOG = [
     id: 'rampage',
     title: 'Kaiju Crush',
     category: 'expanded',
+    genre: 'Action',
     accent: PALETTE.RED,
     mechanics: 'Skyscraper climbing & collapse physics',
     controls: 'Climb/Walk + Punch(Z) + Jump(X)',
@@ -4357,15 +5515,17 @@ const GAME_CATALOG = [
     id: 'marblemadness',
     title: 'Gyro Sphere',
     category: 'expanded',
+    genre: 'Action',
     accent: PALETTE.CYAN,
-    mechanics: 'Isometric slope gravity, track momentum',
+    mechanics: '6 Isometric Courses, slope gravity, momentum',
     controls: '4-Way Roll Acceleration + Turbo(Z)',
-    enhancements: '3D shaded slope vectors & chasm hazards'
+    enhancements: '3D shaded slope vectors, ice & boost pads'
   },
   {
     id: 'pitfall',
     title: 'Jungle Strider',
     category: 'expanded',
+    genre: 'Platform',
     accent: PALETTE.GREEN,
     mechanics: 'Vine swinging, crocodile timing, scorpions',
     controls: 'Run/Climb + Jump/Grab Vine (Z)',
@@ -4375,6 +5535,7 @@ const GAME_CATALOG = [
     id: 'duckhunt',
     title: 'Wing Blaster',
     category: 'expanded',
+    genre: 'Shooter',
     accent: PALETTE.GOLD,
     mechanics: 'Light-gun touch/click & crosshair targeting',
     controls: 'Tap/Click or Aim Crosshair + Shoot(Z)',
@@ -4384,6 +5545,7 @@ const GAME_CATALOG = [
     id: 'excitebike',
     title: 'Nitro Moto',
     category: 'expanded',
+    genre: 'Sports',
     accent: PALETTE.PINK,
     mechanics: 'Stunt incline jumping, engine heat meter',
     controls: 'Lane/Pitch + Gas(Z) + Turbo Boost(X)',
@@ -4393,6 +5555,7 @@ const GAME_CATALOG = [
     id: 'missilecommand',
     title: 'Aegis Intercept',
     category: 'expanded',
+    genre: 'Shooter',
     accent: PALETTE.RED,
     mechanics: 'ABM interception trajectories, blast radii',
     controls: 'Click/Tap or Crosshair + Launch ABM(Z)',
@@ -4402,8 +5565,9 @@ const GAME_CATALOG = [
     id: 'burgertime',
     title: 'Bistro Stacker',
     category: 'expanded',
+    genre: 'Platform',
     accent: PALETTE.GOLD,
-    mechanics: 'Ingredient stepping collapse, spice stun',
+    mechanics: '4 Kitchen Layouts, cascading burger slices',
     controls: '4-Way Scaffold Climb + Throw Spice(X)',
     enhancements: 'Cascading burger slices & enemy crush'
   },
@@ -4411,8 +5575,9 @@ const GAME_CATALOG = [
     id: 'bubblebobble',
     title: 'Bubble Dragons',
     category: 'expanded',
+    genre: 'Platform',
     accent: PALETTE.PINK,
-    mechanics: 'Bubble traps, air currents, fruit bonuses',
+    mechanics: '6 Cave Stages, bubble traps, air currents',
     controls: 'Move + Blow Bubble(Z) + Jump(X/Up)',
     enhancements: 'Chain-popping physics & bonus fruit drops'
   },
@@ -4420,6 +5585,7 @@ const GAME_CATALOG = [
     id: 'spyhunter',
     title: 'Highway Agent',
     category: 'expanded',
+    genre: 'Action',
     accent: PALETTE.CYAN,
     mechanics: 'High-speed combat driving & Supply Van',
     controls: 'Steer/Speed + Machine Gun(Z) + Oil/Smoke(X)',
@@ -4429,6 +5595,7 @@ const GAME_CATALOG = [
     id: 'tron',
     title: 'Light Grid',
     category: 'expanded',
+    genre: 'Action',
     accent: PALETTE.CYAN,
     mechanics: 'Light cycle trail walls, AI turn raycasts',
     controls: '4-Way 90° Turns + Boost(Z) + Brake(X)',
@@ -4438,6 +5605,7 @@ const GAME_CATALOG = [
     id: 'trackandfield',
     title: 'Cyber Decathlon',
     category: 'expanded',
+    genre: 'Sports',
     accent: PALETTE.GOLD,
     mechanics: 'Button mashing velocity, angle triggers',
     controls: 'Mash Run(Z / L-R) + Angle Action(X)',
@@ -4447,6 +5615,7 @@ const GAME_CATALOG = [
     id: 'outrun',
     title: 'Synthwave Horizon',
     category: 'expanded',
+    genre: 'Sports',
     accent: PALETTE.PINK,
     mechanics: 'Pseudo-3D horizon road, drifting, forks',
     controls: 'Steer + Gas(Z/Up) + Drift Brake(X/Down)',
@@ -4456,11 +5625,20 @@ const GAME_CATALOG = [
     id: 'contra',
     title: 'Commando Strike',
     category: 'expanded',
+    genre: 'Shooter',
     accent: PALETTE.RED,
     mechanics: '8-way directional aiming, Spread Shot (S)',
     controls: '8-Way Aim/Move + Fire(Z) + Jump(X)',
     enhancements: 'Spread/Laser capsules & Wall Boss core'
   }
+];
+
+const SORT_MODES = [
+  { id: 'default', label: 'SORT: FEATURED' },
+  { id: 'rating', label: 'SORT: ★ TOP RATED' },
+  { id: 'highscore', label: 'SORT: 🏆 HIGH SCORE' },
+  { id: 'saved', label: 'SORT: ♥ SAVED' },
+  { id: 'most_played', label: 'SORT: 🔥 MOST PLAYED' }
 ];
 class MainMenu {
   constructor(renderer, input, audio, onSelectGame) {
@@ -4469,16 +5647,34 @@ class MainMenu {
     this.audio = audio;
     this.onSelectGame = onSelectGame;
 
+    cloudPersistence.initializeCatalog(GAME_CATALOG.map((g) => g.id));
+
     this.activeTab = 'core'; // 'core' (8 flagship) | 'expanded' (20 classics)
+    this.sortModeIndex = 0;
     this.selectedIndex = 0;
     this.hoverIndex = -1;
     this.animTime = 0;
     this.cardRects = [];
     this.tabRects = [];
+    this.inspectorStarRects = [];
+    this.inspectorFavRect = null;
+  }
+
+  getSortMode() {
+    return SORT_MODES[this.sortModeIndex % SORT_MODES.length];
+  }
+
+  cycleSortMode() {
+    this.sortModeIndex = (this.sortModeIndex + 1) % SORT_MODES.length;
+    cloudPersistence.sortMode = this.getSortMode().id;
+    this.selectedIndex = 0;
+    this.audio.playMenuMove();
+    return this.getSortMode();
   }
 
   getVisibleGames() {
-    return GAME_CATALOG.filter((g) => g.category === this.activeTab);
+    const base = GAME_CATALOG.filter((g) => g.category === this.activeTab);
+    return cloudPersistence.sortCatalog(base, this.getSortMode().id);
   }
 
   setTab(tab) {
@@ -4495,9 +5691,46 @@ class MainMenu {
     const cols = this.activeTab === 'core' ? 4 : 5;
     const rows = Math.ceil(list.length / cols);
 
+    if (this.selectedIndex >= list.length) {
+      this.selectedIndex = Math.max(0, list.length - 1);
+    }
+    const activeGame = list[this.selectedIndex] || list[0];
+
     // Tab toggle with Action B (X / Shift)
     if (this.input.isJustPressed('actionB')) {
       this.setTab(this.activeTab === 'core' ? 'expanded' : 'core');
+    }
+
+    // Favorite / Bookmark toggle with KeyF
+    if (this.input.isKeyJustPressed('KeyF') && activeGame) {
+      const saved = cloudPersistence.toggleSaveGame(activeGame.id);
+      this.audio.playCoin();
+      achievementManager.unlock('arcade_critic', this.audio);
+      achievementManager.pushToast(
+        saved ? `♥ SAVED ${activeGame.title.toUpperCase()}` : `REMOVED ${activeGame.title.toUpperCase()}`,
+        'Synced to Local & Firebase Cloud',
+        PALETTE.PINK
+      );
+      if (typeof window !== 'undefined' && window.arcadeStudio) {
+        window.arcadeStudio._syncHeaderStatus();
+      }
+    }
+
+    // 1-5 Star Rating shortcuts (Digit1..Digit5) in Lobby
+    for (let s = 1; s <= 5; s++) {
+      if (this.input.isKeyJustPressed(`Digit${s}`) && activeGame) {
+        cloudPersistence.rateGame(activeGame.id, s);
+        this.audio.playCoin();
+        achievementManager.unlock('arcade_critic', this.audio);
+        achievementManager.pushToast(
+          `★ RATED ${activeGame.title.toUpperCase()}: ${s}/5 STARS`,
+          'Synced to Firebase Cloud Leaderboard',
+          PALETTE.GOLD
+        );
+        if (typeof window !== 'undefined' && window.arcadeStudio) {
+          window.arcadeStudio._syncHeaderStatus();
+        }
+      }
     }
 
     // Keyboard / D-Pad Grid Navigation
@@ -4542,10 +5775,48 @@ class MainMenu {
     const py = this.input.pointer.y;
 
     if (this.input.pointer.justPressed) {
-      // Check tab clicks
+      // Check tab & sort button clicks
       for (const tab of this.tabRects) {
         if (px >= tab.x && px <= tab.x + tab.w && py >= tab.y && py <= tab.y + tab.h) {
-          this.setTab(tab.id);
+          if (tab.id === 'sort') {
+            this.cycleSortMode();
+          } else {
+            this.setTab(tab.id);
+          }
+          return;
+        }
+      }
+
+      // Check Inspector 1-5 Star clicks
+      if (activeGame && this.inspectorStarRects.length === 5) {
+        for (let s = 0; s < 5; s++) {
+          const sr = this.inspectorStarRects[s];
+          if (px >= sr.x && px <= sr.x + sr.w && py >= sr.y && py <= sr.y + sr.h) {
+            cloudPersistence.rateGame(activeGame.id, s + 1);
+            this.audio.playCoin();
+            achievementManager.unlock('arcade_critic', this.audio);
+            achievementManager.pushToast(
+              `★ RATED ${activeGame.title.toUpperCase()}: ${s + 1}/5`,
+              'Synced to Firebase Cloud Leaderboard',
+              PALETTE.GOLD
+            );
+            return;
+          }
+        }
+      }
+
+      // Check Inspector Fav Heart click
+      if (activeGame && this.inspectorFavRect) {
+        const fr = this.inspectorFavRect;
+        if (px >= fr.x && px <= fr.x + fr.w && py >= fr.y && py <= fr.y + fr.h) {
+          const saved = cloudPersistence.toggleSaveGame(activeGame.id);
+          this.audio.playCoin();
+          achievementManager.unlock('arcade_critic', this.audio);
+          achievementManager.pushToast(
+            saved ? `♥ SAVED ${activeGame.title.toUpperCase()}` : `REMOVED ${activeGame.title.toUpperCase()}`,
+            'Synced to Firebase Cloud',
+            PALETTE.PINK
+          );
           return;
         }
       }
@@ -4606,7 +5877,7 @@ class MainMenu {
     ctx.restore();
 
     // Header Banner
-    this.renderer.drawText('RETRO ARCADE STUDIO', W / 2, 34, {
+    this.renderer.drawText('RETRO ARCADE STUDIO', W / 2, 32, {
       font: FONTS.HEADER,
       size: 20,
       color: PALETTE.CYAN,
@@ -4614,10 +5885,15 @@ class MainMenu {
       glow: 14
     });
 
+    const cloudStatus =
+      cloudPersistence.syncStatus === 'synced'
+        ? 'FIREBASE CLOUD: SYNCED'
+        : 'FIREBASE CLOUD: LOCAL+CACHE';
+
     this.renderer.drawText(
-      'MODERN CRT VISUAL PIPELINE  •  UNIFIED INPUT ENGINE  •  PROCEDURAL WEB AUDIO SYNTH',
+      `CRT SHADER PIPELINE  •  ${cloudStatus}  •  SAVE STATES [F5/F8]  •  REWIND [R]`,
       W / 2,
-      54,
+      52,
       {
         font: FONTS.HUD,
         size: 11,
@@ -4626,18 +5902,29 @@ class MainMenu {
       }
     );
 
-    // Category Tabs
+    // Category Tabs + Cloud Sort Pill
+    const sortMode = this.getSortMode();
     this.tabRects = [
-      { id: 'core', label: 'CORE 8 ARCHETYPES (FEATURED)', x: 185, y: 64, w: 285, h: 28 },
-      { id: 'expanded', label: 'EXPANDED VAULT (20 CLASSICS)', x: 490, y: 64, w: 285, h: 28 }
+      { id: 'core', label: 'CORE 8 ARCHETYPES (FEATURED)', x: 85, y: 62, w: 265, h: 28 },
+      { id: 'expanded', label: 'EXPANDED VAULT (20 CLASSICS)', x: 362, y: 62, w: 265, h: 28 },
+      { id: 'sort', label: sortMode.label, x: 639, y: 62, w: 236, h: 28 }
     ];
 
     for (const tab of this.tabRects) {
-      const active = this.activeTab === tab.id;
+      const isSort = tab.id === 'sort';
+      const active = !isSort && this.activeTab === tab.id;
       ctx.save();
-      ctx.fillStyle = active ? 'rgba(0, 240, 255, 0.18)' : 'rgba(19, 27, 46, 0.85)';
-      ctx.strokeStyle = active ? PALETTE.CYAN : 'rgba(148, 163, 184, 0.35)';
-      ctx.lineWidth = active ? 2 : 1;
+      ctx.fillStyle = isSort
+        ? 'rgba(255, 215, 0, 0.14)'
+        : active
+        ? 'rgba(0, 240, 255, 0.18)'
+        : 'rgba(19, 27, 46, 0.85)';
+      ctx.strokeStyle = isSort
+        ? PALETTE.GOLD
+        : active
+        ? PALETTE.CYAN
+        : 'rgba(148, 163, 184, 0.35)';
+      ctx.lineWidth = active || isSort ? 2 : 1;
       if (active) {
         ctx.shadowColor = PALETTE.CYAN;
         ctx.shadowBlur = 10;
@@ -4648,8 +5935,8 @@ class MainMenu {
 
       this.renderer.drawText(tab.label, tab.x + tab.w / 2, tab.y + 19, {
         font: FONTS.HUD,
-        size: 12,
-        color: active ? PALETTE.CYAN : PALETTE.MUTED,
+        size: 11.5,
+        color: isSort ? PALETTE.GOLD : active ? PALETTE.CYAN : PALETTE.MUTED,
         align: 'center'
       });
     }
@@ -4665,7 +5952,7 @@ class MainMenu {
       const gapX = 16;
       const gapY = 16;
       const startX = (W - (cols * cardW + (cols - 1) * gapX)) / 2;
-      const startY = 104;
+      const startY = 102;
 
       list.forEach((game, idx) => {
         const col = idx % cols;
@@ -4675,7 +5962,10 @@ class MainMenu {
         this.cardRects.push({ x, y, w: cardW, h: cardH });
 
         const selected = idx === this.selectedIndex;
-        const hi = scores[game.id] || 0;
+        const rec = cloudPersistence.getRecord(game.id);
+        const rating = cloudPersistence.getEffectiveRating(game.id);
+        const hi = Math.max(scores[game.id] || 0, rec.highScore || 0);
+        const hasSave = !!SaveStateManager.getSlotMeta(game.id, 1);
 
         ctx.save();
         ctx.fillStyle = selected ? 'rgba(24, 36, 64, 0.96)' : 'rgba(15, 22, 38, 0.90)';
@@ -4689,25 +5979,33 @@ class MainMenu {
         ctx.strokeRect(x, y, cardW, cardH);
         ctx.restore();
 
-        // Top accent bar & Cabinet Number
+        // Top accent bar
         ctx.fillStyle = game.accent;
         ctx.fillRect(x, y, cardW, 4);
 
-        this.renderer.drawText(`0${idx + 1}`, x + 10, y + 22, {
-          font: FONTS.HEADER,
-          size: 10,
-          color: game.accent
-        });
+        // Star Rating + Favorite Heart + Save State Badge
+        const favIcon = rec.saved ? '♥ ' : '';
+        const saveIcon = hasSave ? ' 💾' : '';
+        this.renderer.drawText(
+          `${favIcon}★${rating.toFixed(1)}${saveIcon}`,
+          x + 8,
+          y + 21,
+          {
+            font: FONTS.HUD,
+            size: 11.5,
+            color: rec.saved ? PALETTE.PINK : PALETTE.GOLD
+          }
+        );
 
-        this.renderer.drawText(`HI: ${String(hi).padStart(6, '0')}`, x + cardW - 10, y + 21, {
+        this.renderer.drawText(`HI: ${String(hi).padStart(6, '0')}`, x + cardW - 8, y + 21, {
           font: FONTS.HUD,
-          size: 12,
+          size: 11.5,
           color: PALETTE.GOLD,
           align: 'right'
         });
 
         // Game Title
-        this.renderer.drawText(game.title.toUpperCase(), x + cardW / 2, y + 48, {
+        this.renderer.drawText(game.title.toUpperCase(), x + cardW / 2, y + 46, {
           font: FONTS.HEADER,
           size: 11,
           color: PALETTE.WHITE,
@@ -4717,25 +6015,25 @@ class MainMenu {
         });
 
         // Mechanics & Controls info
-        this.renderer.drawText(game.mechanics, x + cardW / 2, y + 76, {
+        this.renderer.drawText(game.mechanics, x + cardW / 2, y + 73, {
           font: FONTS.BODY,
-          size: 11,
+          size: 10.5,
           color: PALETTE.CYAN,
           align: 'center',
           bold: false
         });
 
-        this.renderer.drawText(game.controls, x + cardW / 2, y + 98, {
+        this.renderer.drawText(game.controls, x + cardW / 2, y + 95, {
           font: FONTS.BODY,
-          size: 10.5,
+          size: 10,
           color: PALETTE.MUTED,
           align: 'center',
           bold: false
         });
 
-        this.renderer.drawText(game.enhancements, x + cardW / 2, y + 118, {
+        this.renderer.drawText(game.enhancements, x + cardW / 2, y + 115, {
           font: FONTS.BODY,
-          size: 10,
+          size: 9.8,
           color: PALETTE.GREEN,
           align: 'center',
           bold: false
@@ -4744,13 +6042,13 @@ class MainMenu {
         // Launch button pill
         ctx.save();
         ctx.fillStyle = selected ? game.accent : 'rgba(255,255,255,0.07)';
-        ctx.fillRect(x + 28, y + 132, cardW - 56, 22);
+        ctx.fillRect(x + 24, y + 131, cardW - 48, 22);
         ctx.restore();
 
         this.renderer.drawText(
           selected ? '▶ INSERT COIN [Z/CLICK]' : 'SELECT CABINET',
           x + cardW / 2,
-          y + 147,
+          y + 146,
           {
             font: FONTS.HUD,
             size: 11,
@@ -4767,7 +6065,7 @@ class MainMenu {
       const gapX = 11;
       const gapY = 10;
       const startX = (W - (cols * cardW + (cols - 1) * gapX)) / 2;
-      const startY = 102;
+      const startY = 100;
 
       list.forEach((game, idx) => {
         const col = idx % cols;
@@ -4777,7 +6075,9 @@ class MainMenu {
         this.cardRects.push({ x, y, w: cardW, h: cardH });
 
         const selected = idx === this.selectedIndex;
-        const hi = scores[game.id] || 0;
+        const rec = cloudPersistence.getRecord(game.id);
+        const rating = cloudPersistence.getEffectiveRating(game.id);
+        const hi = Math.max(scores[game.id] || 0, rec.highScore || 0);
 
         ctx.save();
         ctx.fillStyle = selected ? 'rgba(24, 36, 64, 0.96)' : 'rgba(15, 22, 38, 0.90)';
@@ -4794,78 +6094,124 @@ class MainMenu {
         ctx.fillStyle = game.accent;
         ctx.fillRect(x, y, cardW, 3);
 
-        this.renderer.drawText(game.title.toUpperCase(), x + 8, y + 21, {
+        this.renderer.drawText(game.title.toUpperCase(), x + 7, y + 20, {
           font: FONTS.HEADER,
-          size: 9.5,
+          size: 8.8,
           color: selected ? game.accent : PALETTE.WHITE
         });
 
-        this.renderer.drawText(`HI:${hi}`, x + cardW - 8, y + 20, {
-          font: FONTS.HUD,
-          size: 10.5,
-          color: PALETTE.GOLD,
-          align: 'right'
-        });
+        this.renderer.drawText(
+          `${rec.saved ? '♥' : ''}★${rating.toFixed(1)} HI:${hi}`,
+          x + cardW - 6,
+          y + 19,
+          {
+            font: FONTS.HUD,
+            size: 9.8,
+            color: PALETTE.GOLD,
+            align: 'right'
+          }
+        );
 
-        this.renderer.drawText(game.mechanics, x + 8, y + 42, {
+        this.renderer.drawText(game.mechanics, x + 7, y + 41, {
           font: FONTS.BODY,
-          size: 10,
+          size: 9.5,
           color: PALETTE.MUTED,
           bold: false
         });
 
         this.renderer.drawText(
           selected ? '▶ PRESS Z / CLICK TO PLAY' : game.controls,
-          x + 8,
+          x + 7,
           y + 62,
           {
             font: FONTS.HUD,
-            size: 10,
+            size: 9.5,
             color: selected ? PALETTE.GREEN : PALETTE.CYAN
           }
         );
       });
     }
 
-    // Selected Game Inspector Footer Strip
+    // Selected Game Inspector Footer Strip (with Interactive 1-5 Star Rating & ♥ Bookmark)
     const activeGame = list[this.selectedIndex] || list[0];
+    this.inspectorStarRects = [];
+    this.inspectorFavRect = null;
+
     if (activeGame) {
+      const rec = cloudPersistence.getRecord(activeGame.id);
+      const effRating = cloudPersistence.getEffectiveRating(activeGame.id);
+      const userStars = rec.userRating || Math.round(effRating);
+
       ctx.save();
       ctx.fillStyle = 'rgba(19, 27, 46, 0.95)';
       ctx.strokeStyle = activeGame.accent;
       ctx.lineWidth = 1.5;
-      ctx.fillRect(22, 456, W - 44, 68);
-      ctx.strokeRect(22, 456, W - 44, 68);
+      ctx.fillRect(22, 454, W - 44, 72);
+      ctx.strokeRect(22, 454, W - 44, 72);
       ctx.restore();
 
-      this.renderer.drawText(
-        `SELECTED: ${activeGame.title.toUpperCase()}`,
-        38,
-        480,
-        {
-          font: FONTS.HEADER,
-          size: 12,
-          color: activeGame.accent,
-          glow: 8
-        }
-      );
+      this.renderer.drawText(`SELECTED: ${activeGame.title.toUpperCase()}`, 36, 478, {
+        font: FONTS.HEADER,
+        size: 11.5,
+        color: activeGame.accent,
+        glow: 8
+      });
+
+      // Interactive 1-5 Star Rating Widget in Inspector
+      this.renderer.drawText('RATE [1-5]:', 355, 478, {
+        font: FONTS.HUD,
+        size: 11.5,
+        color: PALETTE.MUTED
+      });
+
+      for (let s = 1; s <= 5; s++) {
+        const sx = 425 + (s - 1) * 20;
+        const sy = 463;
+        this.inspectorStarRects.push({ x: sx, y: sy, w: 19, h: 20 });
+        this.renderer.drawText(s <= userStars ? '★' : '☆', sx + 3, 479, {
+          font: FONTS.HUD,
+          size: 15,
+          color: s <= userStars ? PALETTE.GOLD : PALETTE.MUTED
+        });
+      }
+
+      // Interactive Favorite / Bookmark Pill
+      const favX = 538;
+      const favY = 463;
+      this.inspectorFavRect = { x: favX, y: favY, w: 86, h: 20 };
+      ctx.save();
+      ctx.fillStyle = rec.saved ? 'rgba(255, 0, 122, 0.25)' : 'rgba(255, 255, 255, 0.06)';
+      ctx.strokeStyle = rec.saved ? PALETTE.PINK : PALETTE.MUTED;
+      ctx.fillRect(favX, favY, 86, 20);
+      ctx.strokeRect(favX, favY, 86, 20);
+      ctx.restore();
+      this.renderer.drawText(rec.saved ? '♥ SAVED [F]' : '♡ SAVE [F]', favX + 43, 477, {
+        font: FONTS.HUD,
+        size: 10.5,
+        color: rec.saved ? PALETTE.PINK : PALETTE.WHITE,
+        align: 'center'
+      });
 
       this.renderer.drawText(
         `CONTROLS: ${activeGame.controls}   |   MODERN TECH: ${activeGame.enhancements}`,
-        38,
+        36,
         506,
         {
           font: FONTS.BODY,
-          size: 12,
+          size: 11.5,
           color: PALETTE.WHITE,
           bold: false
         }
       );
 
       this.renderer.drawText(
-        `♪ LOBBY BGM: ${this.audio && this.audio.getCurrentTrackTitle ? this.audio.getCurrentTrackTitle().toUpperCase() : 'NEON ARCADE LOBBY'}   |   [X/SHIFT] TAB   [Z/CLICK] LAUNCH`,
-        W - 38,
-        480,
+        `♪ BGM: ${
+          this.audio && this.audio.getCurrentTrackTitle
+            ? this.audio.getCurrentTrackTitle().toUpperCase()
+            : 'NEON ARCADE LOBBY'
+        }`,
+        W - 36,
+        478,
         {
           font: FONTS.HUD,
           size: 11.5,
@@ -4967,6 +6313,63 @@ const LEVEL_DESIGNS = [
     '....H....$...P...$....H.....',
     '########H#########H#########',
     '....$...H.........H...$.....',
+    '############################'
+  ],
+  // LEVEL 4: The Hanging Rope Labyrinth
+  [
+    '.............E..............',
+    '.$....G......E......G.....$.',
+    '###H########H=H########H####',
+    '...H--------H.H--------H....',
+    '...H...$....H.H....$...H....',
+    '...H.######.H.H.######.H....',
+    '...H------..H.H..------H....',
+    '######H.....H.H.....H#######',
+    '......H..$..H.H..$..H.......',
+    '..G...H.####===####.H...G...',
+    '####H##.............##H#####',
+    '....H---....$P$....---H.....',
+    '....H...###########...H.....',
+    '########H.........H#########',
+    '....$...H....$....H...$.....',
+    '############################'
+  ],
+  // LEVEL 5: Twin Pyramid Catacombs
+  [
+    '..................E.........',
+    '......$...........E...$.....',
+    '....#####H#######H#####.....',
+    '....H....H.......H....H.....',
+    '..$.H.G..H---.---H..G.H.$...',
+    '###H####H#.......#H####H####',
+    '...H....H...$.$...H....H....',
+    '...H....H.#######.H....H....',
+    '...H----H....G....H----H....',
+    '#######H###########H########',
+    '.......H...........H........',
+    '..$....H---..P..---H....$...',
+    '####H###...#####...###H#####',
+    '....H...$..#...#..$...H.....',
+    '....H......#...#......H.....',
+    '############################'
+  ],
+  // LEVEL 6: Fortress of Solid Gold
+  [
+    '.............E..............',
+    '.$...G.......E.......G....$.',
+    '###H#####H#######H#####H####',
+    '...H.....H---.---H.....H....',
+    '...H..$..H.......H..$..H....',
+    '######H##====H====##H#######',
+    '......H......H......H.......',
+    '..$...H--..--H--..--H...$...',
+    '###H###......H......###H####',
+    '...H....$....G....$....H....',
+    '...H..######H.H######..H....',
+    '...H........H.H........H....',
+    '...H..$.....HPH.....$..H....',
+    '########H#########H#########',
+    '....$...H....$....H...$.....',
     '############################'
   ]
 ];
@@ -7996,103 +9399,121 @@ class DonkeyKong {
   }
 
   _buildStageGeometry() {
-    // 6 inclined steel girder tiers (0 = bottom, 5 = Kong top girder) + tier 6 (Pauline's platform)
-    // Each girder has a physical slope between (xMin, yLeft) and (xMax, yRight).
-    this.girders = [
-      {
-        tier: 0,
-        xMin: 110,
-        xMax: 850,
-        yLeft: 514,
-        yRight: 492,
-        rollDir: -1, // Barrels roll left toward flaming oil drum
-        thickness: 12
-      },
-      {
-        tier: 1,
-        xMin: 110,
-        xMax: 805,
-        yLeft: 418,
-        yRight: 440,
-        rollDir: 1, // Barrels roll right
-        thickness: 12
-      },
-      {
-        tier: 2,
-        xMin: 155,
-        xMax: 850,
-        yLeft: 368,
-        yRight: 346,
-        rollDir: -1, // Barrels roll left
-        thickness: 12
-      },
-      {
-        tier: 3,
-        xMin: 110,
-        xMax: 805,
-        yLeft: 274,
-        yRight: 296,
-        rollDir: 1, // Barrels roll right
-        thickness: 12
-      },
-      {
-        tier: 4,
-        xMin: 155,
-        xMax: 850,
-        yLeft: 224,
-        yRight: 202,
-        rollDir: -1, // Barrels roll left
-        thickness: 12
-      },
-      {
-        tier: 5,
-        xMin: 110,
-        xMax: 805,
-        yLeft: 132,
-        yRight: 150,
-        rollDir: 1, // Kong stands on left; barrels roll right
-        thickness: 12
-      },
-      {
-        tier: 6,
-        xMin: 360,
-        xMax: 575,
-        yLeft: 84,
-        yRight: 84,
-        rollDir: 0, // Pauline's rescue platform
-        thickness: 10
-      }
-    ];
+    const variant = (this.level - 1) % 4;
+    this.stageNames = ['25M GIRDERS', '50M CONVEYOR', '75M ELEVATOR', '100M RIVET TOWER'];
+    this.stageSubtitle = this.stageNames[variant];
 
-    // Working ladders (broken: false) and broken ladders (broken: true).
-    // Barrels can roll down ANY ladder at a 30% rate; player can only climb unbroken ladders.
-    this.ladders = [
-      // Tier 0 -> Tier 1
-      { id: 'L0_A', fromTier: 0, toTier: 1, x: 350, broken: true },
-      { id: 'L0_B', fromTier: 0, toTier: 1, x: 755, broken: false },
-
-      // Tier 1 -> Tier 2
-      { id: 'L1_A', fromTier: 1, toTier: 2, x: 215, broken: false },
-      { id: 'L1_B', fromTier: 1, toTier: 2, x: 470, broken: false },
-      { id: 'L1_C', fromTier: 1, toTier: 2, x: 650, broken: true },
-
-      // Tier 2 -> Tier 3
-      { id: 'L2_A', fromTier: 2, toTier: 3, x: 320, broken: true },
-      { id: 'L2_B', fromTier: 2, toTier: 3, x: 540, broken: false },
-      { id: 'L2_C', fromTier: 2, toTier: 3, x: 755, broken: false },
-
-      // Tier 3 -> Tier 4
-      { id: 'L3_A', fromTier: 3, toTier: 4, x: 215, broken: false },
-      { id: 'L3_B', fromTier: 3, toTier: 4, x: 410, broken: false },
-      { id: 'L3_C', fromTier: 3, toTier: 4, x: 675, broken: true },
-
-      // Tier 4 -> Tier 5
-      { id: 'L4_A', fromTier: 4, toTier: 5, x: 495, broken: true },
-      { id: 'L4_B', fromTier: 4, toTier: 5, x: 755, broken: false },
-
-      // Tier 5 -> Tier 6 (Pauline victory ladder)
-      { id: 'L5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
-    ];
+    if (variant === 0) {
+      // STAGE 1 (25m): Classic 6 inclined steel girder tiers
+      this.girders = [
+        { tier: 0, xMin: 110, xMax: 850, yLeft: 514, yRight: 492, rollDir: -1, thickness: 12 },
+        { tier: 1, xMin: 110, xMax: 805, yLeft: 418, yRight: 440, rollDir: 1, thickness: 12 },
+        { tier: 2, xMin: 155, xMax: 850, yLeft: 368, yRight: 346, rollDir: -1, thickness: 12 },
+        { tier: 3, xMin: 110, xMax: 805, yLeft: 274, yRight: 296, rollDir: 1, thickness: 12 },
+        { tier: 4, xMin: 155, xMax: 850, yLeft: 224, yRight: 202, rollDir: -1, thickness: 12 },
+        { tier: 5, xMin: 110, xMax: 805, yLeft: 132, yRight: 150, rollDir: 1, thickness: 12 },
+        { tier: 6, xMin: 360, xMax: 575, yLeft: 84, yRight: 84, rollDir: 0, thickness: 10 }
+      ];
+      this.ladders = [
+        { id: 'L0_A', fromTier: 0, toTier: 1, x: 350, broken: true },
+        { id: 'L0_B', fromTier: 0, toTier: 1, x: 755, broken: false },
+        { id: 'L1_A', fromTier: 1, toTier: 2, x: 215, broken: false },
+        { id: 'L1_B', fromTier: 1, toTier: 2, x: 470, broken: false },
+        { id: 'L1_C', fromTier: 1, toTier: 2, x: 650, broken: true },
+        { id: 'L2_A', fromTier: 2, toTier: 3, x: 320, broken: true },
+        { id: 'L2_B', fromTier: 2, toTier: 3, x: 540, broken: false },
+        { id: 'L2_C', fromTier: 2, toTier: 3, x: 755, broken: false },
+        { id: 'L3_A', fromTier: 3, toTier: 4, x: 215, broken: false },
+        { id: 'L3_B', fromTier: 3, toTier: 4, x: 410, broken: false },
+        { id: 'L3_C', fromTier: 3, toTier: 4, x: 675, broken: true },
+        { id: 'L4_A', fromTier: 4, toTier: 5, x: 495, broken: true },
+        { id: 'L4_B', fromTier: 4, toTier: 5, x: 755, broken: false },
+        { id: 'L5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
+      ];
+    } else if (variant === 1) {
+      // STAGE 2 (50m): Conveyor / Cement Factory — flatter, wide symmetrical tiers with twin side & center ladders
+      this.girders = [
+        { tier: 0, xMin: 110, xMax: 850, yLeft: 510, yRight: 504, rollDir: -1, thickness: 12 },
+        { tier: 1, xMin: 120, xMax: 840, yLeft: 424, yRight: 432, rollDir: 1, thickness: 12 },
+        { tier: 2, xMin: 140, xMax: 820, yLeft: 354, yRight: 346, rollDir: -1, thickness: 12 },
+        { tier: 3, xMin: 120, xMax: 840, yLeft: 274, yRight: 282, rollDir: 1, thickness: 12 },
+        { tier: 4, xMin: 140, xMax: 820, yLeft: 206, yRight: 198, rollDir: -1, thickness: 12 },
+        { tier: 5, xMin: 110, xMax: 830, yLeft: 134, yRight: 144, rollDir: 1, thickness: 12 },
+        { tier: 6, xMin: 360, xMax: 575, yLeft: 84, yRight: 84, rollDir: 0, thickness: 10 }
+      ];
+      this.ladders = [
+        { id: 'L0_A', fromTier: 0, toTier: 1, x: 185, broken: false },
+        { id: 'L0_B', fromTier: 0, toTier: 1, x: 480, broken: true },
+        { id: 'L0_C', fromTier: 0, toTier: 1, x: 775, broken: false },
+        { id: 'L1_A', fromTier: 1, toTier: 2, x: 290, broken: false },
+        { id: 'L1_B', fromTier: 1, toTier: 2, x: 670, broken: false },
+        { id: 'L2_A', fromTier: 2, toTier: 3, x: 185, broken: false },
+        { id: 'L2_B', fromTier: 2, toTier: 3, x: 480, broken: false },
+        { id: 'L2_C', fromTier: 2, toTier: 3, x: 775, broken: false },
+        { id: 'L3_A', fromTier: 3, toTier: 4, x: 290, broken: false },
+        { id: 'L3_B', fromTier: 3, toTier: 4, x: 480, broken: true },
+        { id: 'L3_C', fromTier: 3, toTier: 4, x: 670, broken: false },
+        { id: 'L4_A', fromTier: 4, toTier: 5, x: 220, broken: false },
+        { id: 'L4_B', fromTier: 4, toTier: 5, x: 740, broken: false },
+        { id: 'L5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
+      ];
+    } else if (variant === 2) {
+      // STAGE 3 (75m): Springs & Stepped Promenade — steeper alternating switchbacks
+      this.girders = [
+        { tier: 0, xMin: 110, xMax: 850, yLeft: 516, yRight: 488, rollDir: -1, thickness: 12 },
+        { tier: 1, xMin: 130, xMax: 820, yLeft: 412, yRight: 442, rollDir: 1, thickness: 12 },
+        { tier: 2, xMin: 140, xMax: 850, yLeft: 368, yRight: 338, rollDir: -1, thickness: 12 },
+        { tier: 3, xMin: 110, xMax: 810, yLeft: 268, yRight: 298, rollDir: 1, thickness: 12 },
+        { tier: 4, xMin: 140, xMax: 850, yLeft: 224, yRight: 196, rollDir: -1, thickness: 12 },
+        { tier: 5, xMin: 110, xMax: 810, yLeft: 130, yRight: 152, rollDir: 1, thickness: 12 },
+        { tier: 6, xMin: 360, xMax: 575, yLeft: 84, yRight: 84, rollDir: 0, thickness: 10 }
+      ];
+      this.ladders = [
+        { id: 'L0_A', fromTier: 0, toTier: 1, x: 260, broken: false },
+        { id: 'L0_B', fromTier: 0, toTier: 1, x: 580, broken: true },
+        { id: 'L0_C', fromTier: 0, toTier: 1, x: 780, broken: false },
+        { id: 'L1_A', fromTier: 1, toTier: 2, x: 190, broken: false },
+        { id: 'L1_B', fromTier: 1, toTier: 2, x: 420, broken: true },
+        { id: 'L1_C', fromTier: 1, toTier: 2, x: 690, broken: false },
+        { id: 'L2_A', fromTier: 2, toTier: 3, x: 260, broken: false },
+        { id: 'L2_B', fromTier: 2, toTier: 3, x: 510, broken: false },
+        { id: 'L2_C', fromTier: 2, toTier: 3, x: 760, broken: true },
+        { id: 'L3_A', fromTier: 3, toTier: 4, x: 190, broken: false },
+        { id: 'L3_B', fromTier: 3, toTier: 4, x: 460, broken: false },
+        { id: 'L3_C', fromTier: 3, toTier: 4, x: 720, broken: false },
+        { id: 'L4_A', fromTier: 4, toTier: 5, x: 350, broken: true },
+        { id: 'L4_B', fromTier: 4, toTier: 5, x: 760, broken: false },
+        { id: 'L5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
+      ];
+    } else {
+      // STAGE 4 (100m): Rivet Tower — pyramid-narrowing steel tiers with outer & inner ladder shafts
+      this.girders = [
+        { tier: 0, xMin: 100, xMax: 860, yLeft: 512, yRight: 500, rollDir: -1, thickness: 12 },
+        { tier: 1, xMin: 125, xMax: 835, yLeft: 424, yRight: 436, rollDir: 1, thickness: 12 },
+        { tier: 2, xMin: 150, xMax: 810, yLeft: 356, yRight: 344, rollDir: -1, thickness: 12 },
+        { tier: 3, xMin: 175, xMax: 785, yLeft: 276, yRight: 288, rollDir: 1, thickness: 12 },
+        { tier: 4, xMin: 200, xMax: 760, yLeft: 212, yRight: 200, rollDir: -1, thickness: 12 },
+        { tier: 5, xMin: 160, xMax: 800, yLeft: 134, yRight: 146, rollDir: 1, thickness: 12 },
+        { tier: 6, xMin: 360, xMax: 575, yLeft: 84, yRight: 84, rollDir: 0, thickness: 10 }
+      ];
+      this.ladders = [
+        { id: 'L0_A', fromTier: 0, toTier: 1, x: 165, broken: false },
+        { id: 'L0_B', fromTier: 0, toTier: 1, x: 480, broken: false },
+        { id: 'L0_C', fromTier: 0, toTier: 1, x: 795, broken: false },
+        { id: 'L1_A', fromTier: 1, toTier: 2, x: 210, broken: false },
+        { id: 'L1_B', fromTier: 1, toTier: 2, x: 480, broken: true },
+        { id: 'L1_C', fromTier: 1, toTier: 2, x: 750, broken: false },
+        { id: 'L2_A', fromTier: 2, toTier: 3, x: 245, broken: false },
+        { id: 'L2_B', fromTier: 2, toTier: 3, x: 480, broken: false },
+        { id: 'L2_C', fromTier: 2, toTier: 3, x: 715, broken: false },
+        { id: 'L3_A', fromTier: 3, toTier: 4, x: 275, broken: false },
+        { id: 'L3_B', fromTier: 3, toTier: 4, x: 480, broken: true },
+        { id: 'L3_C', fromTier: 3, toTier: 4, x: 685, broken: false },
+        { id: 'L4_A', fromTier: 4, toTier: 5, x: 310, broken: false },
+        { id: 'L4_B', fromTier: 4, toTier: 5, x: 650, broken: false },
+        { id: 'L5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
+      ];
+    }
   }
 
   /**
@@ -10440,6 +11861,58 @@ const MAZE_TEMPLATES = [
     '#.#..#.#####.#.#####.#..#.#',
     '#o#..#.......#.......#..#o#',
     '#.##########.#.##########.#',
+    '#...........................#',
+    '#############################',
+    '                             '
+  ],
+  // Maze 2: Ms. Pac-Man Stage 2 Emerald Cross-Corridor Layout
+  [
+    '#############################',
+    '#.............#.............#',
+    '#o###.#######.#.#######.###o#',
+    '#.#.#...................#.#.#',
+    '#.#.#.#####.#####.#####.#.#.#',
+    '#.....#.......#.......#.....#',
+    '#####.#.##### # #####.#.#####',
+    '     .  #           #  .     ',
+    '#####.#.# ######### #.#.#####',
+    '#.....#.# ####-#### #.#.....#',
+    '#.###.#.  #       #  .#.###.#',
+    '#.....#.# ######### #.#.....#',
+    '#####.#.#           #.#.#####',
+    '     .  #.#########.#  .     ',
+    '#####.#.......#.......#.#####',
+    '#.....#######.#.#######.....#',
+    '#.###......... .........###.#',
+    '#o..#.#######.#.#######.#..o#',
+    '###.#.#.......#.......#.#.###',
+    '#.....#.#####.#.#####.#.....#',
+    '#...........................#',
+    '#############################',
+    '                             '
+  ],
+  // Maze 3: Championship Stage 3 Twin-Warp Labyrinth
+  [
+    '#############################',
+    '#o....#...............#....o#',
+    '#.###.#.#####.#.#####.#.###.#',
+    '#.###.#.#####.#.#####.#.###.#',
+    '#...........................#',
+    '###.###.#####.#.#####.###.###',
+    '   .#.........#.........#.   ',
+    '#####.####### # #######.#####',
+    '#.....#               #.....#',
+    '#.###.#.  ####-####  .#.###.#',
+    '     .    #       #    .     ',
+    '#.###.#.  #########  .#.###.#',
+    '#.....#               #.....#',
+    '#####.#.#############.#.#####',
+    '   .#.#.......#.......#.#.   ',
+    '###.#.#######.#.#######.#.###',
+    '#o............ ............o#',
+    '#.#####.#####.#.#####.#####.#',
+    '#.....#.......#.......#.....#',
+    '#####.#.#####.#.#####.#.#####',
     '#...........................#',
     '#############################',
     '                             '
@@ -17689,20 +19162,24 @@ class Arkanoid {
       PALETTE.PINK,
       PALETTE.PURPLE
     ];
-    const rows = Math.min(8, 5 + level);
+    const variant = (level - 1) % 6;
+    const rows = Math.min(8, 6 + Math.floor((level - 1) / 2));
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < BRICK_COLS; c++) {
-        // Architectural patterns per level
-        if (level % 3 === 2 && (c === 5 || c === 6) && r > 1 && r < rows - 1) continue;
-        if (level % 3 === 0 && (r + c) % 5 === 0) continue;
+        // 6 distinct classic Arkanoid architectural formations
+        if (variant === 1 && (c === 5 || c === 6) && r > 0 && r < rows - 1) continue; // Twin Towers
+        if (variant === 2 && Math.abs(c - 5.5) > r + 1.5) continue; // Pyramid Fortress
+        if (variant === 3 && (r + c) % 3 === 1 && r > 0 && r < rows - 1) continue; // Lattice Matrix
+        if (variant === 4 && Math.abs(c - 5.5) + Math.abs(r - 3) > 5.5) continue; // Diamond Prism
+        if (variant === 5 && (c === 2 || c === 9) && r < rows - 1) continue; // Citadel Channels
 
         let type = 'NORMAL';
         let hp = 1;
-        let color = rowColors[r % rowColors.length];
-        let pts = (rows - r) * 15 + 40;
+        let color = rowColors[(r + variant) % rowColors.length];
+        let pts = (rows - r) * 15 + 50;
 
-        if (r === 0 && (c % 3 === 1)) {
+        if ((r === 0 && c % 3 === 1) || (variant >= 3 && r === 2 && (c === 3 || c === 8))) {
           type = 'GOLD';
           hp = 3;
           color = PALETTE.GOLD;
@@ -26445,6 +27922,24 @@ const LEVEL_LAYOUTS = [
     { x: 290, y: 335, w: 560 },
     { x: 110, y: 240, w: 560 },
     { x: 290, y: 145, w: 420 }
+  ],
+  // Level 5: Diamond Sanctum
+  [
+    { x: 320, y: 425, w: 320 },
+    { x: 140, y: 330, w: 240 },
+    { x: 580, y: 330, w: 240 },
+    { x: 260, y: 235, w: 440 },
+    { x: 350, y: 145, w: 260 }
+  ],
+  // Level 6: Grand Spiral Catwalk
+  [
+    { x: 90, y: 425, w: 230 },
+    { x: 365, y: 425, w: 230 },
+    { x: 640, y: 425, w: 230 },
+    { x: 150, y: 325, w: 660 },
+    { x: 90, y: 225, w: 280 },
+    { x: 590, y: 225, w: 280 },
+    { x: 290, y: 135, w: 380 }
   ]
 ];
 
@@ -31354,8 +32849,10 @@ return Contra;
  * main.js
  * Entry point and Studio Orchestrator for Retro Arcade Studio.
  * Manages the 60 FPS WebGL/Canvas render loop, clean game lifecycle switching,
- * unified input & audio initialization, and studio deck controls.
+ * unified input & audio initialization, Firebase cloud persistence, emulator save states,
+ * rewind time-machine buffer, DIP switches, and studio deck controls.
  */
+
 
 
 
@@ -31406,8 +32903,9 @@ class RetroArcadeStudio {
     this.displayCanvas = document.getElementById('arcade-canvas');
     this.viewportEl = document.getElementById('arcade-viewport');
 
-    // Initialize localStorage high score defaults immediately
+    // Initialize localStorage & Firebase Cloud high score defaults immediately
     HighScoreStore.loadAll();
+    CloudPersistence.init();
 
     this.audio = new AudioSynth();
     this.wasm = wasmCore;
@@ -31446,10 +32944,46 @@ class RetroArcadeStudio {
     this._fpsFrames = 0;
     this._fpsAccum = 0;
 
+    // Emulator features state
+    this.speedMultiplier = 1.0;
+    this._speedOptions = [1.0, 1.5, 2.0, 0.5];
+    this._speedIdx = 0;
+
+    this._rewindBuffer = [];
+    this._rewindSampleAccum = 0;
+    this._rewindMaxFrames = 120; // 6 seconds at 20Hz snapshot rate
+    this._rewindButtonHeld = false;
+
+    // Attract mode state
+    this.attractActive = false;
+    this.attractTimer = 0;
+    this.lobbyIdleTimer = 0;
+
+    // 3-Initials high score entry state
+    this._initialsCursor = 0;
+
+    CloudPersistence.onUpdate(() => {
+      this._syncFavoriteButton();
+    });
+
     this._initStudioDeckUI();
     this._applyQueryParams();
     this.renderer.resizeViewport();
     this._startLoop();
+  }
+
+  _tryUnlockAchievement(id) {
+    const ach = AchievementManager.unlock(id);
+    if (ach) {
+      this.renderer.pushToast({
+        icon: ach.icon,
+        title: `ACHIEVEMENT: ${ach.title}`,
+        desc: ach.desc,
+        color: '#FFD700',
+        timer: 3.4
+      });
+      this.audio.playStageClear();
+    }
   }
 
   setDeviceMode(mode) {
@@ -31473,9 +33007,18 @@ class RetroArcadeStudio {
     const btnTouch = document.getElementById('btn-toggle-touch');
     if (btnTouch && this.input.touchControls) {
       const vis = this.input.touchControls.isVisible();
-      btnTouch.textContent = `TOUCH PAD: ${vis ? 'ON' : 'AUTO'}`;
+      btnTouch.textContent = `TOUCH: ${vis ? 'ON' : 'AUTO'}`;
       btnTouch.classList.toggle('active', vis);
     }
+  }
+
+  _syncFavoriteButton() {
+    const btnFav = document.getElementById('btn-fav-game');
+    if (!btnFav) return;
+    const targetId = this.activeGameId || (this.mainMenu && GAME_CATALOG[this.mainMenu.selectedIndex]?.id);
+    const isFav = targetId ? CloudPersistence.isFavorite(targetId) : false;
+    btnFav.textContent = isFav ? '♥ SAVED' : '♡ FAV';
+    btnFav.classList.toggle('active', isFav);
   }
 
   _applyQueryParams() {
@@ -31497,6 +33040,161 @@ class RetroArcadeStudio {
     }
   }
 
+  saveCurrentState() {
+    if (!this.activeGame || !this.activeGameId) {
+      this.renderer.pushToast({
+        icon: '💾',
+        title: 'LAUNCH A CABINET FIRST',
+        desc: 'Select any arcade game to capture an instant save state.',
+        color: '#00F0FF',
+        timer: 2.2
+      });
+      return false;
+    }
+    const ok = SaveStateManager.save(this.activeGameId, this.activeGame);
+    if (ok) {
+      this.audio.playCoin();
+      this.renderer.pushToast({
+        icon: '💾',
+        title: `STATE SAVED — ${this.activeGame.title.toUpperCase()}`,
+        desc: `Score ${this.activeGame.score || 0} • Press [F8] or LOAD anytime to restore`,
+        color: '#00FF66',
+        timer: 2.6
+      });
+      this._tryUnlockAchievement('SAVE_MASTER');
+    }
+    return ok;
+  }
+
+  loadCurrentState() {
+    const targetId = this.activeGameId || (this.mainMenu && GAME_CATALOG[this.mainMenu.selectedIndex]?.id);
+    if (!targetId) return false;
+    if (!SaveStateManager.hasSave(targetId)) {
+      this.renderer.pushToast({
+        icon: '📂',
+        title: 'NO SAVE STATE FOUND',
+        desc: 'Press [F5] or SAVE during gameplay to create a snapshot first.',
+        color: '#FF007A',
+        timer: 2.4
+      });
+      return false;
+    }
+    if (this.activeGameId !== targetId) {
+      this.launchGame(targetId, { skipAttract: true });
+    }
+    const ok = SaveStateManager.load(this.activeGameId, this.activeGame);
+    if (ok) {
+      this.audio.playPowerUp();
+      this.renderer.pushToast({
+        icon: '📂',
+        title: `STATE RESTORED — ${this.activeGame.title.toUpperCase()}`,
+        desc: `Resumed at Score ${this.activeGame.score || 0}`,
+        color: '#00F0FF',
+        timer: 2.4
+      });
+    }
+    return ok;
+  }
+
+  captureScreenshot() {
+    this.audio.init();
+    this.audio.playCoin();
+    this.renderer.triggerShutterFlash();
+    this._tryUnlockAchievement('SHUTTERBUG');
+    try {
+      const dataUrl = this.displayCanvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      const slug = this.activeGameId || 'studio-lobby';
+      const score = this.activeGame ? this.activeGame.score || 0 : 0;
+      a.href = dataUrl;
+      a.download = `retro-arcade-${slug}-${score}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      this.renderer.pushToast({
+        icon: '📸',
+        title: 'ARCADE SNAP SAVED',
+        desc: `Captured ${slug.toUpperCase()} frame to PNG`,
+        color: '#00F0FF',
+        timer: 2.5
+      });
+    } catch (_) {}
+  }
+
+  toggleAttractMode(forceState) {
+    this.attractActive = typeof forceState === 'boolean' ? forceState : !this.attractActive;
+    const btnAttract = document.getElementById('btn-attract');
+    if (btnAttract) {
+      btnAttract.classList.toggle('active', this.attractActive);
+      btnAttract.textContent = this.attractActive ? '🎬 ATTRACT: ON' : '🎬 ATTRACT';
+    }
+    if (this.attractActive) {
+      this.attractTimer = 0;
+      this._launchNextAttractGame();
+    } else {
+      this.input.clearAttractInput();
+      this.renderer.attractOverlay = { active: false, title: '', timer: 0 };
+    }
+  }
+
+  _launchNextAttractGame() {
+    const idx = Math.floor(Math.random() * GAME_CATALOG.length);
+    const meta = GAME_CATALOG[idx];
+    if (meta) {
+      this.launchGame(meta.id, { fromAttract: true });
+    }
+  }
+
+  _updateAttractAI(nowSec) {
+    if (!this.attractActive || !this.activeGame) {
+      this.input.clearAttractInput();
+      this.renderer.attractOverlay = { active: false, title: '', timer: 0 };
+      return;
+    }
+
+    // Any real user input immediately hands control over to the player!
+    if (
+      this.input.keysDown.size > 0 ||
+      this.input.pointer.justPressed ||
+      (this.input.touchControls &&
+        (this.input.touchControls.state.left ||
+          this.input.touchControls.state.right ||
+          this.input.touchControls.state.up ||
+          this.input.touchControls.state.down ||
+          this.input.touchControls.state.actionA ||
+          this.input.touchControls.state.actionB))
+    ) {
+      this.toggleAttractMode(false);
+      this.renderer.pushToast({
+        icon: '🕹️',
+        title: 'PLAYER 1 TOOK CONTROL',
+        desc: `Live control active in ${this.activeGame.title}`,
+        color: '#00FF66',
+        timer: 2.2
+      });
+      return;
+    }
+
+    const wave = Math.sin(nowSec * 2.1);
+    const wave2 = Math.cos(nowSec * 1.4);
+    const pulseA = Math.sin(nowSec * 9.5) > 0.55;
+    const pulseB = Math.sin(nowSec * 3.7) > 0.82;
+    this.input.setAttractInput({
+      left: wave < -0.35,
+      right: wave > 0.35,
+      up: wave2 > 0.45,
+      down: wave2 < -0.45,
+      actionA: pulseA,
+      actionB: pulseB
+    });
+
+    this.renderer.attractOverlay = {
+      active: true,
+      title: this.activeGame.title,
+      timer: Math.max(0, 18 - this.attractTimer)
+    };
+  }
+
   _initStudioDeckUI() {
     const quickBar = document.getElementById('cabinet-quick-bar');
     if (quickBar) {
@@ -31511,6 +33209,7 @@ class RetroArcadeStudio {
       lobbyBtn.addEventListener('click', () => {
         this.audio.init();
         this.audio.playMenuSelect();
+        this.toggleAttractMode(false);
         this.returnToLobby();
       });
       quickBar.appendChild(lobbyBtn);
@@ -31526,6 +33225,7 @@ class RetroArcadeStudio {
         btn.addEventListener('click', () => {
           this.audio.init();
           this.audio.playMenuSelect();
+          this.toggleAttractMode(false);
           this.launchGame(meta.id);
         });
         quickBar.appendChild(btn);
@@ -31538,7 +33238,124 @@ class RetroArcadeStudio {
       btnLobby.addEventListener('click', () => {
         this.audio.init();
         this.audio.playMenuSelect();
+        this.toggleAttractMode(false);
         this.returnToLobby();
+      });
+    }
+
+    const btnSave = document.getElementById('btn-save-state');
+    if (btnSave) {
+      btnSave.addEventListener('click', () => {
+        this.audio.init();
+        this.saveCurrentState();
+      });
+    }
+
+    const btnLoad = document.getElementById('btn-load-state');
+    if (btnLoad) {
+      btnLoad.addEventListener('click', () => {
+        this.audio.init();
+        this.loadCurrentState();
+      });
+    }
+
+    const btnRewind = document.getElementById('btn-rewind');
+    if (btnRewind) {
+      const startRewind = (e) => {
+        e.preventDefault();
+        this._rewindButtonHeld = true;
+        btnRewind.classList.add('active');
+      };
+      const stopRewind = () => {
+        this._rewindButtonHeld = false;
+        btnRewind.classList.remove('active');
+      };
+      btnRewind.addEventListener('pointerdown', startRewind);
+      window.addEventListener('pointerup', stopRewind);
+      btnRewind.addEventListener('mouseleave', stopRewind);
+    }
+
+    const btnSpeed = document.getElementById('btn-speed');
+    if (btnSpeed) {
+      btnSpeed.addEventListener('click', () => {
+        this.audio.init();
+        this.audio.playMenuMove();
+        this._speedIdx = (this._speedIdx + 1) % this._speedOptions.length;
+        this.speedMultiplier = this._speedOptions[this._speedIdx];
+        btnSpeed.textContent = `⚡ ${this.speedMultiplier}x`;
+        btnSpeed.classList.toggle('active', this.speedMultiplier !== 1.0);
+      });
+    }
+
+    const btnTurbo = document.getElementById('btn-turbo');
+    if (btnTurbo) {
+      btnTurbo.addEventListener('click', () => {
+        this.audio.init();
+        this.audio.playMenuMove();
+        const on = this.input.toggleTurbo();
+        btnTurbo.textContent = `🔥 TURBO: ${on ? 'ON' : 'OFF'}`;
+        btnTurbo.classList.toggle('active', on);
+      });
+    }
+
+    const btnDip = document.getElementById('btn-dip');
+    if (btnDip) {
+      const currentDip = DipSwitchStore.getPreset();
+      btnDip.textContent = `⚙ DIP: ${currentDip.label.split(' ')[0]}`;
+      btnDip.title = `DIP Switches: ${currentDip.label} (${currentDip.lives} Lives, ${currentDip.difficultyName})`;
+      btnDip.addEventListener('click', () => {
+        this.audio.init();
+        this.audio.playMenuSelect();
+        const nextDip = DipSwitchStore.cyclePreset();
+        btnDip.textContent = `⚙ DIP: ${nextDip.label.split(' ')[0]}`;
+        btnDip.title = `DIP Switches: ${nextDip.label} (${nextDip.lives} Lives, ${nextDip.difficultyName})`;
+        if (this.activeGame) {
+          this.activeGame.lives = nextDip.lives;
+        }
+        this.renderer.pushToast({
+          icon: '⚙️',
+          title: `DIP SWITCH: ${nextDip.label}`,
+          desc: `Starting Lives: ${nextDip.lives} • Difficulty: ${nextDip.difficultyName}`,
+          color: '#FFD700',
+          timer: 2.4
+        });
+      });
+    }
+
+    const btnFav = document.getElementById('btn-fav-game');
+    if (btnFav) {
+      btnFav.addEventListener('click', () => {
+        this.audio.init();
+        this.audio.playCoin();
+        const targetId = this.activeGameId || (this.mainMenu && GAME_CATALOG[this.mainMenu.selectedIndex]?.id);
+        if (targetId) {
+          const isFav = CloudPersistence.toggleFavorite(targetId);
+          this._syncFavoriteButton();
+          const meta = GAME_CATALOG.find((g) => g.id === targetId);
+          this.renderer.pushToast({
+            icon: isFav ? '♥' : '♡',
+            title: isFav ? `SAVED TO FAVORITES` : `REMOVED FROM FAVORITES`,
+            desc: meta ? meta.title : targetId.toUpperCase(),
+            color: '#FF007A',
+            timer: 2.1
+          });
+        }
+      });
+    }
+
+    const btnSnap = document.getElementById('btn-snap');
+    if (btnSnap) {
+      btnSnap.addEventListener('click', () => {
+        this.captureScreenshot();
+      });
+    }
+
+    const btnAttract = document.getElementById('btn-attract');
+    if (btnAttract) {
+      btnAttract.addEventListener('click', () => {
+        this.audio.init();
+        this.audio.playMenuSelect();
+        this.toggleAttractMode();
       });
     }
 
@@ -31564,6 +33381,10 @@ class RetroArcadeStudio {
         if (this.activeGame && typeof this.activeGame.reset === 'function') {
           this.audio.playMenuSelect();
           this.activeGame.reset();
+          const dip = DipSwitchStore.getPreset();
+          if (typeof this.activeGame.lives === 'number') {
+            this.activeGame.lives = dip.lives;
+          }
           this.activeGame.setState('PLAYING');
           this._syncHeaderStatus();
         }
@@ -31573,9 +33394,9 @@ class RetroArcadeStudio {
     const btnCrt = document.getElementById('btn-toggle-crt');
     if (btnCrt) {
       btnCrt.addEventListener('click', () => {
-        const on = this.renderer.crt.toggle();
-        btnCrt.textContent = `CRT SHADER: ${on ? 'ON' : 'OFF'}`;
-        btnCrt.classList.toggle('active', on);
+        const preset = this.renderer.crt.cyclePreset();
+        btnCrt.textContent = `CRT: ${preset.label}`;
+        btnCrt.classList.toggle('active', preset.enabled);
       });
     }
 
@@ -31618,41 +33439,74 @@ class RetroArcadeStudio {
       btnAudio.addEventListener('click', () => {
         this.audio.init();
         const muted = this.audio.toggleMute();
-        btnAudio.textContent = `AUDIO: ${muted ? 'MUTED' : 'SYNTH ON'}`;
+        btnAudio.textContent = `AUDIO: ${muted ? 'MUTED' : 'ON'}`;
         btnAudio.classList.toggle('active', !muted);
       });
     }
+
+    this._syncFavoriteButton();
   }
 
   /**
    * Cleanly switches to any of the 28 games, resetting memory, timers, and input state
    */
-  launchGame(gameId) {
+  launchGame(gameId, opts = {}) {
     const id = String(gameId || '').toLowerCase();
     const GameClass = GAME_REGISTRY[id];
     if (!GameClass) return false;
 
+    if (!opts.fromAttract && this.attractActive) {
+      this.toggleAttractMode(false);
+    }
+
     this._cleanupCurrentGame();
     this.input.resetState();
+    this._rewindBuffer = [];
+    this._rewindSampleAccum = 0;
 
     this.activeGameId = id;
     this.activeGame = new GameClass(this.renderer, this.input, this.audio);
+
+    // Apply DIP Switch starting lives
+    const dip = DipSwitchStore.getPreset();
+    if (typeof this.activeGame.lives === 'number') {
+      this.activeGame.lives = dip.lives;
+    }
+
     if (this.activeGame.state !== 'PLAYING') {
       this.activeGame.setState('PLAYING');
     }
 
+    // Record play session to Firebase Cloud & unlock first coin achievement
+    CloudPersistence.recordPlay(id);
+    if (!opts.fromAttract) {
+      this._tryUnlockAchievement('FIRST_COIN');
+    }
+
+    // Apply dynamic bezel lighting matching the game's cabinet accent color
+    const meta = GAME_CATALOG.find((g) => g.id === id);
+    if (meta && meta.accent) {
+      document.documentElement.style.setProperty('--bezel-accent', meta.accent);
+    }
+
     this.audio.playMusic(id, true);
     this._syncHeaderStatus();
+    this._syncFavoriteButton();
     return true;
   }
 
   returnToLobby() {
+    this.toggleAttractMode(false);
     this._cleanupCurrentGame();
     this.input.resetState();
     this.activeGame = null;
     this.activeGameId = null;
+    this._rewindBuffer = [];
+    this.lobbyIdleTimer = 0;
+    document.documentElement.style.setProperty('--bezel-accent', '#00F0FF');
     this.audio.playMusic('lobby', true);
     this._syncHeaderStatus();
+    this._syncFavoriteButton();
   }
 
   _cleanupCurrentGame() {
@@ -31687,11 +33541,46 @@ class RetroArcadeStudio {
     });
   }
 
+  _handleEmulatorHotkeys() {
+    // [F5] Save State / [F8] Load State
+    if (this.input.isKeyJustPressed('F5')) {
+      this.saveCurrentState();
+    }
+    if (this.input.isKeyJustPressed('F8')) {
+      this.loadCurrentState();
+    }
+
+    //When in GAMEOVER state, allow 3-initial entry with Up/Down/Left/Right
+    if (this.activeGame && this.activeGame.state === 'GAMEOVER') {
+      if (this.input.isJustPressed('left')) {
+        this._initialsCursor = (this._initialsCursor + 2) % 3;
+        this.audio.playMenuMove();
+      } else if (this.input.isJustPressed('right')) {
+        this._initialsCursor = (this._initialsCursor + 1) % 3;
+        this.audio.playMenuMove();
+      } else if (this.input.isJustPressed('up')) {
+        const nextInit = InitialsStore.cycleChar(this._initialsCursor, 1);
+        this.audio.playMenuMove();
+        if (this.activeGame.score >= HighScoreStore.get(this.activeGameId)) {
+          HighScoreStore.setHolder(this.activeGameId, nextInit);
+          CloudPersistence.submitHighScore(this.activeGameId, this.activeGame.score, nextInit);
+        }
+      } else if (this.input.isJustPressed('down')) {
+        const nextInit = InitialsStore.cycleChar(this._initialsCursor, -1);
+        this.audio.playMenuMove();
+        if (this.activeGame.score >= HighScoreStore.get(this.activeGameId)) {
+          HighScoreStore.setHolder(this.activeGameId, nextInit);
+          CloudPersistence.submitHighScore(this.activeGameId, this.activeGame.score, nextInit);
+        }
+      }
+    }
+  }
+
   _startLoop() {
     const tick = (now) => {
       const rawDt = (now - this.lastFrameTime) / 1000;
       this.lastFrameTime = now;
-      const dt = Math.max(0.001, Math.min(0.05, rawDt));
+      const baseDt = Math.max(0.001, Math.min(0.05, rawDt));
 
       this._fpsFrames++;
       this._fpsAccum += rawDt;
@@ -31704,13 +33593,104 @@ class RetroArcadeStudio {
       }
 
       this.input.pollGamepads();
-      this.renderer.beginFrame(dt);
+      this.input.updateTurbo(baseDt);
+      this._handleEmulatorHotkeys();
+      this.renderer.beginFrame(baseDt);
 
       if (this.activeGame) {
-        this.activeGame.update(dt);
+        // Check Attract Mode cycling
+        if (this.attractActive) {
+          this.attractTimer += baseDt;
+          if (this.attractTimer >= 18.0 || this.activeGame.state === 'GAMEOVER') {
+            this.attractTimer = 0;
+            this._launchNextAttractGame();
+          } else {
+            this._updateAttractAI(now * 0.001);
+          }
+        }
+
+        const isRewinding =
+          (this.input.isKeyDown('KeyR') || this._rewindButtonHeld) &&
+          this._rewindBuffer.length > 0;
+
+        if (isRewinding) {
+          // Pop latest state from rewind ring buffer
+          const snap = this._rewindBuffer.pop();
+          if (snap) {
+            SaveStateManager.restoreSnapshot(this.activeGame, snap);
+            if (this.activeGame.state === 'GAMEOVER') {
+              this.activeGame.state = 'PLAYING';
+            }
+          }
+          this.renderer.rewindOverlay = {
+            active: true,
+            framesLeft: this._rewindBuffer.length,
+            maxFrames: this._rewindMaxFrames
+          };
+          this._tryUnlockAchievement('TIME_TRAVELER');
+        } else {
+          this.renderer.rewindOverlay = {
+            active: false,
+            framesLeft: this._rewindBuffer.length,
+            maxFrames: this._rewindMaxFrames
+          };
+
+          // Frame-step when paused via [.] Period key
+          const frameStep =
+            this.activeGame.state === 'PAUSED' && this.input.isKeyJustPressed('Period');
+
+          if (frameStep) {
+            this.activeGame.state = 'PLAYING';
+            this.activeGame.update(1 / 60);
+            this.activeGame.state = 'PAUSED';
+          } else {
+            const dip = DipSwitchStore.getPreset();
+            const scaledDt = baseDt * this.speedMultiplier * (dip ? dip.speedScale : 1.0);
+            this.activeGame.update(scaledDt);
+          }
+
+          // Sample rewind snapshot at 20Hz while PLAYING
+          if (this.activeGame.state === 'PLAYING') {
+            this._rewindSampleAccum += baseDt;
+            if (this._rewindSampleAccum >= 0.05) {
+              this._rewindSampleAccum = 0;
+              const snap = SaveStateManager.createSnapshot(this.activeGame);
+              if (snap) {
+                this._rewindBuffer.push(snap);
+                if (this._rewindBuffer.length > this._rewindMaxFrames) {
+                  this._rewindBuffer.shift();
+                }
+              }
+            }
+          }
+
+          // Check score & level achievements
+          if ((this.activeGame.score || 0) >= 10000) {
+            this._tryUnlockAchievement('HIGH_ROLLER_10K');
+          }
+          if ((this.activeGame.level || this.activeGame.stage || 1) >= 2) {
+            this._tryUnlockAchievement('STAGE_CONQUEROR');
+          }
+        }
+
         this.activeGame.render(this.renderer.ctx);
       } else {
-        this.mainMenu.update(dt);
+        // Lobby idle timer for auto-attract mode (45s of no input)
+        if (this.input.keysDown.size === 0 && !this.input.pointer.isDown) {
+          this.lobbyIdleTimer += baseDt;
+          if (this.lobbyIdleTimer >= 45.0 && !this.attractActive) {
+            this.lobbyIdleTimer = 0;
+            this.toggleAttractMode(true);
+          }
+        } else {
+          this.lobbyIdleTimer = 0;
+        }
+
+        const prevSelected = this.mainMenu.selectedIndex;
+        this.mainMenu.update(baseDt);
+        if (this.mainMenu.selectedIndex !== prevSelected) {
+          this._syncFavoriteButton();
+        }
         this.mainMenu.render(this.renderer.ctx);
       }
 

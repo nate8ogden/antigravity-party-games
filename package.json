@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Retro Arcade Studio — 28 Modernized Classic Coin-Op Games with WebAssembly, WebGL CRT Shaders, Procedural Web Audio, Responsive Desktop/Tablet/Mobile Controls, and RetroPie ROM Builder",
   "scripts": {
-    "build:rom": "node scripts/build-rom.mjs"
+    "bundle": "node scripts/bundle.mjs",
+    "build:rom": "node scripts/bundle.mjs && node scripts/build-rom.mjs"
   }
 }

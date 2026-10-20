@@ -1,7 +1,8 @@
 /**
  * Input.js
  * Unified Input Event Controller handling physical keyboard, mouse/pointer,
- * canvas swipe/tap gestures, and mobile touch overlay controls simultaneously.
+ * canvas swipe/tap gestures, W3C Gamepad API, Rapid-Fire Auto-Turbo latch,
+ * Attract-Mode Demo AI inputs, and mobile touch overlay controls simultaneously.
  */
 import { TouchControls } from '../ui/TouchControls.js';
 
@@ -57,6 +58,23 @@ export class InputManager {
       axisY: 0
     };
 
+    this.attractState = {
+      active: false,
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      actionA: false,
+      actionB: false
+    };
+
+    this.rawKeysDown = new Set();
+    this.rawKeysJustPressed = new Set();
+
+    // Hardware Rapid-Fire Turbo Auto-Fire (15 Hz pulse when held)
+    this.turboEnabled = false;
+    this._turboTick = 0;
+
     this.prevState = { ...this.virtualState };
     // Edge-latched presses so rapid keydown+keyup between frames is never missed
     this.latchedPress = {
@@ -84,6 +102,7 @@ export class InputManager {
     this.onPauseCallback = null;
     this.onMenuCallback = null;
     this.onFirstInteraction = null;
+    this.onUserActivity = null;
     this._interacted = false;
 
     this.initKeyboard();
@@ -99,6 +118,9 @@ export class InputManager {
       if (typeof this.onFirstInteraction === 'function') {
         this.onFirstInteraction();
       }
+    }
+    if (typeof this.onUserActivity === 'function') {
+      this.onUserActivity();
     }
   }
 
@@ -131,6 +153,11 @@ export class InputManager {
         return;
       }
       this._notifyInteraction();
+      if (!this.rawKeysDown.has(e.code)) {
+        this.rawKeysJustPressed.add(e.code);
+      }
+      this.rawKeysDown.add(e.code);
+
       const action = this._keyMap[e.code];
       if (action) {
         e.preventDefault();
@@ -149,6 +176,7 @@ export class InputManager {
     };
 
     this._onKeyUp = (e) => {
+      this.rawKeysDown.delete(e.code);
       const action = this._keyMap[e.code];
       if (action) {
         this.keyState[action] = false;
@@ -306,6 +334,36 @@ export class InputManager {
     this.syncVirtualState();
   }
 
+  setAttractInput(up, down, left, right, actionA, actionB) {
+    this.attractState.active = true;
+    if (actionA && !this.attractState.actionA) this.latchedPress.actionA = true;
+    if (actionB && !this.attractState.actionB) this.latchedPress.actionB = true;
+    if (up && !this.attractState.up) this.latchedPress.up = true;
+    if (down && !this.attractState.down) this.latchedPress.down = true;
+    if (left && !this.attractState.left) this.latchedPress.left = true;
+    if (right && !this.attractState.right) this.latchedPress.right = true;
+
+    this.attractState.up = !!up;
+    this.attractState.down = !!down;
+    this.attractState.left = !!left;
+    this.attractState.right = !!right;
+    this.attractState.actionA = !!actionA;
+    this.attractState.actionB = !!actionB;
+    this.syncVirtualState();
+  }
+
+  clearAttractInput() {
+    if (!this.attractState.active) return;
+    this.attractState.active = false;
+    this.attractState.up = false;
+    this.attractState.down = false;
+    this.attractState.left = false;
+    this.attractState.right = false;
+    this.attractState.actionA = false;
+    this.attractState.actionB = false;
+    this.syncVirtualState();
+  }
+
   triggerPause() {
     this._notifyInteraction();
     this.latchedPress.pause = true;
@@ -323,6 +381,19 @@ export class InputManager {
   }
 
   pollGamepads() {
+    // Handle Rapid-Fire Turbo Auto-Fire Oscillator (15 Hz pulse)
+    if (this.turboEnabled) {
+      this._turboTick = (this._turboTick + 1) % 4;
+      if (this._turboTick === 0) {
+        if (this.keyState.actionA || this.touchState.actionA || this.gamepadState.actionA) {
+          this.latchedPress.actionA = true;
+        }
+        if (this.keyState.actionB || this.touchState.actionB || this.gamepadState.actionB) {
+          this.latchedPress.actionB = true;
+        }
+      }
+    }
+
     if (typeof navigator === 'undefined' || typeof navigator.getGamepads !== 'function') {
       return;
     }
@@ -372,6 +443,10 @@ export class InputManager {
       }
     }
 
+    if (up || down || left || right || actionA || actionB) {
+      this._notifyInteraction();
+    }
+
     if (up && !this.gamepadState.up) this.latchedPress.up = true;
     if (down && !this.gamepadState.down) this.latchedPress.down = true;
     if (left && !this.gamepadState.left) this.latchedPress.left = true;
@@ -401,12 +476,42 @@ export class InputManager {
   }
 
   syncVirtualState() {
-    this.virtualState.up = !!(this.keyState.up || this.touchState.up || this.gamepadState.up);
-    this.virtualState.down = !!(this.keyState.down || this.touchState.down || this.gamepadState.down);
-    this.virtualState.left = !!(this.keyState.left || this.touchState.left || this.gamepadState.left);
-    this.virtualState.right = !!(this.keyState.right || this.touchState.right || this.gamepadState.right);
-    this.virtualState.actionA = !!(this.keyState.actionA || this.touchState.actionA || this.gamepadState.actionA);
-    this.virtualState.actionB = !!(this.keyState.actionB || this.touchState.actionB || this.gamepadState.actionB);
+    this.virtualState.up = !!(
+      this.keyState.up ||
+      this.touchState.up ||
+      this.gamepadState.up ||
+      (this.attractState.active && this.attractState.up)
+    );
+    this.virtualState.down = !!(
+      this.keyState.down ||
+      this.touchState.down ||
+      this.gamepadState.down ||
+      (this.attractState.active && this.attractState.down)
+    );
+    this.virtualState.left = !!(
+      this.keyState.left ||
+      this.touchState.left ||
+      this.gamepadState.left ||
+      (this.attractState.active && this.attractState.left)
+    );
+    this.virtualState.right = !!(
+      this.keyState.right ||
+      this.touchState.right ||
+      this.gamepadState.right ||
+      (this.attractState.active && this.attractState.right)
+    );
+    this.virtualState.actionA = !!(
+      this.keyState.actionA ||
+      this.touchState.actionA ||
+      this.gamepadState.actionA ||
+      (this.attractState.active && this.attractState.actionA)
+    );
+    this.virtualState.actionB = !!(
+      this.keyState.actionB ||
+      this.touchState.actionB ||
+      this.gamepadState.actionB ||
+      (this.attractState.active && this.attractState.actionB)
+    );
     this.virtualState.pause = !!(this.keyState.pause || this.gamepadState.pause);
     this.virtualState.menu = !!(this.keyState.menu || this.gamepadState.menu);
   }
@@ -420,6 +525,14 @@ export class InputManager {
 
   isDown(action) {
     return !!this.virtualState[action];
+  }
+
+  isKeyDown(code) {
+    return this.rawKeysDown.has(code);
+  }
+
+  isKeyJustPressed(code) {
+    return this.rawKeysJustPressed.has(code);
   }
 
   isJustPressed(action) {
@@ -473,6 +586,7 @@ export class InputManager {
       this.prevState[k] = this.virtualState[k];
       this.latchedPress[k] = false;
     }
+    this.rawKeysJustPressed.clear();
     this.pointer.justPressed = false;
     this.pointer.justReleased = false;
   }
@@ -484,6 +598,9 @@ export class InputManager {
       this.prevState[k] = false;
       this.latchedPress[k] = false;
     }
+    this.rawKeysDown.clear();
+    this.rawKeysJustPressed.clear();
+    this.clearAttractInput();
     this.touchState.up = false;
     this.touchState.down = false;
     this.touchState.left = false;

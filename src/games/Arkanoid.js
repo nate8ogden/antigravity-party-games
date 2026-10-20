@@ -107,20 +107,24 @@ export class Arkanoid {
       PALETTE.PINK,
       PALETTE.PURPLE
     ];
-    const rows = Math.min(8, 5 + level);
+    const variant = (level - 1) % 6;
+    const rows = Math.min(8, 6 + Math.floor((level - 1) / 2));
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < BRICK_COLS; c++) {
-        // Architectural patterns per level
-        if (level % 3 === 2 && (c === 5 || c === 6) && r > 1 && r < rows - 1) continue;
-        if (level % 3 === 0 && (r + c) % 5 === 0) continue;
+        // 6 distinct classic Arkanoid architectural formations
+        if (variant === 1 && (c === 5 || c === 6) && r > 0 && r < rows - 1) continue; // Twin Towers
+        if (variant === 2 && Math.abs(c - 5.5) > r + 1.5) continue; // Pyramid Fortress
+        if (variant === 3 && (r + c) % 3 === 1 && r > 0 && r < rows - 1) continue; // Lattice Matrix
+        if (variant === 4 && Math.abs(c - 5.5) + Math.abs(r - 3) > 5.5) continue; // Diamond Prism
+        if (variant === 5 && (c === 2 || c === 9) && r < rows - 1) continue; // Citadel Channels
 
         let type = 'NORMAL';
         let hp = 1;
-        let color = rowColors[r % rowColors.length];
-        let pts = (rows - r) * 15 + 40;
+        let color = rowColors[(r + variant) % rowColors.length];
+        let pts = (rows - r) * 15 + 50;
 
-        if (r === 0 && (c % 3 === 1)) {
+        if ((r === 0 && c % 3 === 1) || (variant >= 3 && r === 2 && (c === 3 || c === 8))) {
           type = 'GOLD';
           hp = 3;
           color = PALETTE.GOLD;

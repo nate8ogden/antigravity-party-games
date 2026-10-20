@@ -10,23 +10,79 @@
  *   [ Barrel Distortion Shader ] (Curvature coefficient: 0.05)
  *          │
  *          ▼
- *   [ Bloom / Chromatic Aberration ] (R/B separation: 1.5px)
+ *   [ Bloom / Chromatic Aberration / Phosphor Tint ] (R/B separation: 1.5px)
  *          │
  *          ▼
  *   [ Final Display Screen ]
  */
+
+export const CRT_PRESETS = [
+  {
+    id: 'trinitron',
+    label: 'TRINITRON',
+    enabled: true,
+    scanlineOpacity: 0.15,
+    curvature: 0.05,
+    aberrationPx: 1.5,
+    bloomIntensity: 0.28,
+    colorMode: 0 // Full RGB
+  },
+  {
+    id: 'bubble',
+    label: 'ARCADE BUBBLE',
+    enabled: true,
+    scanlineOpacity: 0.22,
+    curvature: 0.10,
+    aberrationPx: 2.3,
+    bloomIntensity: 0.40,
+    colorMode: 0
+  },
+  {
+    id: 'green',
+    label: 'GREEN P1',
+    enabled: true,
+    scanlineOpacity: 0.19,
+    curvature: 0.06,
+    aberrationPx: 0.6,
+    bloomIntensity: 0.36,
+    colorMode: 1 // P1 Green Vector Monitor
+  },
+  {
+    id: 'amber',
+    label: 'AMBER P3',
+    enabled: true,
+    scanlineOpacity: 0.19,
+    curvature: 0.06,
+    aberrationPx: 0.6,
+    bloomIntensity: 0.36,
+    colorMode: 2 // P3 Amber Monitor
+  },
+  {
+    id: 'off',
+    label: 'RAW PIXEL',
+    enabled: false,
+    scanlineOpacity: 0.0,
+    curvature: 0.0,
+    aberrationPx: 0.0,
+    bloomIntensity: 0.0,
+    colorMode: 0
+  }
+];
+
 export class CRTOverlay {
   constructor(displayCanvas, sourceCanvas) {
     this.displayCanvas = displayCanvas;
     this.sourceCanvas = sourceCanvas;
     this.enabled = true;
+    this.presetIndex = 0;
 
     // Exact shader parameters from Section 3 specification
     this.params = {
       scanlineOpacity: 0.15, // 15% dark opacity alternate horizontal lines
       curvature: 0.05,       // Curvature coefficient: 0.05
       aberrationPx: 1.5,     // R/B separation: 1.5px
-      bloomIntensity: 0.28   // Neon phosphor bloom pass
+      bloomIntensity: 0.28,  // Neon phosphor bloom pass
+      colorMode: 0           // 0 = RGB, 1 = Green Phosphor, 2 = Amber Phosphor
     };
 
     this.gl = null;
@@ -36,6 +92,23 @@ export class CRTOverlay {
     this.fallbackCtx = null;
 
     this._initWebGL();
+  }
+
+  getPresetLabel() {
+    const p = CRT_PRESETS[this.presetIndex] || CRT_PRESETS[0];
+    return p.label;
+  }
+
+  cyclePreset() {
+    this.presetIndex = (this.presetIndex + 1) % CRT_PRESETS.length;
+    const p = CRT_PRESETS[this.presetIndex];
+    this.enabled = p.enabled;
+    this.params.scanlineOpacity = p.scanlineOpacity;
+    this.params.curvature = p.curvature;
+    this.params.aberrationPx = p.aberrationPx;
+    this.params.bloomIntensity = p.bloomIntensity;
+    this.params.colorMode = p.colorMode;
+    return p;
   }
 
   _initWebGL() {
@@ -78,6 +151,7 @@ export class CRTOverlay {
         uniform float uCurvature;
         uniform float uAberrationPx;
         uniform float uBloomIntensity;
+        uniform float uColorMode;
         uniform float uEnabled;
 
         // Barrel Distortion Shader (Curvature coefficient: 0.05)
@@ -119,6 +193,15 @@ export class CRTOverlay {
           vec3 avgGlow = (b1 + b2 + b3 + b4) * 0.25;
           float luma = dot(avgGlow, vec3(0.299, 0.587, 0.114));
           color += avgGlow * smoothstep(0.25, 0.85, luma) * uBloomIntensity;
+
+          // Optional Monochrome Phosphor Monitor Emulation (P1 Green / P3 Amber)
+          if (uColorMode > 0.5 && uColorMode < 1.5) {
+            float yLuma = dot(color, vec3(0.299, 0.587, 0.114));
+            color = vec3(yLuma * 0.18, min(1.0, yLuma * 1.18 + 0.03), yLuma * 0.36);
+          } else if (uColorMode >= 1.5) {
+            float yLuma = dot(color, vec3(0.299, 0.587, 0.114));
+            color = vec3(min(1.0, yLuma * 1.22 + 0.04), yLuma * 0.72, yLuma * 0.12);
+          }
 
           // 4. Scanline Overlay Shader (15% dark opacity alternate horizontal lines)
           float row = floor(uv.y * uResolution.y);
@@ -184,6 +267,7 @@ export class CRTOverlay {
         uCurvature: gl.getUniformLocation(program, 'uCurvature'),
         uAberrationPx: gl.getUniformLocation(program, 'uAberrationPx'),
         uBloomIntensity: gl.getUniformLocation(program, 'uBloomIntensity'),
+        uColorMode: gl.getUniformLocation(program, 'uColorMode'),
         uEnabled: gl.getUniformLocation(program, 'uEnabled')
       };
     } catch (_) {
@@ -210,8 +294,7 @@ export class CRTOverlay {
   }
 
   toggle() {
-    this.enabled = !this.enabled;
-    return this.enabled;
+    return this.cyclePreset().enabled;
   }
 
   render() {
@@ -243,6 +326,7 @@ export class CRTOverlay {
       gl.uniform1f(this.uniforms.uCurvature, this.params.curvature);
       gl.uniform1f(this.uniforms.uAberrationPx, this.params.aberrationPx);
       gl.uniform1f(this.uniforms.uBloomIntensity, this.params.bloomIntensity);
+      gl.uniform1f(this.uniforms.uColorMode, this.params.colorMode || 0.0);
       gl.uniform1f(this.uniforms.uEnabled, this.enabled ? 1.0 : 0.0);
 
       gl.drawArrays(gl.TRIANGLES, 0, 6);

@@ -16,6 +16,7 @@
       --neon-pink: #FF007A;
       --arcade-gold: #FFD700;
       --vivid-green: #00FF66;
+      --bezel-accent: #00F0FF;
       --text-white: #F8FAFC;
       --text-muted: #94A3B8;
       --font-header: 'Press Start 2P', 'Courier New', monospace;
@@ -34,7 +35,8 @@
 
     html, body {
       width: 100%;
-      height: 100%;
+      height: 100vh;
+      height: 100dvh;
       overflow: hidden;
       background-color: var(--bg-space);
       background-image:
@@ -51,9 +53,9 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      padding: 8px 16px;
-      background: rgba(11, 15, 25, 0.95);
+      gap: 10px;
+      padding: 6px 14px;
+      background: rgba(11, 15, 25, 0.96);
       border-bottom: 1px solid rgba(0, 240, 255, 0.28);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
       z-index: 20;
@@ -63,12 +65,14 @@
     .studio-brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
+      min-width: 0;
+      flex-shrink: 0;
     }
 
     .brand-badge {
       font-family: var(--font-header);
-      font-size: 13px;
+      font-size: 12px;
       color: var(--electric-cyan);
       text-shadow: 0 0 10px rgba(0, 240, 255, 0.65);
       letter-spacing: 0.5px;
@@ -77,35 +81,37 @@
 
     .studio-status {
       font-family: var(--font-hud);
-      font-size: 12px;
+      font-size: 11px;
       color: var(--arcade-gold);
       border-left: 2px solid rgba(255, 215, 0, 0.4);
       padding-left: 10px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 440px;
+      max-width: 340px;
     }
 
     .studio-controls {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
     .deck-btn {
       font-family: var(--font-hud);
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       color: var(--text-white);
-      background: rgba(19, 27, 46, 0.9);
+      background: rgba(19, 27, 46, 0.92);
       border: 1px solid rgba(0, 240, 255, 0.35);
-      padding: 5px 10px;
+      padding: 4px 8px;
       border-radius: 4px;
       cursor: pointer;
       transition: all 0.14s ease;
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .deck-btn:hover {
@@ -131,24 +137,45 @@
       box-shadow: 0 0 10px rgba(255, 0, 122, 0.5);
     }
 
+    .deck-btn.emu-btn {
+      border-color: rgba(255, 215, 0, 0.45);
+      color: var(--arcade-gold);
+    }
+
+    .deck-btn.emu-btn:hover,
+    .deck-btn.emu-btn.active {
+      background: rgba(255, 215, 0, 0.16);
+      border-color: var(--arcade-gold);
+      color: var(--arcade-gold);
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.35);
+    }
+
+    .deck-btn.fav-btn.active {
+      background: rgba(255, 0, 122, 0.22);
+      border-color: var(--neon-pink);
+      color: var(--neon-pink);
+      box-shadow: 0 0 10px rgba(255, 0, 122, 0.45);
+    }
+
     .fps-badge {
       font-family: var(--font-hud);
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       color: var(--vivid-green);
       background: rgba(0, 255, 102, 0.1);
       border: 1px solid rgba(0, 255, 102, 0.35);
-      padding: 4px 8px;
+      padding: 4px 7px;
       border-radius: 4px;
-      min-width: 56px;
+      min-width: 52px;
       text-align: center;
+      flex-shrink: 0;
     }
 
     /* Quick-Switch Cabinet Strip */
     .cabinet-strip-wrapper {
       background: rgba(7, 10, 18, 0.95);
       border-bottom: 1px solid rgba(148, 163, 184, 0.18);
-      padding: 5px 12px;
+      padding: 4px 12px;
       overflow-x: auto;
       white-space: nowrap;
       flex-shrink: 0;
@@ -165,9 +192,9 @@
 
     .cabinet-pill {
       font-family: var(--font-hud);
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
-      padding: 4px 10px;
+      padding: 3px 9px;
       border-radius: 3px;
       cursor: pointer;
       background: rgba(19, 27, 46, 0.75);
@@ -202,6 +229,7 @@
     /* Scalable 16:9 CRT Viewport Container */
     .arcade-viewport {
       flex: 1;
+      min-height: 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -216,12 +244,13 @@
       align-items: center;
       justify-content: center;
       background: var(--bg-bezel);
-      border: 2px solid rgba(0, 240, 255, 0.4);
+      border: 2px solid var(--bezel-accent, rgba(0, 240, 255, 0.55));
       border-radius: 10px;
       box-shadow:
-        0 0 32px rgba(0, 240, 255, 0.16),
+        0 0 34px color-mix(in srgb, var(--bezel-accent, #00F0FF) 26%, transparent),
         inset 0 0 24px rgba(0, 0, 0, 0.85);
       overflow: hidden;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
 
     #arcade-canvas {
@@ -240,13 +269,13 @@
       left: 0;
       right: 0;
       bottom: 0;
-      height: 195px;
-      padding: 10px 20px 18px;
+      height: 190px;
+      padding: 8px 20px calc(14px + env(safe-area-inset-bottom, 0px));
       pointer-events: none;
       z-index: 50;
       justify-content: space-between;
       align-items: flex-end;
-      background: linear-gradient(to top, rgba(11, 15, 25, 0.88) 0%, rgba(11, 15, 25, 0.0) 100%);
+      background: linear-gradient(to top, rgba(11, 15, 25, 0.90) 0%, rgba(11, 15, 25, 0.0) 100%);
     }
 
     .arcade-touch-overlay.visible {
@@ -266,7 +295,7 @@
     .touch-center-zone {
       flex-direction: row;
       gap: 10px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .touch-zone-caption {
@@ -279,8 +308,8 @@
     /* Virtual 4-Way D-Pad with 15px Deadzone */
     .virtual-dpad {
       position: relative;
-      width: 142px;
-      height: 142px;
+      width: 140px;
+      height: 140px;
       border-radius: 50%;
       background: rgba(15, 23, 42, 0.78);
       border: 2px solid rgba(0, 240, 255, 0.55);
@@ -346,7 +375,7 @@
       display: flex;
       align-items: center;
       gap: 16px;
-      height: 142px;
+      height: 140px;
       padding: 0 6px;
     }
 
@@ -420,42 +449,53 @@
     }
 
     body.device-tablet .virtual-dpad {
-      width: 150px;
-      height: 150px;
+      width: 148px;
+      height: 148px;
     }
 
     body.device-tablet .virtual-action-btn {
-      width: 78px;
-      height: 78px;
+      width: 76px;
+      height: 76px;
     }
 
-    /* Portrait & Small Screen Phone Responsive Adjustments */
-    @media (max-width: 820px) {
+    /* Single-Row Scrollable Controls on Tablet & Phone so Header Never Wraps Vertically */
+    @media (max-width: 1180px) {
       .studio-header {
-        padding: 5px 8px;
-        gap: 6px;
-      }
-      .brand-badge {
-        font-size: 9.5px;
+        padding: 5px 10px;
+        gap: 8px;
       }
       .studio-status {
         display: none;
       }
+      .studio-controls {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding-bottom: 2px;
+      }
+      .studio-controls::-webkit-scrollbar {
+        display: none;
+      }
+      .brand-badge {
+        font-size: 10px;
+      }
       .deck-btn {
         font-size: 9.5px;
-        padding: 4px 6px;
+        padding: 4px 7px;
       }
     }
 
     @media (orientation: portrait) {
       body.touch-overlay-active .arcade-viewport {
         align-items: center;
-        padding-top: 8px;
-        padding-bottom: 192px;
+        padding-top: 6px;
+        padding-bottom: 188px;
       }
       body.device-phone .virtual-dpad {
-        width: 124px;
-        height: 124px;
+        width: 122px;
+        height: 122px;
       }
       body.device-phone .dpad-arm {
         width: 34px;
@@ -463,11 +503,11 @@
         font-size: 13px;
       }
       body.device-phone .virtual-action-btn {
-        width: 62px;
-        height: 62px;
+        width: 60px;
+        height: 60px;
       }
       body.device-phone .action-buttons-cluster {
-        height: 124px;
+        height: 122px;
         gap: 10px;
       }
       body.device-phone .touch-center-zone {
@@ -482,37 +522,37 @@
     }
 
     /* Compact Phone Landscape Gutter Mode */
-    @media (orientation: landscape) and (max-height: 500px) {
+    @media (orientation: landscape) and (max-height: 520px) {
       .studio-header {
         padding: 3px 8px;
       }
       .cabinet-strip-wrapper {
-        padding: 3px 8px;
+        padding: 2px 8px;
       }
       body.touch-overlay-active .arcade-viewport {
         padding-bottom: 6px;
       }
       .arcade-touch-overlay {
-        height: 140px;
+        height: 136px;
         padding: 4px 10px 8px;
         background: none;
       }
       .virtual-dpad {
-        width: 112px;
-        height: 112px;
+        width: 110px;
+        height: 110px;
       }
       .dpad-arm {
-        width: 30px;
-        height: 30px;
+        width: 28px;
+        height: 28px;
         font-size: 12px;
       }
       .action-buttons-cluster {
-        height: 112px;
+        height: 110px;
         gap: 8px;
       }
       .virtual-action-btn {
-        width: 54px;
-        height: 54px;
+        width: 52px;
+        height: 52px;
       }
       .btn-main-label {
         font-size: 13px;
@@ -539,16 +579,25 @@
 
     <div class="studio-controls">
       <a href="./index.html" class="deck-btn" id="btn-party-suite" style="text-decoration:none;border-color:var(--arcade-gold);color:var(--arcade-gold);" title="Switch to Antigravity 1-4P Party Games">🎮 1-4P PARTY</a>
-      <button type="button" class="deck-btn lobby-btn" id="btn-studio-lobby">★ STUDIO LOBBY</button>
+      <button type="button" class="deck-btn lobby-btn" id="btn-studio-lobby" title="Return to Arcade Selection Lobby [ESC]">★ LOBBY</button>
+      <button type="button" class="deck-btn emu-btn" id="btn-save-state" title="Save Instant Emulator State [F5]">💾 SAVE [F5]</button>
+      <button type="button" class="deck-btn emu-btn" id="btn-load-state" title="Load Instant Emulator State [F8]">📂 LOAD [F8]</button>
+      <button type="button" class="deck-btn emu-btn" id="btn-rewind" title="Hold [R] or Click to Rewind Time (6s Ring Buffer)">⏪ REWIND [R]</button>
+      <button type="button" class="deck-btn" id="btn-speed" title="Cycle Emulator Clock Speed (0.5x / 1x / 1.5x / 2x) or [.] Frame-Step">⚡ 1x</button>
+      <button type="button" class="deck-btn" id="btn-turbo" title="Toggle 15Hz Rapid-Fire Turbo on Action A">🔥 TURBO: OFF</button>
+      <button type="button" class="deck-btn" id="btn-dip" title="Arcade Operator DIP Switches (Lives & Difficulty)">⚙ DIP: STD</button>
+      <button type="button" class="deck-btn fav-btn" id="btn-fav-game" title="Bookmark / Favorite Current Cabinet (Synced to Cloud)">♥ FAV</button>
+      <button type="button" class="deck-btn" id="btn-snap" title="Capture Arcade Cabinet Screenshot PNG">📸 SNAP</button>
+      <button type="button" class="deck-btn" id="btn-attract" title="Toggle Arcade Attract-Mode Demo Cycler">🎬 ATTRACT</button>
       <button type="button" class="deck-btn active" id="btn-mode-desktop" title="Desktop Mode">DESKTOP</button>
       <button type="button" class="deck-btn" id="btn-mode-tablet" title="Tablet Touch Mode">TABLET</button>
       <button type="button" class="deck-btn" id="btn-mode-phone" title="Mobile Phone Mode">PHONE</button>
-      <button type="button" class="deck-btn" id="btn-toggle-pause">PAUSE [P]</button>
-      <button type="button" class="deck-btn" id="btn-reset-game">RESET</button>
-      <button type="button" class="deck-btn active" id="btn-toggle-crt">CRT SHADER: ON</button>
-      <button type="button" class="deck-btn" id="btn-toggle-touch">TOUCH PAD: AUTO</button>
+      <button type="button" class="deck-btn" id="btn-toggle-pause" title="Pause / Resume [P] (Press [.] while paused to Frame-Step)">PAUSE [P]</button>
+      <button type="button" class="deck-btn" id="btn-reset-game" title="Reset Current Cabinet">RESET</button>
+      <button type="button" class="deck-btn active" id="btn-toggle-crt" title="Cycle CRT Shader Presets (Trinitron / Bubble / Green P1 / Amber P3 / Off)">CRT: TRINITRON</button>
+      <button type="button" class="deck-btn" id="btn-toggle-touch" title="Toggle Virtual Touch Controller Overlay">TOUCH: AUTO</button>
       <button type="button" class="deck-btn active" id="btn-wasm-status" title="Click to run WASM vs JS benchmark">WASM: NATIVE</button>
-      <button type="button" class="deck-btn active" id="btn-toggle-audio">AUDIO: SYNTH ON</button>
+      <button type="button" class="deck-btn active" id="btn-toggle-audio" title="Toggle Chiptune Synth & Sound Effects">AUDIO: ON</button>
       <div class="fps-badge" id="studio-fps-readout">60 FPS</div>
     </div>
   </header>
@@ -558,22 +607,33 @@
   </nav>
 
   <main class="arcade-viewport" id="arcade-viewport">
-    <div class="crt-bezel">
+    <div class="crt-bezel" id="crt-bezel">
       <canvas id="arcade-canvas" width="960" height="540"></canvas>
     </div>
   </main>
 
   <script>
-    if (window.location.protocol === 'file:') {
-      const s = document.createElement('script');
-      s.src = './dist/bundle.js';
-      document.body.appendChild(s);
-    } else {
-      const m = document.createElement('script');
-      m.type = 'module';
-      m.src = './src/main.js';
-      document.body.appendChild(m);
-    }
+    (function () {
+      var partyBtn = document.getElementById('btn-party-suite');
+      if (partyBtn && window.location && window.location.pathname.indexOf('/classic/') !== -1) {
+        partyBtn.setAttribute('href', '../index.html');
+      }
+      if (window.location.protocol === 'file:') {
+        var s = document.createElement('script');
+        s.src = './dist/bundle.js';
+        document.body.appendChild(s);
+      } else {
+        var m = document.createElement('script');
+        m.type = 'module';
+        m.src = './src/main.js';
+        m.onerror = function () {
+          var fallback = document.createElement('script');
+          fallback.src = './dist/bundle.js';
+          document.body.appendChild(fallback);
+        };
+        document.body.appendChild(m);
+      }
+    })();
   </script>
 </body>
 </html>

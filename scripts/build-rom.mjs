@@ -49,10 +49,11 @@ function buildStandaloneHtmlBundle() {
   const bundleJs = fs.readFileSync(bundleJsPath, 'utf8');
 
   // Inline the entire universal bundle directly into the HTML so it works with zero external files
+  // Use a function callback () => ... so String.prototype.replace never expands $ tokens in bundleJs
   const scriptPattern = /<script>[\s\S]*?<\/script>\s*<\/body>/i;
   const standaloneHtml = indexRaw.replace(
     scriptPattern,
-    `<script>\n${bundleJs}\n</script>\n</body>`
+    () => `<script>\n${bundleJs}\n</script>\n</body>`
   );
 
   fs.mkdirSync(path.join(ROOT_DIR, 'dist'), { recursive: true });

@@ -79,103 +79,121 @@ export class DonkeyKong {
   }
 
   _buildStageGeometry() {
-    // 6 inclined steel girder tiers (0 = bottom, 5 = Kong top girder) + tier 6 (Pauline's platform)
-    // Each girder has a physical slope between (xMin, yLeft) and (xMax, yRight).
-    this.girders = [
-      {
-        tier: 0,
-        xMin: 110,
-        xMax: 850,
-        yLeft: 514,
-        yRight: 492,
-        rollDir: -1, // Barrels roll left toward flaming oil drum
-        thickness: 12
-      },
-      {
-        tier: 1,
-        xMin: 110,
-        xMax: 805,
-        yLeft: 418,
-        yRight: 440,
-        rollDir: 1, // Barrels roll right
-        thickness: 12
-      },
-      {
-        tier: 2,
-        xMin: 155,
-        xMax: 850,
-        yLeft: 368,
-        yRight: 346,
-        rollDir: -1, // Barrels roll left
-        thickness: 12
-      },
-      {
-        tier: 3,
-        xMin: 110,
-        xMax: 805,
-        yLeft: 274,
-        yRight: 296,
-        rollDir: 1, // Barrels roll right
-        thickness: 12
-      },
-      {
-        tier: 4,
-        xMin: 155,
-        xMax: 850,
-        yLeft: 224,
-        yRight: 202,
-        rollDir: -1, // Barrels roll left
-        thickness: 12
-      },
-      {
-        tier: 5,
-        xMin: 110,
-        xMax: 805,
-        yLeft: 132,
-        yRight: 150,
-        rollDir: 1, // Kong stands on left; barrels roll right
-        thickness: 12
-      },
-      {
-        tier: 6,
-        xMin: 360,
-        xMax: 575,
-        yLeft: 84,
-        yRight: 84,
-        rollDir: 0, // Pauline's rescue platform
-        thickness: 10
-      }
-    ];
+    const variant = (this.level - 1) % 4;
+    this.stageNames = ['25M GIRDERS', '50M CONVEYOR', '75M ELEVATOR', '100M RIVET TOWER'];
+    this.stageSubtitle = this.stageNames[variant];
 
-    // Working ladders (broken: false) and broken ladders (broken: true).
-    // Barrels can roll down ANY ladder at a 30% rate; player can only climb unbroken ladders.
-    this.ladders = [
-      // Tier 0 -> Tier 1
-      { id: 'L0_A', fromTier: 0, toTier: 1, x: 350, broken: true },
-      { id: 'L0_B', fromTier: 0, toTier: 1, x: 755, broken: false },
-
-      // Tier 1 -> Tier 2
-      { id: 'L1_A', fromTier: 1, toTier: 2, x: 215, broken: false },
-      { id: 'L1_B', fromTier: 1, toTier: 2, x: 470, broken: false },
-      { id: 'L1_C', fromTier: 1, toTier: 2, x: 650, broken: true },
-
-      // Tier 2 -> Tier 3
-      { id: 'L2_A', fromTier: 2, toTier: 3, x: 320, broken: true },
-      { id: 'L2_B', fromTier: 2, toTier: 3, x: 540, broken: false },
-      { id: 'L2_C', fromTier: 2, toTier: 3, x: 755, broken: false },
-
-      // Tier 3 -> Tier 4
-      { id: 'L3_A', fromTier: 3, toTier: 4, x: 215, broken: false },
-      { id: 'L3_B', fromTier: 3, toTier: 4, x: 410, broken: false },
-      { id: 'L3_C', fromTier: 3, toTier: 4, x: 675, broken: true },
-
-      // Tier 4 -> Tier 5
-      { id: 'L4_A', fromTier: 4, toTier: 5, x: 495, broken: true },
-      { id: 'L4_B', fromTier: 4, toTier: 5, x: 755, broken: false },
-
-      // Tier 5 -> Tier 6 (Pauline victory ladder)
-      { id: 'L5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
-    ];
+    if (variant === 0) {
+      // STAGE 1 (25m): Classic 6 inclined steel girder tiers
+      this.girders = [
+        { tier: 0, xMin: 110, xMax: 850, yLeft: 514, yRight: 492, rollDir: -1, thickness: 12 },
+        { tier: 1, xMin: 110, xMax: 805, yLeft: 418, yRight: 440, rollDir: 1, thickness: 12 },
+        { tier: 2, xMin: 155, xMax: 850, yLeft: 368, yRight: 346, rollDir: -1, thickness: 12 },
+        { tier: 3, xMin: 110, xMax: 805, yLeft: 274, yRight: 296, rollDir: 1, thickness: 12 },
+        { tier: 4, xMin: 155, xMax: 850, yLeft: 224, yRight: 202, rollDir: -1, thickness: 12 },
+        { tier: 5, xMin: 110, xMax: 805, yLeft: 132, yRight: 150, rollDir: 1, thickness: 12 },
+        { tier: 6, xMin: 360, xMax: 575, yLeft: 84, yRight: 84, rollDir: 0, thickness: 10 }
+      ];
+      this.ladders = [
+        { id: 'L0_A', fromTier: 0, toTier: 1, x: 350, broken: true },
+        { id: 'L0_B', fromTier: 0, toTier: 1, x: 755, broken: false },
+        { id: 'L1_A', fromTier: 1, toTier: 2, x: 215, broken: false },
+        { id: 'L1_B', fromTier: 1, toTier: 2, x: 470, broken: false },
+        { id: 'L1_C', fromTier: 1, toTier: 2, x: 650, broken: true },
+        { id: 'L2_A', fromTier: 2, toTier: 3, x: 320, broken: true },
+        { id: 'L2_B', fromTier: 2, toTier: 3, x: 540, broken: false },
+        { id: 'L2_C', fromTier: 2, toTier: 3, x: 755, broken: false },
+        { id: 'L3_A', fromTier: 3, toTier: 4, x: 215, broken: false },
+        { id: 'L3_B', fromTier: 3, toTier: 4, x: 410, broken: false },
+        { id: 'L3_C', fromTier: 3, toTier: 4, x: 675, broken: true },
+        { id: 'L4_A', fromTier: 4, toTier: 5, x: 495, broken: true },
+        { id: 'L4_B', fromTier: 4, toTier: 5, x: 755, broken: false },
+        { id: 'L5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
+      ];
+    } else if (variant === 1) {
+      // STAGE 2 (50m): Conveyor / Cement Factory — flatter, wide symmetrical tiers with twin side & center ladders
+      this.girders = [
+        { tier: 0, xMin: 110, xMax: 850, yLeft: 510, yRight: 504, rollDir: -1, thickness: 12 },
+        { tier: 1, xMin: 120, xMax: 840, yLeft: 424, yRight: 432, rollDir: 1, thickness: 12 },
+        { tier: 2, xMin: 140, xMax: 820, yLeft: 354, yRight: 346, rollDir: -1, thickness: 12 },
+        { tier: 3, xMin: 120, xMax: 840, yLeft: 274, yRight: 282, rollDir: 1, thickness: 12 },
+        { tier: 4, xMin: 140, xMax: 820, yLeft: 206, yRight: 198, rollDir: -1, thickness: 12 },
+        { tier: 5, xMin: 110, xMax: 830, yLeft: 134, yRight: 144, rollDir: 1, thickness: 12 },
+        { tier: 6, xMin: 360, xMax: 575, yLeft: 84, yRight: 84, rollDir: 0, thickness: 10 }
+      ];
+      this.ladders = [
+        { id: 'L0_A', fromTier: 0, toTier: 1, x: 185, broken: false },
+        { id: 'L0_B', fromTier: 0, toTier: 1, x: 480, broken: true },
+        { id: 'L0_C', fromTier: 0, toTier: 1, x: 775, broken: false },
+        { id: 'L1_A', fromTier: 1, toTier: 2, x: 290, broken: false },
+        { id: 'L1_B', fromTier: 1, toTier: 2, x: 670, broken: false },
+        { id: 'L2_A', fromTier: 2, toTier: 3, x: 185, broken: false },
+        { id: 'L2_B', fromTier: 2, toTier: 3, x: 480, broken: false },
+        { id: 'L2_C', fromTier: 2, toTier: 3, x: 775, broken: false },
+        { id: 'L3_A', fromTier: 3, toTier: 4, x: 290, broken: false },
+        { id: 'L3_B', fromTier: 3, toTier: 4, x: 480, broken: true },
+        { id: 'L3_C', fromTier: 3, toTier: 4, x: 670, broken: false },
+        { id: 'L4_A', fromTier: 4, toTier: 5, x: 220, broken: false },
+        { id: 'L4_B', fromTier: 4, toTier: 5, x: 740, broken: false },
+        { id: 'L5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
+      ];
+    } else if (variant === 2) {
+      // STAGE 3 (75m): Springs & Stepped Promenade — steeper alternating switchbacks
+      this.girders = [
+        { tier: 0, xMin: 110, xMax: 850, yLeft: 516, yRight: 488, rollDir: -1, thickness: 12 },
+        { tier: 1, xMin: 130, xMax: 820, yLeft: 412, yRight: 442, rollDir: 1, thickness: 12 },
+        { tier: 2, xMin: 140, xMax: 850, yLeft: 368, yRight: 338, rollDir: -1, thickness: 12 },
+        { tier: 3, xMin: 110, xMax: 810, yLeft: 268, yRight: 298, rollDir: 1, thickness: 12 },
+        { tier: 4, xMin: 140, xMax: 850, yLeft: 224, yRight: 196, rollDir: -1, thickness: 12 },
+        { tier: 5, xMin: 110, xMax: 810, yLeft: 130, yRight: 152, rollDir: 1, thickness: 12 },
+        { tier: 6, xMin: 360, xMax: 575, yLeft: 84, yRight: 84, rollDir: 0, thickness: 10 }
+      ];
+      this.ladders = [
+        { id: 'L0_A', fromTier: 0, toTier: 1, x: 260, broken: false },
+        { id: 'L0_B', fromTier: 0, toTier: 1, x: 580, broken: true },
+        { id: 'L0_C', fromTier: 0, toTier: 1, x: 780, broken: false },
+        { id: 'L1_A', fromTier: 1, toTier: 2, x: 190, broken: false },
+        { id: 'L1_B', fromTier: 1, toTier: 2, x: 420, broken: true },
+        { id: 'L1_C', fromTier: 1, toTier: 2, x: 690, broken: false },
+        { id: 'L2_A', fromTier: 2, toTier: 3, x: 260, broken: false },
+        { id: 'L2_B', fromTier: 2, toTier: 3, x: 510, broken: false },
+        { id: 'L2_C', fromTier: 2, toTier: 3, x: 760, broken: true },
+        { id: 'L3_A', fromTier: 3, toTier: 4, x: 190, broken: false },
+        { id: 'L3_B', fromTier: 3, toTier: 4, x: 460, broken: false },
+        { id: 'L3_C', fromTier: 3, toTier: 4, x: 720, broken: false },
+        { id: 'L4_A', fromTier: 4, toTier: 5, x: 350, broken: true },
+        { id: 'L4_B', fromTier: 4, toTier: 5, x: 760, broken: false },
+        { id: 'L5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
+      ];
+    } else {
+      // STAGE 4 (100m): Rivet Tower — pyramid-narrowing steel tiers with outer & inner ladder shafts
+      this.girders = [
+        { tier: 0, xMin: 100, xMax: 860, yLeft: 512, yRight: 500, rollDir: -1, thickness: 12 },
+        { tier: 1, xMin: 125, xMax: 835, yLeft: 424, yRight: 436, rollDir: 1, thickness: 12 },
+        { tier: 2, xMin: 150, xMax: 810, yLeft: 356, yRight: 344, rollDir: -1, thickness: 12 },
+        { tier: 3, xMin: 175, xMax: 785, yLeft: 276, yRight: 288, rollDir: 1, thickness: 12 },
+        { tier: 4, xMin: 200, xMax: 760, yLeft: 212, yRight: 200, rollDir: -1, thickness: 12 },
+        { tier: 5, xMin: 160, xMax: 800, yLeft: 134, yRight: 146, rollDir: 1, thickness: 12 },
+        { tier: 6, xMin: 360, xMax: 575, yLeft: 84, yRight: 84, rollDir: 0, thickness: 10 }
+      ];
+      this.ladders = [
+        { id: 'L0_A', fromTier: 0, toTier: 1, x: 165, broken: false },
+        { id: 'L0_B', fromTier: 0, toTier: 1, x: 480, broken: false },
+        { id: 'L0_C', fromTier: 0, toTier: 1, x: 795, broken: false },
+        { id: 'L1_A', fromTier: 1, toTier: 2, x: 210, broken: false },
+        { id: 'L1_B', fromTier: 1, toTier: 2, x: 480, broken: true },
+        { id: 'L1_C', fromTier: 1, toTier: 2, x: 750, broken: false },
+        { id: 'L2_A', fromTier: 2, toTier: 3, x: 245, broken: false },
+        { id: 'L2_B', fromTier: 2, toTier: 3, x: 480, broken: false },
+        { id: 'L2_C', fromTier: 2, toTier: 3, x: 715, broken: false },
+        { id: 'L3_A', fromTier: 3, toTier: 4, x: 275, broken: false },
+        { id: 'L3_B', fromTier: 3, toTier: 4, x: 480, broken: true },
+        { id: 'L3_C', fromTier: 3, toTier: 4, x: 685, broken: false },
+        { id: 'L4_A', fromTier: 4, toTier: 5, x: 310, broken: false },
+        { id: 'L4_B', fromTier: 4, toTier: 5, x: 650, broken: false },
+        { id: 'L5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
+      ];
+    }
   }
 
   /**
