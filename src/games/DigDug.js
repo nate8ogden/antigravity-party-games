@@ -1,0 +1,1501 @@
+/**
+ * DigDug.js
+ * Flagship implementation of classic Dig Dug (1982) for Retro Arcade Studio.
+ * Features 4 volumetric depth strata, a fine-grained 96x46 dynamic soil mask,
+ * 15% digging speed reduction vs open tunnel speed, a 4-stage enemy inflation
+ * state machine ('idle' -> 'inflated_1' -> 'inflated_2' -> 'inflated_3' -> 'popped')
+ * with 3.0s deflation decay, Pooka & fire-breathing Fygar AI with ghost-eyes phase,
+ * and 1.2s suspended wobbling boulders with downward raycast multi-crush physics.
+ */
+import { PALETTE, FONTS, HighScoreStore } from '../engine/Renderer.js';
+
+export const INFLATION_STATES = [
+  'idle',
+  'inflated_1',
+  'inflated_2',
+  'inflated_3',
+  'popped'
+];
+
+export const INFLATION_SCALES = [1.0, 1.35, 1.7, 2.1, 2.35];
+
+const SOIL_STRATA = [
+  {
+    name: 'TOP SOIL',
+    yStart: 86,
+    yEnd: 200,
+    fill: '#D99B26',
+    speckle: '#F6C453',
+    edge: '#FDE047',
+    baseScore: 200
+  },
+  {
+    name: 'TERRACOTTA',
+    yStart: 200,
+    yEnd: 314,
+    fill: '#C85A17',
+    speckle: '#F97316',
+    edge: '#FB923C',
+    baseScore: 300
+  },
+  {
+    name: 'CRIMSON RUST',
+    yStart: 314,
+    yEnd: 428,
+    fill: '#9E2A2B',
+    speckle: '#EF4444',
+    edge: '#F87171',
+    baseScore: 400
+  },
+  {
+    name: 'DEEP BEDROCK',
+    yStart: 428,
+    yEnd: 540,
+    fill: '#4C1D57',
+    speckle: '#9333EA',
+    edge: '#C084FC',
+    baseScore: 500
+  }
+];
+
+const DIR_VECTORS = {
+  up: { x: 0, y: -1 },
+  down: { x: 0, y: 1 },
+  left: { x: -1, y: 0 },
+  right: { x: 1, y: 0 }
+};
+
+export class DigDug {
+  constructor(renderer, input, audio) {
+    this.renderer = renderer;
+    this.input = input;
+    this.audio = audio;
+
+    this.id = 'digdug';
+    this.title = 'Sub-Terra Driller';
+
+    // Soil mask grid covering y: 86..540 (960x454) at 10x10px resolution
+    this.surfaceY = 86;
+    this.cellSize = 10;
+    this.gridCols = 96; // 96 * 10 = 960
+    this.gridRows = 46; // 46 * 10 = 460
+    this.soil = []; // soil[r][c]: 1 = solid earth, 0 = excavated tunnel
+
+    this.state = 'PLAYING';
+    this.score = 0;
+    this.highScore = HighScoreStore.get(this.id);
+    this.lives = 3;
+    this.level = 1;
+
+    this.player = null;
+    this.harpoon = null;
+    this.enemies = [];
+    this.rocks = [];
+    this.particles = [];
+    this.popups = [];
+    this.bonusVeggie = null;
+    this.rocksDroppedCount = 0;
+    this.veggieSpawnedThisStage = false;
+
+    this.stageClearTimer = 0;
+    this.deathTimer = 0;
+    this.animTime = 0;
+
+    this.reset();
+  }
+
+  reset() {
+    this.score = 0;
+    this.lives = 3;
+    this.level = 1;
+    this.highScore = HighScoreStore.get(this.id);
+    this.state = 'PLAYING';
+    this.initStage(this.level);
+  }
+
+  setState(state) {
+    this.state = state;
+  }
+
+  destroy() {
+    if (this.audio && typeof this.audio.stopSequence === 'function') {
+      this.audio.stopSequence();
+    }
+  }
+
+  addScore(points, x = null, y = null, color = PALETTE.GOLD) {
+    this.score += points;
+    if (this.score > this.highScore) {
+      this.highScore = this.score;
+      HighScoreStore.submit(this.id, this.score);
+    }
+    if (x !== null && y !== null) {
+      this.popups.push({
+        text: `${points}`,
+        x,
+        y,
+        vy: -34,
+        life: 1.0,
+        maxLife: 1.0,
+        color
+      });
+    }
+  }
+
+  getStratumForY(y) {
+    for (let i = 0; i < SOIL_STRATA.length; i++) {
+      if (y < SOIL_STRATA[i].yEnd) return SOIL_STRATA[i];
+    }
+    return SOIL_STRATA[SOIL_STRATA.length - 1];
+  }
+
+  initStage(levelNum) {
+    this.particles = [];
+    this.popups = [];
+    this.bonusVeggie = null;
+    this.rocksDroppedCount = 0;
+    this.veggieSpawnedThisStage = false;
+    this.stageClearTimer = 0;
+    this.deathTimer = 0;
+
+    // 1. Fill underground soil mask (1 = solid dirt)
+    this.soil = [];
+    for (let r = 0; r < this.gridRows; r++) {
+      this.soil.push(new Uint8Array(this.gridCols).fill(1));
+    }
+
+    // 2. Carve central vertical entry shaft & center home pocket
+    this.carveLine(480, this.surfaceY, 480, 300, 15, false);
+    this.carveLine(445, 300, 515, 300, 15, false);
+
+    // 3. Configure enemy chambers (horizontal or vertical pockets)
+    const chamberDefs = [
+      { x1: 140, y1: 155, x2: 260, y2: 155, type: 'pooka' },
+      { x1: 690, y1: 165, x2: 820, y2: 165, type: 'fygar' },
+      { x1: 170, y1: 350, x2: 170, y2: 455, type: 'pooka' },
+      { x1: 660, y1: 375, x2: 810, y2: 375, type: 'fygar' },
+      { x1: 350, y1: 455, x2: 590, y2: 455, type: 'pooka' }
+    ];
+
+    const enemyCount = Math.min(6, 4 + Math.floor((levelNum - 1) / 2));
+    this.enemies = [];
+
+    for (let i = 0; i < enemyCount; i++) {
+      const def = chamberDefs[i % chamberDefs.length];
+      this.carveLine(def.x1, def.y1, def.x2, def.y2, 16, false);
+      const cx = (def.x1 + def.x2) * 0.5 + (i >= chamberDefs.length ? 24 : 0);
+      const cy = (def.y1 + def.y2) * 0.5;
+      const isVertical = Math.abs(def.y2 - def.y1) > Math.abs(def.x2 - def.x1);
+      const eType = i % 2 === 1 ? 'fygar' : def.type;
+
+      this.enemies.push({
+        id: i,
+        type: eType, // 'pooka' | 'fygar'
+        x: cx,
+        y: cy,
+        spawnX: cx,
+        spawnY: cy,
+        dir: isVertical ? 'down' : i % 2 === 0 ? 'right' : 'left',
+        facing: i % 2 === 0 ? 1 : -1,
+        baseRadius: 13,
+        inflationStage: 0, // 0..4
+        inflationState: 'idle', // 'idle' | 'inflated_1' | 'inflated_2' | 'inflated_3' | 'popped'
+        deflateTimer: 0, // 3.0s total deflation timer
+        ghostMode: false,
+        ghostTimer: 5.5 + i * 2.2,
+        fireChargeTimer: 0,
+        fireActiveTimer: 0,
+        fireCooldown: 4.5 + i * 1.5,
+        turnCooldown: 0,
+        crushed: false,
+        rockCarriedBy: null,
+        animFrame: 0
+      });
+    }
+
+    // 4. Embed 4 boulders in strategic earth positions above chambers
+    const rockCoords = [
+      { x: 205, y: 115 },
+      { x: 750, y: 120 },
+      { x: 295, y: 255 },
+      { x: 645, y: 265 }
+    ];
+
+    this.rocks = rockCoords.map((rc, idx) => ({
+      id: idx,
+      x: rc.x,
+      y: rc.y,
+      radius: 17,
+      state: 'embedded', // 'embedded' | 'wobbling' | 'falling' | 'shattering' | 'done'
+      hangTimer: 1.2, // 1.2s suspended tremble before downward raycast fall
+      shatterTimer: 0.45,
+      vy: 0,
+      fallenDistance: 0,
+      crushCount: 0,
+      wobbleOffset: 0
+    }));
+
+    this.spawnPlayer();
+  }
+
+  spawnPlayer() {
+    this.player = {
+      x: 480,
+      y: 300,
+      radius: 12,
+      dir: 'right',
+      facing: 1,
+      baseSpeed: 138,
+      currentSpeed: 138,
+      isDiggingSoil: false,
+      digSoundTimer: 0,
+      pumpHoldTimer: 0,
+      latchedEnemy: null,
+      crushedByRock: null,
+      animFrame: 0
+    };
+
+    this.harpoon = {
+      active: false,
+      x: 480,
+      y: 300,
+      dir: 'right',
+      length: 0,
+      maxLength: 82,
+      extendSpeed: 390,
+      latchedEnemy: null
+    };
+  }
+
+  worldToCell(x, y) {
+    const c = Math.floor(x / this.cellSize);
+    const r = Math.floor((y - this.surfaceY) / this.cellSize);
+    return { c, r };
+  }
+
+  isSoilAtCell(c, r) {
+    if (c < 0 || c >= this.gridCols || r < 0 || r >= this.gridRows) {
+      return false;
+    }
+    return this.soil[r][c] === 1;
+  }
+
+  isSoilAtWorld(x, y) {
+    if (y < this.surfaceY) return false;
+    const { c, r } = this.worldToCell(x, y);
+    return this.isSoilAtCell(c, r);
+  }
+
+  /**
+   * Checks if any cell in a circular area around (x, y) still contains unexcavated soil
+   */
+  hasUnexcavatedSoilAround(x, y, radius = 12) {
+    const minC = Math.max(0, Math.floor((x - radius) / this.cellSize));
+    const maxC = Math.min(this.gridCols - 1, Math.floor((x + radius) / this.cellSize));
+    const minR = Math.max(0, Math.floor((y - this.surfaceY - radius) / this.cellSize));
+    const maxR = Math.min(this.gridRows - 1, Math.floor((y - this.surfaceY + radius) / this.cellSize));
+
+    for (let r = minR; r <= maxR; r++) {
+      for (let c = minC; c <= maxC; c++) {
+        if (this.soil[r][c] === 1) {
+          const cx = (c + 0.5) * this.cellSize;
+          const cy = this.surfaceY + (r + 0.5) * this.cellSize;
+          if (Math.hypot(cx - x, cy - y) <= radius) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Carves a circular tunnel brush at (x, y), returning the number of newly cleared cells
+   */
+  carveCircle(x, y, radius = 14, withEffects = true) {
+    const minC = Math.max(0, Math.floor((x - radius) / this.cellSize));
+    const maxC = Math.min(this.gridCols - 1, Math.floor((x + radius) / this.cellSize));
+    const minR = Math.max(0, Math.floor((y - this.surfaceY - radius) / this.cellSize));
+    const maxR = Math.min(this.gridRows - 1, Math.floor((y - this.surfaceY + radius) / this.cellSize));
+
+    let cleared = 0;
+    const stratum = this.getStratumForY(y);
+
+    for (let r = minR; r <= maxR; r++) {
+      for (let c = minC; c <= maxC; c++) {
+        if (this.soil[r][c] === 1) {
+          const cx = (c + 0.5) * this.cellSize;
+          const cy = this.surfaceY + (r + 0.5) * this.cellSize;
+          if (Math.hypot(cx - x, cy - y) <= radius) {
+            this.soil[r][c] = 0;
+            cleared++;
+            if (withEffects && Math.random() < 0.65) {
+              this.particles.push({
+                x: cx,
+                y: cy,
+                vx: (Math.random() - 0.5) * 90,
+                vy: -25 - Math.random() * 65,
+                gravity: 280,
+                size: 3 + Math.random() * 2.5,
+                life: 0.25 + Math.random() * 0.2,
+                maxLife: 0.45,
+                color: Math.random() < 0.5 ? stratum.fill : stratum.speckle
+              });
+            }
+          }
+        }
+      }
+    }
+    return cleared;
+  }
+
+  carveLine(x1, y1, x2, y2, radius = 14, withEffects = false) {
+    const dist = Math.hypot(x2 - x1, y2 - y1);
+    const steps = Math.max(1, Math.ceil(dist / 6));
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      this.carveCircle(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t, radius, withEffects);
+    }
+  }
+
+  isBlockedByEmbeddedRock(x, y, radius = 11, ignoreRock = null) {
+    for (const rock of this.rocks) {
+      if (rock === ignoreRock || rock.state === 'done' || rock.state === 'shattering') {
+        continue;
+      }
+      if (rock.state === 'embedded' || rock.state === 'wobbling') {
+        if (Math.hypot(x - rock.x, y - rock.y) < radius + rock.radius - 2) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Advances an enemy by 1 inflation stage along:
+   * 'idle' (0) -> 'inflated_1' (1) -> 'inflated_2' (2) -> 'inflated_3' (3) -> 'popped' (4)
+   */
+  pumpEnemyStep(enemy) {
+    if (!enemy || enemy.inflationState === 'popped') return;
+
+    enemy.ghostMode = false;
+    enemy.fireChargeTimer = 0;
+    enemy.fireActiveTimer = 0;
+
+    enemy.inflationStage = Math.min(4, enemy.inflationStage + 1);
+    enemy.inflationState = INFLATION_STATES[enemy.inflationStage];
+
+    // Reset 3.0s deflation timer (each stage holds 1.0s so 3 stages deflate over 3.0s total)
+    enemy.deflateTimer = enemy.inflationStage * 1.0;
+
+    if (enemy.inflationStage < 4) {
+      this.audio.playPump(enemy.inflationStage);
+    } else {
+      // Stage 4: 'popped'!
+      this.popEnemy(enemy);
+    }
+  }
+
+  popEnemy(enemy) {
+    enemy.inflationStage = 4;
+    enemy.inflationState = 'popped';
+    this.audio.playPop();
+    this.renderer.shake(7, 0.22);
+
+    const stratum = this.getStratumForY(enemy.y);
+    // Classic Dig Dug bonus: Fygars popped horizontally award 2x points!
+    const horizMultiplier =
+      enemy.type === 'fygar' &&
+      (this.player.dir === 'left' || this.player.dir === 'right')
+        ? 2
+        : 1;
+    const pts = stratum.baseScore * horizMultiplier;
+    this.addScore(pts, enemy.x, enemy.y - 10, PALETTE.GOLD);
+
+    // Release harpoon
+    if (this.harpoon.latchedEnemy === enemy) {
+      this.harpoon.active = false;
+      this.harpoon.latchedEnemy = null;
+      this.player.latchedEnemy = null;
+    }
+
+    // Pop explosion particles
+    const colors =
+      enemy.type === 'pooka'
+        ? [PALETTE.RED, '#FDE047', PALETTE.WHITE, PALETTE.ORANGE]
+        : [PALETTE.GREEN, PALETTE.ORANGE, '#FDE047', PALETTE.WHITE];
+
+    for (let i = 0; i < 28; i++) {
+      const a = (Math.PI * 2 * i) / 28 + Math.random() * 0.2;
+      const spd = 60 + Math.random() * 165;
+      this.particles.push({
+        x: enemy.x,
+        y: enemy.y,
+        vx: Math.cos(a) * spd,
+        vy: Math.sin(a) * spd,
+        gravity: 240,
+        size: 3.5 + Math.random() * 3.5,
+        life: 0.45 + Math.random() * 0.25,
+        maxLife: 0.7,
+        color: colors[i % colors.length]
+      });
+    }
+
+    // Remove popped enemy
+    const idx = this.enemies.indexOf(enemy);
+    if (idx !== -1) {
+      this.enemies.splice(idx, 1);
+    }
+
+    this.checkStageClear();
+  }
+
+  checkStageClear() {
+    if (this.enemies.length === 0 && this.stageClearTimer <= 0) {
+      this.audio.playStageClear();
+      this.addScore(1000, 480, 240, PALETTE.GREEN);
+      this.stageClearTimer = 1.4;
+    }
+  }
+
+  killPlayer() {
+    if (this.deathTimer > 0 || this.stageClearTimer > 0) return;
+    this.lives--;
+    this.audio.playHit();
+    this.renderer.shake(9, 0.32);
+
+    this.harpoon.active = false;
+    this.harpoon.latchedEnemy = null;
+    this.player.latchedEnemy = null;
+
+    for (let i = 0; i < 24; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const spd = 45 + Math.random() * 145;
+      this.particles.push({
+        x: this.player.x,
+        y: this.player.y,
+        vx: Math.cos(a) * spd,
+        vy: Math.sin(a) * spd,
+        gravity: 220,
+        size: 3.5,
+        life: 0.55,
+        maxLife: 0.55,
+        color: i % 2 === 0 ? PALETTE.CYAN : PALETTE.WHITE
+      });
+    }
+
+    if (this.lives <= 0) {
+      HighScoreStore.submit(this.id, this.score);
+      this.audio.playGameOver();
+      this.state = 'GAMEOVER';
+    } else {
+      this.deathTimer = 1.15;
+    }
+  }
+
+  update(dt) {
+    this.animTime += dt;
+
+    if (this.input.isJustPressed('pause')) {
+      if (this.state === 'PLAYING') {
+        this.state = 'PAUSED';
+        return;
+      } else if (this.state === 'PAUSED') {
+        this.state = 'PLAYING';
+        return;
+      }
+    }
+
+    if (this.state === 'MENU') {
+      if (this.input.isJustPressed('actionA') || this.input.pointer.justPressed) {
+        this.audio.playMenuSelect();
+        this.reset();
+      }
+      return;
+    }
+
+    if (this.state === 'PAUSED') {
+      if (this.input.isJustPressed('actionA')) {
+        this.state = 'PLAYING';
+      }
+      return;
+    }
+
+    if (this.state === 'GAMEOVER') {
+      if (this.input.isJustPressed('actionA') || this.input.pointer.justPressed) {
+        this.audio.playMenuSelect();
+        this.reset();
+      }
+      return;
+    }
+
+    this.updateEffects(dt);
+
+    if (this.stageClearTimer > 0) {
+      this.stageClearTimer -= dt;
+      if (this.stageClearTimer <= 0) {
+        this.level++;
+        this.initStage(this.level);
+      }
+      return;
+    }
+
+    if (this.deathTimer > 0) {
+      this.deathTimer -= dt;
+      if (this.deathTimer <= 0) {
+        this.spawnPlayer();
+        // Reset surviving enemies to their chamber spawns
+        for (const e of this.enemies) {
+          e.x = e.spawnX;
+          e.y = e.spawnY;
+          e.inflationStage = 0;
+          e.inflationState = 'idle';
+          e.deflateTimer = 0;
+          e.ghostMode = false;
+          e.fireChargeTimer = 0;
+          e.fireActiveTimer = 0;
+        }
+      }
+      return;
+    }
+
+    this.updatePlayerAndPump(dt);
+    this.updateRocks(dt);
+    this.updateEnemies(dt);
+    this.updateBonusVeggie(dt);
+  }
+
+  updateEffects(dt) {
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const pt = this.particles[i];
+      pt.x += pt.vx * dt;
+      pt.y += pt.vy * dt;
+      pt.vy += (pt.gravity || 0) * dt;
+      pt.life -= dt;
+      if (pt.life <= 0) {
+        this.particles.splice(i, 1);
+      }
+    }
+
+    for (let i = this.popups.length - 1; i >= 0; i--) {
+      const pop = this.popups[i];
+      pop.y += pop.vy * dt;
+      pop.life -= dt;
+      if (pop.life <= 0) {
+        this.popups.splice(i, 1);
+      }
+    }
+  }
+
+  updatePlayerAndPump(dt) {
+    const p = this.player;
+    const h = this.harpoon;
+
+    // 1. Handle Pump Harpoon & Latched Enemy Inflation
+    const actionJustPressed =
+      this.input.isJustPressed('actionA') || this.input.isJustPressed('actionB');
+    const actionHeld =
+      this.input.isDown('actionA') || this.input.isDown('actionB');
+
+    let moveDir = null;
+    if (this.input.isDown('left')) moveDir = 'left';
+    else if (this.input.isDown('right')) moveDir = 'right';
+    else if (this.input.isDown('up')) moveDir = 'up';
+    else if (this.input.isDown('down')) moveDir = 'down';
+
+    // If latched onto an enemy: pressing or holding Action A pumps the enemy; moving detaches!
+    if (h.latchedEnemy) {
+      if (
+        !this.enemies.includes(h.latchedEnemy) ||
+        h.latchedEnemy.inflationState === 'popped'
+      ) {
+        h.active = false;
+        h.latchedEnemy = null;
+        p.latchedEnemy = null;
+      } else if (moveDir && !actionHeld) {
+        // Player walked away -> detach harpoon so enemy begins 3.0s deflation
+        h.active = false;
+        h.latchedEnemy = null;
+        p.latchedEnemy = null;
+      } else {
+        if (actionJustPressed) {
+          p.pumpHoldTimer = 0.26;
+          this.pumpEnemyStep(h.latchedEnemy);
+          return;
+        } else if (actionHeld) {
+          p.pumpHoldTimer -= dt;
+          if (p.pumpHoldTimer <= 0) {
+            p.pumpHoldTimer = 0.26;
+            this.pumpEnemyStep(h.latchedEnemy);
+            return;
+          }
+        }
+      }
+    } else if (actionJustPressed && !h.active) {
+      // Fire new harpoon in player's facing direction
+      h.active = true;
+      h.dir = p.dir;
+      h.x = p.x;
+      h.y = p.y;
+      h.length = 12;
+      h.latchedEnemy = null;
+      p.pumpHoldTimer = 0.26;
+      this.audio.playLaser(680, 320, 0.07);
+    }
+
+    // Extend active unlatched harpoon
+    if (h.active && !h.latchedEnemy) {
+      h.length += h.extendSpeed * dt;
+      const vec = DIR_VECTORS[h.dir];
+      const tipX = p.x + vec.x * h.length;
+      const tipY = p.y + vec.y * h.length;
+
+      // Check if harpoon tip hits an enemy
+      for (const e of this.enemies) {
+        const hitRadius = e.baseRadius * INFLATION_SCALES[e.inflationStage] + 6;
+        if (Math.hypot(tipX - e.x, tipY - e.y) <= hitRadius) {
+          h.latchedEnemy = e;
+          p.latchedEnemy = e;
+          this.pumpEnemyStep(e);
+          break;
+        }
+      }
+
+      // Stop harpoon if it hits a rock or reaches max length
+      if (
+        !h.latchedEnemy &&
+        (h.length >= h.maxLength ||
+          this.isBlockedByEmbeddedRock(tipX, tipY, 4) ||
+          tipX < 10 ||
+          tipX > 950 ||
+          tipY < this.surfaceY - 10 ||
+          tipY > 532)
+      ) {
+        h.active = false;
+      }
+    }
+
+    // Cannot walk while actively extending harpoon or pumping
+    if (h.active && ( !h.latchedEnemy || actionHeld )) {
+      return;
+    }
+
+    // 2. Player Directional Movement & Soil Excavation (15% speed reduction in soil)
+    if (moveDir) {
+      // Detach harpoon if moving away
+      h.active = false;
+      h.latchedEnemy = null;
+      p.latchedEnemy = null;
+
+      p.dir = moveDir;
+      if (moveDir === 'left') p.facing = -1;
+      if (moveDir === 'right') p.facing = 1;
+
+      const vec = DIR_VECTORS[moveDir];
+      const probeX = p.x + vec.x * 13;
+      const probeY = p.y + vec.y * 13;
+
+      // Check whether leading edge is carving unexcavated soil
+      const isCarving =
+        probeY >= this.surfaceY && this.hasUnexcavatedSoilAround(probeX, probeY, 10);
+      p.isDiggingSoil = isCarving;
+
+      // Exact spec requirement: 15% speed reduction when carving through unexcavated soil
+      p.currentSpeed = isCarving ? p.baseSpeed * 0.85 : p.baseSpeed * 1.0;
+
+      const nx = Math.max(18, Math.min(942, p.x + vec.x * p.currentSpeed * dt));
+      const ny = Math.max(
+        this.surfaceY - 4,
+        Math.min(524, p.y + vec.y * p.currentSpeed * dt)
+      );
+
+      if (!this.isBlockedByEmbeddedRock(nx, ny, p.radius)) {
+        p.x = nx;
+        p.y = ny;
+        p.animFrame += dt * (isCarving ? 10 : 12);
+
+        const clearedCells = this.carveCircle(p.x, p.y, 14, true);
+        if (clearedCells > 0) {
+          this.addScore(clearedCells * 2);
+          p.digSoundTimer -= dt;
+          if (p.digSoundTimer <= 0) {
+            p.digSoundTimer = 0.14;
+            this.audio.playDig();
+          }
+        }
+      }
+    } else {
+      p.isDiggingSoil = false;
+      p.currentSpeed = p.baseSpeed;
+    }
+  }
+
+  /**
+   * Updates boulders:
+   * - Checks if soil directly beneath an embedded rock is excavated
+   * - Suspends & wobbles for 1.2 seconds when undermined
+   * - Enters downward collision raycast loop crushing enemies & player
+   */
+  updateRocks(dt) {
+    for (const rock of this.rocks) {
+      if (rock.state === 'done') continue;
+
+      if (rock.state === 'embedded') {
+        // Check if player excavated the support cells directly below this boulder
+        const supportCleared =
+          !this.isSoilAtWorld(rock.x, rock.y + rock.radius + 6) &&
+          !this.isSoilAtWorld(rock.x - 7, rock.y + rock.radius + 6) &&
+          !this.isSoilAtWorld(rock.x + 7, rock.y + rock.radius + 6);
+
+        if (supportCleared) {
+          rock.state = 'wobbling';
+          rock.hangTimer = 1.2; // Exact 1.2s suspension timer
+        }
+      } else if (rock.state === 'wobbling') {
+        rock.hangTimer -= dt;
+        rock.wobbleOffset = Math.sin(this.animTime * 48) * 3.0;
+
+        // Drop warning dust particles from underneath the trembling rock
+        if (Math.random() < 0.45) {
+          const stratum = this.getStratumForY(rock.y + rock.radius);
+          this.particles.push({
+            x: rock.x + (Math.random() - 0.5) * 24,
+            y: rock.y + rock.radius,
+            vx: (Math.random() - 0.5) * 25,
+            vy: 30 + Math.random() * 45,
+            gravity: 220,
+            size: 2.5,
+            life: 0.35,
+            maxLife: 0.35,
+            color: stratum.speckle
+          });
+        }
+
+        if (rock.hangTimer <= 0) {
+          rock.state = 'falling';
+          rock.wobbleOffset = 0;
+          rock.vy = 60;
+          rock.fallenDistance = 0;
+          rock.crushCount = 0;
+          // Clear immediate pocket where rock was sitting
+          this.carveCircle(rock.x, rock.y, rock.radius, false);
+        }
+      } else if (rock.state === 'falling') {
+        rock.vy = Math.min(350, rock.vy + 760 * dt);
+        const stepDist = rock.vy * dt;
+        const raySteps = Math.max(1, Math.ceil(stepDist / 4));
+        const dyStep = stepDist / raySteps;
+
+        let hitBottom = false;
+
+        // Downward collision raycast loop
+        for (let s = 0; s < raySteps; s++) {
+          const nextY = rock.y + dyStep;
+          rock.fallenDistance += dyStep;
+
+          // Carve tunnel behind/around falling rock
+          this.carveCircle(rock.x, rock.y, rock.radius - 1, true);
+
+          // Check crushing any enemies in the boulder's path
+          for (const e of this.enemies) {
+            if (!e.crushed && Math.hypot(e.x - rock.x, e.y - nextY) < rock.radius + 11) {
+              e.crushed = true;
+              e.rockCarriedBy = rock;
+              rock.crushCount++;
+              this.audio.playShove();
+            }
+          }
+
+          // Carry crushed enemies down with the rock
+          for (const e of this.enemies) {
+            if (e.rockCarriedBy === rock) {
+              e.x = rock.x;
+              e.y = nextY + 8;
+            }
+          }
+
+          // Check crushing the player
+          if (
+            Math.hypot(this.player.x - rock.x, this.player.y - nextY) <
+            rock.radius + this.player.radius - 3
+          ) {
+            this.killPlayer();
+          }
+
+          // Raycast check against bottom floor or solid unexcavated earth below tunnel
+          const bottomProbeY = nextY + rock.radius + 4;
+          const hitSolidFloor =
+            bottomProbeY >= 530 ||
+            (rock.fallenDistance > 26 &&
+              this.isSoilAtWorld(rock.x, bottomProbeY) &&
+              this.isSoilAtWorld(rock.x - 8, bottomProbeY) &&
+              this.isSoilAtWorld(rock.x + 8, bottomProbeY));
+
+          rock.y = nextY;
+
+          if (hitSolidFloor) {
+            hitBottom = true;
+            break;
+          }
+        }
+
+        if (hitBottom) {
+          rock.state = 'shattering';
+          rock.shatterTimer = 0.42;
+          this.rocksDroppedCount++;
+          this.audio.playExplosion(0.32, 800);
+          this.renderer.shake(8, 0.25);
+
+          // Remove any enemies crushed by this rock and award multi-crush bonus!
+          for (let i = this.enemies.length - 1; i >= 0; i--) {
+            if (this.enemies[i].rockCarriedBy === rock) {
+              this.enemies.splice(i, 1);
+            }
+          }
+
+          if (rock.crushCount > 0) {
+            const crushScores = [0, 1000, 2500, 4000, 8000];
+            const bonus =
+              crushScores[Math.min(crushScores.length - 1, rock.crushCount)];
+            this.addScore(bonus, rock.x, rock.y - 16, PALETTE.PINK);
+          }
+
+          // Spawn rock shatter fragments
+          for (let i = 0; i < 20; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const spd = 40 + Math.random() * 130;
+            this.particles.push({
+              x: rock.x,
+              y: rock.y,
+              vx: Math.cos(a) * spd,
+              vy: Math.sin(a) * spd - 30,
+              gravity: 320,
+              size: 4 + Math.random() * 3,
+              life: 0.45,
+              maxLife: 0.45,
+              color: i % 2 === 0 ? '#94A3B8' : '#CBD5E1'
+            });
+          }
+
+          // Spawn Bonus Veggie after 2 rocks drop in a stage
+          if (this.rocksDroppedCount >= 2 && !this.veggieSpawnedThisStage) {
+            this.veggieSpawnedThisStage = true;
+            this.bonusVeggie = {
+              x: 480,
+              y: 300,
+              timer: 9.0,
+              value: Math.min(4000, 400 + (this.level - 1) * 400)
+            };
+          }
+
+          this.checkStageClear();
+        }
+      } else if (rock.state === 'shattering') {
+        rock.shatterTimer -= dt;
+        if (rock.shatterTimer <= 0) {
+          rock.state = 'done';
+        }
+      }
+    }
+  }
+
+  /**
+   * Updates Pooka & Fygar AI, 3.0s inflation deflation, Ghost-Eyes drift, and Fygar fire breath
+   */
+  updateEnemies(dt) {
+    const p = this.player;
+    const baseSpeed = Math.min(112, 74 + (this.level - 1) * 6);
+
+    for (const e of this.enemies) {
+      if (e.crushed) continue;
+      e.animFrame += dt * 8;
+
+      // 1. Handle 4-stage inflation deflation over 3.0 seconds when pump action halts
+      if (e.inflationStage > 0 && e.inflationStage < 4) {
+        const isBeingActivelyPumped =
+          this.harpoon.latchedEnemy === e &&
+          (this.input.isDown('actionA') || this.input.isDown('actionB'));
+
+        if (!isBeingActivelyPumped) {
+          // 3 stages deflate over 3.0 seconds total (1.0s per stage)
+          e.deflateTimer = Math.max(0, e.deflateTimer - dt);
+          const newStage = Math.ceil(e.deflateTimer);
+          e.inflationStage = newStage;
+          e.inflationState = INFLATION_STATES[newStage];
+
+          if (e.inflationStage === 0) {
+            if (this.harpoon.latchedEnemy === e) {
+              this.harpoon.active = false;
+              this.harpoon.latchedEnemy = null;
+              this.player.latchedEnemy = null;
+            }
+          }
+        }
+        // Inflated enemies are immobilized in place
+        continue;
+      }
+
+      // 2. Fygar Horizontal Fire-Breathing State
+      if (e.type === 'fygar' && !e.ghostMode) {
+        if (e.fireChargeTimer > 0) {
+          e.fireChargeTimer -= dt;
+          if (e.fireChargeTimer <= 0) {
+            e.fireActiveTimer = 0.55;
+            this.audio.playExplosion(0.28, 1200);
+          }
+          continue;
+        }
+        if (e.fireActiveTimer > 0) {
+          e.fireActiveTimer -= dt;
+          // Check if player is inside the fire jet hitbox (up to 72px in facing dir)
+          const fireWidth = 72;
+          const fireMinX = e.facing > 0 ? e.x + 10 : e.x - 10 - fireWidth;
+          const fireMaxX = e.facing > 0 ? e.x + 10 + fireWidth : e.x - 10;
+          if (
+            p.x + p.radius > fireMinX &&
+            p.x - p.radius < fireMaxX &&
+            Math.abs(p.y - e.y) < 18
+          ) {
+            this.killPlayer();
+            return;
+          }
+          continue;
+        }
+
+        e.fireCooldown -= dt;
+        if (
+          e.fireCooldown <= 0 &&
+          (e.dir === 'left' || e.dir === 'right') &&
+          !this.isSoilAtWorld(e.x + e.facing * 32, e.y)
+        ) {
+          e.fireChargeTimer = 0.55;
+          e.fireCooldown = 6.5 + Math.random() * 3.5;
+          continue;
+        }
+      }
+
+      // 3. Ghost-Eyes Phase (drifting through solid dirt toward player's tunnel)
+      if (e.ghostMode) {
+        const dx = p.x - e.x;
+        const dy = p.y - e.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const ghostSpeed = baseSpeed * 0.58;
+        e.x += (dx / dist) * ghostSpeed * dt;
+        e.y += (dy / dist) * ghostSpeed * dt;
+        if (Math.abs(dx) > 2) e.facing = dx > 0 ? 1 : -1;
+
+        e.ghostTimer -= dt;
+        // Materialize back into solid enemy when inside an excavated tunnel near player
+        if (
+          e.ghostTimer <= 0 &&
+          !this.hasUnexcavatedSoilAround(e.x, e.y, 11) &&
+          !this.isBlockedByEmbeddedRock(e.x, e.y, 12)
+        ) {
+          e.ghostMode = false;
+          e.ghostTimer = 7.5 + Math.random() * 4.0;
+        }
+      } else {
+        // 4. Standard Tunnel Patrol AI
+        e.ghostTimer -= dt;
+        if (e.ghostTimer <= 0) {
+          e.ghostMode = true;
+          e.ghostTimer = 2.6 + Math.random() * 1.5;
+          continue;
+        }
+
+        e.turnCooldown = Math.max(0, e.turnCooldown - dt);
+        const vec = DIR_VECTORS[e.dir];
+        const step = baseSpeed * dt;
+        const nextX = e.x + vec.x * step;
+        const nextY = e.y + vec.y * step;
+        const probeX = e.x + vec.x * 15;
+        const probeY = e.y + vec.y * 15;
+
+        const blocked =
+          probeX < 18 ||
+          probeX > 942 ||
+          probeY < this.surfaceY + 6 ||
+          probeY > 524 ||
+          this.isSoilAtWorld(probeX, probeY) ||
+          this.isBlockedByEmbeddedRock(nextX, nextY, 12);
+
+        // At tunnel junctions or when blocked, pick open tunnel direction toward player
+        if (blocked || (e.turnCooldown <= 0 && Math.random() < 0.04)) {
+          const dirs = ['up', 'down', 'left', 'right'];
+          const opposite = { up: 'down', down: 'up', left: 'right', right: 'left' }[
+            e.dir
+          ];
+          let bestDir = opposite;
+          let bestScore = -Infinity;
+
+          for (const d of dirs) {
+            const dv = DIR_VECTORS[d];
+            const px = e.x + dv.x * 16;
+            const py = e.y + dv.y * 16;
+            if (
+              px >= 18 &&
+              px <= 942 &&
+              py >= this.surfaceY + 6 &&
+              py <= 524 &&
+              !this.isSoilAtWorld(px, py) &&
+              !this.isBlockedByEmbeddedRock(px, py, 12)
+            ) {
+              const distToPlayer = Math.hypot(p.x - px, p.y - py);
+              let score = -distToPlayer;
+              if (d === opposite && !blocked) score -= 80;
+              if (score > bestScore) {
+                bestScore = score;
+                bestDir = d;
+              }
+            }
+          }
+          e.dir = bestDir;
+          e.turnCooldown = 0.28;
+        } else {
+          e.x = nextX;
+          e.y = nextY;
+        }
+
+        if (e.dir === 'left') e.facing = -1;
+        else if (e.dir === 'right') e.facing = 1;
+      }
+
+      // 5. Check lethal contact with player (only when enemy is uninflated stage 0)
+      if (
+        e.inflationStage === 0 &&
+        Math.hypot(e.x - p.x, e.y - p.y) < e.baseRadius + p.radius - 3
+      ) {
+        this.killPlayer();
+        return;
+      }
+    }
+  }
+
+  updateBonusVeggie(dt) {
+    if (!this.bonusVeggie) return;
+    this.bonusVeggie.timer -= dt;
+    if (this.bonusVeggie.timer <= 0) {
+      this.bonusVeggie = null;
+      return;
+    }
+
+    if (
+      Math.hypot(
+        this.player.x - this.bonusVeggie.x,
+        this.player.y - this.bonusVeggie.y
+      ) < 24
+    ) {
+      this.addScore(
+        this.bonusVeggie.value,
+        this.bonusVeggie.x,
+        this.bonusVeggie.y - 10,
+        PALETTE.GREEN
+      );
+      this.audio.playCoin();
+      this.bonusVeggie = null;
+    }
+  }
+
+  render(ctx = this.renderer.ctx) {
+    this.renderer.clear(PALETTE.BG);
+
+    // 1. Render Sky & Surface Flowers (y: 38..86)
+    this.renderSurface(ctx);
+
+    // 2. Render 4 Volumetric Underground Soil Strata & Excavated Tunnels (y: 86..540)
+    this.renderSoilLayers(ctx);
+
+    // 3. Render Bonus Veggie if active
+    if (this.bonusVeggie) {
+      this.renderBonusVeggie(ctx, this.bonusVeggie);
+    }
+
+    // 4. Render Boulders
+    for (const rock of this.rocks) {
+      if (rock.state !== 'done') {
+        this.renderRock(ctx, rock);
+      }
+    }
+
+    // 5. Render Pookas & Fygars (with 4-stage inflation scaling & fire jets)
+    for (const e of this.enemies) {
+      this.renderEnemy(ctx, e);
+    }
+
+    // 6. Render Player & Harpoon Pump Line
+    if (this.deathTimer <= 0) {
+      this.renderHarpoon(ctx);
+      this.renderPlayer(ctx);
+    }
+
+    // 7. Render Particles & Score Popups
+    this.renderEffects(ctx);
+
+    // 8. Top Arcade HUD
+    this.renderer.drawHUD({
+      title: this.title,
+      score: this.score,
+      highScore: this.highScore,
+      lives: this.lives,
+      level: this.level,
+      extraLabel: `ENEMIES: ${this.enemies.length}`,
+      accent: PALETTE.ORANGE
+    });
+
+    // Stage Clear Banner
+    if (this.stageClearTimer > 0) {
+      this.renderer.drawGlowRect(310, 230, 340, 74, PALETTE.PANEL, 16, true);
+      this.renderer.drawGlowRect(310, 230, 340, 74, PALETTE.GREEN, 16, false, 2.5);
+      this.renderer.drawText('ROUND CLEAR! +1000', 480, 275, {
+        font: FONTS.HEADER,
+        size: 16,
+        color: PALETTE.GREEN,
+        align: 'center',
+        glow: 10
+      });
+    }
+
+    // Standard State Overlay
+    this.renderer.drawStateOverlay(this.state, {
+      title: this.title,
+      subtitle: 'VOLUMETRIC TUNNELING  |  4-STAGE PUMP INFLATION & ROCK GRAVITY',
+      controls: 'ARROWS/WASD: DIG TUNNELS  |  Z/SPACE: FIRE HARPOON & PUMP ENEMIES',
+      score: this.score,
+      highScore: this.highScore,
+      accent: PALETTE.ORANGE
+    });
+  }
+
+  renderSurface(ctx) {
+    // Deep twilight arcade sky band
+    const grad = ctx.createLinearGradient(0, 38, 0, this.surfaceY);
+    grad.addColorStop(0, '#0F172A');
+    grad.addColorStop(1, '#1E3A8A');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 38, 960, this.surfaceY - 38);
+
+    // Grass crest along y = 82..86
+    ctx.fillStyle = PALETTE.GREEN;
+    ctx.fillRect(0, this.surfaceY - 4, 464, 4);
+    ctx.fillRect(496, this.surfaceY - 4, 464, 4);
+
+    // Stage indicator flowers on the right side of the surface
+    const flowerCount = Math.min(10, this.level);
+    for (let i = 0; i < flowerCount; i++) {
+      const fx = 920 - i * 24;
+      const fy = this.surfaceY - 4;
+      // Stem
+      ctx.fillStyle = PALETTE.GREEN;
+      ctx.fillRect(fx - 1, fy - 12, 2, 12);
+      // Petals
+      ctx.fillStyle = i % 2 === 0 ? PALETTE.PINK : PALETTE.CYAN;
+      ctx.fillRect(fx - 5, fy - 18, 10, 6);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(fx - 2, fy - 16, 4, 3);
+    }
+  }
+
+  renderSoilLayers(ctx) {
+    // Dark subterranean tunnel background
+    ctx.fillStyle = '#090D16';
+    ctx.fillRect(0, this.surfaceY, 960, 540 - this.surfaceY);
+
+    // Render contiguous horizontal runs of unexcavated soil per row
+    for (let r = 0; r < this.gridRows; r++) {
+      const y = this.surfaceY + r * this.cellSize;
+      const stratum = this.getStratumForY(y + 2);
+      const rowData = this.soil[r];
+
+      ctx.fillStyle = stratum.fill;
+      let runStart = -1;
+      for (let c = 0; c <= this.gridCols; c++) {
+        const solid = c < this.gridCols && rowData[c] === 1;
+        if (solid && runStart === -1) {
+          runStart = c;
+        } else if (!solid && runStart !== -1) {
+          const rx = runStart * this.cellSize;
+          const rw = (c - runStart) * this.cellSize;
+          ctx.fillRect(rx, y, rw, this.cellSize);
+          runStart = -1;
+        }
+      }
+
+      // Draw retro geological speckles & stratum border lines
+      ctx.fillStyle = stratum.speckle;
+      for (let c = 0; c < this.gridCols; c += 2) {
+        if (rowData[c] === 1 && (r * 7 + c * 13) % 5 === 0) {
+          ctx.fillRect(c * this.cellSize + 3, y + 3, 3, 3);
+        }
+      }
+    }
+  }
+
+  renderBonusVeggie(ctx, v) {
+    const bob = Math.sin(this.animTime * 6) * 2;
+    ctx.save();
+    ctx.shadowColor = PALETTE.ORANGE;
+    ctx.shadowBlur = 10;
+    // Carrot/Turnip arcade icon
+    ctx.fillStyle = PALETTE.GREEN;
+    ctx.fillRect(v.x - 6, v.y - 14 + bob, 12, 5);
+    ctx.fillStyle = PALETTE.ORANGE;
+    ctx.beginPath();
+    ctx.moveTo(v.x - 8, v.y - 9 + bob);
+    ctx.lineTo(v.x + 8, v.y - 9 + bob);
+    ctx.lineTo(v.x, v.y + 11 + bob);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  renderRock(ctx, rock) {
+    const rx = rock.x + (rock.wobbleOffset || 0);
+    const ry = rock.y;
+    const r = rock.radius;
+
+    ctx.save();
+    if (rock.state === 'shattering') {
+      ctx.globalAlpha = Math.max(0, rock.shatterTimer / 0.42);
+    }
+
+    // Craggy retro boulder polygon
+    ctx.fillStyle = '#64748B';
+    ctx.strokeStyle = '#E2E8F0';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(rx, ry, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Facet highlights & cracks
+    ctx.fillStyle = '#94A3B8';
+    ctx.fillRect(rx - r * 0.5, ry - r * 0.5, r * 0.6, r * 0.4);
+    ctx.strokeStyle = '#1E293B';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(rx - 6, ry - 4);
+    ctx.lineTo(rx + 2, ry + 2);
+    ctx.lineTo(rx + 8, ry - 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  renderEnemy(ctx, e) {
+    const scale = INFLATION_SCALES[e.inflationStage] || 1.0;
+    const r = e.baseRadius * scale;
+
+    ctx.save();
+
+    // Ghost-Eyes disembodied drift mode
+    if (e.ghostMode) {
+      const blink = 0.6 + 0.4 * Math.sin(this.animTime * 18);
+      ctx.globalAlpha = blink;
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(e.x - 8, e.y - 5, 6, 8);
+      ctx.fillRect(e.x + 2, e.y - 5, 6, 8);
+      ctx.fillStyle = e.type === 'pooka' ? PALETTE.RED : PALETTE.GREEN;
+      ctx.fillRect(e.x - 6 + e.facing * 1.5, e.y - 2, 3, 4);
+      ctx.fillRect(e.x + 4 + e.facing * 1.5, e.y - 2, 3, 4);
+      ctx.restore();
+      return;
+    }
+
+    // Fygar Fire Breath Jet
+    if (e.type === 'fygar' && e.fireActiveTimer > 0) {
+      const fireLen = 72;
+      const sx = e.x + e.facing * 14;
+      ctx.save();
+      ctx.shadowColor = PALETTE.ORANGE;
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = Math.sin(this.animTime * 45) > 0 ? PALETTE.ORANGE : PALETTE.GOLD;
+      ctx.beginPath();
+      ctx.moveTo(sx, e.y - 6);
+      ctx.lineTo(sx + e.facing * fireLen, e.y - 16);
+      ctx.lineTo(sx + e.facing * fireLen, e.y + 16);
+      ctx.lineTo(sx, e.y + 6);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Flatten slightly if crushed under a falling boulder
+    const scaleX = e.crushed ? scale * 1.35 : scale;
+    const scaleY = e.crushed ? scale * 0.5 : scale;
+
+    ctx.translate(e.x, e.y);
+    ctx.scale(scaleX, scaleY);
+
+    if (e.type === 'pooka') {
+      // POOKA: Round Red Monster with big yellow goggles
+      ctx.shadowColor = PALETTE.RED;
+      ctx.shadowBlur = e.inflationStage > 0 ? 14 : 6;
+      ctx.fillStyle = e.inflationStage === 3 ? '#FB7185' : PALETTE.RED;
+      ctx.beginPath();
+      ctx.arc(0, 0, e.baseRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Yellow Goggle Visor
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(-9, -6, 18, 8);
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(-7, -4, 6, 5);
+      ctx.fillRect(1, -4, 6, 5);
+
+      // Comical stretched pupils when inflated
+      const eyeSize = e.inflationStage >= 2 ? 3.5 : 2.5;
+      ctx.fillStyle = '#0F172A';
+      ctx.fillRect(-5 + e.facing, -3, eyeSize, eyeSize);
+      ctx.fillRect(3 + e.facing, -3, eyeSize, eyeSize);
+
+      // Little yellow boots
+      const step = Math.sin(e.animFrame) * 2;
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(-8, e.baseRadius - 3 + step, 6, 4);
+      ctx.fillRect(2, e.baseRadius - 3 - step, 6, 4);
+    } else {
+      // FYGAR: Green Dragon with flashing orange wings & dorsal spikes
+      const charging = e.fireChargeTimer > 0 && Math.sin(this.animTime * 35) > 0;
+      const bodyColor = charging
+        ? PALETTE.ORANGE
+        : e.inflationStage === 3
+          ? '#86EFAC'
+          : PALETTE.GREEN;
+
+      ctx.shadowColor = bodyColor;
+      ctx.shadowBlur = e.inflationStage > 0 || charging ? 14 : 6;
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.arc(0, 0, e.baseRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Orange dorsal wings
+      ctx.fillStyle = PALETTE.ORANGE;
+      ctx.fillRect(-e.facing * 11 - 3, -7, 7, 11);
+
+      // Eyes
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(e.facing * 2 - 4, -6, 8, 6);
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(e.facing * 4 - 2, -4, 3, 4);
+    }
+
+    // Inflation stage indicator outline when pumped up
+    if (e.inflationStage > 0) {
+      ctx.strokeStyle = PALETTE.WHITE;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.arc(0, 0, e.baseRadius + 2, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  renderHarpoon(ctx) {
+    const h = this.harpoon;
+    if (!h.active) return;
+
+    const p = this.player;
+    let endX = p.x;
+    let endY = p.y;
+
+    if (h.latchedEnemy) {
+      endX = h.latchedEnemy.x;
+      endY = h.latchedEnemy.y;
+    } else {
+      const vec = DIR_VECTORS[h.dir];
+      endX = p.x + vec.x * h.length;
+      endY = p.y + vec.y * h.length;
+    }
+
+    ctx.save();
+    ctx.strokeStyle = PALETTE.GOLD;
+    ctx.shadowColor = PALETTE.GOLD;
+    ctx.shadowBlur = 8;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+
+    // Barbed harpoon tip
+    ctx.fillStyle = PALETTE.RED;
+    ctx.beginPath();
+    ctx.arc(endX, endY, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  renderPlayer(ctx) {
+    const p = this.player;
+    const x = p.x - 12;
+    const y = p.y - 12;
+    const step = Math.floor(p.animFrame) % 2 === 0;
+
+    const sprite1 = [
+      '....WWWW....',
+      '..WWWWWWWW..',
+      '..WWBBBBWW..',
+      '..WWWWWWWW..',
+      '...BBBBBB...',
+      '..WWBBBBWW..',
+      '.WW.BBBB.WW.',
+      '....RRRR....',
+      '...RR..RR...',
+      '..RR....RR..'
+    ];
+    const sprite2 = [
+      '....WWWW....',
+      '..WWWWWWWW..',
+      '..WWBBBBWW..',
+      '..WWWWWWWW..',
+      '...BBBBBB...',
+      '..WWBBBBWW..',
+      '..W.BBBB.W..',
+      '....RRRR....',
+      '....RR.RR...',
+      '...RR...RR..'
+    ];
+
+    this.renderer.drawPixelSprite(
+      step ? sprite1 : sprite2,
+      x,
+      y,
+      2.2,
+      {
+        W: PALETTE.WHITE,
+        B: PALETTE.CYAN,
+        R: PALETTE.RED
+      },
+      p.facing < 0,
+      false
+    );
+  }
+
+  renderEffects(ctx) {
+    for (const pt of this.particles) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, pt.life / pt.maxLife);
+      ctx.fillStyle = pt.color;
+      ctx.fillRect(pt.x - pt.size * 0.5, pt.y - pt.size * 0.5, pt.size, pt.size);
+      ctx.restore();
+    }
+
+    for (const pop of this.popups) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, pop.life / pop.maxLife);
+      this.renderer.drawText(pop.text, pop.x, pop.y, {
+        font: FONTS.HEADER,
+        size: 12,
+        color: pop.color,
+        align: 'center',
+        glow: 8
+      });
+      ctx.restore();
+    }
+  }
+}
+
+export default DigDug;

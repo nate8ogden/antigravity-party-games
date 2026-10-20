@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<gameList>
+  <game>
+    <path>./Retro Arcade Studio.sh</path>
+    <name>Retro Arcade Studio (All 28 Classics + WASM + CRT)</name>
+    <desc>28 modernized classic coin-op arcade games with WebAssembly physics/pathfinding, WebGL CRT post-processing shaders, procedural Web Audio synthesis, and USB/GPIO arcade stick support.</desc>
+    <rating>0.98</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>Antigravity Retro Arcade Studio</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Arcade / Classics</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Lode Runner.sh</path>
+    <name>Lode Runner (Modernized Coin-Op)</name>
+    <desc>Play Lode Runner with WebGL CRT shaders, WebAssembly acceleration, and procedural Web Audio synth.</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>Antigravity Retro Arcade Studio</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Arcade</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Dig Dug.sh</path>
+    <name>Dig Dug (Modernized Coin-Op)</name>
+    <desc>Play Dig Dug with WebGL CRT shaders, WebAssembly acceleration, and procedural Web Audio synth.</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>Antigravity Retro Arcade Studio</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Arcade</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Donkey Kong.sh</path>
+    <name>Donkey Kong (Modernized Coin-Op)</name>
+    <desc>Play Donkey Kong with WebGL CRT shaders, WebAssembly acceleration, and procedural Web Audio synth.</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>Antigravity Retro Arcade Studio</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Arcade</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Sumo Arcade.sh</path>
+    <name>Sumo Arcade (Modernized Coin-Op)</name>
+    <desc>Play Sumo Arcade with WebGL CRT shaders, WebAssembly acceleration, and procedural Web Audio synth.</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>Antigravity Retro Arcade Studio</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Arcade</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Pac-Man.sh</path>
+    <name>Pac-Man (Modernized Coin-Op)</name>
+    <desc>Play Pac-Man with WebGL CRT shaders, WebAssembly acceleration, and procedural Web Audio synth.</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>Antigravity Retro Arcade Studio</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Arcade</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Frogger.sh</path>
+    <name>Frogger (Modernized Coin-Op)</name>
+    <desc>Play Frogger with WebGL CRT shaders, WebAssembly acceleration, and procedural Web Audio synth.</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>Antigravity Retro Arcade Studio</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Arcade</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Galaga.sh</path>
+    <name>Galaga (Modernized Coin-Op)</name>
+    <desc>Play Galaga with WebGL CRT shaders, WebAssembly acceleration, and procedural Web Audio synth.</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>Antigravity Retro Arcade Studio</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Arcade</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Space Invaders.sh</path>
+    <name>Space Invaders (Modernized Coin-Op)</name>
+    <desc>Play Space Invaders with WebGL CRT shaders, WebAssembly acceleration, and procedural Web Audio synth.</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>Antigravity Retro Arcade Studio</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Arcade</genre>
+    <players>1-2</players>
+  </game>
+</gameList>

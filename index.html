@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>RETRO ARCADE STUDIO — Modernized Coin-Op Suite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Press+Start+2P&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-space: #0B0F19;
+      --bg-panel: #111827;
+      --bg-bezel: #070A12;
+      --electric-cyan: #00F0FF;
+      --neon-pink: #FF007A;
+      --arcade-gold: #FFD700;
+      --vivid-green: #00FF66;
+      --text-white: #F8FAFC;
+      --text-muted: #94A3B8;
+      --font-header: 'Press Start 2P', 'Courier New', monospace;
+      --font-hud: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+      --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-space);
+      background-image:
+        radial-gradient(circle at 50% 10%, rgba(0, 240, 255, 0.10) 0%, transparent 55%),
+        radial-gradient(circle at 85% 90%, rgba(255, 0, 122, 0.08) 0%, transparent 50%);
+      color: var(--text-white);
+      font-family: var(--font-body);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Studio Control Deck */
+    .studio-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 16px;
+      background: rgba(11, 15, 25, 0.95);
+      border-bottom: 1px solid rgba(0, 240, 255, 0.28);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      z-index: 20;
+      flex-shrink: 0;
+    }
+
+    .studio-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-badge {
+      font-family: var(--font-header);
+      font-size: 13px;
+      color: var(--electric-cyan);
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.65);
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .studio-status {
+      font-family: var(--font-hud);
+      font-size: 12px;
+      color: var(--arcade-gold);
+      border-left: 2px solid rgba(255, 215, 0, 0.4);
+      padding-left: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 440px;
+    }
+
+    .studio-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .deck-btn {
+      font-family: var(--font-hud);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-white);
+      background: rgba(19, 27, 46, 0.9);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.14s ease;
+      white-space: nowrap;
+    }
+
+    .deck-btn:hover {
+      border-color: var(--electric-cyan);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+      color: var(--electric-cyan);
+    }
+
+    .deck-btn.active {
+      background: rgba(0, 240, 255, 0.16);
+      border-color: var(--electric-cyan);
+      color: var(--electric-cyan);
+      box-shadow: 0 0 8px rgba(0, 240, 255, 0.35);
+    }
+
+    .deck-btn.lobby-btn {
+      border-color: var(--neon-pink);
+      color: var(--neon-pink);
+    }
+
+    .deck-btn.lobby-btn:hover {
+      background: rgba(255, 0, 122, 0.18);
+      box-shadow: 0 0 10px rgba(255, 0, 122, 0.5);
+    }
+
+    .fps-badge {
+      font-family: var(--font-hud);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--vivid-green);
+      background: rgba(0, 255, 102, 0.1);
+      border: 1px solid rgba(0, 255, 102, 0.35);
+      padding: 4px 8px;
+      border-radius: 4px;
+      min-width: 56px;
+      text-align: center;
+    }
+
+    /* Quick-Switch Cabinet Strip */
+    .cabinet-strip-wrapper {
+      background: rgba(7, 10, 18, 0.95);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+      padding: 5px 12px;
+      overflow-x: auto;
+      white-space: nowrap;
+      flex-shrink: 0;
+      z-index: 15;
+      scrollbar-width: thin;
+      scrollbar-color: var(--electric-cyan) transparent;
+    }
+
+    .cabinet-quick-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cabinet-pill {
+      font-family: var(--font-hud);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      background: rgba(19, 27, 46, 0.75);
+      color: var(--text-muted);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      transition: all 0.12s ease;
+    }
+
+    .cabinet-pill.core-pill {
+      border-color: rgba(0, 240, 255, 0.35);
+      color: var(--text-white);
+    }
+
+    .cabinet-pill.lobby-pill {
+      border-color: var(--arcade-gold);
+      color: var(--arcade-gold);
+    }
+
+    .cabinet-pill:hover {
+      color: var(--electric-cyan);
+      border-color: var(--electric-cyan);
+      transform: translateY(-1px);
+    }
+
+    .cabinet-pill.active {
+      background: var(--electric-cyan);
+      color: var(--bg-space);
+      border-color: var(--electric-cyan);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.65);
+    }
+
+    /* Scalable 16:9 CRT Viewport Container */
+    .arcade-viewport {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      padding: 6px;
+    }
+
+    .crt-bezel {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-bezel);
+      border: 2px solid rgba(0, 240, 255, 0.4);
+      border-radius: 10px;
+      box-shadow:
+        0 0 32px rgba(0, 240, 255, 0.16),
+        inset 0 0 24px rgba(0, 0, 0, 0.85);
+      overflow: hidden;
+    }
+
+    #arcade-canvas {
+      display: block;
+      width: 960px;
+      height: 540px;
+      background: var(--bg-space);
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    /* Mobile Touch Controls Overlay (Section 4) */
+    .arcade-touch-overlay {
+      display: none;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 195px;
+      padding: 10px 20px 18px;
+      pointer-events: none;
+      z-index: 50;
+      justify-content: space-between;
+      align-items: flex-end;
+      background: linear-gradient(to top, rgba(11, 15, 25, 0.88) 0%, rgba(11, 15, 25, 0.0) 100%);
+    }
+
+    .arcade-touch-overlay.visible {
+      display: flex;
+    }
+
+    .touch-left-zone,
+    .touch-right-zone,
+    .touch-center-zone {
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .touch-center-zone {
+      flex-direction: row;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .touch-zone-caption {
+      font-family: var(--font-hud);
+      font-size: 9px;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    /* Virtual 4-Way D-Pad with 15px Deadzone */
+    .virtual-dpad {
+      position: relative;
+      width: 142px;
+      height: 142px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.78);
+      border: 2px solid rgba(0, 240, 255, 0.55);
+      box-shadow: 0 0 18px rgba(0, 240, 255, 0.25), inset 0 0 15px rgba(0, 240, 255, 0.15);
+      touch-action: none;
+    }
+
+    .dpad-ring {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 30px; /* 15px radius deadzone indicator */
+      height: 30px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 1px dashed rgba(255, 215, 0, 0.45);
+      pointer-events: none;
+    }
+
+    .dpad-arm {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      color: rgba(0, 240, 255, 0.75);
+      font-size: 15px;
+      border-radius: 6px;
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      pointer-events: none;
+      transition: all 0.08s ease;
+    }
+
+    .dpad-arm.active {
+      background: rgba(0, 240, 255, 0.38);
+      color: #ffffff;
+      border-color: var(--electric-cyan);
+      box-shadow: 0 0 12px var(--electric-cyan);
+    }
+
+    .dpad-up { top: 6px; left: 50%; transform: translateX(-50%); }
+    .dpad-down { bottom: 6px; left: 50%; transform: translateX(-50%); }
+    .dpad-left { left: 6px; top: 50%; transform: translateY(-50%); }
+    .dpad-right { right: 6px; top: 50%; transform: translateY(-50%); }
+
+    .dpad-Stick {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 38px;
+      height: 38px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--electric-cyan) 0%, #0284c7 100%);
+      box-shadow: 0 0 14px var(--electric-cyan);
+      pointer-events: none;
+    }
+
+    /* Right Side Dual Action Buttons with Neon Borders */
+    .action-buttons-cluster {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      height: 142px;
+      padding: 0 6px;
+    }
+
+    .virtual-action-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: none;
+      background: rgba(15, 23, 42, 0.85);
+      transition: transform 0.06s ease, box-shadow 0.06s ease;
+    }
+
+    .btn-action-a {
+      border: 2.5px solid var(--electric-cyan);
+      color: var(--electric-cyan);
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.45), inset 0 0 10px rgba(0, 240, 255, 0.2);
+      transform: translateY(-14px);
+    }
+
+    .btn-action-b {
+      border: 2.5px solid var(--neon-pink);
+      color: var(--neon-pink);
+      box-shadow: 0 0 16px rgba(255, 0, 122, 0.45), inset 0 0 10px rgba(255, 0, 122, 0.2);
+      transform: translateY(14px);
+    }
+
+    .virtual-action-btn.active {
+      transform: scale(0.93);
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+    }
+
+    .btn-main-label {
+      font-family: var(--font-header);
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .btn-sub-label {
+      font-family: var(--font-hud);
+      font-size: 7.5px;
+      margin-top: 4px;
+      opacity: 0.85;
+    }
+
+    .touch-utility-btn {
+      font-family: var(--font-hud);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 14px;
+      background: rgba(19, 27, 46, 0.9);
+      color: var(--arcade-gold);
+      border: 1px solid rgba(255, 215, 0, 0.5);
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.25);
+    }
+
+    /* Multi-Device Adaptive Layouts: Desktop, Tablet, and Mobile Phone */
+    body.touch-overlay-active .arcade-viewport {
+      padding-bottom: 175px;
+    }
+
+    body.device-tablet.touch-overlay-active .arcade-touch-overlay {
+      height: 186px;
+      padding: 10px 28px 18px;
+    }
+
+    body.device-tablet .virtual-dpad {
+      width: 150px;
+      height: 150px;
+    }
+
+    body.device-tablet .virtual-action-btn {
+      width: 78px;
+      height: 78px;
+    }
+
+    /* Portrait & Small Screen Phone Responsive Adjustments */
+    @media (max-width: 820px) {
+      .studio-header {
+        padding: 5px 8px;
+        gap: 6px;
+      }
+      .brand-badge {
+        font-size: 9.5px;
+      }
+      .studio-status {
+        display: none;
+      }
+      .deck-btn {
+        font-size: 9.5px;
+        padding: 4px 6px;
+      }
+    }
+
+    @media (orientation: portrait) {
+      body.touch-overlay-active .arcade-viewport {
+        align-items: center;
+        padding-top: 8px;
+        padding-bottom: 192px;
+      }
+      body.device-phone .virtual-dpad {
+        width: 124px;
+        height: 124px;
+      }
+      body.device-phone .dpad-arm {
+        width: 34px;
+        height: 34px;
+        font-size: 13px;
+      }
+      body.device-phone .virtual-action-btn {
+        width: 62px;
+        height: 62px;
+      }
+      body.device-phone .action-buttons-cluster {
+        height: 124px;
+        gap: 10px;
+      }
+      body.device-phone .touch-center-zone {
+        flex-direction: column;
+        gap: 5px;
+        margin-bottom: 8px;
+      }
+      body.device-phone .touch-utility-btn {
+        font-size: 8.5px;
+        padding: 4px 8px;
+      }
+    }
+
+    /* Compact Phone Landscape Gutter Mode */
+    @media (orientation: landscape) and (max-height: 500px) {
+      .studio-header {
+        padding: 3px 8px;
+      }
+      .cabinet-strip-wrapper {
+        padding: 3px 8px;
+      }
+      body.touch-overlay-active .arcade-viewport {
+        padding-bottom: 6px;
+      }
+      .arcade-touch-overlay {
+        height: 140px;
+        padding: 4px 10px 8px;
+        background: none;
+      }
+      .virtual-dpad {
+        width: 112px;
+        height: 112px;
+      }
+      .dpad-arm {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+      }
+      .action-buttons-cluster {
+        height: 112px;
+        gap: 8px;
+      }
+      .virtual-action-btn {
+        width: 54px;
+        height: 54px;
+      }
+      .btn-main-label {
+        font-size: 13px;
+      }
+      .btn-sub-label,
+      .touch-zone-caption {
+        display: none;
+      }
+      .touch-center-zone {
+        margin-bottom: 4px;
+        gap: 6px;
+      }
+    }
+  </style>
+</head>
+<body class="device-desktop">
+  <header class="studio-header">
+    <div class="studio-brand">
+      <div class="brand-badge">RETRO ARCADE STUDIO</div>
+      <div class="studio-status" id="studio-active-title">
+        SELECT ANY ARCADE CABINET (8 CORE + 20 VAULT CLASSICS)
+      </div>
+    </div>
+
+    <div class="studio-controls">
+      <a href="./index.html" class="deck-btn" id="btn-party-suite" style="text-decoration:none;border-color:var(--arcade-gold);color:var(--arcade-gold);" title="Switch to Antigravity 1-4P Party Games">🎮 1-4P PARTY</a>
+      <button type="button" class="deck-btn lobby-btn" id="btn-studio-lobby">★ STUDIO LOBBY</button>
+      <button type="button" class="deck-btn active" id="btn-mode-desktop" title="Desktop Mode">DESKTOP</button>
+      <button type="button" class="deck-btn" id="btn-mode-tablet" title="Tablet Touch Mode">TABLET</button>
+      <button type="button" class="deck-btn" id="btn-mode-phone" title="Mobile Phone Mode">PHONE</button>
+      <button type="button" class="deck-btn" id="btn-toggle-pause">PAUSE [P]</button>
+      <button type="button" class="deck-btn" id="btn-reset-game">RESET</button>
+      <button type="button" class="deck-btn active" id="btn-toggle-crt">CRT SHADER: ON</button>
+      <button type="button" class="deck-btn" id="btn-toggle-touch">TOUCH PAD: AUTO</button>
+      <button type="button" class="deck-btn active" id="btn-wasm-status" title="Click to run WASM vs JS benchmark">WASM: NATIVE</button>
+      <button type="button" class="deck-btn active" id="btn-toggle-audio">AUDIO: SYNTH ON</button>
+      <div class="fps-badge" id="studio-fps-readout">60 FPS</div>
+    </div>
+  </header>
+
+  <nav class="cabinet-strip-wrapper" aria-label="Arcade Cabinet Switcher">
+    <div class="cabinet-quick-bar" id="cabinet-quick-bar"></div>
+  </nav>
+
+  <main class="arcade-viewport" id="arcade-viewport">
+    <div class="crt-bezel">
+      <canvas id="arcade-canvas" width="960" height="540"></canvas>
+    </div>
+  </main>
+
+  <script>
+    if (window.location.protocol === 'file:') {
+      const s = document.createElement('script');
+      s.src = './dist/bundle.js';
+      document.body.appendChild(s);
+    } else {
+      const m = document.createElement('script');
+      m.type = 'module';
+      m.src = './src/main.js';
+      document.body.appendChild(m);
+    }
+  </script>
+</body>
+</html>
