@@ -7704,14 +7704,15 @@ export class GameManager {
     const activeSort = sortMeta[this.catalogSortMode] || sortMeta.default;
 
     if (!isNarrow) {
-      const catW = 62;
-      const allPillW = 76;
+      const catW = 58;
+      const allPillW = 72;
       const catGap = 4;
-      const randW = 84;
-      const cupW = 78;
-      const sortW = 108;
-      const searchBaseW = 92;
-      const totalPillsW = allPillW + 6 * (catW + catGap) + 10 + randW + 5 + cupW + 5 + sortW + 5 + searchBaseW;
+      const classicW = 94;
+      const randW = 78;
+      const cupW = 72;
+      const sortW = 100;
+      const searchBaseW = 86;
+      const totalPillsW = allPillW + 6 * (catW + catGap) + 8 + classicW + 5 + randW + 5 + cupW + 5 + sortW + 5 + searchBaseW;
       let curX = Math.max(16, w / 2 - totalPillsW / 2);
 
       categories.forEach((cat) => {
@@ -7739,7 +7740,24 @@ export class GameManager {
         curX += pillW + catGap;
       });
 
-      curX += 5;
+      curX += 4;
+
+      // 🕹️ CLASSIC ARCADE STUDIO BUTTON (Neon Cyan/Dark 3D Button)
+      this.categoryPillBoxes.push({ id: 'CLASSIC_ARCADE', x: curX, y: catBarY, w: classicW, h: 22, type: 'category' });
+      this.ctx.save();
+      this.ctx.shadowColor = 'rgba(0, 240, 255, 0.45)';
+      this.ctx.shadowBlur = 8;
+      this.ctx.shadowOffsetY = 2;
+      this.drawRoundedRect(curX, catBarY + 2, classicW, 20, 6, '#0369A1');
+      const classicGrad = this.ctx.createLinearGradient(curX, catBarY, curX, catBarY + 22);
+      classicGrad.addColorStop(0, '#0F172A');
+      classicGrad.addColorStop(1, '#1E293B');
+      this.drawRoundedRect(curX, catBarY, classicW, 21, 6, classicGrad, '#00F0FF', 1.5);
+      this.ctx.restore();
+      this.ctx.fillStyle = '#00F0FF';
+      this.drawFittedButtonText('🕹️ CLASSICS', curX + classicW / 2, catBarY + 14.5, classicW - 8, 9.5, 7.5);
+
+      curX += classicW + 5;
 
       // 🎲 RANDOM MINIGAME BUTTON (Tactile Violet 3D Button)
       this.categoryPillBoxes.push({ id: 'RANDOM', x: curX, y: catBarY, w: randW, h: 22, type: 'random' });
@@ -7849,12 +7867,25 @@ export class GameManager {
         curX += catW + catGap;
       });
 
-      // Narrow Row 2: Actions (RANDOM, CUP, RANK, SEARCH)
+      // Narrow Row 2: Actions (CLASSICS, RANDOM, CUP, RANK, SEARCH)
       const actionY = 175;
-      const actGap = 6;
-      const btnW = Math.min(115, Math.floor((w - 28 - 3 * actGap) / 4));
-      const totalActW = 4 * btnW + 3 * actGap;
+      const actGap = 5;
+      const btnW = Math.min(100, Math.floor((w - 24 - 4 * actGap) / 5));
+      const totalActW = 5 * btnW + 4 * actGap;
       let actX = (w - totalActW) / 2;
+
+      // 🕹️ CLASSICS
+      this.categoryPillBoxes.push({ id: 'CLASSIC_ARCADE', x: actX, y: actionY, w: btnW, h: 22, type: 'category' });
+      this.ctx.save();
+      this.drawRoundedRect(actX, actionY + 2, btnW, 20, 6, '#0369A1');
+      const classicGrad = this.ctx.createLinearGradient(actX, actionY, actX, actionY + 22);
+      classicGrad.addColorStop(0, '#0F172A');
+      classicGrad.addColorStop(1, '#1E293B');
+      this.drawRoundedRect(actX, actionY, btnW, 21, 6, classicGrad, '#00F0FF', 1.5);
+      this.ctx.restore();
+      this.ctx.fillStyle = '#00F0FF';
+      this.drawFittedButtonText('🕹️ CLASSICS', actX + btnW / 2, actionY + 14.5, btnW - 6, 8.5, 6.5);
+      actX += btnW + actGap;
 
       // 🎲 RANDOM
       this.categoryPillBoxes.push({ id: 'RANDOM', x: actX, y: actionY, w: btnW, h: 22, type: 'random' });
@@ -11772,7 +11803,11 @@ export class GameManager {
       // 0. Check category filter & quick action pills
       for (const pill of this.categoryPillBoxes) {
         if (x >= pill.x && x <= pill.x + pill.w && y >= pill.y && y <= pill.y + pill.h) {
-          if (pill.id === 'SEARCH') {
+          if (pill.id === 'CLASSIC_ARCADE') {
+            this.audio.playTap();
+            window.location.href = './classic/';
+            return;
+          } else if (pill.id === 'SEARCH') {
             if (this.searchQuery) {
               this.searchQuery = '';
               this.isSearchFocused = false;
