@@ -397,14 +397,14 @@ export class RetroArcadeStudio {
       });
       quickBar.appendChild(lobbyBtn);
 
-      // All 8 Core Games + 20 Expanded Games pills
+      // All 8 Core Games + 20 Expanded Games pills with icons
       GAME_CATALOG.forEach((meta) => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = `cabinet-pill ${meta.category === 'core' ? 'core-pill' : 'vault-pill'}`;
         btn.dataset.game = meta.id;
-        btn.textContent = meta.title;
-        btn.title = `${meta.title} — ${meta.mechanics}`;
+        btn.textContent = `${meta.icon || '🕹️'} ${meta.title}`;
+        btn.title = `${meta.title} (${meta.classicRef || meta.genre}) — ${meta.mechanics}`;
         btn.addEventListener('click', () => {
           this.audio.init();
           this.audio.playMenuSelect();
