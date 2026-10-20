@@ -1010,22 +1010,41 @@ export class MainMenu {
 
       case 'contra':
       default: {
-        // Commando firing 5-way red Spread Shot fan at boss core
-        ctx.fillStyle = '#38BDF8';
-        ctx.fillRect(x + 10, cy - 6, 8, 14);
-        // 5-way Spread Shot red energy bullets
-        ctx.fillStyle = '#FF2A55';
+        // Jungle turf & rock cliff + water + headband commando firing 5-way Spread Shot at Defense Wall
+        ctx.fillStyle = '#0284C7';
+        ctx.fillRect(x, y + h - 8, w, 8);
+        ctx.fillStyle = '#78350F';
+        ctx.fillRect(x + 4, y + h * 0.65, w * 0.56, h * 0.25);
+        ctx.fillStyle = '#22C55E';
+        ctx.fillRect(x + 4, y + h * 0.63, w * 0.56, 4);
+        // Commando (blue pants, tan chest, red headband, rifle)
+        ctx.fillStyle = '#2563EB';
+        ctx.fillRect(x + 12, cy + 1, 7, 8);
+        ctx.fillStyle = '#FDBA74';
+        ctx.fillRect(x + 12, cy - 6, 7, 7);
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(x + 11, cy - 9, 9, 3);
+        ctx.fillStyle = '#E2E8F0';
+        ctx.fillRect(x + 17, cy - 4, 9, 2.5);
+        // 5-way Spread Shot red/gold orbs
         for (let a = -2; a <= 2; a++) {
-          const bx = x + 26 + ((t * 35) % (w * 0.45));
-          const by = cy + a * 5;
+          const bx = x + 28 + ((t * 38) % (w * 0.42));
+          const by = cy - 2 + a * 4.5;
+          ctx.fillStyle = '#EF4444';
           ctx.beginPath();
-          ctx.arc(bx, by, 2.5, 0, Math.PI * 2);
+          ctx.arc(bx, by, 2.6, 0, Math.PI * 2);
           ctx.fill();
         }
-        // Alien Boss Core on right
-        ctx.fillStyle = '#FFD700';
+        // Armored Defense Wall & glowing Core on right
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(x + w - 18, y + 6, 16, h - 10);
+        ctx.fillStyle = '#DC2626';
         ctx.beginPath();
-        ctx.arc(x + w - 12, cy, 8, 0, Math.PI * 2);
+        ctx.arc(x + w - 12, cy + 4, 6.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#FEF08A';
+        ctx.beginPath();
+        ctx.arc(x + w - 12, cy + 4, 3, 0, Math.PI * 2);
         ctx.fill();
         break;
       }
