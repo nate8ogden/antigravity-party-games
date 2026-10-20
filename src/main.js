@@ -92,7 +92,16 @@ export class RetroArcadeStudio {
 
     this.input.onFirstInteraction = () => {
       this.audio.init();
+      this.audio.playMusic(this.activeGameId || 'lobby');
     };
+
+    const unlockAudio = () => {
+      this.audio.init();
+      this.audio.playMusic(this.activeGameId || 'lobby');
+    };
+    window.addEventListener('pointerdown', unlockAudio, { once: true, passive: true });
+    window.addEventListener('keydown', unlockAudio, { once: true, passive: true });
+    window.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
 
     this.input.onMenuCallback = () => {
       this.returnToLobby();
@@ -304,6 +313,7 @@ export class RetroArcadeStudio {
       this.activeGame.setState('PLAYING');
     }
 
+    this.audio.playMusic(id, true);
     this._syncHeaderStatus();
     return true;
   }
@@ -313,6 +323,7 @@ export class RetroArcadeStudio {
     this.input.resetState();
     this.activeGame = null;
     this.activeGameId = null;
+    this.audio.playMusic('lobby', true);
     this._syncHeaderStatus();
   }
 

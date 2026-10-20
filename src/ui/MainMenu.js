@@ -666,12 +666,12 @@ export class MainMenu {
       );
 
       this.renderer.drawText(
-        '[X/SHIFT] SWITCH TAB   [Z/SPACE/CLICK] LAUNCH',
+        `♪ LOBBY BGM: ${this.audio && this.audio.getCurrentTrackTitle ? this.audio.getCurrentTrackTitle().toUpperCase() : 'NEON ARCADE LOBBY'}   |   [X/SHIFT] TAB   [Z/CLICK] LAUNCH`,
         W - 38,
         480,
         {
           font: FONTS.HUD,
-          size: 12,
+          size: 11.5,
           color: PALETTE.GOLD,
           align: 'right'
         }
