@@ -78,9 +78,9 @@ export class OutRun {
 
     this.segmentLength = 200;
     this.drawDistance = 85;
-    this.roadWidth = 2100;
-    this.cameraHeight = 1050;
-    this.cameraDepth = 0.84;
+    this.roadWidth = 530;
+    this.cameraHeight = 680;
+    this.cameraDepth = 0.30;
 
     this.segments = [];
     this.traffic = [];
@@ -170,8 +170,8 @@ export class OutRun {
       else if (i >= 295 && i < 355) curve = -2.5;
 
       const hillY =
-        Math.sin(i * 0.06) * 1400 +
-        Math.cos(i * 0.025) * 900;
+        Math.sin(i * 0.055) * 420 +
+        Math.cos(i * 0.025) * 260;
 
       const props = [];
       if (i % 7 === 0) {
@@ -440,7 +440,7 @@ export class OutRun {
   _project(worldX, worldY, worldZ) {
     const scale = this.cameraDepth / Math.max(1, worldZ);
     const screenX = Math.round(this.width / 2 + (scale * worldX * this.width) / 2);
-    const screenY = Math.round(235 - (scale * worldY * this.height) / 2);
+    const screenY = Math.round(240 + (scale * worldY * this.height) / 2);
     const screenW = Math.round((scale * this.roadWidth * this.width) / 2);
     return { x: screenX, y: screenY, w: screenW, scale };
   }
@@ -449,11 +449,11 @@ export class OutRun {
     const biome = BIOMES[this.biomeIndex % BIOMES.length];
 
     // Synthwave Sunset Sky Gradient
-    const skyGrad = ctx.createLinearGradient(0, 38, 0, 250);
+    const skyGrad = ctx.createLinearGradient(0, 38, 0, 265);
     skyGrad.addColorStop(0, biome.skyTop);
     skyGrad.addColorStop(1, biome.skyBot);
     ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 38, this.width, 220);
+    ctx.fillRect(0, 38, this.width, 240);
 
     // Synthwave OutRun Sun with scanline stripes
     const sunX = this.width / 2 - this.playerX * 35;
@@ -463,13 +463,15 @@ export class OutRun {
       ctx.fillRect(sunX - 65, 182 + s * 9, 130, 3 + s);
     }
 
-    // Ground Base
+    // Ground Base below horizon
     ctx.fillStyle = biome.grassA;
     ctx.fillRect(0, 240, this.width, this.height - 240);
 
     const baseIndex = Math.floor(this.position / this.segmentLength);
     const basePercent = (this.position % this.segmentLength) / this.segmentLength;
     const baseSeg = this.segments[baseIndex % this.segments.length];
+    const nextBaseSeg = this.segments[(baseIndex + 1) % this.segments.length];
+    const playerElevation = baseSeg.y + (nextBaseSeg.y - baseSeg.y) * basePercent;
 
     let dx = -(baseSeg.curve * basePercent);
     let x = 0;
@@ -477,14 +479,19 @@ export class OutRun {
 
     const projectedList = [];
 
-    for (let n = 0; n < this.drawDistance; n++) {
+    // Seed near-plane anchor just in front of the camera so bottom of screen (y=540) is always seamlessly filled
+    const nearProj = this._project(-this.playerX * this.roadWidth, this.cameraHeight, 80);
+    nearProj.seg = baseSeg;
+    nearProj.clipY = maxY;
+    projectedList.push(nearProj);
+
+    for (let n = 1; n < this.drawDistance; n++) {
       const seg = this.segments[(baseIndex + n) % this.segments.length];
       const worldZ = (n - basePercent) * this.segmentLength;
-      if (worldZ <= 10) continue;
 
-      const worldX = this.playerX * this.roadWidth - x;
-      const worldY = this.cameraHeight + baseSeg.y - seg.y;
-      const proj = this._project(worldX, worldY, worldZ);
+      const worldX = -this.playerX * this.roadWidth + x;
+      const worldY = this.cameraHeight + playerElevation - seg.y;
+      const proj = this._project(worldX, worldY, Math.max(85, worldZ));
 
       x += dx;
       dx += seg.curve;
@@ -493,67 +500,68 @@ export class OutRun {
       proj.clipY = maxY;
       projectedList.push(proj);
 
-      if (proj.y >= maxY || proj.y < 38) continue;
+      if (worldZ <= 85 || proj.y >= maxY || proj.y < 38) continue;
 
-      if (projectedList.length >= 2) {
-        const prev = projectedList[projectedList.length - 2];
-        const isAlt = Math.floor(seg.index / 3) % 2 === 0;
+      const prev = projectedList[projectedList.length - 2];
+      const isAlt = Math.floor(seg.index / 3) % 2 === 0;
 
-        // Grass Strip
+      // Grass Strip
+      const stripBottom = Math.min(this.height, prev.y);
+      if (stripBottom > proj.y) {
         ctx.fillStyle = isAlt ? biome.grassA : biome.grassB;
-        ctx.fillRect(0, proj.y, this.width, prev.y - proj.y);
+        ctx.fillRect(0, proj.y, this.width, stripBottom - proj.y);
+      }
 
-        // Rumble Strips
-        ctx.fillStyle = isAlt ? biome.rumbleA : biome.rumbleB;
-        this._drawTrapezoid(ctx, prev.x, prev.y, prev.w * 1.16, proj.x, proj.y, proj.w * 1.16);
+      // Rumble Strips
+      ctx.fillStyle = isAlt ? biome.rumbleA : biome.rumbleB;
+      this._drawTrapezoid(ctx, prev.x, prev.y, prev.w * 1.16, proj.x, proj.y, proj.w * 1.16);
 
-        // Main Asphalt Road (or Split Branching Fork!)
-        ctx.fillStyle = isAlt ? biome.roadA : biome.roadB;
-        if (seg.isForkZone) {
-          const splitProgress = (seg.index - (this.stageLength - 45)) / 45;
-          const offset = proj.w * splitProgress * 0.75;
-          const prevOffset = prev.w * splitProgress * 0.75;
-          this._drawTrapezoid(ctx, prev.x - prevOffset, prev.y, prev.w * 0.65, proj.x - offset, proj.y, proj.w * 0.65);
-          this._drawTrapezoid(ctx, prev.x + prevOffset, prev.y, prev.w * 0.65, proj.x + offset, proj.y, proj.w * 0.65);
-        } else {
-          this._drawTrapezoid(ctx, prev.x, prev.y, prev.w, proj.x, proj.y, proj.w);
-        }
+      // Main Asphalt Road (or Split Branching Fork!)
+      ctx.fillStyle = isAlt ? biome.roadA : biome.roadB;
+      if (seg.isForkZone) {
+        const splitProgress = (seg.index - (this.stageLength - 45)) / 45;
+        const offset = proj.w * splitProgress * 0.75;
+        const prevOffset = prev.w * splitProgress * 0.75;
+        this._drawTrapezoid(ctx, prev.x - prevOffset, prev.y, prev.w * 0.65, proj.x - offset, proj.y, proj.w * 0.65);
+        this._drawTrapezoid(ctx, prev.x + prevOffset, prev.y, prev.w * 0.65, proj.x + offset, proj.y, proj.w * 0.65);
+      } else {
+        this._drawTrapezoid(ctx, prev.x, prev.y, prev.w, proj.x, proj.y, proj.w);
+      }
 
-        // Lane Dividers
-        if (isAlt && !seg.isForkZone) {
-          ctx.fillStyle = PALETTE.WHITE;
-          this._drawTrapezoid(
-            ctx,
-            prev.x - prev.w * 0.33,
-            prev.y,
-            prev.w * 0.03,
-            proj.x - proj.w * 0.33,
-            proj.y,
-            proj.w * 0.03
-          );
-          this._drawTrapezoid(
-            ctx,
-            prev.x + prev.w * 0.33,
-            prev.y,
-            prev.w * 0.03,
-            proj.x + proj.w * 0.33,
-            proj.y,
-            proj.w * 0.03
-          );
-        }
+      // Lane Dividers
+      if (isAlt && !seg.isForkZone) {
+        ctx.fillStyle = PALETTE.WHITE;
+        this._drawTrapezoid(
+          ctx,
+          prev.x - prev.w * 0.33,
+          prev.y,
+          prev.w * 0.03,
+          proj.x - proj.w * 0.33,
+          proj.y,
+          proj.w * 0.03
+        );
+        this._drawTrapezoid(
+          ctx,
+          prev.x + prev.w * 0.33,
+          prev.y,
+          prev.w * 0.03,
+          proj.x + proj.w * 0.33,
+          proj.y,
+          proj.w * 0.03
+        );
       }
 
       maxY = proj.y;
     }
 
     // Back-to-Front Pass: Roadside Palm Trees, Billboards, Checkpoint Arch, and Traffic Cars
-    for (let i = projectedList.length - 1; i >= 0; i--) {
+    for (let i = projectedList.length - 1; i >= 1; i--) {
       const p = projectedList[i];
       const seg = p.seg;
-      const spriteScale = p.w / 220;
+      const spriteScale = p.w / 140;
 
       // Checkpoint Banner Arch
-      if (seg.isCheckpoint && p.y < p.clipY) {
+      if (seg.isCheckpoint && p.y <= p.clipY && p.y <= this.height) {
         const archW = p.w * 2.1;
         const archH = 55 * spriteScale;
         this.renderer.drawGlowRect(
@@ -571,7 +579,7 @@ export class OutRun {
       for (const prop of seg.props) {
         const px = p.x + p.w * prop.offset;
         const py = p.y;
-        if (py > p.clipY) continue;
+        if (py > p.clipY || py > this.height) continue;
 
         if (prop.type === 'PALM') {
           const trunkH = 75 * spriteScale;
@@ -595,14 +603,21 @@ export class OutRun {
         }
       }
 
-      // Traffic Cars in this segment
+      // Traffic Cars in this segment (interpolated smoothly along Z)
       for (const car of this.traffic) {
-        const carSegIdx = Math.floor(car.z / this.segmentLength);
-        if (carSegIdx === seg.index && p.y < p.clipY) {
-          const cx = p.x + p.w * car.offset;
-          const cy = p.y;
-          const cw = Math.max(8, 38 * spriteScale);
-          const ch = Math.max(5, 22 * spriteScale);
+        const carSegIdx = Math.floor(car.z / this.segmentLength) % this.segments.length;
+        if (carSegIdx === seg.index && p.y <= p.clipY && p.y <= this.height) {
+          const pNext = i + 1 < projectedList.length ? projectedList[i + 1] : p;
+          const frac = (car.z % this.segmentLength) / this.segmentLength;
+          const roadX = p.x + (pNext.x - p.x) * frac;
+          const roadY = p.y + (pNext.y - p.y) * frac;
+          const roadW = p.w + (pNext.w - p.w) * frac;
+          const carScale = roadW / 140;
+
+          const cx = roadX + roadW * car.offset;
+          const cy = roadY;
+          const cw = Math.max(8, 38 * carScale);
+          const ch = Math.max(5, 22 * carScale);
           this.renderer.drawGlowRect(cx - cw / 2, cy - ch, cw, ch, car.color, 8, true);
           ctx.fillStyle = PALETTE.RED;
           ctx.fillRect(cx - cw * 0.4, cy - ch * 0.4, cw * 0.2, ch * 0.25);

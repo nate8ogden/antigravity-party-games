@@ -1,11 +1,75 @@
 /**
  * MarbleMadness.js
  * Isometric 3D-Grid Course Roller
- * Navigate shaded isometric slope tiles (flat, slopeDown, slopeLeft, slopeRight, chasm, goal)
- * with realistic slope gravity vectors, momentum, bumper rebounds, and chasm drop-offs!
+ * Navigate shaded isometric slope tiles (flat, slopeDown, slopeLeft, slopeRight, boost, ice, chasm, goal)
+ * across 6 distinct multi-stage courses with realistic slope gravity vectors, momentum,
+ * bumper rebounds, patrolling steel marbles, and chasm drop-offs!
  */
 import { PALETTE, FONTS, HighScoreStore } from '../engine/Renderer.js';
 import { Vector2 } from '../engine/Vector2.js';
+
+const COURSE_CATALOG = [
+  {
+    name: 'PRACTICE TERRACE',
+    subtitle: 'GENTLE SLOPES & WIDE BRIDGES',
+    timeLimit: 50,
+    flatA: '#1E3A8A',
+    flatB: '#172554',
+    stroke: '#00F0FF',
+    skirtL: '#0F172A',
+    skirtR: '#1E293B'
+  },
+  {
+    name: 'SERPENTINE CHASM',
+    subtitle: 'SWITCHBACK CURVES & BOOST PADS',
+    timeLimit: 52,
+    flatA: '#065F46',
+    flatB: '#064E3B',
+    stroke: '#00FF66',
+    skirtL: '#022C22',
+    skirtR: '#064E3B'
+  },
+  {
+    name: 'BUMPER FORTRESS',
+    subtitle: 'PINBALL CITADEL & SPLIT ISLAND',
+    timeLimit: 54,
+    flatA: '#581C87',
+    flatB: '#3B0764',
+    stroke: '#FF007A',
+    skirtL: '#1E1B4B',
+    skirtR: '#2E1065'
+  },
+  {
+    name: 'TWIN SKYBRIDGES',
+    subtitle: 'GLACIER ICE & PARALLEL BRIDGES',
+    timeLimit: 55,
+    flatA: '#0C4A6E',
+    flatB: '#082F49',
+    stroke: '#38BDF8',
+    skirtL: '#082F49',
+    skirtR: '#0369A1'
+  },
+  {
+    name: 'VORTEX GAUNTLET',
+    subtitle: 'SPIRAL DESCENT & TURBO RUNWAY',
+    timeLimit: 56,
+    flatA: '#7C2D12',
+    flatB: '#431407',
+    stroke: '#FF8800',
+    skirtL: '#271206',
+    skirtR: '#431407'
+  },
+  {
+    name: 'ZENITH CITADEL',
+    subtitle: 'GRAND MASTER CHAMPIONSHIP',
+    timeLimit: 60,
+    flatA: '#312E81',
+    flatB: '#1E1B4B',
+    stroke: '#FFD700',
+    skirtL: '#090D16',
+    skirtR: '#1E1B4B'
+  }
+];
 
 export class MarbleMadness {
   constructor(renderer, input, audio) {
@@ -21,10 +85,14 @@ export class MarbleMadness {
     this.highScore = HighScoreStore.get(this.id);
     this.lives = 3;
     this.level = 1;
+    this.totalCourses = COURSE_CATALOG.length;
 
     this.tileW = 36;
     this.tileH = 18;
     this.elevScale = 16;
+
+    this.courseBannerTimer = 0;
+    this.boostCooldown = 0;
 
     this.reset();
   }
@@ -35,11 +103,16 @@ export class MarbleMadness {
     this.lives = 3;
     this.level = 1;
     this.state = 'PLAYING';
-    this.timeLeft = 45.0;
+    this.timeLeft = 50.0;
 
     this.particles = [];
     this.trail = [];
     this._buildCourse(this.level);
+  }
+
+  _getCourseMeta(level = this.level) {
+    const idx = (Math.max(1, level) - 1) % COURSE_CATALOG.length;
+    return { ...COURSE_CATALOG[idx], index: idx + 1 };
   }
 
   _buildCourse(level) {
@@ -48,120 +121,400 @@ export class MarbleMadness {
     this.bumpers = [];
     this.hazards = [];
     this.levelClearTimer = 0;
-    this.timeLeft = Math.max(30, 48 - (level - 1) * 3);
+    this.courseBannerTimer = 2.4;
+    this.boostCooldown = 0;
+
+    const meta = this._getCourseMeta(level);
+    const loopTier = Math.floor((level - 1) / COURSE_CATALOG.length);
+    this.courseName = meta.name;
+    this.courseSubtitle = meta.subtitle;
+    this.courseTheme = meta;
+    this.timeLeft = Math.max(32, meta.timeLimit - loopTier * 4);
 
     const setTile = (gx, gy, z, type = 'flat') => {
-      const key = `${gx},${gy}`;
-      const tile = { gx, gy, z, type };
+      const ix = Math.round(gx);
+      const iy = Math.round(gy);
+      const key = `${ix},${iy}`;
+      const tile = { gx: ix, gy: iy, z, type };
       this.grid.set(key, tile);
     };
 
-    // Construct a winding multi-elevation isometric course
-    let cx = 0;
-    let cy = 0;
-    let cz = 12;
-
-    // 1. Starting platform (3x4 flat)
-    for (let x = -1; x <= 2; x++) {
-      for (let y = -1; y <= 2; y++) {
-        setTile(x, y, cz, 'flat');
-      }
-    }
-
-    // 2. First slopeDown chute along +x
-    cx = 3;
-    for (let step = 0; step < 6; step++) {
-      cz -= 0.65;
-      for (let w = -1; w <= 1; w++) {
-        setTile(cx + step, w, cz, 'slopeRight');
-      }
-    }
-    cx += 6;
-
-    // 3. Landing plaza with arcade bumpers
-    for (let x = cx; x <= cx + 4; x++) {
-      for (let y = -1; y <= 3; y++) {
-        setTile(x, y, cz, 'flat');
-      }
-    }
-    this.bumpers.push({ gx: cx + 2, gy: 0.5, z: cz, r: 0.42, pulse: 0 });
-    this.bumpers.push({ gx: cx + 2, gy: 2.0, z: cz, r: 0.42, pulse: 0 });
-
-    // 4. Steep slopeLeft ramp heading down +y
-    cy = 4;
-    for (let step = 0; step < 7; step++) {
-      cz -= 0.7;
-      for (let w = cx + 1; w <= cx + 3; w++) {
-        setTile(w, cy + step, cz, 'slopeLeft');
-      }
-    }
-    cy += 7;
-
-    // 5. Mid-course turn & chasm bridge section
-    for (let x = cx + 1; x <= cx + 5; x++) {
-      for (let y = cy; y <= cy + 3; y++) {
-        setTile(x, y, cz, 'flat');
-      }
-    }
-    // Roaming black steel enemy marble on mid platform
-    this.hazards.push({
-      gx: cx + 3,
-      gy: cy + 1.5,
-      z: cz,
-      baseX: cx + 3,
-      baseY: cy + 1.5,
-      ampX: 1.3,
-      ampY: 0.8,
-      phase: 0,
-      speed: 2.0 + level * 0.35
-    });
-
-    // 6. Narrow ridge with slopeDown gradient and side slopes
-    const bridgeStartX = cx + 6;
-    const bridgeW = level >= 3 ? 1 : 2;
-    for (let step = 0; step < 8; step++) {
-      cz -= 0.5;
-      const bx = bridgeStartX + step;
-      for (let y = cy + 1; y <= cy + 1 + bridgeW; y++) {
-        const isEdge = step % 2 === 0;
-        setTile(bx, y, cz, isEdge ? 'slopeDown' : 'flat');
-      }
-      // Chasm tiles flanking the bridge for visual depth
-      setTile(bx, cy, cz - 3, 'chasm');
-      setTile(bx, cy + 2 + bridgeW, cz - 3, 'chasm');
-    }
-
-    const finalX = bridgeStartX + 8;
-    // 7. Final slalom court with bumpers and Goal Platform
-    for (let x = finalX; x <= finalX + 6; x++) {
-      for (let y = cy; y <= cy + 5; y++) {
-        let tType = 'flat';
-        if (x >= finalX + 3 && x <= finalX + 5 && y >= cy + 1 && y <= cy + 4) {
-          tType = 'goal';
-        } else if (y === cy) {
-          tType = 'slopeLeft';
-        } else if (y === cy + 5) {
-          tType = 'slopeRight';
+    const fillRectTiles = (x0, y0, x1, y1, z, type = 'flat') => {
+      const minX = Math.min(x0, x1);
+      const maxX = Math.max(x0, x1);
+      const minY = Math.min(y0, y1);
+      const maxY = Math.max(y0, y1);
+      for (let x = minX; x <= maxX; x++) {
+        for (let y = minY; y <= maxY; y++) {
+          setTile(x, y, z, type);
         }
-        setTile(x, y, cz, tType);
       }
-    }
+    };
 
-    this.bumpers.push({ gx: finalX + 1.5, gy: cy + 1.5, z: cz, r: 0.42, pulse: 0 });
-    this.bumpers.push({ gx: finalX + 1.5, gy: cy + 3.5, z: cz, r: 0.42, pulse: 0 });
+    const courseIndex = ((level - 1) % COURSE_CATALOG.length) + 1;
+    let startZ = 12;
 
-    if (level >= 2) {
+    if (courseIndex === 1) {
+      // =========================================================================
+      // COURSE 1: PRACTICE TERRACE (Gentle introduction, wide bridges & slopes)
+      // =========================================================================
+      let cz = 12;
+      fillRectTiles(-1, -1, 2, 2, cz, 'flat');
+
+      // Gentle slopeRight ramp along +x
+      let cx = 3;
+      for (let step = 0; step < 5; step++) {
+        cz -= 0.6;
+        fillRectTiles(cx + step, -1, cx + step, 2, cz, 'slopeRight');
+      }
+      cx += 5;
+
+      // Wide Landing Plaza with 2 friendly bumpers
+      fillRectTiles(cx, -1, cx + 4, 3, cz, 'flat');
+      this.bumpers.push({ gx: cx + 2, gy: 0.2, z: cz, r: 0.42, pulse: 0 });
+      this.bumpers.push({ gx: cx + 2, gy: 2.0, z: cz, r: 0.42, pulse: 0 });
+
+      // Wide slopeLeft cascade heading down +y
+      let cy = 4;
+      for (let step = 0; step < 5; step++) {
+        cz -= 0.6;
+        fillRectTiles(cx + 1, cy + step, cx + 4, cy + step, cz, 'slopeLeft');
+      }
+      cy += 5;
+
+      // Mid Terrace + wide bridge with boost pad
+      fillRectTiles(cx + 1, cy, cx + 5, cy + 3, cz, 'flat');
+      const bxStart = cx + 6;
+      for (let step = 0; step < 6; step++) {
+        cz -= 0.35;
+        const bx = bxStart + step;
+        for (let y = cy; y <= cy + 3; y++) {
+          setTile(bx, y, cz, step === 2 && (y === cy + 1 || y === cy + 2) ? 'boost' : 'flat');
+        }
+      }
+
+      // Large Goal Court
+      const gx0 = bxStart + 6;
+      fillRectTiles(gx0, cy - 1, gx0 + 5, cy + 4, cz, 'flat');
+      fillRectTiles(gx0 + 2, cy, gx0 + 4, cy + 3, cz, 'goal');
+    } else if (courseIndex === 2) {
+      // =========================================================================
+      // COURSE 2: SERPENTINE CHASM (S-Curve switchbacks, boost pads & steel guard)
+      // =========================================================================
+      let cz = 14;
+      startZ = cz;
+      fillRectTiles(-1, -1, 2, 2, cz, 'flat');
+
+      // Leg 1: Eastward sprint with speed boost
+      for (let x = 3; x <= 8; x++) {
+        cz -= 0.45;
+        for (let y = 0; y <= 2; y++) {
+          setTile(x, y, cz, x === 5 && y === 1 ? 'boost' : 'slopeRight');
+        }
+      }
+
+      // Turn 1 Plaza (x: 9..12, y: 0..3)
+      fillRectTiles(9, 0, 12, 3, cz, 'flat');
+      this.bumpers.push({ gx: 11, gy: 1.5, z: cz, r: 0.42, pulse: 0 });
+
+      // Leg 2: Southward slopeLeft chute (x: 9..11, y: 4..9)
+      for (let y = 4; y <= 9; y++) {
+        cz -= 0.55;
+        fillRectTiles(9, y, 11, y, cz, 'slopeLeft');
+      }
+
+      // Turn 2 Plaza (x: 8..12, y: 10..13)
+      fillRectTiles(8, 10, 12, 13, cz, 'flat');
       this.hazards.push({
-        gx: finalX + 2.5,
-        gy: cy + 2.5,
+        gx: 10,
+        gy: 11.5,
         z: cz,
-        baseX: finalX + 2.5,
-        baseY: cy + 2.5,
-        ampX: 0.5,
-        ampY: 1.6,
-        phase: 1.5,
-        speed: 2.4 + level * 0.3
+        baseX: 10,
+        baseY: 11.5,
+        ampX: 1.4,
+        ampY: 0.9,
+        phase: 0,
+        speed: 2.1 + loopTier * 0.4
       });
+
+      // Leg 3: Westward switchback catwalk (x: 3..7, y: 11..13)
+      for (let x = 7; x >= 3; x--) {
+        cz -= 0.25;
+        fillRectTiles(x, 11, x, 13, cz, 'flat');
+      }
+      this.bumpers.push({ gx: 5, gy: 12, z: cz, r: 0.4, pulse: 0 });
+
+      // Turn 3 Plaza (x: 0..2, y: 10..14)
+      fillRectTiles(0, 10, 2, 14, cz, 'flat');
+
+      // Leg 4: Southward diagonal slopeDown drop (x: 0..3, y: 15..20)
+      for (let y = 15; y <= 20; y++) {
+        cz -= 0.6;
+        fillRectTiles(0, y, 3, y, cz, y % 2 === 0 ? 'slopeDown' : 'slopeLeft');
+      }
+
+      // Final Eastward Goal Terrace (x: 0..8, y: 21..25)
+      fillRectTiles(0, 21, 8, 25, cz, 'flat');
+      setTile(3, 23, cz, 'boost');
+      setTile(4, 23, cz, 'boost');
+      fillRectTiles(5, 22, 7, 24, cz, 'goal');
+    } else if (courseIndex === 3) {
+      // =========================================================================
+      // COURSE 3: BUMPER FORTRESS (Pinball bumper diamond & split chasm island)
+      // =========================================================================
+      let cz = 15;
+      startZ = cz;
+      fillRectTiles(-1, -1, 2, 2, cz, 'flat');
+
+      // Steep diagonal slopeDown launch chute
+      for (let s = 1; s <= 5; s++) {
+        cz -= 0.75;
+        fillRectTiles(s, s, s + 2, s + 2, cz, 'slopeDown');
+      }
+
+      // Giant Pinball Bumper Arena (x: 6..13, y: 6..13)
+      fillRectTiles(6, 6, 13, 13, cz, 'flat');
+      const bumperCoords = [
+        [8.5, 8.5],
+        [10.5, 8.5],
+        [9.5, 10.0],
+        [8.5, 11.5],
+        [10.5, 11.5],
+        [11.8, 10.0]
+      ];
+      for (const [bx, by] of bumperCoords) {
+        this.bumpers.push({ gx: bx, gy: by, z: cz, r: 0.44, pulse: 0 });
+      }
+
+      // Split Island Bridge around central chasm (x: 14..20, y: 6..13)
+      for (let x = 14; x <= 20; x++) {
+        cz -= 0.4;
+        // Left/North branch (y: 6..8)
+        fillRectTiles(x, 6, x, 8, cz, x === 17 ? 'boost' : 'slopeRight');
+        // Central chasm (y: 9..10)
+        setTile(x, 9, cz - 3, 'chasm');
+        setTile(x, 10, cz - 3, 'chasm');
+        // Right/South branch (y: 11..13)
+        fillRectTiles(x, 11, x, 13, cz, x === 17 ? 'boost' : 'slopeRight');
+      }
+
+      // Reconvergence Citadel & Goal (x: 21..27, y: 6..13)
+      fillRectTiles(21, 6, 27, 13, cz, 'flat');
+      this.hazards.push({
+        gx: 22.5,
+        gy: 9.5,
+        z: cz,
+        baseX: 22.5,
+        baseY: 9.5,
+        ampX: 0.6,
+        ampY: 2.4,
+        phase: 0,
+        speed: 2.5 + loopTier * 0.4
+      });
+      fillRectTiles(24, 8, 26, 11, cz, 'goal');
+    } else if (courseIndex === 4) {
+      // =========================================================================
+      // COURSE 4: TWIN SKYBRIDGES (Cryo Ice Plazas & Parallel High-Altitude Bridges)
+      // =========================================================================
+      let cz = 15;
+      startZ = cz;
+      fillRectTiles(-1, -1, 2, 2, cz, 'flat');
+
+      // Icy entry ramp
+      for (let x = 3; x <= 7; x++) {
+        cz -= 0.5;
+        fillRectTiles(x, -1, x, 2, cz, 'ice');
+      }
+
+      // Sky Fork Plaza (x: 8..11, y: -2..4)
+      fillRectTiles(8, -2, 11, 4, cz, 'flat');
+
+      // Twin Parallel Skybridges across the abyss (x: 12..20)
+      for (let x = 12; x <= 20; x++) {
+        cz -= 0.35;
+        // Upper Express Bridge (1.5-tile narrow with boost pads)
+        setTile(x, -2, cz, x % 3 === 0 ? 'boost' : 'flat');
+        setTile(x, -1, cz, x % 3 === 0 ? 'boost' : 'flat');
+        // Lower Glacier Bridge (2-tile wide ice bridge with bumpers)
+        setTile(x, 2, cz, 'ice');
+        setTile(x, 3, cz, 'ice');
+        setTile(x, 4, cz, 'ice');
+      }
+      this.bumpers.push({ gx: 15, gy: 3, z: cz + 1.2, r: 0.4, pulse: 0 });
+      this.bumpers.push({ gx: 18, gy: 3, z: cz + 0.5, r: 0.4, pulse: 0 });
+
+      // Confluence Terrace (x: 21..25, y: -2..4)
+      fillRectTiles(21, -2, 25, 4, cz, 'flat');
+      this.hazards.push({
+        gx: 23,
+        gy: 1,
+        z: cz,
+        baseX: 23,
+        baseY: 1,
+        ampX: 1.0,
+        ampY: 2.2,
+        phase: 0.7,
+        speed: 2.6 + loopTier * 0.4
+      });
+
+      // Glacier Slide Southward (+y: 5..11)
+      for (let y = 5; y <= 11; y++) {
+        cz -= 0.6;
+        fillRectTiles(21, y, 25, y, cz, y <= 8 ? 'slopeLeft' : 'ice');
+      }
+
+      // Goal Sanctuary (x: 20..26, y: 12..17)
+      fillRectTiles(20, 12, 26, 17, cz, 'flat');
+      fillRectTiles(22, 14, 24, 16, cz, 'goal');
+    } else if (courseIndex === 5) {
+      // =========================================================================
+      // COURSE 5: VORTEX GAUNTLET (Spiral Funnel Descent & Turbo Straightaway)
+      // =========================================================================
+      let cz = 16;
+      startZ = cz;
+      fillRectTiles(-1, -1, 2, 2, cz, 'flat');
+
+      // Spiral Arm 1: East (+x: 3..10, y: -1..1)
+      for (let x = 3; x <= 10; x++) {
+        cz -= 0.45;
+        fillRectTiles(x, -1, x, 1, cz, 'slopeRight');
+      }
+      fillRectTiles(11, -1, 13, 2, cz, 'flat');
+      this.bumpers.push({ gx: 12, gy: 0.5, z: cz, r: 0.42, pulse: 0 });
+
+      // Spiral Arm 2: South (+y: 3..10, x: 11..13)
+      for (let y = 3; y <= 10; y++) {
+        cz -= 0.45;
+        fillRectTiles(11, y, 13, y, cz, 'slopeLeft');
+      }
+      fillRectTiles(10, 11, 13, 13, cz, 'flat');
+
+      // Spiral Arm 3: West (x: 4..9, y: 11..13) with ice & hazard
+      for (let x = 9; x >= 4; x--) {
+        cz -= 0.25;
+        fillRectTiles(x, 11, x, 13, cz, x % 2 === 0 ? 'ice' : 'flat');
+      }
+      this.hazards.push({
+        gx: 6.5,
+        gy: 12,
+        z: cz,
+        baseX: 6.5,
+        baseY: 12,
+        ampX: 2.0,
+        ampY: 0.6,
+        phase: 0,
+        speed: 2.7 + loopTier * 0.4
+      });
+      fillRectTiles(1, 11, 3, 14, cz, 'flat');
+
+      // Spiral Arm 4: South Plunge (y: 15..20, x: 1..3)
+      for (let y = 15; y <= 20; y++) {
+        cz -= 0.65;
+        fillRectTiles(1, y, 3, y, cz, 'slopeDown');
+      }
+      fillRectTiles(1, 21, 4, 24, cz, 'flat');
+
+      // Turbo Boost Runway Eastward (x: 5..15, y: 21..24)
+      for (let x = 5; x <= 15; x++) {
+        cz -= 0.35;
+        for (let y = 21; y <= 24; y++) {
+          const isBoost = (x === 7 || x === 11) && (y === 22 || y === 23);
+          setTile(x, y, cz, isBoost ? 'boost' : 'slopeRight');
+        }
+      }
+      this.hazards.push({
+        gx: 10,
+        gy: 22.5,
+        z: cz + 1.5,
+        baseX: 10,
+        baseY: 22.5,
+        ampX: 0.5,
+        ampY: 1.3,
+        phase: 1.2,
+        speed: 3.0 + loopTier * 0.4
+      });
+
+      // Goal Platform (x: 16..21, y: 20..25)
+      fillRectTiles(16, 20, 21, 25, cz, 'flat');
+      fillRectTiles(18, 21, 20, 24, cz, 'goal');
+    } else {
+      // =========================================================================
+      // COURSE 6: ZENITH CITADEL (Grand Master Championship Course)
+      // =========================================================================
+      let cz = 18;
+      startZ = cz;
+      fillRectTiles(-1, -1, 2, 2, cz, 'flat');
+
+      // 1. High-velocity slopeRight + boost launch
+      for (let x = 3; x <= 8; x++) {
+        cz -= 0.65;
+        for (let y = -1; y <= 1; y++) {
+          setTile(x, y, cz, x === 5 && y === 0 ? 'boost' : 'slopeRight');
+        }
+      }
+
+      // 2. Ice Diamond Arena (x: 9..15, y: -2..4)
+      fillRectTiles(9, -2, 15, 4, cz, 'ice');
+      fillRectTiles(11, 0, 13, 2, cz, 'flat');
+      this.bumpers.push({ gx: 10.5, gy: -0.5, z: cz, r: 0.42, pulse: 0 });
+      this.bumpers.push({ gx: 13.5, gy: -0.5, z: cz, r: 0.42, pulse: 0 });
+      this.bumpers.push({ gx: 10.5, gy: 2.5, z: cz, r: 0.42, pulse: 0 });
+      this.bumpers.push({ gx: 13.5, gy: 2.5, z: cz, r: 0.42, pulse: 0 });
+      this.hazards.push({
+        gx: 12,
+        gy: 1,
+        z: cz,
+        baseX: 12,
+        baseY: 1,
+        ampX: 2.2,
+        ampY: 1.8,
+        phase: 0,
+        speed: 2.8 + loopTier * 0.4
+      });
+
+      // 3. Steep Southward Cascade (x: 11..13, y: 5..11)
+      for (let y = 5; y <= 11; y++) {
+        cz -= 0.65;
+        fillRectTiles(11, y, 13, y, cz, y % 2 === 0 ? 'slopeDown' : 'slopeLeft');
+      }
+
+      // 4. Mid Citadel Checkpoint (x: 10..14, y: 12..15)
+      fillRectTiles(10, 12, 14, 15, cz, 'flat');
+
+      // 5. Razor Catwalk Eastward (x: 15..22, y: 13..14)
+      for (let x = 15; x <= 22; x++) {
+        cz -= 0.4;
+        setTile(x, 13, cz, x === 18 ? 'boost' : 'flat');
+        setTile(x, 14, cz, x === 18 ? 'boost' : 'flat');
+      }
+
+      // 6. Zenith Grand Finale Court (x: 23..30, y: 11..17)
+      fillRectTiles(23, 11, 30, 17, cz, 'flat');
+      this.bumpers.push({ gx: 25, gy: 12.5, z: cz, r: 0.44, pulse: 0 });
+      this.bumpers.push({ gx: 25, gy: 15.5, z: cz, r: 0.44, pulse: 0 });
+      this.hazards.push({
+        gx: 26,
+        gy: 14,
+        z: cz,
+        baseX: 26,
+        baseY: 14,
+        ampX: 0.8,
+        ampY: 2.2,
+        phase: 0.5,
+        speed: 3.1 + loopTier * 0.4
+      });
+      this.hazards.push({
+        gx: 27.5,
+        gy: 14,
+        z: cz,
+        baseX: 27.5,
+        baseY: 14,
+        ampX: 0.6,
+        ampY: 2.0,
+        phase: 2.6,
+        speed: 3.1 + loopTier * 0.4
+      });
+      fillRectTiles(28, 12, 30, 16, cz, 'goal');
     }
 
     // Sort tiles back-to-front by (gx + gy) for painter's algorithm rendering
@@ -171,14 +524,14 @@ export class MarbleMadness {
     this.marble = {
       gx: 0.5,
       gy: 0.5,
-      z: 12,
+      z: startZ,
       vx: 0,
       vy: 0,
       vz: 0,
       radius: 10,
       safeGx: 0.5,
       safeGy: 0.5,
-      safeZ: 12,
+      safeZ: startZ,
       falling: false,
       fallTimer: 0,
       currentTileType: 'flat',
@@ -219,6 +572,9 @@ export class MarbleMadness {
         return new Vector2(3.4, 0.4);
       case 'slopeLeft':
         return new Vector2(0.4, 3.4);
+      case 'boost':
+        return new Vector2(4.5, 1.5);
+      case 'ice':
       case 'flat':
       case 'goal':
       default:
@@ -276,6 +632,21 @@ export class MarbleMadness {
 
     if (this.state !== 'PLAYING') return;
 
+    if (this.courseBannerTimer > 0) {
+      this.courseBannerTimer = Math.max(0, this.courseBannerTimer - dt);
+    }
+    if (this.boostCooldown > 0) {
+      this.boostCooldown = Math.max(0, this.boostCooldown - dt);
+    }
+
+    // Allow cycling courses directly with Action B (X/Shift) when stationary on start pad, or N key
+    if (this.input.isKeyJustPressed('KeyN')) {
+      this.level = (this.level % this.totalCourses) + 1;
+      this.audio.playMenuSelect();
+      this._buildCourse(this.level);
+      return;
+    }
+
     if (this.levelClearTimer > 0) {
       this.levelClearTimer -= dt;
       if (this.levelClearTimer <= 0) {
@@ -296,7 +667,7 @@ export class MarbleMadness {
         this.setState('GAMEOVER');
         return;
       } else {
-        this.timeLeft = 20.0;
+        this.timeLeft = 22.0;
         this.audio.playHit();
       }
     }
@@ -365,17 +736,33 @@ export class MarbleMadness {
       m.safeZ = tile.z;
     }
 
+    // Boost Pad impulse
+    if (tile.type === 'boost' && this.boostCooldown <= 0) {
+      this.boostCooldown = 0.25;
+      const spd = Math.hypot(m.vx, m.vy);
+      if (spd > 0.4) {
+        m.vx = (m.vx / spd) * 8.4;
+        m.vy = (m.vy / spd) * 8.4;
+      } else {
+        m.vx += 5.5;
+      }
+      this.score += 50;
+      this.audio.playPowerUp();
+      this._spawnParticles(m.gx, m.gy, m.z, PALETTE.GOLD, 10);
+    }
+
     // Apply Isometric Slope Gravity Vector + Player Acceleration
     const slopeGravity = this._getSlopeGravityVector(tile.type);
     m.vx += (isoAx + slopeGravity.x) * dt;
     m.vy += (isoAy + slopeGravity.y) * dt;
 
-    // Track surface damping & momentum cap
-    const damping = Math.pow(0.28, dt);
+    // Track surface damping & momentum cap (ice tiles have much lower friction!)
+    const surfaceDrag = tile.type === 'ice' ? 0.65 : 0.28;
+    const damping = Math.pow(surfaceDrag, dt);
     m.vx *= damping;
     m.vy *= damping;
 
-    const maxSpeed = boost > 1 ? 8.2 : 6.4;
+    const maxSpeed = tile.type === 'boost' ? 9.5 : boost > 1 ? 8.2 : 6.4;
     const speed = Math.hypot(m.vx, m.vy);
     if (speed > maxSpeed) {
       m.vx = (m.vx / speed) * maxSpeed;
@@ -443,7 +830,6 @@ export class MarbleMadness {
     }
 
     // Update ribbon trail
-    const proj = this._isoProject(m.gx, m.gy, m.z);
     this.trail.push({ gx: m.gx, gy: m.gy, z: m.z, life: 0.35 });
     if (this.trail.length > 18) this.trail.shift();
     for (let i = this.trail.length - 1; i >= 0; i--) {
@@ -481,6 +867,8 @@ export class MarbleMadness {
     const { gx, gy, z, type } = tile;
     if (type === 'chasm') return;
 
+    const theme = this.courseTheme || COURSE_CATALOG[0];
+
     // Corner elevation adjustments to visually slant slope tiles
     let zN = z;
     let zE = z;
@@ -510,7 +898,7 @@ export class MarbleMadness {
     const skirtDepth = 22;
 
     // Left vertical skirt face (pW -> pS)
-    ctx.fillStyle = '#0F172A';
+    ctx.fillStyle = theme.skirtL;
     ctx.beginPath();
     ctx.moveTo(pW.x, pW.y);
     ctx.lineTo(pS.x, pS.y);
@@ -520,7 +908,7 @@ export class MarbleMadness {
     ctx.fill();
 
     // Right vertical skirt face (pS -> pE)
-    ctx.fillStyle = '#1E293B';
+    ctx.fillStyle = theme.skirtR;
     ctx.beginPath();
     ctx.moveTo(pS.x, pS.y);
     ctx.lineTo(pE.x, pE.y);
@@ -530,9 +918,9 @@ export class MarbleMadness {
     ctx.fill();
 
     // Top Isometric Diamond Face
-    const checker = (Math.abs(gx + gy) % 2) === 0;
-    let fill = checker ? '#1E3A8A' : '#172554';
-    let stroke = PALETTE.CYAN;
+    const checker = Math.abs(gx + gy) % 2 === 0;
+    let fill = checker ? theme.flatA : theme.flatB;
+    let stroke = theme.stroke;
 
     if (type === 'slopeRight') {
       fill = checker ? '#0369A1' : '#075985';
@@ -543,6 +931,12 @@ export class MarbleMadness {
     } else if (type === 'slopeDown') {
       fill = checker ? '#6D28D9' : '#4C1D95';
       stroke = PALETTE.PURPLE;
+    } else if (type === 'ice') {
+      fill = checker ? '#0284C7' : '#0369A1';
+      stroke = '#E0F2FE';
+    } else if (type === 'boost') {
+      fill = '#9A3412';
+      stroke = PALETTE.GOLD;
     } else if (type === 'goal') {
       fill = checker ? PALETTE.GOLD : '#1E293B';
       stroke = PALETTE.GOLD;
@@ -560,13 +954,18 @@ export class MarbleMadness {
     ctx.fill();
     ctx.stroke();
 
-    // Draw directional chevron on slope tiles
-    if (type === 'slopeRight' || type === 'slopeLeft' || type === 'slopeDown') {
+    // Draw directional chevron on slope & boost tiles
+    if (
+      type === 'slopeRight' ||
+      type === 'slopeLeft' ||
+      type === 'slopeDown' ||
+      type === 'boost'
+    ) {
       const c = this._isoProject(gx, gy, z);
-      ctx.strokeStyle = 'rgba(255,255,255,0.45)';
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = type === 'boost' ? PALETTE.GOLD : 'rgba(255,255,255,0.45)';
+      ctx.lineWidth = type === 'boost' ? 2.2 : 1.5;
       ctx.beginPath();
-      if (type === 'slopeRight') {
+      if (type === 'slopeRight' || type === 'boost') {
         ctx.moveTo(c.x - 4, c.y - 4);
         ctx.lineTo(c.x + 5, c.y + 2);
         ctx.lineTo(c.x - 2, c.y + 5);
@@ -586,6 +985,8 @@ export class MarbleMadness {
   render(ctx = this.renderer.ctx) {
     ctx.fillStyle = PALETTE.BG;
     ctx.fillRect(0, 38, this.renderer.width, this.renderer.height - 38);
+
+    const courseMeta = this._getCourseMeta(this.level);
 
     // Subtle background isometric wireframe grid
     ctx.strokeStyle = 'rgba(56, 189, 248, 0.06)';
@@ -665,31 +1066,61 @@ export class MarbleMadness {
     }
     ctx.globalAlpha = 1;
 
-    // Course Status Banner
+    // Course Status / Intro Banner
     if (this.levelClearTimer > 0) {
-      this.renderer.drawText('GOAL REACHED! TIME BONUS AWARDED!', 480, 120, {
-        font: FONTS.HEADER,
-        size: 18,
-        color: PALETTE.GOLD,
-        align: 'center',
-        glow: 12
-      });
+      const nextMeta = this._getCourseMeta(this.level + 1);
+      this.renderer.drawText(
+        `COURSE ${courseMeta.index} CLEAR! NEXT: ${nextMeta.name}`,
+        480,
+        112,
+        {
+          font: FONTS.HEADER,
+          size: 16,
+          color: PALETTE.GOLD,
+          align: 'center',
+          glow: 12
+        }
+      );
     } else if (m.falling) {
-      this.renderer.drawText('CHASM DROP-OFF!', 480, 120, {
+      this.renderer.drawText('CHASM DROP-OFF!', 480, 112, {
         font: FONTS.HEADER,
         size: 18,
         color: PALETTE.PINK,
         align: 'center',
         glow: 12
       });
+    } else if (this.courseBannerTimer > 0) {
+      this.renderer.drawText(
+        `COURSE ${courseMeta.index}/${this.totalCourses}: ${this.courseName}`,
+        480,
+        96,
+        {
+          font: FONTS.HEADER,
+          size: 15,
+          color: courseMeta.stroke,
+          align: 'center',
+          glow: 12
+        }
+      );
+      this.renderer.drawText(this.courseSubtitle, 480, 120, {
+        font: FONTS.HUD,
+        size: 12,
+        color: PALETTE.WHITE,
+        align: 'center'
+      });
     }
 
-    // Tile slope indicator in lower-left corner
-    this.renderer.drawText(`SURFACE: ${m.currentTileType.toUpperCase()}`, 20, 520, {
-      font: FONTS.HUD,
-      size: 14,
-      color: PALETTE.CYAN
-    });
+    // Tile slope & Course indicator in lower bar
+    this.renderer.drawText(
+      `COURSE ${courseMeta.index}/${this.totalCourses}: ${this.courseName}  |  SURFACE: ${m.currentTileType.toUpperCase()}  |  [N]: NEXT COURSE`,
+      20,
+      522,
+      {
+        font: FONTS.HUD,
+        size: 12,
+        color: courseMeta.stroke
+      }
+    );
 
     // Top HUD
     this.renderer.drawHUD({
@@ -698,15 +1129,15 @@ export class MarbleMadness {
       highScore: this.highScore,
       lives: this.lives,
       level: this.level,
-      extraLabel: `TIME:${Math.ceil(this.timeLeft)}s`,
-      accent: PALETTE.CYAN
+      extraLabel: `TIME:${Math.ceil(this.timeLeft)}s C${courseMeta.index}/${this.totalCourses}`,
+      accent: courseMeta.stroke
     });
 
     // State Overlay
     this.renderer.drawStateOverlay(this.state, {
       title: this.title,
-      subtitle: 'ISOMETRIC 3D COURSE ROLLER',
-      controls: 'ARROWS/WASD: ROLL MARBLE  |  Z/SPACE: TURBO SPIN',
+      subtitle: '6-COURSE ISOMETRIC 3D ROLLER',
+      controls: 'ARROWS/WASD: ROLL  |  Z/SPACE: TURBO SPIN  |  N: SKIP COURSE',
       score: this.score,
       highScore: this.highScore,
       accent: PALETTE.CYAN
