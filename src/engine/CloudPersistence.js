@@ -396,6 +396,28 @@ export class CloudPersistenceManager {
 
 export const cloudPersistence = CloudPersistenceManager.getInstance();
 
+export const CloudPersistence = {
+  init() {
+    return cloudPersistence;
+  },
+  onUpdate(cb) {
+    cloudPersistence._updateListeners = cloudPersistence._updateListeners || [];
+    if (typeof cb === 'function') cloudPersistence._updateListeners.push(cb);
+  },
+  isFavorite(gameId) {
+    return !!cloudPersistence.getRecord(gameId).saved;
+  },
+  toggleFavorite(gameId) {
+    return cloudPersistence.toggleSaveGame(gameId);
+  },
+  recordPlay(gameId) {
+    return cloudPersistence.recordPlay(gameId);
+  },
+  submitHighScore(gameId, score, initials = 'ACE') {
+    return cloudPersistence.submitHighScore(gameId, score, initials);
+  }
+};
+
 /**
  * Deep State Serializer for Arcade Emulator Save States & Real-Time Rewind Ring Buffer
  */
@@ -428,43 +450,46 @@ export class SaveStateManager {
       }
 
       seen.add(val);
+      try {
+        if (val instanceof Vector2 || (val.constructor && val.constructor.name === 'Vector2')) {
+          return { __type: 'Vector2', x: val.x, y: val.y };
+        }
+        if (val instanceof Map) {
+          const entries = [];
+          for (const [k, v] of val.entries()) {
+            entries.push([k, SaveStateManager.serializeValue(v, seen, depth + 1)]);
+          }
+          return { __type: 'Map', entries };
+        }
+        if (val instanceof Set) {
+          const values = [];
+          for (const v of val.values()) {
+            values.push(SaveStateManager.serializeValue(v, seen, depth + 1));
+          }
+          return { __type: 'Set', values };
+        }
+        if (val instanceof Uint8Array) {
+          return { __type: 'Uint8Array', data: Array.from(val) };
+        }
+        if (val instanceof Float32Array) {
+          return { __type: 'Float32Array', data: Array.from(val) };
+        }
+        if (Array.isArray(val)) {
+          return val.map((item) => SaveStateManager.serializeValue(item, seen, depth + 1));
+        }
 
-      if (val instanceof Vector2 || (val.constructor && val.constructor.name === 'Vector2')) {
-        return { __type: 'Vector2', x: val.x, y: val.y };
-      }
-      if (val instanceof Map) {
-        const entries = [];
-        for (const [k, v] of val.entries()) {
-          entries.push([k, SaveStateManager.serializeValue(v, seen, depth + 1)]);
+        const out = {};
+        for (const key of Object.keys(val)) {
+          if (EXCLUDED_GAME_KEYS.has(key)) continue;
+          const sv = SaveStateManager.serializeValue(val[key], seen, depth + 1);
+          if (sv !== undefined) {
+            out[key] = sv;
+          }
         }
-        return { __type: 'Map', entries };
+        return out;
+      } finally {
+        seen.delete(val);
       }
-      if (val instanceof Set) {
-        const values = [];
-        for (const v of val.values()) {
-          values.push(SaveStateManager.serializeValue(v, seen, depth + 1));
-        }
-        return { __type: 'Set', values };
-      }
-      if (val instanceof Uint8Array) {
-        return { __type: 'Uint8Array', data: Array.from(val) };
-      }
-      if (val instanceof Float32Array) {
-        return { __type: 'Float32Array', data: Array.from(val) };
-      }
-      if (Array.isArray(val)) {
-        return val.map((item) => SaveStateManager.serializeValue(item, seen, depth + 1));
-      }
-
-      const out = {};
-      for (const key of Object.keys(val)) {
-        if (EXCLUDED_GAME_KEYS.has(key)) continue;
-        const sv = SaveStateManager.serializeValue(val[key], seen, depth + 1);
-        if (sv !== undefined) {
-          out[key] = sv;
-        }
-      }
-      return out;
     }
     return undefined;
   }
@@ -542,6 +567,26 @@ export class SaveStateManager {
       game[key] = restored[key];
     }
     return true;
+  }
+
+  static createSnapshot(game) {
+    return SaveStateManager.captureSnapshot(game);
+  }
+
+  static applySnapshot(game, snapshot) {
+    return SaveStateManager.restoreSnapshot(game, snapshot);
+  }
+
+  static save(gameId, game) {
+    return !!SaveStateManager.saveToSlot(game, 1);
+  }
+
+  static load(gameId, game) {
+    return !!SaveStateManager.loadFromSlot(game, 1);
+  }
+
+  static hasSave(gameId) {
+    return !!SaveStateManager.getSlotMeta(gameId, 1);
   }
 
   static saveToSlot(game, slot = 1) {
@@ -623,6 +668,36 @@ export class DipSwitchStore {
     if (d === 'HARD') return 1.22;
     return 1.0;
   }
+
+  static getPreset() {
+    const cur = DipSwitchStore.get();
+    const label =
+      cur.difficulty === 'EASY'
+        ? 'EASY 5-LIVES'
+        : cur.difficulty === 'HARD'
+        ? 'HARD 2-LIVES'
+        : `${cur.startingLives} LIVES STD`;
+    return {
+      label,
+      lives: cur.startingLives,
+      difficultyName: cur.difficulty,
+      speedScale: DipSwitchStore.getDifficultyScale()
+    };
+  }
+
+  static cyclePreset() {
+    const cur = DipSwitchStore.get();
+    if (cur.difficulty === 'NORMAL' && cur.startingLives === 3) {
+      DipSwitchStore.save({ startingLives: 5, difficulty: 'NORMAL' });
+    } else if (cur.difficulty === 'NORMAL' && cur.startingLives === 5) {
+      DipSwitchStore.save({ startingLives: 2, difficulty: 'HARD' });
+    } else if (cur.difficulty === 'HARD') {
+      DipSwitchStore.save({ startingLives: 5, difficulty: 'EASY', freePlay: true });
+    } else {
+      DipSwitchStore.save({ startingLives: 3, difficulty: 'NORMAL', freePlay: false });
+    }
+    return DipSwitchStore.getPreset();
+  }
 }
 
 /**
@@ -647,6 +722,15 @@ export class InitialsStore {
       localStorage.setItem(INITIALS_STORAGE_KEY, clean);
     } catch (_) {}
     return clean;
+  }
+
+  static cycleChar(cursorIdx = 0, delta = 1) {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const current = InitialsStore.getLastInitials().split('');
+    const idx = Math.max(0, Math.min(2, cursorIdx));
+    const pos = Math.max(0, alphabet.indexOf(current[idx]));
+    current[idx] = alphabet[(pos + delta + alphabet.length) % alphabet.length];
+    return InitialsStore.setLastInitials(current.join(''));
   }
 }
 
@@ -723,6 +807,23 @@ export class AchievementManager {
         this.activeToasts.splice(i, 1);
       }
     }
+  }
+
+  static unlock(id, audio = null) {
+    const norm = String(id || '').toLowerCase();
+    const map = {
+      first_coin: 'first_coin',
+      high_roller_10k: 'high_roller',
+      stage_conqueror: 'stage_veteran',
+      time_traveler: 'time_traveler',
+      save_master: 'save_master',
+      shutterbug: 'crt_connoisseur'
+    };
+    const targetId = map[norm] || norm;
+    const unlocked = achievementManager.unlock(targetId, audio);
+    if (!unlocked) return null;
+    const def = ACHIEVEMENT_DEFS.find((a) => a.id === targetId);
+    return def ? { icon: '🏆', title: def.title, desc: def.desc } : null;
   }
 }
 

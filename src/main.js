@@ -50,6 +50,30 @@ import { TrackAndField } from './games/TrackAndField.js';
 import { OutRun } from './games/OutRun.js';
 import { Contra } from './games/Contra.js';
 
+// 22 Vault II Classics (Total Roster: 50 Games)
+import { Galaxian } from './games/Galaxian.js';
+import { DigDug2 } from './games/DigDug2.js';
+import { ElevatorAction } from './games/ElevatorAction.js';
+import { Tapper } from './games/Tapper.js';
+import { LunarLander } from './games/LunarLander.js';
+import { Tempest } from './games/Tempest.js';
+import { Robotron } from './games/Robotron.js';
+import { Sinistar } from './games/Sinistar.js';
+import { CrystalCastles } from './games/CrystalCastles.js';
+import { Zaxxon } from './games/Zaxxon.js';
+import { MoonPatrol } from './games/MoonPatrol.js';
+import { Pengo } from './games/Pengo.js';
+import { RallyX } from './games/RallyX.js';
+import { RoadFighter } from './games/RoadFighter.js';
+import { Flicky } from './games/Flicky.js';
+import { Mappy } from './games/Mappy.js';
+import { CircusCharlie } from './games/CircusCharlie.js';
+import { BattleCity } from './games/BattleCity.js';
+import { KungFuMaster } from './games/KungFuMaster.js';
+import { WildGunman } from './games/WildGunman.js';
+import { Exerion } from './games/Exerion.js';
+import { TetrisRetro } from './games/TetrisRetro.js';
+
 export const GAME_REGISTRY = {
   loderunner: LodeRunner,
   digdug: DigDug,
@@ -78,7 +102,29 @@ export const GAME_REGISTRY = {
   tron: Tron,
   trackandfield: TrackAndField,
   outrun: OutRun,
-  contra: Contra
+  contra: Contra,
+  galaxian: Galaxian,
+  digdug2: DigDug2,
+  elevatoraction: ElevatorAction,
+  tapper: Tapper,
+  lunarlander: LunarLander,
+  tempest: Tempest,
+  robotron: Robotron,
+  sinistar: Sinistar,
+  crystalcastles: CrystalCastles,
+  zaxxon: Zaxxon,
+  moonpatrol: MoonPatrol,
+  pengo: Pengo,
+  rallyx: RallyX,
+  roadfighter: RoadFighter,
+  flicky: Flicky,
+  mappy: Mappy,
+  circuscharlie: CircusCharlie,
+  battlecity: BattleCity,
+  kungfumaster: KungFuMaster,
+  wildgunman: WildGunman,
+  exerion: Exerion,
+  tetrisretro: TetrisRetro
 };
 
 export class RetroArcadeStudio {

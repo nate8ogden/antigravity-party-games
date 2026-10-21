@@ -65,7 +65,29 @@ const DEFAULT_HIGHSCORES = {
   tron: 11800,
   trackandfield: 10500,
   outrun: 24000,
-  contra: 21000
+  contra: 21000,
+  galaxian: 14200,
+  digdug2: 15800,
+  elevatoraction: 16500,
+  tapper: 13900,
+  lunarlander: 11500,
+  tempest: 22400,
+  robotron: 28000,
+  sinistar: 25600,
+  crystalcastles: 17200,
+  zaxxon: 19400,
+  moonpatrol: 14600,
+  pengo: 15200,
+  rallyx: 13800,
+  roadfighter: 16400,
+  flicky: 14900,
+  mappy: 15600,
+  circuscharlie: 13400,
+  battlecity: 18200,
+  kungfumaster: 19800,
+  wildgunman: 12600,
+  exerion: 15100,
+  tetrisretro: 24500
 };
 
 export class HighScoreStore {
@@ -726,6 +748,19 @@ export class Renderer {
     }
 
     ctx.restore();
+  }
+
+  pushToast(opts = {}) {
+    if (!opts) return;
+    achievementManager.pushToast(
+      `${opts.icon ? opts.icon + ' ' : ''}${opts.title || 'ARCADE NOTICE'}`,
+      opts.desc || opts.subtitle || '',
+      opts.color || PALETTE.CYAN
+    );
+  }
+
+  triggerShutterFlash() {
+    this.shutterFlashTimer = 0.25;
   }
 }
 

@@ -351,6 +351,272 @@ export const GAME_CATALOG = [
     mechanics: 'Run-and-gun across jungle bridges with 8-way aiming & 5-way Spread Shot powerups',
     controls: '8-Way Aim/Move + Shoot(Z) + Jump(X)',
     enhancements: 'Spread Shot [S], Rapid [R], Laser [L] & Fortress Wall Boss'
+  },
+
+  // === 22 VAULT II CLASSICS (TOTAL ROSTER: 50 GAMES) ===
+  {
+    id: 'galaxian',
+    icon: '🛸',
+    title: 'Star Swarm',
+    classicRef: 'Galaxian Style',
+    category: 'vault2',
+    genre: 'Space Shooter',
+    accent: PALETTE.GOLD,
+    mechanics: 'Shoot convecting alien insect squadrons & Flagships diving in escort formations',
+    controls: 'Left/Right Dodge + Fire Nose Missile (Z)',
+    enhancements: 'Flagship + 2 Red Escort formation dives for 800-pt bonuses'
+  },
+  {
+    id: 'digdug2',
+    icon: '🏝️',
+    title: 'Island Driller',
+    classicRef: 'Dig Dug II Style',
+    category: 'vault2',
+    genre: 'Island Action',
+    accent: PALETTE.GREEN,
+    mechanics: 'Inflate monsters with your pump or hammer fault-line pegs to sink island chunks',
+    controls: '4-Way Walk + Pump(Z) + Jackhammer Fault Peg(X)',
+    enhancements: 'Fracture coastal fault lines to drown multiple enemies at once'
+  },
+  {
+    id: 'elevatoraction',
+    icon: '🕵️',
+    title: 'Tower Agent',
+    classicRef: 'Elevator Action Style',
+    category: 'vault2',
+    genre: 'Spy Platformer',
+    accent: PALETTE.RED,
+    mechanics: 'Ride elevators down a spy tower, steal secret files behind red doors & shoot agents',
+    controls: 'Move/Ride Elevator + Shoot(Z) + Jump Kick(X)',
+    enhancements: 'Shoot ceiling lamps for blackout cover & crush spies with elevators'
+  },
+  {
+    id: 'tapper',
+    icon: '🍺',
+    title: 'Root Beer Dash',
+    classicRef: 'Tapper Style',
+    category: 'vault2',
+    genre: 'Bar Arcade',
+    accent: PALETTE.GOLD,
+    mechanics: 'Slide frosty root beer mugs down 4 saloon bars to thirsty patrons & catch empties',
+    controls: 'Up/Down Switch Bar + Pour/Slide Mug(Z) + Run(L/R)',
+    enhancements: '4 parallel counters, sliding empty glasses & tip bonuses'
+  },
+  {
+    id: 'lunarlander',
+    icon: '🌕',
+    title: 'Apollo Lander',
+    classicRef: 'Lunar Lander Style',
+    category: 'vault2',
+    genre: 'Vector Physics',
+    accent: PALETTE.CYAN,
+    mechanics: 'Rotate thrusters & feather your rocket burn to land gently on 2X-5X moon pads',
+    controls: 'Rotate Left/Right + Variable Rocket Thrust (Z/Up)',
+    enhancements: 'Vector telemetry HUD, fuel conservation & 5X narrow crater pads'
+  },
+  {
+    id: 'tempest',
+    icon: '🕸️',
+    title: 'Vortex Tube',
+    classicRef: 'Tempest Style',
+    category: 'vault2',
+    genre: '3D Tube Shooter',
+    accent: PALETTE.PINK,
+    mechanics: 'Spin your yellow claw blaster around 3D neon wireframe tubes to blast Flippers',
+    controls: 'Left/Right Rim Spin + Rapid Fire(Z) + Superzapper(X)',
+    enhancements: 'Circle, Square, Plus & Star 3D tubes + screen-wiping Superzapper'
+  },
+  {
+    id: 'robotron',
+    icon: '🤖',
+    title: 'Cyber Arena 2084',
+    classicRef: 'Robotron: 2084 Style',
+    category: 'vault2',
+    genre: 'Arena Shooter',
+    accent: PALETTE.RED,
+    mechanics: 'Blast relentless robot swarms in 8 directions while rescuing the last human family',
+    controls: '8-Way Move & Fire(Z) + Lock Aim Strafe(X)',
+    enhancements: 'Grunts, indestructible Hulks, Spheroids, Brains & 5000-pt rescues'
+  },
+  {
+    id: 'sinistar',
+    icon: '💀',
+    title: 'Dread Star',
+    classicRef: 'Sinistar Style',
+    category: 'vault2',
+    genre: 'Space Boss Hunt',
+    accent: PALETTE.RED,
+    mechanics: 'Mine Sinibomb crystals from planetoids before worker drones build the giant skull boss',
+    controls: '8-Way Thrust + Laser(Z) + Fire Sinibomb(X)',
+    enhancements: '13-piece boss construction, radar scanner & Sinibomb homing blasts'
+  },
+  {
+    id: 'crystalcastles',
+    icon: '🐻',
+    title: 'Gem Citadel',
+    classicRef: 'Crystal Castles Style',
+    category: 'vault2',
+    genre: 'Isometric 3D',
+    accent: PALETTE.PINK,
+    mechanics: 'Guide the bear across 3D isometric castle ramps & elevators to scoop up every gem',
+    controls: '4-Way Isometric Walk + Jump(Z)',
+    enhancements: 'Magic Hat invincibility, Honey Pots, Gem Eaters & Witch hazard'
+  },
+  {
+    id: 'zaxxon',
+    icon: '✈️',
+    title: 'Iso Fortress',
+    classicRef: 'Zaxxon Style',
+    category: 'vault2',
+    genre: 'Isometric Shooter',
+    accent: PALETTE.CYAN,
+    mechanics: 'Fly diagonally through an isometric space fortress using your altitude gauge & shadow',
+    controls: 'Left/Right Bank + Up/Down Altitude + Laser(Z)',
+    enhancements: 'Live altitude meter, ground shadow targeting, fuel tanks & Zaxxon Boss'
+  },
+  {
+    id: 'moonpatrol',
+    icon: '🛞',
+    title: 'Crater Buggy',
+    classicRef: 'Moon Patrol Style',
+    category: 'vault2',
+    genre: 'Lunar Runner',
+    accent: PALETTE.PINK,
+    mechanics: 'Drive a 6-wheel lunar buggy jumping craters while firing forward & upward lasers',
+    controls: 'Speed L/R + Dual Cannon/AA Laser(Z) + Jump(X/Up)',
+    enhancements: 'Articulated 6-wheel suspension, bomb-dropping UFOs & checkpoints A-E'
+  },
+  {
+    id: 'pengo',
+    icon: '🐧',
+    title: 'Ice Pusher',
+    classicRef: 'Pengo Style',
+    category: 'vault2',
+    genre: 'Ice Maze Action',
+    accent: PALETTE.CYAN,
+    mechanics: 'Push sliding ice blocks across a frozen maze to crush Sno-Bees & align 3 diamonds',
+    controls: '4-Way Move + Push/Shatter Ice Block or Stun Wall(Z)',
+    enhancements: '10,000-pt 3-Diamond alignment jackpot & electric wall stun'
+  },
+  {
+    id: 'rallyx',
+    icon: '💨',
+    title: 'Smoke Rally',
+    classicRef: 'Rally-X Style',
+    category: 'vault2',
+    genre: 'Maze Racer',
+    accent: PALETTE.GOLD,
+    mechanics: 'Race through scrolling mazes using the radar to grab 10 flags & smoke-spin rival cars',
+    controls: '4-Way Steer + Deploy Smoke Screen Cloud(Z/X)',
+    enhancements: 'Live right-side radar minimap, Special [S] flag multiplier & fuel gauge'
+  },
+  {
+    id: 'roadfighter',
+    icon: '🛣️',
+    title: 'Turbo Highway',
+    classicRef: 'Road Fighter Style',
+    category: 'vault2',
+    genre: 'High-Speed Racer',
+    accent: PALETTE.RED,
+    mechanics: 'Weave through traffic at 400 km/h, counter-steer skids & touch rainbow fuel cars',
+    controls: 'Steer/Counter-Steer + Low Gear(Z) + Turbo Gear(X)',
+    enhancements: 'Narrowing bridges, oil slicks & counter-steer skid recovery physics'
+  },
+  {
+    id: 'flicky',
+    icon: '🐦',
+    title: 'Chirpy Rescue',
+    classicRef: 'Flicky Style',
+    category: 'vault2',
+    genre: 'Platform Rescue',
+    accent: PALETTE.GOLD,
+    mechanics: 'Lead a trailing chain of rescued yellow chicks to the exit door while dodging cats',
+    controls: 'Left/Right Run + Jump/Flutter(Z) + Throw Item(X)',
+    enhancements: 'Chain-rescue score multipliers & throwable flowerpots vs Tiger Cats'
+  },
+  {
+    id: 'mappy',
+    icon: '🐭',
+    title: 'Trampoline Cop',
+    classicRef: 'Mappy Style',
+    category: 'vault2',
+    genre: 'Mansion Platform',
+    accent: PALETTE.CYAN,
+    mechanics: 'Bounce on color-changing trampolines to grab stolen loot & blast cats with sonic doors',
+    controls: 'Left/Right Floor Entry + Open/Sonic Door(Z/X)',
+    enhancements: '4-bounce trampoline color tension & microwave wave doors'
+  },
+  {
+    id: 'circuscharlie',
+    icon: '🎪',
+    title: 'Big Top Stunt',
+    classicRef: 'Circus Charlie Style',
+    category: 'vault2',
+    genre: 'Circus Action',
+    accent: PALETTE.GOLD,
+    mechanics: 'Jump a lion through flaming rings, walk tightropes over monkeys & hop circus balls',
+    controls: 'Left/Right Pace + Stunt Leap(Z/Up)',
+    enhancements: '3 classic Big Top events: Lion Rings, Tightrope Monkeys & Rolling Balls'
+  },
+  {
+    id: 'battlecity',
+    icon: '🛡️',
+    title: 'Tank Battalion',
+    classicRef: 'Battle City Style',
+    category: 'vault2',
+    genre: 'Tank Defense',
+    accent: PALETTE.GOLD,
+    mechanics: 'Command your golden tank through brick walls to defend the Phoenix base from enemy armor',
+    controls: '4-Way Tank Tread + Fire Shell(Z)',
+    enhancements: 'Destructible brick/steel walls, Star upgrades, Base Shovel & Time Freeze'
+  },
+  {
+    id: 'kungfumaster',
+    icon: '🥋',
+    title: 'Dragon Dojo',
+    classicRef: 'Kung-Fu Master Style',
+    category: 'vault2',
+    genre: 'Martial Arts',
+    accent: PALETTE.RED,
+    mechanics: 'Battle across 5 temple floors with jump-kicks & crouch-punches to defeat dojo bosses',
+    controls: 'Walk/Jump/Crouch + Punch(Z) + Kick(X)',
+    enhancements: 'Grippers, Knife Throwers, Dragon Pots & 5 Floor Boss showdowns'
+  },
+  {
+    id: 'wildgunman',
+    icon: '🤠',
+    title: 'High Noon Draw',
+    classicRef: 'Wild Gunman Style',
+    category: 'vault2',
+    genre: 'Quick-Draw Duel',
+    accent: PALETTE.ORANGE,
+    mechanics: 'Wait for the outlaw’s eyes to flash "FIRE!!" then draw & shoot in milliseconds',
+    controls: 'Click/Tap Outlaw or Press Draw(Z) on "FIRE!!"',
+    enhancements: 'Millisecond reaction timer, early-draw FOUL detection & Saloon Gang mode'
+  },
+  {
+    id: 'exerion',
+    icon: '🦅',
+    title: 'Inertia Wing',
+    classicRef: 'Exerion Style',
+    category: 'vault2',
+    genre: 'Inertia Shooter',
+    accent: PALETTE.CYAN,
+    mechanics: 'Master gliding momentum over 3D alien terrain with Dual Slow & Single Fast cannons',
+    controls: 'Inertia Steer + Fast Cannon(Z) + Dual Blaster(X)',
+    enhancements: 'Authentic ship momentum physics & ammo-charging Fast Cannon'
+  },
+  {
+    id: 'tetrisretro',
+    icon: '💎',
+    title: 'Neon Blocks & Gems',
+    classicRef: 'Tetris & Columns 2-in-1',
+    category: 'vault2',
+    genre: 'Arcade Puzzle',
+    accent: PALETTE.PINK,
+    mechanics: 'Clear 4-line Tetrominoes or match 3-gem jewel chains in a dual-mode puzzle cabinet',
+    controls: 'Move/Drop + Rotate/Cycle Gems(Z/Up) + Switch Mode(X)',
+    enhancements: '2-in-1 Tetris + Columns modes, ghost piece, combos & neon bursts'
   }
 ];
 
@@ -1048,6 +1314,526 @@ export class MainMenu {
         ctx.fill();
         break;
       }
+
+      case 'galaxian': {
+        // Shimmering starfield + Flagship & Red Escort diving formation + Galaxip fighter
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(cx - 5, y + 7, 10, 6);
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(cx - 18, y + 14, 8, 5);
+        ctx.fillRect(cx + 10, y + 14, 8, 5);
+        ctx.fillStyle = '#A855F7';
+        for (let i = 0; i < 4; i++) {
+          ctx.fillRect(x + 12 + i * ((w - 28) / 3), y + 23, 7, 4);
+        }
+        // Diving alien arc
+        const dx = cx + Math.sin(t * 4) * (w * 0.25);
+        const dy = y + 24 + ((t * 24) % (h * 0.45));
+        ctx.fillStyle = '#00F0FF';
+        ctx.fillRect(dx - 4, dy, 8, 6);
+        // Galaxip at bottom with red wings & yellow nose missile
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(cx - 5, y + h - 11, 10, 6);
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(cx - 8, y + h - 9, 3, 5);
+        ctx.fillRect(cx + 5, y + h - 9, 3, 5);
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(cx - 1.5, y + h - 15, 3, 4);
+        break;
+      }
+
+      case 'digdug2': {
+        // Blue ocean + green tropical island + white fault crack + Pooka & Driller
+        ctx.fillStyle = '#0284C7';
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = '#22C55E';
+        ctx.fillRect(x + 8, y + 8, w - 16, h - 16);
+        ctx.strokeStyle = '#FDE047';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x + 8, y + 8, w - 16, h - 16);
+        // Fault pegs & crack line
+        ctx.strokeStyle = '#060913';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx + 4, y + 8);
+        ctx.lineTo(cx + 4, y + h - 8);
+        ctx.stroke();
+        ctx.fillStyle = '#F59E0B';
+        ctx.fillRect(cx + 2, cy - 2, 5, 5);
+        // Driller & inflating Red Pooka
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(x + 16, cy - 4, 7, 8);
+        ctx.fillStyle = '#EF4444';
+        ctx.beginPath();
+        ctx.arc(x + w - 20, cy, 5.5 + pulse * 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+
+      case 'elevatoraction': {
+        // Spy building floors + central cyan elevator shaft + red secret doors
+        ctx.fillStyle = '#1E293B';
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(x, cy - 2, w, 4);
+        ctx.fillRect(x, y + h - 7, w, 4);
+        // Red secret doors
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(x + 8, y + 8, 9, cy - y - 10);
+        ctx.fillRect(x + w - 17, cy + 4, 9, h * 0.36);
+        // Moving elevator cable & car
+        const ey = y + 6 + Math.abs(Math.sin(t * 2)) * (h - 24);
+        ctx.strokeStyle = '#94A3B8';
+        ctx.beginPath();
+        ctx.moveTo(cx, y);
+        ctx.lineTo(cx, ey);
+        ctx.stroke();
+        ctx.strokeStyle = '#00F0FF';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(cx - 9, ey, 18, 16);
+        // Spy inside elevator
+        ctx.fillStyle = '#38BDF8';
+        ctx.fillRect(cx - 3, ey + 5, 6, 9);
+        break;
+      }
+
+      case 'tapper': {
+        // 3 saloon bar counters + sliding golden root beer mug + bartender
+        for (let i = 0; i < 3; i++) {
+          const by = y + 12 + i * ((h - 18) / 2.2);
+          ctx.fillStyle = '#92400E';
+          ctx.fillRect(x + 6, by, w - 12, 6);
+          // Thirsty patron on left
+          ctx.fillStyle = '#F43F5E';
+          ctx.fillRect(x + 10 + i * 5, by - 7, 6, 7);
+        }
+        // Bartender on right
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(x + w - 14, cy - 8, 7, 10);
+        // Sliding frosty mug
+        const mx = x + w - 20 - ((t * 32) % (w * 0.55));
+        ctx.fillStyle = '#FACC15';
+        ctx.fillRect(mx, cy - 6, 5, 6);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(mx, cy - 8, 5, 2.5);
+        break;
+      }
+
+      case 'lunarlander': {
+        // Jagged vector moon terrain + flat 5X landing pad + descending Lunar Module
+        ctx.strokeStyle = '#00F0FF';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x, y + h - 8);
+        ctx.lineTo(x + w * 0.25, y + h - 22);
+        ctx.lineTo(x + w * 0.4, y + h - 10);
+        ctx.lineTo(x + w * 0.65, y + h - 10);
+        ctx.lineTo(x + w * 0.82, y + h - 25);
+        ctx.lineTo(x + w, y + h - 12);
+        ctx.stroke();
+        // Glowing 5X pad
+        ctx.strokeStyle = '#00FF66';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.4, y + h - 10);
+        ctx.lineTo(x + w * 0.65, y + h - 10);
+        ctx.stroke();
+        // Lander & thruster flame
+        const ly = y + 14 + Math.sin(t * 2.5) * 5;
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1.4;
+        ctx.strokeRect(cx - 5, ly, 10, 7);
+        ctx.beginPath();
+        ctx.moveTo(cx - 5, ly + 7);
+        ctx.lineTo(cx - 9, ly + 12);
+        ctx.moveTo(cx + 5, ly + 7);
+        ctx.lineTo(cx + 9, ly + 12);
+        ctx.stroke();
+        ctx.fillStyle = '#FF9900';
+        ctx.fillRect(cx - 2, ly + 8, 4, 4 + pulse * 4);
+        break;
+      }
+
+      case 'tempest': {
+        // 3D perspective blue neon wireframe tube + yellow claw blaster + red Flipper
+        ctx.strokeStyle = '#2563EB';
+        ctx.lineWidth = 1.2;
+        const rOuter = Math.min(w, h) * 0.42;
+        const rInner = rOuter * 0.32;
+        for (let i = 0; i < 8; i++) {
+          const a = (i / 8) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.moveTo(cx + Math.cos(a) * rInner, cy + Math.sin(a) * rInner);
+          ctx.lineTo(cx + Math.cos(a) * rOuter, cy + Math.sin(a) * rOuter);
+          ctx.stroke();
+        }
+        ctx.strokeRect(cx - rOuter, cy - rOuter, rOuter * 2, rOuter * 2);
+        ctx.strokeRect(cx - rInner, cy - rInner, rInner * 2, rInner * 2);
+        // Yellow Claw Blaster on bottom rim
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(cx - 8, cy + rOuter - 4);
+        ctx.lineTo(cx, cy + rOuter + 2);
+        ctx.lineTo(cx + 8, cy + rOuter - 4);
+        ctx.stroke();
+        // Red Flipper enemy climbing lane
+        ctx.fillStyle = '#FF2A55';
+        ctx.fillRect(cx - 4, cy + rInner + 4, 8, 4);
+        break;
+      }
+
+      case 'robotron': {
+        // Neon cyber arena border + hero firing 8-way lasers + surrounding red/green robots
+        ctx.strokeStyle = '#FF007A';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x + 4, y + 4, w - 8, h - 8);
+        // Player in center
+        ctx.fillStyle = '#00F0FF';
+        ctx.fillRect(cx - 3.5, cy - 5, 7, 10);
+        // Laser stream
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(cx + 4, cy);
+        ctx.lineTo(x + w - 8, cy - 8);
+        ctx.stroke();
+        // Swarming Grunts & Hulks
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(x + 12, y + 12, 6, 7);
+        ctx.fillRect(x + w - 18, y + 14, 6, 7);
+        ctx.fillRect(x + 14, y + h - 18, 6, 7);
+        ctx.fillStyle = '#22C55E';
+        ctx.fillRect(x + w - 20, y + h - 20, 9, 9);
+        break;
+      }
+
+      case 'sinistar': {
+        // Starfield + menacing skull boss Sinistar + fighter firing Sinibombs
+        const sr = Math.min(w, h) * 0.28;
+        ctx.fillStyle = '#94A3B8';
+        ctx.beginPath();
+        ctx.arc(cx + 10, cy - 2, sr, 0, Math.PI * 2);
+        ctx.fill();
+        // Glowing red eyes & jaw of Sinistar
+        ctx.fillStyle = '#FF2A55';
+        ctx.fillRect(cx + 4, cy - 6, 4, 4);
+        ctx.fillRect(cx + 12, cy - 6, 4, 4);
+        ctx.fillStyle = '#060913';
+        ctx.fillRect(cx + 5, cy + 1, 10, 4);
+        // Player ship on left
+        ctx.fillStyle = '#00F0FF';
+        ctx.fillRect(x + 10, cy + 4, 8, 5);
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.arc(x + 24 + ((t * 30) % 16), cy + 4, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+
+      case 'crystalcastles': {
+        // Isometric castle terrace blocks + sparkling gems + Bentley Bear
+        ctx.fillStyle = '#7C3AED';
+        ctx.fillRect(x + 8, y + h * 0.52, w - 16, h * 0.34);
+        ctx.fillStyle = '#A855F7';
+        ctx.fillRect(x + 16, y + h * 0.3, w - 32, h * 0.24);
+        // Gems
+        ctx.fillStyle = '#00F0FF';
+        for (let i = 0; i < 4; i++) {
+          ctx.fillRect(x + 18 + i * 14, y + h * 0.46, 4, 4);
+        }
+        // Bear character
+        ctx.fillStyle = '#D97706';
+        ctx.fillRect(cx - 4, y + h * 0.22, 8, 9);
+        break;
+      }
+
+      case 'zaxxon': {
+        // Diagonal isometric fortress wall + fighter jet + dark ground shadow + altitude bar
+        ctx.fillStyle = '#334155';
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.2, y + h);
+        ctx.lineTo(x + w, y + h * 0.25);
+        ctx.lineTo(x + w, y + h);
+        ctx.closePath();
+        ctx.fill();
+        // Red laser barrier
+        ctx.strokeStyle = '#FF2A55';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.35, y + h * 0.2);
+        ctx.lineTo(x + w * 0.78, y + h * 0.65);
+        ctx.stroke();
+        // Ground shadow below jet
+        ctx.fillStyle = 'rgba(0,0,0,0.65)';
+        ctx.fillRect(cx - 4, y + h * 0.74, 10, 5);
+        // High-altitude Jet
+        ctx.fillStyle = '#00F0FF';
+        ctx.fillRect(cx - 4, y + h * 0.38 - Math.sin(t * 3) * 5, 11, 6);
+        // Left-side Altitude Bar
+        ctx.fillStyle = '#00FF66';
+        ctx.fillRect(x + 4, y + 8, 3, h - 16);
+        break;
+      }
+
+      case 'moonpatrol': {
+        // Blue lunar mountains + cratered purple ground + 6-wheel pink buggy + UFO
+        ctx.fillStyle = '#1E3A8A';
+        ctx.beginPath();
+        ctx.moveTo(x, y + h - 12);
+        ctx.lineTo(x + w * 0.35, y + h * 0.45);
+        ctx.lineTo(x + w * 0.7, y + h * 0.6);
+        ctx.lineTo(x + w, y + h * 0.4);
+        ctx.lineTo(x + w, y + h);
+        ctx.lineTo(x, y + h);
+        ctx.fill();
+        ctx.fillStyle = '#D97706';
+        ctx.fillRect(x, y + h - 11, w, 11);
+        // Crater
+        ctx.fillStyle = '#060913';
+        ctx.fillRect(x + w * 0.68, y + h - 11, 14, 6);
+        // 6-wheel Pink Buggy
+        ctx.fillStyle = '#FF007A';
+        ctx.fillRect(x + 14, y + h - 21, 18, 6);
+        ctx.fillStyle = '#FACC15';
+        for (let wIdx = 0; wIdx < 3; wIdx++) {
+          ctx.beginPath();
+          ctx.arc(x + 16 + wIdx * 7, y + h - 13, 2.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // UFO above
+        ctx.fillStyle = '#00FF66';
+        ctx.fillRect(x + w * 0.6, y + 10, 12, 5);
+        break;
+      }
+
+      case 'pengo': {
+        // Cyan ice block maze + 3 glowing diamond blocks + red penguin + Sno-Bee
+        ctx.fillStyle = '#0284C7';
+        ctx.fillRect(x + 8, y + 8, 12, 12);
+        ctx.fillRect(x + 8, y + 22, 12, 12);
+        ctx.fillRect(x + w - 20, y + 12, 12, 12);
+        // Sliding Diamond block
+        ctx.fillStyle = '#00F0FF';
+        ctx.fillRect(cx - 6 + Math.sin(t * 5) * 8, cy - 6, 12, 12);
+        // Red Pengo
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(x + 24, cy - 4, 7, 8);
+        // Green Sno-Bee
+        ctx.fillStyle = '#00FF66';
+        ctx.fillRect(x + w - 22, cy + 4, 7, 7);
+        break;
+      }
+
+      case 'rallyx': {
+        // Tan desert maze walls + blue player car + white smoke puff + red rival car + radar strip
+        ctx.fillStyle = '#D97706';
+        ctx.fillRect(x + 6, y + 6, w * 0.25, 8);
+        ctx.fillRect(x + 6, y + h - 14, w * 0.35, 8);
+        // Right radar strip
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(x + w - 14, y + 2, 12, h - 4);
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(x + w - 9, y + 10, 3, 3);
+        // Blue Rally Car
+        ctx.fillStyle = '#2563EB';
+        ctx.fillRect(x + 14, cy - 4, 11, 7);
+        // White smoke screen cloud behind
+        ctx.fillStyle = '#F8FAFC';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 6 + pulse * 2, 0, Math.PI * 2);
+        ctx.fill();
+        // Red rival car spinning
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(cx + 12, cy - 3, 10, 7);
+        break;
+      }
+
+      case 'roadfighter': {
+        // Vertical gray highway + green shoulders + red player sports car + rainbow fuel car
+        ctx.fillStyle = '#15803D';
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(x + w * 0.2, y, w * 0.6, h);
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(cx, y);
+        ctx.lineTo(cx, y + h);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // Red player car
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(cx - 10, y + h - 16, 8, 12);
+        // Yellow traffic car
+        ctx.fillStyle = '#FACC15';
+        ctx.fillRect(cx + 4, y + 12, 8, 12);
+        break;
+      }
+
+      case 'flicky': {
+        // Blue bird Flicky + trailing chain of 3 yellow chicks + red EXIT door
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(x, y + h * 0.72, w, 5);
+        ctx.fillRect(x + 8, y + h * 0.36, w - 16, 4);
+        // Exit door
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(x + w - 18, y + h * 0.48, 10, h * 0.24);
+        // Blue Flicky bird
+        ctx.fillStyle = '#38BDF8';
+        ctx.fillRect(cx + 2, y + h * 0.58, 8, 7);
+        // Trailing yellow Piopio chicks
+        ctx.fillStyle = '#FACC15';
+        for (let c = 1; c <= 3; c++) {
+          ctx.fillRect(cx + 2 - c * 8, y + h * 0.6, 5, 5);
+        }
+        break;
+      }
+
+      case 'mappy': {
+        // Mansion floors + central green vertical trampoline + bouncing mouse Mappy + pink cat
+        ctx.fillStyle = '#92400E';
+        ctx.fillRect(x + 4, y + h * 0.35, w * 0.34, 4);
+        ctx.fillRect(x + w * 0.62, y + h * 0.35, w * 0.34, 4);
+        ctx.fillRect(x + 4, y + h * 0.72, w * 0.34, 4);
+        ctx.fillRect(x + w * 0.62, y + h * 0.72, w * 0.34, 4);
+        // Green elastic trampoline at bottom center
+        ctx.strokeStyle = '#00FF66';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.38, y + h - 6);
+        ctx.lineTo(x + w * 0.62, y + h - 6);
+        ctx.stroke();
+        // Bouncing Blue Mouse Mappy in center shaft
+        const my = y + 12 + Math.abs(Math.sin(t * 4.5)) * (h - 28);
+        ctx.fillStyle = '#38BDF8';
+        ctx.fillRect(cx - 4, my, 8, 8);
+        // Pink Meowky cat on floor
+        ctx.fillStyle = '#FF007A';
+        ctx.fillRect(x + 12, y + h * 0.22, 7, 7);
+        break;
+      }
+
+      case 'circuscharlie': {
+        // Green circus ring floor + tall flaming orange hoop + Charlie riding Lion jumping through
+        ctx.fillStyle = '#15803D';
+        ctx.fillRect(x, y + h - 8, w, 8);
+        // Flaming ring
+        ctx.strokeStyle = '#FF9900';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.ellipse(cx + 8, cy - 2, 5, h * 0.34, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        // Jumping Lion & Charlie
+        const jy = cy + 4 - Math.abs(Math.sin(t * 4)) * 12;
+        ctx.fillStyle = '#F59E0B';
+        ctx.fillRect(cx - 16, jy, 14, 7);
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(cx - 12, jy - 6, 6, 6);
+        break;
+      }
+
+      case 'battlecity': {
+        // Red brick walls + golden player tank + silver enemy tank + Phoenix emblem
+        ctx.fillStyle = '#B91C1C';
+        ctx.fillRect(x + 10, y + 10, 12, 12);
+        ctx.fillRect(x + w - 22, y + 10, 12, 12);
+        ctx.fillRect(cx - 10, y + h - 16, 20, 14);
+        // Phoenix base inside brick wall
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(cx - 5, y + h - 11, 10, 9);
+        // Golden Player Tank
+        ctx.fillStyle = '#FACC15';
+        ctx.fillRect(x + 14, cy + 2, 10, 10);
+        ctx.fillRect(x + 18, cy - 3, 2.5, 5);
+        // Silver Enemy Tank
+        ctx.fillStyle = '#CBD5E1';
+        ctx.fillRect(x + w - 24, cy - 6, 10, 10);
+        break;
+      }
+
+      case 'kungfumaster': {
+        // Dojo floor & red pillars + white GI martial artist delivering flying jump-kick
+        ctx.fillStyle = '#78350F';
+        ctx.fillRect(x, y + h - 9, w, 9);
+        ctx.fillStyle = '#DC2626';
+        ctx.fillRect(x + 10, y + 4, 5, h - 13);
+        ctx.fillRect(x + w - 15, y + 4, 5, h - 13);
+        // Hero in white Gi kicking
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(cx - 12, cy - 4, 7, 11);
+        ctx.fillRect(cx - 5, cy - 2, 9, 3.5);
+        // Purple Gripper enemy
+        ctx.fillStyle = '#A855F7';
+        ctx.fillRect(cx + 8, cy - 3, 7, 12);
+        break;
+      }
+
+      case 'wildgunman': {
+        // Western desert horizon + outlaw cowboy + flashing "FIRE!!" speech bubble
+        ctx.fillStyle = '#78350F';
+        ctx.fillRect(x, y + h * 0.65, w, h * 0.35);
+        // Outlaw in hat & poncho
+        ctx.fillStyle = '#F59E0B';
+        ctx.fillRect(cx - 9, y + 10, 18, 4);
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(cx - 6, y + 14, 12, 18);
+        // Flashing eyes
+        ctx.fillStyle = pulse > 0.5 ? '#00F0FF' : '#FFFFFF';
+        ctx.fillRect(cx - 4, y + 16, 3, 2);
+        ctx.fillRect(cx + 1, y + 16, 3, 2);
+        // Speech bubble
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(cx + 8, y + 6, 20, 9);
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(cx + 11, y + 9, 14, 3);
+        break;
+      }
+
+      case 'exerion': {
+        // Pseudo-3D scrolling purple/cyan grid horizon + gliding fighter + bird wave
+        ctx.fillStyle = '#1E1B4B';
+        ctx.fillRect(x, cy, w, h * 0.5);
+        ctx.strokeStyle = '#00F0FF';
+        ctx.lineWidth = 1;
+        for (let i = -2; i <= 2; i++) {
+          ctx.beginPath();
+          ctx.moveTo(cx + i * 6, cy);
+          ctx.lineTo(cx + i * 22, y + h);
+          ctx.stroke();
+        }
+        // Gliding Exerion ship
+        const sx = cx + Math.sin(t * 3) * (w * 0.22);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(sx - 6, y + h - 14, 12, 6);
+        ctx.fillStyle = '#FF2A55';
+        ctx.fillRect(sx - 3, y + 12, 8, 5);
+        ctx.fillRect(sx + 8, y + 16, 8, 5);
+        break;
+      }
+
+      case 'tetrisretro': {
+        // Matrix well + colorful stacked blocks + falling cyan T-piece / jewel triad
+        const wx = cx - 18;
+        ctx.strokeStyle = '#38BDF8';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(wx, y + 4, 36, h - 8);
+        // Stacked bottom blocks
+        const colors = ['#EF4444', '#00FF66', '#FFD700', '#A855F7', '#FF007A'];
+        for (let c = 0; c < 5; c++) {
+          ctx.fillStyle = colors[c];
+          ctx.fillRect(wx + 3 + c * 6, y + h - 11, 5.5, 5.5);
+          if (c !== 2) {
+            ctx.fillRect(wx + 3 + c * 6, y + h - 17, 5.5, 5.5);
+          }
+        }
+        // Falling T-piece
+        const fy = y + 8 + ((t * 18) % (h * 0.35));
+        ctx.fillStyle = '#00F0FF';
+        ctx.fillRect(cx - 8, fy, 16, 5);
+        ctx.fillRect(cx - 2.5, fy + 5, 5, 5);
+        break;
+      }
     }
 
     // Subtle CRT scanline & inner bezel border on preview screen
@@ -1060,7 +1846,7 @@ export class MainMenu {
   update(dt) {
     this.animTime += dt;
     const list = this.getVisibleGames();
-    const cols = this.activeTab === 'core' ? 4 : 5;
+    const cols = this.activeTab === 'core' ? 4 : this.activeTab === 'vault2' ? 6 : 5;
     const rows = Math.ceil(list.length / cols);
 
     if (this.selectedIndex >= list.length) {
@@ -1070,7 +1856,13 @@ export class MainMenu {
 
     // Tab toggle with Action B (X / Shift)
     if (this.input.isJustPressed('actionB')) {
-      this.setTab(this.activeTab === 'core' ? 'expanded' : 'core');
+      const nextTab =
+        this.activeTab === 'core'
+          ? 'expanded'
+          : this.activeTab === 'expanded'
+          ? 'vault2'
+          : 'core';
+      this.setTab(nextTab);
     }
 
     // Favorite / Bookmark toggle with KeyF
@@ -1277,9 +2069,10 @@ export class MainMenu {
     // Category Tabs + Cloud Sort Pill
     const sortMode = this.getSortMode();
     this.tabRects = [
-      { id: 'core', label: '🕹️ CORE 8 ARCHETYPES (FEATURED)', x: 80, y: 58, w: 270, h: 28 },
-      { id: 'expanded', label: '👾 EXPANDED VAULT (20 CLASSICS)', x: 362, y: 58, w: 270, h: 28 },
-      { id: 'sort', label: sortMode.label, x: 644, y: 58, w: 236, h: 28 }
+      { id: 'core', label: '🕹️ CORE 8 (FEATURED)', x: 20, y: 58, w: 215, h: 28 },
+      { id: 'expanded', label: '👾 VAULT I (20 CLASSICS)', x: 243, y: 58, w: 235, h: 28 },
+      { id: 'vault2', label: '🏆 VAULT II (22 CLASSICS)', x: 486, y: 58, w: 235, h: 28 },
+      { id: 'sort', label: sortMode.label, x: 729, y: 58, w: 211, h: 28 }
     ];
 
     for (const tab of this.tabRects) {
@@ -1436,14 +2229,18 @@ export class MainMenu {
         );
       });
     } else {
-      // 5x4 Grid for the 20 Expanded Vault Classics with Left-Side Live Screenshot Thumbnail
-      const cols = 5;
-      const cardW = 176;
+      // 5x4 Grid for Vault I (20 Classics) or 6x4 Grid for Vault II (22 Classics) with Left-Side Live Screenshot Thumbnail
+      const isVault2 = this.activeTab === 'vault2';
+      const cols = isVault2 ? 6 : 5;
+      const cardW = isVault2 ? 148 : 176;
       const cardH = 80;
-      const gapX = 10;
+      const gapX = isVault2 ? 8 : 10;
       const gapY = 9;
       const startX = (W - (cols * cardW + (cols - 1) * gapX)) / 2;
       const startY = 96;
+      const thumbW = isVault2 ? 44 : 54;
+      const textXOffset = isVault2 ? 54 : 65;
+      const maxLineChars = isVault2 ? 15 : 19;
 
       list.forEach((game, idx) => {
         const col = idx % cols;
@@ -1471,37 +2268,37 @@ export class MainMenu {
         ctx.fillStyle = game.accent;
         ctx.fillRect(x, y, cardW, 3);
 
-        // Left-side Miniature Arcade Screenshot (54x54)
-        this.drawGamePreview(ctx, game.id, x + 6, y + 20, 54, 54, this.animTime);
+        // Left-side Miniature Arcade Screenshot
+        this.drawGamePreview(ctx, game.id, x + 5, y + 20, thumbW, 54, this.animTime);
 
         // Top Row: Icon + Title + Star Rating
         this.renderer.drawText(
           `${game.icon || '🕹️'} ${game.title.toUpperCase()}`,
-          x + 6,
+          x + 5,
           y + 15,
           {
             font: FONTS.HEADER,
-            size: 7.5,
+            size: isVault2 ? 6.8 : 7.5,
             color: selected ? game.accent : PALETTE.WHITE
           }
         );
 
         this.renderer.drawText(
           `${rec.saved ? '♥' : ''}★${rating.toFixed(1)}`,
-          x + cardW - 5,
+          x + cardW - 4,
           y + 15,
           {
             font: FONTS.HUD,
-            size: 9.2,
+            size: isVault2 ? 8.5 : 9.2,
             color: PALETTE.GOLD,
             align: 'right'
           }
         );
 
         // Right-side Clear Classic Reference & Genre
-        this.renderer.drawText(game.classicRef, x + 65, y + 33, {
+        this.renderer.drawText(game.classicRef, x + textXOffset, y + 33, {
           font: FONTS.HUD,
-          size: 9.5,
+          size: isVault2 ? 8.5 : 9.5,
           color: PALETTE.CYAN
         });
 
@@ -1510,32 +2307,32 @@ export class MainMenu {
         let line1 = '';
         let line2 = '';
         for (const w of words) {
-          if ((line1 + ' ' + w).trim().length <= 19) {
+          if ((line1 + ' ' + w).trim().length <= maxLineChars) {
             line1 = (line1 + ' ' + w).trim();
-          } else if ((line2 + ' ' + w).trim().length <= 19) {
+          } else if ((line2 + ' ' + w).trim().length <= maxLineChars) {
             line2 = (line2 + ' ' + w).trim();
           }
         }
-        this.renderer.drawText(line1, x + 65, y + 48, {
+        this.renderer.drawText(line1, x + textXOffset, y + 48, {
           font: FONTS.BODY,
-          size: 8.8,
+          size: isVault2 ? 8.2 : 8.8,
           color: PALETTE.MUTED,
           bold: false
         });
-        this.renderer.drawText(line2, x + 65, y + 60, {
+        this.renderer.drawText(line2, x + textXOffset, y + 60, {
           font: FONTS.BODY,
-          size: 8.8,
+          size: isVault2 ? 8.2 : 8.8,
           color: PALETTE.MUTED,
           bold: false
         });
 
         this.renderer.drawText(
           selected ? '▶ CLICK / Z TO PLAY' : game.genre.toUpperCase(),
-          x + 65,
+          x + textXOffset,
           y + 73,
           {
             font: FONTS.HUD,
-            size: 8.8,
+            size: isVault2 ? 8.2 : 8.8,
             color: selected ? PALETTE.GREEN : PALETTE.GOLD
           }
         );

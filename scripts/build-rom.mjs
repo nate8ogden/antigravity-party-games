@@ -556,7 +556,29 @@ function buildRetroPiePackage(standaloneHtmlBuffer) {
     { id: 'tron', title: 'Tron' },
     { id: 'trackandfield', title: 'Track and Field' },
     { id: 'outrun', title: 'OutRun' },
-    { id: 'contra', title: 'Contra' }
+    { id: 'contra', title: 'Contra' },
+    { id: 'galaxian', title: 'Galaxian' },
+    { id: 'digdug2', title: 'Dig Dug II' },
+    { id: 'elevatoraction', title: 'Elevator Action' },
+    { id: 'tapper', title: 'Tapper' },
+    { id: 'lunarlander', title: 'Lunar Lander' },
+    { id: 'tempest', title: 'Tempest' },
+    { id: 'robotron', title: 'Robotron 2084' },
+    { id: 'sinistar', title: 'Sinistar' },
+    { id: 'crystalcastles', title: 'Crystal Castles' },
+    { id: 'zaxxon', title: 'Zaxxon' },
+    { id: 'moonpatrol', title: 'Moon Patrol' },
+    { id: 'pengo', title: 'Pengo' },
+    { id: 'rallyx', title: 'Rally X' },
+    { id: 'roadfighter', title: 'Road Fighter' },
+    { id: 'flicky', title: 'Flicky' },
+    { id: 'mappy', title: 'Mappy' },
+    { id: 'circuscharlie', title: 'Circus Charlie' },
+    { id: 'battlecity', title: 'Battle City' },
+    { id: 'kungfumaster', title: 'Kung Fu Master' },
+    { id: 'wildgunman', title: 'Wild Gunman' },
+    { id: 'exerion', title: 'Exerion' },
+    { id: 'tetrisretro', title: 'Tetris and Columns' }
   ];
 
   for (const g of ALL_28_GAMES) {

@@ -46,7 +46,29 @@ const gameFiles = [
   { file: 'src/games/Tron.js', className: 'Tron' },
   { file: 'src/games/TrackAndField.js', className: 'TrackAndField' },
   { file: 'src/games/OutRun.js', className: 'OutRun' },
-  { file: 'src/games/Contra.js', className: 'Contra' }
+  { file: 'src/games/Contra.js', className: 'Contra' },
+  { file: 'src/games/Galaxian.js', className: 'Galaxian' },
+  { file: 'src/games/DigDug2.js', className: 'DigDug2' },
+  { file: 'src/games/ElevatorAction.js', className: 'ElevatorAction' },
+  { file: 'src/games/Tapper.js', className: 'Tapper' },
+  { file: 'src/games/LunarLander.js', className: 'LunarLander' },
+  { file: 'src/games/Tempest.js', className: 'Tempest' },
+  { file: 'src/games/Robotron.js', className: 'Robotron' },
+  { file: 'src/games/Sinistar.js', className: 'Sinistar' },
+  { file: 'src/games/CrystalCastles.js', className: 'CrystalCastles' },
+  { file: 'src/games/Zaxxon.js', className: 'Zaxxon' },
+  { file: 'src/games/MoonPatrol.js', className: 'MoonPatrol' },
+  { file: 'src/games/Pengo.js', className: 'Pengo' },
+  { file: 'src/games/RallyX.js', className: 'RallyX' },
+  { file: 'src/games/RoadFighter.js', className: 'RoadFighter' },
+  { file: 'src/games/Flicky.js', className: 'Flicky' },
+  { file: 'src/games/Mappy.js', className: 'Mappy' },
+  { file: 'src/games/CircusCharlie.js', className: 'CircusCharlie' },
+  { file: 'src/games/BattleCity.js', className: 'BattleCity' },
+  { file: 'src/games/KungFuMaster.js', className: 'KungFuMaster' },
+  { file: 'src/games/WildGunman.js', className: 'WildGunman' },
+  { file: 'src/games/Exerion.js', className: 'Exerion' },
+  { file: 'src/games/TetrisRetro.js', className: 'TetrisRetro' }
 ];
 
 function stripESM(code) {
