@@ -109,7 +109,18 @@ export class DigDug2 {
 
   _loadLevel(level) {
     this.grid = [];
-    const shapeIdx = (level - 1) % 4;
+    const shapeIdx = (level - 1) % 8;
+    const ISLAND_NAMES = [
+      'TROPICAL ATOLL',
+      'HOURGLASS PENINSULA',
+      'CROSS REEF',
+      'HORSESHOE LAGOON',
+      'TRIPLE CAPE',
+      'DIAMOND KEY',
+      'TWIN LAGOON ATOLL',
+      'SERPENT ISTHMUS'
+    ];
+    this.islandName = ISLAND_NAMES[shapeIdx];
 
     for (let r = 0; r < this.rows; r++) {
       const row = [];
@@ -130,20 +141,40 @@ export class DigDug2 {
         } else if (shapeIdx === 2) {
           // Stage 3: Cross Reef Island
           if ((r <= 2 || r >= this.rows - 3) && (c <= 3 || c >= this.cols - 4)) isLand = false;
-        } else {
-          // Stage 4: Horseshoe Bay Island
-          if (r >= 7 && c >= 8 && c <= 11) isLand = false;
+        } else if (shapeIdx === 3) {
+          // Stage 4: Horseshoe Bay Lagoon
+          if (r >= 7 && c >= 7 && c <= 12) isLand = false;
           if (r <= 1 && (c <= 2 || c >= this.cols - 3)) isLand = false;
+        } else if (shapeIdx === 4) {
+          // Stage 5: Triple Cape Peninsula (two northern fjords + southern coves)
+          if (r <= 3 && ((c >= 5 && c <= 7) || (c >= 12 && c <= 14))) isLand = false;
+          if (r >= 9 && (c <= 3 || c >= 16)) isLand = false;
+        } else if (shapeIdx === 5) {
+          // Stage 6: Diamond Key (stepped coral diamond)
+          const dist = Math.abs(r - 5.5) * 1.45 + Math.abs(c - 9.5) * 0.72;
+          if (dist > 8.2) isLand = false;
+        } else if (shapeIdx === 6) {
+          // Stage 7: Twin Lagoon Atoll (two interior sea inlets + corner coves)
+          if ((r === 4 || r === 5) && ((c >= 5 && c <= 6) || (c >= 13 && c <= 14))) isLand = false;
+          if ((r <= 1 || r >= this.rows - 2) && (c <= 3 || c >= this.cols - 4)) isLand = false;
+        } else {
+          // Stage 8: Serpent Isthmus (winding S-ridge island)
+          if (r <= 3 && c >= 12 && c <= 16) isLand = false;
+          if (r >= 8 && c >= 3 && c <= 7) isLand = false;
+          if ((r === 1 || r === this.rows - 2) && (c === 1 || c === this.cols - 2)) isLand = false;
         }
         row.push(isLand ? 1 : 0);
       }
       this.grid.push(row);
     }
 
-    // Build fault-line pegs at even interior grid intersections (vx = 2..18, vy = 2..10)
+    // Build fault-line pegs across the island's fault network
     this.pegs = [];
     for (let vy = 2; vy <= this.rows - 2; vy += 2) {
       for (let vx = 2; vx <= this.cols - 2; vx += 2) {
+        // Slightly vary interior peg presence on advanced islands while keeping rich fault lines
+        if (shapeIdx === 5 && (vx === 10 && vy === 6)) continue;
+        if (shapeIdx === 7 && ((vx === 6 && vy === 4) || (vx === 14 && vy === 8))) continue;
         if (this._isVertexOnLand(vx, vy)) {
           this.pegs.push({
             vx,
@@ -205,7 +236,7 @@ export class DigDug2 {
       });
     }
 
-    this.bannerText = `ISLAND ${level} — FAULT DRILLER READY!`;
+    this.bannerText = `ISLAND ${level}: ${this.islandName} — FAULT DRILLER READY!`;
     this.bannerTimer = 2.0;
   }
 

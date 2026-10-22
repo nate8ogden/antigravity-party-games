@@ -28,6 +28,81 @@ const OFFSET_Y = 42;
 const HOP_DURATION = 0.11;
 const MAX_LIFE_TIME = 60.0;
 
+export const STAGE_CONFIGS = [
+  // Stage 1: Classic Arcade Crossing
+  {
+    name: 'STAGE 1: CLASSIC CROSSING',
+    highwayCounts: { 11: 4, 10: 3, 9: 4, 8: 3, 7: 3 },
+    logLengths: { 4: 128, 3: 224, 1: 168 },
+    logCounts: { 4: 4, 3: 3, 1: 3 },
+    divingGroups: { 5: 1, 2: 1 },
+    surfacedTime: 3.8,
+    warningTime: 1.6,
+    submergedTime: 1.7,
+    crocodileRows: []
+  },
+  // Stage 2: Alligator Bayou (Crocodile log on Row 1 + faster traffic)
+  {
+    name: 'STAGE 2: ALLIGATOR BAYOU',
+    highwayCounts: { 11: 4, 10: 4, 9: 4, 8: 3, 7: 3 },
+    logLengths: { 4: 122, 3: 208, 1: 160 },
+    logCounts: { 4: 4, 3: 3, 1: 3 },
+    divingGroups: { 5: 2, 2: 1 },
+    surfacedTime: 3.5,
+    warningTime: 1.5,
+    submergedTime: 1.7,
+    crocodileRows: [1]
+  },
+  // Stage 3: Rush Hour & Rapids
+  {
+    name: 'STAGE 3: RUSH HOUR & RAPIDS',
+    highwayCounts: { 11: 5, 10: 4, 9: 4, 8: 4, 7: 3 },
+    logLengths: { 4: 112, 3: 196, 1: 152 },
+    logCounts: { 4: 4, 3: 3, 1: 3 },
+    divingGroups: { 5: 2, 2: 2 },
+    surfacedTime: 3.2,
+    warningTime: 1.4,
+    submergedTime: 1.7,
+    crocodileRows: [1]
+  },
+  // Stage 4: Dual Gator Swamp (Crocodiles on Rows 1 & 3)
+  {
+    name: 'STAGE 4: DUAL GATOR SWAMP',
+    highwayCounts: { 11: 5, 10: 4, 9: 5, 8: 4, 7: 3 },
+    logLengths: { 4: 110, 3: 188, 1: 148 },
+    logCounts: { 4: 4, 3: 3, 1: 4 },
+    divingGroups: { 5: 2, 2: 2 },
+    surfacedTime: 3.0,
+    warningTime: 1.4,
+    submergedTime: 1.8,
+    crocodileRows: [1, 3]
+  },
+  // Stage 5: Midnight Expressway
+  {
+    name: 'STAGE 5: MIDNIGHT EXPRESSWAY',
+    highwayCounts: { 11: 5, 10: 4, 9: 5, 8: 4, 7: 4 },
+    logLengths: { 4: 104, 3: 180, 1: 142 },
+    logCounts: { 4: 4, 3: 3, 1: 4 },
+    divingGroups: { 5: 2, 2: 2 },
+    surfacedTime: 2.8,
+    warningTime: 1.3,
+    submergedTime: 1.8,
+    crocodileRows: [1, 4]
+  },
+  // Stage 6: Master Hopper Gauntlet
+  {
+    name: 'STAGE 6: MASTER GAUNTLET',
+    highwayCounts: { 11: 5, 10: 5, 9: 5, 8: 4, 7: 4 },
+    logLengths: { 4: 100, 3: 172, 1: 138 },
+    logCounts: { 4: 4, 3: 3, 1: 4 },
+    divingGroups: { 5: 3, 2: 2 },
+    surfacedTime: 2.6,
+    warningTime: 1.3,
+    submergedTime: 1.8,
+    crocodileRows: [1, 3, 4]
+  }
+];
+
 export class Frogger {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -120,10 +195,12 @@ export class Frogger {
 
   _buildLanes() {
     const speedScale = 1 + (this.level - 1) * 0.16;
+    const stageCfg = STAGE_CONFIGS[(this.level - 1) % STAGE_CONFIGS.length];
+    this.stageConfig = stageCfg;
     this.lanes = [];
 
     // Helper to create evenly spaced lane objects across GRID_W + wrap margin
-    const createObjects = (count, widthPx, hasDiving = false) => {
+    const createObjects = (count, widthPx, divingCount = 0, hasCroc = false) => {
       const span = GRID_W + 220;
       const spacing = span / count;
       const items = [];
@@ -131,9 +208,12 @@ export class Frogger {
         items.push({
           x: i * spacing,
           w: widthPx,
-          dives: hasDiving && i === 0, // First turtle group in each turtle lane dives periodically
-          divePhase: Math.random() * 6.0,
-          diveState: 'SURFACED' // 'SURFACED' | 'WARNING' | 'SUBMERGED'
+          dives: i < divingCount,
+          divePhase: (i * 2.3) % 6.0,
+          diveState: 'SURFACED', // 'SURFACED' | 'WARNING' | 'SUBMERGED'
+          isCrocodile: hasCroc && i === 0,
+          jawPhase: Math.random() * Math.PI * 2,
+          jawsOpen: false
         });
       }
       return items;
@@ -149,7 +229,7 @@ export class Frogger {
       accent: '#FF2A55',
       dir: -1,
       speed: 95 * speedScale,
-      items: createObjects(4, 48, false)
+      items: createObjects(stageCfg.highwayCounts[11], 48, 0, false)
     };
     // Row 10: Bulldozer (Right)
     this.lanes[10] = {
@@ -160,7 +240,7 @@ export class Frogger {
       accent: '#F8FAFC',
       dir: 1,
       speed: 68 * speedScale,
-      items: createObjects(3, 52, false)
+      items: createObjects(stageCfg.highwayCounts[10], 52, 0, false)
     };
     // Row 9: Neon Coupe (Left)
     this.lanes[9] = {
@@ -171,7 +251,7 @@ export class Frogger {
       accent: '#00F0FF',
       dir: -1,
       speed: 122 * speedScale,
-      items: createObjects(4, 50, false)
+      items: createObjects(stageCfg.highwayCounts[9], 50, 0, false)
     };
     // Row 8: Turbo Cruiser (Right)
     this.lanes[8] = {
@@ -182,7 +262,7 @@ export class Frogger {
       accent: '#FFD700',
       dir: 1,
       speed: 150 * speedScale,
-      items: createObjects(3, 54, false)
+      items: createObjects(stageCfg.highwayCounts[8], 54, 0, false)
     };
     // Row 7: Dual-Cab Semi Truck (Left)
     this.lanes[7] = {
@@ -193,7 +273,7 @@ export class Frogger {
       accent: '#FF2A55',
       dir: -1,
       speed: 86 * speedScale,
-      items: createObjects(3, 108, false)
+      items: createObjects(stageCfg.highwayCounts[7], 108, 0, false)
     };
 
     // RIVER LANES (Rows 1 - 5)
@@ -205,7 +285,7 @@ export class Frogger {
       countPerGroup: 3,
       dir: -1,
       speed: 78 * speedScale,
-      items: createObjects(4, 3 * 34, true)
+      items: createObjects(4, 3 * 34, stageCfg.divingGroups[5], false)
     };
     // Row 4: Short Logs (Right)
     this.lanes[4] = {
@@ -214,7 +294,12 @@ export class Frogger {
       platformType: 'LOG_SHORT',
       dir: 1,
       speed: 72 * speedScale,
-      items: createObjects(4, 128, false)
+      items: createObjects(
+        stageCfg.logCounts[4],
+        stageCfg.logLengths[4],
+        0,
+        stageCfg.crocodileRows.includes(4)
+      )
     };
     // Row 3: Long Logs (Right, fast)
     this.lanes[3] = {
@@ -223,7 +308,12 @@ export class Frogger {
       platformType: 'LOG_LONG',
       dir: 1,
       speed: 118 * speedScale,
-      items: createObjects(3, 224, false)
+      items: createObjects(
+        stageCfg.logCounts[3],
+        stageCfg.logLengths[3],
+        0,
+        stageCfg.crocodileRows.includes(3)
+      )
     };
     // Row 2: 2-Turtle Groups (Left, with diving group)
     this.lanes[2] = {
@@ -233,16 +323,21 @@ export class Frogger {
       countPerGroup: 2,
       dir: -1,
       speed: 96 * speedScale,
-      items: createObjects(4, 2 * 35, true)
+      items: createObjects(4, 2 * 35, stageCfg.divingGroups[2], false)
     };
-    // Row 1: Medium Logs (Right)
+    // Row 1: Medium Logs + Stage 2+ Crocodiles (Right)
     this.lanes[1] = {
       row: 1,
       kind: 'RIVER',
       platformType: 'LOG_MEDIUM',
       dir: 1,
       speed: 88 * speedScale,
-      items: createObjects(3, 168, false)
+      items: createObjects(
+        stageCfg.logCounts[1],
+        stageCfg.logLengths[1],
+        0,
+        stageCfg.crocodileRows.includes(1)
+      )
     };
   }
 
@@ -377,6 +472,11 @@ export class Frogger {
 
   _updateLanes(dt) {
     const wrapSpan = GRID_W + 220;
+    const cfg = this.stageConfig || STAGE_CONFIGS[0];
+    const tSurfaced = cfg.surfacedTime || 3.8;
+    const tWarning = tSurfaced + (cfg.warningTime || 1.6);
+    const tCycle = tWarning + (cfg.submergedTime || 1.7);
+
     for (let r = 1; r <= 11; r++) {
       const lane = this.lanes[r];
       if (!lane) continue;
@@ -390,16 +490,22 @@ export class Frogger {
           item.x += wrapSpan;
         }
 
-        // Update Diving Turtle cycle: SURFACED (3.8s) -> WARNING BLINK (1.6s) -> SUBMERGED (1.7s)
+        // Update Diving Turtle cycle
         if (item.dives) {
-          item.divePhase = (item.divePhase + dt) % 7.1;
-          if (item.divePhase < 3.8) {
+          item.divePhase = (item.divePhase + dt) % tCycle;
+          if (item.divePhase < tSurfaced) {
             item.diveState = 'SURFACED';
-          } else if (item.divePhase < 5.4) {
+          } else if (item.divePhase < tWarning) {
             item.diveState = 'WARNING';
           } else {
             item.diveState = 'SUBMERGED';
           }
+        }
+
+        // Update Crocodile snapping jaws cycle
+        if (item.isCrocodile) {
+          item.jawPhase = (item.jawPhase + dt * 2.6) % (Math.PI * 2);
+          item.jawsOpen = Math.sin(item.jawPhase) > 0.35;
         }
       }
     }
@@ -548,6 +654,10 @@ export class Frogger {
         for (const p of lane.items) {
           if (p.dives && p.diveState === 'SUBMERGED') continue;
           if (f.x >= p.x - 6 && f.x <= p.x + p.w + 6) {
+            // If crocodile's jaws are open at the right-hand snout tip, it's a hazard!
+            if (p.isCrocodile && p.jawsOpen && f.x >= p.x + p.w - 20) {
+              continue;
+            }
             onValidPlatform = true;
             break;
           }
@@ -802,7 +912,52 @@ export class Frogger {
       const cy = r * CELL_H + CELL_H / 2;
 
       for (const item of lane.items) {
-        if (lane.platformType.startsWith('LOG')) {
+        if (item.isCrocodile) {
+          // Stage 2+ Crocodile / Alligator swimming in log lane
+          const lh = CELL_H - 10;
+          const ly = cy - lh / 2;
+          const bodyW = item.w - 26;
+
+          // Armored green body & scutes
+          ctx.fillStyle = '#15803D';
+          ctx.fillRect(item.x + 8, ly + 2, bodyW - 8, lh - 4);
+          ctx.strokeStyle = '#4ADE80';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(item.x + 8, ly + 2, bodyW - 8, lh - 4);
+
+          // Tail ridges on left
+          ctx.fillStyle = '#166534';
+          ctx.beginPath();
+          ctx.moveTo(item.x, cy);
+          ctx.lineTo(item.x + 12, ly + 3);
+          ctx.lineTo(item.x + 12, ly + lh - 3);
+          ctx.closePath();
+          ctx.fill();
+
+          for (let sx = item.x + 18; sx < item.x + bodyW - 8; sx += 16) {
+            ctx.fillStyle = '#22C55E';
+            ctx.fillRect(sx, cy - 5, 8, 3);
+            ctx.fillRect(sx, cy + 2, 8, 3);
+          }
+
+          // Glowing Yellow Reptile Eyes
+          ctx.fillStyle = '#FACC15';
+          ctx.fillRect(item.x + bodyW - 6, ly + 3, 5, 4);
+          ctx.fillRect(item.x + bodyW - 6, ly + lh - 7, 5, 4);
+
+          // Snapping Jaws on right (travel direction)
+          const jawSpread = item.jawsOpen ? 6 : 1;
+          ctx.fillStyle = '#15803D';
+          ctx.fillRect(item.x + bodyW, cy - 8 - jawSpread, 22, 6);
+          ctx.fillRect(item.x + bodyW, cy + 2 + jawSpread, 22, 6);
+          if (item.jawsOpen) {
+            ctx.fillStyle = '#F8FAFC';
+            for (let tx = item.x + bodyW + 4; tx < item.x + bodyW + 20; tx += 5) {
+              ctx.fillRect(tx, cy - 2 - jawSpread, 2, 3);
+              ctx.fillRect(tx, cy - 1 + jawSpread, 2, 3);
+            }
+          }
+        } else if (lane.platformType.startsWith('LOG')) {
           // Floating Cedar Log with bark grain & end rings
           const lh = CELL_H - 8;
           const ly = cy - lh / 2;

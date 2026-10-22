@@ -16,9 +16,134 @@ const CUBE_RY = 18; // Vertical half-height of cube top diamond
 const CUBE_H = 26;  // Vertical height of cube side faces
 
 const LEVEL_THEMES = [
-  { startTop: '#1E293B', midTop: PALETTE.BLUE, targetTop: PALETTE.GOLD, leftFace: '#0E7490', rightFace: '#155E75', accent: PALETTE.CYAN },
-  { startTop: '#31102F', midTop: PALETTE.PURPLE, targetTop: PALETTE.GREEN, leftFace: '#6B21A8', rightFace: '#4C1D95', accent: PALETTE.PINK },
-  { startTop: '#172554', midTop: PALETTE.ORANGE, targetTop: PALETTE.CYAN, leftFace: '#9A3412', rightFace: '#7C2D12', accent: PALETTE.GOLD }
+  // Round 1: 1-hop classic blue/gold pyramid
+  {
+    name: 'ROUND 1: SINGLE HOP',
+    startTop: '#1E293B',
+    midTop: PALETTE.BLUE,
+    targetTop: PALETTE.GOLD,
+    startColor: '#1E293B',
+    midColor: PALETTE.BLUE,
+    targetColor: PALETTE.GOLD,
+    leftFace: '#0E7490',
+    rightFace: '#155E75',
+    accent: PALETTE.CYAN,
+    stepsRequired: 1,
+    revertOnExtraHop: false,
+    discRows: [2, 4]
+  },
+  // Round 2: 2-hop multi-step color transition (startColor -> midColor -> targetColor)
+  {
+    name: 'ROUND 2: DOUBLE HOP',
+    startTop: '#31102F',
+    midTop: PALETTE.PURPLE,
+    targetTop: PALETTE.GREEN,
+    startColor: '#31102F',
+    midColor: PALETTE.PURPLE,
+    targetColor: PALETTE.GREEN,
+    leftFace: '#6B21A8',
+    rightFace: '#4C1D95',
+    accent: PALETTE.PINK,
+    stepsRequired: 2,
+    revertOnExtraHop: false,
+    discRows: [1, 5]
+  },
+  // Round 3: Revert-on-extra-hop introduced!
+  {
+    name: 'ROUND 3: REVERT HOP',
+    startTop: '#172554',
+    midTop: PALETTE.ORANGE,
+    targetTop: PALETTE.CYAN,
+    startColor: '#172554',
+    midColor: PALETTE.ORANGE,
+    targetColor: PALETTE.CYAN,
+    leftFace: '#9A3412',
+    rightFace: '#7C2D12',
+    accent: PALETTE.GOLD,
+    stepsRequired: 2,
+    revertOnExtraHop: true,
+    discRows: [2, 5]
+  },
+  // Round 4: Crimson Neon Matrix (2-step + revert)
+  {
+    name: 'ROUND 4: CRIMSON MATRIX',
+    startTop: '#1F2937',
+    midTop: PALETTE.RED,
+    targetTop: PALETTE.GOLD,
+    startColor: '#1F2937',
+    midColor: PALETTE.RED,
+    targetColor: PALETTE.GOLD,
+    leftFace: '#991B1B',
+    rightFace: '#7F1D1D',
+    accent: PALETTE.RED,
+    stepsRequired: 2,
+    revertOnExtraHop: true,
+    discRows: [1, 4]
+  },
+  // Round 5: Emerald Prism (2-step + revert)
+  {
+    name: 'ROUND 5: EMERALD PRISM',
+    startTop: '#064E3B',
+    midTop: PALETTE.CYAN,
+    targetTop: PALETTE.PINK,
+    startColor: '#064E3B',
+    midColor: PALETTE.CYAN,
+    targetColor: PALETTE.PINK,
+    leftFace: '#047857',
+    rightFace: '#065F46',
+    accent: PALETTE.GREEN,
+    stepsRequired: 2,
+    revertOnExtraHop: true,
+    discRows: [2, 4]
+  },
+  // Round 6: Solar Flare (2-step + revert)
+  {
+    name: 'ROUND 6: SOLAR FLARE',
+    startTop: '#3B0764',
+    midTop: PALETTE.GOLD,
+    targetTop: PALETTE.WHITE,
+    startColor: '#3B0764',
+    midColor: PALETTE.GOLD,
+    targetColor: PALETTE.WHITE,
+    leftFace: '#B45309',
+    rightFace: '#78350F',
+    accent: PALETTE.ORANGE,
+    stepsRequired: 2,
+    revertOnExtraHop: true,
+    discRows: [1, 3, 5]
+  },
+  // Round 7: Cyber Indigo (2-step + revert)
+  {
+    name: 'ROUND 7: CYBER INDIGO',
+    startTop: '#0F172A',
+    midTop: PALETTE.PINK,
+    targetTop: PALETTE.GREEN,
+    startColor: '#0F172A',
+    midColor: PALETTE.PINK,
+    targetColor: PALETTE.GREEN,
+    leftFace: '#1D4ED8',
+    rightFace: '#1E3A8A',
+    accent: PALETTE.BLUE,
+    stepsRequired: 2,
+    revertOnExtraHop: true,
+    discRows: [2, 5]
+  },
+  // Round 8: Championship Apex (2-step + revert)
+  {
+    name: 'ROUND 8: APEX SANCTUM',
+    startTop: '#450A0A',
+    midTop: PALETTE.PURPLE,
+    targetTop: PALETTE.CYAN,
+    startColor: '#450A0A',
+    midColor: PALETTE.PURPLE,
+    targetColor: PALETTE.CYAN,
+    leftFace: '#701A75',
+    rightFace: '#4A044E',
+    accent: PALETTE.PINK,
+    stepsRequired: 2,
+    revertOnExtraHop: true,
+    discRows: [1, 4, 5]
+  }
 ];
 
 export class Qbert {
@@ -78,7 +203,10 @@ export class Qbert {
   }
 
   _initPyramid(level) {
-    this.targetState = level >= 2 ? 2 : 1;
+    const theme = this._getTheme();
+    this.stepsRequired = theme.stepsRequired || (level >= 2 ? 2 : 1);
+    this.revertOnExtraHop = Boolean(theme.revertOnExtraHop || level >= 3);
+    this.targetState = this.stepsRequired;
     this.cubes = [];
     for (let r = 0; r < PYRAMID_ROWS; r++) {
       const rowArr = [];
@@ -93,13 +221,13 @@ export class Qbert {
       this.cubes.push(rowArr);
     }
 
-    // Flanking Spinning Escape Discs at row 2 and row 4 (left col = -1, right col = r + 1)
-    this.discs = [
-      { r: 2, c: -1, active: true, phase: 0 },
-      { r: 2, c: 3, active: true, phase: 1.5 },
-      { r: 4, c: -1, active: true, phase: 3.0 },
-      { r: 4, c: 5, active: true, phase: 4.5 }
-    ];
+    // Flanking Spinning Escape Discs configured per round
+    const discRows = theme.discRows || [2, 4];
+    this.discs = [];
+    discRows.forEach((r, idx) => {
+      this.discs.push({ r, c: -1, active: true, phase: idx * 1.5 });
+      this.discs.push({ r, c: r + 1, active: true, phase: idx * 1.5 + 0.75 });
+    });
   }
 
   _resetQbertPosition() {
@@ -493,6 +621,11 @@ export class Qbert {
         this.audio.playStageClear();
         this._addScore(1000, TOP_X, 85, `PYRAMID COMPLETE! +1000`, PALETTE.GREEN);
       }
+    } else if (this.revertOnExtraHop && cube.state >= this.targetState) {
+      // OG Level 3+ mechanic: hopping on an already-completed cube reverts it by 1 step!
+      cube.state = Math.max(0, this.targetState - 1);
+      cube.flashTimer = 0.14;
+      this.audio.playNote(220, 0.06, 'triangle', 0.2);
     }
   }
 

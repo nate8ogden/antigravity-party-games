@@ -24,6 +24,80 @@ const PLATFORMS = [
   { x: 635, y: 150, w: 210, h: 14, isSpawn: false }
 ];
 
+export const ARENA_CONFIGS = [
+  // Wave 1: Classic 4-Ledge Arena
+  {
+    name: 'CLASSIC 4-LEDGE',
+    playerSpawn: { x: 480, y: 444 },
+    platforms: PLATFORMS
+  },
+  // Wave 2: Collapsed Center Bridge
+  {
+    name: 'COLLAPSED BRIDGE',
+    playerSpawn: { x: 260, y: 444 },
+    platforms: [
+      { x: 140, y: 468, w: 240, h: 16, isSpawn: true },
+      { x: 580, y: 468, w: 240, h: 16, isSpawn: true },
+      { x: 0, y: 320, w: 250, h: 14, isSpawn: true },
+      { x: 710, y: 320, w: 250, h: 14, isSpawn: true },
+      { x: 310, y: 235, w: 340, h: 14, isSpawn: true },
+      { x: 380, y: 125, w: 200, h: 14, isSpawn: false }
+    ]
+  },
+  // Wave 3: Double-Deck Catwalks
+  {
+    name: 'DOUBLE-DECK CATWALKS',
+    playerSpawn: { x: 480, y: 444 },
+    platforms: [
+      { x: 190, y: 468, w: 580, h: 16, isSpawn: true },
+      { x: 90, y: 345, w: 310, h: 14, isSpawn: true },
+      { x: 560, y: 345, w: 310, h: 14, isSpawn: true },
+      { x: 90, y: 210, w: 310, h: 14, isSpawn: true },
+      { x: 560, y: 210, w: 310, h: 14, isSpawn: true }
+    ]
+  },
+  // Wave 4: High-Altitude Perches
+  {
+    name: 'HIGH-ALTITUDE PERCHES',
+    playerSpawn: { x: 480, y: 444 },
+    platforms: [
+      { x: 330, y: 468, w: 300, h: 16, isSpawn: true },
+      { x: 40, y: 360, w: 210, h: 14, isSpawn: true },
+      { x: 710, y: 360, w: 210, h: 14, isSpawn: true },
+      { x: 200, y: 250, w: 220, h: 14, isSpawn: true },
+      { x: 540, y: 250, w: 220, h: 14, isSpawn: true },
+      { x: 290, y: 135, w: 380, h: 14, isSpawn: false }
+    ]
+  },
+  // Wave 5: Low Lava Skimmer
+  {
+    name: 'LOW LAVA SKIMMER',
+    playerSpawn: { x: 480, y: 444 },
+    platforms: [
+      { x: 80, y: 468, w: 210, h: 16, isSpawn: true },
+      { x: 375, y: 468, w: 210, h: 16, isSpawn: true },
+      { x: 670, y: 468, w: 210, h: 16, isSpawn: true },
+      { x: 180, y: 290, w: 240, h: 14, isSpawn: true },
+      { x: 540, y: 290, w: 240, h: 14, isSpawn: true },
+      { x: 0, y: 170, w: 240, h: 14, isSpawn: false },
+      { x: 720, y: 170, w: 240, h: 14, isSpawn: false }
+    ]
+  },
+  // Wave 6: Pterodactyl Colosseum
+  {
+    name: 'PTERODACTYL COLOSSEUM',
+    playerSpawn: { x: 480, y: 444 },
+    platforms: [
+      { x: 150, y: 468, w: 660, h: 16, isSpawn: true },
+      { x: 0, y: 340, w: 200, h: 14, isSpawn: true },
+      { x: 760, y: 340, w: 200, h: 14, isSpawn: true },
+      { x: 240, y: 245, w: 480, h: 14, isSpawn: true },
+      { x: 60, y: 140, w: 220, h: 14, isSpawn: false },
+      { x: 680, y: 140, w: 220, h: 14, isSpawn: false }
+    ]
+  }
+];
+
 const TIER_CONFIG = {
   1: { name: 'BOUNDER', color: PALETTE.RED, speed: 155, flapRate: 0.42, pts: 500 },
   2: { name: 'HUNTER', color: PALETTE.CYAN, speed: 205, flapRate: 0.30, pts: 750 },
@@ -77,9 +151,11 @@ export class Joust {
   }
 
   _spawnPlayer() {
+    const arena = ARENA_CONFIGS[(this.level - 1) % ARENA_CONFIGS.length];
+    const spawn = arena.playerSpawn || { x: 480, y: 444 };
     this.player = {
-      x: 480,
-      y: 444,
+      x: spawn.x,
+      y: spawn.y,
       vx: 0,
       vy: 0,
       dir: 1,
@@ -95,7 +171,21 @@ export class Joust {
   _spawnWave(level) {
     this.enemies = [];
     this.eggs = [];
-    const spawnPads = PLATFORMS.filter((p) => p.isSpawn);
+    const arena = ARENA_CONFIGS[(level - 1) % ARENA_CONFIGS.length];
+    this.arenaName = arena.name;
+    this.platforms = arena.platforms;
+
+    // Ensure player is safe when bridge geometry reconfigures between waves
+    if (this.player && !this.player.dead && level > 1) {
+      this.player.invuln = Math.max(this.player.invuln, 1.8);
+      if (this.player.y > 410) {
+        this.player.x = arena.playerSpawn.x;
+        this.player.y = arena.playerSpawn.y;
+        this.player.vy = 0;
+      }
+    }
+
+    const spawnPads = this.platforms.filter((p) => p.isSpawn);
     const total = Math.min(8, 3 + level);
 
     for (let i = 0; i < total; i++) {
@@ -171,8 +261,9 @@ export class Joust {
 
     entity.onGround = false;
     const footOffset = isEgg ? 7 : 20;
+    const activePlatforms = this.platforms || PLATFORMS;
 
-    for (const plat of PLATFORMS) {
+    for (const plat of activePlatforms) {
       if (entity.x >= plat.x - 8 && entity.x <= plat.x + plat.w + 8) {
         // Landing on top of stone platform
         if (
@@ -575,7 +666,8 @@ export class Joust {
     }
 
     // Floating Stone Ledges
-    for (const plat of PLATFORMS) {
+    const activePlatforms = this.platforms || PLATFORMS;
+    for (const plat of activePlatforms) {
       ctx.fillStyle = '#334155';
       ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
       this.renderer.drawGlowRect(plat.x, plat.y, plat.w, 4, PALETTE.ORANGE, 8, true);

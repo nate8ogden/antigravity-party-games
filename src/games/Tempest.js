@@ -54,9 +54,10 @@ export class Tempest {
 
   /**
    * Generates the rim vertices and lane pairs for the current level's 3D vector web
+   * Cycles through 12 iconic OG Atari Tempest wireframe tube geometries
    */
   _buildTubeGeometry(level) {
-    const shapeIdx = (level - 1) % 6;
+    const shapeIdx = (level - 1) % 12;
     const vertices = [];
     let closed = true;
     let shapeName = 'CIRCLE WEB';
@@ -114,8 +115,8 @@ export class Tempest {
         });
       }
     } else if (shapeIdx === 4) {
-      // 5. Starburst Web
-      shapeName = 'NEON STARBURST';
+      // 5. Crosshair Starburst Web
+      shapeName = 'CROSSHAIR STAR';
       const n = 16;
       for (let i = 0; i < n; i++) {
         const ang = (Math.PI * 2 * i) / n - Math.PI / 2;
@@ -125,16 +126,90 @@ export class Tempest {
           y: Math.sin(ang) * r * 0.88
         });
       }
-    } else {
+    } else if (shapeIdx === 5) {
       // 6. Open V-Trench Web
       shapeName = 'OPEN V-TRENCH';
       closed = false;
       const numVerts = 13;
       for (let i = 0; i < numVerts; i++) {
-        const t = (i / (numVerts - 1)) * 2 - 1; // -1 .. 1
+        const t = (i / (numVerts - 1)) * 2 - 1;
         vertices.push({
           x: t * 280,
           y: 175 - Math.abs(t) * 250
+        });
+      }
+    } else if (shapeIdx === 6) {
+      // 7. Flat Horizon Trench (Open 14-lane flat bottom line with upturned tips)
+      shapeName = 'FLAT HORIZON LINE';
+      closed = false;
+      const numVerts = 15;
+      for (let i = 0; i < numVerts; i++) {
+        const t = (i / (numVerts - 1)) * 2 - 1;
+        const edgeLift = Math.max(0, Math.abs(t) - 0.72) * 260;
+        vertices.push({
+          x: t * 300,
+          y: 155 - edgeLift
+        });
+      }
+    } else if (shapeIdx === 7) {
+      // 8. Heart Tube (16-lane parametric heart curve)
+      shapeName = 'HEART VORTEX';
+      const n = 16;
+      for (let i = 0; i < n; i++) {
+        const t = (Math.PI * 2 * i) / n;
+        const hx = 16 * Math.pow(Math.sin(t), 3);
+        const hy = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+        vertices.push({
+          x: hx * 13.5,
+          y: hy * 11.5
+        });
+      }
+    } else if (shapeIdx === 8) {
+      // 9. Figure-8 Peanut / Infinity Tube
+      shapeName = 'INFINITY PEANUT';
+      const n = 16;
+      for (let i = 0; i < n; i++) {
+        const ang = (Math.PI * 2 * i) / n;
+        const r = 165 * Math.sqrt(Math.max(0.28, Math.cos(2 * ang) + 1.15));
+        vertices.push({
+          x: Math.cos(ang) * r * 1.05,
+          y: Math.sin(ang) * r * 0.85
+        });
+      }
+    } else if (shapeIdx === 9) {
+      // 10. Open W-Trench Web
+      shapeName = 'OPEN W-TRENCH';
+      closed = false;
+      const pts = [
+        [-290, -80], [-240, 45], [-190, 170], [-140, 110],
+        [-90, 50], [-45, 95], [0, 140], [45, 95],
+        [90, 50], [140, 110], [190, 170], [240, 45], [290, -80]
+      ];
+      for (const [x, y] of pts) {
+        vertices.push({ x, y });
+      }
+    } else if (shapeIdx === 10) {
+      // 11. Cloverleaf 4-Lobe Tube
+      shapeName = 'FOUR-LOBE CLOVER';
+      const n = 16;
+      for (let i = 0; i < n; i++) {
+        const ang = (Math.PI * 2 * i) / n - Math.PI / 2;
+        const r = 160 + 55 * Math.cos(ang * 4);
+        vertices.push({
+          x: Math.cos(ang) * r * 1.08,
+          y: Math.sin(ang) * r * 0.9
+        });
+      }
+    } else {
+      // 12. Spiked Octagon (8 outer bevels + 8 inner notches)
+      shapeName = 'SPIKED OCTAGON';
+      const n = 16;
+      for (let i = 0; i < n; i++) {
+        const ang = (Math.PI * 2 * i) / n - Math.PI / 2;
+        const r = i % 2 === 0 ? 235 : 170;
+        vertices.push({
+          x: Math.cos(ang) * r * 1.05,
+          y: Math.sin(ang) * r * 0.88
         });
       }
     }
@@ -579,7 +654,7 @@ export class Tempest {
   render(ctx = this.renderer.ctx) {
     this.renderer.clear('#04060E');
 
-    const tubeColors = [PALETTE.BLUE, PALETTE.CYAN, PALETTE.PURPLE, PALETTE.GREEN, PALETTE.PINK];
+    const tubeColors = [PALETTE.BLUE, PALETTE.RED, PALETTE.GOLD, PALETTE.CYAN, PALETTE.GREEN];
     const webColor =
       this.zapperFlashTimer > 0
         ? PALETTE.WHITE

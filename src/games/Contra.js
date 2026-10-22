@@ -15,6 +15,203 @@
  */
 import { PALETTE, FONTS, HighScoreStore } from '../engine/Renderer.js';
 
+export const STAGE_BIOMES = [
+  // Stage 1: Jungle Garrison (Lush green turf, waterfalls, suspension bridges & Defense Wall Boss)
+  {
+    name: 'JUNGLE GARRISON',
+    bossName: 'DEFENSE WALL CORE',
+    rockBase: '#451A03',
+    brickDark: '#78350F',
+    brickMid: '#B45309',
+    brickLight: '#D97706',
+    turfDark: '#14532D',
+    turfMid: '#16A34A',
+    turfLight: '#4ADE80',
+    platforms: [
+      { x: 0, y: 340, w: 520, depth: 165, type: 'JUNGLE' },
+      { x: 240, y: 245, w: 220, depth: 46, type: 'LEDGE' },
+      { x: 530, y: 340, w: 260, depth: 24, type: 'BRIDGE', exploded: false, explodeProgress: 0 },
+      { x: 800, y: 390, w: 380, depth: 120, type: 'JUNGLE' },
+      { x: 910, y: 280, w: 280, depth: 48, type: 'LEDGE' },
+      { x: 1110, y: 190, w: 250, depth: 44, type: 'LEDGE' },
+      { x: 1230, y: 350, w: 340, depth: 150, type: 'JUNGLE' },
+      { x: 1580, y: 350, w: 260, depth: 24, type: 'BRIDGE', exploded: false, explodeProgress: 0 },
+      { x: 1850, y: 410, w: 400, depth: 110, type: 'JUNGLE' },
+      { x: 1950, y: 300, w: 260, depth: 46, type: 'LEDGE' },
+      { x: 2140, y: 205, w: 260, depth: 44, type: 'LEDGE' },
+      { x: 2270, y: 355, w: 380, depth: 150, type: 'JUNGLE' },
+      { x: 2520, y: 450, w: 960, depth: 90, type: 'FORTRESS_FLOOR', solid: true },
+      { x: 2620, y: 350, w: 180, depth: 38, type: 'LEDGE' },
+      { x: 2850, y: 265, w: 170, depth: 38, type: 'LEDGE' }
+    ],
+    placements: [
+      { x: 380, y: 205, type: 'SNIPER' },
+      { x: 700, y: 215, type: 'TURRET' },
+      { x: 1050, y: 240, type: 'SNIPER' },
+      { x: 1380, y: 312, type: 'TURRET' },
+      { x: 1520, y: 220, type: 'TURRET' },
+      { x: 2060, y: 260, type: 'SNIPER' },
+      { x: 2290, y: 168, type: 'TURRET' },
+      { x: 2480, y: 315, type: 'SNIPER' }
+    ]
+  },
+  // Stage 2: Enemy Base Steel Corridor (Metallic blue/gray fortress walls, steel catwalk decks, laser turrets & Armored Core Boss)
+  {
+    name: 'ENEMY BASE CORRIDOR',
+    bossName: 'ARMORED BASE CORE',
+    rockBase: '#0F172A',
+    brickDark: '#1E293B',
+    brickMid: '#334155',
+    brickLight: '#64748B',
+    turfDark: '#0369A1',
+    turfMid: '#0284C7',
+    turfLight: '#38BDF8',
+    platforms: [
+      { x: 0, y: 360, w: 480, depth: 145, type: 'JUNGLE' },
+      { x: 180, y: 250, w: 260, depth: 36, type: 'LEDGE' },
+      { x: 490, y: 360, w: 240, depth: 24, type: 'BRIDGE', exploded: false, explodeProgress: 0 },
+      { x: 740, y: 310, w: 420, depth: 185, type: 'JUNGLE' },
+      { x: 860, y: 200, w: 300, depth: 36, type: 'LEDGE' },
+      { x: 1180, y: 380, w: 420, depth: 125, type: 'JUNGLE' },
+      { x: 1300, y: 265, w: 280, depth: 36, type: 'LEDGE' },
+      { x: 1610, y: 340, w: 250, depth: 24, type: 'BRIDGE', exploded: false, explodeProgress: 0 },
+      { x: 1870, y: 340, w: 380, depth: 165, type: 'JUNGLE' },
+      { x: 2020, y: 220, w: 280, depth: 36, type: 'LEDGE' },
+      { x: 2270, y: 350, w: 360, depth: 155, type: 'JUNGLE' },
+      { x: 2520, y: 450, w: 960, depth: 90, type: 'FORTRESS_FLOOR', solid: true },
+      { x: 2600, y: 340, w: 200, depth: 36, type: 'LEDGE' },
+      { x: 2840, y: 250, w: 190, depth: 36, type: 'LEDGE' }
+    ],
+    placements: [
+      { x: 340, y: 210, type: 'TURRET' },
+      { x: 640, y: 205, type: 'TURRET' },
+      { x: 980, y: 160, type: 'SNIPER' },
+      { x: 1120, y: 270, type: 'TURRET' },
+      { x: 1460, y: 225, type: 'TURRET' },
+      { x: 1980, y: 300, type: 'SNIPER' },
+      { x: 2180, y: 180, type: 'TURRET' },
+      { x: 2440, y: 310, type: 'TURRET' }
+    ]
+  },
+  // Stage 3: Waterfall Cliff Ascent (Multi-tiered high rock ledges, cascading water, sniper perches & Cliffside Core)
+  {
+    name: 'WATERFALL CLIFF ASCENT',
+    bossName: 'CLIFFSIDE ALIEN CORE',
+    rockBase: '#27272A',
+    brickDark: '#3F3F46',
+    brickMid: '#52525B',
+    brickLight: '#A1A1AA',
+    turfDark: '#065F46',
+    turfMid: '#059669',
+    turfLight: '#34D399',
+    platforms: [
+      { x: 0, y: 375, w: 450, depth: 130, type: 'JUNGLE' },
+      { x: 190, y: 275, w: 220, depth: 42, type: 'LEDGE' },
+      { x: 360, y: 180, w: 230, depth: 42, type: 'LEDGE' },
+      { x: 540, y: 330, w: 340, depth: 170, type: 'JUNGLE' },
+      { x: 750, y: 225, w: 260, depth: 44, type: 'LEDGE' },
+      { x: 960, y: 380, w: 320, depth: 125, type: 'JUNGLE' },
+      { x: 1120, y: 270, w: 260, depth: 44, type: 'LEDGE' },
+      { x: 1320, y: 175, w: 250, depth: 42, type: 'LEDGE' },
+      { x: 1520, y: 350, w: 260, depth: 24, type: 'BRIDGE', exploded: false, explodeProgress: 0 },
+      { x: 1800, y: 370, w: 360, depth: 135, type: 'JUNGLE' },
+      { x: 1960, y: 260, w: 260, depth: 44, type: 'LEDGE' },
+      { x: 2150, y: 170, w: 240, depth: 42, type: 'LEDGE' },
+      { x: 2260, y: 350, w: 380, depth: 155, type: 'JUNGLE' },
+      { x: 2520, y: 450, w: 960, depth: 90, type: 'FORTRESS_FLOOR', solid: true },
+      { x: 2630, y: 345, w: 180, depth: 38, type: 'LEDGE' },
+      { x: 2850, y: 255, w: 180, depth: 38, type: 'LEDGE' }
+    ],
+    placements: [
+      { x: 460, y: 140, type: 'SNIPER' },
+      { x: 700, y: 290, type: 'TURRET' },
+      { x: 910, y: 185, type: 'SNIPER' },
+      { x: 1260, y: 230, type: 'TURRET' },
+      { x: 1460, y: 135, type: 'SNIPER' },
+      { x: 2080, y: 220, type: 'TURRET' },
+      { x: 2280, y: 130, type: 'SNIPER' },
+      { x: 2460, y: 310, type: 'TURRET' }
+    ]
+  },
+  // Stage 4: Snow Field Garrison (Ice-blue cliff faces, white snow-capped turf, falling snow particles & Cryo Defense Wall)
+  {
+    name: 'SNOW FIELD GARRISON',
+    bossName: 'CRYO DEFENSE WALL',
+    rockBase: '#0C4A6E',
+    brickDark: '#075985',
+    brickMid: '#0284C7',
+    brickLight: '#38BDF8',
+    turfDark: '#94A3B8',
+    turfMid: '#E2E8F0',
+    turfLight: '#FFFFFF',
+    platforms: [
+      { x: 0, y: 345, w: 540, depth: 160, type: 'JUNGLE' },
+      { x: 260, y: 240, w: 250, depth: 44, type: 'LEDGE' },
+      { x: 550, y: 345, w: 250, depth: 24, type: 'BRIDGE', exploded: false, explodeProgress: 0 },
+      { x: 810, y: 380, w: 420, depth: 125, type: 'JUNGLE' },
+      { x: 940, y: 265, w: 280, depth: 44, type: 'LEDGE' },
+      { x: 1250, y: 340, w: 380, depth: 165, type: 'JUNGLE' },
+      { x: 1380, y: 220, w: 260, depth: 44, type: 'LEDGE' },
+      { x: 1640, y: 340, w: 250, depth: 24, type: 'BRIDGE', exploded: false, explodeProgress: 0 },
+      { x: 1900, y: 390, w: 380, depth: 115, type: 'JUNGLE' },
+      { x: 2040, y: 275, w: 270, depth: 44, type: 'LEDGE' },
+      { x: 2280, y: 350, w: 360, depth: 155, type: 'JUNGLE' },
+      { x: 2520, y: 450, w: 960, depth: 90, type: 'FORTRESS_FLOOR', solid: true },
+      { x: 2610, y: 350, w: 190, depth: 38, type: 'LEDGE' },
+      { x: 2840, y: 260, w: 180, depth: 38, type: 'LEDGE' }
+    ],
+    placements: [
+      { x: 390, y: 200, type: 'SNIPER' },
+      { x: 680, y: 215, type: 'TURRET' },
+      { x: 1080, y: 225, type: 'TURRET' },
+      { x: 1480, y: 180, type: 'SNIPER' },
+      { x: 1750, y: 215, type: 'TURRET' },
+      { x: 2160, y: 235, type: 'SNIPER' },
+      { x: 2380, y: 310, type: 'TURRET' },
+      { x: 2490, y: 210, type: 'TURRET' }
+    ]
+  },
+  // Stage 5: Alien Lair (Red Falcon Hive) (Organic crimson/purple bio-walls, glowing alien spores & Pulsing Red Falcon Heart Boss)
+  {
+    name: 'RED FALCON ALIEN LAIR',
+    bossName: 'RED FALCON HEART',
+    rockBase: '#31102F',
+    brickDark: '#4C1D95',
+    brickMid: '#701A75',
+    brickLight: '#C026D3',
+    turfDark: '#881337',
+    turfMid: '#E11D48',
+    turfLight: '#FB7185',
+    platforms: [
+      { x: 0, y: 350, w: 500, depth: 155, type: 'JUNGLE' },
+      { x: 220, y: 245, w: 240, depth: 44, type: 'LEDGE' },
+      { x: 510, y: 350, w: 260, depth: 24, type: 'BRIDGE', exploded: false, explodeProgress: 0 },
+      { x: 780, y: 390, w: 380, depth: 120, type: 'JUNGLE' },
+      { x: 890, y: 275, w: 270, depth: 44, type: 'LEDGE' },
+      { x: 1100, y: 185, w: 250, depth: 42, type: 'LEDGE' },
+      { x: 1220, y: 345, w: 350, depth: 160, type: 'JUNGLE' },
+      { x: 1580, y: 345, w: 260, depth: 24, type: 'BRIDGE', exploded: false, explodeProgress: 0 },
+      { x: 1850, y: 400, w: 400, depth: 110, type: 'JUNGLE' },
+      { x: 1960, y: 285, w: 260, depth: 44, type: 'LEDGE' },
+      { x: 2150, y: 195, w: 250, depth: 42, type: 'LEDGE' },
+      { x: 2270, y: 355, w: 380, depth: 150, type: 'JUNGLE' },
+      { x: 2520, y: 450, w: 960, depth: 90, type: 'FORTRESS_FLOOR', solid: true },
+      { x: 2620, y: 350, w: 185, depth: 38, type: 'LEDGE' },
+      { x: 2850, y: 265, w: 175, depth: 38, type: 'LEDGE' }
+    ],
+    placements: [
+      { x: 350, y: 205, type: 'TURRET' },
+      { x: 680, y: 210, type: 'TURRET' },
+      { x: 1020, y: 235, type: 'SNIPER' },
+      { x: 1240, y: 145, type: 'TURRET' },
+      { x: 1480, y: 305, type: 'TURRET' },
+      { x: 2080, y: 245, type: 'SNIPER' },
+      { x: 2280, y: 155, type: 'TURRET' },
+      { x: 2470, y: 315, type: 'TURRET' }
+    ]
+  }
+];
+
 export class Contra {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -109,39 +306,16 @@ export class Contra {
     this.runnerSpawnTimer = 1.6;
     this.capsuleTimer = 4.0;
 
+    this.biomeIdx = (this.level - 1) % STAGE_BIOMES.length;
+    this.biome = STAGE_BIOMES[this.biomeIdx];
+
     this._resetPlayer(80, 260, this.player ? this.player.weapon : 'S');
 
-    // Multi-Tier Stage 1 Jungle Cliffs, Rock Ledges & Exploding Suspension Bridges
-    this.platforms = [
-      { x: 0, y: 340, w: 520, depth: 165, type: 'JUNGLE' },
-      { x: 240, y: 245, w: 220, depth: 46, type: 'LEDGE' },
-      { x: 530, y: 340, w: 260, depth: 24, type: 'BRIDGE', exploded: false, explodeProgress: 0 },
-      { x: 800, y: 390, w: 380, depth: 120, type: 'JUNGLE' },
-      { x: 910, y: 280, w: 280, depth: 48, type: 'LEDGE' },
-      { x: 1110, y: 190, w: 250, depth: 44, type: 'LEDGE' },
-      { x: 1230, y: 350, w: 340, depth: 150, type: 'JUNGLE' },
-      { x: 1580, y: 350, w: 260, depth: 24, type: 'BRIDGE', exploded: false, explodeProgress: 0 },
-      { x: 1850, y: 410, w: 400, depth: 110, type: 'JUNGLE' },
-      { x: 1950, y: 300, w: 260, depth: 46, type: 'LEDGE' },
-      { x: 2140, y: 205, w: 260, depth: 44, type: 'LEDGE' },
-      { x: 2270, y: 355, w: 380, depth: 150, type: 'JUNGLE' },
-      // Boss Arena Ground & Tactical Ledges
-      { x: 2520, y: 450, w: 960, depth: 90, type: 'FORTRESS_FLOOR', solid: true },
-      { x: 2620, y: 350, w: 180, depth: 38, type: 'LEDGE' },
-      { x: 2850, y: 265, w: 170, depth: 38, type: 'LEDGE' }
-    ];
+    // Load Biome-Specific Multi-Tier Cliffs, Ledges & Exploding Bridges
+    this.platforms = this.biome.platforms.map((p) => ({ ...p }));
 
-    // Populate Snipers & 12-Way Hexagonal Rotary Wall Turrets
-    const placements = [
-      { x: 380, y: 205, type: 'SNIPER' },
-      { x: 700, y: 215, type: 'TURRET' },
-      { x: 1050, y: 240, type: 'SNIPER' },
-      { x: 1380, y: 312, type: 'TURRET' },
-      { x: 1520, y: 220, type: 'TURRET' },
-      { x: 2060, y: 260, type: 'SNIPER' },
-      { x: 2290, y: 168, type: 'TURRET' },
-      { x: 2480, y: 315, type: 'SNIPER' }
-    ];
+    // Populate Snipers & 12-Way Hexagonal Rotary Wall Turrets for this stage biome
+    const placements = this.biome.placements;
 
     for (const pl of placements) {
       this.enemies.push({
@@ -171,7 +345,7 @@ export class Contra {
       phase: 0
     });
 
-    // Iconic Stage 1 Defense Wall Boss Fortress at end of sector
+    // Iconic Stage End Boss Fortress
     const baseHp = 55 + this.level * 18;
     this.boss = {
       x: 3240,
@@ -873,11 +1047,121 @@ export class Contra {
   }
 
   /**
-   * Draws Stage 1 Jungle Parallax Background: volcanic night sky, distant mountain ridge,
-   * palm trees, dense pixel-art canopy leaves, and animated waterfalls.
+   * Draws Stage Parallax Background across the 5 OG Contra Biomes:
+   * 0: Jungle Garrison, 1: Enemy Base Steel Corridor, 2: Waterfall Cliff Ascent,
+   * 3: Snow Field Garrison, 4: Alien Lair (Red Falcon Hive).
    */
   _drawJungleBackdrop(ctx) {
-    // Deep jungle night sky gradient
+    const bIdx = this.biomeIdx || 0;
+
+    if (bIdx === 1) {
+      // Stage 2: Enemy Base Steel Corridor
+      const skyGrad = ctx.createLinearGradient(0, 38, 0, this.height);
+      skyGrad.addColorStop(0, '#090D16');
+      skyGrad.addColorStop(0.5, '#0F172A');
+      skyGrad.addColorStop(1, '#1E293B');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 38, this.width, this.height - 38);
+
+      // Steel bulkhead pillars & glowing cyan power conduits
+      for (let i = 0; i < 8; i++) {
+        const bx = ((i * 180 - this.cameraX * 0.35) % 1440 + 1440) % 1440 - 100;
+        ctx.fillStyle = '#1E293B';
+        ctx.fillRect(bx, 48, 64, 444);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(bx + 8, 54, 48, 430);
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.28)';
+        ctx.fillRect(bx + 28, 60, 8, 420);
+      }
+      return;
+    }
+
+    if (bIdx === 2) {
+      // Stage 3: Waterfall Cliff Ascent
+      const skyGrad = ctx.createLinearGradient(0, 38, 0, this.height);
+      skyGrad.addColorStop(0, '#081C24');
+      skyGrad.addColorStop(0.5, '#0F293A');
+      skyGrad.addColorStop(1, '#18181B');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 38, this.width, this.height - 38);
+
+      // Towering granite gorge cliffs & wide cascading waterfalls
+      for (let i = 0; i < 5; i++) {
+        const wfX = ((i * 300 + 80 - this.cameraX * 0.32) % 1500 + 1500) % 1500 - 100;
+        ctx.fillStyle = 'rgba(14, 165, 233, 0.32)';
+        ctx.fillRect(wfX, 55, 68, 437);
+        ctx.fillStyle = 'rgba(186, 230, 253, 0.55)';
+        const cascadeOffset = Math.floor(this.animTime * 115) % 24;
+        for (let wy = 60 + cascadeOffset; wy < 485; wy += 24) {
+          ctx.fillRect(wfX + 8, wy, 16, 14);
+          ctx.fillRect(wfX + 36, wy - 10, 18, 14);
+        }
+      }
+      return;
+    }
+
+    if (bIdx === 3) {
+      // Stage 4: Snow Field Garrison
+      const skyGrad = ctx.createLinearGradient(0, 38, 0, this.height);
+      skyGrad.addColorStop(0, '#082F49');
+      skyGrad.addColorStop(0.6, '#0C4A6E');
+      skyGrad.addColorStop(1, '#1E3A8A');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 38, this.width, this.height - 38);
+
+      // Jagged glacial peaks
+      ctx.fillStyle = '#075985';
+      ctx.beginPath();
+      ctx.moveTo(0, 360);
+      for (let mx = 0; mx <= this.width + 160; mx += 110) {
+        const worldM = mx + Math.floor(this.cameraX * 0.2);
+        const peakY = 145 + Math.sin(worldM * 0.008) * 55;
+        ctx.lineTo(mx, peakY);
+      }
+      ctx.lineTo(this.width, 492);
+      ctx.lineTo(0, 492);
+      ctx.closePath();
+      ctx.fill();
+
+      // Falling snow particles
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      for (let s = 0; s < 36; s++) {
+        const sx = ((s * 97 - this.cameraX * 0.5 + this.animTime * (28 + (s % 5) * 8)) % this.width + this.width) % this.width;
+        const sy = 44 + ((s * 61 + this.animTime * (75 + (s % 4) * 18)) % (this.height - 54));
+        ctx.fillRect(sx, sy, s % 2 === 0 ? 3 : 2, s % 2 === 0 ? 3 : 2);
+      }
+      return;
+    }
+
+    if (bIdx === 4) {
+      // Stage 5: Alien Lair (Red Falcon Hive)
+      const skyGrad = ctx.createLinearGradient(0, 38, 0, this.height);
+      skyGrad.addColorStop(0, '#1A051D');
+      skyGrad.addColorStop(0.55, '#31102F');
+      skyGrad.addColorStop(1, '#4C0519');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 38, this.width, this.height - 38);
+
+      // Organic biomechanical ribs & drifting glowing alien spores
+      ctx.strokeStyle = 'rgba(225, 29, 72, 0.25)';
+      ctx.lineWidth = 10;
+      for (let i = 0; i < 9; i++) {
+        const rx = ((i * 160 - this.cameraX * 0.35) % 1440 + 1440) % 1440 - 80;
+        ctx.beginPath();
+        ctx.moveTo(rx, 45);
+        ctx.quadraticCurveTo(rx + 36, 260, rx, 490);
+        ctx.stroke();
+      }
+      for (let s = 0; s < 24; s++) {
+        const sx = ((s * 113 - this.cameraX * 0.4) % this.width + this.width) % this.width;
+        const sy = 60 + ((s * 73 + Math.sin(this.animTime * 2 + s) * 28) % 410);
+        ctx.fillStyle = s % 2 === 0 ? '#FB7185' : '#E879F9';
+        ctx.fillRect(sx, sy, 3, 3);
+      }
+      return;
+    }
+
+    // Stage 1: Jungle Garrison
     const skyGrad = ctx.createLinearGradient(0, 38, 0, this.height);
     skyGrad.addColorStop(0, '#040B1A');
     skyGrad.addColorStop(0.55, '#071B2C');
@@ -940,10 +1224,11 @@ export class Contra {
   }
 
   /**
-   * Draws Contra Stage 1 Chiseled Rock Cliffs, Grassy Turf Ledges & Suspension Bridges
+   * Draws Contra Chiseled Rock Cliffs, Biome Turf Ledges & Suspension Bridges
    */
   _drawPlatform(ctx, plat) {
     if (plat.exploded) return;
+    const biome = this.biome || STAGE_BIOMES[0];
 
     if (plat.type === 'BRIDGE') {
       // Classic Contra Suspension Bridge with steel cables, wooden planks & support chains
@@ -994,17 +1279,17 @@ export class Contra {
         ctx.fillRect(bx + 38, plat.y + 12, 4, 4);
         ctx.fillStyle = '#334155';
       }
-      ctx.fillStyle = '#38BDF8';
+      ctx.fillStyle = biome.turfLight || '#38BDF8';
       ctx.fillRect(plat.x, plat.y, plat.w, 6);
       return;
     }
 
-    // Authentic Contra Stage 1 Chiseled Rock Strata + Lush Serrated Green Jungle Turf
+    // Authentic Contra Chiseled Rock Strata + Biome-Themed Turf Overhang
     const depth = plat.depth || (plat.type === 'JUNGLE' ? 150 : 44);
-    ctx.fillStyle = '#451A03';
+    ctx.fillStyle = biome.rockBase;
     ctx.fillRect(plat.x, plat.y + 8, plat.w, depth - 8);
 
-    // Chiseled brown/amber boulder blocks inside the cliff face
+    // Chiseled boulder blocks inside the cliff face
     const brickW = 36;
     const brickH = 20;
     for (let ry = plat.y + 12; ry < plat.y + depth - 6; ry += brickH) {
@@ -1012,30 +1297,30 @@ export class Contra {
       for (let rx = plat.x + rowOffset; rx < plat.x + plat.w - 8; rx += brickW) {
         const bw = Math.min(brickW - 3, plat.x + plat.w - rx - 2);
         if (bw <= 6) continue;
-        ctx.fillStyle = '#78350F';
+        ctx.fillStyle = biome.brickDark;
         ctx.fillRect(rx + 2, ry, bw, brickH - 3);
-        ctx.fillStyle = '#B45309';
+        ctx.fillStyle = biome.brickMid;
         ctx.fillRect(rx + 3, ry + 1, bw - 4, 6);
-        ctx.fillStyle = '#D97706';
+        ctx.fillStyle = biome.brickLight;
         ctx.fillRect(rx + 4, ry + 2, bw - 8, 3);
       }
     }
 
-    // Lush Multi-Shaded Green Jungle Turf Overhang on top of rock
-    ctx.fillStyle = '#14532D';
+    // Multi-Shaded Biome Turf Overhang on top of rock
+    ctx.fillStyle = biome.turfDark;
     ctx.fillRect(plat.x - 2, plat.y, plat.w + 4, 14);
-    ctx.fillStyle = '#16A34A';
+    ctx.fillStyle = biome.turfMid;
     ctx.fillRect(plat.x - 2, plat.y, plat.w + 4, 9);
-    ctx.fillStyle = '#4ADE80';
+    ctx.fillStyle = biome.turfLight;
     ctx.fillRect(plat.x, plat.y, plat.w, 4);
 
-    // Serrated hanging grass blades along top edge
-    ctx.fillStyle = '#22C55E';
+    // Serrated hanging blades/icicles/tendrils along top edge
+    ctx.fillStyle = biome.turfMid;
     for (let gx = plat.x + 2; gx < plat.x + plat.w - 6; gx += 12) {
       ctx.fillRect(gx, plat.y + 9, 6, 6);
-      ctx.fillStyle = '#15803D';
+      ctx.fillStyle = biome.turfDark;
       ctx.fillRect(gx + 6, plat.y + 11, 5, 5);
-      ctx.fillStyle = '#22C55E';
+      ctx.fillStyle = biome.turfMid;
     }
   }
 
@@ -1623,7 +1908,7 @@ export class Contra {
       ctx.fillStyle = '#1E293B';
       ctx.fillRect(320, 52, 320, 12);
       this.renderer.drawGlowRect(320, 52, 320 * ratio, 12, PALETTE.RED, 8, true);
-      this.renderer.drawText('DEFENSE WALL CORE', 480, 78, {
+      this.renderer.drawText(this.biome ? this.biome.bossName : 'DEFENSE WALL CORE', 480, 78, {
         font: FONTS.HEADER,
         size: 10,
         color: PALETTE.GOLD,

@@ -65,6 +65,176 @@ const DIR_VECTORS = {
   right: { x: 1, y: 0 }
 };
 
+export const BONUS_VEGGIES = [
+  { name: 'CARROT', value: 400, color: '#F97316', stem: '#22C55E', shape: 'cone' },
+  { name: 'TURNIP', value: 600, color: '#F8FAFC', stem: '#22C55E', shape: 'round' },
+  { name: 'MUSHROOM', value: 800, color: '#D97706', stem: '#FDE68A', shape: 'cap' },
+  { name: 'CUCUMBER', value: 1000, color: '#16A34A', stem: '#86EFAC', shape: 'rod' },
+  { name: 'EGGPLANT', value: 2000, color: '#9333EA', stem: '#4ADE80', shape: 'oval' },
+  { name: 'GREEN PEPPER', value: 3000, color: '#22C55E', stem: '#15803D', shape: 'bell' },
+  { name: 'TOMATO', value: 4000, color: '#EF4444', stem: '#22C55E', shape: 'round' },
+  { name: 'WATERMELON', value: 5000, color: '#EF4444', stem: '#16A34A', shape: 'slice' },
+  { name: 'PINEAPPLE', value: 8000, color: '#FACC15', stem: '#22C55E', shape: 'oval' }
+];
+
+export const STAGE_LAYOUTS = [
+  // Stage 1: Classic 4-Chamber layout (2 horizontal upper, 1 vertical lower-left, 1 horizontal lower-right) + 4 boulders
+  {
+    name: 'CLASSIC 4-CHAMBER',
+    enemyCount: 4,
+    chambers: [
+      { x1: 140, y1: 165, x2: 270, y2: 165, type: 'pooka' },
+      { x1: 690, y1: 165, x2: 820, y2: 165, type: 'fygar' },
+      { x1: 185, y1: 340, x2: 185, y2: 465, type: 'pooka' },
+      { x1: 660, y1: 395, x2: 810, y2: 395, type: 'fygar' }
+    ],
+    rocks: [
+      { x: 205, y: 115 },
+      { x: 755, y: 115 },
+      { x: 310, y: 255 },
+      { x: 650, y: 265 }
+    ]
+  },
+  // Stage 2: Twin Vertical Deep Shafts + Central Cross Chamber + 4 boulders
+  {
+    name: 'TWIN VERTICAL SHAFTS',
+    enemyCount: 5,
+    extraTunnels: [{ x1: 420, y1: 210, x2: 540, y2: 210 }],
+    chambers: [
+      { x1: 160, y1: 175, x2: 160, y2: 330, type: 'pooka' },
+      { x1: 800, y1: 175, x2: 800, y2: 330, type: 'fygar' },
+      { x1: 280, y1: 425, x2: 410, y2: 425, type: 'pooka' },
+      { x1: 550, y1: 425, x2: 680, y2: 425, type: 'fygar' },
+      { x1: 300, y1: 165, x2: 390, y2: 165, type: 'pooka' }
+    ],
+    rocks: [
+      { x: 160, y: 115 },
+      { x: 800, y: 115 },
+      { x: 345, y: 310 },
+      { x: 615, y: 310 }
+    ]
+  },
+  // Stage 3: Staggered 5-Chamber Terraces + 5 boulders
+  {
+    name: 'STAGGERED TERRACES',
+    enemyCount: 5,
+    chambers: [
+      { x1: 120, y1: 155, x2: 250, y2: 155, type: 'pooka' },
+      { x1: 710, y1: 155, x2: 840, y2: 155, type: 'fygar' },
+      { x1: 240, y1: 275, x2: 370, y2: 275, type: 'fygar' },
+      { x1: 590, y1: 275, x2: 720, y2: 275, type: 'pooka' },
+      { x1: 360, y1: 445, x2: 600, y2: 445, type: 'fygar' }
+    ],
+    rocks: [
+      { x: 185, y: 110 },
+      { x: 775, y: 110 },
+      { x: 305, y: 210 },
+      { x: 655, y: 210 },
+      { x: 480, y: 365 }
+    ]
+  },
+  // Stage 4: The Fygar Fire Den (wide horizontal fire alleys + 4 boulders)
+  {
+    name: 'FYGAR FIRE DEN',
+    enemyCount: 5,
+    chambers: [
+      { x1: 120, y1: 180, x2: 350, y2: 180, type: 'fygar' },
+      { x1: 610, y1: 180, x2: 840, y2: 180, type: 'fygar' },
+      { x1: 120, y1: 355, x2: 360, y2: 355, type: 'fygar' },
+      { x1: 600, y1: 355, x2: 840, y2: 355, type: 'fygar' },
+      { x1: 370, y1: 465, x2: 590, y2: 465, type: 'pooka' }
+    ],
+    rocks: [
+      { x: 235, y: 120 },
+      { x: 725, y: 120 },
+      { x: 240, y: 280 },
+      { x: 720, y: 280 }
+    ]
+  },
+  // Stage 5: Zig-Zag Diagonal Strata Pockets + 5 boulders
+  {
+    name: 'ZIG-ZAG STRATA',
+    enemyCount: 6,
+    chambers: [
+      { x1: 130, y1: 155, x2: 240, y2: 205, type: 'pooka' },
+      { x1: 720, y1: 205, x2: 830, y2: 155, type: 'fygar' },
+      { x1: 230, y1: 310, x2: 350, y2: 365, type: 'fygar' },
+      { x1: 610, y1: 365, x2: 730, y2: 310, type: 'pooka' },
+      { x1: 150, y1: 455, x2: 310, y2: 455, type: 'pooka' },
+      { x1: 650, y1: 455, x2: 810, y2: 455, type: 'fygar' }
+    ],
+    rocks: [
+      { x: 185, y: 108 },
+      { x: 775, y: 108 },
+      { x: 290, y: 235 },
+      { x: 670, y: 235 },
+      { x: 480, y: 380 }
+    ]
+  },
+  // Stage 6: Symmetrical 6-Chamber Honeycomb + 5 boulders
+  {
+    name: 'HONEYCOMB CAVERN',
+    enemyCount: 6,
+    chambers: [
+      { x1: 130, y1: 160, x2: 260, y2: 160, type: 'pooka' },
+      { x1: 700, y1: 160, x2: 830, y2: 160, type: 'pooka' },
+      { x1: 130, y1: 300, x2: 260, y2: 300, type: 'fygar' },
+      { x1: 700, y1: 300, x2: 830, y2: 300, type: 'fygar' },
+      { x1: 180, y1: 440, x2: 340, y2: 440, type: 'pooka' },
+      { x1: 620, y1: 440, x2: 780, y2: 440, type: 'fygar' }
+    ],
+    rocks: [
+      { x: 195, y: 112 },
+      { x: 765, y: 112 },
+      { x: 195, y: 230 },
+      { x: 765, y: 230 },
+      { x: 480, y: 375 }
+    ]
+  },
+  // Stage 7: Boulder Avalanche (6 boulders poised above narrow vertical shafts)
+  {
+    name: 'BOULDER AVALANCHE',
+    enemyCount: 6,
+    chambers: [
+      { x1: 150, y1: 210, x2: 150, y2: 360, type: 'pooka' },
+      { x1: 300, y1: 230, x2: 300, y2: 390, type: 'fygar' },
+      { x1: 660, y1: 230, x2: 660, y2: 390, type: 'fygar' },
+      { x1: 810, y1: 210, x2: 810, y2: 360, type: 'pooka' },
+      { x1: 220, y1: 465, x2: 420, y2: 465, type: 'pooka' },
+      { x1: 540, y1: 465, x2: 740, y2: 465, type: 'fygar' }
+    ],
+    rocks: [
+      { x: 150, y: 125 },
+      { x: 300, y: 145 },
+      { x: 660, y: 145 },
+      { x: 810, y: 125 },
+      { x: 360, y: 365 },
+      { x: 600, y: 365 }
+    ]
+  },
+  // Stage 8: Championship Deep Cavern (7 enemies + 5 boulders)
+  {
+    name: 'DEEP CAVERN FINALE',
+    enemyCount: 7,
+    chambers: [
+      { x1: 120, y1: 155, x2: 260, y2: 155, type: 'fygar' },
+      { x1: 700, y1: 155, x2: 840, y2: 155, type: 'fygar' },
+      { x1: 240, y1: 265, x2: 370, y2: 265, type: 'pooka' },
+      { x1: 590, y1: 265, x2: 720, y2: 265, type: 'pooka' },
+      { x1: 140, y1: 340, x2: 140, y2: 465, type: 'fygar' },
+      { x1: 820, y1: 340, x2: 820, y2: 465, type: 'fygar' },
+      { x1: 330, y1: 455, x2: 630, y2: 455, type: 'pooka' }
+    ],
+    rocks: [
+      { x: 190, y: 110 },
+      { x: 770, y: 110 },
+      { x: 305, y: 195 },
+      { x: 655, y: 195 },
+      { x: 480, y: 370 }
+    ]
+  }
+];
+
 export class DigDug {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -158,6 +328,9 @@ export class DigDug {
     this.stageClearTimer = 0;
     this.deathTimer = 0;
 
+    const layout = STAGE_LAYOUTS[(levelNum - 1) % STAGE_LAYOUTS.length];
+    this.stageName = layout.name;
+
     // 1. Fill underground soil mask (1 = solid dirt)
     this.soil = [];
     for (let r = 0; r < this.gridRows; r++) {
@@ -168,25 +341,24 @@ export class DigDug {
     this.carveLine(480, this.surfaceY, 480, 300, 15, false);
     this.carveLine(445, 300, 515, 300, 15, false);
 
-    // 3. Configure enemy chambers (horizontal or vertical pockets)
-    const chamberDefs = [
-      { x1: 140, y1: 155, x2: 260, y2: 155, type: 'pooka' },
-      { x1: 690, y1: 165, x2: 820, y2: 165, type: 'fygar' },
-      { x1: 170, y1: 350, x2: 170, y2: 455, type: 'pooka' },
-      { x1: 660, y1: 375, x2: 810, y2: 375, type: 'fygar' },
-      { x1: 350, y1: 455, x2: 590, y2: 455, type: 'pooka' }
-    ];
+    if (layout.extraTunnels) {
+      for (const et of layout.extraTunnels) {
+        this.carveLine(et.x1, et.y1, et.x2, et.y2, 15, false);
+      }
+    }
 
-    const enemyCount = Math.min(6, 4 + Math.floor((levelNum - 1) / 2));
+    // 3. Configure enemy chambers (horizontal, vertical, or diagonal pockets)
+    const chamberDefs = layout.chambers;
+    const enemyCount = Math.min(8, Math.max(layout.enemyCount, chamberDefs.length) + Math.floor((levelNum - 1) / 8));
     this.enemies = [];
 
     for (let i = 0; i < enemyCount; i++) {
       const def = chamberDefs[i % chamberDefs.length];
       this.carveLine(def.x1, def.y1, def.x2, def.y2, 16, false);
-      const cx = (def.x1 + def.x2) * 0.5 + (i >= chamberDefs.length ? 24 : 0);
+      const cx = (def.x1 + def.x2) * 0.5 + (i >= chamberDefs.length ? 22 : 0);
       const cy = (def.y1 + def.y2) * 0.5;
       const isVertical = Math.abs(def.y2 - def.y1) > Math.abs(def.x2 - def.x1);
-      const eType = i % 2 === 1 ? 'fygar' : def.type;
+      const eType = i >= chamberDefs.length ? (i % 2 === 1 ? 'fygar' : 'pooka') : def.type;
 
       this.enemies.push({
         id: i,
@@ -213,15 +385,8 @@ export class DigDug {
       });
     }
 
-    // 4. Embed 4 boulders in strategic earth positions above chambers
-    const rockCoords = [
-      { x: 205, y: 115 },
-      { x: 750, y: 120 },
-      { x: 295, y: 255 },
-      { x: 645, y: 265 }
-    ];
-
-    this.rocks = rockCoords.map((rc, idx) => ({
+    // 4. Embed boulders in strategic earth positions above chambers
+    this.rocks = layout.rocks.map((rc, idx) => ({
       id: idx,
       x: rc.x,
       y: rc.y,
@@ -881,11 +1046,13 @@ export class DigDug {
           // Spawn Bonus Veggie after 2 rocks drop in a stage
           if (this.rocksDroppedCount >= 2 && !this.veggieSpawnedThisStage) {
             this.veggieSpawnedThisStage = true;
+            const vegDef =
+              BONUS_VEGGIES[Math.min(BONUS_VEGGIES.length - 1, this.level - 1)];
             this.bonusVeggie = {
               x: 480,
               y: 300,
               timer: 9.0,
-              value: Math.min(4000, 400 + (this.level - 1) * 400)
+              ...vegDef
             };
           }
 
@@ -1233,19 +1400,49 @@ export class DigDug {
 
   renderBonusVeggie(ctx, v) {
     const bob = Math.sin(this.animTime * 6) * 2;
+    const color = v.color || PALETTE.ORANGE;
+    const stem = v.stem || PALETTE.GREEN;
     ctx.save();
-    ctx.shadowColor = PALETTE.ORANGE;
+    ctx.shadowColor = color;
     ctx.shadowBlur = 10;
-    // Carrot/Turnip arcade icon
-    ctx.fillStyle = PALETTE.GREEN;
+
+    // Stem / leaves
+    ctx.fillStyle = stem;
     ctx.fillRect(v.x - 6, v.y - 14 + bob, 12, 5);
-    ctx.fillStyle = PALETTE.ORANGE;
-    ctx.beginPath();
-    ctx.moveTo(v.x - 8, v.y - 9 + bob);
-    ctx.lineTo(v.x + 8, v.y - 9 + bob);
-    ctx.lineTo(v.x, v.y + 11 + bob);
-    ctx.closePath();
-    ctx.fill();
+
+    ctx.fillStyle = color;
+    if (v.shape === 'round' || v.shape === 'bell') {
+      ctx.beginPath();
+      ctx.arc(v.x, v.y + bob, 8.5, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (v.shape === 'cap') {
+      ctx.beginPath();
+      ctx.arc(v.x, v.y - 2 + bob, 9.5, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = stem;
+      ctx.fillRect(v.x - 4, v.y - 2 + bob, 8, 10);
+    } else if (v.shape === 'rod') {
+      ctx.fillRect(v.x - 4, v.y - 9 + bob, 8, 19);
+    } else if (v.shape === 'oval') {
+      ctx.beginPath();
+      ctx.ellipse(v.x, v.y + bob, 7, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (v.shape === 'slice') {
+      ctx.beginPath();
+      ctx.arc(v.x, v.y - 3 + bob, 10, 0, Math.PI);
+      ctx.fill();
+      ctx.strokeStyle = stem;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    } else {
+      // Classic Carrot cone
+      ctx.beginPath();
+      ctx.moveTo(v.x - 8, v.y - 9 + bob);
+      ctx.lineTo(v.x + 8, v.y - 9 + bob);
+      ctx.lineTo(v.x, v.y + 11 + bob);
+      ctx.closePath();
+      ctx.fill();
+    }
     ctx.restore();
   }
 

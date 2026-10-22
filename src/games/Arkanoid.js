@@ -107,47 +107,178 @@ export class Arkanoid {
       PALETTE.PINK,
       PALETTE.PURPLE
     ];
-    const variant = (level - 1) % 6;
-    const rows = Math.min(8, 6 + Math.floor((level - 1) / 2));
+    const variant = (level - 1) % 12;
+    const silverHp = 2 + Math.floor((level - 1) / 12);
 
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < BRICK_COLS; c++) {
-        // 6 distinct classic Arkanoid architectural formations
-        if (variant === 1 && (c === 5 || c === 6) && r > 0 && r < rows - 1) continue; // Twin Towers
-        if (variant === 2 && Math.abs(c - 5.5) > r + 1.5) continue; // Pyramid Fortress
-        if (variant === 3 && (r + c) % 3 === 1 && r > 0 && r < rows - 1) continue; // Lattice Matrix
-        if (variant === 4 && Math.abs(c - 5.5) + Math.abs(r - 3) > 5.5) continue; // Diamond Prism
-        if (variant === 5 && (c === 2 || c === 9) && r < rows - 1) continue; // Citadel Channels
+    const addBrick = (r, c, type = 'NORMAL', customColor = null) => {
+      let hp = 1;
+      let color = customColor || rowColors[(r + variant) % rowColors.length];
+      let pts = (10 - r) * 15 + 50;
 
-        let type = 'NORMAL';
-        let hp = 1;
-        let color = rowColors[(r + variant) % rowColors.length];
-        let pts = (rows - r) * 15 + 50;
+      if (type === 'GOLD') {
+        hp = 3;
+        color = PALETTE.GOLD;
+        pts = 250;
+      } else if (type === 'SILVER') {
+        hp = silverHp;
+        color = '#CBD5E1';
+        pts = 120;
+      }
 
-        if ((r === 0 && c % 3 === 1) || (variant >= 3 && r === 2 && (c === 3 || c === 8))) {
-          type = 'GOLD';
-          hp = 3;
-          color = PALETTE.GOLD;
-          pts = 250;
-        } else if (r === rows - 1 || (r === 2 && c >= 2 && c <= 9)) {
-          type = 'SILVER';
-          hp = 2;
-          color = '#CBD5E1';
-          pts = 120;
+      this.bricks.push({
+        x: GRID_START_X + c * (BRICK_W + BRICK_GAP),
+        y: GRID_START_Y + r * (BRICK_H + BRICK_GAP),
+        w: BRICK_W,
+        h: BRICK_H,
+        type,
+        hp,
+        maxHp: hp,
+        color,
+        pts,
+        flashTimer: 0
+      });
+    };
+
+    if (variant === 0) {
+      // Round 1: Classic Silver + 5 Rainbow Rows
+      const rainbow = ['#CBD5E1', PALETTE.RED, PALETTE.GOLD, PALETTE.BLUE, PALETTE.PINK, PALETTE.GREEN];
+      for (let r = 0; r < 6; r++) {
+        for (let c = 0; c < BRICK_COLS; c++) {
+          addBrick(r, c, r === 0 ? 'SILVER' : 'NORMAL', rainbow[r]);
         }
-
-        this.bricks.push({
-          x: GRID_START_X + c * (BRICK_W + BRICK_GAP),
-          y: GRID_START_Y + r * (BRICK_H + BRICK_GAP),
-          w: BRICK_W,
-          h: BRICK_H,
-          type,
-          hp,
-          maxHp: hp,
-          color,
-          pts,
-          flashTimer: 0
-        });
+      }
+    } else if (variant === 1) {
+      // Round 2: Diagonal Staircase Wedge ending in Silver bottom row
+      for (let r = 0; r < 9; r++) {
+        const maxCol = Math.min(BRICK_COLS - 1, r + 3);
+        for (let c = 0; c <= maxCol; c++) {
+          const type = r === 8 && c < maxCol ? 'SILVER' : c === 0 && r === 0 ? 'GOLD' : 'NORMAL';
+          addBrick(r, c, type, rowColors[c % rowColors.length]);
+        }
+      }
+    } else if (variant === 2) {
+      // Round 3: Horizontal Gold-Brick Channels
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < BRICK_COLS; c++) {
+          if (r % 2 === 1) {
+            if (r === 1 && c >= 3 && c <= 11) addBrick(r, c, 'GOLD');
+            else if (r === 3 && c >= 0 && c <= 8) addBrick(r, c, 'GOLD');
+            else if (r === 5 && c >= 3 && c <= 11) addBrick(r, c, 'GOLD');
+            else if (r === 7 && c >= 2 && c <= 9) addBrick(r, c, 'SILVER');
+          } else {
+            addBrick(r, c, 'NORMAL', rowColors[(r / 2) % rowColors.length]);
+          }
+        }
+      }
+    } else if (variant === 3) {
+      // Round 4: Twin Split Columns with central corridor
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < BRICK_COLS; c++) {
+          if (c === 0 || c === 5 || c === 6 || c === 11) continue;
+          const type = r === 0 || r === 7 ? 'SILVER' : (r === 3 && (c === 2 || c === 9)) ? 'GOLD' : 'NORMAL';
+          addBrick(r, c, type, rowColors[(c + r) % rowColors.length]);
+        }
+      }
+    } else if (variant === 4) {
+      // Round 5: Space Invader Alien Pixel Shape made of colored bricks!
+      const invaderRows = [
+        '..G......G..',
+        '...C....C...',
+        '..GGGGGGGG..',
+        '.GGGRGGRGGG.',
+        'CCCCCCCCCCCC',
+        'C.CCCCCCCC.C',
+        'C.C......C.C',
+        '...SS..SS...'
+      ];
+      for (let r = 0; r < invaderRows.length; r++) {
+        for (let c = 0; c < BRICK_COLS; c++) {
+          const ch = invaderRows[r][c];
+          if (ch === '.') continue;
+          if (ch === 'G') addBrick(r, c, r === 0 ? 'GOLD' : 'NORMAL', PALETTE.GREEN);
+          else if (ch === 'R') addBrick(r, c, 'GOLD', PALETTE.RED);
+          else if (ch === 'S') addBrick(r, c, 'SILVER');
+          else addBrick(r, c, 'NORMAL', PALETTE.CYAN);
+        }
+      }
+    } else if (variant === 5) {
+      // Round 6: Gold-Guarded Diamond Vault
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < BRICK_COLS; c++) {
+          const dist = Math.abs(c - 5.5) + Math.abs(r - 3.5);
+          if (dist > 5.5) continue;
+          let type = 'NORMAL';
+          if (dist >= 4.5) type = 'SILVER';
+          else if (dist <= 1.5) type = 'GOLD';
+          addBrick(r, c, type, rowColors[r % rowColors.length]);
+        }
+      }
+    } else if (variant === 6) {
+      // Round 7: Zig-Zag Chevron Matrix
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < BRICK_COLS; c++) {
+          const wave = Math.abs((c % 6) - 2.5);
+          if (Math.abs(r - wave * 2) > 2.2) continue;
+          const type = r === 0 ? 'GOLD' : r === 7 ? 'SILVER' : 'NORMAL';
+          addBrick(r, c, type, rowColors[(r + c) % rowColors.length]);
+        }
+      }
+    } else if (variant === 7) {
+      // Round 8: Octagonal Cyber Reactor
+      for (let r = 0; r < 8; r++) {
+        for (let c = 1; c < BRICK_COLS - 1; c++) {
+          if ((r === 0 || r === 7) && (c === 1 || c === 10)) continue;
+          const isOuter = r === 0 || r === 7 || c === 1 || c === 10;
+          const isCore = r >= 3 && r <= 4 && c >= 5 && c <= 6;
+          const type = isCore ? 'GOLD' : isOuter ? 'SILVER' : 'NORMAL';
+          addBrick(r, c, type, isCore ? PALETTE.GOLD : PALETTE.PINK);
+        }
+      }
+    } else if (variant === 8) {
+      // Round 9: Dual Pyramid Citadels
+      for (let r = 0; r < 7; r++) {
+        for (let c = 0; c < BRICK_COLS; c++) {
+          const leftDist = Math.abs(c - 2.5);
+          const rightDist = Math.abs(c - 8.5);
+          if (leftDist > r * 0.5 + 0.5 && rightDist > r * 0.5 + 0.5) continue;
+          const type = r === 0 ? 'GOLD' : r === 6 ? 'SILVER' : 'NORMAL';
+          addBrick(r, c, type, rowColors[r % rowColors.length]);
+        }
+      }
+    } else if (variant === 9) {
+      // Round 10: Checkerboard Prism Lattice
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < BRICK_COLS; c++) {
+          if ((r + c) % 2 === 1) continue;
+          const type = r === 0 ? 'GOLD' : r === 7 ? 'SILVER' : 'NORMAL';
+          addBrick(r, c, type, rowColors[(r + c) % rowColors.length]);
+        }
+      }
+    } else if (variant === 10) {
+      // Round 11: Fortress Bastion (Silver wall with Gold battlements & rainbow treasury)
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < BRICK_COLS; c++) {
+          if (r === 1 && c % 2 === 1) continue;
+          let type = 'NORMAL';
+          if (r === 0 && c % 2 === 0) type = 'GOLD';
+          else if (r === 7 && c !== 5 && c !== 6) type = 'SILVER';
+          else if ((c === 0 || c === 11) && r < 7) type = 'SILVER';
+          addBrick(r, c, type, rowColors[r % rowColors.length]);
+        }
+      }
+    } else {
+      // Round 12: DOH's Dimensional Labyrinth
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < BRICK_COLS; c++) {
+          if ((c === 3 || c === 8) && r >= 1 && r <= 6) continue;
+          const type =
+            (r === 0 || r === 7) && (c === 4 || c === 7)
+              ? 'GOLD'
+              : r === 0 || r === 7 || c === 0 || c === 11
+              ? 'SILVER'
+              : 'NORMAL';
+          addBrick(r, c, type, rowColors[(r * 2 + c) % rowColors.length]);
+        }
       }
     }
   }

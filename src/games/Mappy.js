@@ -179,23 +179,177 @@ export class Mappy {
       deflect: 0
     }));
 
-    // Create Doors across the 6 floors (both Standard Doors and 4 Microwave Sonic Doors)
-    this.doors = [];
-    const doorPositions = [
-      { floor: 0, x: 230, facing: -1, microwave: false },
-      { floor: 0, x: 725, facing: 1, microwave: true },
-      { floor: 1, x: 205, facing: 1, microwave: true },
-      { floor: 1, x: 480, facing: -1, microwave: false },
-      { floor: 2, x: 480, facing: 1, microwave: true },
-      { floor: 2, x: 740, facing: -1, microwave: false },
-      { floor: 3, x: 230, facing: -1, microwave: false },
-      { floor: 3, x: 720, facing: 1, microwave: true },
-      { floor: 4, x: 215, facing: 1, microwave: false },
-      { floor: 4, x: 480, facing: -1, microwave: true },
-      { floor: 5, x: 480, facing: 1, microwave: false }
+    const MANSION_CONFIGS = [
+      {
+        name: 'RED ROOF MANOR',
+        roof: '#B91C1C',
+        roofTrim: '#FCA5A5',
+        wall: '#151E32',
+        floorBar: '#F59E0B',
+        doors: [
+          { floor: 0, x: 230, facing: -1, microwave: false },
+          { floor: 0, x: 725, facing: 1, microwave: true },
+          { floor: 1, x: 205, facing: 1, microwave: true },
+          { floor: 1, x: 480, facing: -1, microwave: false },
+          { floor: 2, x: 480, facing: 1, microwave: true },
+          { floor: 2, x: 740, facing: -1, microwave: false },
+          { floor: 3, x: 230, facing: -1, microwave: false },
+          { floor: 3, x: 720, facing: 1, microwave: true },
+          { floor: 4, x: 215, facing: 1, microwave: false },
+          { floor: 4, x: 480, facing: -1, microwave: true },
+          { floor: 5, x: 480, facing: 1, microwave: false }
+        ],
+        loots: [
+          { floor: 0, x: 170 }, { floor: 0, x: 520 },
+          { floor: 1, x: 285 }, { floor: 1, x: 780 },
+          { floor: 2, x: 185 }, { floor: 2, x: 675 },
+          { floor: 3, x: 440 }, { floor: 3, x: 790 },
+          { floor: 4, x: 295 }, { floor: 4, x: 695 }
+        ]
+      },
+      {
+        name: 'SAPPHIRE PENTHOUSE',
+        roof: '#1D4ED8',
+        roofTrim: '#93C5FD',
+        wall: '#0F172A',
+        floorBar: '#38BDF8',
+        doors: [
+          { floor: 0, x: 210, facing: 1, microwave: true },
+          { floor: 0, x: 480, facing: -1, microwave: false },
+          { floor: 1, x: 250, facing: -1, microwave: false },
+          { floor: 1, x: 730, facing: 1, microwave: true },
+          { floor: 2, x: 215, facing: 1, microwave: true },
+          { floor: 2, x: 490, facing: -1, microwave: false },
+          { floor: 3, x: 470, facing: 1, microwave: true },
+          { floor: 3, x: 735, facing: -1, microwave: false },
+          { floor: 4, x: 235, facing: -1, microwave: false },
+          { floor: 4, x: 720, facing: 1, microwave: true },
+          { floor: 5, x: 230, facing: 1, microwave: false }
+        ],
+        loots: [
+          { floor: 0, x: 290 }, { floor: 0, x: 760 },
+          { floor: 1, x: 175 }, { floor: 1, x: 530 },
+          { floor: 2, x: 295 }, { floor: 2, x: 775 },
+          { floor: 3, x: 185 }, { floor: 3, x: 535 },
+          { floor: 4, x: 430 }, { floor: 4, x: 790 }
+        ]
+      },
+      {
+        name: 'EMERALD GALLERY',
+        roof: '#047857',
+        roofTrim: '#6EE7B7',
+        wall: '#091E1A',
+        floorBar: '#10B981',
+        doors: [
+          { floor: 0, x: 480, facing: 1, microwave: true },
+          { floor: 0, x: 730, facing: -1, microwave: false },
+          { floor: 1, x: 220, facing: -1, microwave: false },
+          { floor: 1, x: 475, facing: 1, microwave: true },
+          { floor: 2, x: 235, facing: 1, microwave: false },
+          { floor: 2, x: 715, facing: -1, microwave: true },
+          { floor: 3, x: 210, facing: -1, microwave: true },
+          { floor: 3, x: 480, facing: 1, microwave: false },
+          { floor: 4, x: 485, facing: -1, microwave: false },
+          { floor: 4, x: 735, facing: 1, microwave: true },
+          { floor: 5, x: 720, facing: -1, microwave: false }
+        ],
+        loots: [
+          { floor: 0, x: 195 }, { floor: 0, x: 660 },
+          { floor: 1, x: 300 }, { floor: 1, x: 750 },
+          { floor: 2, x: 435 }, { floor: 2, x: 785 },
+          { floor: 3, x: 285 }, { floor: 3, x: 685 },
+          { floor: 4, x: 180 }, { floor: 4, x: 540 }
+        ]
+      },
+      {
+        name: 'VIOLET CHATEAU',
+        roof: '#7E22CE',
+        roofTrim: '#D8B4FE',
+        wall: '#1B102E',
+        floorBar: '#F472B6',
+        doors: [
+          { floor: 0, x: 225, facing: -1, microwave: true },
+          { floor: 1, x: 480, facing: 1, microwave: false },
+          { floor: 1, x: 725, facing: -1, microwave: true },
+          { floor: 2, x: 215, facing: 1, microwave: false },
+          { floor: 2, x: 480, facing: -1, microwave: true },
+          { floor: 3, x: 240, facing: 1, microwave: true },
+          { floor: 3, x: 715, facing: -1, microwave: false },
+          { floor: 4, x: 210, facing: -1, microwave: true },
+          { floor: 4, x: 735, facing: 1, microwave: false },
+          { floor: 5, x: 235, facing: 1, microwave: false },
+          { floor: 5, x: 725, facing: -1, microwave: false }
+        ],
+        loots: [
+          { floor: 0, x: 295 }, { floor: 0, x: 480 },
+          { floor: 1, x: 180 }, { floor: 1, x: 660 },
+          { floor: 2, x: 295 }, { floor: 2, x: 760 },
+          { floor: 3, x: 480 }, { floor: 3, x: 785 },
+          { floor: 4, x: 285 }, { floor: 4, x: 525 }
+        ]
+      },
+      {
+        name: 'GOLDEN BULLION VAULT',
+        roof: '#B45309',
+        roofTrim: '#FDE047',
+        wall: '#1F160B',
+        floorBar: '#FBBF24',
+        doors: [
+          { floor: 0, x: 240, facing: 1, microwave: false },
+          { floor: 0, x: 715, facing: -1, microwave: true },
+          { floor: 1, x: 215, facing: -1, microwave: true },
+          { floor: 1, x: 735, facing: 1, microwave: false },
+          { floor: 2, x: 475, facing: 1, microwave: true },
+          { floor: 3, x: 220, facing: 1, microwave: false },
+          { floor: 3, x: 485, facing: -1, microwave: true },
+          { floor: 4, x: 230, facing: -1, microwave: false },
+          { floor: 4, x: 480, facing: 1, microwave: true },
+          { floor: 5, x: 480, facing: -1, microwave: false }
+        ],
+        loots: [
+          { floor: 0, x: 170 }, { floor: 0, x: 790 },
+          { floor: 1, x: 430 }, { floor: 1, x: 530 },
+          { floor: 2, x: 190 }, { floor: 2, x: 760 },
+          { floor: 3, x: 295 }, { floor: 3, x: 735 },
+          { floor: 4, x: 665 }, { floor: 4, x: 790 }
+        ]
+      },
+      {
+        name: 'GORO GRAND FORTRESS',
+        roof: '#BE123C',
+        roofTrim: '#FDA4AF',
+        wall: '#1E1122',
+        floorBar: '#FB923C',
+        doors: [
+          { floor: 0, x: 220, facing: 1, microwave: true },
+          { floor: 0, x: 480, facing: -1, microwave: false },
+          { floor: 0, x: 735, facing: -1, microwave: true },
+          { floor: 1, x: 235, facing: -1, microwave: false },
+          { floor: 1, x: 720, facing: 1, microwave: false },
+          { floor: 2, x: 215, facing: 1, microwave: true },
+          { floor: 2, x: 735, facing: -1, microwave: true },
+          { floor: 3, x: 480, facing: 1, microwave: false },
+          { floor: 4, x: 225, facing: -1, microwave: true },
+          { floor: 4, x: 725, facing: 1, microwave: false },
+          { floor: 5, x: 230, facing: 1, microwave: false },
+          { floor: 5, x: 730, facing: -1, microwave: false }
+        ],
+        loots: [
+          { floor: 0, x: 295 }, { floor: 0, x: 665 },
+          { floor: 1, x: 170 }, { floor: 1, x: 480 },
+          { floor: 2, x: 430 }, { floor: 2, x: 530 },
+          { floor: 3, x: 195 }, { floor: 3, x: 765 },
+          { floor: 4, x: 300 }, { floor: 4, x: 665 }
+        ]
+      }
     ];
 
-    doorPositions.forEach((dp, i) => {
+    const cfg = MANSION_CONFIGS[(level - 1) % MANSION_CONFIGS.length];
+    this.mansionTheme = cfg;
+
+    // Create Doors across the 6 floors (both Standard Doors and Microwave Sonic Doors)
+    this.doors = [];
+    cfg.doors.forEach((dp, i) => {
       this.doors.push({
         id: i,
         floor: dp.floor,
@@ -210,18 +364,7 @@ export class Mappy {
     });
 
     // Place 10 Stolen Loot items (2 of each of the 5 LOOT_TYPES)
-    const lootSpots = [
-      { floor: 0, x: 170 },
-      { floor: 0, x: 520 },
-      { floor: 1, x: 285 },
-      { floor: 1, x: 780 },
-      { floor: 2, x: 185 },
-      { floor: 2, x: 675 },
-      { floor: 3, x: 440 },
-      { floor: 3, x: 790 },
-      { floor: 4, x: 295 },
-      { floor: 4, x: 695 }
-    ];
+    const lootSpots = cfg.loots;
 
     this.loots = lootSpots.map((spot, idx) => {
       const t = LOOT_TYPES[Math.floor(idx / 2) % LOOT_TYPES.length];
@@ -873,12 +1016,20 @@ export class Mappy {
 
   drawMansion(ctx) {
     ctx.save();
+    const theme = this.mansionTheme || {
+      name: 'RED ROOF MANOR',
+      roof: '#B91C1C',
+      roofTrim: '#FCA5A5',
+      wall: '#151E32',
+      floorBar: '#F59E0B'
+    };
+
     // Mansion Wallpaper interior
-    ctx.fillStyle = '#151E32';
+    ctx.fillStyle = theme.wall;
     ctx.fillRect(36, 76, 888, 448);
 
-    // Classic Victorian/Namco Red Tiled Roof
-    ctx.fillStyle = '#B91C1C';
+    // Classic Victorian/Namco Tiled Roof
+    ctx.fillStyle = theme.roof;
     ctx.beginPath();
     ctx.moveTo(20, 78);
     ctx.lineTo(110, 42);
@@ -886,9 +1037,16 @@ export class Mappy {
     ctx.lineTo(940, 78);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = '#FCA5A5';
+    ctx.strokeStyle = theme.roofTrim;
     ctx.lineWidth = 2;
     ctx.stroke();
+
+    this.renderer.drawText(theme.name, 480, 64, {
+      font: FONTS.HEADER,
+      size: 9,
+      color: theme.roofTrim,
+      align: 'center'
+    });
 
     // Vertical trampoline shaft columns (dark backing)
     for (const s of this.shafts) {
@@ -900,7 +1058,7 @@ export class Mappy {
     for (let f = 0; f < this.floorYs.length; f++) {
       const y = this.floorYs[f];
       for (const seg of this.floorSegments) {
-        ctx.fillStyle = '#F59E0B';
+        ctx.fillStyle = theme.floorBar;
         ctx.fillRect(seg.x1, y, seg.x2 - seg.x1, 7);
         ctx.fillStyle = '#FEF08A';
         ctx.fillRect(seg.x1, y, seg.x2 - seg.x1, 2);

@@ -86,29 +86,53 @@ export class Pitfall {
   }
 
   _loadScreen(index) {
-    const mod = ((index % 5) + 5) % 5;
+    // 12 Handcrafted OG Activision Pitfall! Jungle Screens before procedural fallback
+    const OG_SCREENS = [
+      { name: 'TAR PIT & SWINGING VINE', pit: 'tarPit', halfW: 125, vine: true, ladder: true, logs: 1, treasure: null },
+      { name: 'CROCODILE POND & VINE', pit: 'crocPond', halfW: 155, vine: true, ladder: false, logs: 0, treasure: 'GOLD BAR' },
+      { name: 'QUICKSAND & TWIN LOGS', pit: 'quicksand', halfW: 130, vine: true, ladder: true, logs: 2, treasure: 'DIAMOND RING' },
+      { name: 'SCORPION CAVERN LADDER', pit: 'tarPit', halfW: 110, vine: false, ladder: true, logs: 1, treasure: 'SILVER BAR' },
+      { name: 'THREE-CROCODILE CROSSING', pit: 'crocPond', halfW: 160, vine: false, ladder: false, logs: 0, treasure: 'RUBY CHALICE' },
+      { name: 'COBRA & CAMPFIRE TREASURY', pit: 'tarPit', halfW: 120, vine: true, ladder: false, logs: 1, treasure: 'MONEY BAG', cobra: true },
+      { name: 'DISAPPEARING TAR PIT', pit: 'quicksand', halfW: 145, vine: true, ladder: true, logs: 2, treasure: null },
+      { name: 'DIAMOND RING VAULT', pit: 'crocPond', halfW: 155, vine: true, ladder: false, logs: 1, treasure: 'DIAMOND RING' },
+      { name: 'TWIN ROLLING LOGS PASS', pit: 'tarPit', halfW: 125, vine: true, ladder: true, logs: 2, treasure: 'GOLD BAR' },
+      { name: 'QUICKSAND VINE CHASM', pit: 'quicksand', halfW: 150, vine: true, ladder: false, logs: 1, treasure: 'RUBY CHALICE', cobra: true },
+      { name: 'CROCODILE KING LAGOON', pit: 'crocPond', halfW: 165, vine: false, ladder: true, logs: 1, treasure: 'SILVER BAR' },
+      { name: 'GOLDEN IDOL SANCTUARY', pit: 'tarPit', halfW: 135, vine: true, ladder: true, logs: 2, treasure: 'DIAMOND RING', cobra: true }
+    ];
 
-    // Determine screen hazard configuration
-    // 0: Expanding Tar Pit + Swinging Vine + Ladder + Scorpion
-    // 1: Crocodile Pond (3 Crocs opening/closing jaws) + Gold Bar
-    // 2: Quicksand Pit + Swinging Vine + Rolling Logs + Diamond Ring
-    // 3: Crocodile Pond + Rolling Log + Treasure
-    // 4: Tar Pit + Double Rolling Logs + Underground Ladder + Treasure
-    const hasCrocPond = mod === 1 || mod === 3;
-    const hasQuicksand = mod === 2;
-    const hasTarPit = mod === 0 || mod === 4;
-    const hasVine = hasTarPit || hasQuicksand || mod === 3;
-    const hasLadder = mod === 0 || mod === 2 || mod === 4;
+    const normalizedIdx = ((index % 255) + 255) % 255;
+    let spec;
+    if (normalizedIdx < OG_SCREENS.length) {
+      spec = OG_SCREENS[normalizedIdx];
+    } else {
+      // Procedural fallback for screens beyond the 12 handcrafted screens
+      const mod = normalizedIdx % 5;
+      spec = {
+        name: `JUNGLE SECTOR ${normalizedIdx + 1}`,
+        pit: mod === 1 || mod === 3 ? 'crocPond' : mod === 2 ? 'quicksand' : 'tarPit',
+        halfW: mod === 1 || mod === 3 ? 155 : 125,
+        vine: mod !== 1,
+        ladder: mod % 2 === 0,
+        logs: mod === 4 ? 2 : mod === 1 ? 0 : 1,
+        treasure: mod === 0 ? null : ['GOLD BAR', 'DIAMOND RING', 'RUBY CHALICE'][normalizedIdx % 3],
+        cobra: mod === 3
+      };
+    }
+
+    this.screenName = spec.name;
+    const hasCrocPond = spec.pit === 'crocPond';
 
     this.pit = {
-      type: hasCrocPond ? 'crocPond' : hasQuicksand ? 'quicksand' : 'tarPit',
+      type: spec.pit,
       cx: 480,
-      baseHalfW: hasCrocPond ? 155 : 125,
-      halfW: hasCrocPond ? 155 : 125,
+      baseHalfW: spec.halfW,
+      halfW: spec.halfW,
       expandPhase: 0
     };
 
-    this.vine = hasVine
+    this.vine = spec.vine
       ? {
           anchorX: 480,
           anchorY: 72,
@@ -136,7 +160,7 @@ export class Pitfall {
       });
     }
 
-    this.ladder = hasLadder
+    this.ladder = spec.ladder
       ? {
           x: 740,
           topY: this.upperGroundY,
@@ -145,26 +169,25 @@ export class Pitfall {
       : null;
 
     this.logs = [];
-    if (mod === 0 || mod === 2 || mod === 3 || mod === 4) {
+    for (let i = 0; i < spec.logs; i++) {
       this.logs.push({
-        x: 860,
+        x: 860 - i * 220,
         y: this.upperGroundY - 12,
         vx: -(150 + this.level * 18),
         radius: 12,
         rot: 0,
         jumped: false
       });
-      if (mod === 4) {
-        this.logs.push({
-          x: 640,
-          y: this.upperGroundY - 12,
-          vx: -(150 + this.level * 18),
-          radius: 12,
-          rot: 0,
-          jumped: false
-        });
-      }
     }
+
+    // Optional rattling Cobra / Campfire hazard guarding the right bank
+    this.cobra = spec.cobra
+      ? {
+          x: 685,
+          y: this.upperGroundY,
+          phase: 0
+        }
+      : null;
 
     this.scorpion = {
       x: 480,
@@ -176,13 +199,15 @@ export class Pitfall {
 
     // Treasure on right bank if not already collected on this screen
     this.treasure = null;
-    if (!this.collectedTreasures.has(index) && (mod === 1 || mod === 2 || mod === 3 || mod === 4)) {
-      const types = [
-        { name: 'GOLD BAR', pts: 2000, color: PALETTE.GOLD },
-        { name: 'DIAMOND RING', pts: 3000, color: PALETTE.CYAN },
-        { name: 'RUBY CHALICE', pts: 2500, color: PALETTE.PINK }
-      ];
-      const t = types[Math.abs(index) % types.length];
+    if (!this.collectedTreasures.has(index) && spec.treasure) {
+      const catalog = {
+        'GOLD BAR': { name: 'GOLD BAR', pts: 2000, color: PALETTE.GOLD },
+        'DIAMOND RING': { name: 'DIAMOND RING', pts: 3000, color: PALETTE.CYAN },
+        'RUBY CHALICE': { name: 'RUBY CHALICE', pts: 2500, color: PALETTE.PINK },
+        'SILVER BAR': { name: 'SILVER BAR', pts: 2000, color: PALETTE.WHITE },
+        'MONEY BAG': { name: 'MONEY BAG', pts: 2500, color: PALETTE.GREEN }
+      };
+      const t = catalog[spec.treasure] || catalog['GOLD BAR'];
       this.treasure = {
         x: 815,
         y: this.upperGroundY - 16,
@@ -553,6 +578,19 @@ export class Pitfall {
       }
     }
 
+    // Update Cobra / Campfire Hazard on right bank
+    if (this.cobra) {
+      this.cobra.phase += dt * 9;
+      if (
+        p.floor === 'upper' &&
+        !p.onVine &&
+        Math.abs(p.x - this.cobra.x) < 18 &&
+        p.y > this.upperGroundY - 18
+      ) {
+        this._loseLife('BITTEN BY COBRA!');
+      }
+    }
+
     // Check Treasure Pickup
     if (this.treasure && p.floor === 'upper') {
       this.treasure.bob += dt * 5;
@@ -757,6 +795,33 @@ export class Pitfall {
       ctx.fillStyle = PALETTE.RED;
       ctx.fillRect(10, -6, 6, 5);
       ctx.restore();
+    }
+
+    // Draw Cobra Hazard if present on screen
+    if (this.cobra) {
+      const cx = this.cobra.x;
+      const cy = this.cobra.y;
+      const sway = Math.sin(this.cobra.phase) * 3;
+      ctx.save();
+      this.renderer.drawGlowRect(cx - 10, cy - 8, 20, 8, PALETTE.GOLD, 6);
+      ctx.strokeStyle = PALETTE.RED;
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 8);
+      ctx.lineTo(cx + sway, cy - 22);
+      ctx.lineTo(cx - 5 + sway, cy - 26);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    if (this.screenName) {
+      this.renderer.drawText(this.screenName, 480, 62, {
+        font: FONTS.HEADER,
+        size: 11,
+        color: PALETTE.GOLD,
+        align: 'center',
+        glow: 6
+      });
     }
 
     // Draw Treasure

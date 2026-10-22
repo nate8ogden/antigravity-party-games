@@ -110,27 +110,107 @@ export class ElevatorAction {
   }
 
   _setupBuilding(level) {
-    // Define elevator shafts across the building width
-    const layoutIdx = (level - 1) % 3;
-    if (layoutIdx === 0) {
-      this.shafts = [
-        { x: 350, w: 68, minFloor: 0, maxFloor: 5, carY: this._floorY(0), vy: 90, dir: 1 },
-        { x: 580, w: 68, minFloor: 2, maxFloor: 8, carY: this._floorY(3), vy: 95, dir: 1 },
-        { x: 465, w: 68, minFloor: 5, maxFloor: 9, carY: this._floorY(6), vy: 100, dir: -1 }
-      ];
-    } else if (layoutIdx === 1) {
-      this.shafts = [
-        { x: 310, w: 68, minFloor: 0, maxFloor: 6, carY: this._floorY(1), vy: 100, dir: 1 },
-        { x: 480, w: 68, minFloor: 1, maxFloor: 8, carY: this._floorY(4), vy: 105, dir: -1 },
-        { x: 650, w: 68, minFloor: 4, maxFloor: 9, carY: this._floorY(7), vy: 110, dir: 1 }
-      ];
-    } else {
-      this.shafts = [
-        { x: 360, w: 68, minFloor: 0, maxFloor: 4, carY: this._floorY(0), vy: 105, dir: 1 },
-        { x: 510, w: 68, minFloor: 2, maxFloor: 7, carY: this._floorY(3), vy: 110, dir: 1 },
-        { x: 640, w: 68, minFloor: 5, maxFloor: 9, carY: this._floorY(8), vy: 115, dir: -1 }
-      ];
-    }
+    // 6 distinct OG Taito Spy Building Architectures (growing from 10 to 15 stories)
+    const BUILDING_CONFIGS = [
+      {
+        name: 'BUILDING 1: TAITO HQ TOWER (10F)',
+        numFloors: 10,
+        wall: '#1E293B',
+        corridor: '#263449',
+        slab: '#64748B',
+        redMod: 3,
+        shafts: [
+          { x: 350, w: 68, minFloor: 0, maxFloor: 5, startFloor: 0, vy: 90, dir: 1 },
+          { x: 580, w: 68, minFloor: 2, maxFloor: 8, startFloor: 3, vy: 95, dir: 1 },
+          { x: 465, w: 68, minFloor: 5, maxFloor: 9, startFloor: 6, vy: 100, dir: -1 }
+        ]
+      },
+      {
+        name: 'BUILDING 2: EMBASSY ANNEX (11F)',
+        numFloors: 11,
+        wall: '#172554',
+        corridor: '#1E3A8A',
+        slab: '#60A5FA',
+        redMod: 2,
+        shafts: [
+          { x: 310, w: 68, minFloor: 0, maxFloor: 6, startFloor: 1, vy: 100, dir: 1 },
+          { x: 480, w: 68, minFloor: 1, maxFloor: 8, startFloor: 4, vy: 105, dir: -1 },
+          { x: 650, w: 68, minFloor: 4, maxFloor: 10, startFloor: 7, vy: 110, dir: 1 }
+        ]
+      },
+      {
+        name: 'BUILDING 3: CRIMSON SYNDICATE (12F)',
+        numFloors: 12,
+        wall: '#31102F',
+        corridor: '#4A1D46',
+        slab: '#F472B6',
+        redMod: 3,
+        shafts: [
+          { x: 360, w: 68, minFloor: 0, maxFloor: 5, startFloor: 0, vy: 105, dir: 1 },
+          { x: 510, w: 68, minFloor: 2, maxFloor: 8, startFloor: 3, vy: 110, dir: 1 },
+          { x: 640, w: 68, minFloor: 5, maxFloor: 11, startFloor: 8, vy: 115, dir: -1 },
+          { x: 340, w: 68, minFloor: 6, maxFloor: 11, startFloor: 9, vy: 108, dir: 1 }
+        ]
+      },
+      {
+        name: 'BUILDING 4: EMERALD MINISTRIES (13F)',
+        numFloors: 13,
+        wall: '#064E3B',
+        corridor: '#065F46',
+        slab: '#34D399',
+        redMod: 2,
+        shafts: [
+          { x: 325, w: 68, minFloor: 0, maxFloor: 6, startFloor: 1, vy: 110, dir: 1 },
+          { x: 595, w: 68, minFloor: 1, maxFloor: 7, startFloor: 3, vy: 112, dir: -1 },
+          { x: 460, w: 68, minFloor: 4, maxFloor: 10, startFloor: 6, vy: 116, dir: 1 },
+          { x: 630, w: 68, minFloor: 7, maxFloor: 12, startFloor: 10, vy: 118, dir: -1 }
+        ]
+      },
+      {
+        name: 'BUILDING 5: AMBER INTELLIGENCE HUB (14F)',
+        numFloors: 14,
+        wall: '#271710',
+        corridor: '#451A03',
+        slab: '#F59E0B',
+        redMod: 3,
+        shafts: [
+          { x: 350, w: 68, minFloor: 0, maxFloor: 5, startFloor: 0, vy: 114, dir: 1 },
+          { x: 520, w: 68, minFloor: 2, maxFloor: 8, startFloor: 4, vy: 118, dir: -1 },
+          { x: 380, w: 68, minFloor: 5, maxFloor: 11, startFloor: 7, vy: 120, dir: 1 },
+          { x: 620, w: 68, minFloor: 8, maxFloor: 13, startFloor: 11, vy: 122, dir: -1 }
+        ]
+      },
+      {
+        name: 'BUILDING 6: OMEGA CITADEL SKYSCRAPER (15F)',
+        numFloors: 15,
+        wall: '#1E1B4B',
+        corridor: '#312E81',
+        slab: '#818CF8',
+        redMod: 2,
+        shafts: [
+          { x: 330, w: 68, minFloor: 0, maxFloor: 6, startFloor: 0, vy: 118, dir: 1 },
+          { x: 500, w: 68, minFloor: 2, maxFloor: 8, startFloor: 4, vy: 122, dir: 1 },
+          { x: 645, w: 68, minFloor: 5, maxFloor: 11, startFloor: 7, vy: 124, dir: -1 },
+          { x: 420, w: 68, minFloor: 8, maxFloor: 14, startFloor: 10, vy: 126, dir: 1 },
+          { x: 585, w: 68, minFloor: 10, maxFloor: 14, startFloor: 13, vy: 128, dir: -1 }
+        ]
+      }
+    ];
+
+    const cfg = BUILDING_CONFIGS[(level - 1) % BUILDING_CONFIGS.length];
+    this.buildingTheme = cfg;
+    this.numFloors = cfg.numFloors;
+    this.worldHeight = this.numFloors * this.floorHeight + 80;
+
+    this.shafts = cfg.shafts.map((s) => ({
+      x: s.x,
+      w: s.w,
+      minFloor: s.minFloor,
+      maxFloor: s.maxFloor,
+      carY: this._floorY(s.startFloor),
+      vy: s.vy,
+      dir: s.dir
+    }));
 
     // Build doors & ceiling lamps per floor
     this.doors = [];
@@ -165,8 +245,8 @@ export class ElevatorAction {
         // Ensure door doesn't overlap a shaft
         if (this.shafts.some((s) => Math.abs(dx - s.x) < 55)) continue;
         const isRed =
-          (f >= 1 && f <= 8 && ((f + Math.round(dx)) % 3 === 0)) ||
-          (f === 8 && redDoorsCount < 4);
+          (f >= 1 && f <= this.numFloors - 2 && ((f + Math.round(dx) + level) % cfg.redMod === 0) && redDoorsCount < 6 + Math.floor(level / 2)) ||
+          (f === this.numFloors - 2 && redDoorsCount < 4);
         if (isRed) redDoorsCount += 1;
 
         this.doors.push({
@@ -206,7 +286,7 @@ export class ElevatorAction {
       this._spawnEnemyOnFloor(f);
     }
 
-    this.bannerText = `BUILDING ${level} — COLLECT RED FILES & REACH BASEMENT!`;
+    this.bannerText = `${cfg.name} — COLLECT RED FILES & REACH BASEMENT!`;
     this.bannerTimer = 2.4;
   }
 
@@ -787,9 +867,10 @@ export class ElevatorAction {
     ctx.translate(0, 40 - this.cameraY);
 
     // 1. Building Exterior Walls & Floors Cross-Section
+    const theme = this.buildingTheme || { wall: '#1E293B', corridor: '#263449', slab: '#64748B' };
     const topWallY = 110;
     const botWallY = this._floorY(this.numFloors - 1);
-    ctx.fillStyle = '#1E293B';
+    ctx.fillStyle = theme.wall;
     ctx.fillRect(this.buildingLeft, topWallY, this.buildingRight - this.buildingLeft, botWallY - topWallY);
 
     for (let f = 0; f < this.numFloors; f++) {
@@ -798,7 +879,7 @@ export class ElevatorAction {
       const isDark = this.floorDarkTimer[f] > 0;
 
       // Corridor wallpaper
-      ctx.fillStyle = isDark ? '#090D16' : f === this.numFloors - 1 ? '#111827' : '#263449';
+      ctx.fillStyle = isDark ? '#090D16' : f === this.numFloors - 1 ? '#111827' : theme.corridor;
       ctx.fillRect(this.buildingLeft + 10, topY + 6, this.buildingRight - this.buildingLeft - 20, this.floorHeight - 6);
 
       // Floor Number Sign
@@ -810,7 +891,7 @@ export class ElevatorAction {
       });
 
       // Concrete Floor Slab (with gaps for elevator shafts)
-      ctx.fillStyle = '#64748B';
+      ctx.fillStyle = theme.slab;
       let segStart = this.buildingLeft;
       const sortedShafts = [...this.shafts].sort((a, b) => a.x - b.x);
       for (const s of sortedShafts) {

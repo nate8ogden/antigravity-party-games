@@ -60,36 +60,57 @@ export class RallyX {
     this.flagsCollected = 0;
     this.smokes = [];
 
-    // Build scrolling desert maze grid (1 = Sandstone Hedge Wall, 0 = Road)
+    const biomes = [
+      { name: 'DESERT SANDSTONE', roadCol: '#292524', wallOuter: '#B45309', wallInner: PALETTE.GREEN },
+      { name: 'EMERALD PARK', roadCol: '#1C2826', wallOuter: '#15803D', wallInner: '#86EFAC' },
+      { name: 'NIGHT NEON CITY', roadCol: '#0F172A', wallOuter: '#1D4ED8', wallInner: PALETTE.CYAN },
+      { name: 'CRIMSON CANYON', roadCol: '#2A1215', wallOuter: '#991B1B', wallInner: PALETTE.ORANGE },
+      { name: 'ARCTIC TUNNELS', roadCol: '#1E293B', wallOuter: '#0284C7', wallInner: PALETTE.WHITE },
+      { name: 'COASTAL DOCKS', roadCol: '#172554', wallOuter: '#CA8A04', wallInner: PALETTE.GOLD },
+      { name: 'GOLDEN DUNES', roadCol: '#271E14', wallOuter: '#D97706', wallInner: '#FDE047' },
+      { name: 'CHAMPIONSHIP CIRCUIT', roadCol: '#18181B', wallOuter: '#7E22CE', wallInner: PALETTE.PINK }
+    ];
+    const stageIdx = (this.level - 1) % 8;
+    this.currentBiome = biomes[stageIdx];
+
+    // Build scrolling maze grid (1 = Hedge/Block Wall, 0 = Road) with 8 distinct OG Namco layouts
     this.maze = [];
     for (let r = 0; r < MAP_ROWS; r++) {
       const row = new Array(MAP_COLS).fill(0);
       for (let c = 0; c < MAP_COLS; c++) {
+        const inSpawnHub = r >= 12 && r <= 16 && c >= 15 && c <= 21;
         if (r === 0 || r === MAP_ROWS - 1 || c === 0 || c === MAP_COLS - 1) {
           row[c] = 1;
-        } else if (
-          r % 4 === 2 &&
-          c % 5 !== 0 &&
-          !(r >= 12 && r <= 16 && c >= 15 && c <= 21)
-        ) {
-          row[c] = 1;
-        } else if (
-          c % 6 === 3 &&
-          r % 4 !== 0 &&
-          !(r >= 12 && r <= 16 && c >= 15 && c <= 21)
-        ) {
-          row[c] = 1;
+        } else if (!inSpawnHub) {
+          if (stageIdx === 0) {
+            if ((r % 4 === 2 && c % 5 !== 0) || (c % 6 === 3 && r % 4 !== 0)) row[c] = 1;
+          } else if (stageIdx === 1) {
+            if ((r % 5 === 2 && c % 4 !== 0) || (c % 5 === 2 && r % 3 === 1)) row[c] = 1;
+          } else if (stageIdx === 2) {
+            if ((r % 3 === 1 && c % 6 !== 0 && c % 6 !== 1) || (c % 7 === 3 && r % 5 !== 0)) row[c] = 1;
+          } else if (stageIdx === 3) {
+            if ((r % 4 === 1 && (c + r) % 5 !== 0) || (c % 5 === 3 && r % 4 !== 2)) row[c] = 1;
+          } else if (stageIdx === 4) {
+            if ((r % 4 === 2 && c % 6 !== 2) || (c % 4 === 2 && r % 5 === 1)) row[c] = 1;
+          } else if (stageIdx === 5) {
+            if ((r % 5 === 3 && c % 4 !== 1) || (c % 6 === 2 && r % 3 !== 0)) row[c] = 1;
+          } else if (stageIdx === 6) {
+            if ((r % 3 === 2 && c % 5 !== 0 && c % 5 !== 4) || (c % 5 === 2 && r % 4 === 1)) row[c] = 1;
+          } else {
+            if ((r % 4 === 2 && c % 4 !== 0) || (c % 5 === 3 && r % 4 !== 0)) row[c] = 1;
+          }
         }
       }
       this.maze.push(row);
     }
 
-    // Place 10 Flags (8 Normal, 1 Special 'S' 2x Flag, 1 Lucky 'L' Flag)
+    // Place 10 Flags (8 Normal, 1 Special 'S' 2x Flag, 1 Lucky 'L' Flag) rotated/shifted per layout
     this.flags = [];
-    const flagSpots = [
-      { r: 3, c: 4, type: 'NORMAL' },
+    const colShift = (stageIdx * 3) % 7;
+    const baseFlagSpots = [
+      { r: 3, c: 4 + colShift, type: 'NORMAL' },
       { r: 3, c: 16, type: 'NORMAL' },
-      { r: 3, c: 31, type: 'SPECIAL' },
+      { r: 3, c: 31 - colShift, type: 'SPECIAL' },
       { r: 9, c: 7, type: 'NORMAL' },
       { r: 9, c: 28, type: 'NORMAL' },
       { r: 15, c: 4, type: 'LUCKY' },
@@ -98,8 +119,15 @@ export class RallyX {
       { r: 21, c: 25, type: 'NORMAL' },
       { r: 25, c: 18, type: 'NORMAL' }
     ];
-    for (const fs of flagSpots) {
-      this.maze[fs.r][fs.c] = 0;
+    for (const fs of baseFlagSpots) {
+      // Clear a 3x3 pocket around each flag so it is always reachable
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          const nr = Math.max(1, Math.min(MAP_ROWS - 2, fs.r + dr));
+          const nc = Math.max(1, Math.min(MAP_COLS - 2, fs.c + dc));
+          this.maze[nr][nc] = 0;
+        }
+      }
       this.flags.push({
         x: (fs.c + 0.5) * TILE,
         y: (fs.r + 0.5) * TILE,
@@ -108,12 +136,25 @@ export class RallyX {
       });
     }
 
-    // Place hazardous Rocks on road
-    this.rocks = [
-      { x: 11.5 * TILE, y: 7.5 * TILE },
-      { x: 24.5 * TILE, y: 11.5 * TILE },
-      { x: 14.5 * TILE, y: 23.5 * TILE }
+    // Place hazardous Rocks on road (increases across the 8 layouts)
+    const rockCoords = [
+      { c: 11, r: 7 },
+      { c: 24, r: 11 },
+      { c: 14, r: 23 },
+      { c: 8, r: 18 },
+      { c: 27, r: 6 },
+      { c: 22, r: 22 }
     ];
+    const numRocks = Math.min(rockCoords.length, 3 + Math.floor(stageIdx / 2));
+    this.rocks = [];
+    for (let i = 0; i < numRocks; i++) {
+      const rc = rockCoords[(i + stageIdx) % rockCoords.length];
+      this.maze[rc.r][rc.c] = 0;
+      this.rocks.push({
+        x: (rc.c + 0.5) * TILE,
+        y: (rc.r + 0.5) * TILE
+      });
+    }
 
     this._resetCars();
   }
@@ -394,8 +435,9 @@ export class RallyX {
     ctx.clip();
     ctx.translate(-camX, 38 - camY);
 
-    // Desert Asphalt Road Background
-    ctx.fillStyle = '#292524';
+    // Biome Road Background
+    const biome = this.currentBiome || { name: 'DESERT SANDSTONE', roadCol: '#292524', wallOuter: '#B45309', wallInner: PALETTE.GREEN };
+    ctx.fillStyle = biome.roadCol;
     ctx.fillRect(camX, camY, VIEW_W, this.height - 38);
 
     // Maze Hedge Walls
@@ -407,9 +449,9 @@ export class RallyX {
     for (let r = startR; r <= endR; r++) {
       for (let c = startC; c <= endC; c++) {
         if (this.maze[r][c] === 1) {
-          ctx.fillStyle = '#B45309';
+          ctx.fillStyle = biome.wallOuter;
           ctx.fillRect(c * TILE + 2, r * TILE + 2, TILE - 4, TILE - 4);
-          ctx.fillStyle = PALETTE.GREEN;
+          ctx.fillStyle = biome.wallInner;
           ctx.fillRect(c * TILE + 8, r * TILE + 8, TILE - 16, TILE - 16);
         }
       }

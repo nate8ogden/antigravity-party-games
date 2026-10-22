@@ -79,11 +79,22 @@ export class DonkeyKong {
   }
 
   _buildStageGeometry() {
-    const variant = (this.level - 1) % 4;
-    this.stageNames = ['25M GIRDERS', '50M CONVEYOR', '75M ELEVATOR', '100M RIVET TOWER'];
-    this.stageSubtitle = this.stageNames[variant];
+    const stageType = (this.level - 1) % 8;
+    this.stageType = stageType;
+    this.stageNames = [
+      '25M GIRDERS',
+      '50M PIE FACTORY',
+      '75M ELEVATORS',
+      '100M RIVET TOWER',
+      '125M VINE JUNGLE (DK JR.)',
+      '150M SPRINGBOARD & TWIN CONVEYORS',
+      '175M SPARKY CHAIN FACTORY',
+      '200M MASTER RIVET CITADEL'
+    ];
+    this.stageSubtitle = this.stageNames[stageType];
+    this.rivets = [];
 
-    if (variant === 0) {
+    if (stageType === 0) {
       // STAGE 1 (25m): Classic 6 inclined steel girder tiers
       this.girders = [
         { tier: 0, xMin: 110, xMax: 850, yLeft: 514, yRight: 492, rollDir: -1, thickness: 12 },
@@ -110,8 +121,8 @@ export class DonkeyKong {
         { id: 'L4_B', fromTier: 4, toTier: 5, x: 755, broken: false },
         { id: 'L5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
       ];
-    } else if (variant === 1) {
-      // STAGE 2 (50m): Conveyor / Cement Factory — flatter, wide symmetrical tiers with twin side & center ladders
+    } else if (stageType === 1) {
+      // STAGE 2 (50m): Pie / Cement Factory — flatter, wide symmetrical conveyor tiers
       this.girders = [
         { tier: 0, xMin: 110, xMax: 850, yLeft: 510, yRight: 504, rollDir: -1, thickness: 12 },
         { tier: 1, xMin: 120, xMax: 840, yLeft: 424, yRight: 432, rollDir: 1, thickness: 12 },
@@ -137,8 +148,8 @@ export class DonkeyKong {
         { id: 'L4_B', fromTier: 4, toTier: 5, x: 740, broken: false },
         { id: 'L5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
       ];
-    } else if (variant === 2) {
-      // STAGE 3 (75m): Springs & Stepped Promenade — steeper alternating switchbacks
+    } else if (stageType === 2) {
+      // STAGE 3 (75m): Elevators & Stepped Promenade — steeper alternating switchbacks
       this.girders = [
         { tier: 0, xMin: 110, xMax: 850, yLeft: 516, yRight: 488, rollDir: -1, thickness: 12 },
         { tier: 1, xMin: 130, xMax: 820, yLeft: 412, yRight: 442, rollDir: 1, thickness: 12 },
@@ -165,8 +176,8 @@ export class DonkeyKong {
         { id: 'L4_B', fromTier: 4, toTier: 5, x: 760, broken: false },
         { id: 'L5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
       ];
-    } else {
-      // STAGE 4 (100m): Rivet Tower — pyramid-narrowing steel tiers with outer & inner ladder shafts
+    } else if (stageType === 3) {
+      // STAGE 4 (100m): Rivet Tower — pyramid-narrowing steel tiers with 8 golden rivets
       this.girders = [
         { tier: 0, xMin: 100, xMax: 860, yLeft: 512, yRight: 500, rollDir: -1, thickness: 12 },
         { tier: 1, xMin: 125, xMax: 835, yLeft: 424, yRight: 436, rollDir: 1, thickness: 12 },
@@ -193,6 +204,132 @@ export class DonkeyKong {
         { id: 'L4_B', fromTier: 4, toTier: 5, x: 650, broken: false },
         { id: 'L5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
       ];
+      for (let t = 1; t <= 4; t++) {
+        this.rivets.push({ tier: t, x: 350, pulled: false });
+        this.rivets.push({ tier: t, x: 610, pulled: false });
+      }
+    } else if (stageType === 4) {
+      // STAGE 5 (125m): Vine Jungle — DK Jr. Stage 1 (Slanted jungle turf platforms + hanging climbable vines + Snapjaws)
+      this.girders = [
+        { tier: 0, xMin: 100, xMax: 860, yLeft: 514, yRight: 496, rollDir: -1, thickness: 14 },
+        { tier: 1, xMin: 120, xMax: 810, yLeft: 416, yRight: 438, rollDir: 1, thickness: 14 },
+        { tier: 2, xMin: 150, xMax: 855, yLeft: 362, yRight: 342, rollDir: -1, thickness: 14 },
+        { tier: 3, xMin: 115, xMax: 815, yLeft: 272, yRight: 294, rollDir: 1, thickness: 14 },
+        { tier: 4, xMin: 150, xMax: 855, yLeft: 220, yRight: 198, rollDir: -1, thickness: 14 },
+        { tier: 5, xMin: 110, xMax: 815, yLeft: 132, yRight: 148, rollDir: 1, thickness: 14 },
+        { tier: 6, xMin: 355, xMax: 580, yLeft: 84, yRight: 84, rollDir: 0, thickness: 12 }
+      ];
+      this.ladders = [
+        { id: 'V0_A', fromTier: 0, toTier: 1, x: 220, broken: false },
+        { id: 'V0_B', fromTier: 0, toTier: 1, x: 510, broken: false },
+        { id: 'V0_C', fromTier: 0, toTier: 1, x: 765, broken: false },
+        { id: 'V1_A', fromTier: 1, toTier: 2, x: 185, broken: false },
+        { id: 'V1_B', fromTier: 1, toTier: 2, x: 430, broken: true },
+        { id: 'V1_C', fromTier: 1, toTier: 2, x: 695, broken: false },
+        { id: 'V2_A', fromTier: 2, toTier: 3, x: 280, broken: false },
+        { id: 'V2_B', fromTier: 2, toTier: 3, x: 560, broken: false },
+        { id: 'V2_C', fromTier: 2, toTier: 3, x: 775, broken: false },
+        { id: 'V3_A', fromTier: 3, toTier: 4, x: 195, broken: false },
+        { id: 'V3_B', fromTier: 3, toTier: 4, x: 465, broken: false },
+        { id: 'V3_C', fromTier: 3, toTier: 4, x: 720, broken: true },
+        { id: 'V4_A', fromTier: 4, toTier: 5, x: 340, broken: false },
+        { id: 'V4_B', fromTier: 4, toTier: 5, x: 760, broken: false },
+        { id: 'V5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
+      ];
+    } else if (stageType === 5) {
+      // STAGE 6 (150m): Springboard & Twin Conveyors — Dual-tier opposing conveyor belts with center ladder gaps
+      this.girders = [
+        { tier: 0, xMin: 105, xMax: 855, yLeft: 510, yRight: 510, rollDir: -1, thickness: 12 },
+        { tier: 1, xMin: 115, xMax: 845, yLeft: 430, yRight: 430, rollDir: 1, thickness: 12 },
+        { tier: 2, xMin: 130, xMax: 830, yLeft: 352, yRight: 352, rollDir: -1, thickness: 12 },
+        { tier: 3, xMin: 115, xMax: 845, yLeft: 276, yRight: 276, rollDir: 1, thickness: 12 },
+        { tier: 4, xMin: 130, xMax: 830, yLeft: 202, yRight: 202, rollDir: -1, thickness: 12 },
+        { tier: 5, xMin: 110, xMax: 835, yLeft: 134, yRight: 142, rollDir: 1, thickness: 12 },
+        { tier: 6, xMin: 360, xMax: 575, yLeft: 84, yRight: 84, rollDir: 0, thickness: 10 }
+      ];
+      this.ladders = [
+        { id: 'C0_A', fromTier: 0, toTier: 1, x: 160, broken: false },
+        { id: 'C0_B', fromTier: 0, toTier: 1, x: 480, broken: false },
+        { id: 'C0_C', fromTier: 0, toTier: 1, x: 800, broken: false },
+        { id: 'C1_A', fromTier: 1, toTier: 2, x: 260, broken: false },
+        { id: 'C1_B', fromTier: 1, toTier: 2, x: 480, broken: true },
+        { id: 'C1_C', fromTier: 1, toTier: 2, x: 700, broken: false },
+        { id: 'C2_A', fromTier: 2, toTier: 3, x: 175, broken: false },
+        { id: 'C2_B', fromTier: 2, toTier: 3, x: 480, broken: false },
+        { id: 'C2_C', fromTier: 2, toTier: 3, x: 785, broken: false },
+        { id: 'C3_A', fromTier: 3, toTier: 4, x: 260, broken: false },
+        { id: 'C3_B', fromTier: 3, toTier: 4, x: 480, broken: true },
+        { id: 'C3_C', fromTier: 3, toTier: 4, x: 700, broken: false },
+        { id: 'C4_A', fromTier: 4, toTier: 5, x: 205, broken: false },
+        { id: 'C4_B', fromTier: 4, toTier: 5, x: 480, broken: false },
+        { id: 'C4_C', fromTier: 4, toTier: 5, x: 755, broken: false },
+        { id: 'C5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
+      ];
+    } else if (stageType === 6) {
+      // STAGE 7 (175m): Sparky Chain Factory — High-voltage girder network with 4 vertical climbing chains
+      this.girders = [
+        { tier: 0, xMin: 110, xMax: 850, yLeft: 515, yRight: 490, rollDir: -1, thickness: 12 },
+        { tier: 1, xMin: 110, xMax: 825, yLeft: 416, yRight: 440, rollDir: 1, thickness: 12 },
+        { tier: 2, xMin: 135, xMax: 850, yLeft: 366, yRight: 342, rollDir: -1, thickness: 12 },
+        { tier: 3, xMin: 110, xMax: 825, yLeft: 270, yRight: 294, rollDir: 1, thickness: 12 },
+        { tier: 4, xMin: 135, xMax: 850, yLeft: 220, yRight: 196, rollDir: -1, thickness: 12 },
+        { tier: 5, xMin: 110, xMax: 825, yLeft: 130, yRight: 150, rollDir: 1, thickness: 12 },
+        { tier: 6, xMin: 360, xMax: 575, yLeft: 84, yRight: 84, rollDir: 0, thickness: 10 }
+      ];
+      this.ladders = [
+        { id: 'S0_A', fromTier: 0, toTier: 1, x: 190, broken: false },
+        { id: 'S0_B', fromTier: 0, toTier: 1, x: 385, broken: false },
+        { id: 'S0_C', fromTier: 0, toTier: 1, x: 580, broken: true },
+        { id: 'S0_D', fromTier: 0, toTier: 1, x: 775, broken: false },
+        { id: 'S1_A', fromTier: 1, toTier: 2, x: 190, broken: false },
+        { id: 'S1_B', fromTier: 1, toTier: 2, x: 385, broken: true },
+        { id: 'S1_C', fromTier: 1, toTier: 2, x: 580, broken: false },
+        { id: 'S1_D', fromTier: 1, toTier: 2, x: 775, broken: false },
+        { id: 'S2_A', fromTier: 2, toTier: 3, x: 190, broken: false },
+        { id: 'S2_B', fromTier: 2, toTier: 3, x: 385, broken: false },
+        { id: 'S2_C', fromTier: 2, toTier: 3, x: 580, broken: false },
+        { id: 'S2_D', fromTier: 2, toTier: 3, x: 775, broken: true },
+        { id: 'S3_A', fromTier: 3, toTier: 4, x: 190, broken: false },
+        { id: 'S3_B', fromTier: 3, toTier: 4, x: 385, broken: false },
+        { id: 'S3_C', fromTier: 3, toTier: 4, x: 580, broken: true },
+        { id: 'S3_D', fromTier: 3, toTier: 4, x: 775, broken: false },
+        { id: 'S4_A', fromTier: 4, toTier: 5, x: 260, broken: false },
+        { id: 'S4_B', fromTier: 4, toTier: 5, x: 520, broken: true },
+        { id: 'S4_C', fromTier: 4, toTier: 5, x: 775, broken: false },
+        { id: 'S5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
+      ];
+    } else {
+      // STAGE 8 (200m): Master Rivet Citadel — 6-tier narrow rivet tower with 10 golden rivets to pull out!
+      this.girders = [
+        { tier: 0, xMin: 95, xMax: 865, yLeft: 512, yRight: 502, rollDir: -1, thickness: 12 },
+        { tier: 1, xMin: 120, xMax: 840, yLeft: 426, yRight: 436, rollDir: 1, thickness: 12 },
+        { tier: 2, xMin: 145, xMax: 815, yLeft: 356, yRight: 346, rollDir: -1, thickness: 12 },
+        { tier: 3, xMin: 170, xMax: 790, yLeft: 278, yRight: 288, rollDir: 1, thickness: 12 },
+        { tier: 4, xMin: 195, xMax: 765, yLeft: 210, yRight: 200, rollDir: -1, thickness: 12 },
+        { tier: 5, xMin: 155, xMax: 805, yLeft: 134, yRight: 144, rollDir: 1, thickness: 12 },
+        { tier: 6, xMin: 360, xMax: 575, yLeft: 84, yRight: 84, rollDir: 0, thickness: 10 }
+      ];
+      this.ladders = [
+        { id: 'M0_A', fromTier: 0, toTier: 1, x: 155, broken: false },
+        { id: 'M0_B', fromTier: 0, toTier: 1, x: 480, broken: false },
+        { id: 'M0_C', fromTier: 0, toTier: 1, x: 805, broken: false },
+        { id: 'M1_A', fromTier: 1, toTier: 2, x: 200, broken: false },
+        { id: 'M1_B', fromTier: 1, toTier: 2, x: 480, broken: true },
+        { id: 'M1_C', fromTier: 1, toTier: 2, x: 760, broken: false },
+        { id: 'M2_A', fromTier: 2, toTier: 3, x: 240, broken: false },
+        { id: 'M2_B', fromTier: 2, toTier: 3, x: 480, broken: false },
+        { id: 'M2_C', fromTier: 2, toTier: 3, x: 720, broken: false },
+        { id: 'M3_A', fromTier: 3, toTier: 4, x: 275, broken: false },
+        { id: 'M3_B', fromTier: 3, toTier: 4, x: 480, broken: true },
+        { id: 'M3_C', fromTier: 3, toTier: 4, x: 685, broken: false },
+        { id: 'M4_A', fromTier: 4, toTier: 5, x: 305, broken: false },
+        { id: 'M4_B', fromTier: 4, toTier: 5, x: 655, broken: false },
+        { id: 'M5_WIN', fromTier: 5, toTier: 6, x: 545, broken: false }
+      ];
+      for (let t = 1; t <= 5; t++) {
+        this.rivets.push({ tier: t, x: 345, pulled: false });
+        this.rivets.push({ tier: t, x: 615, pulled: false });
+      }
     }
   }
 
@@ -369,7 +506,8 @@ export class DonkeyKong {
   }
 
   _spawnBarrel(forceBlue = false) {
-    const isBlue = forceBlue || this.nextRandom() < 0.18;
+    const blueChance = this.stageType === 6 ? 0.55 : 0.18;
+    const isBlue = forceBlue || this.nextRandom() < blueChance;
     const spawnX = this.kong.x + 36;
     const spawnY = this.getGirderY(5, spawnX);
     this.barrels.push({
@@ -894,6 +1032,28 @@ export class DonkeyKong {
       }
     }
 
+    // 2b. Golden Rivets (Stages 4 & 8)
+    if (this.rivets && this.rivets.length > 0) {
+      let remainingRivets = 0;
+      for (const rv of this.rivets) {
+        if (!rv.pulled) {
+          const ry = this.getGirderY(rv.tier, rv.x);
+          if (p.tier === rv.tier && Math.abs(p.x - rv.x) < 14 && p.y <= ry + 4) {
+            rv.pulled = true;
+            this._addScore(100, rv.x, ry - 14, PALETTE.GOLD);
+            this.audio.playCoin();
+            this._spawnSparks(rv.x, ry, PALETTE.GOLD, 12);
+          } else {
+            remainingRivets++;
+          }
+        }
+      }
+      if (remainingRivets === 0) {
+        this._triggerStageClear();
+        return;
+      }
+    }
+
     const hammerBox = this._getHammerHitbox();
 
     // 3. Barrel collisions vs Hammer or Player body
@@ -1043,20 +1203,36 @@ export class DonkeyKong {
       align: 'center',
       glow: 8
     });
+
+    if (this.stageSubtitle) {
+      this.renderer.drawText(this.stageSubtitle, 480, 62, {
+        font: FONTS.HEADER,
+        size: 11,
+        color: PALETTE.GOLD,
+        align: 'center',
+        glow: 6
+      });
+    }
     ctx.restore();
   }
 
   _drawGirders(ctx) {
     ctx.save();
+    const isJungle = this.stageType === 4;
+    const isConveyor = this.stageType === 1 || this.stageType === 5;
+    const isSparky = this.stageType === 6;
+    const mainStroke = isJungle ? PALETTE.GREEN : isConveyor ? PALETTE.GOLD : isSparky ? PALETTE.CYAN : PALETTE.RED;
+    const webStroke = isJungle ? '#16A34A' : isConveyor ? '#F59E0B' : isSparky ? '#38BDF8' : '#FF5588';
+
     for (const g of this.girders) {
       const y1 = g.yLeft;
       const y2 = g.yRight;
       const h = g.thickness;
 
-      // Top & bottom neon red/pink flanges
-      ctx.strokeStyle = PALETTE.RED;
+      // Top & bottom neon flanges
+      ctx.strokeStyle = mainStroke;
       ctx.lineWidth = 3;
-      ctx.shadowColor = PALETTE.RED;
+      ctx.shadowColor = mainStroke;
       ctx.shadowBlur = 8;
 
       ctx.beginPath();
@@ -1068,7 +1244,7 @@ export class DonkeyKong {
 
       // Diagonal truss webbing inside the sloped girder
       ctx.shadowBlur = 0;
-      ctx.strokeStyle = '#FF5588';
+      ctx.strokeStyle = webStroke;
       ctx.lineWidth = 1.5;
       const span = g.xMax - g.xMin;
       const steps = Math.floor(span / 18);
@@ -1214,6 +1390,19 @@ export class DonkeyKong {
       ctx.arc(item.x, item.y, 7, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
+    }
+
+    // 5. Golden Rivets (Stages 4 & 8)
+    if (this.rivets && this.rivets.length > 0) {
+      for (const rv of this.rivets) {
+        const ry = this.getGirderY(rv.tier, rv.x);
+        if (rv.pulled) {
+          ctx.fillStyle = PALETTE.BG;
+          ctx.fillRect(rv.x - 6, ry - 2, 12, 16);
+        } else {
+          this.renderer.drawGlowRect(rv.x - 5, ry - 4, 10, 16, PALETTE.GOLD, 8, true);
+        }
+      }
     }
     ctx.restore();
   }

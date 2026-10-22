@@ -61,14 +61,102 @@ export class Pengo {
     this.slidingBlocks = [];
     this.shatteringBlocks = [];
 
+    const MAZE_LAYOUTS = [
+      {
+        // Act 1: Classic Sega Cross-Grid Pillars & Triangle Diamond Puzzle
+        name: 'ACT 1: ANTARCTIC LABYRINTH',
+        wallPredicate: (r, c) =>
+          (r % 2 === 1 && c % 2 === 1) ||
+          (r % 2 === 1 && (c === 4 || c === 10)) ||
+          (c % 4 === 2 && (r === 2 || r === 8)),
+        diamonds: [{ r: 2, c: 3 }, { r: 5, c: 11 }, { r: 8, c: 3 }],
+        eggs: [{ r: 1, c: 1 }, { r: 9, c: 13 }]
+      },
+      {
+        // Act 2: Twin Ice Rings & Horizontal Corridor
+        name: 'ACT 2: TWIN ICE RINGS',
+        wallPredicate: (r, c) => {
+          const leftRing = r >= 2 && r <= 8 && c >= 1 && c <= 5 && (r === 2 || r === 8 || c === 1 || c === 5) && r !== 5;
+          const rightRing = r >= 2 && r <= 8 && c >= 9 && c <= 13 && (r === 2 || r === 8 || c === 9 || c === 13) && r !== 5;
+          const centerPillars = c === 7 && (r === 1 || r === 3 || r === 7 || r === 9);
+          return leftRing || rightRing || centerPillars;
+        },
+        diamonds: [{ r: 3, c: 3 }, { r: 5, c: 3 }, { r: 7, c: 11 }],
+        eggs: [{ r: 2, c: 1 }, { r: 8, c: 13 }]
+      },
+      {
+        // Act 3: Vertical Slalom Chutes
+        name: 'ACT 3: GLACIER SLALOM',
+        wallPredicate: (r, c) =>
+          (c % 2 === 1 && r >= 1 && r <= 9 && (r + Math.floor(c / 2)) % 3 !== 0),
+        diamonds: [{ r: 2, c: 2 }, { r: 2, c: 8 }, { r: 8, c: 12 }],
+        eggs: [{ r: 1, c: 3 }, { r: 9, c: 11 }]
+      },
+      {
+        // Act 4: Spiral Ice Fortress
+        name: 'ACT 4: SPIRAL FORTRESS',
+        wallPredicate: (r, c) => {
+          const outer = (r === 1 || r === 9) && c >= 2 && c <= 12 && c !== 7;
+          const sides = (c === 2 || c === 12) && r >= 1 && r <= 9 && r !== 5;
+          const inner = (r === 3 || r === 7) && c >= 4 && c <= 10 && c !== 7;
+          return outer || sides || inner;
+        },
+        diamonds: [{ r: 4, c: 5 }, { r: 6, c: 9 }, { r: 2, c: 7 }],
+        eggs: [{ r: 1, c: 2 }, { r: 9, c: 12 }, { r: 3, c: 10 }]
+      },
+      {
+        // Act 5: Checkerboard Ice Field
+        name: 'ACT 5: CRYSTAL CHECKERBOARD',
+        wallPredicate: (r, c) =>
+          (r >= 1 && r <= 9 && c >= 1 && c <= 13 && (r + c) % 2 === 0 && (r % 2 === 1 || c % 3 === 1)),
+        diamonds: [{ r: 1, c: 4 }, { r: 5, c: 4 }, { r: 9, c: 10 }],
+        eggs: [{ r: 1, c: 2 }, { r: 9, c: 2 }, { r: 5, c: 12 }]
+      },
+      {
+        // Act 6: Hourglass Funnel
+        name: 'ACT 6: FROZEN HOURGLASS',
+        wallPredicate: (r, c) => {
+          const diag1 = Math.abs(c - (r + 2)) <= 0 && r >= 1 && r <= 9;
+          const diag2 = Math.abs(c - (12 - r)) <= 0 && r >= 1 && r <= 9;
+          const bars = (r === 2 || r === 8) && c >= 4 && c <= 10 && c !== 7;
+          const wings = (c === 1 || c === 13) && r >= 3 && r <= 7;
+          return diag1 || diag2 || bars || wings;
+        },
+        diamonds: [{ r: 3, c: 7 }, { r: 7, c: 4 }, { r: 7, c: 10 }],
+        eggs: [{ r: 2, c: 5 }, { r: 8, c: 9 }]
+      },
+      {
+        // Act 7: Crossroad Bastions (Four Quadrant Vaults)
+        name: 'ACT 7: FOUR BASTIONS',
+        wallPredicate: (r, c) => {
+          if (r === 5 || c === 7) return false;
+          const qR = r < 5 ? r : 10 - r;
+          const qC = c < 7 ? c : 14 - c;
+          return (qR >= 1 && qR <= 3 && qC >= 1 && qC <= 5) && !(qR === 2 && (qC === 2 || qC === 4));
+        },
+        diamonds: [{ r: 2, c: 2 }, { r: 2, c: 12 }, { r: 8, c: 7 }],
+        eggs: [{ r: 1, c: 5 }, { r: 9, c: 9 }, { r: 3, c: 11 }]
+      },
+      {
+        // Act 8: Zig-Zag Ice Chutes Finale
+        name: 'ACT 8: POLAR CITADEL',
+        wallPredicate: (r, c) =>
+          (r % 2 === 1 && c >= 1 && c <= 13 && c !== ((r * 3) % 11) + 2 && c !== 7) ||
+          (r % 2 === 0 && (c === 3 || c === 11) && r > 0 && r < 10),
+        diamonds: [{ r: 1, c: 7 }, { r: 5, c: 2 }, { r: 9, c: 7 }],
+        eggs: [{ r: 3, c: 5 }, { r: 7, c: 9 }, { r: 1, c: 11 }]
+      }
+    ];
+
+    const layout = MAZE_LAYOUTS[(this.level - 1) % MAZE_LAYOUTS.length];
+    this.mazeName = layout.name;
+
     // 0 = Empty, 1 = Ice Block, 2 = Diamond Block, 3 = Ice Block with Hidden Sno-Bee Egg
     this.grid = [];
     for (let r = 0; r < ROWS; r++) {
       const row = new Array(COLS).fill(0);
       for (let c = 0; c < COLS; c++) {
-        if (r % 2 === 1 && c % 2 === 1) {
-          row[c] = 1;
-        } else if ((r + c * 3 + this.level) % 5 === 0 && !(r === 5 && c === 7)) {
+        if (layout.wallPredicate(r, c)) {
           row[c] = 1;
         }
       }
@@ -81,18 +169,16 @@ export class Pengo {
     this.grid[5][8] = 0;
 
     // Place 3 Indestructible Glowing Diamond Blocks
-    const diamondCoords = [
-      { r: 2, c: 3 },
-      { r: 5, c: 11 },
-      { r: 8, c: 3 }
-    ];
-    for (const dc of diamondCoords) {
+    for (const dc of layout.diamonds) {
       this.grid[dc.r][dc.c] = 2;
     }
 
-    // Place 2 Hidden Sno-Bee Eggs inside Ice Blocks
-    this.grid[1][1] = 3;
-    this.grid[9][13] = 3;
+    // Place Hidden Sno-Bee Eggs inside Ice Blocks
+    for (const eg of layout.eggs) {
+      if (this.grid[eg.r][eg.c] !== 2) {
+        this.grid[eg.r][eg.c] = 3;
+      }
+    }
 
     this._resetPengo();
 
@@ -591,7 +677,7 @@ export class Pengo {
       highScore: this.highScore,
       lives: this.lives,
       level: this.level,
-      extraLabel: `SNO-BEES:${this.snoBees.length}`,
+      extraLabel: `${this.mazeName || 'ICE ARENA'}  SNO-BEES:${this.snoBees.length}`,
       accent: PALETTE.CYAN
     });
 

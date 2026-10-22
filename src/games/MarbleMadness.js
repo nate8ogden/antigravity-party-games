@@ -68,6 +68,46 @@ const COURSE_CATALOG = [
     stroke: '#FFD700',
     skirtL: '#090D16',
     skirtR: '#1E1B4B'
+  },
+  {
+    name: 'THE CATAPULT CHASM',
+    subtitle: 'TURBO JUMP BRIDGES & TWIN GAPS',
+    timeLimit: 58,
+    flatA: '#701A75',
+    flatB: '#4A044E',
+    stroke: '#F472B6',
+    skirtL: '#2E1065',
+    skirtR: '#3B0764'
+  },
+  {
+    name: 'ICE & ACID GAUNTLET',
+    subtitle: 'SLICK GLACIERS & TOXIC POOLS',
+    timeLimit: 60,
+    flatA: '#14532D',
+    flatB: '#052E16',
+    stroke: '#4ADE80',
+    skirtL: '#022C22',
+    skirtR: '#064E3B'
+  },
+  {
+    name: 'SWISS CHEESE LABYRINTH',
+    subtitle: 'PERFORATED DECK & BUMPER MAZE',
+    timeLimit: 62,
+    flatA: '#78350F',
+    flatB: '#451A03',
+    stroke: '#FACC15',
+    skirtL: '#1C1917',
+    skirtR: '#292524'
+  },
+  {
+    name: 'ULTIMATE MARBLE CITADEL',
+    subtitle: 'FINAL ATARI CHAMPIONSHIP FINALE',
+    timeLimit: 65,
+    flatA: '#7F1D1D',
+    flatB: '#450A0A',
+    stroke: '#38BDF8',
+    skirtL: '#090D16',
+    skirtR: '#1E293B'
   }
 ];
 
@@ -437,7 +477,7 @@ export class MarbleMadness {
       // Goal Platform (x: 16..21, y: 20..25)
       fillRectTiles(16, 20, 21, 25, cz, 'flat');
       fillRectTiles(18, 21, 20, 24, cz, 'goal');
-    } else {
+    } else if (courseIndex === 6) {
       // =========================================================================
       // COURSE 6: ZENITH CITADEL (Grand Master Championship Course)
       // =========================================================================
@@ -515,6 +555,226 @@ export class MarbleMadness {
         speed: 3.1 + loopTier * 0.4
       });
       fillRectTiles(28, 12, 30, 16, cz, 'goal');
+    } else if (courseIndex === 7) {
+      // =========================================================================
+      // COURSE 7: THE CATAPULT CHASM (High-speed turbo launch bridges & twin gaps)
+      // =========================================================================
+      let cz = 17;
+      startZ = cz;
+      fillRectTiles(-1, -1, 2, 2, cz, 'flat');
+
+      // Catapult Launch Runway Eastward (x: 3..11, y: -1..2)
+      for (let x = 3; x <= 11; x++) {
+        cz -= 0.5;
+        for (let y = -1; y <= 2; y++) {
+          const isBoost = (x === 5 || x === 8 || x === 10) && (y === 0 || y === 1);
+          setTile(x, y, cz, isBoost ? 'boost' : 'slopeRight');
+        }
+      }
+
+      // Twin Chasm Bypass Plaza (x: 12..18, y: -2..3)
+      fillRectTiles(12, -2, 18, 3, cz, 'flat');
+      setTile(14, 0, cz - 3, 'chasm');
+      setTile(14, 1, cz - 3, 'chasm');
+      setTile(16, 0, cz - 3, 'chasm');
+      setTile(16, 1, cz - 3, 'chasm');
+      this.bumpers.push({ gx: 15, gy: 0.5, z: cz, r: 0.42, pulse: 0 });
+
+      // Southward Steep Chute (x: 14..17, y: 4..11)
+      for (let y = 4; y <= 11; y++) {
+        cz -= 0.6;
+        fillRectTiles(14, y, 17, y, cz, y === 7 ? 'boost' : 'slopeLeft');
+      }
+
+      // Catapult Landing Basin & Goal (x: 13..22, y: 12..17)
+      fillRectTiles(13, 12, 22, 17, cz, 'flat');
+      this.hazards.push({
+        gx: 17.5,
+        gy: 14.5,
+        z: cz,
+        baseX: 17.5,
+        baseY: 14.5,
+        ampX: 2.2,
+        ampY: 1.5,
+        phase: 0,
+        speed: 2.9 + loopTier * 0.4
+      });
+      fillRectTiles(19, 13, 21, 16, cz, 'goal');
+    } else if (courseIndex === 8) {
+      // =========================================================================
+      // COURSE 8: ICE & ACID GAUNTLET (Slick Glaciers & Toxic Chasm Pools)
+      // =========================================================================
+      let cz = 17;
+      startZ = cz;
+      fillRectTiles(-1, -1, 2, 2, cz, 'flat');
+
+      // Icy Descent (x: 3..9, y: -1..2)
+      for (let x = 3; x <= 9; x++) {
+        cz -= 0.5;
+        fillRectTiles(x, -1, x, 2, cz, x % 2 === 0 ? 'ice' : 'slopeRight');
+      }
+
+      // Acid Pool Basin (x: 10..18, y: -2..6)
+      fillRectTiles(10, -2, 18, 6, cz, 'ice');
+      fillRectTiles(12, 0, 13, 1, cz - 3, 'chasm');
+      fillRectTiles(15, 2, 16, 3, cz - 3, 'chasm');
+      this.bumpers.push({ gx: 11.5, gy: 2.5, z: cz, r: 0.42, pulse: 0 });
+      this.bumpers.push({ gx: 16.5, gy: 0.0, z: cz, r: 0.42, pulse: 0 });
+      this.hazards.push({
+        gx: 14,
+        gy: 2,
+        z: cz,
+        baseX: 14,
+        baseY: 2,
+        ampX: 2.5,
+        ampY: 2.2,
+        phase: 0.4,
+        speed: 3.0 + loopTier * 0.4
+      });
+
+      // Narrow Glacier Sluice Southward (x: 13..15, y: 7..14)
+      for (let y = 7; y <= 14; y++) {
+        cz -= 0.55;
+        fillRectTiles(13, y, 15, y, cz, y % 2 === 0 ? 'ice' : 'slopeDown');
+      }
+
+      // Goal Sanctuary (x: 12..19, y: 15..20)
+      fillRectTiles(12, 15, 19, 20, cz, 'flat');
+      fillRectTiles(15, 16, 18, 19, cz, 'goal');
+    } else if (courseIndex === 9) {
+      // =========================================================================
+      // COURSE 9: SWISS CHEESE LABYRINTH (Perforated Deck & Bumper Maze)
+      // =========================================================================
+      let cz = 18;
+      startZ = cz;
+      fillRectTiles(-1, -1, 2, 2, cz, 'flat');
+
+      // Entry Ramp
+      for (let x = 3; x <= 6; x++) {
+        cz -= 0.5;
+        fillRectTiles(x, -1, x, 2, cz, 'slopeRight');
+      }
+
+      // Giant Swiss Cheese Perforated Deck (x: 7..19, y: -2..10)
+      fillRectTiles(7, -2, 19, 10, cz, 'flat');
+      const holes = [
+        [9, 0], [12, 1], [15, -1], [17, 2],
+        [10, 4], [13, 4], [16, 5],
+        [9, 7], [12, 8], [15, 7], [17, 8]
+      ];
+      for (const [hx, hy] of holes) {
+        setTile(hx, hy, cz - 3, 'chasm');
+      }
+      const bumpers = [
+        [10.5, 2], [14.5, 2], [11.5, 6], [15.5, 6]
+      ];
+      for (const [bx, by] of bumpers) {
+        this.bumpers.push({ gx: bx, gy: by, z: cz, r: 0.42, pulse: 0 });
+      }
+      this.hazards.push({
+        gx: 13,
+        gy: 2.5,
+        z: cz,
+        baseX: 13,
+        baseY: 2.5,
+        ampX: 3.0,
+        ampY: 1.2,
+        phase: 0,
+        speed: 2.8 + loopTier * 0.4
+      });
+      this.hazards.push({
+        gx: 13,
+        gy: 6.5,
+        z: cz,
+        baseX: 13,
+        baseY: 6.5,
+        ampX: 3.0,
+        ampY: 1.2,
+        phase: 1.6,
+        speed: 2.8 + loopTier * 0.4
+      });
+
+      // Exit Boost Bridge & Goal (x: 20..26, y: 3..8)
+      for (let x = 20; x <= 23; x++) {
+        cz -= 0.4;
+        fillRectTiles(x, 4, x, 7, cz, x === 21 ? 'boost' : 'slopeRight');
+      }
+      fillRectTiles(24, 3, 28, 8, cz, 'flat');
+      fillRectTiles(25, 4, 27, 7, cz, 'goal');
+    } else {
+      // =========================================================================
+      // COURSE 10: ULTIMATE MARBLE CITADEL (Final Atari Championship Finale)
+      // =========================================================================
+      let cz = 20;
+      startZ = cz;
+      fillRectTiles(-1, -1, 2, 2, cz, 'flat');
+
+      // 1. Lightning Launch Ramp Eastward (x: 3..9, y: -1..1)
+      for (let x = 3; x <= 9; x++) {
+        cz -= 0.65;
+        for (let y = -1; y <= 1; y++) {
+          setTile(x, y, cz, (x === 5 || x === 8) && y === 0 ? 'boost' : 'slopeRight');
+        }
+      }
+
+      // 2. Twin Steel Guard Ice Ring (x: 10..17, y: -3..4)
+      fillRectTiles(10, -3, 17, 4, cz, 'ice');
+      fillRectTiles(13, 0, 14, 1, cz - 3, 'chasm');
+      this.bumpers.push({ gx: 11.5, gy: -1, z: cz, r: 0.44, pulse: 0 });
+      this.bumpers.push({ gx: 15.5, gy: -1, z: cz, r: 0.44, pulse: 0 });
+      this.bumpers.push({ gx: 11.5, gy: 2, z: cz, r: 0.44, pulse: 0 });
+      this.bumpers.push({ gx: 15.5, gy: 2, z: cz, r: 0.44, pulse: 0 });
+      this.hazards.push({
+        gx: 13.5,
+        gy: -1.5,
+        z: cz,
+        baseX: 13.5,
+        baseY: -1.5,
+        ampX: 2.4,
+        ampY: 0.8,
+        phase: 0,
+        speed: 3.2 + loopTier * 0.4
+      });
+      this.hazards.push({
+        gx: 13.5,
+        gy: 2.5,
+        z: cz,
+        baseX: 13.5,
+        baseY: 2.5,
+        ampX: 2.4,
+        ampY: 0.8,
+        phase: Math.PI,
+        speed: 3.2 + loopTier * 0.4
+      });
+
+      // 3.Corkscrew Descent Southward (x: 12..15, y: 5..12)
+      for (let y = 5; y <= 12; y++) {
+        cz -= 0.65;
+        fillRectTiles(12, y, 15, y, cz, y % 2 === 0 ? 'slopeDown' : 'slopeLeft');
+      }
+
+      // 4. Championship Catwalk Eastward (x: 12..25, y: 13..16)
+      fillRectTiles(12, 13, 15, 16, cz, 'flat');
+      for (let x = 16; x <= 24; x++) {
+        cz -= 0.4;
+        setTile(x, 14, cz, x % 3 === 0 ? 'boost' : 'ice');
+        setTile(x, 15, cz, x % 3 === 0 ? 'boost' : 'ice');
+      }
+
+      // 5. Ultimate Citadel Goal Sanctuary (x: 25..32, y: 12..18)
+      fillRectTiles(25, 12, 32, 18, cz, 'flat');
+      this.hazards.push({
+        gx: 27.5,
+        gy: 15,
+        z: cz,
+        baseX: 27.5,
+        baseY: 15,
+        ampX: 1.0,
+        ampY: 2.4,
+        phase: 0.8,
+        speed: 3.4 + loopTier * 0.4
+      });
+      fillRectTiles(29, 13, 31, 17, cz, 'goal');
     }
 
     // Sort tiles back-to-front by (gx + gy) for painter's algorithm rendering
@@ -1136,7 +1396,7 @@ export class MarbleMadness {
     // State Overlay
     this.renderer.drawStateOverlay(this.state, {
       title: this.title,
-      subtitle: '6-COURSE ISOMETRIC 3D ROLLER',
+      subtitle: '10-COURSE ISOMETRIC 3D ROLLER',
       controls: 'ARROWS/WASD: ROLL  |  Z/SPACE: TURBO SPIN  |  N: SKIP COURSE',
       score: this.score,
       highScore: this.highScore,

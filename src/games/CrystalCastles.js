@@ -18,7 +18,11 @@ const CASTLE_THEMES = [
   { name: 'CITADEL STEPS', top: '#1E293B', left: '#0F766E', right: '#115E59', accent: PALETTE.CYAN },
   { name: 'SPIRAL RAMPARTS', top: '#31102F', left: '#7E22CE', right: '#581C87', accent: PALETTE.PINK },
   { name: 'TWIN TOWERS', top: '#172554', left: '#B45309', right: '#78350F', accent: PALETTE.GOLD },
-  { name: 'ROYAL LABYRINTH', top: '#064E3B', left: '#047857', right: '#065F46', accent: PALETTE.GREEN }
+  { name: 'ROYAL LABYRINTH', top: '#064E3B', left: '#047857', right: '#065F46', accent: PALETTE.GREEN },
+  { name: 'SPIRAL KEEP', top: '#1E1B4B', left: '#4338CA', right: '#312E81', accent: PALETTE.CYAN },
+  { name: 'TWIN BRIDGES', top: '#3F1D38', left: '#BE185D', right: '#831843', accent: PALETTE.PINK },
+  { name: 'DIAMOND ZIGGURAT', top: '#271710', left: '#D97706', right: '#92400E', accent: PALETTE.GOLD },
+  { name: "BERTHILDA'S CITADEL", top: '#2E1065', left: '#9333EA', right: '#581C87', accent: PALETTE.ORANGE }
 ];
 
 export class CrystalCastles {
@@ -65,7 +69,7 @@ export class CrystalCastles {
   }
 
   _buildCastleLayout(level) {
-    const layoutIdx = (level - 1) % 4;
+    const layoutIdx = (level - 1) % 8;
     this.grid = [];
     this.gemsRemaining = 0;
 
@@ -82,7 +86,7 @@ export class CrystalCastles {
           h = distEdge;
           if (r === 5 && c === 5) isElevator = true;
         } else if (layoutIdx === 1) {
-          // Layout 1: Twin elevated bridges with central courtyard
+          // Layout 1: Spiral Ramparts with central courtyard
           if (r <= 2 || r >= 8) h = 2;
           else if (c <= 2 || c >= 8) h = 1;
           else h = 0;
@@ -95,11 +99,44 @@ export class CrystalCastles {
           else if (onBridge) h = 1;
           else walkable = false;
           if ((r === 2 && c === 2) || (r === 8 && c === 8)) isElevator = true;
-        } else {
+        } else if (layoutIdx === 3) {
           // Layout 3: Royal Staircase & Terraces
           h = Math.floor((GRID_SIZE - 1 - Math.abs(r - 5) - Math.abs(c - 5)) * 0.5);
           h = Math.max(0, h);
           if (r === 5 && (c === 1 || c === 9)) isElevator = true;
+        } else if (layoutIdx === 4) {
+          // Layout 4: Spiral Keep (ascending helical ramp around central keep)
+          const ring = Math.max(Math.abs(r - 5), Math.abs(c - 5));
+          h = Math.max(0, 4 - Math.floor(ring * 0.8));
+          if (ring === 3 && r !== 5 && c !== 5 && r !== 2 && r !== 8) walkable = false;
+          if ((r === 5 && c === 5) || (r === 1 && c === 5)) isElevator = true;
+        } else if (layoutIdx === 5) {
+          // Layout 5: Twin Bridges (three parallel castle wings linked by high sky-bridges)
+          const onWing = c <= 3 || c >= 7 || (c >= 4 && c <= 6 && (r <= 2 || r >= 8 || r === 5));
+          if (!onWing) walkable = false;
+          if (c <= 2 || c >= 8) h = 2;
+          else if (r === 5) h = 3;
+          else h = 1;
+          if ((r === 5 && c === 2) || (r === 5 && c === 8)) isElevator = true;
+        } else if (layoutIdx === 6) {
+          // Layout 6: Diamond Ziggurat (stepped diagonal diamond terraces with corner bastions)
+          const manhattan = Math.abs(r - 5) + Math.abs(c - 5);
+          if (manhattan <= 2) h = 4;
+          else if (manhattan <= 4) h = 2;
+          else if (manhattan <= 6) h = 1;
+          else h = 0;
+          if ((r === 3 && c === 5) || (r === 7 && c === 5) || (r === 5 && c === 5)) isElevator = true;
+        } else {
+          // Layout 7: Berthilda's Citadel (fortified citadel with moat gaps and 4 elevators)
+          const isMoat =
+            (r === 3 || r === 7) && (c === 3 || c === 7);
+          if (isMoat) walkable = false;
+          if (r >= 4 && r <= 6 && c >= 4 && c <= 6) h = 3;
+          else if (r <= 1 || r >= 9 || c <= 1 || c >= 9) h = 2;
+          else h = 1;
+          if ((r === 2 && c === 5) || (r === 8 && c === 5) || (r === 5 && c === 2) || (r === 5 && c === 8)) {
+            isElevator = true;
+          }
         }
 
         const hasGem =

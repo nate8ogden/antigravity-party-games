@@ -472,6 +472,22 @@ export class RetroArcadeStudio {
       });
     }
 
+    const btnStagePrev = document.getElementById('btn-stage-prev');
+    if (btnStagePrev) {
+      btnStagePrev.addEventListener('click', () => {
+        this.audio.init();
+        this.changeStage(-1);
+      });
+    }
+
+    const btnStageNext = document.getElementById('btn-stage-next');
+    if (btnStageNext) {
+      btnStageNext.addEventListener('click', () => {
+        this.audio.init();
+        this.changeStage(1);
+      });
+    }
+
     const btnSave = document.getElementById('btn-save-state');
     if (btnSave) {
       btnSave.addEventListener('click', () => {
@@ -759,7 +775,7 @@ export class RetroArcadeStudio {
           ? `${meta.title.toUpperCase()} — ${meta.controls}`
           : this.activeGame.title.toUpperCase();
       } else {
-        statusEl.textContent = 'SELECT ANY ARCADE CABINET (8 CORE + 20 VAULT CLASSICS)';
+        statusEl.textContent = 'SELECT ANY ARCADE CABINET (50 CLASSIC COIN-OP GAMES)';
       }
     }
 
@@ -770,13 +786,89 @@ export class RetroArcadeStudio {
     });
   }
 
+  changeStage(delta = 1) {
+    if (!this.activeGame) {
+      this.renderer.pushToast({
+        icon: '🗺️',
+        title: 'LAUNCH A CABINET FIRST',
+        desc: 'Select any game to cycle through its OG levels with [ or ].',
+        color: '#00F0FF',
+        timer: 2.2
+      });
+      return false;
+    }
+
+    const g = this.activeGame;
+    const nextLvl = Math.max(1, (g.level || g.stage || g.wave || g.round || 1) + delta);
+    g.level = nextLvl;
+    if (typeof g.stage === 'number') g.stage = nextLvl;
+    if (typeof g.wave === 'number') g.wave = nextLvl;
+    if (typeof g.round === 'number') g.round = nextLvl;
+
+    try {
+      if (typeof g.loadLevel === 'function') g.loadLevel(nextLvl);
+      else if (typeof g._loadLevel === 'function') g._loadLevel(nextLvl);
+      else if (typeof g.initStage === 'function') g.initStage(nextLvl);
+      else if (typeof g._initStage === 'function') g._initStage(nextLvl);
+      else if (typeof g._initRound === 'function') g._initRound(true);
+      else if (typeof g.initRound === 'function') g.initRound(nextLvl);
+      else if (typeof g._initKitchen === 'function') g._initKitchen(nextLvl);
+      else if (typeof g._buildCourse === 'function') g._buildCourse(nextLvl);
+      else if (typeof g._buildFortress === 'function') {
+        g._buildFortress(nextLvl);
+        if (typeof g._initPaddle === 'function') g._initPaddle();
+      } else if (typeof g._loadScreen === 'function') {
+        g.screenIndex = nextLvl - 1;
+        g._loadScreen(g.screenIndex);
+      } else if (typeof g._initTrack === 'function') g._initTrack(nextLvl);
+      else if (typeof g._buildTrack === 'function') g._buildTrack(nextLvl);
+      else if (typeof g._initCourse === 'function') g._initCourse(nextLvl);
+      else if (typeof g._initMaze === 'function') g._initMaze(nextLvl);
+      else if (typeof g._buildCastleLayout === 'function') g._buildCastleLayout(nextLvl);
+      else if (typeof g._setupBuilding === 'function') g._setupBuilding(nextLvl);
+      else if (typeof g._setupWave === 'function') g._setupWave(nextLvl);
+      else if (typeof g._loadTubeWave === 'function') g._loadTubeWave(nextLvl);
+      else if (typeof g.initFloor === 'function') g.initFloor(nextLvl);
+      else if (typeof g._initHighway === 'function') g._initHighway(nextLvl);
+      else if (typeof g._initSector === 'function') g._initSector(nextLvl);
+      else if (typeof g._initPyramid === 'function') g._initPyramid(nextLvl);
+      else if (typeof g._buildCity === 'function') g._buildCity(nextLvl);
+      else if (typeof g._initLevel === 'function') g._initLevel(nextLvl);
+      else if (typeof g._initBout === 'function') g._initBout(nextLvl);
+      else if (typeof g._initEvent === 'function') {
+        g.eventIndex = (nextLvl - 1) % 5;
+        g._initEvent(g.eventIndex);
+      } else if (typeof g._spawnWave === 'function') g._spawnWave(nextLvl);
+      else if (typeof g._initWave === 'function') g._initWave(nextLvl);
+    } catch (_) {}
+
+    g.state = 'PLAYING';
+    this._rewindBuffer = [];
+    this.audio.playStageClear();
+    this._syncHeaderStatus();
+    this.renderer.pushToast({
+      icon: '🗺️',
+      title: `${g.title.toUpperCase()} — STAGE ${nextLvl}`,
+      desc: 'Switched to OG Level Layout ([ / ] to cycle levels)',
+      color: '#FFD700',
+      timer: 2.2
+    });
+    return true;
+  }
+
   _handleEmulatorHotkeys() {
-    // [F5] Save State / [F8] Load State
+    // [F5] Save State / [F8] Load State / [ and ] Stage Select
     if (this.input.isKeyJustPressed('F5')) {
       this.saveCurrentState();
     }
     if (this.input.isKeyJustPressed('F8')) {
       this.loadCurrentState();
+    }
+    if (this.input.isKeyJustPressed('BracketLeft')) {
+      this.changeStage(-1);
+    }
+    if (this.input.isKeyJustPressed('BracketRight')) {
+      this.changeStage(1);
     }
 
     //When in GAMEOVER state, allow 3-initial entry with Up/Down/Left/Right

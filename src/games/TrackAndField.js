@@ -33,6 +33,22 @@ const EVENTS = [
     baseQualify: 74.0,
     worldRecord: 98.48,
     lowerIsBetter: false
+  },
+  {
+    id: 'HURDLES',
+    name: '110m HURDLES',
+    unit: 's',
+    baseQualify: 13.8,
+    worldRecord: 12.8,
+    lowerIsBetter: true
+  },
+  {
+    id: 'HIGHJUMP',
+    name: 'HIGH JUMP',
+    unit: 'm',
+    baseQualify: 2.15,
+    worldRecord: 2.45,
+    lowerIsBetter: false
   }
 ];
 
@@ -139,11 +155,15 @@ export class TrackAndField {
 
   _getQualifyMark() {
     const ev = this._getCurrentEvent();
-    const loop = Math.floor((this.level - 1) / 3);
+    const loop = Math.floor((this.level - 1) / EVENTS.length);
     if (ev.id === 'DASH') {
       return Math.max(9.9, ev.baseQualify - loop * 0.35);
+    } else if (ev.id === 'HURDLES') {
+      return Math.max(12.6, ev.baseQualify - loop * 0.25);
     } else if (ev.id === 'LONGJUMP') {
       return Math.min(8.4, ev.baseQualify + loop * 0.35);
+    } else if (ev.id === 'HIGHJUMP') {
+      return Math.min(2.4, ev.baseQualify + loop * 0.06);
     } else {
       return Math.min(90.0, ev.baseQualify + loop * 4.0);
     }
@@ -156,6 +176,7 @@ export class TrackAndField {
     this.athleteX = 0;
     this.athleteY = 0;
     this.athleteVy = 0;
+    this.peakY = 0;
     this.rivalX = 0;
     this.rivalSpeed = 0;
     this.elapsedTime = 0;
@@ -166,6 +187,13 @@ export class TrackAndField {
     this.qualified = false;
     this.isWorldRecord = false;
     this.lastRunKey = null;
+
+    // 6 Hurdles for 110m Hurdles event
+    this.hurdles = [18, 33, 48, 63, 78, 93].map((x) => ({
+      x,
+      knocked: false,
+      cleared: false
+    }));
 
     this.javelin = { active: false, x: 0, y: 0, vx: 0, vy: 0, angle: 0, landed: false };
     this.skyBird = { x: 42, y: 22, vx: 7, hit: false };
@@ -211,6 +239,15 @@ export class TrackAndField {
       const vTotal = Math.max(6.5, this.speed) * optimalBoost;
       this.speed = vTotal * Math.cos(rad);
       this.athleteVy = vTotal * Math.sin(rad);
+      this.audio.playJump();
+    } else if (ev.id === 'HIGHJUMP') {
+      this.phase = 'FLIGHT';
+      const highDiff = Math.abs(this.launchAngle - 52.0);
+      const highBoost = highDiff <= 6.0 ? 1.15 : 1.0;
+      const vTotal = Math.max(7.2, this.speed) * highBoost;
+      this.speed = Math.max(3.8, vTotal * Math.cos(rad) * 0.65);
+      this.athleteVy = Math.max(5.8, vTotal * Math.sin(rad) * 0.85);
+      this.peakY = 0;
       this.audio.playJump();
     } else if (ev.id === 'JAVELIN') {
       this.phase = 'FLIGHT';
@@ -357,8 +394,56 @@ export class TrackAndField {
           this.athleteX = 100;
           this._finishEvent(this.elapsedTime, false);
         }
+      } else if (ev.id === 'HURDLES') {
+        // 110m HURDLES: Sprint with Action A + Jump over 6 hurdles with Action B or Up!
+        const targetRival = 8.8 + Math.sin(this.elapsedTime * 2.5) * 0.4 + (this.level - 1) * 0.18;
+        this.rivalSpeed += (targetRival - this.rivalSpeed) * 2 * dt;
+        this.rivalX += this.rivalSpeed * dt;
+
+        if (
+          (this.input.isJustPressed('actionB') || this.input.isJustPressed('up')) &&
+          this.athleteY <= 0.02
+        ) {
+          this.athleteVy = 6.2;
+          this.audio.playJump();
+        }
+
+        if (this.athleteY > 0 || this.athleteVy > 0) {
+          this.athleteY += this.athleteVy * dt;
+          this.athleteVy -= 18.5 * dt;
+          if (this.athleteY <= 0) {
+            this.athleteY = 0;
+            this.athleteVy = 0;
+          }
+        }
+
+        for (const h of this.hurdles) {
+          if (!h.knocked && !h.cleared && Math.abs(this.athleteX - h.x) < 0.75) {
+            if (this.athleteY >= 0.65) {
+              h.cleared = true;
+              this._addScore(150, 480, 240, PALETTE.CYAN, 'CLEAN HURDLE +150!');
+            } else {
+              h.knocked = true;
+              this.speed *= 0.55;
+              this.audio.playHit();
+              this.renderer.shake(4, 0.12);
+              this.popups.push({
+                x: 480,
+                y: 250,
+                text: 'CLIPPED HURDLE!',
+                color: PALETTE.ORANGE,
+                life: 0.9
+              });
+            }
+          }
+        }
+
+        if (this.athleteX >= 110) {
+          this.athleteX = 110;
+          this._finishEvent(this.elapsedTime, false);
+        }
       } else {
-        // LONG JUMP or JAVELIN THROW (Foul Line at 36m)
+        // LONG JUMP, JAVELIN THROW, or HIGH JUMP (Takeoff Line at 36m)
         const foulLineX = 36.0;
 
         // Pressing Action B begins charging launch elevation angle (0°..65°)
@@ -375,7 +460,7 @@ export class TrackAndField {
           return;
         }
 
-        // Stepping past foul line without releasing triggers a FOUL
+        // Stepping past takeoff line without releasing triggers a FOUL
         if (this.athleteX > foulLineX + 0.8) {
           if (this.chargingAngle) {
             this._triggerJumpOrThrow();
@@ -407,6 +492,21 @@ export class TrackAndField {
             });
           }
           this._finishEvent(jumpDist, false);
+        }
+      } else if (ev.id === 'HIGHJUMP') {
+        const g = 9.81 * 1.15;
+        this.athleteX += this.speed * dt;
+        this.athleteY += this.athleteVy * dt;
+        this.athleteVy -= g * dt;
+        if (this.athleteY > this.peakY) {
+          this.peakY = this.athleteY;
+        }
+
+        if (this.athleteY <= 0) {
+          this.athleteY = 0;
+          const clearedHeight = Math.min(2.65, Math.max(1.5, this.peakY * 1.12));
+          this.audio.playExplosion(0.22, 600);
+          this._finishEvent(clearedHeight, false);
         }
       } else if (ev.id === 'JAVELIN') {
         const jav = this.javelin;
@@ -585,17 +685,31 @@ export class TrackAndField {
       }
     }
 
-    // Event-Specific Field Markings (Finish Line, Foul Line, Sand Pit, Qualifying Flag)
-    if (ev.id === 'DASH') {
-      const finishSx = 220 + (100 - camMeters) * pxPerMeter;
+    // Event-Specific Field Markings (Finish Line, Hurdles, High Jump Crossbar, Foul Line, Sand Pit, Qualifying Flag)
+    if (ev.id === 'DASH' || ev.id === 'HURDLES') {
+      const finishM = ev.id === 'HURDLES' ? 110 : 100;
+      const finishSx = 220 + (finishM - camMeters) * pxPerMeter;
       this.renderer.drawGlowRect(finishSx, 320, 6, 110, PALETTE.WHITE, 10, true);
       // Draw CPU Rival in Top Lane
       const rivalSx = 220 + (this.rivalX - camMeters) * pxPerMeter;
       this._drawAthlete(ctx, rivalSx, 352, this.rivalSpeed, false, PALETTE.ORANGE, false);
+
+      if (ev.id === 'HURDLES') {
+        for (const h of this.hurdles) {
+          const hsx = 220 + (h.x - camMeters) * pxPerMeter;
+          if (hsx < -30 || hsx > this.width + 30) continue;
+          if (h.knocked) {
+            this.renderer.drawGlowRect(hsx, 398, 16, 4, PALETTE.RED, 6, true);
+          } else {
+            this.renderer.drawGlowRect(hsx - 2, 382, 4, 20, PALETTE.WHITE, 6, true);
+            this.renderer.drawGlowRect(hsx - 5, 380, 10, 4, PALETTE.GOLD, 6, true);
+          }
+        }
+      }
     } else {
       const foulSx = 220 + (36 - camMeters) * pxPerMeter;
       this.renderer.drawGlowRect(foulSx, 320, 6, 110, PALETTE.WHITE, 10, true);
-      this.renderer.drawText('FOUL LINE', foulSx, 444, {
+      this.renderer.drawText(ev.id === 'HIGHJUMP' ? 'TAKEOFF BAR' : 'FOUL LINE', foulSx, 444, {
         font: FONTS.HUD,
         size: 11,
         color: PALETTE.GOLD,
@@ -606,17 +720,33 @@ export class TrackAndField {
         const pitStart = 220 + (36.8 - camMeters) * pxPerMeter;
         ctx.fillStyle = '#D97706';
         ctx.fillRect(pitStart, 370, 260, 56);
+      } else if (ev.id === 'HIGHJUMP') {
+        const matStart = 220 + (37.2 - camMeters) * pxPerMeter;
+        ctx.fillStyle = '#1D4ED8';
+        ctx.fillRect(matStart, 368, 120, 52);
+        const barY = 402 - qualify * 18;
+        this.renderer.drawGlowRect(matStart - 4, barY - 12, 4, 58, PALETTE.WHITE, 6, true);
+        this.renderer.drawGlowRect(matStart + 52, barY - 12, 4, 58, PALETTE.WHITE, 6, true);
+        this.renderer.drawGlowRect(matStart - 6, barY, 62, 4, PALETTE.GOLD, 10, true);
+        this.renderer.drawText(`BAR ${qualify.toFixed(2)}m`, matStart + 26, barY - 16, {
+          font: FONTS.HUD,
+          size: 11,
+          color: PALETTE.GOLD,
+          align: 'center'
+        });
       }
 
-      // Qualifying Flag Marker
-      const qualSx = 220 + (36 + qualify / (ev.id === 'LONGJUMP' ? 1.18 : 1.05) - camMeters) * pxPerMeter;
-      this.renderer.drawGlowRect(qualSx, 335, 3, 45, PALETTE.GREEN, 8, true);
-      this.renderer.drawText(`QUAL ${qualify.toFixed(2)}m`, qualSx, 330, {
-        font: FONTS.HUD,
-        size: 11,
-        color: PALETTE.GREEN,
-        align: 'center'
-      });
+      if (ev.id !== 'HIGHJUMP') {
+        // Qualifying Flag Marker
+        const qualSx = 220 + (36 + qualify / (ev.id === 'LONGJUMP' ? 1.18 : 1.05) - camMeters) * pxPerMeter;
+        this.renderer.drawGlowRect(qualSx, 335, 3, 45, PALETTE.GREEN, 8, true);
+        this.renderer.drawText(`QUAL ${qualify.toFixed(2)}m`, qualSx, 330, {
+          font: FONTS.HUD,
+          size: 11,
+          color: PALETTE.GREEN,
+          align: 'center'
+        });
+      }
     }
 
     // Draw Player Athlete
@@ -651,7 +781,7 @@ export class TrackAndField {
     }
 
     // Draw Launch Angle Protractor Gauge when charging or in field events
-    if (ev.id !== 'DASH' && (this.chargingAngle || this.launchAngle > 0)) {
+    if (ev.id !== 'DASH' && ev.id !== 'HURDLES' && (this.chargingAngle || this.launchAngle > 0)) {
       const gx = playerSx + 36;
       const gy = playerSy - 20;
       ctx.save();
@@ -690,7 +820,7 @@ export class TrackAndField {
     ctx.fillRect(0, 450, this.width, 90);
     this.renderer.drawGlowRect(20, 462, 920, 66, PALETTE.CYAN, 6, false, 1.5);
 
-    this.renderer.drawText(`EVENT ${this.eventIndex + 1}/3: ${ev.name}`, 40, 488, {
+    this.renderer.drawText(`EVENT ${this.eventIndex + 1}/${EVENTS.length}: ${ev.name}`, 40, 488, {
       font: FONTS.HEADER,
       size: 13,
       color: PALETTE.GOLD,
@@ -734,7 +864,9 @@ export class TrackAndField {
       bannerText =
         ev.id === 'DASH'
           ? `TIME: ${this.elapsedTime.toFixed(2)}s  (TAP Z/SPACE OR LEFT/RIGHT RAPIDLY!)`
-          : 'MASH Z/SPACE TO SPRINT! HOLD X/SHIFT AT FOUL LINE TO SET ANGLE!';
+          : ev.id === 'HURDLES'
+          ? `TIME: ${this.elapsedTime.toFixed(2)}s  (TAP Z/SPACE TO SPRINT, PRESS X/UP TO LEAP HURDLES!)`
+          : 'MASH Z/SPACE TO SPRINT! HOLD X/SHIFT AT LINE TO SET LAUNCH ANGLE!';
     } else if (this.phase === 'RESULT') {
       bannerText = this.isFoul
         ? 'FOUL! STEPPED OVER THE FOUL LINE!'
@@ -780,8 +912,8 @@ export class TrackAndField {
 
     this.renderer.drawStateOverlay(this.state, {
       title: this.title,
-      subtitle: 'OLYMPIC DECATHLON: 100M DASH • LONG JUMP • JAVELIN',
-      controls: 'RAPID TAP Z/SPACE OR L/R: SPRINT  |  HOLD & RELEASE X/SHIFT: LAUNCH ANGLE',
+      subtitle: '5-EVENT OLYMPIC DECATHLON: DASH • LONG JUMP • JAVELIN • HURDLES • HIGH JUMP',
+      controls: 'RAPID TAP Z/SPACE OR L/R: SPRINT  |  X/SHIFT: LEAP HURDLES / LAUNCH ANGLE',
       score: this.score,
       highScore: this.highScore,
       accent: PALETTE.GOLD

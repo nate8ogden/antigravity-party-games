@@ -11,7 +11,9 @@ import { PALETTE, FONTS, HighScoreStore } from '../engine/Renderer.js';
 const EVENT_NAMES = [
   'STAGE 1: FLAMING LION RINGS',
   'STAGE 2: HIGH WIRE MONKEYS',
-  'STAGE 3: ROLLING BALL ACROBAT'
+  'STAGE 3: ROLLING BALL ACROBAT',
+  'STAGE 4: GALLOPING HORSE HURDLES',
+  'STAGE 5: SWINGING TRAPEZE ACROBAT'
 ];
 
 const CHARLIE_SPRITE = [
@@ -36,6 +38,18 @@ const LION_SPRITE = [
   'O.YYYYYYYYY.',
   '..YY.YY.YY..',
   '..WW.WW.WW..'
+];
+
+const HORSE_SPRITE = [
+  '........WWWW',
+  '.......WWKWW',
+  '......WWWWWW',
+  '.YYYYWWWWWWW',
+  'WWWWWRRRRWWW',
+  'WWWWWWWWWWWW',
+  '.WWWWWWWWWW.',
+  '..WW..WW.WW.',
+  '..YY..YY.YY.'
 ];
 
 export class CircusCharlie {
@@ -110,8 +124,8 @@ export class CircusCharlie {
   }
 
   initStage(level) {
-    this.eventIndex = (level - 1) % 3;
-    this.trackLength = 2500 + Math.floor((level - 1) / 3) * 350;
+    this.eventIndex = (level - 1) % 5;
+    this.trackLength = 2500 + Math.floor((level - 1) / 5) * 350;
     this.cameraX = 0;
     this.bonusTimer = 5000;
     this.stageClearTimer = 0;
@@ -128,11 +142,13 @@ export class CircusCharlie {
       vy: 0,
       grounded: true,
       onBall: null,
+      onTrapeze: null,
+      horseX: 140,
       facing: 1,
       animFrame: 0
     };
 
-    const speedMult = 1 + Math.floor((level - 1) / 3) * 0.16;
+    const speedMult = 1 + Math.floor((level - 1) / 5) * 0.16;
 
     if (this.eventIndex === 0) {
       // EVENT 1: LION & FLAMING RINGS + FIRE POTS
@@ -175,7 +191,7 @@ export class CircusCharlie {
           passed: false
         });
       }
-    } else {
+    } else if (this.eventIndex === 2) {
       // EVENT 3: ROLLING CIRCUS BALLS & SPRINGBOARDS
       let curX = 140;
       let idx = 0;
@@ -197,6 +213,48 @@ export class CircusCharlie {
         }
         curX += 165 + (idx % 2) * 25;
         idx++;
+      }
+    } else if (this.eventIndex === 3) {
+      // EVENT 4: GALLOPING HORSEBACK TRAMPOLINE HURDLES
+      let idx = 0;
+      for (let x = 420; x < this.trackLength - 220; x += 250) {
+        const isHigh = idx % 2 === 1;
+        this.obstacles.push({
+          type: 'hurdle_trampoline',
+          x,
+          y: isHigh ? this.groundY - 58 : this.groundY - 36,
+          w: 72,
+          isHigh,
+          deflect: 0,
+          passed: false
+        });
+        idx++;
+      }
+    } else {
+      // EVENT 5: TRAMPOLINE & SWINGING TRAPEZE ACROBATICS
+      for (let x = 140; x < this.trackLength - 160; x += 270) {
+        this.obstacles.push({
+          type: 'floor_trampoline',
+          x,
+          y: this.groundY - 14,
+          w: 96,
+          deflect: 0
+        });
+      }
+      let tIdx = 0;
+      for (let x = 275; x < this.trackLength - 220; x += 270) {
+        this.obstacles.push({
+          type: 'trapeze',
+          pivotX: x,
+          pivotY: 96,
+          length: 132,
+          phase: tIdx * 1.3,
+          swingSpeed: (2.2 + (tIdx % 2) * 0.35) * speedMult,
+          x,
+          y: 228,
+          passed: false
+        });
+        tIdx++;
       }
     }
   }
@@ -291,12 +349,39 @@ export class CircusCharlie {
 
     const p = this.player;
     const baseY = this.eventIndex === 1 ? this.wireY : this.groundY;
-    const forwardSpeed = this.eventIndex === 0 ? 195 : this.eventIndex === 1 ? 160 : 155;
+    const forwardSpeed =
+      this.eventIndex === 0 ? 195 : this.eventIndex === 3 ? 210 : this.eventIndex === 1 ? 160 : 155;
     const backSpeed = 95;
 
     // Movement input (locked horizontal velocity while mid-air, classic Circus Charlie feel!)
-    if (p.grounded) {
-      if (this.input.isDown('right')) {
+    if (p.onTrapeze) {
+      // Swinging on Trapeze Bar in Stage 5!
+      p.vx = 0;
+      p.vy = 0;
+      p.x = p.onTrapeze.x;
+      p.y = p.onTrapeze.y + 18;
+      if (
+        this.input.isJustPressed('up') ||
+        this.input.isJustPressed('actionA') ||
+        this.input.isJustPressed('actionB') ||
+        this.input.pointer.justPressed
+      ) {
+        p.onTrapeze = null;
+        p.grounded = false;
+        p.vx = 215;
+        p.vy = -410;
+        p.facing = 1;
+        this.audio.playJump();
+      }
+    } else if (p.grounded) {
+      if (this.eventIndex === 3) {
+        // Stage 4: White circus horse always gallops forward (can spur faster or rein slower)
+        if (this.input.isDown('right')) p.vx = 235;
+        else if (this.input.isDown('left')) p.vx = 135;
+        else p.vx = 185;
+        p.facing = 1;
+        p.animFrame += dt * 16;
+      } else if (this.input.isDown('right')) {
         p.vx = forwardSpeed;
         p.facing = 1;
         p.animFrame += dt * 14;
@@ -317,25 +402,39 @@ export class CircusCharlie {
       ) {
         p.grounded = false;
         p.onBall = null;
-        p.vy = this.eventIndex === 0 ? -430 : this.eventIndex === 1 ? -380 : -415;
+        p.vy =
+          this.eventIndex === 0
+            ? -430
+            : this.eventIndex === 1
+            ? -380
+            : this.eventIndex === 3
+            ? -445
+            : -415;
         if (p.vx === 0) p.vx = forwardSpeed * 0.85;
         this.audio.playHop();
       }
     }
 
-    p.x = Math.max(80, p.x + p.vx * dt);
-    if (!p.grounded) {
-      p.vy += 860 * dt;
-      p.y += p.vy * dt;
+    if (!p.onTrapeze) {
+      p.x = Math.max(80, p.x + p.vx * dt);
+      if (!p.grounded) {
+        p.vy += 860 * dt;
+        p.y += p.vy * dt;
+      }
     }
+    p.horseX = p.x;
 
     // Event-specific landing & obstacle logic
     if (this.eventIndex === 0) {
       this.updateLionStage(dt, baseY);
     } else if (this.eventIndex === 1) {
       this.updateTightropeStage(dt, baseY);
-    } else {
+    } else if (this.eventIndex === 2) {
       this.updateRollingBallStage(dt, baseY);
+    } else if (this.eventIndex === 3) {
+      this.updateHorseHurdlesStage(dt, baseY);
+    } else {
+      this.updateTrapezeStage(dt, baseY);
     }
 
     // Smooth camera follow
@@ -486,6 +585,84 @@ export class CircusCharlie {
       if (p.y >= baseY && p.x < this.trackLength - 165) {
         this.killPlayer('FELL OFF THE BALL!');
       }
+    }
+  }
+
+  updateHorseHurdlesStage(dt, baseY) {
+    const p = this.player;
+
+    for (const ob of this.obstacles) {
+      if (ob.deflect > 0) ob.deflect = Math.max(0, ob.deflect - dt * 35);
+
+      const halfW = ob.w * 0.5;
+      if (Math.abs(p.x - ob.x) <= halfW + 8) {
+        // Landing on top of the springboard hurdle platform
+        if (!p.grounded && p.vy > 0 && p.y >= ob.y - 12 && p.y <= ob.y + 18) {
+          p.y = ob.y;
+          p.vy = ob.isHigh ? -470 : -415;
+          ob.deflect = 10;
+          this.audio.playPowerUp();
+          const pts = ob.isHigh ? 500 : 300;
+          this.addScore(pts, p.x - this.cameraX, p.y - 36, PALETTE.CYAN, 'HURDLE BOUNCE');
+          ob.passed = true;
+          return;
+        }
+        // Running into the hurdle platform from the side while too low
+        if (p.y > ob.y + 14) {
+          this.killPlayer('TRIPPED ON HURDLE!');
+          return;
+        }
+      }
+    }
+
+    // Remount the galloping white circus horse on ground level
+    if (p.y >= baseY) {
+      p.y = baseY;
+      p.vy = 0;
+      p.grounded = true;
+    }
+  }
+
+  updateTrapezeStage(dt, baseY) {
+    const p = this.player;
+
+    // Update swinging trapeze bars and floor trampolines
+    for (const ob of this.obstacles) {
+      if (ob.type === 'trapeze') {
+        ob.phase += ob.swingSpeed * dt;
+        const maxAngle = 0.62;
+        const ang = Math.sin(ob.phase) * maxAngle;
+        ob.x = ob.pivotX + Math.sin(ang) * ob.length;
+        ob.y = ob.pivotY + Math.cos(ang) * ob.length;
+
+        // Grab trapeze bar mid-air!
+        if (!p.onTrapeze && !p.grounded && Math.hypot(p.x - ob.x, (p.y - 18) - ob.y) < 28) {
+          p.onTrapeze = ob;
+          p.vx = 0;
+          p.vy = 0;
+          this.audio.playCoin();
+          if (!ob.passed) {
+            ob.passed = true;
+            this.addScore(500, ob.x - this.cameraX, ob.y - 24, PALETTE.GOLD, 'TRAPEZE CATCH');
+          }
+          return;
+        }
+      } else if (ob.type === 'floor_trampoline') {
+        if (ob.deflect > 0) ob.deflect = Math.max(0, ob.deflect - dt * 35);
+        if (!p.onTrapeze && p.vy >= 0 && Math.abs(p.x - ob.x) <= ob.w * 0.5 + 8 && p.y >= ob.y - 8) {
+          p.y = ob.y;
+          p.grounded = false;
+          p.vy = -485;
+          p.vx = this.input.isDown('right') ? 210 : this.input.isDown('left') ? -110 : 165;
+          ob.deflect = 10;
+          this.audio.playHop();
+          return;
+        }
+      }
+    }
+
+    if (!p.onTrapeze && p.y >= baseY && p.x < this.trackLength - 165) {
+      this.killPlayer('MISSED THE TRAMPOLINE!');
     }
   }
 
@@ -689,6 +866,38 @@ export class CircusCharlie {
         ctx.fillStyle = PALETTE.GOLD;
         ctx.fillRect(sx - 14, this.groundY - 10, 6, 10);
         ctx.fillRect(sx + 8, this.groundY - 10, 6, 10);
+      } else if (ob.type === 'hurdle_trampoline') {
+        // Elevated Horseback Hurdle Trampoline Platform
+        const halfW = ob.w * 0.5;
+        ctx.fillStyle = '#E2E8F0';
+        ctx.fillRect(sx - halfW + 4, ob.y, 6, this.groundY - ob.y);
+        ctx.fillRect(sx + halfW - 10, ob.y, 6, this.groundY - ob.y);
+        ctx.strokeStyle = ob.isHigh ? PALETTE.PINK : PALETTE.CYAN;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(sx - halfW, ob.y);
+        ctx.quadraticCurveTo(sx, ob.y + (ob.deflect || 0), sx + halfW, ob.y);
+        ctx.stroke();
+      } else if (ob.type === 'floor_trampoline') {
+        const halfW = ob.w * 0.5;
+        ctx.fillStyle = '#FACC15';
+        ctx.fillRect(sx - halfW + 4, ob.y, 6, this.groundY - ob.y);
+        ctx.fillRect(sx + halfW - 10, ob.y, 6, this.groundY - ob.y);
+        ctx.strokeStyle = PALETTE.GREEN;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(sx - halfW, ob.y);
+        ctx.quadraticCurveTo(sx, ob.y + (ob.deflect || 0), sx + halfW, ob.y);
+        ctx.stroke();
+      } else if (ob.type === 'trapeze') {
+        const px = ob.pivotX - this.cameraX;
+        ctx.strokeStyle = '#E2E8F0';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(px, ob.pivotY);
+        ctx.lineTo(sx, ob.y);
+        ctx.stroke();
+        this.renderer.drawGlowRect(sx - 16, ob.y - 3, 32, 6, PALETTE.GOLD, 8, true);
       }
     }
     ctx.restore();
@@ -717,6 +926,37 @@ export class CircusCharlie {
         CHARLIE_SPRITE,
         sx - 10,
         p.y - 48,
+        2.5,
+        {
+          R: '#EF4444',
+          Y: '#FFD700',
+          W: '#F8FAFC',
+          B: '#38BDF8',
+          K: '#0B0F19'
+        },
+        p.facing < 0
+      );
+    } else if (this.eventIndex === 3) {
+      // Stage 4: Draw Galloping White Circus Horse along the ground + Charlie vaulting above!
+      const horseSx = (p.horseX || p.x) - this.cameraX;
+      this.renderer.drawPixelSprite(
+        HORSE_SPRITE,
+        horseSx - 24,
+        this.groundY - 27,
+        3.0,
+        {
+          W: '#F8FAFC',
+          Y: '#FACC15',
+          R: '#EF4444',
+          K: '#0B0F19'
+        },
+        false
+      );
+      const charlieY = p.grounded ? this.groundY - 48 : p.y - 26;
+      this.renderer.drawPixelSprite(
+        CHARLIE_SPRITE,
+        sx - 10,
+        charlieY,
         2.5,
         {
           R: '#EF4444',

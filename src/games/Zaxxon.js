@@ -62,6 +62,59 @@ export class Zaxxon {
     this.bossDist = 2600 + this.level * 400;
     this.fuel = 100;
 
+    const sectors = [
+      {
+        name: 'SECTOR 1: ASTEROID ENTRY FORTRESS',
+        deckCol: '#131C31',
+        gridCol: PALETTE.BLUE,
+        wallFill: '#334155',
+        wallStroke: PALETTE.ORANGE,
+        wallEvery: 465
+      },
+      {
+        name: 'SECTOR 2: OPEN SPACE DOGFIGHT SQUADRON',
+        deckCol: '#090D1A',
+        gridCol: PALETTE.PURPLE,
+        wallFill: '#1E1B4B',
+        wallStroke: PALETTE.CYAN,
+        wallEvery: 620
+      },
+      {
+        name: 'SECTOR 3: HIGH-WALL LASER CITADEL',
+        deckCol: '#1E1B4B',
+        gridCol: PALETTE.PINK,
+        wallFill: '#3B0764',
+        wallStroke: PALETTE.PINK,
+        wallEvery: 310
+      },
+      {
+        name: 'SECTOR 4: FUEL DEPOT GAUNTLET',
+        deckCol: '#06281E',
+        gridCol: PALETTE.GREEN,
+        wallFill: '#14532D',
+        wallStroke: PALETTE.GOLD,
+        wallEvery: 465
+      },
+      {
+        name: 'SECTOR 5: SUPER ZAXXON RED FORTRESS',
+        deckCol: '#2A1215',
+        gridCol: PALETTE.RED,
+        wallFill: '#7F1D1D',
+        wallStroke: PALETTE.GOLD,
+        wallEvery: 380
+      },
+      {
+        name: 'SECTOR 6: ZAXXON COMMAND CORE',
+        deckCol: '#172554',
+        gridCol: PALETTE.GOLD,
+        wallFill: '#0F172A',
+        wallStroke: PALETTE.CYAN,
+        wallEvery: 310
+      }
+    ];
+    const sectorIdx = (this.level - 1) % sectors.length;
+    this.currentSector = sectors[sectorIdx];
+
     this.player = {
       lane: 0,
       alt: 36,
@@ -73,11 +126,12 @@ export class Zaxxon {
     this.enemyBullets = [];
     this.objects = [];
 
-    // Populate Fortress Runway with Fuel Tanks, Radar Dishes, Gun Turrets, Laser Walls & Interceptors
+    // Populate Fortress Runway with Sector-specific Fuel Tanks, Radar Dishes, Gun Turrets, Laser Walls & Interceptors
+    const wallEvery = this.currentSector.wallEvery;
     for (let d = 320; d < this.bossDist - 220; d += 155) {
-      if (d % 465 === 0) {
+      if (d % wallEvery === 0) {
         // Fortress Wall with Laser Barrier (either fly OVER alt > 68, or fly THROUGH gap)
-        const highGap = (d / 465) % 2 === 0;
+        const highGap = (Math.floor(d / 155) + sectorIdx) % 2 === 0;
         this.objects.push({
           type: 'WALL',
           dist: d,
@@ -88,16 +142,25 @@ export class Zaxxon {
           hp: 999
         });
       } else {
-        // Place Fuel Tanks (low altitude targets!) & Turrets/Radars
-        const numItems = 2 + (d % 2);
+        // Place Fuel Tanks (low altitude targets!) & Turrets/Radars/Interceptors tailored to sector
+        const numItems = 2 + ((d + sectorIdx) % 2);
         for (let k = 0; k < numItems; k++) {
-          const lane = -110 + k * 110 + ((d * 17 + k * 43) % 40) - 20;
-          const kindRoll = (d + k * 3) % 5;
+          const lane = -110 + k * 110 + ((d * 17 + k * 43 + sectorIdx * 19) % 40) - 20;
+          const kindRoll = (d + k * 3 + sectorIdx) % 5;
           let type = 'FUEL_TANK';
           let alt = 0;
-          if (kindRoll === 1) type = 'TURRET';
-          else if (kindRoll === 2) type = 'RADAR';
-          else if (kindRoll === 3) {
+          if (sectorIdx === 1 && kindRoll !== 0) {
+            // Sector 2 Open Space Dogfight Squadron: heavy interceptor wave
+            type = 'INTERCEPTOR';
+            alt = 25 + ((d + k * 29) % 85);
+          } else if (sectorIdx === 3 && kindRoll <= 2) {
+            // Sector 4 Fuel Depot Gauntlet: dense fuel tanks + guarding turrets
+            type = k % 2 === 0 ? 'FUEL_TANK' : 'TURRET';
+          } else if (kindRoll === 1) {
+            type = 'TURRET';
+          } else if (kindRoll === 2) {
+            type = 'RADAR';
+          } else if (kindRoll === 3) {
             type = 'INTERCEPTOR';
             alt = 25 + ((d + k * 29) % 85);
           }
@@ -120,7 +183,7 @@ export class Zaxxon {
       dist: this.bossDist,
       lane: 0,
       alt: 30,
-      vxLane: 85,
+      vxLane: 85 + sectorIdx * 8,
       hp: 10 + this.level * 2,
       maxHp: 10 + this.level * 2,
       fireTimer: 1.2,
@@ -406,13 +469,20 @@ export class Zaxxon {
     this.renderer.clear('#070B14');
 
     // 1. Isometric Fortress Runway Deck & Grid Lines
+    const sector = this.currentSector || {
+      name: 'SECTOR 1: ASTEROID ENTRY FORTRESS',
+      deckCol: '#131C31',
+      gridCol: PALETTE.BLUE,
+      wallFill: '#334155',
+      wallStroke: PALETTE.ORANGE
+    };
     ctx.save();
     const c1 = this._isoToScreen(-120, -LANE_LIMIT - 20, 0);
     const c2 = this._isoToScreen(780, -LANE_LIMIT - 20, 0);
     const c3 = this._isoToScreen(780, LANE_LIMIT + 20, 0);
     const c4 = this._isoToScreen(-120, LANE_LIMIT + 20, 0);
 
-    ctx.fillStyle = '#131C31';
+    ctx.fillStyle = sector.deckCol;
     ctx.beginPath();
     ctx.moveTo(c1.x, c1.y);
     ctx.lineTo(c2.x, c2.y);
@@ -420,9 +490,17 @@ export class Zaxxon {
     ctx.lineTo(c4.x, c4.y);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = PALETTE.BLUE;
+    ctx.strokeStyle = sector.gridCol;
     ctx.lineWidth = 2;
     ctx.stroke();
+
+    this.renderer.drawText(sector.name, 480, 62, {
+      font: FONTS.HEADER,
+      size: 11,
+      color: sector.wallStroke,
+      align: 'center',
+      glow: 6
+    });
 
     //Scrolling diagonal deck ribs
     ctx.strokeStyle = 'rgba(56, 189, 248, 0.22)';
@@ -449,8 +527,8 @@ export class Zaxxon {
         const wL = this._isoToScreen(relDist, -LANE_LIMIT - 15, 0);
         const wR = this._isoToScreen(relDist, LANE_LIMIT + 15, 0);
         ctx.save();
-        ctx.fillStyle = '#334155';
-        ctx.strokeStyle = PALETTE.ORANGE;
+        ctx.fillStyle = sector.wallFill;
+        ctx.strokeStyle = sector.wallStroke;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(wL.x, wL.y);

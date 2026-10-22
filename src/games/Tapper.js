@@ -67,6 +67,69 @@ const MUG_PALETTE = {
   G: '#D97706'
 };
 
+const VENUE_THEMES = [
+  {
+    id: 'western',
+    name: 'WESTERN SALOON',
+    bgFill: '#1C120C',
+    lineStroke: 'rgba(120, 53, 15, 0.35)',
+    barBase: '#451A03',
+    barTop: '#92400E',
+    barTrim: '#F59E0B',
+    doorFill: '#78350F',
+    kegFill: '#78350F',
+    skinColor: '#FDBA74',
+    hatColors: ['#92400E', '#B45309', '#78350F', '#D97706'],
+    shirtColors: ['#DC2626', '#2563EB', '#D97706', '#059669'],
+    dancerBanner: '💃 SALOON CAN-CAN SHOW! COWBOYS DISTRACTED! 💃'
+  },
+  {
+    id: 'sports',
+    name: 'SPORTS TAVERN',
+    bgFill: '#06281E',
+    lineStroke: 'rgba(16, 185, 129, 0.25)',
+    barBase: '#1E293B',
+    barTop: '#047857',
+    barTrim: '#FACC15',
+    doorFill: '#065F46',
+    kegFill: '#334155',
+    skinColor: '#FDBA74',
+    hatColors: ['#EF4444', '#3B82F6', '#FACC15', '#F8FAFC'],
+    shirtColors: ['#F8FAFC', '#EF4444', '#2563EB', '#10B981'],
+    dancerBanner: '📣 CHEERLEADER HALFTIME SHOW! JOCKS DISTRACTED! 📣'
+  },
+  {
+    id: 'punk',
+    name: 'PUNK ROCK CLUB',
+    bgFill: '#160B24',
+    lineStroke: 'rgba(236, 72, 153, 0.28)',
+    barBase: '#2E1065',
+    barTop: '#701A75',
+    barTrim: '#FF007A',
+    doorFill: '#4C1D95',
+    kegFill: '#1E1B4B',
+    skinColor: '#FDE68A',
+    hatColors: ['#FF007A', '#00FF66', '#00F0FF', '#FACC15'],
+    shirtColors: ['#111827', '#9333EA', '#BE185D', '#1E293B'],
+    dancerBanner: '🎸 PUNK ROCKSTAGE SOLO! HEADBANGERS DISTRACTED! 🎸'
+  },
+  {
+    id: 'space',
+    name: 'SPACE CANTINA',
+    bgFill: '#060D1F',
+    lineStroke: 'rgba(56, 189, 248, 0.25)',
+    barBase: '#0F172A',
+    barTop: '#0369A1',
+    barTrim: '#00F0FF',
+    doorFill: '#1E3A8A',
+    kegFill: '#0284C7',
+    skinColor: '#4ADE80',
+    hatColors: ['#00F0FF', '#C084FC', '#38BDF8', '#F472B6'],
+    shirtColors: ['#6366F1', '#0284C7', '#EC4899', '#14B8A6'],
+    dancerBanner: '🛸 HOLO-DANCER NEXUS! ALIENS DISTRACTED! 🛸'
+  }
+];
+
 export class Tapper {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -129,22 +192,23 @@ export class Tapper {
     this.spawnTimer = 0.6;
     this.showDancerTimer = 0;
 
+    this.venue = VENUE_THEMES[(level - 1) % VENUE_THEMES.length];
+    this.themeName = this.venue.name;
+    this.bannerText = `STAGE ${level}: ${this.themeName}`;
+    this.bannerTimer = 2.0;
+
     // Spawn 1 patron on each bar immediately
     for (let b = 0; b < 4; b++) {
       this._spawnPatron(b, this.bars[b].leftX + 20 + b * 14);
       this.patronsRemainingToSpawn = Math.max(0, this.patronsRemainingToSpawn - 1);
     }
-
-    const themes = ['WESTERN SALOON', 'SPORTS GRILL', 'NEON PUNK CLUB', 'COSMIC CANTINA'];
-    this.themeName = themes[(level - 1) % themes.length];
-    this.bannerText = `STAGE ${level}: ${this.themeName}`;
-    this.bannerTimer = 2.0;
   }
 
   _spawnPatron(barIdx, customX = null) {
     const bar = this.bars[barIdx];
-    const colors = [PALETTE.CYAN, PALETTE.GREEN, PALETTE.PURPLE, PALETTE.PINK, PALETTE.ORANGE];
-    const hats = ['#92400E', PALETTE.GOLD, PALETTE.RED, PALETTE.BLUE];
+    const venue = this.venue || VENUE_THEMES[0];
+    const colors = venue.shirtColors;
+    const hats = venue.hatColors;
     this.patrons.push({
       barIdx,
       x: customX !== null ? customX : bar.leftX + 8,
@@ -153,8 +217,9 @@ export class Tapper {
       state: 'advancing', // 'advancing' | 'drinking' | 'distracted'
       drinkTimer: 0,
       hasSentEmpty: false,
+      skinColor: venue.skinColor,
       shirtColor: colors[(barIdx + this.patrons.length) % colors.length],
-      hatColor: hats[barIdx % hats.length]
+      hatColor: hats[(barIdx + this.patrons.length) % hats.length]
     });
   }
 
@@ -477,12 +542,14 @@ export class Tapper {
   }
 
   render(ctx = this.renderer.ctx) {
-    // 1. Warm Saloon Wood Flooring Background
-    ctx.fillStyle = '#1C120C';
+    const venue = this.venue || VENUE_THEMES[0];
+
+    // 1. Venue-Themed Flooring & Backdrop
+    ctx.fillStyle = venue.bgFill;
     ctx.fillRect(0, 38, this.width, this.height - 38);
 
-    // Subtle wood plank lines
-    ctx.strokeStyle = 'rgba(120, 53, 15, 0.35)';
+    // Venue-specific floor/backdrop pattern
+    ctx.strokeStyle = venue.lineStroke;
     ctx.lineWidth = 1;
     for (let y = 60; y < this.height; y += 20) {
       ctx.beginPath();
@@ -490,55 +557,63 @@ export class Tapper {
       ctx.lineTo(this.width, y);
       ctx.stroke();
     }
+    if (venue.id === 'punk' || venue.id === 'sports' || venue.id === 'space') {
+      for (let x = 80; x < this.width; x += 80) {
+        ctx.beginPath();
+        ctx.moveTo(x, 40);
+        ctx.lineTo(x, this.height);
+        ctx.stroke();
+      }
+    }
 
-    // 2. Back-Wall Can-Can Stage Banner (lights up when a Tip is collected!)
-    ctx.fillStyle = this.showDancerTimer > 0 ? '#4C1D95' : '#271710';
+    // 2. Back-Wall Stage Banner (lights up when a Tip is collected!)
+    ctx.fillStyle = this.showDancerTimer > 0 ? '#4C1D95' : venue.barBase;
     ctx.fillRect(260, 48, 440, 44);
-    ctx.strokeStyle = this.showDancerTimer > 0 ? PALETTE.PINK : '#92400E';
+    ctx.strokeStyle = this.showDancerTimer > 0 ? PALETTE.PINK : venue.barTrim;
     ctx.lineWidth = 2;
     ctx.strokeRect(260, 48, 440, 44);
     this.renderer.drawText(
       this.showDancerTimer > 0
-        ? '💃 CAN-CAN STAGE SHOW! PATRONS DISTRACTED! 💃'
-        : `🍺 ${this.themeName || 'ROOT BEER SALOON'} — SERVE COLD ROOT BEER! 🍺`,
+        ? venue.dancerBanner
+        : `🍺 ${this.themeName || 'ROOT BEER SALOON'} — SERVE COLD BREWS! 🍺`,
       this.width / 2,
       75,
       {
         font: FONTS.HEADER,
         size: 11,
-        color: this.showDancerTimer > 0 ? PALETTE.GOLD : PALETTE.ORANGE,
+        color: this.showDancerTimer > 0 ? PALETTE.GOLD : venue.barTrim,
         align: 'center',
         glow: this.showDancerTimer > 0 ? 10 : 4
       }
     );
 
-    // 3. The 4 Parallel Saloon Bar Counters (y = 140, 240, 340, 440)
+    // 3. The 4 Parallel Venue Bar Counters (y = 140, 240, 340, 440)
     for (let i = 0; i < this.bars.length; i++) {
       const bar = this.bars[i];
 
-      // Left swinging saloon doors
-      ctx.fillStyle = '#78350F';
+      // Left venue entry doors / portals
+      ctx.fillStyle = venue.doorFill;
       ctx.fillRect(bar.leftX - 28, bar.y - 42, 22, 54);
-      ctx.strokeStyle = PALETTE.GOLD;
+      ctx.strokeStyle = venue.barTrim;
       ctx.strokeRect(bar.leftX - 28, bar.y - 42, 22, 54);
 
-      // Mahogany Bar Counter Base & Polished Brass Top Rail
-      ctx.fillStyle = '#451A03';
+      // Bar Counter Base & Top Rail
+      ctx.fillStyle = venue.barBase;
       ctx.fillRect(bar.leftX, bar.y, bar.rightX - bar.leftX, 28);
-      ctx.fillStyle = '#92400E';
+      ctx.fillStyle = venue.barTop;
       ctx.fillRect(bar.leftX - 4, bar.y - 6, bar.rightX - bar.leftX + 8, 10);
-      ctx.strokeStyle = '#F59E0B';
+      ctx.strokeStyle = venue.barTrim;
       ctx.lineWidth = 1.5;
       ctx.strokeRect(bar.leftX - 4, bar.y - 6, bar.rightX - bar.leftX + 8, 10);
 
-      // Right-end Oak Root Beer Keg & Brass Tap Handle
-      ctx.fillStyle = '#78350F';
+      // Right-end Keg / Dispenser & Tap Handle
+      ctx.fillStyle = venue.kegFill;
       ctx.fillRect(bar.rightX + 8, bar.y - 32, 38, 36);
-      ctx.strokeStyle = PALETTE.GOLD;
+      ctx.strokeStyle = venue.barTrim;
       ctx.lineWidth = 2;
       ctx.strokeRect(bar.rightX + 8, bar.y - 32, 38, 36);
 
-      // Brass Tap Lever
+      // Tap Lever
       ctx.strokeStyle = this.bartender.barIdx === i ? PALETTE.CYAN : PALETTE.GOLD;
       ctx.lineWidth = 4;
       ctx.beginPath();
@@ -551,7 +626,7 @@ export class Tapper {
     for (const p of this.patrons) {
       const palette = {
         H: p.hatColor,
-        F: '#FDBA74',
+        F: p.skinColor || venue.skinColor,
         C: p.shirtColor,
         B: '#1E3A8A',
         K: '#0F172A'

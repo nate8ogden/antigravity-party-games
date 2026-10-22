@@ -62,6 +62,47 @@ export class MoonPatrol {
   _initCourse() {
     this.scrollX = 0;
     this.checkpointIdx = 0;
+
+    const courses = [
+      {
+        name: 'BEGINNER COURSE A-E',
+        checkpoints: ['A', 'B', 'C', 'D', 'E'],
+        step: 250,
+        groundCol: '#B45309',
+        rimCol: PALETTE.GOLD
+      },
+      {
+        name: 'CHAMPION COURSE F-J',
+        checkpoints: ['F', 'G', 'H', 'I', 'J'],
+        step: 220,
+        groundCol: '#7C2D12',
+        rimCol: PALETTE.ORANGE
+      },
+      {
+        name: 'CRATER GAUNTLET K-O',
+        checkpoints: ['K', 'L', 'M', 'N', 'O'],
+        step: 200,
+        groundCol: '#4C1D95',
+        rimCol: PALETTE.PINK
+      },
+      {
+        name: 'MINEFIELD SECTOR P-T',
+        checkpoints: ['P', 'Q', 'R', 'S', 'T'],
+        step: 190,
+        groundCol: '#064E3B',
+        rimCol: PALETTE.GREEN
+      },
+      {
+        name: 'MASTER COURSE U-Z',
+        checkpoints: ['U', 'V', 'W', 'X', 'Z'],
+        step: 175,
+        groundCol: '#7F1D1D',
+        rimCol: PALETTE.CYAN
+      }
+    ];
+
+    const courseIdx = (this.level - 1) % courses.length;
+    this.currentCourse = courses[courseIdx];
     this.courseLength = CHECKPOINT_DIST * 4;
 
     this.buggy = {
@@ -81,22 +122,36 @@ export class MoonPatrol {
     this.ufos = [];
     this.obstacles = [];
 
-    // Populate lunar course with Craters, Boulders, and Landmines
-    for (let x = 580; x < this.courseLength + 600; x += 245) {
-      const roll = Math.floor(x / 245) % 4;
-      if (roll === 0) {
-        this.obstacles.push({ type: 'CRATER', x, width: 52, hp: 999 });
+    // Populate lunar course with course-specific Craters, Rolling Boulders, and Landmines
+    const step = this.currentCourse.step;
+    let idx = 0;
+    for (let x = 560; x < this.courseLength + 600; x += step) {
+      const roll = (idx + courseIdx) % 5;
+      idx++;
+      if (courseIdx === 2 && roll % 2 === 0) {
+        // Crater Gauntlet K-O: Wide & double craters
+        this.obstacles.push({ type: 'CRATER', x, width: 58, hp: 999, vx: 0 });
+      } else if (courseIdx === 3 && roll % 2 === 1) {
+        // Minefield Sector P-T: Dense landmines + boulders
+        this.obstacles.push({ type: 'MINE', x, width: 24, hp: 999, vx: 0 });
+        this.obstacles.push({ type: 'MINE', x: x + 78, width: 22, hp: 999, vx: 0 });
+      } else if (roll === 0) {
+        this.obstacles.push({ type: 'CRATER', x, width: 52, hp: 999, vx: 0 });
       } else if (roll === 1) {
-        this.obstacles.push({ type: 'BOULDER', x, width: 32, hp: 2 });
+        // Rolling boulder on Champion & Master courses!
+        const rollingVx = courseIdx >= 1 ? -(35 + courseIdx * 12) : 0;
+        this.obstacles.push({ type: 'BOULDER', x, width: 32, hp: 2, vx: rollingVx });
       } else if (roll === 2) {
-        this.obstacles.push({ type: 'MINE', x, width: 22, hp: 999 });
+        this.obstacles.push({ type: 'MINE', x, width: 22, hp: 999, vx: 0 });
+      } else if (roll === 3) {
+        this.obstacles.push({ type: 'CRATER', x, width: 46, hp: 999, vx: 0 });
+        this.obstacles.push({ type: 'BOULDER', x: x + 92, width: 34, hp: 3, vx: 0 });
       } else {
-        this.obstacles.push({ type: 'CRATER', x, width: 46, hp: 999 });
-        this.obstacles.push({ type: 'BOULDER', x: x + 95, width: 34, hp: 3 });
+        this.obstacles.push({ type: 'BOULDER', x, width: 36, hp: 3, vx: courseIdx >= 4 ? -55 : 0 });
       }
     }
 
-    this.ufoSpawnTimer = 1.6;
+    this.ufoSpawnTimer = Math.max(1.0, 1.6 - courseIdx * 0.15);
   }
 
   _surfaceHeightAt(worldX) {
@@ -198,17 +253,18 @@ export class MoonPatrol {
     this.scrollX += b.speed * dt;
     b.wheelPhase += b.speed * dt * 0.12;
 
-    // Checkpoints A -> E
+    // Checkpoints (A-E, F-J, K-O, P-T, U-Z)
+    const activeCheckpoints = (this.currentCourse && this.currentCourse.checkpoints) || CHECKPOINTS;
     const newCheckpoint = Math.min(4, Math.floor(this.scrollX / CHECKPOINT_DIST));
     if (newCheckpoint > this.checkpointIdx) {
       this.checkpointIdx = newCheckpoint;
-      const ptLetter = CHECKPOINTS[this.checkpointIdx];
+      const ptLetter = activeCheckpoints[this.checkpointIdx];
       this.audio.playPowerUp();
       this._addScore(1000, this.width * 0.5, 130, `POINT ${ptLetter} REACHED! +1000`, PALETTE.GREEN);
 
       if (this.checkpointIdx >= 4) {
         this.audio.playStageClear();
-        this._addScore(3000, this.width * 0.5, 165, 'COURSE COMPLETE! +3000', PALETTE.GOLD);
+        this._addScore(3000, this.width * 0.5, 165, `${this.currentCourse.name} CLEAR! +3000`, PALETTE.GOLD);
         this.level++;
         this._initCourse();
         return;
@@ -366,8 +422,11 @@ export class MoonPatrol {
       }
     }
 
-    // 8. Check Ground Obstacles (Craters, Boulders, Landmines)
+    // 8. Check Ground Obstacles (Craters, Rolling Boulders, Landmines)
     for (const ob of this.obstacles) {
+      if (ob.vx && ob.x - this.scrollX < this.width + 60) {
+        ob.x += ob.vx * dt;
+      }
       const sx = ob.x - this.scrollX;
       if (Math.abs(sx - b.x) < ob.width * 0.5 + 18) {
         const clearance = groundY - b.y;
@@ -429,8 +488,14 @@ export class MoonPatrol {
     this._drawMountainLayer(ctx, 0.45, 415, 38, 0.012, '#1D4ED8');
 
     // 3. Lunar Regolith Surface
+    const course = this.currentCourse || {
+      name: 'BEGINNER COURSE A-E',
+      checkpoints: CHECKPOINTS,
+      groundCol: '#B45309',
+      rimCol: PALETTE.GOLD
+    };
     ctx.save();
-    ctx.fillStyle = '#B45309';
+    ctx.fillStyle = course.groundCol;
     ctx.beginPath();
     ctx.moveTo(0, this.height);
     for (let x = 0; x <= this.width; x += 12) {
@@ -441,7 +506,7 @@ export class MoonPatrol {
     ctx.closePath();
     ctx.fill();
 
-    ctx.strokeStyle = PALETTE.GOLD;
+    ctx.strokeStyle = course.rimCol;
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     for (let x = 0; x <= this.width; x += 12) {
@@ -575,10 +640,11 @@ export class MoonPatrol {
     const prog = Math.min(1, this.scrollX / this.courseLength);
     this.renderer.drawGlowRect(barX + 2, barY + 2, prog * (barW - 4), 20, 'rgba(0, 240, 255, 0.35)', 6, true);
 
-    for (let i = 0; i < CHECKPOINTS.length; i++) {
+    const activeCheckpoints = course.checkpoints || CHECKPOINTS;
+    for (let i = 0; i < activeCheckpoints.length; i++) {
       const cx = barX + 16 + i * ((barW - 32) / 4);
       const reached = i <= this.checkpointIdx;
-      this.renderer.drawText(CHECKPOINTS[i], cx, barY + 17, {
+      this.renderer.drawText(activeCheckpoints[i], cx, barY + 17, {
         font: FONTS.HEADER,
         size: 11,
         color: reached ? PALETTE.GOLD : PALETTE.MUTED,
@@ -586,6 +652,12 @@ export class MoonPatrol {
         glow: reached ? 8 : 0
       });
     }
+    this.renderer.drawText(course.name, barX + barW * 0.5, barY + 38, {
+      font: FONTS.HEADER,
+      size: 9,
+      color: course.rimCol,
+      align: 'center'
+    });
     ctx.restore();
 
     // 9. Top HUD & State Overlay
@@ -595,7 +667,7 @@ export class MoonPatrol {
       highScore: this.highScore,
       lives: this.lives,
       level: this.level,
-      extraLabel: `POINT:${CHECKPOINTS[this.checkpointIdx]}`,
+      extraLabel: `POINT:${activeCheckpoints[this.checkpointIdx]}`,
       accent: PALETTE.PINK
     });
 

@@ -44,8 +44,23 @@ const MIGHTA_SPRITE = [
   '.CCCC..CCCC.'
 ];
 
+export const CAVE_THEMES = [
+  { name: 'CAVE 1: CLASSIC 3-TIER', wall: '#FF007A', plat: '#B829FF', fill: 'rgba(184, 41, 255, 0.25)' },
+  { name: 'CAVE 2: PYRAMID STEPS', wall: '#00F0FF', plat: '#3B82F6', fill: 'rgba(59, 130, 246, 0.25)' },
+  { name: 'CAVE 3: TWIN TOWERS', wall: '#22C55E', plat: '#10B981', fill: 'rgba(16, 185, 129, 0.25)' },
+  { name: 'CAVE 4: ZIG-ZAG CANYON', wall: '#F97316', plat: '#FACC15', fill: 'rgba(250, 204, 21, 0.25)' },
+  { name: 'CAVE 5: DIAMOND SANCTUM', wall: '#A855F7', plat: '#EC4899', fill: 'rgba(236, 72, 153, 0.25)' },
+  { name: 'CAVE 6: GRAND SPIRAL', wall: '#38BDF8', plat: '#06B6D4', fill: 'rgba(6, 182, 212, 0.25)' },
+  { name: 'CAVE 7: CHIMNEY FUNNEL', wall: '#EF4444', plat: '#F97316', fill: 'rgba(249, 115, 22, 0.25)' },
+  { name: 'CAVE 8: CHECKERBOARD LEDGES', wall: '#FACC15', plat: '#22C55E', fill: 'rgba(34, 197, 94, 0.25)' },
+  { name: 'CAVE 9: DUAL SIDE FUNNELS', wall: '#EC4899', plat: '#00F0FF', fill: 'rgba(0, 240, 255, 0.25)' },
+  { name: 'CAVE 10: HOURGLASS CHAMBER', wall: '#6366F1', plat: '#A855F7', fill: 'rgba(168, 85, 247, 0.25)' },
+  { name: 'CAVE 11: CASTLE RAMPARTS', wall: '#14B8A6', plat: '#F59E0B', fill: 'rgba(245, 158, 11, 0.25)' },
+  { name: 'CAVE 12: SUPER DRUNK SANCTUM', wall: '#F43F5E', plat: '#FFD700', fill: 'rgba(255, 215, 0, 0.28)' }
+];
+
 const LEVEL_LAYOUTS = [
-  // Level 1: Classic 3-tier symmetrical cave
+  // Cave 1: Classic 3-Tier symmetrical cave
   [
     { x: 140, y: 410, w: 260 },
     { x: 560, y: 410, w: 260 },
@@ -53,7 +68,7 @@ const LEVEL_LAYOUTS = [
     { x: 140, y: 190, w: 260 },
     { x: 560, y: 190, w: 260 }
   ],
-  // Level 2: Pyramid steps
+  // Cave 2: Pyramid Steps
   [
     { x: 100, y: 420, w: 200 },
     { x: 380, y: 420, w: 200 },
@@ -62,7 +77,7 @@ const LEVEL_LAYOUTS = [
     { x: 540, y: 315, w: 220 },
     { x: 310, y: 205, w: 340 }
   ],
-  // Level 3: Twin towers & central bridge
+  // Cave 3: Twin Towers & central bridge
   [
     { x: 90, y: 415, w: 190 },
     { x: 680, y: 415, w: 190 },
@@ -71,14 +86,14 @@ const LEVEL_LAYOUTS = [
     { x: 680, y: 270, w: 190 },
     { x: 280, y: 180, w: 400 }
   ],
-  // Level 4: Zig-zag canyon
+  // Cave 4: Zig-Zag Canyon
   [
     { x: 110, y: 430, w: 560 },
     { x: 290, y: 335, w: 560 },
     { x: 110, y: 240, w: 560 },
     { x: 290, y: 145, w: 420 }
   ],
-  // Level 5: Diamond Sanctum
+  // Cave 5: Diamond Sanctum
   [
     { x: 320, y: 425, w: 320 },
     { x: 140, y: 330, w: 240 },
@@ -86,7 +101,7 @@ const LEVEL_LAYOUTS = [
     { x: 260, y: 235, w: 440 },
     { x: 350, y: 145, w: 260 }
   ],
-  // Level 6: Grand Spiral Catwalk
+  // Cave 6: Grand Spiral Catwalk
   [
     { x: 90, y: 425, w: 230 },
     { x: 365, y: 425, w: 230 },
@@ -95,6 +110,72 @@ const LEVEL_LAYOUTS = [
     { x: 90, y: 225, w: 280 },
     { x: 590, y: 225, w: 280 },
     { x: 290, y: 135, w: 380 }
+  ],
+  // Cave 7: Central Chimney Drop Funnel
+  [
+    { x: 80, y: 420, w: 310 },
+    { x: 570, y: 420, w: 310 },
+    { x: 130, y: 325, w: 260 },
+    { x: 570, y: 325, w: 260 },
+    { x: 180, y: 230, w: 210 },
+    { x: 570, y: 230, w: 210 },
+    { x: 80, y: 140, w: 280 },
+    { x: 600, y: 140, w: 280 }
+  ],
+  // Cave 8: Checkerboard Ledges
+  [
+    { x: 90, y: 425, w: 180 },
+    { x: 390, y: 425, w: 180 },
+    { x: 690, y: 425, w: 180 },
+    { x: 240, y: 330, w: 180 },
+    { x: 540, y: 330, w: 180 },
+    { x: 90, y: 235, w: 180 },
+    { x: 390, y: 235, w: 180 },
+    { x: 690, y: 235, w: 180 },
+    { x: 240, y: 145, w: 180 },
+    { x: 540, y: 145, w: 180 }
+  ],
+  // Cave 9: Dual Side Funnels
+  [
+    { x: 230, y: 420, w: 500 },
+    { x: 75, y: 325, w: 175 },
+    { x: 330, y: 325, w: 300 },
+    { x: 710, y: 325, w: 175 },
+    { x: 230, y: 230, w: 500 },
+    { x: 140, y: 140, w: 240 },
+    { x: 580, y: 140, w: 240 }
+  ],
+  // Cave 10: Hourglass Chamber
+  [
+    { x: 110, y: 425, w: 740 },
+    { x: 220, y: 330, w: 520 },
+    { x: 330, y: 235, w: 300 },
+    { x: 150, y: 145, w: 270 },
+    { x: 540, y: 145, w: 270 }
+  ],
+  // Cave 11: Castle Ramparts
+  [
+    { x: 80, y: 425, w: 220 },
+    { x: 370, y: 425, w: 220 },
+    { x: 660, y: 425, w: 220 },
+    { x: 160, y: 330, w: 640 },
+    { x: 80, y: 235, w: 200 },
+    { x: 380, y: 235, w: 200 },
+    { x: 680, y: 235, w: 200 },
+    { x: 140, y: 145, w: 160 },
+    { x: 400, y: 145, w: 160 },
+    { x: 660, y: 145, w: 160 }
+  ],
+  // Cave 12: Super Drunk Boss Sanctum
+  [
+    { x: 80, y: 425, w: 210 },
+    { x: 670, y: 425, w: 210 },
+    { x: 310, y: 350, w: 340 },
+    { x: 80, y: 265, w: 210 },
+    { x: 670, y: 265, w: 210 },
+    { x: 260, y: 185, w: 440 },
+    { x: 110, y: 115, w: 180 },
+    { x: 670, y: 115, w: 180 }
   ]
 ];
 
@@ -183,7 +264,9 @@ export class BubbleBobble {
   }
 
   _initStage() {
-    const layout = LEVEL_LAYOUTS[(this.level - 1) % LEVEL_LAYOUTS.length];
+    const caveIdx = (this.level - 1) % LEVEL_LAYOUTS.length;
+    const layout = LEVEL_LAYOUTS[caveIdx];
+    this.caveTheme = CAVE_THEMES[caveIdx % CAVE_THEMES.length];
     this.platforms = layout.map((p) => ({ ...p, h: 14 }));
 
     this.bubbles = [];
@@ -814,13 +897,15 @@ export class BubbleBobble {
     ctx.restore();
 
     // Cave Brick Walls & Floor
-    const wallColor = this.level % 2 === 1 ? '#FF007A' : '#00F0FF';
+    const theme = this.caveTheme || CAVE_THEMES[(this.level - 1) % CAVE_THEMES.length];
+    const wallColor = theme.wall;
+    const platColor = theme.plat;
     this.renderer.drawGlowRect(0, 38, this.wallLeft, this.height - 38, wallColor, 8, false, 2);
     this.renderer.drawGlowRect(this.wallRight, 38, this.width - this.wallRight, this.height - 38, wallColor, 8, false, 2);
     this.renderer.drawGlowRect(0, this.floorY, this.width, this.height - this.floorY, wallColor, 8, false, 2);
 
     // Brick pattern inside walls
-    ctx.fillStyle = 'rgba(255, 0, 122, 0.16)';
+    ctx.fillStyle = theme.fill;
     for (let y = 44; y < this.floorY; y += 22) {
       ctx.fillRect(4, y, this.wallLeft - 8, 16);
       ctx.fillRect(this.wallRight + 4, y, this.width - this.wallRight - 8, 16);
@@ -828,8 +913,8 @@ export class BubbleBobble {
 
     // One-Way Neon Platforms
     for (const plat of this.platforms) {
-      this.renderer.drawGlowRect(plat.x, plat.y, plat.w, plat.h, PALETTE.PURPLE, 8, false, 2);
-      ctx.fillStyle = 'rgba(184, 41, 255, 0.25)';
+      this.renderer.drawGlowRect(plat.x, plat.y, plat.w, plat.h, platColor, 8, false, 2);
+      ctx.fillStyle = theme.fill;
       ctx.fillRect(plat.x + 2, plat.y + 2, plat.w - 4, plat.h - 4);
     }
 

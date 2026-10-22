@@ -152,54 +152,180 @@ export class BattleCity {
       }
     };
 
-    const layoutIdx = (level - 1) % 3;
-    // Construct classic symmetrical columns & terrain bands
-    for (let r = 2; r <= 12; r++) {
-      if (r === 6 || r === 7) continue;
-      for (const c of [2, 3, 6, 7, 10, 11, 14, 15, 18, 19, 22, 23]) {
-        setTile(c, r, TILE.BRICK);
-      }
-    }
+    const STAGE_NAMES = [
+      'CLASSIC COLUMNS',
+      'STEEL CORRIDORS',
+      'TWIN RIVER BRIDGES',
+      'FOREST AMBUSH',
+      'GLACIER ICE RING',
+      'CROSSROAD MOAT',
+      'CITADEL OF STEEL',
+      'TWIN FORTRESSES',
+      'ZIG-ZAG CANYON',
+      'IRON CURTAIN FINALE'
+    ];
+    const layoutIdx = (level - 1) % 10;
+    this.stageName = STAGE_NAMES[layoutIdx];
 
-    // River / Steel / Forest / Ice features varying by stage layout
-    if (layoutIdx === 0) {
-      for (let c = 4; c <= 21; c++) {
-        if (c === 12 || c === 13) setTile(c, 7, TILE.STEEL);
-        else if (c >= 8 && c <= 17) setTile(c, 7, TILE.BRICK);
-      }
-      for (let r = 5; r <= 9; r++) {
-        setTile(0, r, TILE.TREES);
-        setTile(1, r, TILE.TREES);
-        setTile(24, r, TILE.TREES);
-        setTile(25, r, TILE.TREES);
-      }
-      setTile(5, 4, TILE.STEEL);
-      setTile(20, 4, TILE.STEEL);
-    } else if (layoutIdx === 1) {
-      // River channel with twin bridges
-      for (let c = 0; c < this.cols; c++) {
-        if (c !== 5 && c !== 6 && c !== 19 && c !== 20) {
-          setTile(c, 7, TILE.WATER);
-        } else {
-          setTile(c, 7, TILE.ICE);
+    const fillRect = (c1, r1, c2, r2, t) => {
+      for (let r = r1; r <= r2; r++) {
+        for (let c = c1; c <= c2; c++) {
+          setTile(c, r, t);
         }
       }
-      for (let c = 9; c <= 16; c++) {
-        setTile(c, 4, TILE.TREES);
-        setTile(c, 10, TILE.ICE);
+    };
+
+    if (layoutIdx === 0) {
+      // Stage 1: Classic 1985 Stage 1 (6 vertical brick columns + center brick H-bar)
+      for (let r = 2; r <= 12; r++) {
+        if (r === 7) continue;
+        for (const c of [2, 3, 6, 7, 10, 11, 14, 15, 18, 19, 22, 23]) {
+          setTile(c, r, TILE.BRICK);
+        }
       }
-      setTile(12, 3, TILE.STEEL);
-      setTile(13, 3, TILE.STEEL);
+      fillRect(10, 5, 15, 6, TILE.BRICK);
+      setTile(12, 4, TILE.STEEL);
+      setTile(13, 4, TILE.STEEL);
+      fillRect(0, 6, 1, 8, TILE.BRICK);
+      fillRect(24, 6, 25, 8, TILE.BRICK);
+    } else if (layoutIdx === 1) {
+      // Stage 2: Steel & Brick Corridors with asymmetric steel shields
+      for (let r = 2; r <= 12; r++) {
+        if (r === 6 || r === 7) continue;
+        for (const c of [2, 3, 6, 7, 10, 11, 14, 15, 18, 19, 22, 23]) {
+          setTile(c, r, TILE.BRICK);
+        }
+      }
+      fillRect(6, 3, 7, 4, TILE.STEEL);
+      fillRect(14, 2, 15, 3, TILE.STEEL);
+      fillRect(22, 4, 23, 5, TILE.STEEL);
+      fillRect(0, 6, 3, 7, TILE.TREES);
+      fillRect(18, 6, 21, 8, TILE.TREES);
+      fillRect(10, 8, 15, 8, TILE.STEEL);
+    } else if (layoutIdx === 2) {
+      // Stage 3: Twin River Bridges with Forest Camouflage belt
+      for (let c = 0; c < this.cols; c++) {
+        if ((c >= 5 && c <= 7) || (c >= 18 && c <= 20)) {
+          setTile(c, 7, TILE.BRICK);
+          setTile(c, 8, TILE.ICE);
+        } else {
+          setTile(c, 7, TILE.WATER);
+          setTile(c, 8, TILE.WATER);
+        }
+      }
+      fillRect(2, 5, 23, 6, TILE.TREES);
+      fillRect(3, 2, 4, 4, TILE.BRICK);
+      fillRect(11, 2, 14, 4, TILE.BRICK);
+      fillRect(21, 2, 22, 4, TILE.BRICK);
+      fillRect(4, 10, 9, 11, TILE.BRICK);
+      fillRect(16, 10, 21, 11, TILE.BRICK);
+      setTile(12, 10, TILE.STEEL);
+      setTile(13, 10, TILE.STEEL);
+    } else if (layoutIdx === 3) {
+      // Stage 4: Forest Ambush (dense green canopy hiding sniper lanes)
+      fillRect(2, 3, 23, 11, TILE.TREES);
+      for (const c of [5, 6, 12, 13, 19, 20]) {
+        fillRect(c, 2, c, 12, TILE.BRICK);
+      }
+      fillRect(2, 6, 23, 7, TILE.TREES);
+      fillRect(8, 4, 9, 5, TILE.STEEL);
+      fillRect(16, 4, 17, 5, TILE.STEEL);
+      fillRect(0, 7, 1, 9, TILE.WATER);
+      fillRect(24, 7, 25, 9, TILE.WATER);
+    } else if (layoutIdx === 4) {
+      // Stage 5: Glacier Ice Ring (slippery ice tracks around central steel bunker)
+      fillRect(3, 3, 22, 4, TILE.ICE);
+      fillRect(3, 10, 22, 11, TILE.ICE);
+      fillRect(3, 4, 4, 10, TILE.ICE);
+      fillRect(21, 4, 22, 10, TILE.ICE);
+      fillRect(9, 6, 16, 8, TILE.STEEL);
+      fillRect(11, 6, 14, 8, TILE.BRICK);
+      fillRect(6, 6, 7, 8, TILE.BRICK);
+      fillRect(18, 6, 19, 8, TILE.BRICK);
+      fillRect(0, 5, 1, 9, TILE.TREES);
+      fillRect(24, 5, 25, 9, TILE.TREES);
+    } else if (layoutIdx === 5) {
+      // Stage 6: The Crossroad Moat (horizontal & vertical water channels with brick bridges)
+      for (let c = 0; c < this.cols; c++) {
+        if (c !== 4 && c !== 5 && c !== 12 && c !== 13 && c !== 20 && c !== 21) {
+          setTile(c, 7, TILE.WATER);
+        }
+      }
+      for (let r = 2; r <= 12; r++) {
+        if (r !== 4 && r !== 7 && r !== 10) {
+          setTile(8, r, TILE.WATER);
+          setTile(17, r, TILE.WATER);
+        }
+      }
+      fillRect(2, 2, 6, 5, TILE.BRICK);
+      fillRect(19, 2, 23, 5, TILE.BRICK);
+      fillRect(10, 3, 15, 5, TILE.BRICK);
+      fillRect(10, 9, 15, 11, TILE.BRICK);
+      fillRect(2, 9, 6, 11, TILE.TREES);
+      fillRect(19, 9, 23, 11, TILE.TREES);
+      setTile(12, 6, TILE.STEEL);
+      setTile(13, 6, TILE.STEEL);
+    } else if (layoutIdx === 6) {
+      // Stage 7: Citadel of Steel (checkerboard steel blocks & brick pockets)
+      for (let r = 2; r <= 11; r += 3) {
+        for (let c = 2; c <= 22; c += 4) {
+          fillRect(c, r, c + 1, r + 1, (r + c) % 2 === 0 ? TILE.STEEL : TILE.BRICK);
+        }
+      }
+      fillRect(8, 6, 17, 7, TILE.BRICK);
+      fillRect(11, 3, 14, 4, TILE.STEEL);
+      fillRect(0, 4, 1, 10, TILE.ICE);
+      fillRect(24, 4, 25, 10, TILE.ICE);
+    } else if (layoutIdx === 7) {
+      // Stage 8: Twin Fortresses (two upper enemy bastions overlooking the Phoenix base)
+      fillRect(2, 2, 9, 6, TILE.BRICK);
+      fillRect(4, 3, 7, 5, TILE.EMPTY);
+      fillRect(4, 6, 7, 6, TILE.STEEL);
+
+      fillRect(16, 2, 23, 6, TILE.BRICK);
+      fillRect(18, 3, 21, 5, TILE.EMPTY);
+      fillRect(18, 6, 21, 6, TILE.STEEL);
+
+      fillRect(11, 3, 14, 7, TILE.TREES);
+      fillRect(3, 9, 8, 11, TILE.BRICK);
+      fillRect(17, 9, 22, 11, TILE.BRICK);
+      fillRect(10, 10, 15, 10, TILE.WATER);
+    } else if (layoutIdx === 8) {
+      // Stage 9: Zig-Zag Canyon (diagonal brick walls & ice chutes)
+      for (let i = 0; i < 10; i++) {
+        fillRect(2 + i, 2 + i, 3 + i, 3 + i, TILE.BRICK);
+        fillRect(22 - i, 2 + i, 23 - i, 3 + i, TILE.BRICK);
+      }
+      fillRect(11, 2, 14, 5, TILE.ICE);
+      fillRect(2, 7, 6, 9, TILE.ICE);
+      fillRect(19, 7, 23, 9, TILE.ICE);
+      fillRect(11, 6, 14, 7, TILE.STEEL);
+      fillRect(8, 10, 17, 11, TILE.TREES);
     } else {
-      // Ice & Steel Fortress
-      for (let c = 4; c <= 21; c++) {
-        setTile(c, 6, TILE.ICE);
-        setTile(c, 8, TILE.TREES);
+      // Stage 10: Iron Curtain Finale (fortified steel & water perimeter)
+      fillRect(2, 3, 23, 3, TILE.STEEL);
+      setTile(6, 3, TILE.BRICK);
+      setTile(7, 3, TILE.BRICK);
+      setTile(12, 3, TILE.BRICK);
+      setTile(13, 3, TILE.BRICK);
+      setTile(18, 3, TILE.BRICK);
+      setTile(19, 3, TILE.BRICK);
+
+      for (let c = 1; c <= 24; c++) {
+        if (c !== 4 && c !== 5 && c !== 12 && c !== 13 && c !== 20 && c !== 21) {
+          setTile(c, 8, TILE.WATER);
+        } else {
+          setTile(c, 8, TILE.ICE);
+        }
       }
-      for (const c of [4, 5, 12, 13, 20, 21]) {
-        setTile(c, 4, TILE.STEEL);
-        setTile(c, 10, TILE.STEEL);
-      }
+      fillRect(3, 5, 10, 6, TILE.BRICK);
+      fillRect(15, 5, 22, 6, TILE.BRICK);
+      fillRect(11, 5, 14, 6, TILE.STEEL);
+      fillRect(4, 10, 9, 11, TILE.TREES);
+      fillRect(16, 10, 21, 11, TILE.TREES);
+      fillRect(10, 11, 15, 11, TILE.STEEL);
+      setTile(12, 11, TILE.BRICK);
+      setTile(13, 11, TILE.BRICK);
     }
 
     // Clear top 3 enemy spawn zones & player spawn zone

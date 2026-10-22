@@ -31,6 +31,130 @@ const INGREDIENT_TYPES = [
   { id: 'bottomBun', label: 'BOTTOM BUN', color: '#D97706', rim: '#FDE68A' }
 ];
 
+// Ladder X indices refer to: [82, 175, 276, 378, 480, 582, 684, 785, 878]
+export const KITCHEN_STAGE_LAYOUTS = [
+  // Stage 1: Classic 4-Stack Bistro (full ladders & 4 burger stacks)
+  {
+    name: 'CLASSIC BISTRO',
+    floorColor: '#1D4ED8',
+    ingredientIndices: [0, 1, 2, 5],
+    colFloors: [
+      [0, 2, 3, 5],
+      [1, 2, 4, 5],
+      [1, 2, 4, 5],
+      [0, 2, 3, 5]
+    ],
+    ladderRows: [
+      [0, 1, 3, 4, 5, 7, 8],
+      [0, 2, 3, 4, 5, 6, 8],
+      [0, 1, 2, 4, 6, 7, 8],
+      [0, 1, 3, 4, 5, 7, 8],
+      [0, 2, 4, 6, 8]
+    ],
+    enemyTypes: ['hotdog', 'hotdog', 'egg']
+  },
+  // Stage 2: Split-Bridge Kitchen (staggered ladders & offset ingredient starting floors)
+  {
+    name: 'SPLIT-BRIDGE KITCHEN',
+    floorColor: '#0E7490',
+    ingredientIndices: [0, 1, 2, 5],
+    colFloors: [
+      [0, 1, 3, 4],
+      [1, 2, 4, 5],
+      [0, 2, 3, 5],
+      [1, 3, 4, 5]
+    ],
+    ladderRows: [
+      [0, 2, 6, 8],
+      [1, 3, 5, 7],
+      [0, 2, 4, 6, 8],
+      [1, 4, 7],
+      [0, 2, 6, 8]
+    ],
+    enemyTypes: ['hotdog', 'egg', 'pickle', 'hotdog']
+  },
+  // Stage 3: Pyramid Steps Kitchen (stepped V/pyramid across the 6 floors with center express ladders)
+  {
+    name: 'PYRAMID STEPS',
+    floorColor: '#7C3AED',
+    ingredientIndices: [0, 1, 3, 5],
+    colFloors: [
+      [1, 3, 4, 5],
+      [0, 1, 2, 3],
+      [0, 1, 2, 3],
+      [1, 3, 4, 5]
+    ],
+    ladderRows: [
+      [0, 3, 4, 5, 8],
+      [1, 2, 4, 6, 7],
+      [0, 2, 4, 6, 8],
+      [0, 1, 4, 7, 8],
+      [0, 3, 4, 5, 8]
+    ],
+    enemyTypes: ['hotdog', 'egg', 'pickle', 'egg']
+  },
+  // Stage 4: Twin Tower Grill (outer columns start high, inner columns start mid-level with Mr. Egg & Mr. Pickle rush)
+  {
+    name: 'TWIN TOWER GRILL',
+    floorColor: '#B45309',
+    ingredientIndices: [0, 1, 2, 4, 5],
+    colFloors: [
+      [0, 1, 2, 3, 4],
+      [1, 2, 3, 4, 5],
+      [1, 2, 3, 4, 5],
+      [0, 1, 2, 3, 4]
+    ],
+    ladderRows: [
+      [0, 1, 4, 7, 8],
+      [0, 2, 3, 5, 6, 8],
+      [1, 3, 4, 5, 7],
+      [0, 2, 4, 6, 8],
+      [0, 1, 3, 5, 7, 8]
+    ],
+    enemyTypes: ['egg', 'pickle', 'hotdog', 'pickle', 'egg']
+  },
+  // Stage 5: Labyrinth Scaffold (alternating zig-zag ladder connections between floors)
+  {
+    name: 'LABYRINTH SCAFFOLD',
+    floorColor: '#BE185D',
+    ingredientIndices: [0, 1, 2, 3, 5],
+    colFloors: [
+      [0, 1, 3, 4, 5],
+      [0, 2, 3, 4, 5],
+      [0, 1, 2, 4, 5],
+      [0, 1, 3, 4, 5]
+    ],
+    ladderRows: [
+      [0, 3, 6, 8],
+      [1, 4, 7],
+      [0, 2, 5, 8],
+      [1, 3, 6, 7],
+      [0, 2, 4, 8]
+    ],
+    enemyTypes: ['hotdog', 'pickle', 'egg', 'hotdog', 'pickle']
+  },
+  // Stage 6: Master Chef 6-Layer Feast (all 6 ingredients per stack with high-speed enemy patrol)
+  {
+    name: 'MASTER CHEF FEAST',
+    floorColor: '#15803D',
+    ingredientIndices: [0, 1, 2, 3, 4, 5],
+    colFloors: [
+      [0, 1, 2, 3, 4, 5],
+      [0, 1, 2, 3, 4, 5],
+      [0, 1, 2, 3, 4, 5],
+      [0, 1, 2, 3, 4, 5]
+    ],
+    ladderRows: [
+      [0, 1, 2, 4, 6, 7, 8],
+      [0, 2, 3, 4, 5, 6, 8],
+      [0, 1, 3, 4, 5, 7, 8],
+      [0, 2, 3, 4, 5, 6, 8],
+      [0, 1, 2, 4, 6, 7, 8]
+    ],
+    enemyTypes: ['hotdog', 'egg', 'pickle', 'hotdog', 'pickle']
+  }
+];
+
 export class BurgerTime {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -74,48 +198,32 @@ export class BurgerTime {
     this.bonusTimer = 8.0;
     this.levelClearTimer = 0;
 
-    // Build Ladders connecting the 6 scaffold floors
+    const stageCfg = KITCHEN_STAGE_LAYOUTS[(level - 1) % KITCHEN_STAGE_LAYOUTS.length];
+    this.stageName = stageCfg.name;
+    this.floorColor = stageCfg.floorColor || '#1D4ED8';
+
+    // Build Ladders connecting the 6 scaffold floors from stage layout
     this.ladders = [];
     const ladderXs = [82, 175, 276, 378, 480, 582, 684, 785, 878];
     for (let f = 0; f < this.floorYs.length - 1; f++) {
       const y1 = this.floorYs[f];
       const y2 = this.floorYs[f + 1];
-      ladderXs.forEach((lx, idx) => {
-        // Stagger inner ladders while keeping outer/column ladders accessible
-        if (idx % 2 === 0 || (f + idx) % 2 === 0) {
-          this.ladders.push({ x: lx, y1, y2 });
-        }
-      });
+      const rowIndices = stageCfg.ladderRows[f] || [0, 2, 4, 6, 8];
+      for (const idx of rowIndices) {
+        this.ladders.push({ x: ladderXs[idx], y1, y2 });
+      }
     }
 
-    // Build 4 Columns of 6 Burger Ingredients (Top Bun, Lettuce, Meat Patty, Tomato, Cheese, Bottom Bun)
-    const numIngredients = Math.min(6, 4 + Math.floor(level / 2));
-    // Choose which ingredient rows are active for this level (always include topBun and bottomBun)
-    let activeTemplates = INGREDIENT_TYPES;
-    if (numIngredients === 4) {
-      activeTemplates = [
-        INGREDIENT_TYPES[0],
-        INGREDIENT_TYPES[1],
-        INGREDIENT_TYPES[2],
-        INGREDIENT_TYPES[5]
-      ];
-    } else if (numIngredients === 5) {
-      activeTemplates = [
-        INGREDIENT_TYPES[0],
-        INGREDIENT_TYPES[1],
-        INGREDIENT_TYPES[2],
-        INGREDIENT_TYPES[4],
-        INGREDIENT_TYPES[5]
-      ];
-    }
+    // Build 4 Columns of Burger Ingredients for this stage layout
+    const activeTemplates = stageCfg.ingredientIndices.map((idx) => INGREDIENT_TYPES[idx]);
 
     this.slices = [];
     for (let c = 0; c < 4; c++) {
       const cx = this.colXs[c];
       const count = activeTemplates.length;
+      const colFloorList = stageCfg.colFloors[c];
       for (let r = 0; r < count; r++) {
-        // Place ingredients on scaffold floors
-        const floorIndex = r + (6 - count);
+        const floorIndex = colFloorList ? colFloorList[r] : r + (6 - count);
         const tpl = activeTemplates[r];
         this.slices.push({
           col: c,
@@ -144,14 +252,15 @@ export class BurgerTime {
 
     // Initialize Enemies: Mr. Hot Dog, Mr. Egg, Mr. Pickle
     this.enemies = [];
-    const enemyDefs = [
-      { type: 'hotdog', name: 'MR. HOT DOG', color: '#EF4444', accent: '#FDBA74', pts: 100 },
-      { type: 'egg', name: 'MR. EGG', color: '#F8FAFC', accent: '#FACC15', pts: 300 },
-      { type: 'pickle', name: 'MR. PICKLE', color: '#22C55E', accent: '#86EFAC', pts: 200 }
-    ];
-    const enemyCount = Math.min(5, 3 + Math.floor(level / 2));
+    const enemyCatalog = {
+      hotdog: { type: 'hotdog', name: 'MR. HOT DOG', color: '#EF4444', accent: '#FDBA74', pts: 100 },
+      egg: { type: 'egg', name: 'MR. EGG', color: '#F8FAFC', accent: '#FACC15', pts: 300 },
+      pickle: { type: 'pickle', name: 'MR. PICKLE', color: '#22C55E', accent: '#86EFAC', pts: 200 }
+    };
+    const roster = stageCfg.enemyTypes || ['hotdog', 'egg', 'pickle'];
+    const enemyCount = Math.min(6, roster.length + Math.floor((level - 1) / 6));
     for (let i = 0; i < enemyCount; i++) {
-      const def = enemyDefs[i % enemyDefs.length];
+      const def = enemyCatalog[roster[i % roster.length]];
       const startFloor = i % 2 === 0 ? 0 : 5;
       const startX = i % 2 === 0 ? 82 : 878;
       this.enemies.push({
@@ -734,7 +843,7 @@ export class BurgerTime {
 
     // Draw 6 Horizontal Kitchen Scaffold Floors
     for (const fy of this.floorYs) {
-      this.renderer.drawGlowRect(65, fy, 830, 5, '#1D4ED8', 8);
+      this.renderer.drawGlowRect(65, fy, 830, 5, this.floorColor || '#1D4ED8', 8);
     }
 
     // Draw 4 Bottom Burger Trays

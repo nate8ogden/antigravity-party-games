@@ -247,6 +247,53 @@ for (const id of catalogIds) {
       game.render(ctx);
     }
 
+    // Verify OG Multi-Level Stage Progression across Levels 1..8
+    for (let lvl = 2; lvl <= 8; lvl++) {
+      game.level = lvl;
+      if (typeof game.stage === 'number') game.stage = lvl;
+      if (typeof game.wave === 'number') game.wave = lvl;
+      if (typeof game.round === 'number') game.round = lvl;
+
+      if (typeof game.loadLevel === 'function') game.loadLevel(lvl);
+      else if (typeof game._loadLevel === 'function') game._loadLevel(lvl);
+      else if (typeof game.initStage === 'function') game.initStage(lvl);
+      else if (typeof game._initStage === 'function') game._initStage(lvl);
+      else if (typeof game._initRound === 'function') game._initRound(true);
+      else if (typeof game.initRound === 'function') game.initRound(lvl);
+      else if (typeof game._initKitchen === 'function') game._initKitchen(lvl);
+      else if (typeof game._buildCourse === 'function') game._buildCourse(lvl);
+      else if (typeof game._buildFortress === 'function') {
+        game._buildFortress(lvl);
+        if (typeof game._initPaddle === 'function') game._initPaddle();
+      } else if (typeof game._loadScreen === 'function') {
+        game.screenIndex = lvl - 1;
+        game._loadScreen(game.screenIndex);
+      } else if (typeof game._initTrack === 'function') game._initTrack(lvl);
+      else if (typeof game._buildTrack === 'function') game._buildTrack(lvl);
+      else if (typeof game._initCourse === 'function') game._initCourse(lvl);
+      else if (typeof game._initMaze === 'function') game._initMaze(lvl);
+      else if (typeof game._buildCastleLayout === 'function') game._buildCastleLayout(lvl);
+      else if (typeof game._setupBuilding === 'function') game._setupBuilding(lvl);
+      else if (typeof game._setupWave === 'function') game._setupWave(lvl);
+      else if (typeof game._loadTubeWave === 'function') game._loadTubeWave(lvl);
+      else if (typeof game.initFloor === 'function') game.initFloor(lvl);
+      else if (typeof game._initHighway === 'function') game._initHighway(lvl);
+      else if (typeof game._initSector === 'function') game._initSector(lvl);
+      else if (typeof game._initPyramid === 'function') game._initPyramid(lvl);
+      else if (typeof game._buildCity === 'function') game._buildCity(lvl);
+      else if (typeof game._initLevel === 'function') game._initLevel(lvl);
+      else if (typeof game._initBout === 'function') game._initBout(lvl);
+      else if (typeof game._initEvent === 'function') {
+        game.eventIndex = (lvl - 1) % 5;
+        game._initEvent(game.eventIndex);
+      } else if (typeof game._spawnWave === 'function') game._spawnWave(lvl);
+      else if (typeof game._initWave === 'function') game._initWave(lvl);
+
+      game.state = 'PLAYING';
+      game.update(1 / 60);
+      game.render(ctx);
+    }
+
     // Verify reset() and destroy()
     if (typeof game.reset === 'function') {
       game.reset();

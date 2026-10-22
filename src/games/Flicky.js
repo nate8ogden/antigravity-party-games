@@ -8,8 +8,215 @@
 import { PALETTE, FONTS, HighScoreStore } from '../engine/Renderer.js';
 
 const FLOORS = [496, 396, 296, 196];
-const DOOR_X = 480;
-const DOOR_Y = 396;
+
+const STAGE_LAYOUTS = [
+  {
+    // Round 1: Classic Blue Brick Living Room
+    name: 'ROUND 1: BLUE TERRACE',
+    bg: '#0F172A',
+    platformFill: '#0284C7',
+    platformStroke: '#00F0FF',
+    doorX: 480,
+    doorY: FLOORS[1],
+    platforms: [
+      { x: 0, w: 960, y: FLOORS[0] },
+      { x: 30, w: 280, y: FLOORS[1] },
+      { x: 360, w: 240, y: FLOORS[1] },
+      { x: 650, w: 280, y: FLOORS[1] },
+      { x: 80, w: 340, y: FLOORS[2] },
+      { x: 540, w: 340, y: FLOORS[2] },
+      { x: 40, w: 250, y: FLOORS[3] },
+      { x: 355, w: 250, y: FLOORS[3] },
+      { x: 670, w: 250, y: FLOORS[3] }
+    ],
+    chicks: [
+      { x: 110, y: FLOORS[3] }, { x: 480, y: FLOORS[3] }, { x: 820, y: FLOORS[3] },
+      { x: 220, y: FLOORS[2] }, { x: 720, y: FLOORS[2] },
+      { x: 160, y: FLOORS[1] }, { x: 800, y: FLOORS[1] }, { x: 240, y: FLOORS[0] }
+    ]
+  },
+  {
+    // Round 2: Pink Parlor with Upper Exit Door
+    name: 'ROUND 2: ROSE PARLOR',
+    bg: '#1F1024',
+    platformFill: '#BE185D',
+    platformStroke: '#FF007A',
+    doorX: 480,
+    doorY: FLOORS[2],
+    platforms: [
+      { x: 0, w: 960, y: FLOORS[0] },
+      { x: 60, w: 360, y: FLOORS[1] },
+      { x: 540, w: 360, y: FLOORS[1] },
+      { x: 20, w: 240, y: FLOORS[2] },
+      { x: 340, w: 280, y: FLOORS[2] },
+      { x: 700, w: 240, y: FLOORS[2] },
+      { x: 120, w: 300, y: FLOORS[3] },
+      { x: 540, w: 300, y: FLOORS[3] }
+    ],
+    chicks: [
+      { x: 250, y: FLOORS[3] }, { x: 690, y: FLOORS[3] },
+      { x: 130, y: FLOORS[2] }, { x: 830, y: FLOORS[2] },
+      { x: 210, y: FLOORS[1] }, { x: 730, y: FLOORS[1] },
+      { x: 150, y: FLOORS[0] }, { x: 810, y: FLOORS[0] }
+    ]
+  },
+  {
+    // Round 3: Emerald Conservatory with Split Shelves
+    name: 'ROUND 3: EMERALD VERANDA',
+    bg: '#091E18',
+    platformFill: '#047857',
+    platformStroke: '#00FF66',
+    doorX: 200,
+    doorY: FLOORS[1],
+    platforms: [
+      { x: 0, w: 960, y: FLOORS[0] },
+      { x: 60, w: 280, y: FLOORS[1] },
+      { x: 400, w: 220, y: FLOORS[1] },
+      { x: 680, w: 220, y: FLOORS[1] },
+      { x: 30, w: 200, y: FLOORS[2] },
+      { x: 290, w: 380, y: FLOORS[2] },
+      { x: 730, w: 200, y: FLOORS[2] },
+      { x: 80, w: 340, y: FLOORS[3] },
+      { x: 540, w: 340, y: FLOORS[3] }
+    ],
+    chicks: [
+      { x: 220, y: FLOORS[3] }, { x: 710, y: FLOORS[3] },
+      { x: 110, y: FLOORS[2] }, { x: 480, y: FLOORS[2] }, { x: 830, y: FLOORS[2] },
+      { x: 510, y: FLOORS[1] }, { x: 790, y: FLOORS[1] },
+      { x: 640, y: FLOORS[0] }
+    ]
+  },
+  {
+    // Round 4: Golden Attic (Top Floor Exit Door!)
+    name: 'ROUND 4: GOLDEN ATTIC',
+    bg: '#1E160A',
+    platformFill: '#B45309',
+    platformStroke: '#FFD700',
+    doorX: 480,
+    doorY: FLOORS[3],
+    platforms: [
+      { x: 0, w: 960, y: FLOORS[0] },
+      { x: 40, w: 260, y: FLOORS[1] },
+      { x: 350, w: 260, y: FLOORS[1] },
+      { x: 660, w: 260, y: FLOORS[1] },
+      { x: 90, w: 330, y: FLOORS[2] },
+      { x: 540, w: 330, y: FLOORS[2] },
+      { x: 30, w: 260, y: FLOORS[3] },
+      { x: 350, w: 260, y: FLOORS[3] },
+      { x: 670, w: 260, y: FLOORS[3] }
+    ],
+    chicks: [
+      { x: 150, y: FLOORS[3] }, { x: 800, y: FLOORS[3] },
+      { x: 240, y: FLOORS[2] }, { x: 710, y: FLOORS[2] },
+      { x: 170, y: FLOORS[1] }, { x: 480, y: FLOORS[1] }, { x: 790, y: FLOORS[1] },
+      { x: 320, y: FLOORS[0] }
+    ]
+  },
+  {
+    // Round 5: Violet Stepping-Stone Gallery
+    name: 'ROUND 5: VIOLET BALCONY',
+    bg: '#170F2E',
+    platformFill: '#6D28D9',
+    platformStroke: '#C084FC',
+    doorX: 760,
+    doorY: FLOORS[1],
+    platforms: [
+      { x: 0, w: 960, y: FLOORS[0] },
+      { x: 40, w: 200, y: FLOORS[1] },
+      { x: 290, w: 180, y: FLOORS[1] },
+      { x: 520, w: 380, y: FLOORS[1] },
+      { x: 60, w: 250, y: FLOORS[2] },
+      { x: 360, w: 240, y: FLOORS[2] },
+      { x: 650, w: 250, y: FLOORS[2] },
+      { x: 140, w: 280, y: FLOORS[3] },
+      { x: 540, w: 280, y: FLOORS[3] }
+    ],
+    chicks: [
+      { x: 280, y: FLOORS[3] }, { x: 680, y: FLOORS[3] },
+      { x: 180, y: FLOORS[2] }, { x: 480, y: FLOORS[2] }, { x: 780, y: FLOORS[2] },
+      { x: 140, y: FLOORS[1] }, { x: 380, y: FLOORS[1] },
+      { x: 220, y: FLOORS[0] }
+    ]
+  },
+  {
+    // Round 6: Crimson Courtyard (Ground Floor Exit Door!)
+    name: 'ROUND 6: CRIMSON COURTYARD',
+    bg: '#230C12',
+    platformFill: '#991B1B',
+    platformStroke: '#FB7185',
+    doorX: 480,
+    doorY: FLOORS[0],
+    platforms: [
+      { x: 0, w: 960, y: FLOORS[0] },
+      { x: 40, w: 370, y: FLOORS[1] },
+      { x: 550, w: 370, y: FLOORS[1] },
+      { x: 30, w: 260, y: FLOORS[2] },
+      { x: 350, w: 260, y: FLOORS[2] },
+      { x: 670, w: 260, y: FLOORS[2] },
+      { x: 90, w: 340, y: FLOORS[3] },
+      { x: 530, w: 340, y: FLOORS[3] }
+    ],
+    chicks: [
+      { x: 220, y: FLOORS[3] }, { x: 400, y: FLOORS[3] }, { x: 700, y: FLOORS[3] },
+      { x: 160, y: FLOORS[2] }, { x: 480, y: FLOORS[2] }, { x: 800, y: FLOORS[2] },
+      { x: 210, y: FLOORS[1] }, { x: 740, y: FLOORS[1] }
+    ]
+  },
+  {
+    // Round 7: Cyan Skybridge (Four Island Shelves per Floor)
+    name: 'ROUND 7: CYAN SKYBRIDGE',
+    bg: '#081C24',
+    platformFill: '#0E7490',
+    platformStroke: '#22D3EE',
+    doorX: 480,
+    doorY: FLOORS[2],
+    platforms: [
+      { x: 0, w: 960, y: FLOORS[0] },
+      { x: 25, w: 190, y: FLOORS[1] },
+      { x: 265, w: 190, y: FLOORS[1] },
+      { x: 505, w: 190, y: FLOORS[1] },
+      { x: 745, w: 190, y: FLOORS[1] },
+      { x: 60, w: 240, y: FLOORS[2] },
+      { x: 360, w: 240, y: FLOORS[2] },
+      { x: 660, w: 240, y: FLOORS[2] },
+      { x: 30, w: 260, y: FLOORS[3] },
+      { x: 350, w: 260, y: FLOORS[3] },
+      { x: 670, w: 260, y: FLOORS[3] }
+    ],
+    chicks: [
+      { x: 160, y: FLOORS[3] }, { x: 480, y: FLOORS[3] }, { x: 800, y: FLOORS[3] },
+      { x: 180, y: FLOORS[2] }, { x: 780, y: FLOORS[2] },
+      { x: 120, y: FLOORS[1] }, { x: 600, y: FLOORS[1] }, { x: 840, y: FLOORS[1] }
+    ]
+  },
+  {
+    // Round 8: Royal Penthouse Finale
+    name: 'ROUND 8: ROYAL PENTHOUSE',
+    bg: '#1A1025',
+    platformFill: '#4338CA',
+    platformStroke: '#FFD700',
+    doorX: 480,
+    doorY: FLOORS[3],
+    platforms: [
+      { x: 0, w: 960, y: FLOORS[0] },
+      { x: 40, w: 250, y: FLOORS[1] },
+      { x: 355, w: 250, y: FLOORS[1] },
+      { x: 670, w: 250, y: FLOORS[1] },
+      { x: 30, w: 195, y: FLOORS[2] },
+      { x: 270, w: 190, y: FLOORS[2] },
+      { x: 500, w: 190, y: FLOORS[2] },
+      { x: 735, w: 195, y: FLOORS[2] },
+      { x: 80, w: 230, y: FLOORS[3] },
+      { x: 365, w: 230, y: FLOORS[3] },
+      { x: 650, w: 230, y: FLOORS[3] }
+    ],
+    chicks: [
+      { x: 190, y: FLOORS[3] }, { x: 770, y: FLOORS[3] },
+      { x: 120, y: FLOORS[2] }, { x: 365, y: FLOORS[2] }, { x: 595, y: FLOORS[2] }, { x: 830, y: FLOORS[2] },
+      { x: 165, y: FLOORS[1] }, { x: 795, y: FLOORS[1] }
+    ]
+  }
+];
 
 export class Flicky {
   constructor(renderer, input, audio) {
@@ -53,37 +260,17 @@ export class Flicky {
   }
 
   _initStage() {
-    this.platforms = [
-      // Bottom full floor
-      { x: 0, w: 960, y: FLOORS[0] },
-      // Floor 1 (with gaps)
-      { x: 30, w: 280, y: FLOORS[1] },
-      { x: 360, w: 240, y: FLOORS[1] },
-      { x: 650, w: 280, y: FLOORS[1] },
-      // Floor 2
-      { x: 80, w: 340, y: FLOORS[2] },
-      { x: 540, w: 340, y: FLOORS[2] },
-      // Top Floor 3
-      { x: 40, w: 250, y: FLOORS[3] },
-      { x: 355, w: 250, y: FLOORS[3] },
-      { x: 670, w: 250, y: FLOORS[3] }
-    ];
+    const cfg = STAGE_LAYOUTS[(this.level - 1) % STAGE_LAYOUTS.length];
+    this.stageTheme = cfg;
+    this.doorX = cfg.doorX;
+    this.doorY = cfg.doorY;
+    this.platforms = cfg.platforms.map((pl) => ({ ...pl }));
 
     this._resetFlicky();
 
     // Spawn 8 Chirping Yellow Piopio Chicks across the floors
     this.chicks = [];
-    const chickSpawns = [
-      { x: 110, y: FLOORS[3] },
-      { x: 480, y: FLOORS[3] },
-      { x: 820, y: FLOORS[3] },
-      { x: 220, y: FLOORS[2] },
-      { x: 720, y: FLOORS[2] },
-      { x: 160, y: FLOORS[1] },
-      { x: 800, y: FLOORS[1] },
-      { x: 240, y: FLOORS[0] }
-    ];
-    chickSpawns.forEach((sp, idx) => {
+    cfg.chicks.forEach((sp, idx) => {
       this.chicks.push({
         x: sp.x,
         y: sp.y,
@@ -120,8 +307,8 @@ export class Flicky {
 
   _resetFlicky() {
     this.flicky = {
-      x: DOOR_X,
-      y: DOOR_Y,
+      x: this.doorX,
+      y: this.doorY,
       vx: 0,
       vy: 0,
       facing: 1,
@@ -131,7 +318,7 @@ export class Flicky {
       trail: []
     };
     for (let i = 0; i < 120; i++) {
-      this.flicky.trail.push({ x: DOOR_X, y: DOOR_Y });
+      this.flicky.trail.push({ x: this.doorX, y: this.doorY });
     }
   }
 
@@ -295,7 +482,7 @@ export class Flicky {
     }
 
     // Deliver Chained Chicks when Flicky passes the EXIT Door!
-    if (Math.hypot(f.x - DOOR_X, f.y - DOOR_Y) < 28) {
+    if (Math.hypot(f.x - this.doorX, f.y - this.doorY) < 28) {
       const chained = this.chicks.filter((c) => c.state === 'CHAIN');
       if (chained.length > 0) {
         for (const c of chained) c.state = 'RESCUED';
@@ -303,14 +490,14 @@ export class Flicky {
         const bonusTable = [0, 200, 500, 1000, 2000, 3200, 4800, 6400, 10000];
         const pts = bonusTable[Math.min(8, n)];
         this.audio.playPowerUp();
-        this._addScore(pts, DOOR_X, DOOR_Y - 36, `${n}x RESCUED! +${pts}`, PALETTE.GREEN);
+        this._addScore(pts, this.doorX, this.doorY - 36, `${n}x RESCUED! +${pts}`, PALETTE.GREEN);
       }
     }
 
     if (allRescued) {
       this.stageClearTimer = 1.6;
       this.audio.playStageClear();
-      this._addScore(2000, DOOR_X, 140, 'ALL CHICKS SAVED! +2000', PALETTE.GOLD);
+      this._addScore(2000, this.doorX, 140, 'ALL CHICKS SAVED! +2000', PALETTE.GOLD);
       return;
     }
 
@@ -393,14 +580,15 @@ export class Flicky {
   }
 
   render(ctx = this.renderer.ctx) {
-    this.renderer.clear('#0F172A');
+    const theme = this.stageTheme || STAGE_LAYOUTS[0];
+    this.renderer.clear(theme.bg);
 
-    // 1. Flashing Home EXIT Door on Floor 1 Center
+    // 1. Flashing Home EXIT Door
     const doorPulse = Math.floor(performance.now() * 0.008) % 2 === 0 ? PALETTE.PINK : PALETTE.GOLD;
-    this.renderer.drawGlowRect(DOOR_X - 24, DOOR_Y - 54, 48, 54, doorPulse, 12, false, 3);
+    this.renderer.drawGlowRect(this.doorX - 24, this.doorY - 54, 48, 54, doorPulse, 12, false, 3);
     ctx.fillStyle = '#1E1B4B';
-    ctx.fillRect(DOOR_X - 21, DOOR_Y - 51, 42, 51);
-    this.renderer.drawText('EXIT', DOOR_X, DOOR_Y - 24, {
+    ctx.fillRect(this.doorX - 21, this.doorY - 51, 42, 51);
+    this.renderer.drawText('EXIT', this.doorX, this.doorY - 24, {
       font: FONTS.HEADER,
       size: 9,
       color: PALETTE.WHITE,
@@ -409,9 +597,9 @@ export class Flicky {
 
     // 2. Multi-Floor Brick & Girder Platforms
     for (const pl of this.platforms) {
-      ctx.fillStyle = '#0284C7';
+      ctx.fillStyle = theme.platformFill;
       ctx.fillRect(pl.x, pl.y, pl.w, 14);
-      ctx.strokeStyle = PALETTE.CYAN;
+      ctx.strokeStyle = theme.platformStroke;
       ctx.lineWidth = 2;
       ctx.strokeRect(pl.x, pl.y, pl.w, 14);
     }

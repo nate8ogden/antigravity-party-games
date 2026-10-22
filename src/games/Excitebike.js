@@ -39,9 +39,51 @@ export class Excitebike {
   }
 
   _initTrack(level) {
-    this.trackLength = 5600 + level * 800;
+    const trackCatalog = [
+      {
+        name: 'TRACK 1: KYOTO STADIUM OPENER',
+        length: 5600,
+        targetTime: 42.0,
+        pattern: ['ramp', 'cooler', 'mud', 'monster', 'cooler', 'ramp']
+      },
+      {
+        name: 'TRACK 2: DOUBLE MUD CHICANE',
+        length: 6200,
+        targetTime: 44.0,
+        pattern: ['mud', 'mud', 'cooler', 'ramp', 'mud', 'monster', 'cooler']
+      },
+      {
+        name: 'TRACK 3: TABLE-TOP PLATEAU & BUMPS',
+        length: 6600,
+        targetTime: 46.0,
+        pattern: ['washboard', 'monster', 'cooler', 'ramp', 'washboard', 'mud', 'cooler']
+      },
+      {
+        name: 'TRACK 4: OVERHEAT STRAIGHTAWAY',
+        length: 7000,
+        targetTime: 47.0,
+        pattern: ['cooler', 'cooler', 'monster', 'mud', 'mud', 'cooler', 'monster']
+      },
+      {
+        name: 'TRACK 5: SUPER JUMP FINALE',
+        length: 7500,
+        targetTime: 49.0,
+        pattern: ['monster', 'washboard', 'cooler', 'monster', 'mud', 'monster', 'cooler']
+      },
+      {
+        name: 'TRACK 6: CUSTOM STUNT ARENA',
+        length: 8000,
+        targetTime: 52.0,
+        pattern: ['washboard', 'monster', 'mud', 'cooler', 'monster', 'washboard', 'monster', 'cooler']
+      }
+    ];
+
+    const trackIdx = (level - 1) % trackCatalog.length;
+    const trackMeta = trackCatalog[trackIdx];
+    this.trackName = trackMeta.name;
+    this.trackLength = trackMeta.length + Math.floor((level - 1) / 6) * 800;
     this.lapTime = 0;
-    this.targetTime = 42.0;
+    this.targetTime = trackMeta.targetTime;
     this.levelClearTimer = 0;
 
     this.bike = {
@@ -61,39 +103,79 @@ export class Excitebike {
       wheelPhase: 0
     };
 
-    // Generate Stadium Track Obstacles: Ramps, Cooling [<<] Strips, Mud Slicks
+    // Generate authentic OG Nintendo Excitebike Obstacle Sequences per Track
     this.features = [];
-    let cursorX = 480;
-    while (cursorX < this.trackLength - 450) {
-      const roll = Math.random();
-      if (roll < 0.36) {
-        // Stunt Incline Ramp spanning all 4 lanes
-        const isMonster = Math.random() < 0.35;
+    let cursorX = 460;
+    let stepIdx = 0;
+    while (cursorX < this.trackLength - 420) {
+      const kind = trackMeta.pattern[stepIdx % trackMeta.pattern.length];
+      stepIdx++;
+
+      if (kind === 'monster') {
+        // Monster Jump Ramp / Table-Top Plateau spanning all 4 lanes
         this.features.push({
           type: 'ramp',
           x: cursorX,
-          width: isMonster ? 190 : 120,
-          height: isMonster ? 76 : 44
+          width: 205,
+          height: 82
         });
-        cursorX += 340;
-      } else if (roll < 0.64) {
-        // Cooling [<<] Arrow Strip in 1 or 2 lanes
-        const lane = Math.floor(Math.random() * 4);
+        cursorX += 360;
+      } else if (kind === 'ramp') {
+        // Standard Stunt Incline Ramp
+        this.features.push({
+          type: 'ramp',
+          x: cursorX,
+          width: 125,
+          height: 46
+        });
+        cursorX += 300;
+      } else if (kind === 'washboard') {
+        // Washboard Bumps (rapid consecutive twin mini-ramps)
+        this.features.push({
+          type: 'ramp',
+          x: cursorX,
+          width: 75,
+          height: 26
+        });
+        this.features.push({
+          type: 'ramp',
+          x: cursorX + 105,
+          width: 75,
+          height: 28
+        });
+        cursorX += 290;
+      } else if (kind === 'cooler') {
+        // Cooling [<<] Arrow Strip in 2 staggered lanes
+        const laneA = (stepIdx + trackIdx) % 4;
+        const laneB = (laneA + 2) % 4;
         this.features.push({
           type: 'cooler',
           x: cursorX,
-          width: 76,
-          lane
+          width: 78,
+          lane: laneA
         });
-        cursorX += 220;
+        this.features.push({
+          type: 'cooler',
+          x: cursorX + 40,
+          width: 78,
+          lane: laneB
+        });
+        cursorX += 230;
       } else {
-        // Mud Slick patch in 1 or 2 lanes
-        const lane = Math.floor(Math.random() * 4);
+        // Double Mud Chicane patches forcing lane weaves
+        const laneA = stepIdx % 4;
+        const laneB = (laneA + 1) % 4;
         this.features.push({
           type: 'mud',
           x: cursorX,
-          width: 84,
-          lane
+          width: 86,
+          lane: laneA
+        });
+        this.features.push({
+          type: 'mud',
+          x: cursorX + 65,
+          width: 86,
+          lane: laneB
         });
         cursorX += 240;
       }
@@ -723,6 +805,16 @@ export class Excitebike {
       size: 16,
       color: PALETTE.GREEN
     });
+
+    if (this.trackName) {
+      this.renderer.drawText(this.trackName, 480, 62, {
+        font: FONTS.HEADER,
+        size: 11,
+        color: PALETTE.GOLD,
+        align: 'center',
+        glow: 6
+      });
+    }
 
     if (this.levelClearTimer > 0) {
       this.renderer.drawText('TRACK COMPLETE! PODIUM BONUS!', 480, 145, {
