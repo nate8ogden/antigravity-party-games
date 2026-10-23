@@ -1803,6 +1803,12 @@ export class AudioSynth {
 
     osc.connect(gain);
     gain.connect(dest);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(startTime);
     osc.stop(startTime + duration + 0.015);
   }
@@ -1817,6 +1823,12 @@ export class AudioSynth {
     gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.09);
     osc.connect(gain);
     gain.connect(dest);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(startTime);
     osc.stop(startTime + 0.095);
   }
@@ -1837,6 +1849,13 @@ export class AudioSynth {
     source.connect(filter);
     filter.connect(gain);
     gain.connect(dest);
+    source.onended = () => {
+      try {
+        source.disconnect();
+        filter.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     source.start(startTime);
     source.stop(startTime + 0.085);
   }
@@ -1857,12 +1876,21 @@ export class AudioSynth {
     source.connect(filter);
     filter.connect(gain);
     gain.connect(dest);
+    source.onended = () => {
+      try {
+        source.disconnect();
+        filter.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     source.start(startTime);
     source.stop(startTime + 0.04);
   }
 
   /**
-   * Jump Sound: Frequency sweep from 150Hz to 600Hz over 0.15s (Square wave)
+   * Donkey Kong & Classic Arcade Jump Sound:
+   * Authentic 1981 Jumpman spring-arc frequency inflection:
+   * G3 (196.00Hz) -> D5 (587.33Hz) -> A4 (440.00Hz) -> E5 (659.25Hz) over 0.155s
    */
   playJump() {
     if (!this._ensureReady()) return;
@@ -1871,16 +1899,76 @@ export class AudioSynth {
     const gain = this.ctx.createGain();
 
     osc.type = 'square';
-    osc.frequency.setValueAtTime(150, now);
-    osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
+    osc.frequency.setValueAtTime(196.0, now);
+    osc.frequency.exponentialRampToValueAtTime(587.33, now + 0.085);
+    osc.frequency.exponentialRampToValueAtTime(440.0, now + 0.115);
+    osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.15);
 
-    gain.gain.setValueAtTime(0.3, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    gain.gain.setValueAtTime(0.28, now);
+    gain.gain.setValueAtTime(0.24, now + 0.09);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.155);
 
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
-    osc.stop(now + 0.155);
+    osc.stop(now + 0.16);
+  }
+
+  /**
+   * Donkey Kong Walk Footstep Stomp:
+   * Alternating C3 (130.81Hz) / D3 (146.83Hz) short girder thud
+   */
+  playWalkStomp(stepParity = 0) {
+    if (!this._ensureReady()) return;
+    const now = this.ctx.currentTime;
+    const freq = stepParity % 2 === 0 ? 130.81 : 146.83;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, now);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.72, now + 0.032);
+    gain.gain.setValueAtTime(0.14, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
+    osc.start(now);
+    osc.stop(now + 0.04);
+  }
+
+  /**
+   * Donkey Kong Barrel Jump Score Fanfare:
+   * Authentic 4-note 100-point clear cadence: G4 (392Hz) -> E5 (659.25Hz) -> C5 (523.25Hz) -> G5 (783.99Hz)
+   */
+  playBarrelJump() {
+    if (!this._ensureReady()) return;
+    this.playNote(392.0, 0.055, 'square', 0.24, 0.0);
+    this.playNote(659.25, 0.055, 'square', 0.24, 0.055);
+    this.playNote(523.25, 0.055, 'square', 0.24, 0.11);
+    this.playNote(783.99, 0.12, 'square', 0.26, 0.165);
+  }
+
+  /**
+   * Donkey Kong Hammer Smash:
+   * D5 (587.33Hz) -> D3 (146.83Hz) metallic crunch + noise burst
+   */
+  playHammerSmash() {
+    if (!this._ensureReady()) return;
+    this.playNote(587.33, 0.05, 'sawtooth', 0.28, 0);
+    this.playNote(293.66, 0.06, 'square', 0.26, 0.04);
+    this.playNote(146.83, 0.09, 'sawtooth', 0.28, 0.08);
+    this.playExplosion(0.18, 1250);
   }
 
   /**
@@ -1904,30 +1992,87 @@ export class AudioSynth {
     source.connect(filter);
     filter.connect(gain);
     gain.connect(this.masterGain);
+    source.onended = () => {
+      try {
+        source.disconnect();
+        filter.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
 
     source.start(now);
     source.stop(now + duration);
   }
 
   /**
-   * Dig Dug Popped sound: pitch pop + 0.4s white noise exponential decay
+   * Dig Dug Monster Popped Sound:
+   * Authentic Namco WSG dual-harmonic snap (G4 392Hz -> D6 1174.66Hz + G3 196Hz -> D5 587.33Hz)
+   * coupled with 0.38s resonant bandpass/lowpass burst
    */
   playPop() {
+    if (!this._ensureReady()) return;
+    const now = this.ctx.currentTime;
+
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc1.type = 'square';
+    osc1.frequency.setValueAtTime(392.0, now);
+    osc1.frequency.exponentialRampToValueAtTime(1174.66, now + 0.085);
+
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(196.0, now);
+    osc2.frequency.exponentialRampToValueAtTime(587.33, now + 0.085);
+
+    gain.gain.setValueAtTime(0.36, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.095);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc1.onended = () => {
+      try {
+        osc1.disconnect();
+        osc2.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.1);
+    osc2.stop(now + 0.1);
+
+    this.playExplosion(0.38, 1380);
+  }
+
+  /**
+   * Dig Dug Harpoon Launch Chirp:
+   * C5 (523.25Hz) -> C6 (1046.50Hz) -> G5 (783.99Hz)
+   */
+  playHarpoon() {
     if (!this._ensureReady()) return;
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'square';
-    osc.frequency.setValueAtTime(280, now);
-    osc.frequency.exponentialRampToValueAtTime(980, now + 0.08);
-    gain.gain.setValueAtTime(0.35, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+    osc.frequency.setValueAtTime(523.25, now);
+    osc.frequency.exponentialRampToValueAtTime(1046.5, now + 0.04);
+    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.075);
+    gain.gain.setValueAtTime(0.24, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
-    osc.stop(now + 0.095);
-
-    this.playExplosion(0.4, 1400);
+    osc.stop(now + 0.085);
   }
 
   /**
@@ -1954,6 +2099,12 @@ export class AudioSynth {
 
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
     osc.stop(now + 0.08);
   }
@@ -1981,6 +2132,12 @@ export class AudioSynth {
 
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
     osc.stop(now + 0.26);
   }
@@ -2003,6 +2160,12 @@ export class AudioSynth {
 
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
     osc.stop(now + duration + 0.01);
   }
@@ -2028,73 +2191,253 @@ export class AudioSynth {
 
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
     osc.stop(now + 0.09);
   }
 
   /**
-   * Digging debris sound (Lode Runner / Dig Dug)
+   * Lode Runner / Dig Dug Digging Sound:
+   * Tuned to match the 1983 Lode Runner Irem AY-3-8910 / Apple II laser-brick disintegration
+   * cascade: A5 (880Hz) -> D5 (587.33Hz) -> G4 (392Hz) -> E3 (164.81Hz) with grit burst
    */
   playDig() {
     if (!this._ensureReady()) return;
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(340, now);
-    osc.frequency.exponentialRampToValueAtTime(110, now + 0.08);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(880.0, now);
+    osc.frequency.setValueAtTime(587.33, now + 0.025);
+    osc.frequency.setValueAtTime(392.0, now + 0.055);
+    osc.frequency.exponentialRampToValueAtTime(164.81, now + 0.11);
+
     gain.gain.setValueAtTime(0.24, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.085);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.115);
+
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
-    osc.stop(now + 0.09);
+    osc.stop(now + 0.12);
+
+    // Subtle brick-dust crumble transient
+    if (this._noiseBuffer) {
+      const src = this.ctx.createBufferSource();
+      src.buffer = this._noiseBuffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1760, now);
+      const nGain = this.ctx.createGain();
+      nGain.gain.setValueAtTime(0.11, now);
+      nGain.gain.exponentialRampToValueAtTime(0.001, now + 0.075);
+      src.connect(filter);
+      filter.connect(nGain);
+      nGain.connect(this.masterGain);
+      src.onended = () => {
+        try {
+          src.disconnect();
+          filter.disconnect();
+          nGain.disconnect();
+        } catch (_) {}
+      };
+      src.start(now);
+      src.stop(now + 0.08);
+    }
   }
 
   /**
-   * Dig Dug Pump Inflation stage sound (stages 1..3)
+   * Dig Dug Soil Tunneling Pulse:
+   * Authentic Namco WSG staccato C4 (261.63Hz) -> E4 (329.63Hz) -> G4 (392.00Hz) soil chomp
+   */
+  playDigDugTunnel() {
+    if (!this._ensureReady()) return;
+    const now = this.ctx.currentTime;
+    this._digStep = ((this._digStep || 0) + 1) % 3;
+    const freqs = [261.63, 329.63, 392.0];
+    const f = freqs[this._digStep];
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(f, now);
+    osc.frequency.setValueAtTime(f * 1.25, now + 0.025);
+    gain.gain.setValueAtTime(0.16, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.055);
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
+    osc.start(now);
+    osc.stop(now + 0.06);
+  }
+
+  /**
+   * Dig Dug 4-Stage Monster Inflation Sound:
+   * Authentic 1982 Namco WSG 2-note alternating air-bellows squeeze stepping up by stage:
+   * Stage 1: C4 (261.63Hz) -> F#4 (369.99Hz)
+   * Stage 2: D#4 (311.13Hz) -> A4 (440.00Hz)
+   * Stage 3: F#4 (369.99Hz) -> C5 (523.25Hz)
    */
   playPump(stage = 1) {
     if (!this._ensureReady()) return;
     const now = this.ctx.currentTime;
-    const base = 240 + stage * 120;
+    const stagePairs = [
+      [261.63, 369.99], // Stage 1 (C4 -> F#4)
+      [311.13, 440.0],  // Stage 2 (D#4 -> A4)
+      [369.99, 523.25], // Stage 3 (F#4 -> C5)
+      [440.0, 659.25]   // Stage 4 (A4 -> E5)
+    ];
+    const idx = Math.max(0, Math.min(stagePairs.length - 1, (stage || 1) - 1));
+    const [lowFreq, highFreq] = stagePairs[idx];
+
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'square';
-    osc.frequency.setValueAtTime(base, now);
-    osc.frequency.linearRampToValueAtTime(base * 1.4, now + 0.09);
+    osc.frequency.setValueAtTime(lowFreq, now);
+    osc.frequency.setValueAtTime(highFreq, now + 0.048);
+    osc.frequency.exponentialRampToValueAtTime(highFreq * 1.08, now + 0.11);
+
     gain.gain.setValueAtTime(0.26, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    gain.gain.setValueAtTime(0.28, now + 0.048);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.115);
+
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
-    osc.stop(now + 0.105);
+    osc.stop(now + 0.12);
   }
 
   /**
-   * Sumo Shove / Heavy Impact
+   * Sumo Shove / Tachiai Heavy Impact:
+   * Dual-oscillator Taiko drum & body-mass sub-harmonic thud:
+   * Triangle A2 (110.00Hz) -> D1 (36.71Hz) + Sine D2 (73.42Hz) -> A0 (27.50Hz) + Lowpass thump
    */
   playShove() {
     if (!this._ensureReady()) return;
     const now = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(140, now);
-    osc.frequency.exponentialRampToValueAtTime(45, now + 0.18);
-    gain.gain.setValueAtTime(0.45, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
-    osc.connect(gain);
+
+    osc1.type = 'triangle';
+    osc1.frequency.setValueAtTime(110.0, now);
+    osc1.frequency.exponentialRampToValueAtTime(36.71, now + 0.19);
+
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(73.42, now);
+    osc2.frequency.exponentialRampToValueAtTime(27.5, now + 0.19);
+
+    gain.gain.setValueAtTime(0.46, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
     gain.connect(this.masterGain);
-    osc.start(now);
-    osc.stop(now + 0.2);
+    osc1.onended = () => {
+      try {
+        osc1.disconnect();
+        osc2.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.21);
+    osc2.stop(now + 0.21);
+
+    if (this._noiseBuffer) {
+      const src = this.ctx.createBufferSource();
+      src.buffer = this._noiseBuffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(280, now);
+      const nGain = this.ctx.createGain();
+      nGain.gain.setValueAtTime(0.28, now);
+      nGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+      src.connect(filter);
+      filter.connect(nGain);
+      nGain.connect(this.masterGain);
+      src.onended = () => {
+        try {
+          src.disconnect();
+          filter.disconnect();
+          nGain.disconnect();
+        } catch (_) {}
+      };
+      src.start(now);
+      src.stop(now + 0.095);
+    }
   }
 
   /**
-   * Sumo Slap / Tsuppari Strike
+   * Sumo Slap / Tsuppari Open-Palm Strike:
+   * Sharp 1850Hz high-Q bandpass palm snap + A4 (440Hz) -> D3 (146.83Hz) transient crack
    */
   playSlap() {
-    this.playExplosion(0.11, 2400);
+    if (!this._ensureReady()) return;
+    const now = this.ctx.currentTime;
+
+    const osc = this.ctx.createOscillator();
+    const oscGain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(440.0, now);
+    osc.frequency.exponentialRampToValueAtTime(146.83, now + 0.065);
+    oscGain.gain.setValueAtTime(0.32, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+    osc.connect(oscGain);
+    oscGain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        oscGain.disconnect();
+      } catch (_) {}
+    };
+    osc.start(now);
+    osc.stop(now + 0.075);
+
+    if (this._noiseBuffer) {
+      const src = this.ctx.createBufferSource();
+      src.buffer = this._noiseBuffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1850, now);
+      filter.Q.setValueAtTime(2.2, now);
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.48, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.095);
+      src.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+      src.onended = () => {
+        try {
+          src.disconnect();
+          filter.disconnect();
+          gain.disconnect();
+        } catch (_) {}
+      };
+      src.start(now);
+      src.stop(now + 0.1);
+    }
   }
 
   /**
@@ -2112,6 +2455,12 @@ export class AudioSynth {
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
     osc.stop(now + 0.075);
   }
@@ -2200,6 +2549,12 @@ export class AudioSynth {
     gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(start);
     osc.stop(start + duration + 0.01);
   }

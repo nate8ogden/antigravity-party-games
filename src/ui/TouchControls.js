@@ -158,9 +158,30 @@ export class TouchControls {
       left: this.root.querySelector('.dpad-left'),
       right: this.root.querySelector('.dpad-right')
     };
+    this.mounted = false;
+    this.mouseDpadDown = false;
+    this._startReleaseTimer = null;
+    this._boundListeners = [];
+  }
+
+  get state() {
+    return this.input ? this.input.touchState : { up: false, down: false, left: false, right: false, actionA: false, actionB: false };
+  }
+
+  _addManagedListener(target, type, handler, options) {
+    if (!target || typeof target.addEventListener !== 'function') return;
+    target.addEventListener(type, handler, options);
+    this._boundListeners.push({ target, type, handler, options });
   }
 
   bindEvents() {
+    this.mount();
+  }
+
+  mount() {
+    if (this.mounted || !this.root) return;
+    this._boundListeners = [];
+
     // Auto-show on any touchstart anywhere on window
     this._onFirstTouch = () => {
       if (!this.isTouchDevice) {
@@ -176,10 +197,10 @@ export class TouchControls {
         }
       }
     };
-    window.addEventListener('touchstart', this._onFirstTouch, { passive: true });
+    this._addManagedListener(window, 'touchstart', this._onFirstTouch, { passive: true });
 
     // Re-evaluate responsive layout on viewport resize if not manually locked
-    window.addEventListener('resize', () => {
+    this._onResize = () => {
       if (!this.forceVisible && this.isTouchDevice) {
         const detected = this.detectDeviceMode();
         if (detected !== 'desktop' && detected !== this.deviceMode) {
@@ -187,10 +208,12 @@ export class TouchControls {
           this.applyDeviceModeClasses();
         }
       }
-    });
+    };
+    this._addManagedListener(window, 'resize', this._onResize);
 
     // D-Pad touch & pointer handling with 15px deadzone
     const handleDpadMove = (clientX, clientY) => {
+      if (!this.dpadEl) return;
       const rect = this.dpadEl.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
@@ -236,6 +259,7 @@ export class TouchControls {
 
     const resetDpad = () => {
       this.activeDpadTouchId = null;
+      this.mouseDpadDown = false;
       if (this.thumbEl) {
         this.thumbEl.style.transform = 'translate(-50%, -50%)';
       }
@@ -243,36 +267,30 @@ export class TouchControls {
       this.syncDpadVisuals();
     };
 
-    this.dpadEl.addEventListener(
-      'touchstart',
-      (e) => {
-        e.preventDefault();
-        const touch = (e.targetTouches && e.targetTouches[0]) || e.changedTouches[0];
-        if (!touch) return;
-        this.activeDpadTouchId = touch.identifier;
-        this.triggerHaptic(15);
-        handleDpadMove(touch.clientX, touch.clientY);
-      },
-      { passive: false }
-    );
+    this._onDpadTouchStart = (e) => {
+      e.preventDefault();
+      const touch = (e.targetTouches && e.targetTouches[0]) || e.changedTouches[0];
+      if (!touch) return;
+      this.activeDpadTouchId = touch.identifier;
+      this.triggerHaptic(15);
+      handleDpadMove(touch.clientX, touch.clientY);
+    };
+    this._addManagedListener(this.dpadEl, 'touchstart', this._onDpadTouchStart, { passive: false });
 
-    this.dpadEl.addEventListener(
-      'touchmove',
-      (e) => {
-        e.preventDefault();
-        const touches = e.targetTouches && e.targetTouches.length > 0 ? e.targetTouches : e.changedTouches;
-        for (let i = 0; i < touches.length; i++) {
-          const t = touches[i];
-          if (this.activeDpadTouchId === null || t.identifier === this.activeDpadTouchId) {
-            handleDpadMove(t.clientX, t.clientY);
-            break;
-          }
+    this._onDpadTouchMove = (e) => {
+      e.preventDefault();
+      const touches = e.targetTouches && e.targetTouches.length > 0 ? e.targetTouches : e.changedTouches;
+      for (let i = 0; i < touches.length; i++) {
+        const t = touches[i];
+        if (this.activeDpadTouchId === null || t.identifier === this.activeDpadTouchId) {
+          handleDpadMove(t.clientX, t.clientY);
+          break;
         }
-      },
-      { passive: false }
-    );
+      }
+    };
+    this._addManagedListener(this.dpadEl, 'touchmove', this._onDpadTouchMove, { passive: false });
 
-    this.dpadEl.addEventListener('touchend', (e) => {
+    this._onDpadTouchEnd = (e) => {
       if (e.targetTouches && e.targetTouches.length === 0) {
         resetDpad();
         return;
@@ -283,31 +301,35 @@ export class TouchControls {
           break;
         }
       }
-    });
-    this.dpadEl.addEventListener('touchcancel', resetDpad);
+    };
+    this._addManagedListener(this.dpadEl, 'touchend', this._onDpadTouchEnd);
+    this._addManagedListener(this.dpadEl, 'touchcancel', resetDpad);
 
     // Support mouse drag on D-Pad when testing touch UI on desktop
-    let mouseDpadDown = false;
-    this.dpadEl.addEventListener('mousedown', (e) => {
+    this._onDpadMouseDown = (e) => {
       e.preventDefault();
-      mouseDpadDown = true;
+      this.mouseDpadDown = true;
       this.triggerHaptic(15);
       handleDpadMove(e.clientX, e.clientY);
-    });
-    window.addEventListener('mousemove', (e) => {
-      if (mouseDpadDown) {
+    };
+    this._onWindowMouseMove = (e) => {
+      if (this.mouseDpadDown) {
         handleDpadMove(e.clientX, e.clientY);
       }
-    });
-    window.addEventListener('mouseup', () => {
-      if (mouseDpadDown) {
-        mouseDpadDown = false;
+    };
+    this._onWindowMouseUp = () => {
+      if (this.mouseDpadDown) {
+        this.mouseDpadDown = false;
         resetDpad();
       }
-    });
+    };
+    this._addManagedListener(this.dpadEl, 'mousedown', this._onDpadMouseDown);
+    this._addManagedListener(window, 'mousemove', this._onWindowMouseMove);
+    this._addManagedListener(window, 'mouseup', this._onWindowMouseUp);
 
     // Bind Action A and Action B buttons with independent multi-touch support
     const bindActionButton = (btn, actionKey) => {
+      if (!btn) return;
       const press = (e) => {
         e.preventDefault();
         btn.classList.add('active');
@@ -320,12 +342,12 @@ export class TouchControls {
         this.input.setTouchAction(actionKey, false);
       };
 
-      btn.addEventListener('touchstart', press, { passive: false });
-      btn.addEventListener('touchend', release, { passive: false });
-      btn.addEventListener('touchcancel', release, { passive: false });
-      btn.addEventListener('mousedown', press);
-      btn.addEventListener('mouseup', release);
-      btn.addEventListener('mouseleave', release);
+      this._addManagedListener(btn, 'touchstart', press, { passive: false });
+      this._addManagedListener(btn, 'touchend', release, { passive: false });
+      this._addManagedListener(btn, 'touchcancel', release, { passive: false });
+      this._addManagedListener(btn, 'mousedown', press);
+      this._addManagedListener(btn, 'mouseup', release);
+      this._addManagedListener(btn, 'mouseleave', release);
     };
 
     bindActionButton(this.btnA, 'actionA');
@@ -339,16 +361,68 @@ export class TouchControls {
         this.triggerHaptic(15);
         if (act === 'start') {
           this.input.setTouchAction('actionA', true);
-          setTimeout(() => this.input.setTouchAction('actionA', false), 90);
+          if (this._startReleaseTimer) {
+            clearTimeout(this._startReleaseTimer);
+          }
+          this._startReleaseTimer = setTimeout(() => {
+            this._startReleaseTimer = null;
+            this.input.setTouchAction('actionA', false);
+          }, 90);
         } else if (act === 'pause') {
           this.input.triggerPause();
         } else if (act === 'menu') {
           this.input.triggerMenuReturn();
         }
       };
-      btn.addEventListener('touchstart', trigger, { passive: false });
-      btn.addEventListener('click', trigger);
+      this._addManagedListener(btn, 'touchstart', trigger, { passive: false });
+      this._addManagedListener(btn, 'click', trigger);
     });
+
+    this.mounted = true;
+  }
+
+  unmount() {
+    if (this._startReleaseTimer) {
+      clearTimeout(this._startReleaseTimer);
+      this._startReleaseTimer = null;
+    }
+    for (let i = 0; i < this._boundListeners.length; i++) {
+      const { target, type, handler, options } = this._boundListeners[i];
+      if (target && typeof target.removeEventListener === 'function') {
+        target.removeEventListener(type, handler, options);
+      }
+    }
+    this._boundListeners = [];
+    this.mounted = false;
+    this.resetState();
+  }
+
+  resetState() {
+    if (this._startReleaseTimer) {
+      clearTimeout(this._startReleaseTimer);
+      this._startReleaseTimer = null;
+    }
+    this.activeDpadTouchId = null;
+    this.mouseDpadDown = false;
+    if (this.thumbEl) {
+      this.thumbEl.style.transform = 'translate(-50%, -50%)';
+    }
+    if (this.btnA) this.btnA.classList.remove('active');
+    if (this.btnB) this.btnB.classList.remove('active');
+    if (this.input && typeof this.input.setTouchDirection === 'function') {
+      this.input.setTouchDirection(false, false, false, false, 0, 0);
+      this.input.setTouchAction('actionA', false);
+      this.input.setTouchAction('actionB', false);
+    }
+    this.syncDpadVisuals();
+  }
+
+  getActiveListenerCount() {
+    return this.mounted ? this._boundListeners.length : 0;
+  }
+
+  destroy() {
+    this.unmount();
   }
 
   syncDpadVisuals() {

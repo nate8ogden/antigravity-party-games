@@ -764,7 +764,11 @@ export class DonkeyKong {
           const count = p.jumpedBarrels.size;
           const bonus = count === 1 ? 100 : count === 2 ? 300 : 500;
           this._addScore(bonus, p.x, p.y - 28, PALETTE.CYAN);
-          this.audio.playCoin();
+          if (typeof this.audio.playBarrelJump === 'function') {
+            this.audio.playBarrelJump();
+          } else {
+            this.audio.playCoin();
+          }
           p.jumpedBarrels.clear();
         }
       }
@@ -814,9 +818,14 @@ export class DonkeyKong {
     // 4. Walking along inclined girder surface
     const girder = this.girders[p.tier];
     if (moveX !== 0) {
+      const prevStep = Math.floor(p.walkCycle * 0.5);
       p.facing = moveX;
       p.x += moveX * this.walkSpeed * dt;
       p.walkCycle += dt * 12;
+      const nextStep = Math.floor(p.walkCycle * 0.5);
+      if (nextStep !== prevStep && typeof this.audio.playWalkStomp === 'function') {
+        this.audio.playWalkStomp(nextStep);
+      }
     }
 
     // Handle girder edge boundaries (walking off edge drops to lower tier if available)
@@ -1067,8 +1076,12 @@ export class DonkeyKong {
         this._addScore(pts, bx, by - 10, b.isBlue ? PALETTE.CYAN : PALETTE.GOLD);
         this._spawnSparks(bx, by, b.isBlue ? PALETTE.CYAN : PALETTE.ORANGE, 18);
         this.renderer.shake(5, 0.14);
-        this.audio.playExplosion(0.2, 1200);
-        this.audio.playCoin();
+        if (typeof this.audio.playHammerSmash === 'function') {
+          this.audio.playHammerSmash();
+        } else {
+          this.audio.playExplosion(0.2, 1200);
+          this.audio.playCoin();
+        }
         this.barrels.splice(i, 1);
         continue;
       }
@@ -1090,8 +1103,12 @@ export class DonkeyKong {
         this._addScore(300, fx, fy - 10, PALETTE.PINK);
         this._spawnSparks(fx, fy, PALETTE.PINK, 18);
         this.renderer.shake(5, 0.14);
-        this.audio.playExplosion(0.22, 1400);
-        this.audio.playCoin();
+        if (typeof this.audio.playHammerSmash === 'function') {
+          this.audio.playHammerSmash();
+        } else {
+          this.audio.playExplosion(0.22, 1400);
+          this.audio.playCoin();
+        }
         this.fireballs.splice(i, 1);
         continue;
       }

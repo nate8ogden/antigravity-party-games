@@ -94,7 +94,10 @@ export class InputManager {
       down: false,
       justPressed: false,
       justReleased: false,
-      isTouch: false
+      isTouch: false,
+      get isDown() {
+        return this.down;
+      }
     };
 
     this.lastSwipe = null;
@@ -105,11 +108,27 @@ export class InputManager {
     this.onUserActivity = null;
     this._interacted = false;
 
+    this.mounted = false;
+    this._boundListeners = [];
+    this.logicalWidth = 960;
+    this.logicalHeight = 540;
+
     this.initKeyboard();
     this.initTouchOverlay();
     if (this.canvas) {
       this.bindCanvasPointer(this.canvas);
     }
+    this.mount();
+  }
+
+  get keysDown() {
+    return this.rawKeysDown;
+  }
+
+  _addManagedListener(target, type, handler, options) {
+    if (!target || typeof target.addEventListener !== 'function') return;
+    target.addEventListener(type, handler, options);
+    this._boundListeners.push({ target, type, handler, options });
   }
 
   _notifyInteraction() {
@@ -187,10 +206,6 @@ export class InputManager {
     this._onBlur = () => {
       this.resetState();
     };
-
-    window.addEventListener('keydown', this._onKeyDown, { passive: false });
-    window.addEventListener('keyup', this._onKeyUp);
-    window.addEventListener('blur', this._onBlur);
   }
 
   initTouchOverlay() {
@@ -205,7 +220,8 @@ export class InputManager {
     this.logicalHeight = logicalHeight;
 
     const toLogicalCoords = (clientX, clientY) => {
-      const rect = canvas.getBoundingClientRect();
+      if (!this.canvas) return { x: 480, y: 270 };
+      const rect = this.canvas.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) return { x: 480, y: 270 };
       const x = ((clientX - rect.left) / rect.width) * this.logicalWidth;
       const y = ((clientY - rect.top) / rect.height) * this.logicalHeight;
@@ -215,13 +231,13 @@ export class InputManager {
       };
     };
 
-    canvas.addEventListener('mousemove', (e) => {
+    this._onCanvasMouseMove = (e) => {
       const pt = toLogicalCoords(e.clientX, e.clientY);
       this.pointer.x = pt.x;
       this.pointer.y = pt.y;
-    });
+    };
 
-    canvas.addEventListener('mousedown', (e) => {
+    this._onCanvasMouseDown = (e) => {
       if (e.button !== 0) return;
       this._notifyInteraction();
       const pt = toLogicalCoords(e.clientX, e.clientY);
@@ -231,82 +247,136 @@ export class InputManager {
       this.pointer.justPressed = true;
       this.pointer.isTouch = false;
       this._swipeStart = { x: pt.x, y: pt.y, time: performance.now() };
-    });
+    };
 
-    window.addEventListener('mouseup', () => {
+    this._onWindowMouseUp = () => {
       if (this.pointer.down) {
         this.pointer.down = false;
         this.pointer.justReleased = true;
       }
-    });
+    };
 
-    canvas.addEventListener(
-      'touchstart',
-      (e) => {
-        this._notifyInteraction();
-        if (e.changedTouches.length > 0) {
-          const t = e.changedTouches[0];
-          const pt = toLogicalCoords(t.clientX, t.clientY);
-          this.pointer.x = pt.x;
-          this.pointer.y = pt.y;
-          this.pointer.down = true;
-          this.pointer.justPressed = true;
-          this.pointer.isTouch = true;
-          this._swipeStart = { x: pt.x, y: pt.y, time: performance.now() };
-        }
-      },
-      { passive: true }
-    );
+    this._onCanvasTouchStart = (e) => {
+      this._notifyInteraction();
+      if (e.changedTouches.length > 0) {
+        const t = e.changedTouches[0];
+        const pt = toLogicalCoords(t.clientX, t.clientY);
+        this.pointer.x = pt.x;
+        this.pointer.y = pt.y;
+        this.pointer.down = true;
+        this.pointer.justPressed = true;
+        this.pointer.isTouch = true;
+        this._swipeStart = { x: pt.x, y: pt.y, time: performance.now() };
+      }
+    };
 
-    canvas.addEventListener(
-      'touchmove',
-      (e) => {
-        if (e.changedTouches.length > 0) {
-          const t = e.changedTouches[0];
-          const pt = toLogicalCoords(t.clientX, t.clientY);
-          this.pointer.x = pt.x;
-          this.pointer.y = pt.y;
-          if (this._swipeStart) {
-            const dx = pt.x - this._swipeStart.x;
-            const dy = pt.y - this._swipeStart.y;
-            if (Math.hypot(dx, dy) > 28) {
-              if (Math.abs(dx) > Math.abs(dy)) {
-                this.lastSwipe = dx > 0 ? 'right' : 'left';
-              } else {
-                this.lastSwipe = dy > 0 ? 'down' : 'up';
-              }
-              this._swipeStart = { x: pt.x, y: pt.y, time: performance.now() };
+    this._onCanvasTouchMove = (e) => {
+      if (e.changedTouches.length > 0) {
+        const t = e.changedTouches[0];
+        const pt = toLogicalCoords(t.clientX, t.clientY);
+        this.pointer.x = pt.x;
+        this.pointer.y = pt.y;
+        if (this._swipeStart) {
+          const dx = pt.x - this._swipeStart.x;
+          const dy = pt.y - this._swipeStart.y;
+          if (Math.hypot(dx, dy) > 28) {
+            if (Math.abs(dx) > Math.abs(dy)) {
+              this.lastSwipe = dx > 0 ? 'right' : 'left';
+            } else {
+              this.lastSwipe = dy > 0 ? 'down' : 'up';
             }
+            this._swipeStart = { x: pt.x, y: pt.y, time: performance.now() };
           }
         }
-      },
-      { passive: true }
-    );
+      }
+    };
 
-    canvas.addEventListener(
-      'touchend',
-      (e) => {
-        if (e.changedTouches.length > 0) {
-          const t = e.changedTouches[0];
-          const pt = toLogicalCoords(t.clientX, t.clientY);
-          if (this._swipeStart) {
-            const dx = pt.x - this._swipeStart.x;
-            const dy = pt.y - this._swipeStart.y;
-            if (Math.hypot(dx, dy) > 24) {
-              if (Math.abs(dx) > Math.abs(dy)) {
-                this.lastSwipe = dx > 0 ? 'right' : 'left';
-              } else {
-                this.lastSwipe = dy > 0 ? 'down' : 'up';
-              }
+    this._onCanvasTouchEnd = (e) => {
+      if (e.changedTouches.length > 0) {
+        const t = e.changedTouches[0];
+        const pt = toLogicalCoords(t.clientX, t.clientY);
+        if (this._swipeStart) {
+          const dx = pt.x - this._swipeStart.x;
+          const dy = pt.y - this._swipeStart.y;
+          if (Math.hypot(dx, dy) > 24) {
+            if (Math.abs(dx) > Math.abs(dy)) {
+              this.lastSwipe = dx > 0 ? 'right' : 'left';
+            } else {
+              this.lastSwipe = dy > 0 ? 'down' : 'up';
             }
-            this._swipeStart = null;
           }
+          this._swipeStart = null;
         }
-        this.pointer.down = false;
-        this.pointer.justReleased = true;
-      },
-      { passive: true }
-    );
+      }
+      this.pointer.down = false;
+      this.pointer.justReleased = true;
+    };
+  }
+
+  mount() {
+    if (this.mounted) {
+      if (this.touchControls && !this.touchControls.mounted) {
+        this.touchControls.mount();
+      }
+      return;
+    }
+
+    this._boundListeners = [];
+    if (typeof window !== 'undefined') {
+      this._addManagedListener(window, 'keydown', this._onKeyDown, { passive: false });
+      this._addManagedListener(window, 'keyup', this._onKeyUp);
+      this._addManagedListener(window, 'blur', this._onBlur);
+      if (this._onWindowMouseUp) {
+        this._addManagedListener(window, 'mouseup', this._onWindowMouseUp);
+      }
+    }
+
+    if (this.canvas) {
+      this._addManagedListener(this.canvas, 'mousemove', this._onCanvasMouseMove);
+      this._addManagedListener(this.canvas, 'mousedown', this._onCanvasMouseDown);
+      this._addManagedListener(this.canvas, 'touchstart', this._onCanvasTouchStart, { passive: true });
+      this._addManagedListener(this.canvas, 'touchmove', this._onCanvasTouchMove, { passive: true });
+      this._addManagedListener(this.canvas, 'touchend', this._onCanvasTouchEnd, { passive: true });
+    }
+
+    if (this.touchControls) {
+      this.touchControls.mount();
+    }
+
+    this.mounted = true;
+  }
+
+  unmount() {
+    for (let i = 0; i < this._boundListeners.length; i++) {
+      const { target, type, handler, options } = this._boundListeners[i];
+      if (target && typeof target.removeEventListener === 'function') {
+        target.removeEventListener(type, handler, options);
+      }
+    }
+    this._boundListeners = [];
+    this.mounted = false;
+    if (this.touchControls) {
+      this.touchControls.unmount();
+    }
+    this.resetState();
+  }
+
+  remountForGameSwitch() {
+    this.unmount();
+    this.mount();
+  }
+
+  getActiveListenerCount() {
+    const own = this.mounted ? this._boundListeners.length : 0;
+    const touch =
+      this.touchControls && typeof this.touchControls.getActiveListenerCount === 'function'
+        ? this.touchControls.getActiveListenerCount()
+        : 0;
+    return own + touch;
+  }
+
+  destroy() {
+    this.unmount();
   }
 
   setTouchDirection(up, down, left, right, axisX = 0, axisY = 0) {
@@ -623,6 +693,21 @@ export class InputManager {
     this.pointer.justPressed = false;
     this.pointer.justReleased = false;
     this.lastSwipe = null;
+    this._swipeStart = null;
+    if (this.touchControls) {
+      if (this.touchControls._startReleaseTimer) {
+        clearTimeout(this.touchControls._startReleaseTimer);
+        this.touchControls._startReleaseTimer = null;
+      }
+      this.touchControls.activeDpadTouchId = null;
+      this.touchControls.mouseDpadDown = false;
+      if (this.touchControls.thumbEl) {
+        this.touchControls.thumbEl.style.transform = 'translate(-50%, -50%)';
+      }
+      if (this.touchControls.btnA) this.touchControls.btnA.classList.remove('active');
+      if (this.touchControls.btnB) this.touchControls.btnB.classList.remove('active');
+      this.touchControls.syncDpadVisuals();
+    }
   }
 }
 

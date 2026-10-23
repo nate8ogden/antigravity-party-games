@@ -806,7 +806,11 @@ export class DigDug {
       h.length = 12;
       h.latchedEnemy = null;
       p.pumpHoldTimer = 0.26;
-      this.audio.playLaser(680, 320, 0.07);
+      if (typeof this.audio.playHarpoon === 'function') {
+        this.audio.playHarpoon();
+      } else {
+        this.audio.playLaser(680, 320, 0.07);
+      }
     }
 
     // Extend active unlatched harpoon
@@ -886,7 +890,11 @@ export class DigDug {
           p.digSoundTimer -= dt;
           if (p.digSoundTimer <= 0) {
             p.digSoundTimer = 0.14;
-            this.audio.playDig();
+            if (typeof this.audio.playDigDugTunnel === 'function') {
+              this.audio.playDigDugTunnel();
+            } else {
+              this.audio.playDig();
+            }
           }
         }
       }

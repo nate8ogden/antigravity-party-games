@@ -1782,9 +1782,30 @@ class TouchControls {
       left: this.root.querySelector('.dpad-left'),
       right: this.root.querySelector('.dpad-right')
     };
+    this.mounted = false;
+    this.mouseDpadDown = false;
+    this._startReleaseTimer = null;
+    this._boundListeners = [];
+  }
+
+  get state() {
+    return this.input ? this.input.touchState : { up: false, down: false, left: false, right: false, actionA: false, actionB: false };
+  }
+
+  _addManagedListener(target, type, handler, options) {
+    if (!target || typeof target.addEventListener !== 'function') return;
+    target.addEventListener(type, handler, options);
+    this._boundListeners.push({ target, type, handler, options });
   }
 
   bindEvents() {
+    this.mount();
+  }
+
+  mount() {
+    if (this.mounted || !this.root) return;
+    this._boundListeners = [];
+
     // Auto-show on any touchstart anywhere on window
     this._onFirstTouch = () => {
       if (!this.isTouchDevice) {
@@ -1800,10 +1821,10 @@ class TouchControls {
         }
       }
     };
-    window.addEventListener('touchstart', this._onFirstTouch, { passive: true });
+    this._addManagedListener(window, 'touchstart', this._onFirstTouch, { passive: true });
 
     // Re-evaluate responsive layout on viewport resize if not manually locked
-    window.addEventListener('resize', () => {
+    this._onResize = () => {
       if (!this.forceVisible && this.isTouchDevice) {
         const detected = this.detectDeviceMode();
         if (detected !== 'desktop' && detected !== this.deviceMode) {
@@ -1811,10 +1832,12 @@ class TouchControls {
           this.applyDeviceModeClasses();
         }
       }
-    });
+    };
+    this._addManagedListener(window, 'resize', this._onResize);
 
     // D-Pad touch & pointer handling with 15px deadzone
     const handleDpadMove = (clientX, clientY) => {
+      if (!this.dpadEl) return;
       const rect = this.dpadEl.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
@@ -1860,6 +1883,7 @@ class TouchControls {
 
     const resetDpad = () => {
       this.activeDpadTouchId = null;
+      this.mouseDpadDown = false;
       if (this.thumbEl) {
         this.thumbEl.style.transform = 'translate(-50%, -50%)';
       }
@@ -1867,36 +1891,30 @@ class TouchControls {
       this.syncDpadVisuals();
     };
 
-    this.dpadEl.addEventListener(
-      'touchstart',
-      (e) => {
-        e.preventDefault();
-        const touch = (e.targetTouches && e.targetTouches[0]) || e.changedTouches[0];
-        if (!touch) return;
-        this.activeDpadTouchId = touch.identifier;
-        this.triggerHaptic(15);
-        handleDpadMove(touch.clientX, touch.clientY);
-      },
-      { passive: false }
-    );
+    this._onDpadTouchStart = (e) => {
+      e.preventDefault();
+      const touch = (e.targetTouches && e.targetTouches[0]) || e.changedTouches[0];
+      if (!touch) return;
+      this.activeDpadTouchId = touch.identifier;
+      this.triggerHaptic(15);
+      handleDpadMove(touch.clientX, touch.clientY);
+    };
+    this._addManagedListener(this.dpadEl, 'touchstart', this._onDpadTouchStart, { passive: false });
 
-    this.dpadEl.addEventListener(
-      'touchmove',
-      (e) => {
-        e.preventDefault();
-        const touches = e.targetTouches && e.targetTouches.length > 0 ? e.targetTouches : e.changedTouches;
-        for (let i = 0; i < touches.length; i++) {
-          const t = touches[i];
-          if (this.activeDpadTouchId === null || t.identifier === this.activeDpadTouchId) {
-            handleDpadMove(t.clientX, t.clientY);
-            break;
-          }
+    this._onDpadTouchMove = (e) => {
+      e.preventDefault();
+      const touches = e.targetTouches && e.targetTouches.length > 0 ? e.targetTouches : e.changedTouches;
+      for (let i = 0; i < touches.length; i++) {
+        const t = touches[i];
+        if (this.activeDpadTouchId === null || t.identifier === this.activeDpadTouchId) {
+          handleDpadMove(t.clientX, t.clientY);
+          break;
         }
-      },
-      { passive: false }
-    );
+      }
+    };
+    this._addManagedListener(this.dpadEl, 'touchmove', this._onDpadTouchMove, { passive: false });
 
-    this.dpadEl.addEventListener('touchend', (e) => {
+    this._onDpadTouchEnd = (e) => {
       if (e.targetTouches && e.targetTouches.length === 0) {
         resetDpad();
         return;
@@ -1907,31 +1925,35 @@ class TouchControls {
           break;
         }
       }
-    });
-    this.dpadEl.addEventListener('touchcancel', resetDpad);
+    };
+    this._addManagedListener(this.dpadEl, 'touchend', this._onDpadTouchEnd);
+    this._addManagedListener(this.dpadEl, 'touchcancel', resetDpad);
 
     // Support mouse drag on D-Pad when testing touch UI on desktop
-    let mouseDpadDown = false;
-    this.dpadEl.addEventListener('mousedown', (e) => {
+    this._onDpadMouseDown = (e) => {
       e.preventDefault();
-      mouseDpadDown = true;
+      this.mouseDpadDown = true;
       this.triggerHaptic(15);
       handleDpadMove(e.clientX, e.clientY);
-    });
-    window.addEventListener('mousemove', (e) => {
-      if (mouseDpadDown) {
+    };
+    this._onWindowMouseMove = (e) => {
+      if (this.mouseDpadDown) {
         handleDpadMove(e.clientX, e.clientY);
       }
-    });
-    window.addEventListener('mouseup', () => {
-      if (mouseDpadDown) {
-        mouseDpadDown = false;
+    };
+    this._onWindowMouseUp = () => {
+      if (this.mouseDpadDown) {
+        this.mouseDpadDown = false;
         resetDpad();
       }
-    });
+    };
+    this._addManagedListener(this.dpadEl, 'mousedown', this._onDpadMouseDown);
+    this._addManagedListener(window, 'mousemove', this._onWindowMouseMove);
+    this._addManagedListener(window, 'mouseup', this._onWindowMouseUp);
 
     // Bind Action A and Action B buttons with independent multi-touch support
     const bindActionButton = (btn, actionKey) => {
+      if (!btn) return;
       const press = (e) => {
         e.preventDefault();
         btn.classList.add('active');
@@ -1944,12 +1966,12 @@ class TouchControls {
         this.input.setTouchAction(actionKey, false);
       };
 
-      btn.addEventListener('touchstart', press, { passive: false });
-      btn.addEventListener('touchend', release, { passive: false });
-      btn.addEventListener('touchcancel', release, { passive: false });
-      btn.addEventListener('mousedown', press);
-      btn.addEventListener('mouseup', release);
-      btn.addEventListener('mouseleave', release);
+      this._addManagedListener(btn, 'touchstart', press, { passive: false });
+      this._addManagedListener(btn, 'touchend', release, { passive: false });
+      this._addManagedListener(btn, 'touchcancel', release, { passive: false });
+      this._addManagedListener(btn, 'mousedown', press);
+      this._addManagedListener(btn, 'mouseup', release);
+      this._addManagedListener(btn, 'mouseleave', release);
     };
 
     bindActionButton(this.btnA, 'actionA');
@@ -1963,16 +1985,68 @@ class TouchControls {
         this.triggerHaptic(15);
         if (act === 'start') {
           this.input.setTouchAction('actionA', true);
-          setTimeout(() => this.input.setTouchAction('actionA', false), 90);
+          if (this._startReleaseTimer) {
+            clearTimeout(this._startReleaseTimer);
+          }
+          this._startReleaseTimer = setTimeout(() => {
+            this._startReleaseTimer = null;
+            this.input.setTouchAction('actionA', false);
+          }, 90);
         } else if (act === 'pause') {
           this.input.triggerPause();
         } else if (act === 'menu') {
           this.input.triggerMenuReturn();
         }
       };
-      btn.addEventListener('touchstart', trigger, { passive: false });
-      btn.addEventListener('click', trigger);
+      this._addManagedListener(btn, 'touchstart', trigger, { passive: false });
+      this._addManagedListener(btn, 'click', trigger);
     });
+
+    this.mounted = true;
+  }
+
+  unmount() {
+    if (this._startReleaseTimer) {
+      clearTimeout(this._startReleaseTimer);
+      this._startReleaseTimer = null;
+    }
+    for (let i = 0; i < this._boundListeners.length; i++) {
+      const { target, type, handler, options } = this._boundListeners[i];
+      if (target && typeof target.removeEventListener === 'function') {
+        target.removeEventListener(type, handler, options);
+      }
+    }
+    this._boundListeners = [];
+    this.mounted = false;
+    this.resetState();
+  }
+
+  resetState() {
+    if (this._startReleaseTimer) {
+      clearTimeout(this._startReleaseTimer);
+      this._startReleaseTimer = null;
+    }
+    this.activeDpadTouchId = null;
+    this.mouseDpadDown = false;
+    if (this.thumbEl) {
+      this.thumbEl.style.transform = 'translate(-50%, -50%)';
+    }
+    if (this.btnA) this.btnA.classList.remove('active');
+    if (this.btnB) this.btnB.classList.remove('active');
+    if (this.input && typeof this.input.setTouchDirection === 'function') {
+      this.input.setTouchDirection(false, false, false, false, 0, 0);
+      this.input.setTouchAction('actionA', false);
+      this.input.setTouchAction('actionB', false);
+    }
+    this.syncDpadVisuals();
+  }
+
+  getActiveListenerCount() {
+    return this.mounted ? this._boundListeners.length : 0;
+  }
+
+  destroy() {
+    this.unmount();
   }
 
   syncDpadVisuals() {
@@ -2117,7 +2191,10 @@ class InputManager {
       down: false,
       justPressed: false,
       justReleased: false,
-      isTouch: false
+      isTouch: false,
+      get isDown() {
+        return this.down;
+      }
     };
 
     this.lastSwipe = null;
@@ -2128,11 +2205,27 @@ class InputManager {
     this.onUserActivity = null;
     this._interacted = false;
 
+    this.mounted = false;
+    this._boundListeners = [];
+    this.logicalWidth = 960;
+    this.logicalHeight = 540;
+
     this.initKeyboard();
     this.initTouchOverlay();
     if (this.canvas) {
       this.bindCanvasPointer(this.canvas);
     }
+    this.mount();
+  }
+
+  get keysDown() {
+    return this.rawKeysDown;
+  }
+
+  _addManagedListener(target, type, handler, options) {
+    if (!target || typeof target.addEventListener !== 'function') return;
+    target.addEventListener(type, handler, options);
+    this._boundListeners.push({ target, type, handler, options });
   }
 
   _notifyInteraction() {
@@ -2210,10 +2303,6 @@ class InputManager {
     this._onBlur = () => {
       this.resetState();
     };
-
-    window.addEventListener('keydown', this._onKeyDown, { passive: false });
-    window.addEventListener('keyup', this._onKeyUp);
-    window.addEventListener('blur', this._onBlur);
   }
 
   initTouchOverlay() {
@@ -2228,7 +2317,8 @@ class InputManager {
     this.logicalHeight = logicalHeight;
 
     const toLogicalCoords = (clientX, clientY) => {
-      const rect = canvas.getBoundingClientRect();
+      if (!this.canvas) return { x: 480, y: 270 };
+      const rect = this.canvas.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) return { x: 480, y: 270 };
       const x = ((clientX - rect.left) / rect.width) * this.logicalWidth;
       const y = ((clientY - rect.top) / rect.height) * this.logicalHeight;
@@ -2238,13 +2328,13 @@ class InputManager {
       };
     };
 
-    canvas.addEventListener('mousemove', (e) => {
+    this._onCanvasMouseMove = (e) => {
       const pt = toLogicalCoords(e.clientX, e.clientY);
       this.pointer.x = pt.x;
       this.pointer.y = pt.y;
-    });
+    };
 
-    canvas.addEventListener('mousedown', (e) => {
+    this._onCanvasMouseDown = (e) => {
       if (e.button !== 0) return;
       this._notifyInteraction();
       const pt = toLogicalCoords(e.clientX, e.clientY);
@@ -2254,82 +2344,136 @@ class InputManager {
       this.pointer.justPressed = true;
       this.pointer.isTouch = false;
       this._swipeStart = { x: pt.x, y: pt.y, time: performance.now() };
-    });
+    };
 
-    window.addEventListener('mouseup', () => {
+    this._onWindowMouseUp = () => {
       if (this.pointer.down) {
         this.pointer.down = false;
         this.pointer.justReleased = true;
       }
-    });
+    };
 
-    canvas.addEventListener(
-      'touchstart',
-      (e) => {
-        this._notifyInteraction();
-        if (e.changedTouches.length > 0) {
-          const t = e.changedTouches[0];
-          const pt = toLogicalCoords(t.clientX, t.clientY);
-          this.pointer.x = pt.x;
-          this.pointer.y = pt.y;
-          this.pointer.down = true;
-          this.pointer.justPressed = true;
-          this.pointer.isTouch = true;
-          this._swipeStart = { x: pt.x, y: pt.y, time: performance.now() };
-        }
-      },
-      { passive: true }
-    );
+    this._onCanvasTouchStart = (e) => {
+      this._notifyInteraction();
+      if (e.changedTouches.length > 0) {
+        const t = e.changedTouches[0];
+        const pt = toLogicalCoords(t.clientX, t.clientY);
+        this.pointer.x = pt.x;
+        this.pointer.y = pt.y;
+        this.pointer.down = true;
+        this.pointer.justPressed = true;
+        this.pointer.isTouch = true;
+        this._swipeStart = { x: pt.x, y: pt.y, time: performance.now() };
+      }
+    };
 
-    canvas.addEventListener(
-      'touchmove',
-      (e) => {
-        if (e.changedTouches.length > 0) {
-          const t = e.changedTouches[0];
-          const pt = toLogicalCoords(t.clientX, t.clientY);
-          this.pointer.x = pt.x;
-          this.pointer.y = pt.y;
-          if (this._swipeStart) {
-            const dx = pt.x - this._swipeStart.x;
-            const dy = pt.y - this._swipeStart.y;
-            if (Math.hypot(dx, dy) > 28) {
-              if (Math.abs(dx) > Math.abs(dy)) {
-                this.lastSwipe = dx > 0 ? 'right' : 'left';
-              } else {
-                this.lastSwipe = dy > 0 ? 'down' : 'up';
-              }
-              this._swipeStart = { x: pt.x, y: pt.y, time: performance.now() };
+    this._onCanvasTouchMove = (e) => {
+      if (e.changedTouches.length > 0) {
+        const t = e.changedTouches[0];
+        const pt = toLogicalCoords(t.clientX, t.clientY);
+        this.pointer.x = pt.x;
+        this.pointer.y = pt.y;
+        if (this._swipeStart) {
+          const dx = pt.x - this._swipeStart.x;
+          const dy = pt.y - this._swipeStart.y;
+          if (Math.hypot(dx, dy) > 28) {
+            if (Math.abs(dx) > Math.abs(dy)) {
+              this.lastSwipe = dx > 0 ? 'right' : 'left';
+            } else {
+              this.lastSwipe = dy > 0 ? 'down' : 'up';
             }
+            this._swipeStart = { x: pt.x, y: pt.y, time: performance.now() };
           }
         }
-      },
-      { passive: true }
-    );
+      }
+    };
 
-    canvas.addEventListener(
-      'touchend',
-      (e) => {
-        if (e.changedTouches.length > 0) {
-          const t = e.changedTouches[0];
-          const pt = toLogicalCoords(t.clientX, t.clientY);
-          if (this._swipeStart) {
-            const dx = pt.x - this._swipeStart.x;
-            const dy = pt.y - this._swipeStart.y;
-            if (Math.hypot(dx, dy) > 24) {
-              if (Math.abs(dx) > Math.abs(dy)) {
-                this.lastSwipe = dx > 0 ? 'right' : 'left';
-              } else {
-                this.lastSwipe = dy > 0 ? 'down' : 'up';
-              }
+    this._onCanvasTouchEnd = (e) => {
+      if (e.changedTouches.length > 0) {
+        const t = e.changedTouches[0];
+        const pt = toLogicalCoords(t.clientX, t.clientY);
+        if (this._swipeStart) {
+          const dx = pt.x - this._swipeStart.x;
+          const dy = pt.y - this._swipeStart.y;
+          if (Math.hypot(dx, dy) > 24) {
+            if (Math.abs(dx) > Math.abs(dy)) {
+              this.lastSwipe = dx > 0 ? 'right' : 'left';
+            } else {
+              this.lastSwipe = dy > 0 ? 'down' : 'up';
             }
-            this._swipeStart = null;
           }
+          this._swipeStart = null;
         }
-        this.pointer.down = false;
-        this.pointer.justReleased = true;
-      },
-      { passive: true }
-    );
+      }
+      this.pointer.down = false;
+      this.pointer.justReleased = true;
+    };
+  }
+
+  mount() {
+    if (this.mounted) {
+      if (this.touchControls && !this.touchControls.mounted) {
+        this.touchControls.mount();
+      }
+      return;
+    }
+
+    this._boundListeners = [];
+    if (typeof window !== 'undefined') {
+      this._addManagedListener(window, 'keydown', this._onKeyDown, { passive: false });
+      this._addManagedListener(window, 'keyup', this._onKeyUp);
+      this._addManagedListener(window, 'blur', this._onBlur);
+      if (this._onWindowMouseUp) {
+        this._addManagedListener(window, 'mouseup', this._onWindowMouseUp);
+      }
+    }
+
+    if (this.canvas) {
+      this._addManagedListener(this.canvas, 'mousemove', this._onCanvasMouseMove);
+      this._addManagedListener(this.canvas, 'mousedown', this._onCanvasMouseDown);
+      this._addManagedListener(this.canvas, 'touchstart', this._onCanvasTouchStart, { passive: true });
+      this._addManagedListener(this.canvas, 'touchmove', this._onCanvasTouchMove, { passive: true });
+      this._addManagedListener(this.canvas, 'touchend', this._onCanvasTouchEnd, { passive: true });
+    }
+
+    if (this.touchControls) {
+      this.touchControls.mount();
+    }
+
+    this.mounted = true;
+  }
+
+  unmount() {
+    for (let i = 0; i < this._boundListeners.length; i++) {
+      const { target, type, handler, options } = this._boundListeners[i];
+      if (target && typeof target.removeEventListener === 'function') {
+        target.removeEventListener(type, handler, options);
+      }
+    }
+    this._boundListeners = [];
+    this.mounted = false;
+    if (this.touchControls) {
+      this.touchControls.unmount();
+    }
+    this.resetState();
+  }
+
+  remountForGameSwitch() {
+    this.unmount();
+    this.mount();
+  }
+
+  getActiveListenerCount() {
+    const own = this.mounted ? this._boundListeners.length : 0;
+    const touch =
+      this.touchControls && typeof this.touchControls.getActiveListenerCount === 'function'
+        ? this.touchControls.getActiveListenerCount()
+        : 0;
+    return own + touch;
+  }
+
+  destroy() {
+    this.unmount();
   }
 
   setTouchDirection(up, down, left, right, axisX = 0, axisY = 0) {
@@ -2646,6 +2790,21 @@ class InputManager {
     this.pointer.justPressed = false;
     this.pointer.justReleased = false;
     this.lastSwipe = null;
+    this._swipeStart = null;
+    if (this.touchControls) {
+      if (this.touchControls._startReleaseTimer) {
+        clearTimeout(this.touchControls._startReleaseTimer);
+        this.touchControls._startReleaseTimer = null;
+      }
+      this.touchControls.activeDpadTouchId = null;
+      this.touchControls.mouseDpadDown = false;
+      if (this.touchControls.thumbEl) {
+        this.touchControls.thumbEl.style.transform = 'translate(-50%, -50%)';
+      }
+      if (this.touchControls.btnA) this.touchControls.btnA.classList.remove('active');
+      if (this.touchControls.btnB) this.touchControls.btnB.classList.remove('active');
+      this.touchControls.syncDpadVisuals();
+    }
   }
 }
 const Input = InputManager;
@@ -4457,6 +4616,12 @@ class AudioSynth {
 
     osc.connect(gain);
     gain.connect(dest);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(startTime);
     osc.stop(startTime + duration + 0.015);
   }
@@ -4471,6 +4636,12 @@ class AudioSynth {
     gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.09);
     osc.connect(gain);
     gain.connect(dest);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(startTime);
     osc.stop(startTime + 0.095);
   }
@@ -4491,6 +4662,13 @@ class AudioSynth {
     source.connect(filter);
     filter.connect(gain);
     gain.connect(dest);
+    source.onended = () => {
+      try {
+        source.disconnect();
+        filter.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     source.start(startTime);
     source.stop(startTime + 0.085);
   }
@@ -4511,12 +4689,21 @@ class AudioSynth {
     source.connect(filter);
     filter.connect(gain);
     gain.connect(dest);
+    source.onended = () => {
+      try {
+        source.disconnect();
+        filter.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     source.start(startTime);
     source.stop(startTime + 0.04);
   }
 
   /**
-   * Jump Sound: Frequency sweep from 150Hz to 600Hz over 0.15s (Square wave)
+   * Donkey Kong & Classic Arcade Jump Sound:
+   * Authentic 1981 Jumpman spring-arc frequency inflection:
+   * G3 (196.00Hz) -> D5 (587.33Hz) -> A4 (440.00Hz) -> E5 (659.25Hz) over 0.155s
    */
   playJump() {
     if (!this._ensureReady()) return;
@@ -4525,16 +4712,76 @@ class AudioSynth {
     const gain = this.ctx.createGain();
 
     osc.type = 'square';
-    osc.frequency.setValueAtTime(150, now);
-    osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
+    osc.frequency.setValueAtTime(196.0, now);
+    osc.frequency.exponentialRampToValueAtTime(587.33, now + 0.085);
+    osc.frequency.exponentialRampToValueAtTime(440.0, now + 0.115);
+    osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.15);
 
-    gain.gain.setValueAtTime(0.3, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    gain.gain.setValueAtTime(0.28, now);
+    gain.gain.setValueAtTime(0.24, now + 0.09);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.155);
 
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
-    osc.stop(now + 0.155);
+    osc.stop(now + 0.16);
+  }
+
+  /**
+   * Donkey Kong Walk Footstep Stomp:
+   * Alternating C3 (130.81Hz) / D3 (146.83Hz) short girder thud
+   */
+  playWalkStomp(stepParity = 0) {
+    if (!this._ensureReady()) return;
+    const now = this.ctx.currentTime;
+    const freq = stepParity % 2 === 0 ? 130.81 : 146.83;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, now);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.72, now + 0.032);
+    gain.gain.setValueAtTime(0.14, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
+    osc.start(now);
+    osc.stop(now + 0.04);
+  }
+
+  /**
+   * Donkey Kong Barrel Jump Score Fanfare:
+   * Authentic 4-note 100-point clear cadence: G4 (392Hz) -> E5 (659.25Hz) -> C5 (523.25Hz) -> G5 (783.99Hz)
+   */
+  playBarrelJump() {
+    if (!this._ensureReady()) return;
+    this.playNote(392.0, 0.055, 'square', 0.24, 0.0);
+    this.playNote(659.25, 0.055, 'square', 0.24, 0.055);
+    this.playNote(523.25, 0.055, 'square', 0.24, 0.11);
+    this.playNote(783.99, 0.12, 'square', 0.26, 0.165);
+  }
+
+  /**
+   * Donkey Kong Hammer Smash:
+   * D5 (587.33Hz) -> D3 (146.83Hz) metallic crunch + noise burst
+   */
+  playHammerSmash() {
+    if (!this._ensureReady()) return;
+    this.playNote(587.33, 0.05, 'sawtooth', 0.28, 0);
+    this.playNote(293.66, 0.06, 'square', 0.26, 0.04);
+    this.playNote(146.83, 0.09, 'sawtooth', 0.28, 0.08);
+    this.playExplosion(0.18, 1250);
   }
 
   /**
@@ -4558,30 +4805,87 @@ class AudioSynth {
     source.connect(filter);
     filter.connect(gain);
     gain.connect(this.masterGain);
+    source.onended = () => {
+      try {
+        source.disconnect();
+        filter.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
 
     source.start(now);
     source.stop(now + duration);
   }
 
   /**
-   * Dig Dug Popped sound: pitch pop + 0.4s white noise exponential decay
+   * Dig Dug Monster Popped Sound:
+   * Authentic Namco WSG dual-harmonic snap (G4 392Hz -> D6 1174.66Hz + G3 196Hz -> D5 587.33Hz)
+   * coupled with 0.38s resonant bandpass/lowpass burst
    */
   playPop() {
+    if (!this._ensureReady()) return;
+    const now = this.ctx.currentTime;
+
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc1.type = 'square';
+    osc1.frequency.setValueAtTime(392.0, now);
+    osc1.frequency.exponentialRampToValueAtTime(1174.66, now + 0.085);
+
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(196.0, now);
+    osc2.frequency.exponentialRampToValueAtTime(587.33, now + 0.085);
+
+    gain.gain.setValueAtTime(0.36, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.095);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc1.onended = () => {
+      try {
+        osc1.disconnect();
+        osc2.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.1);
+    osc2.stop(now + 0.1);
+
+    this.playExplosion(0.38, 1380);
+  }
+
+  /**
+   * Dig Dug Harpoon Launch Chirp:
+   * C5 (523.25Hz) -> C6 (1046.50Hz) -> G5 (783.99Hz)
+   */
+  playHarpoon() {
     if (!this._ensureReady()) return;
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'square';
-    osc.frequency.setValueAtTime(280, now);
-    osc.frequency.exponentialRampToValueAtTime(980, now + 0.08);
-    gain.gain.setValueAtTime(0.35, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+    osc.frequency.setValueAtTime(523.25, now);
+    osc.frequency.exponentialRampToValueAtTime(1046.5, now + 0.04);
+    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.075);
+    gain.gain.setValueAtTime(0.24, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
-    osc.stop(now + 0.095);
-
-    this.playExplosion(0.4, 1400);
+    osc.stop(now + 0.085);
   }
 
   /**
@@ -4608,6 +4912,12 @@ class AudioSynth {
 
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
     osc.stop(now + 0.08);
   }
@@ -4635,6 +4945,12 @@ class AudioSynth {
 
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
     osc.stop(now + 0.26);
   }
@@ -4657,6 +4973,12 @@ class AudioSynth {
 
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
     osc.stop(now + duration + 0.01);
   }
@@ -4682,73 +5004,253 @@ class AudioSynth {
 
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
     osc.stop(now + 0.09);
   }
 
   /**
-   * Digging debris sound (Lode Runner / Dig Dug)
+   * Lode Runner / Dig Dug Digging Sound:
+   * Tuned to match the 1983 Lode Runner Irem AY-3-8910 / Apple II laser-brick disintegration
+   * cascade: A5 (880Hz) -> D5 (587.33Hz) -> G4 (392Hz) -> E3 (164.81Hz) with grit burst
    */
   playDig() {
     if (!this._ensureReady()) return;
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(340, now);
-    osc.frequency.exponentialRampToValueAtTime(110, now + 0.08);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(880.0, now);
+    osc.frequency.setValueAtTime(587.33, now + 0.025);
+    osc.frequency.setValueAtTime(392.0, now + 0.055);
+    osc.frequency.exponentialRampToValueAtTime(164.81, now + 0.11);
+
     gain.gain.setValueAtTime(0.24, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.085);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.115);
+
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
-    osc.stop(now + 0.09);
+    osc.stop(now + 0.12);
+
+    // Subtle brick-dust crumble transient
+    if (this._noiseBuffer) {
+      const src = this.ctx.createBufferSource();
+      src.buffer = this._noiseBuffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1760, now);
+      const nGain = this.ctx.createGain();
+      nGain.gain.setValueAtTime(0.11, now);
+      nGain.gain.exponentialRampToValueAtTime(0.001, now + 0.075);
+      src.connect(filter);
+      filter.connect(nGain);
+      nGain.connect(this.masterGain);
+      src.onended = () => {
+        try {
+          src.disconnect();
+          filter.disconnect();
+          nGain.disconnect();
+        } catch (_) {}
+      };
+      src.start(now);
+      src.stop(now + 0.08);
+    }
   }
 
   /**
-   * Dig Dug Pump Inflation stage sound (stages 1..3)
+   * Dig Dug Soil Tunneling Pulse:
+   * Authentic Namco WSG staccato C4 (261.63Hz) -> E4 (329.63Hz) -> G4 (392.00Hz) soil chomp
+   */
+  playDigDugTunnel() {
+    if (!this._ensureReady()) return;
+    const now = this.ctx.currentTime;
+    this._digStep = ((this._digStep || 0) + 1) % 3;
+    const freqs = [261.63, 329.63, 392.0];
+    const f = freqs[this._digStep];
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(f, now);
+    osc.frequency.setValueAtTime(f * 1.25, now + 0.025);
+    gain.gain.setValueAtTime(0.16, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.055);
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
+    osc.start(now);
+    osc.stop(now + 0.06);
+  }
+
+  /**
+   * Dig Dug 4-Stage Monster Inflation Sound:
+   * Authentic 1982 Namco WSG 2-note alternating air-bellows squeeze stepping up by stage:
+   * Stage 1: C4 (261.63Hz) -> F#4 (369.99Hz)
+   * Stage 2: D#4 (311.13Hz) -> A4 (440.00Hz)
+   * Stage 3: F#4 (369.99Hz) -> C5 (523.25Hz)
    */
   playPump(stage = 1) {
     if (!this._ensureReady()) return;
     const now = this.ctx.currentTime;
-    const base = 240 + stage * 120;
+    const stagePairs = [
+      [261.63, 369.99], // Stage 1 (C4 -> F#4)
+      [311.13, 440.0],  // Stage 2 (D#4 -> A4)
+      [369.99, 523.25], // Stage 3 (F#4 -> C5)
+      [440.0, 659.25]   // Stage 4 (A4 -> E5)
+    ];
+    const idx = Math.max(0, Math.min(stagePairs.length - 1, (stage || 1) - 1));
+    const [lowFreq, highFreq] = stagePairs[idx];
+
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'square';
-    osc.frequency.setValueAtTime(base, now);
-    osc.frequency.linearRampToValueAtTime(base * 1.4, now + 0.09);
+    osc.frequency.setValueAtTime(lowFreq, now);
+    osc.frequency.setValueAtTime(highFreq, now + 0.048);
+    osc.frequency.exponentialRampToValueAtTime(highFreq * 1.08, now + 0.11);
+
     gain.gain.setValueAtTime(0.26, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    gain.gain.setValueAtTime(0.28, now + 0.048);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.115);
+
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
-    osc.stop(now + 0.105);
+    osc.stop(now + 0.12);
   }
 
   /**
-   * Sumo Shove / Heavy Impact
+   * Sumo Shove / Tachiai Heavy Impact:
+   * Dual-oscillator Taiko drum & body-mass sub-harmonic thud:
+   * Triangle A2 (110.00Hz) -> D1 (36.71Hz) + Sine D2 (73.42Hz) -> A0 (27.50Hz) + Lowpass thump
    */
   playShove() {
     if (!this._ensureReady()) return;
     const now = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(140, now);
-    osc.frequency.exponentialRampToValueAtTime(45, now + 0.18);
-    gain.gain.setValueAtTime(0.45, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
-    osc.connect(gain);
+
+    osc1.type = 'triangle';
+    osc1.frequency.setValueAtTime(110.0, now);
+    osc1.frequency.exponentialRampToValueAtTime(36.71, now + 0.19);
+
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(73.42, now);
+    osc2.frequency.exponentialRampToValueAtTime(27.5, now + 0.19);
+
+    gain.gain.setValueAtTime(0.46, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
     gain.connect(this.masterGain);
-    osc.start(now);
-    osc.stop(now + 0.2);
+    osc1.onended = () => {
+      try {
+        osc1.disconnect();
+        osc2.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.21);
+    osc2.stop(now + 0.21);
+
+    if (this._noiseBuffer) {
+      const src = this.ctx.createBufferSource();
+      src.buffer = this._noiseBuffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(280, now);
+      const nGain = this.ctx.createGain();
+      nGain.gain.setValueAtTime(0.28, now);
+      nGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+      src.connect(filter);
+      filter.connect(nGain);
+      nGain.connect(this.masterGain);
+      src.onended = () => {
+        try {
+          src.disconnect();
+          filter.disconnect();
+          nGain.disconnect();
+        } catch (_) {}
+      };
+      src.start(now);
+      src.stop(now + 0.095);
+    }
   }
 
   /**
-   * Sumo Slap / Tsuppari Strike
+   * Sumo Slap / Tsuppari Open-Palm Strike:
+   * Sharp 1850Hz high-Q bandpass palm snap + A4 (440Hz) -> D3 (146.83Hz) transient crack
    */
   playSlap() {
-    this.playExplosion(0.11, 2400);
+    if (!this._ensureReady()) return;
+    const now = this.ctx.currentTime;
+
+    const osc = this.ctx.createOscillator();
+    const oscGain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(440.0, now);
+    osc.frequency.exponentialRampToValueAtTime(146.83, now + 0.065);
+    oscGain.gain.setValueAtTime(0.32, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+    osc.connect(oscGain);
+    oscGain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        oscGain.disconnect();
+      } catch (_) {}
+    };
+    osc.start(now);
+    osc.stop(now + 0.075);
+
+    if (this._noiseBuffer) {
+      const src = this.ctx.createBufferSource();
+      src.buffer = this._noiseBuffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1850, now);
+      filter.Q.setValueAtTime(2.2, now);
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.48, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.095);
+      src.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+      src.onended = () => {
+        try {
+          src.disconnect();
+          filter.disconnect();
+          gain.disconnect();
+        } catch (_) {}
+      };
+      src.start(now);
+      src.stop(now + 0.1);
+    }
   }
 
   /**
@@ -4766,6 +5268,12 @@ class AudioSynth {
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(now);
     osc.stop(now + 0.075);
   }
@@ -4854,6 +5362,12 @@ class AudioSynth {
     gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
     osc.connect(gain);
     gain.connect(this.masterGain);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
     osc.start(start);
     osc.stop(start + duration + 0.01);
   }
@@ -5532,7 +6046,7 @@ class Renderer {
     ctx.restore();
 
     // 1. Rewind Time-Machine VHS Scan Bar Overlay
-    if (this.rewinding) {
+    if (this.rewinding || (this.rewindOverlay && this.rewindOverlay.active)) {
       ctx.save();
       ctx.fillStyle = 'rgba(0, 240, 255, 0.14)';
       ctx.fillRect(0, 0, this.width, this.height);
@@ -5550,7 +6064,7 @@ class Renderer {
     }
 
     // 2. Attract Mode Demo Banner
-    if (this.attractMode) {
+    if (this.attractMode || (this.attractOverlay && this.attractOverlay.active)) {
       const blink = Math.floor(performance.now() / 420) % 2 === 0;
       ctx.save();
       ctx.fillStyle = 'rgba(11, 15, 25, 0.82)';
@@ -5988,6 +6502,14 @@ class Renderer {
 
   triggerShutterFlash() {
     this.shutterFlashTimer = 0.25;
+    this.flashAlpha = 0.85;
+  }
+
+  destroy() {
+    if (typeof window !== 'undefined' && this._onResize) {
+      window.removeEventListener('resize', this._onResize);
+      window.removeEventListener('orientationchange', this._onResize);
+    }
   }
 }
 
@@ -8469,7 +8991,26 @@ const TILE = {
  *  G = GUARD SPAWN
  */
 const LEVEL_DESIGNS = [
-  // LEVEL 1: Classic Tiered Terraces & Rope Bridges
+  // LEVEL 1: Authentic 1983 Original Stage 1 — Classic 6-Tier Brick Terraces & Twin Ropes
+  [
+    '..................E.........',
+    '....$.........G..EH.........',
+    '#######H##########H.........',
+    '.......H----------H.........',
+    '.......H..........H..$......',
+    '.......H..........###H######',
+    '..G....H.............H......',
+    '#############H#######H......',
+    '.............H-------H...$..',
+    '.............H.......#######',
+    '....$..G.....H..............',
+    '#########H####..............',
+    '.........H.........$....P...',
+    '.........H##########H#######',
+    '....$....H..........H.......',
+    '############################'
+  ],
+  // LEVEL 2: Classic Tiered Terraces & Rope Bridges
   [
     '..................E.........',
     '....$............EH....G....',
@@ -8488,7 +9029,7 @@ const LEVEL_DESIGNS = [
     '....$....H............H...$.',
     '############################'
   ],
-  // LEVEL 2: Twin Citadels & Suspended Highwires
+  // LEVEL 3: Twin Citadels & Suspended Highwires
   [
     '.............E..............',
     '..$....G.....E.....G......$.',
@@ -8507,7 +9048,7 @@ const LEVEL_DESIGNS = [
     '....$.....H.....H.....$.....',
     '############################'
   ],
-  // LEVEL 3: The Vault of Traps & Deep Shafts
+  // LEVEL 4: The Vault of Traps & Deep Shafts
   [
     '..........................E.',
     '.$...G.......$.......G....E.',
@@ -8526,7 +9067,7 @@ const LEVEL_DESIGNS = [
     '....$...H.........H...$.....',
     '############################'
   ],
-  // LEVEL 4: The Hanging Rope Labyrinth
+  // LEVEL 5: The Hanging Rope Labyrinth
   [
     '.............E..............',
     '.$....G......E......G.....$.',
@@ -8545,7 +9086,7 @@ const LEVEL_DESIGNS = [
     '....$...H....$....H...$.....',
     '############################'
   ],
-  // LEVEL 5: Twin Pyramid Catacombs
+  // LEVEL 6: Twin Pyramid Catacombs
   [
     '..................E.........',
     '......$...........E...$.....',
@@ -8564,7 +9105,7 @@ const LEVEL_DESIGNS = [
     '....H......#...#......H.....',
     '############################'
   ],
-  // LEVEL 6: Fortress of Solid Gold
+  // LEVEL 7: Fortress of Solid Gold
   [
     '.............E..............',
     '.$...G.......E.......G....$.',
@@ -8581,25 +9122,6 @@ const LEVEL_DESIGNS = [
     '...H..$.....HPH.....$..H....',
     '########H#########H#########',
     '....$...H....$....H...$.....',
-    '############################'
-  ],
-  // LEVEL 7: OG 1983 Level 1 Homage — Classic 6-Tier Terraces & Long Ropes
-  [
-    '..................E.........',
-    '....$............EH....G....',
-    '#######H##########H.........',
-    '.......H----------H.........',
-    '.......H..........H..$......',
-    '.......H..........###H######',
-    '..G....H.............H......',
-    '#############H#######H......',
-    '.............H-------H...$..',
-    '.............H.......#######',
-    '....$..G.....H..............',
-    '#########H####..............',
-    '.........H.........$....P...',
-    '.........H##########H#######',
-    '....$....H..........H....$..',
     '############################'
   ],
   // LEVEL 8: OG Level 2 Homage — The Chandelier & Pitfall Shafts
@@ -10945,7 +11467,11 @@ class DigDug {
       h.length = 12;
       h.latchedEnemy = null;
       p.pumpHoldTimer = 0.26;
-      this.audio.playLaser(680, 320, 0.07);
+      if (typeof this.audio.playHarpoon === 'function') {
+        this.audio.playHarpoon();
+      } else {
+        this.audio.playLaser(680, 320, 0.07);
+      }
     }
 
     // Extend active unlatched harpoon
@@ -11025,7 +11551,11 @@ class DigDug {
           p.digSoundTimer -= dt;
           if (p.digSoundTimer <= 0) {
             p.digSoundTimer = 0.14;
-            this.audio.playDig();
+            if (typeof this.audio.playDigDugTunnel === 'function') {
+              this.audio.playDigDugTunnel();
+            } else {
+              this.audio.playDig();
+            }
           }
         }
       }
@@ -12604,7 +13134,11 @@ class DonkeyKong {
           const count = p.jumpedBarrels.size;
           const bonus = count === 1 ? 100 : count === 2 ? 300 : 500;
           this._addScore(bonus, p.x, p.y - 28, PALETTE.CYAN);
-          this.audio.playCoin();
+          if (typeof this.audio.playBarrelJump === 'function') {
+            this.audio.playBarrelJump();
+          } else {
+            this.audio.playCoin();
+          }
           p.jumpedBarrels.clear();
         }
       }
@@ -12654,9 +13188,14 @@ class DonkeyKong {
     // 4. Walking along inclined girder surface
     const girder = this.girders[p.tier];
     if (moveX !== 0) {
+      const prevStep = Math.floor(p.walkCycle * 0.5);
       p.facing = moveX;
       p.x += moveX * this.walkSpeed * dt;
       p.walkCycle += dt * 12;
+      const nextStep = Math.floor(p.walkCycle * 0.5);
+      if (nextStep !== prevStep && typeof this.audio.playWalkStomp === 'function') {
+        this.audio.playWalkStomp(nextStep);
+      }
     }
 
     // Handle girder edge boundaries (walking off edge drops to lower tier if available)
@@ -12907,8 +13446,12 @@ class DonkeyKong {
         this._addScore(pts, bx, by - 10, b.isBlue ? PALETTE.CYAN : PALETTE.GOLD);
         this._spawnSparks(bx, by, b.isBlue ? PALETTE.CYAN : PALETTE.ORANGE, 18);
         this.renderer.shake(5, 0.14);
-        this.audio.playExplosion(0.2, 1200);
-        this.audio.playCoin();
+        if (typeof this.audio.playHammerSmash === 'function') {
+          this.audio.playHammerSmash();
+        } else {
+          this.audio.playExplosion(0.2, 1200);
+          this.audio.playCoin();
+        }
         this.barrels.splice(i, 1);
         continue;
       }
@@ -12930,8 +13473,12 @@ class DonkeyKong {
         this._addScore(300, fx, fy - 10, PALETTE.PINK);
         this._spawnSparks(fx, fy, PALETTE.PINK, 18);
         this.renderer.shake(5, 0.14);
-        this.audio.playExplosion(0.22, 1400);
-        this.audio.playCoin();
+        if (typeof this.audio.playHammerSmash === 'function') {
+          this.audio.playHammerSmash();
+        } else {
+          this.audio.playExplosion(0.22, 1400);
+          this.audio.playCoin();
+        }
         this.fireballs.splice(i, 1);
         continue;
       }
@@ -56483,6 +57030,9 @@ class RetroArcadeStudio {
     };
 
     const unlockAudio = () => {
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
       this.audio.init();
       this.audio.playMusic(this.activeGameId || 'lobby');
     };
@@ -57037,6 +57587,7 @@ class RetroArcadeStudio {
     }
 
     this._cleanupCurrentGame();
+    this.input.mount();
     this.input.resetState();
     this._rewindBuffer = [];
     this._rewindSampleAccum = 0;
@@ -57075,6 +57626,7 @@ class RetroArcadeStudio {
   returnToLobby() {
     this.toggleAttractMode(false);
     this._cleanupCurrentGame();
+    this.input.mount();
     this.input.resetState();
     this.activeGame = null;
     this.activeGameId = null;
@@ -57088,6 +57640,10 @@ class RetroArcadeStudio {
 
   _cleanupCurrentGame() {
     this.audio.stopSequence();
+    // Cleanly unmount all keyboard, pointer, and touch control event listeners on game switch
+    if (this.input && typeof this.input.unmount === 'function') {
+      this.input.unmount();
+    }
     if (this.activeGame) {
       if (typeof this.activeGame.destroy === 'function') {
         try {

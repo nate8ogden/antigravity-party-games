@@ -305,7 +305,7 @@ export class Renderer {
     ctx.restore();
 
     // 1. Rewind Time-Machine VHS Scan Bar Overlay
-    if (this.rewinding) {
+    if (this.rewinding || (this.rewindOverlay && this.rewindOverlay.active)) {
       ctx.save();
       ctx.fillStyle = 'rgba(0, 240, 255, 0.14)';
       ctx.fillRect(0, 0, this.width, this.height);
@@ -323,7 +323,7 @@ export class Renderer {
     }
 
     // 2. Attract Mode Demo Banner
-    if (this.attractMode) {
+    if (this.attractMode || (this.attractOverlay && this.attractOverlay.active)) {
       const blink = Math.floor(performance.now() / 420) % 2 === 0;
       ctx.save();
       ctx.fillStyle = 'rgba(11, 15, 25, 0.82)';
@@ -761,6 +761,14 @@ export class Renderer {
 
   triggerShutterFlash() {
     this.shutterFlashTimer = 0.25;
+    this.flashAlpha = 0.85;
+  }
+
+  destroy() {
+    if (typeof window !== 'undefined' && this._onResize) {
+      window.removeEventListener('resize', this._onResize);
+      window.removeEventListener('orientationchange', this._onResize);
+    }
   }
 }
 

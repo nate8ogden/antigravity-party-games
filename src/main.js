@@ -151,6 +151,9 @@ export class RetroArcadeStudio {
     };
 
     const unlockAudio = () => {
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
       this.audio.init();
       this.audio.playMusic(this.activeGameId || 'lobby');
     };
@@ -705,6 +708,7 @@ export class RetroArcadeStudio {
     }
 
     this._cleanupCurrentGame();
+    this.input.mount();
     this.input.resetState();
     this._rewindBuffer = [];
     this._rewindSampleAccum = 0;
@@ -743,6 +747,7 @@ export class RetroArcadeStudio {
   returnToLobby() {
     this.toggleAttractMode(false);
     this._cleanupCurrentGame();
+    this.input.mount();
     this.input.resetState();
     this.activeGame = null;
     this.activeGameId = null;
@@ -756,6 +761,10 @@ export class RetroArcadeStudio {
 
   _cleanupCurrentGame() {
     this.audio.stopSequence();
+    // Cleanly unmount all keyboard, pointer, and touch control event listeners on game switch
+    if (this.input && typeof this.input.unmount === 'function') {
+      this.input.unmount();
+    }
     if (this.activeGame) {
       if (typeof this.activeGame.destroy === 'function') {
         try {
