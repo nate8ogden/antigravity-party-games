@@ -242,7 +242,7 @@ export class DigDug {
     this.audio = audio;
 
     this.id = 'digdug';
-    this.title = 'Sub-Terra Driller';
+    this.title = 'Dig Dug';
 
     // Soil mask grid covering y: 86..540 (960x454) at 10x10px resolution
     this.surfaceY = 86;
@@ -1455,140 +1455,232 @@ export class DigDug {
   }
 
   renderRock(ctx, rock) {
-    const rx = rock.x + (rock.wobbleOffset || 0);
-    const ry = rock.y;
-    const r = rock.radius;
+    const rx = Math.round(rock.x + (rock.wobbleOffset || 0));
+    const ry = Math.round(rock.y);
 
     ctx.save();
     if (rock.state === 'shattering') {
       ctx.globalAlpha = Math.max(0, rock.shatterTimer / 0.42);
     }
 
-    // Craggy retro boulder polygon
-    ctx.fillStyle = '#64748B';
-    ctx.strokeStyle = '#E2E8F0';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(rx, ry, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+    // Craggy multi-tone pixel-art boulder (14x14 matrix at scale 2.5 = 35x35px)
+    const rockSprite = [
+      '....DDDDDD....',
+      '..DDLLLLLLDD..',
+      '.DLLHHHHLLLLD.',
+      '.DLHHHLLLLDDD.',
+      'DLLLLLLCCLLLLD',
+      'DLLLLCCLLLLLLD',
+      'DDDDCCLLLLDDDD',
+      'DDLLLLCCLLDDDD',
+      'DLLLLLLCCDDDDD',
+      'DLLLLLDDDDDDDD',
+      '.DDDDDDDDDDDD.',
+      '.DDDDCCDDDDDD.',
+      '..DDDDDDDDDD..',
+      '....DDDDDD....'
+    ];
+    this.renderer.drawPixelSprite(
+      rockSprite,
+      rx - 17,
+      ry - 17,
+      2.5,
+      {
+        H: '#F8FAFC',
+        L: '#94A3B8',
+        D: '#64748B',
+        C: '#1E293B'
+      }
+    );
 
-    // Facet highlights & cracks
-    ctx.fillStyle = '#94A3B8';
-    ctx.fillRect(rx - r * 0.5, ry - r * 0.5, r * 0.6, r * 0.4);
-    ctx.strokeStyle = '#1E293B';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(rx - 6, ry - 4);
-    ctx.lineTo(rx + 2, ry + 2);
-    ctx.lineTo(rx + 8, ry - 2);
-    ctx.stroke();
+    // Shaking dust particles around the boulder when wobbling
+    if (rock.state === 'wobbling') {
+      ctx.fillStyle = '#FDE047';
+      for (let i = 0; i < 4; i++) {
+        const dx = Math.sin(this.animTime * 36 + i * 1.7) * 15;
+        const dy = 14 + ((this.animTime * 40 + i * 5) % 8);
+        ctx.fillRect(rx + dx - 1.5, ry + dy, 3, 3);
+      }
+    }
+
     ctx.restore();
   }
 
   renderEnemy(ctx, e) {
     const scale = INFLATION_SCALES[e.inflationStage] || 1.0;
-    const r = e.baseRadius * scale;
 
     ctx.save();
 
     // Ghost-Eyes disembodied drift mode
     if (e.ghostMode) {
-      const blink = 0.6 + 0.4 * Math.sin(this.animTime * 18);
+      const blink = 0.65 + 0.35 * Math.sin(this.animTime * 18);
       ctx.globalAlpha = blink;
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(e.x - 8, e.y - 5, 6, 8);
-      ctx.fillRect(e.x + 2, e.y - 5, 6, 8);
-      ctx.fillStyle = e.type === 'pooka' ? PALETTE.RED : PALETTE.GREEN;
-      ctx.fillRect(e.x - 6 + e.facing * 1.5, e.y - 2, 3, 4);
-      ctx.fillRect(e.x + 4 + e.facing * 1.5, e.y - 2, 3, 4);
+      const ghostSprite = [
+        '.WWWW..WWWW.',
+        'WWWWWWWWWWWW',
+        'WWPPWWWWPPWW',
+        'WWPPWWWWPPWW',
+        '.WWWW..WWWW.'
+      ];
+      this.renderer.drawPixelSprite(
+        ghostSprite,
+        e.x - 12,
+        e.y - 5,
+        2,
+        {
+          W: PALETTE.WHITE,
+          P: e.type === 'pooka' ? PALETTE.RED : PALETTE.GREEN
+        },
+        e.facing < 0,
+        false
+      );
       ctx.restore();
       return;
     }
 
-    // Fygar Fire Breath Jet
+    // Fygar Multi-Flame Pixelated Fire Breath Jet
     if (e.type === 'fygar' && e.fireActiveTimer > 0) {
-      const fireLen = 72;
       const sx = e.x + e.facing * 14;
+      const flicker = Math.floor(this.animTime * 28) % 2 === 0;
+      const flameColors = {
+        R: '#EF4444',
+        O: '#F97316',
+        Y: '#FACC15',
+        W: '#FFFFFF'
+      };
+      const flameSprite = [
+        '........RRRR..RRRRRRRR....',
+        '....RRRRROOORROOOOOOOORR..',
+        '.RRROOOOOYYYOYYYYYYYYYOOR.',
+        'ROOOYYYYYWWWWWWWWYYYYYYOOR',
+        '.RRROOOOOYYYOYYYYYYYYYOOR.',
+        '....RRRRROOORROOOOOOOORR..',
+        '........RRRR..RRRRRRRR....'
+      ];
       ctx.save();
       ctx.shadowColor = PALETTE.ORANGE;
-      ctx.shadowBlur = 16;
-      ctx.fillStyle = Math.sin(this.animTime * 45) > 0 ? PALETTE.ORANGE : PALETTE.GOLD;
-      ctx.beginPath();
-      ctx.moveTo(sx, e.y - 6);
-      ctx.lineTo(sx + e.facing * fireLen, e.y - 16);
-      ctx.lineTo(sx + e.facing * fireLen, e.y + 16);
-      ctx.lineTo(sx, e.y + 6);
-      ctx.closePath();
-      ctx.fill();
+      ctx.shadowBlur = 14;
+      const fw = 26 * 2.7;
+      const drawX = e.facing > 0 ? sx : sx - fw;
+      this.renderer.drawPixelSprite(
+        flameSprite,
+        drawX,
+        e.y - 10,
+        2.7,
+         {
+          R: flicker ? flameColors.R : flameColors.O,
+          O: flicker ? flameColors.O : flameColors.Y,
+          Y: flameColors.Y,
+          W: flameColors.W
+        },
+        e.facing < 0,
+        false
+      );
       ctx.restore();
     }
 
     // Flatten slightly if crushed under a falling boulder
     const scaleX = e.crushed ? scale * 1.35 : scale;
     const scaleY = e.crushed ? scale * 0.5 : scale;
+    const step = Math.floor(e.animFrame) % 2 === 0;
 
     ctx.translate(e.x, e.y);
     ctx.scale(scaleX, scaleY);
 
     if (e.type === 'pooka') {
-      // POOKA: Round Red Monster with big yellow goggles
-      ctx.shadowColor = PALETTE.RED;
-      ctx.shadowBlur = e.inflationStage > 0 ? 14 : 6;
-      ctx.fillStyle = e.inflationStage === 3 ? '#FB7185' : PALETTE.RED;
-      ctx.beginPath();
-      ctx.arc(0, 0, e.baseRadius, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Yellow Goggle Visor
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(-9, -6, 18, 8);
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(-7, -4, 6, 5);
-      ctx.fillRect(1, -4, 6, 5);
-
-      // Comical stretched pupils when inflated
-      const eyeSize = e.inflationStage >= 2 ? 3.5 : 2.5;
-      ctx.fillStyle = '#0F172A';
-      ctx.fillRect(-5 + e.facing, -3, eyeSize, eyeSize);
-      ctx.fillRect(3 + e.facing, -3, eyeSize, eyeSize);
-
-      // Little yellow boots
-      const step = Math.sin(e.animFrame) * 2;
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(-8, e.baseRadius - 3 + step, 6, 4);
-      ctx.fillRect(2, e.baseRadius - 3 - step, 6, 4);
+      // POOKA: Round Red Body, Big Yellow Goggles with White Lenses, Walking Yellow Boots
+      const pooka1 = [
+        '....RRRRRR....',
+        '..RRRRRRRRRR..',
+        '.RRRYYYYYYRRR.',
+        '.RYYWWWWWWYYR.',
+        'RRYWWKWWWKWWYR',
+        'RRYWWWWWWWWYRR',
+        'RRRYYYYYYYYRRR',
+        'RRRRRRRRRRRRRR',
+        '.RRRRRRRRRRRR.',
+        '..RRRRRRRRRR..',
+        '...YY....YY...',
+        '..YYYY..YYYY..'
+      ];
+      const pooka2 = [
+        '....RRRRRR....',
+        '..RRRRRRRRRR..',
+        '.RRRYYYYYYRRR.',
+        '.RYYWWWWWWYYR.',
+        'RRYWWKWWWKWWYR',
+        'RRYWWWWWWWWYRR',
+        'RRRYYYYYYYYRRR',
+        'RRRRRRRRRRRRRR',
+        '.RRRRRRRRRRRR.',
+        '..RRRRRRRRRR..',
+        '....YY..YY....',
+        '...YYYYYYYY...'
+      ];
+      this.renderer.drawPixelSprite(
+        step ? pooka1 : pooka2,
+        -14,
+        -12,
+        2,
+        {
+          R: e.inflationStage === 3 ? '#FB7185' : '#EF4444',
+          Y: '#FACC15',
+          W: '#FFFFFF',
+          K: '#0F172A'
+        },
+        e.facing < 0,
+        false
+      );
     } else {
-      // FYGAR: Green Dragon with flashing orange wings & dorsal spikes
+      // FYGAR: Green Pixelated Dragon Body, Orange Wings, Yellow Belly Plates, Dorsal Spikes
       const charging = e.fireChargeTimer > 0 && Math.sin(this.animTime * 35) > 0;
-      const bodyColor = charging
-        ? PALETTE.ORANGE
-        : e.inflationStage === 3
-          ? '#86EFAC'
-          : PALETTE.GREEN;
-
-      ctx.shadowColor = bodyColor;
-      ctx.shadowBlur = e.inflationStage > 0 || charging ? 14 : 6;
-      ctx.fillStyle = bodyColor;
-      ctx.beginPath();
-      ctx.arc(0, 0, e.baseRadius, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Orange dorsal wings
-      ctx.fillStyle = PALETTE.ORANGE;
-      ctx.fillRect(-e.facing * 11 - 3, -7, 7, 11);
-
-      // Eyes
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(e.facing * 2 - 4, -6, 8, 6);
-      ctx.fillStyle = PALETTE.RED;
-      ctx.fillRect(e.facing * 4 - 2, -4, 3, 4);
+      const fygar1 = [
+        '.W..W..GGGG...',
+        '.GGGGGGGGGGGG.',
+        '..GGGGGGWWKGGG',
+        '.WGGGGGGWWKGGG',
+        '..GOOOOGGGGGGG',
+        '.WGOOOOGGGGYY.',
+        '..GGGGGGGGGYY.',
+        '..GGGGGGGGYYY.',
+        '...GGGGGGYYY..',
+        '....GG...GG...',
+        '...GGG..GGG...'
+      ];
+      const fygar2 = [
+        '.W..W..GGGG...',
+        '.GGGGGGGGGGGG.',
+        '..GGGGGGWWKGGG',
+        '.WGGGGGGWWKGGG',
+        '..GGOOOOGGGGGG',
+        '.WGGOOOOGGGYY.',
+        '..GGGGGGGGGYY.',
+        '..GGGGGGGGYYY.',
+        '...GGGGGGYYY..',
+        '...GG....GG...',
+        '..GGG....GGG..'
+      ];
+      this.renderer.drawPixelSprite(
+        step ? fygar1 : fygar2,
+        -14,
+        -11,
+        2,
+        {
+          G: charging ? '#F97316' : e.inflationStage === 3 ? '#86EFAC' : '#22C55E',
+          O: charging ? '#FACC15' : '#F97316',
+          Y: '#FACC15',
+          W: '#FFFFFF',
+          K: '#EF4444'
+        },
+        e.facing < 0,
+        false
+      );
     }
 
     // Inflation stage indicator outline when pumped up
     if (e.inflationStage > 0) {
       ctx.strokeStyle = PALETTE.WHITE;
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.2;
       ctx.setLineDash([3, 3]);
       ctx.beginPath();
       ctx.arc(0, 0, e.baseRadius + 2, 0, Math.PI * 2);
@@ -1635,44 +1727,83 @@ export class DigDug {
 
   renderPlayer(ctx) {
     const p = this.player;
-    const x = p.x - 12;
-    const y = p.y - 12;
+    const x = Math.round(p.x - 13);
+    const y = Math.round(p.y - 13);
     const step = Math.floor(p.animFrame) % 2 === 0;
+    const isPumping = !!(this.harpoon && this.harpoon.latchedEnemy);
 
-    const sprite1 = [
-      '....WWWW....',
-      '..WWWWWWWW..',
-      '..WWBBBBWW..',
-      '..WWWWWWWW..',
-      '...BBBBBB...',
-      '..WWBBBBWW..',
-      '.WW.BBBB.WW.',
-      '....RRRR....',
-      '...RR..RR...',
-      '..RR....RR..'
+    // Taizo Hori iconic white/blue digging helmet & suit pixel-art sprites
+    const walkSprite1 = [
+      '....WWWWWW....',
+      '..WWWWWWWWWW..',
+      '..WWBBBBFFFF..',
+      '..WWBBBBFKFF..',
+      '...WWWWFFFF...',
+      '..WWWWBBBBWW..',
+      '.WW.BBBBBBBBRR',
+      '....WWWWWWWW..',
+      '...BB....BB...',
+      '..BBB....BBB..'
     ];
-    const sprite2 = [
-      '....WWWW....',
-      '..WWWWWWWW..',
-      '..WWBBBBWW..',
-      '..WWWWWWWW..',
-      '...BBBBBB...',
-      '..WWBBBBWW..',
-      '..W.BBBB.W..',
-      '....RRRR....',
-      '....RR.RR...',
-      '...RR...RR..'
+    const walkSprite2 = [
+      '....WWWWWW....',
+      '..WWWWWWWWWW..',
+      '..WWBBBBFFFF..',
+      '..WWBBBBFKFF..',
+      '...WWWWFFFF...',
+      '...WWWBBBBW...',
+      '..WWBBBBBBBBRR',
+      '....WWWWWWWW..',
+      '....BB..BB....',
+      '...BBB..BBB...'
     ];
+
+    // Air-pump handle animation when latched onto an enemy
+    const pumpDown = Math.floor(this.animTime * 10) % 2 === 0;
+    const pumpSprite1 = [
+      '....WWWWWW.RRR',
+      '..WWWWWWWW. .R.',
+      '..WWBBBBFF..R.',
+      '..WWBBBBFK..R.',
+      '...WWWWFFF.RRR',
+      '..WWWWBBBBWW..',
+      '..WWBBBBBBBB..',
+      '....WWWWWWWW..',
+      '...BB....BB...',
+      '..BBB....BBB..'
+    ];
+    const pumpSprite2 = [
+      '....WWWWWW....',
+      '..WWWWWWWW....',
+      '..WWBBBBFF.RRR',
+      '..WWBBBBFK..R.',
+      '...WWWWFFF.RRR',
+      '..WWWWBBBBWW..',
+      '..WWBBBBBBBB..',
+      '....WWWWWWWW..',
+      '...BB....BB...',
+      '..BBB....BBB..'
+    ];
+
+    const activeSprite = isPumping
+      ? pumpDown
+        ? pumpSprite2
+        : pumpSprite1
+      : step
+        ? walkSprite1
+        : walkSprite2;
 
     this.renderer.drawPixelSprite(
-      step ? sprite1 : sprite2,
+      activeSprite,
       x,
       y,
-      2.2,
+      2.1,
       {
-        W: PALETTE.WHITE,
-        B: PALETTE.CYAN,
-        R: PALETTE.RED
+        W: '#F8FAFC',
+        B: '#2563EB',
+        F: '#FDE68A',
+        K: '#0F172A',
+        R: '#EF4444'
       },
       p.facing < 0,
       false

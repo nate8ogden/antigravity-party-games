@@ -137,7 +137,7 @@ export class Tapper {
     this.audio = audio;
 
     this.id = 'tapper';
-    this.title = 'Root Beer Dash';
+    this.title = 'Tapper';
     this.state = 'PLAYING';
 
     this.width = 960;

@@ -23,7 +23,7 @@ export class KungFuMaster {
     this.audio = audio;
 
     this.id = 'kungfumaster';
-    this.title = 'Dragon Dojo';
+    this.title = 'Kung-Fu Master';
 
     this.state = 'PLAYING';
     this.score = 0;

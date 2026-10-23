@@ -14,7 +14,7 @@ export class DonkeyKong {
     this.audio = audio;
 
     this.id = 'donkeykong';
-    this.title = 'Girder Titan';
+    this.title = 'Donkey Kong';
 
     this.width = 960;
     this.height = 540;
@@ -1170,7 +1170,7 @@ export class DonkeyKong {
 
     // Top HUD & Bonus Box
     this.renderer.drawHUD({
-      title: 'GIRDER TITAN',
+      title: 'DONKEY KONG',
       score: this.score,
       highScore: this.highScore,
       lives: this.lives,
@@ -1180,8 +1180,8 @@ export class DonkeyKong {
     });
 
     this.renderer.drawStateOverlay(this.state, {
-      title: 'GIRDER TITAN',
-      subtitle: '25M INCLINED GIRDER & BARREL ARCADE EDITION',
+      title: 'DONKEY KONG',
+      subtitle: '1981 INCLINED GIRDER & BARREL ARCADE EDITION',
       controls: 'ARROWS/WASD: CLIMB & RUN  |  Z/SPACE: JUMP BARRELS  |  HAMMER: AUTO-SMASH',
       score: this.score,
       highScore: this.highScore,
@@ -1425,33 +1425,68 @@ export class DonkeyKong {
   }
 
   _drawPauline(ctx) {
-    const px = this.pauline.x;
-    const py = this.pauline.y;
+    const px = Math.round(this.pauline.x);
+    const py = Math.round(this.pauline.y);
     const bounce = Math.sin(this.pauline.helpTimer * 6) > 0 ? -2 : 0;
 
     ctx.save();
-    // Golden hair
-    ctx.fillStyle = PALETTE.GOLD;
-    ctx.fillRect(px - 6, py - 28 + bounce, 12, 8);
-    // Pink dress
-    ctx.fillStyle = PALETTE.PINK;
-    ctx.fillRect(px - 7, py - 20 + bounce, 14, 14);
-    // Feet
-    ctx.fillStyle = PALETTE.WHITE;
-    ctx.fillRect(px - 5, py - 6, 4, 6);
-    ctx.fillRect(px + 1, py - 6, 4, 6);
+    // Pauline pixel-art sprite: golden hair, pink gown with white frill trim
+    const paulineSprite = [
+      '...GGGGGG...',
+      '..GGGGGGGG..',
+      '..GGFFFFKW..',
+      '..GGGFFFF...',
+      '....FFFF....',
+      '...PPPPPP...',
+      '..WPPPPPPW..',
+      '..PPPPPPPP..',
+      '.PPPPPPPPPP.',
+      '.WWWWWWWWWW.',
+      '.PPPPPPPPPP.',
+      '...WW..WW...',
+      '..WWW..WWW..'
+    ];
+    this.renderer.drawPixelSprite(
+      paulineSprite,
+      px - 12,
+      py - 26 + bounce,
+      2,
+      {
+        G: '#FACC15',
+        F: '#FDE68A',
+        K: '#0F172A',
+        P: '#FF007A',
+        W: '#FFFFFF'
+      }
+    );
 
-    if (this.stageClearTimer > 0) {
-      // Victory heart between Pauline and Jumpman
-      this.renderer.drawText('STAGE CLEAR!', px + 55, py - 36, {
+    if (this.stageClearTimer > 0 || this.player.tier === 6) {
+      // Classic floating Heart (♥) between Pauline and Jumpman on reaching top platform!
+      const heartY = py - 34 + Math.sin(this.animTime * 8) * 3;
+      const heartSprite = [
+        '.RR..RR.',
+        'RRRRRRRR',
+        'RRRRRRRR',
+        '.RRRRRR.',
+        '..RRRR..',
+        '...RR...'
+      ];
+      this.renderer.drawPixelSprite(
+        heartSprite,
+        px + 26,
+        heartY - 8,
+        2.2,
+        { R: '#FF2A55' }
+      );
+      this.renderer.drawText('♥ STAGE CLEAR! ♥', px + 58, py - 38, {
         font: FONTS.HEADER,
         size: 11,
-        color: PALETTE.GOLD,
+        color: PALETTE.PINK,
         align: 'center',
         glow: 10
       });
     } else if (Math.sin(this.pauline.helpTimer * 3) > -0.2) {
-      this.renderer.drawText('HELP!', px + 34, py - 24, {
+      this.renderer.drawText('HELP!', px + 26, py - 24, {
         font: FONTS.HEADER,
         size: 9,
         color: PALETTE.CYAN,
@@ -1463,43 +1498,106 @@ export class DonkeyKong {
   }
 
   _drawKong(ctx) {
-    const kx = this.kong.x;
-    const ky = this.kong.y;
+    const kx = Math.round(this.kong.x);
+    const ky = Math.round(this.kong.y);
     ctx.save();
 
-    // Muscular torso & fur
-    ctx.fillStyle = '#92400E';
-    ctx.fillRect(kx - 24, ky - 44, 48, 32);
-    // Chest plate
-    ctx.fillStyle = '#D97706';
-    ctx.fillRect(kx - 14, ky - 36, 28, 18);
-    // Head & grin
-    ctx.fillStyle = '#92400E';
-    ctx.fillRect(kx - 16, ky - 58, 32, 16);
-    ctx.fillStyle = '#FDE68A';
-    ctx.fillRect(kx - 10, ky - 49, 20, 5);
-    // Eyes
-    ctx.fillStyle = PALETTE.WHITE;
-    ctx.fillRect(kx - 8, ky - 55, 5, 4);
-    ctx.fillRect(kx + 3, ky - 55, 5, 4);
+    // Rich multi-color pixel-art Donkey Kong sprite (24x20 matrix at scale 2.8 = 67x56px)
+    const beatLeft = Math.sin(this.animTime * 8) > 0;
+    const kongChest1 = [
+      '.......BBBBBBBBBB.......',
+      '.....BBBBBBBBBBBBBB.....',
+      '....BBBBTTTTTTTTBBBB....',
+      '....BBBTTWWKKWWTTBBB....',
+      '...BBBBTTTTTTTTTTBBBB...',
+      '...BBBTTTWWWWWWTTTBBB...',
+      '....BBBBTTTTTTTTBBBB....',
+      '.TTTBBBBBBBBBBBBBBBB....',
+      'TTTTBBBBTTTTTTTTBBBBBBBB',
+      'TTT.BBBTTTTTTTTTTBBBBBBB',
+      '....BBBTTTTDDTTTTBBBTTTT',
+      '....BBBBTTTTTTTTBBBBTTTT',
+      '.....BBBBBBBBBBBBBB..TT.',
+      '....BBBBBBBBBBBBBBBB....',
+      '...BBBBBB......BBBBBB...',
+      '..BBBBBB........BBBBBB..',
+      '..TTTTT..........TTTTT..'
+    ];
+    const kongChest2 = [
+      '.......BBBBBBBBBB.......',
+      '.....BBBBBBBBBBBBBB.....',
+      '....BBBBTTTTTTTTBBBB....',
+      '....BBBTTWWKKWWTTBBB....',
+      '...BBBBTTTTTTTTTTBBBB...',
+      '...BBBTTTWWWWWWTTTBBB...',
+      '....BBBBTTTTTTTTBBBB....',
+      '....BBBBBBBBBBBBBBBBTTT.',
+      'BBBBBBBBTTTTTTTTBBBBTTTT',
+      'BBBBBBBTTTTTTTTTTBBB.TTT',
+      'TTTTBBBTTTTDDTTTTBBB....',
+      'TTTTBBBBTTTTTTTTBBBB....',
+      '.TT..BBBBBBBBBBBBBB.....',
+      '....BBBBBBBBBBBBBBBB....',
+      '...BBBBBB......BBBBBB...',
+      '..BBBBBB........BBBBBB..',
+      '..TTTTT..........TTTTT..'
+    ];
+    const kongRoll = [
+      '.......BBBBBBBBBB.......',
+      '.....BBBBBBBBBBBBBB.....',
+      '....BBBBTTTTTTTTBBBB....',
+      '....BBBTTWWKKWWTTBBB....',
+      '...BBBBTTTTTTTTTTBBBB...',
+      '...BBBTTTWWWWWWTTTBBB...',
+      '....BBBBTTTTTTTTBBBB....',
+      '....BBBBBBBBBBBBBBBB....',
+      '..BBBBBBTTTTTTTTBBBBBB..',
+      '.BBBBBBTTTTTTTTTTBBBBBB.',
+      '.TTTBBBTTTTDDTTTTBBBTTT.',
+      '..TTBBBBTTTTTTTTBBBBTT..',
+      '.....BBBBBBBBBBBBBB.....',
+      '....BBBBBBBBBBBBBBBB....',
+      '...BBBBBB......BBBBBB...',
+      '..BBBBBB........BBBBBB..',
+      '..TTTTT..........TTTTT..'
+    ];
 
-    // Legs
-    ctx.fillStyle = '#78350F';
-    ctx.fillRect(kx - 20, ky - 12, 12, 12);
-    ctx.fillRect(kx + 8, ky - 12, 12, 12);
+    const activeKong =
+      this.kong.pose === 'GRAB' || this.kong.pose === 'ROLL'
+        ? kongRoll
+        : beatLeft
+          ? kongChest1
+          : kongChest2;
 
-    // Arms based on Kong's barrel-throwing pose
-    ctx.fillStyle = '#92400E';
+    this.renderer.drawPixelSprite(
+      activeKong,
+      kx - 33,
+      ky - 48,
+      2.8,
+      {
+        B: '#92400E',
+        D: '#78350F',
+        T: '#FDBA74',
+        W: '#FFFFFF',
+        K: '#0F172A'
+      },
+      this.kong.pose === 'GRAB',
+      false
+    );
+
+    // Draw barrel in Kong's hands during GRAB / ROLL poses
     if (this.kong.pose === 'GRAB') {
-      ctx.fillRect(kx - 36, ky - 42, 14, 14);
-      ctx.fillRect(kx + 22, ky - 40, 12, 14);
+      ctx.fillStyle = '#D97706';
+      ctx.fillRect(kx - 36, ky - 28, 16, 18);
+      ctx.strokeStyle = PALETTE.GOLD;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(kx - 36, ky - 28, 16, 18);
     } else if (this.kong.pose === 'ROLL') {
-      ctx.fillRect(kx - 28, ky - 40, 10, 14);
-      ctx.fillRect(kx + 24, ky - 30, 18, 12);
-    } else {
-      const armOffset = Math.sin(this.animTime * 8) > 0 ? -6 : 2;
-      ctx.fillRect(kx - 34, ky - 44 + armOffset, 12, 18);
-      ctx.fillRect(kx + 22, ky - 44 - armOffset, 12, 18);
+      ctx.fillStyle = '#D97706';
+      ctx.fillRect(kx + 20, ky - 22, 16, 18);
+      ctx.strokeStyle = PALETTE.GOLD;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(kx + 20, ky - 22, 16, 18);
     }
 
     ctx.restore();
@@ -1510,27 +1608,50 @@ export class DonkeyKong {
     for (const b of this.barrels) {
       const cx = b.x;
       const cy = b.y - 9;
-      const mainColor = b.isBlue ? PALETTE.CYAN : '#D97706';
-      const rimColor = b.isBlue ? PALETTE.WHITE : PALETTE.GOLD;
+      const mainColor = b.isBlue ? '#0284C7' : '#D97706';
+      const darkWood = b.isBlue ? '#0369A1' : '#92400E';
+      const rimColor = b.isBlue ? PALETTE.CYAN : PALETTE.GOLD;
 
       ctx.save();
       ctx.translate(cx, cy);
-      ctx.rotate(b.rot);
 
-      ctx.fillStyle = mainColor;
-      ctx.beginPath();
-      ctx.arc(0, 0, 9, 0, Math.PI * 2);
-      ctx.fill();
+      if (b.state === 'LADDER') {
+        // Barrel rolling broadside down a ladder (wide cylindrical view with hoops)
+        ctx.fillStyle = mainColor;
+        ctx.fillRect(-12, -7, 24, 14);
+        ctx.fillStyle = darkWood;
+        ctx.fillRect(-12, -2, 24, 4);
+        ctx.strokeStyle = rimColor;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-12, -7, 24, 14);
+        ctx.beginPath();
+        ctx.moveTo(-6, -7);
+        ctx.lineTo(-6, 7);
+        ctx.moveTo(6, -7);
+        ctx.lineTo(6, 7);
+        ctx.stroke();
+      } else {
+        ctx.rotate(b.rot);
+        ctx.fillStyle = mainColor;
+        ctx.beginPath();
+        ctx.arc(0, 0, 9.5, 0, Math.PI * 2);
+        ctx.fill();
 
-      ctx.strokeStyle = rimColor;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(0, 0, 9, 0, Math.PI * 2);
-      ctx.moveTo(-7, 0);
-      ctx.lineTo(7, 0);
-      ctx.moveTo(0, -7);
-      ctx.lineTo(0, 7);
-      ctx.stroke();
+        ctx.fillStyle = darkWood;
+        ctx.beginPath();
+        ctx.arc(0, 0, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = rimColor;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 9.5, 0, Math.PI * 2);
+        ctx.moveTo(-7, 0);
+        ctx.lineTo(7, 0);
+        ctx.moveTo(0, -7);
+        ctx.lineTo(0, 7);
+        ctx.stroke();
+      }
 
       ctx.restore();
     }
@@ -1539,30 +1660,48 @@ export class DonkeyKong {
 
   _drawFireballs(ctx) {
     ctx.save();
+    const fireSprite1 = [
+      '....YY..YY....',
+      '..YYOOOOOOYY..',
+      '.YOOORRRROOOY.',
+      'YOORRRRRRRROOY',
+      'YORRWWKRRWWKRY',
+      'YORRWWKRRWWKRY',
+      'YOORRRRRRRROOY',
+      '.YOOOOOOOOOOY.',
+      '..YYYYYYYYYY..'
+    ];
+    const fireSprite2 = [
+      '..YY..YY..YY..',
+      '.YOOOOOOOOOOY.',
+      'YOORRRRRRRROOY',
+      'YORRRRRRRRRROY',
+      'YORRWWKRRWWKRY',
+      'YORRWWKRRWWKRY',
+      '.YOORRRRRRROY.',
+      '..YOOOOOOOOY..',
+      '...YYYYYYYY...'
+    ];
+
     for (const f of this.fireballs) {
-      const fx = f.x;
-      const fy = f.y - 10 + Math.sin(f.phase) * 2;
-      ctx.fillStyle = PALETTE.ORANGE;
-      ctx.shadowColor = PALETTE.RED;
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      ctx.arc(fx, fy, 8, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Flame crown
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.beginPath();
-      ctx.moveTo(fx - 6, fy - 4);
-      ctx.lineTo(fx, fy - 14);
-      ctx.lineTo(fx + 6, fy - 4);
-      ctx.closePath();
-      ctx.fill();
-
-      // Eyes
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = PALETTE.BG;
-      ctx.fillRect(fx - 4, fy - 2, 2, 3);
-      ctx.fillRect(fx + 2, fy - 2, 2, 3);
+      const fx = Math.round(f.x - 12);
+      const fy = Math.round(f.y - 19 + Math.sin(f.phase) * 2);
+      const alt = Math.floor(f.phase * 2) % 2 === 0;
+      this.renderer.drawPixelSprite(
+        alt ? fireSprite1 : fireSprite2,
+        fx,
+        fy,
+        1.8,
+        {
+          Y: PALETTE.GOLD,
+          O: PALETTE.ORANGE,
+          R: PALETTE.RED,
+          W: PALETTE.WHITE,
+          K: '#0F172A'
+        },
+        f.dir < 0,
+        false
+      );
     }
     ctx.restore();
   }
@@ -1582,27 +1721,109 @@ export class DonkeyKong {
 
     const px = Math.round(p.x);
     const py = Math.round(p.y);
-    const stride = p.jumping ? 3 : Math.sin(p.walkCycle) * 3;
+    const step = Math.floor(p.walkCycle) % 2 === 0;
 
-    // Red cap & visor
-    ctx.fillStyle = PALETTE.RED;
-    ctx.fillRect(px - 6, py - 26, 12, 4);
-    ctx.fillRect(px + (p.facing > 0 ? 0 : -8), py - 24, 8, 2);
+    // Jumpman (Mario) authentic multi-color pixel-art sprites:
+    // R = Red Hat/Overalls, B = Blue Shirt/Hair, F = Tan Face, M = Dark Mustache/Boots, Y = Gold Buttons
+    const marioWalk1 = [
+      '...RRRRRR...',
+      '..RRRRRRRRR.',
+      '..BBBFFKFF..',
+      '.BFFFFFMMFF.',
+      '.BFFFMMMMM..',
+      '..BBBBFFFF..',
+      '..BBRBBBRB..',
+      '.BBBBRRRRBBB',
+      '.FF.RRRRRR.F',
+      '....RRYRRY..',
+      '...RRRRRRRR.',
+      '..RRRR..RRRR',
+      '.MMMM....MMM'
+    ];
+    const marioWalk2 = [
+      '...RRRRRR...',
+      '..RRRRRRRRR.',
+      '..BBBFFKFF..',
+      '.BFFFFFMMFF.',
+      '.BFFFMMMMM..',
+      '..BBBBFFFF..',
+      '...BBRBBR...',
+      '..BBBRRRRBB.',
+      '..FFRRRRRRFF',
+      '....RRYRRY..',
+      '....RRRRRR..',
+      '....RRR.RRR.',
+      '...MMMM.MMMM'
+    ];
+    const marioJump = [
+      '...RRRRRR.FF',
+      '..RRRRRRRRFF',
+      '..BBBFFKFFBB',
+      '.BFFFFFMMFFB',
+      '.BFFFMMMMMB.',
+      '..BBBBFFFF..',
+      '.BBBRRRRRB..',
+      'FF.RRRRRRRR.',
+      '...RRYRRYRR.',
+      '..RRRRRRRRR.',
+      '.MMMM...MMMM',
+      'MM........MM',
+      '............'
+    ];
+    const marioClimb1 = [
+      '..FFRRRRRR..',
+      '..BBRRRRRR..',
+      '...BBBBBBBB.',
+      '...BBBBBBBB.',
+      '..BBBRRRR...',
+      '..BBRRRRRRFF',
+      '....RRRRRRBB',
+      '...RRRRRRRR.',
+      '...RRR..RRR.',
+      '..MMMM..RRRR',
+      '........MMMM',
+      '............',
+      '............'
+    ];
+    const marioClimb2 = [
+      '..RRRRRRFF..',
+      '..RRRRRRBB..',
+      '.BBBBBBBB...',
+      '.BBBBBBBB...',
+      '...RRRRBBB..',
+      'FFRRRRRRBB..',
+      'BBRRRRRR....',
+      '.RRRRRRRR...',
+      '.RRR..RRR...',
+      'RRRR..MMMM..',
+      'MMMM........',
+      '............',
+      '............'
+    ];
 
-    // Face
-    ctx.fillStyle = '#FDE68A';
-    ctx.fillRect(px - 5, py - 22, 10, 6);
+    let activeSprite = step ? marioWalk1 : marioWalk2;
+    if (p.onLadder) {
+      activeSprite = step ? marioClimb1 : marioClimb2;
+    } else if (p.jumping) {
+      activeSprite = marioJump;
+    }
 
-    // Blue shirt & red overalls
-    ctx.fillStyle = PALETTE.BLUE;
-    ctx.fillRect(px - 6, py - 16, 12, 9);
-    ctx.fillStyle = PALETTE.RED;
-    ctx.fillRect(px - 5, py - 11, 10, 6);
-
-    // Boots
-    ctx.fillStyle = PALETTE.GOLD;
-    ctx.fillRect(px - 6 + stride, py - 5, 5, 5);
-    ctx.fillRect(px + 1 - stride, py - 5, 5, 5);
+    this.renderer.drawPixelSprite(
+      activeSprite,
+      px - 12,
+      py - 26,
+      2,
+      {
+        R: '#EF4444',
+        B: '#2563EB',
+        F: '#FDE68A',
+        M: '#78350F',
+        K: '#0F172A',
+        Y: '#FACC15'
+      },
+      p.onLadder ? false : p.facing < 0,
+      false
+    );
 
     // Active Hammer swing visual
     const hammerBox = this._getHammerHitbox();
@@ -1614,10 +1835,13 @@ export class DonkeyKong {
       ctx.lineTo(hammerBox.x, hammerBox.y);
       ctx.stroke();
 
-      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillStyle = '#991B1B';
       ctx.shadowColor = PALETTE.GOLD;
       ctx.shadowBlur = 10;
-      ctx.fillRect(hammerBox.x - 8, hammerBox.y - 6, 16, 12);
+      ctx.fillRect(hammerBox.x - 9, hammerBox.y - 7, 18, 14);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(hammerBox.x - 9, hammerBox.y - 7, 4, 14);
+      ctx.fillRect(hammerBox.x + 5, hammerBox.y - 7, 4, 14);
       ctx.shadowBlur = 0;
     }
 

@@ -269,7 +269,7 @@ export class LodeRunner {
     this.audio = audio;
 
     this.id = 'loderunner';
-    this.title = 'Vault Runner';
+    this.title = 'Lode Runner';
 
     // 28x16 grid metrics inside 960x540 logical canvas
     this.cols = 28;
@@ -1347,27 +1347,26 @@ export class LodeRunner {
   }
 
   render(ctx = this.renderer.ctx) {
-    // Deep arcade background
-    this.renderer.clear(PALETTE.BG);
+    // Classic pitch-dark subterranean cavern background
+    this.renderer.clear('#05070D');
 
-    // Subtle cyber grid lines in background
+    // Subtle subterranean framing border
     ctx.save();
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)';
-    ctx.lineWidth = 1;
-    for (let c = 0; c <= this.cols; c++) {
-      const x = this.colToX(c);
-      ctx.beginPath();
-      ctx.moveTo(x, this.offsetY);
-      ctx.lineTo(x, this.offsetY + this.rows * this.tileH);
-      ctx.stroke();
-    }
-    for (let r = 0; r <= this.rows; r++) {
-      const y = this.rowToY(r);
-      ctx.beginPath();
-      ctx.moveTo(this.offsetX, y);
-      ctx.lineTo(this.offsetX + this.cols * this.tileW, y);
-      ctx.stroke();
-    }
+    ctx.fillStyle = '#070A12';
+    ctx.fillRect(
+      this.offsetX,
+      this.offsetY,
+      this.cols * this.tileW,
+      this.rows * this.tileH
+    );
+    ctx.strokeStyle = 'rgba(194, 65, 12, 0.22)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(
+      this.offsetX - 1,
+      this.offsetY - 1,
+      this.cols * this.tileW + 2,
+      this.rows * this.tileH + 2
+    );
     ctx.restore();
 
     // Render 28x16 Tile Grid
@@ -1390,12 +1389,19 @@ export class LodeRunner {
     this.renderEffects(ctx);
 
     // Bottom bedrock frame strip
-    ctx.fillStyle = '#1E293B';
+    ctx.fillStyle = '#475569';
     ctx.fillRect(
       this.offsetX,
       this.offsetY + this.rows * this.tileH,
       this.cols * this.tileW,
       10
+    );
+    ctx.fillStyle = '#94A3B8';
+    ctx.fillRect(
+      this.offsetX,
+      this.offsetY + this.rows * this.tileH,
+      this.cols * this.tileW,
+      2
     );
 
     // Top HUD Bar
@@ -1425,7 +1431,7 @@ export class LodeRunner {
     // Overlay for MENU / PAUSED / GAMEOVER
     this.renderer.drawStateOverlay(this.state, {
       title: this.title,
-      subtitle: '28x16 PUZZLE PLATFORMER  |  A* GUARD AI & BRICK TRAPS',
+      subtitle: '1983 CHAMPIONSHIP PUZZLE PLATFORMER  |  A* GUARD AI & BRICK TRAPS',
       controls: 'ARROWS/WASD: MOVE & CLIMB  |  Z/SPACE: DIG LEFT  |  X/SHIFT: DIG RIGHT',
       score: this.score,
       highScore: this.highScore,
@@ -1447,74 +1453,122 @@ export class LodeRunner {
         const h = this.tileH;
 
         if (t === TILE.BRICK) {
-          // Classic red/terracotta masonry brick pattern with mortar lines
-          ctx.fillStyle = '#7F1D1D';
+          // Authentic 1983 terracotta red masonry brick with dark #431407 mortar lines
+          ctx.fillStyle = '#431407';
           ctx.fillRect(x, y, w, h);
+
+          // Top course (2 full half-bricks)
+          const topH = Math.floor(h / 2) - 2;
+          const botY = y + Math.floor(h / 2) + 1;
+          const botH = h - Math.floor(h / 2) - 2;
 
           ctx.fillStyle = '#C2410C';
-          ctx.fillRect(x + 1, y + 1, w / 2 - 2, h / 2 - 2);
-          ctx.fillRect(x + w / 2 + 1, y + 1, w / 2 - 2, h / 2 - 2);
-          ctx.fillRect(x + 1, y + h / 2 + 1, w / 4 - 1, h / 2 - 2);
-          ctx.fillRect(x + w / 4 + 2, y + h / 2 + 1, w / 2 - 2, h / 2 - 2);
-          ctx.fillRect(x + (w * 3) / 4 + 2, y + h / 2 + 1, w / 4 - 3, h / 2 - 2);
+          ctx.fillRect(x + 1, y + 1, w / 2 - 2, topH);
+          ctx.fillStyle = '#9A3412';
+          ctx.fillRect(x + w / 2 + 1, y + 1, w / 2 - 2, topH);
 
-          // Top highlight
+          // Bottom course (staggered running bond: quarter, half, quarter)
+          ctx.fillStyle = '#9A3412';
+          ctx.fillRect(x + 1, botY, w / 4 - 1, botH);
+          ctx.fillStyle = '#C2410C';
+          ctx.fillRect(x + w / 4 + 2, botY, w / 2 - 2, botH);
+          ctx.fillStyle = '#9A3412';
+          ctx.fillRect(x + (w * 3) / 4 + 2, botY, w / 4 - 3, botH);
+
+          // Crisp top edge kiln highlights
           ctx.fillStyle = '#FB923C';
-          ctx.fillRect(x + 2, y + 2, w / 2 - 4, 2);
-          ctx.fillRect(x + w / 2 + 2, y + 2, w / 2 - 4, 2);
+          ctx.fillRect(x + 2, y + 1, w / 2 - 4, 2);
+          ctx.fillRect(x + w / 2 + 2, y + 1, w / 2 - 4, 2);
+          ctx.fillRect(x + w / 4 + 3, botY, w / 2 - 4, 2);
         } else if (t === TILE.SOLID) {
-          // Indestructible steel/concrete block with rivets
-          ctx.fillStyle = '#334155';
-          ctx.fillRect(x, y, w, h);
-          ctx.strokeStyle = '#94A3B8';
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+          // Solid gray concrete bedrock (#64748B with riveted border)
           ctx.fillStyle = '#64748B';
-          ctx.fillRect(x + 4, y + 4, 3, 3);
-          ctx.fillRect(x + w - 7, y + 4, 3, 3);
-          ctx.fillRect(x + 4, y + h - 7, 3, 3);
-          ctx.fillRect(x + w - 7, y + h - 7, 3, 3);
+          ctx.fillRect(x, y, w, h);
+          ctx.fillStyle = '#94A3B8';
+          ctx.fillRect(x, y, w, 3);
+          ctx.fillRect(x, y, 3, h);
+          ctx.fillStyle = '#334155';
+          ctx.fillRect(x, y + h - 3, w, 3);
+          ctx.fillRect(x + w - 3, y, 3, h);
+          ctx.strokeStyle = '#1E293B';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+
+          // Corner rivets
+          ctx.fillStyle = '#E2E8F0';
+          ctx.fillRect(x + 4, y + 4, 2, 2);
+          ctx.fillRect(x + w - 6, y + 4, 2, 2);
+          ctx.fillRect(x + 4, y + h - 6, 2, 2);
+          ctx.fillRect(x + w - 6, y + h - 6, 2, 2);
         } else if (t === TILE.LADDER || (t === TILE.EXIT_LADDER && this.exitRevealed)) {
           const isExit = t === TILE.EXIT_LADDER;
-          const color = isExit ? PALETTE.GREEN : PALETTE.GOLD;
+          const railColor = isExit ? PALETTE.GREEN : '#F59E0B';
+          const rungColor = isExit ? '#86EFAC' : '#FDE047';
           ctx.save();
           if (isExit) {
             ctx.shadowColor = PALETTE.GREEN;
             ctx.shadowBlur = 8 * pulse;
           }
-          ctx.fillStyle = color;
           // Left & right rails
+          ctx.fillStyle = railColor;
           ctx.fillRect(x + 5, y, 3, h);
           ctx.fillRect(x + w - 8, y, 3, h);
-          // Rungs
-          for (let ry = 4; ry < h; ry += 7) {
+          // Rungs with top highlight
+          for (let ry = 3; ry < h; ry += 7) {
+            ctx.fillStyle = rungColor;
             ctx.fillRect(x + 5, y + ry, w - 10, 2.5);
           }
           ctx.restore();
         } else if (t === TILE.ROPE) {
-          // Glowing cyan highwire cable near top of tile
+          // Suspended highwire traverse bar near top of tile
           ctx.save();
-          ctx.shadowColor = PALETTE.CYAN;
-          ctx.shadowBlur = 6;
-          ctx.fillStyle = PALETTE.CYAN;
-          ctx.fillRect(x, y + 5, w, 3);
+          ctx.fillStyle = '#94A3B8';
+          ctx.fillRect(x, y + 4, w, 3);
           ctx.fillStyle = PALETTE.WHITE;
-          for (let rx = 2; rx < w; rx += 8) {
-            ctx.fillRect(x + rx, y + 5, 3, 1.5);
+          for (let rx = 2; rx < w; rx += 6) {
+            ctx.fillRect(x + rx, y + 4, 3, 1.5);
           }
           ctx.restore();
         } else if (t === TILE.GOLD) {
-          // Glowing arcade gold ingot chest
-          const bob = Math.sin(this.animTime * 5 + c) * 1.5;
+          // Ornate gleaming Gold Chest with clasps and keyhole highlights
+          const bob = Math.sin(this.animTime * 5 + c) * 1.2;
+          const cx = x + 5;
+          const cy = Math.round(y + 10 + bob);
+          const cw = w - 10; // 22
+          const ch = h - 12; // 18
+
           ctx.save();
           ctx.shadowColor = PALETTE.GOLD;
-          ctx.shadowBlur = 10;
-          ctx.fillStyle = '#D97706';
-          ctx.fillRect(x + 6, y + 11 + bob, w - 12, h - 14);
-          ctx.fillStyle = PALETTE.GOLD;
-          ctx.fillRect(x + 8, y + 13 + bob, w - 16, h - 18);
-          ctx.fillStyle = PALETTE.WHITE;
-          ctx.fillRect(x + 10, y + 14 + bob, 5, 3);
+          ctx.shadowBlur = 8;
+
+          // Chest outer bronze frame
+          ctx.fillStyle = '#92400E';
+          ctx.fillRect(cx, cy, cw, ch);
+
+          // Gleaming gold body & arched lid
+          ctx.fillStyle = '#FACC15';
+          ctx.fillRect(cx + 2, cy + 2, cw - 4, 5);
+          ctx.fillStyle = '#EAB308';
+          ctx.fillRect(cx + 2, cy + 8, cw - 4, ch - 10);
+
+          // Dark band seam between lid and base
+          ctx.fillStyle = '#78350F';
+          ctx.fillRect(cx + 1, cy + 7, cw - 2, 2);
+
+          // Brass vertical straps
+          ctx.fillStyle = '#FEF08A';
+          ctx.fillRect(cx + 4, cy + 2, 2, ch - 4);
+          ctx.fillRect(cx + cw - 6, cy + 2, 2, ch - 4);
+
+          // Center lock plate & keyhole
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(cx + Math.floor(cw / 2) - 2, cy + 5, 4, 6);
+          ctx.fillStyle = '#0F172A';
+          ctx.fillRect(cx + Math.floor(cw / 2) - 1, cy + 7, 2, 3);
+
+          // Specular corner sparkle
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(cx + 3, cy + 3, 4, 2);
           ctx.restore();
         }
       }
@@ -1578,6 +1632,7 @@ export class LodeRunner {
       ctx.restore();
     }
 
+    // Classic white/cyan Lode Runner sprites for run, rope (hand-over-hand), and climb (ladder rungs)
     const spriteRun1 = [
       '....WWWW....',
       '...WCCCCW...',
@@ -1604,18 +1659,77 @@ export class LodeRunner {
       '...BB...BB..',
       '...WW...WW..'
     ];
+    const spriteRope1 = [
+      '..WW....WW..',
+      '..CC....CC..',
+      '...CCWWWW...',
+      '....WCCCW...',
+      '....WWWW....',
+      '...CCCCCC...',
+      '...CCCCCC...',
+      '....BBBB....',
+      '...BB..BB...',
+      '...WW..WW...',
+      '............'
+    ];
+    const spriteRope2 = [
+      '....WW..WW..',
+      '....CC..CC..',
+      '....WWWWCC..',
+      '...WCCCW....',
+      '....WWWW....',
+      '...CCCCCC...',
+      '...CCCCCC...',
+      '....BBBB....',
+      '....BBBB....',
+      '....WWWW....',
+      '............'
+    ];
+    const spriteClimb1 = [
+      '..WW........',
+      '..CCWWWW....',
+      '...WWCCCW...',
+      '....WWWW..WW',
+      '...CCCCCC.CC',
+      '...CCCCCC...',
+      '....BBBB....',
+      '...BB..BB...',
+      '...WW..BB...',
+      '.......WW...',
+      '............'
+    ];
+    const spriteClimb2 = [
+      '........WW..',
+      '....WWWWCC..',
+      '...WCCCWW...',
+      'WW..WWWW....',
+      'CC.CCCCCC...',
+      '...CCCCCC...',
+      '....BBBB....',
+      '...BB..BB...',
+      '...BB..WW...',
+      '...WW.......',
+      '............'
+    ];
+
+    let activeSprite = step ? spriteRun1 : spriteRun2;
+    if (p.pose === 'rope') {
+      activeSprite = step ? spriteRope1 : spriteRope2;
+    } else if (p.pose === 'climb') {
+      activeSprite = step ? spriteClimb1 : spriteClimb2;
+    }
 
     this.renderer.drawPixelSprite(
-      step ? spriteRun1 : spriteRun2,
+      activeSprite,
       x,
-      y,
+      p.pose === 'rope' ? y + 1 : y,
       2,
       {
         W: PALETTE.WHITE,
         C: PALETTE.CYAN,
         B: '#38BDF8'
       },
-      p.facing < 0,
+      p.pose === 'climb' ? false : p.facing < 0,
       false
     );
   }
@@ -1630,48 +1744,120 @@ export class LodeRunner {
       x += Math.sin(this.animTime * 40) * 2.5;
     }
 
-    const guardSprite1 = [
+    const gc = Math.round(g.col);
+    const gr = Math.round(g.row);
+    const curTile = this.getTile(gc, gr);
+    const pose =
+      g.state === 'active' && curTile === TILE.ROPE
+        ? 'rope'
+        : curTile === TILE.LADDER || g.state === 'climbing_out'
+          ? 'climb'
+          : 'run';
+
+    // Red-robed Bungeling Empire Monk guard sprites (run, rope, climb)
+    const guardRun1 = [
       '....RRRR....',
-      '...RYYYYR...',
+      '...RFFFFR...',
       '...RRRRRR...',
       '....YYYY....',
       '..RRRRRRRR..',
       '.RR.RRRR.RR.',
-      '.Y..RRRR..Y.',
+      '.F..YYYY..F.',
       '....PPPP....',
       '...PP..PP...',
       '..PP....PP..',
-      '.YY......YY.'
+      '.WW......WW.'
     ];
-    const guardSprite2 = [
+    const guardRun2 = [
       '....RRRR....',
-      '...RYYYYR...',
+      '...RFFFFR...',
       '...RRRRRR...',
       '....YYYY....',
       '...RRRRRR...',
       '..RRRRRRRR..',
-      '....RRRR....',
+      '....YYYY....',
       '...PPPPPP...',
       '....PP.PP...',
       '...PP...PP..',
-      '...YY...YY..'
+      '...WW...WW..'
+    ];
+    const guardRope1 = [
+      '..FF....FF..',
+      '..RR....RR..',
+      '...RRRRRR...',
+      '....RFFR....',
+      '....YYYY....',
+      '...RRRRRR...',
+      '...PPPPPP...',
+      '....PPPP....',
+      '...PP..PP...',
+      '...WW..WW...',
+      '............'
+    ];
+    const guardRope2 = [
+      '....FF..FF..',
+      '....RR..RR..',
+      '....RRRRRR..',
+      '....RFFR....',
+      '....YYYY....',
+      '...RRRRRR...',
+      '...PPPPPP...',
+      '....PPPP....',
+      '....PPPP....',
+      '....WWWW....',
+      '............'
+    ];
+    const guardClimb1 = [
+      '..FF........',
+      '..RRRRRR....',
+      '...RRFFRR...',
+      '....YYYY..FF',
+      '...RRRRRR.RR',
+      '...YYYYYY...',
+      '....PPPP....',
+      '...PP..PP...',
+      '...WW..PP...',
+      '.......WW...',
+      '............'
+    ];
+    const guardClimb2 = [
+      '........FF..',
+      '....RRRRRR..',
+      '...RRFFRR...',
+      'FF..YYYY....',
+      'RR.RRRRRR...',
+      '...YYYYYY...',
+      '....PPPP....',
+      '...PP..PP...',
+      '...PP..WW...',
+      '...WW.......',
+      '............'
     ];
 
+    let activeSprite = step ? guardRun1 : guardRun2;
+    if (pose === 'rope') {
+      activeSprite = step ? guardRope1 : guardRope2;
+    } else if (pose === 'climb') {
+      activeSprite = step ? guardClimb1 : guardClimb2;
+    }
+
     this.renderer.drawPixelSprite(
-      step ? guardSprite1 : guardSprite2,
+      activeSprite,
       x,
-      y,
+      pose === 'rope' ? y + 1 : y,
       2,
       {
-        R: PALETTE.PINK,
-        Y: g.hasGold ? PALETTE.GOLD : '#FDE047',
-        P: '#9D174D'
+        R: '#EF4444',
+        F: '#FDE68A',
+        Y: g.hasGold ? PALETTE.GOLD : '#F8FAFC',
+        P: '#991B1B',
+        W: PALETTE.WHITE
       },
-      g.facing < 0,
+      pose === 'climb' ? false : g.facing < 0,
       false
     );
 
-    // Small gold indicator if carrying stolen gold
+    // Gleaming gold bar indicator if carrying stolen gold
     if (g.hasGold) {
       this.renderer.drawGlowCircle(x + 12, y - 3, 3.5, PALETTE.GOLD, 8, true);
     }

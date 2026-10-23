@@ -23,7 +23,7 @@ export class Sumo {
     this.audio = audio;
 
     this.id = 'sumo';
-    this.title = 'Dohyo Clash';
+    this.title = 'Sumo Arcade';
 
     this.width = 960;
     this.height = 540;
@@ -123,6 +123,23 @@ export class Sumo {
     this.shockwaves = [];
     this.particles = [];
     this.afterimages = [];
+
+    // Ceremonial salt scatter (Shio) burst at bout start from East & West corners
+    for (let i = 0; i < 20; i++) {
+      const side = i < 10 ? -1 : 1;
+      const sx = this.ringCenter.x + side * 120 + (Math.random() - 0.5) * 24;
+      const sy = this.ringCenter.y + (Math.random() - 0.5) * 40;
+      this.particles.push({
+        x: sx,
+        y: sy,
+        vx: -side * (35 + Math.random() * 85),
+        vy: (Math.random() - 0.5) * 70 - 15,
+        color: '#F8FAFC',
+        size: 2.5,
+        life: 0.75 + Math.random() * 0.35,
+        maxLife: 1.1
+      });
+    }
   }
 
   update(dt) {
@@ -623,22 +640,64 @@ export class Sumo {
 
     ctx.save();
 
-    // Outer square clay mound (Dohyo platform)
-    ctx.fillStyle = '#19151E';
-    ctx.strokeStyle = '#33293A';
-    ctx.lineWidth = 3;
-    ctx.fillRect(cx - r - 42, cy - r - 30, (r + 42) * 2, (r + 30) * 2);
-    ctx.strokeRect(cx - r - 42, cy - r - 30, (r + 42) * 2, (r + 30) * 2);
+    // Outer square clay mound (Dohyo platform) with bevel border
+    ctx.fillStyle = '#241B15';
+    ctx.strokeStyle = '#5C4332';
+    ctx.lineWidth = 4;
+    ctx.fillRect(cx - r - 44, cy - r - 32, (r + 44) * 2, (r + 32) * 2);
+    ctx.strokeRect(cx - r - 44, cy - r - 32, (r + 44) * 2, (r + 32) * 2);
 
-    // Packed clay circle
-    const grad = ctx.createRadialGradient(cx, cy, 20, cx, cy, r);
-    grad.addColorStop(0, '#3D2E24');
-    grad.addColorStop(0.78, '#2C211B');
-    grad.addColorStop(1, '#1E1612');
+    // 4 Ceremonial Tsuri-yane corner tassel markers (Ao-dusa, Aka-dusa, Shiro-dusa, Kuro-dusa)
+    const corners = [
+      { x: cx + r + 28, y: cy - r - 18, color: '#38BDF8' }, // NE Blue
+      { x: cx + r + 28, y: cy + r + 18, color: '#EF4444' }, // SE Red
+      { x: cx - r - 28, y: cy + r + 18, color: '#F8FAFC' }, // SW White
+      { x: cx - r - 28, y: cy - r - 18, color: '#FACC15' }  // NW Gold/Black
+    ];
+    for (const c of corners) {
+      ctx.fillStyle = c.color;
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#0F172A';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // Janome-no-suna (swept sand ring outside the Tawara bales)
+    ctx.strokeStyle = '#6B513E';
+    ctx.lineWidth = 14;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r + 9, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Packed Arakida clay circle
+    const grad = ctx.createRadialGradient(cx, cy, 18, cx, cy, r);
+    grad.addColorStop(0, '#594233');
+    grad.addColorStop(0.72, '#3E2E23');
+    grad.addColorStop(1, '#291E17');
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.fill();
+
+    // Subtle concentric broom-swept clay texture rings
+    ctx.strokeStyle = 'rgba(254, 215, 170, 0.08)';
+    ctx.lineWidth = 1;
+    for (let rr = 45; rr < r - 10; rr += 36) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, rr, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Ceremonial salt scatter (Shio) crystals on East & West approaches
+    ctx.fillStyle = 'rgba(248, 250, 252, 0.65)';
+    for (let i = 0; i < 28; i++) {
+      const side = i % 2 === 0 ? -1 : 1;
+      const sx = cx + side * (86 + ((i * 19) % 72));
+      const sy = cy + (((i * 37) % 84) - 42);
+      ctx.fillRect(sx, sy, 2, 2);
+    }
 
     // Danger zone 72% threshold ring (subtle tactical guide)
     ctx.strokeStyle = 'rgba(255, 136, 0, 0.18)';
@@ -649,30 +708,43 @@ export class Sumo {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // White Shikiri-sen starting lines in the center of the Dohyo
-    ctx.strokeStyle = PALETTE.WHITE;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(cx - 56, cy - 34);
-    ctx.lineTo(cx - 56, cy + 34);
-    ctx.moveTo(cx + 56, cy - 34);
-    ctx.lineTo(cx + 56, cy + 34);
-    ctx.stroke();
+    // Authentic White Shikiri-sen starting lines in the center of the Dohyo
+    ctx.fillStyle = '#FFFFFF';
+    ctx.strokeStyle = '#7C2D12';
+    ctx.lineWidth = 1.5;
+    ctx.fillRect(cx - 59, cy - 36, 6, 72);
+    ctx.strokeRect(cx - 59, cy - 36, 6, 72);
+    ctx.fillRect(cx + 53, cy - 36, 6, 72);
+    ctx.strokeRect(cx + 53, cy - 36, 6, 72);
 
-    // Tawara straw bales ring perimeter
+    // Tawara straw bales around the Dohyo perimeter with woven bindings
     for (let i = 0; i < this.tawaraCount; i++) {
       const a = (Math.PI * 2 * i) / this.tawaraCount;
-      const bx = cx + Math.cos(a) * r;
-      const by = cy + Math.sin(a) * r;
+      // N/S/E/W Toku-dawara bales sit slightly recessed outward for drainage/stepping
+      const isToku = i % (this.tawaraCount / 4) === 0;
+      const baleR = isToku ? r + 5 : r;
+      const bx = cx + Math.cos(a) * baleR;
+      const by = cy + Math.sin(a) * baleR;
 
       ctx.save();
       ctx.translate(bx, by);
       ctx.rotate(a + Math.PI / 2);
+
+      // Straw bale cylinder
       ctx.fillStyle = i % 2 === 0 ? '#D97706' : '#F59E0B';
-      ctx.fillRect(-11, -5, 22, 10);
-      ctx.strokeStyle = '#78350F';
+      ctx.fillRect(-12, -5.5, 24, 11);
+      // Highlight stripe along top of straw bale
+      ctx.fillStyle = '#FDE68A';
+      ctx.fillRect(-11, -3.5, 22, 2.5);
+      // Dark woven straw rope bindings
+      ctx.fillStyle = '#78350F';
+      ctx.fillRect(-7, -5.5, 2, 11);
+      ctx.fillRect(-1, -5.5, 2, 11);
+      ctx.fillRect(5, -5.5, 2, 11);
+
+      ctx.strokeStyle = '#451A03';
       ctx.lineWidth = 1.2;
-      ctx.strokeRect(-11, -5, 22, 10);
+      ctx.strokeRect(-12, -5.5, 24, 11);
       ctx.restore();
     }
 
@@ -748,7 +820,7 @@ export class Sumo {
     // Lunge / Slap visual extension
     const armReach = w.shoveTimer > 0 ? 12 : w.slapTimer > 0 ? 15 : 4;
 
-    // Shoulders & outstretched grappling arms
+    // Outstretched grappling arms & taped wrists
     ctx.fillStyle = '#FDBA74';
     ctx.strokeStyle = '#7C2D12';
     ctx.lineWidth = 2;
@@ -758,29 +830,60 @@ export class Sumo {
     ctx.fill();
     ctx.stroke();
 
-    // Rikishi body
+    // White wrist tape bands
+    ctx.fillStyle = '#F8FAFC';
+    ctx.fillRect(4 + armReach, -r * 0.68 - 4, 4, 8);
+    ctx.fillRect(4 + armReach, r * 0.68 - 4, 4, 8);
+
+    // Rikishi muscular torso & back shoulders
     ctx.fillStyle = '#FED7AA';
     ctx.beginPath();
     ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.fill();
     ctx.lineWidth = 2.5;
-    ctx.strokeStyle = w.mawashiColor;
+    ctx.strokeStyle = '#9A3412';
     ctx.stroke();
 
-    // Ceremonial Mawashi belt
+    // Ceremonial silk Mawashi belt with rear knot & front Sagari fringes
     ctx.fillStyle = w.mawashiColor;
     ctx.shadowColor = w.mawashiColor;
     ctx.shadowBlur = 8;
-    ctx.fillRect(-10, -r + 3, 14, (r - 3) * 2);
+    ctx.fillRect(-11, -r + 2, 15, (r - 2) * 2);
     ctx.shadowBlur = 0;
 
-    // Chonmage topknot hair
+    // Mawashi folded silk seams & rear bow knot
+    ctx.strokeStyle = '#0F172A';
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(-11, -r + 2, 15, (r - 2) * 2);
+    ctx.fillStyle = w.mawashiColor;
+    ctx.fillRect(-16, -8, 6, 16);
+    ctx.strokeRect(-16, -8, 6, 16);
+
+    // Front Sagari fringes along belt edge
+    ctx.fillStyle = PALETTE.GOLD;
+    for (let sy = -r + 6; sy <= r - 8; sy += 7) {
+      ctx.fillRect(4, sy, 4, 2.5);
+    }
+
+    // Detailed Chonmage topknot (dark hair crown + Oicho-mage ginkgo fan + white paper tie)
     ctx.fillStyle = '#0F172A';
     ctx.beginPath();
-    ctx.arc(-2, 0, 11, 0, Math.PI * 2);
+    ctx.arc(-1, 0, 11.5, 0, Math.PI * 2);
     ctx.fill();
+
+    // Oicho-mage fan-shaped topknot tail folded forward
+    ctx.fillStyle = '#1E293B';
+    ctx.beginPath();
+    ctx.moveTo(-6, -2);
+    ctx.lineTo(6, -5.5);
+    ctx.lineTo(6, 5.5);
+    ctx.lineTo(-6, 2);
+    ctx.closePath();
+    ctx.fill();
+
+    // White motoyui paper cord binding
     ctx.fillStyle = PALETTE.WHITE;
-    ctx.fillRect(-4, -2, 8, 4);
+    ctx.fillRect(-2, -3, 4, 6);
 
     ctx.restore();
 

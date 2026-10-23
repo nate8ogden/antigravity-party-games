@@ -15,7 +15,7 @@ export class RoadFighter {
     this.audio = audio;
 
     this.id = 'roadfighter';
-    this.title = 'Turbo Highway';
+    this.title = 'Road Fighter';
     this.width = 960;
     this.height = 540;
 
@@ -375,19 +375,62 @@ export class RoadFighter {
       const geom = this._getRoadGeometry(car.dist);
       const cx = geom.centerX + car.laneOffset;
 
-      let col = PALETTE.BLUE;
-      if (car.type === 'FUEL_CAR') {
-        col = Math.floor(performance.now() * 0.02) % 2 === 0 ? PALETTE.PINK : PALETTE.CYAN;
-      } else if (car.type === 'WEAVER') {
-        col = PALETTE.GOLD;
-      } else if (car.type === 'TRUCK') {
-        col = PALETTE.MUTED;
-      }
+      ctx.save();
+      ctx.translate(cx, sy);
 
-      const h = car.type === 'TRUCK' ? 54 : 36;
-      this.renderer.drawGlowRect(cx - 14, sy - h * 0.5, 28, h, col, 8, true);
-      ctx.fillStyle = '#0F172A';
-      ctx.fillRect(cx - 10, sy - 8, 20, 10);
+      if (car.type === 'TRUCK') {
+        // 18-Wheeler Highway Semi-Truck (Cab + Ribbed Trailer + 6 Tires)
+        ctx.fillStyle = '#090D16';
+        for (const ty of [-24, -4, 18]) {
+          ctx.fillRect(-17, ty, 4, 8);
+          ctx.fillRect(13, ty, 4, 8);
+        }
+        // Tractor Cab (front)
+        this.renderer.drawGlowRect(-13, -30, 26, 16, '#38BDF8', 6, true);
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(-10, -25, 20, 6);
+        ctx.fillStyle = PALETTE.GOLD;
+        ctx.fillRect(-11, -31, 5, 2);
+        ctx.fillRect(6, -31, 5, 2);
+        // Trailer Container
+        this.renderer.drawGlowRect(-14, -12, 28, 40, '#CBD5E1', 6, true);
+        ctx.fillStyle = '#94A3B8';
+        for (let ry = -6; ry <= 20; ry += 8) {
+          ctx.fillRect(-12, ry, 24, 3);
+        }
+        ctx.fillStyle = PALETTE.RED;
+        ctx.fillRect(-12, 25, 7, 3);
+        ctx.fillRect(5, 25, 7, 3);
+      } else {
+        let col = PALETTE.BLUE;
+        if (car.type === 'FUEL_CAR') {
+          col = Math.floor(performance.now() * 0.02) % 2 === 0 ? PALETTE.PINK : PALETTE.CYAN;
+        } else if (car.type === 'WEAVER') {
+          col = PALETTE.GOLD;
+        }
+        // 4 Black Tires
+        ctx.fillStyle = '#090D16';
+        ctx.fillRect(-16, -14, 4, 8);
+        ctx.fillRect(12, -14, 4, 8);
+        ctx.fillRect(-16, 6, 4, 8);
+        ctx.fillRect(12, 6, 4, 8);
+        // Contoured Car Body & Hood
+        this.renderer.drawGlowRect(-13, -18, 26, 36, col, 8, true);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.fillRect(-9, -16, 18, 6);
+        // Windshield & Rear Window
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(-10, -8, 20, 8);
+        ctx.fillRect(-9, 7, 18, 5);
+        // Headlights & Taillights
+        ctx.fillStyle = PALETTE.GOLD;
+        ctx.fillRect(-10, -19, 5, 2);
+        ctx.fillRect(5, -19, 5, 2);
+        ctx.fillStyle = PALETTE.RED;
+        ctx.fillRect(-10, 16, 6, 2);
+        ctx.fillRect(4, 16, 6, 2);
+      }
+      ctx.restore();
     }
 
     // 4. Render Player Red Turbo Sports Car
@@ -397,11 +440,35 @@ export class RoadFighter {
       if (p.skidTimer > 0) {
         ctx.rotate(p.skidDir * 0.48);
       }
-      this.renderer.drawGlowRect(-15, -20, 30, 40, PALETTE.RED, 12, true);
+      // 4 Wide Black Racing Tires
+      ctx.fillStyle = '#090D16';
+      ctx.fillRect(-18, -15, 4, 9);
+      ctx.fillRect(14, -15, 4, 9);
+      ctx.fillRect(-18, 7, 4, 9);
+      ctx.fillRect(14, 7, 4, 9);
+
+      // Sculpted Red Sports Car Body + Tapered Nose
+      this.renderer.drawGlowRect(-15, -18, 30, 38, PALETTE.RED, 12, true);
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(-12, -22, 24, 5);
+
+      // Twin White Center Racing Stripes
       ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(-3, -20, 6, 40);
+      ctx.fillRect(-4, -22, 3, 42);
+      ctx.fillRect(1, -22, 3, 42);
+
+      // Wrap-Around Cyan Cockpit Windshield & Rear Louvers
       ctx.fillStyle = PALETTE.CYAN;
-      ctx.fillRect(-11, -8, 22, 10);
+      ctx.fillRect(-11, -9, 22, 9);
+      ctx.fillStyle = '#0F172A';
+      ctx.fillRect(-9, 6, 18, 6);
+
+      // Rear GT Spoiler Wing & Glowing Taillights
+      ctx.fillStyle = '#991B1B';
+      ctx.fillRect(-16, 15, 32, 4);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(-11, -23, 5, 2);
+      ctx.fillRect(6, -23, 5, 2);
       ctx.restore();
     }
 

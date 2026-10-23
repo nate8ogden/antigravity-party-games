@@ -14,7 +14,7 @@ export class Excitebike {
     this.audio = audio;
 
     this.id = 'excitebike';
-    this.title = 'Nitro Moto';
+    this.title = 'Excitebike';
     this.state = 'PLAYING';
 
     this.score = 0;
@@ -575,45 +575,130 @@ export class Excitebike {
   }
 
   _drawBike(ctx, screenX, laneY, z, pitch, color, wipedOut = false) {
-    // Ground Shadow
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+    // Ground Shadow (scales with height z)
+    const shadowScale = Math.max(0.45, 1 - z * 0.004);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.48)';
     ctx.beginPath();
-    ctx.ellipse(screenX, laneY + 6, 20, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(screenX, laneY + 7, 23 * shadowScale, 6 * shadowScale, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    // Dirt Roostertail Spray behind Rear Tire when on track and moving fast
+    if (!wipedOut && z <= 3 && this.bike.speed > 95) {
+      const roosterPhase = performance.now() * 0.025;
+      for (let r = 0; r < 5; r++) {
+        const rx = -21 - r * 6 - ((roosterPhase * 8 + r * 3) % 7);
+        const ry = -2 - r * 3.2 - Math.sin(roosterPhase + r) * 3;
+        ctx.fillStyle = r % 2 === 0 ? '#D97706' : '#FEF08A';
+        ctx.fillRect(screenX + rx, laneY + ry, 4 - r * 0.4, 4 - r * 0.4);
+      }
+    }
 
     ctx.save();
     ctx.translate(screenX, laneY - z);
     ctx.rotate(wipedOut ? Math.PI * 0.65 : pitch);
 
-    // Rear & Front Tires
-    this.renderer.drawGlowCircle(-14, -4, 9, '#0F172A', 4);
-    ctx.strokeStyle = PALETTE.WHITE;
-    ctx.lineWidth = 2;
+    const spokeAngle = this.bike.wheelPhase || 0;
+    const drawSpokedWheel = (wx, wy) => {
+      // Knobby black motocross tire
+      ctx.fillStyle = '#090D16';
+      ctx.beginPath();
+      ctx.arc(wx, wy, 10, 0, Math.PI * 2);
+      ctx.fill();
+      // Silver wheel rim
+      ctx.strokeStyle = '#E2E8F0';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(wx, wy, 7, 0, Math.PI * 2);
+      ctx.stroke();
+      // Rotating wheel spokes
+      ctx.strokeStyle = '#94A3B8';
+      ctx.lineWidth = 1.2;
+      for (let s = 0; s < 4; s++) {
+        const a = spokeAngle + (s * Math.PI) / 4;
+        ctx.beginPath();
+        ctx.moveTo(wx + Math.cos(a) * 6.5, wy + Math.sin(a) * 6.5);
+        ctx.lineTo(wx - Math.cos(a) * 6.5, wy - Math.sin(a) * 6.5);
+        ctx.stroke();
+      }
+      // Hub
+      ctx.fillStyle = color;
+      ctx.fillRect(wx - 2, wy - 2, 4, 4);
+    };
+
+    // Rear & Front Spoked Wheels
+    drawSpokedWheel(-15, -4);
+    drawSpokedWheel(16, -4);
+
+    // Chrome Exhaust Muffler & Swingarm
+    ctx.strokeStyle = '#CBD5E1';
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(-14, -4, 7, 0, Math.PI * 2);
+    ctx.moveTo(-15, -4);
+    ctx.lineTo(-2, -6);
+    ctx.moveTo(-4, -9);
+    ctx.lineTo(-21, -15);
     ctx.stroke();
 
-    this.renderer.drawGlowCircle(15, -4, 9, '#0F172A', 4);
+    // Engine Block & Crankcase
+    ctx.fillStyle = '#475569';
+    ctx.fillRect(-5, -13, 10, 8);
+    ctx.fillStyle = '#94A3B8';
+    ctx.fillRect(-3, -11, 6, 4);
+
+    // Front Suspension Forks & Handlebars
+    ctx.strokeStyle = '#E2E8F0';
+    ctx.lineWidth = 2.8;
     ctx.beginPath();
-    ctx.arc(15, -4, 7, 0, Math.PI * 2);
+    ctx.moveTo(16, -4);
+    ctx.lineTo(8, -22);
+    ctx.lineTo(4, -24);
     ctx.stroke();
 
-    // Motocross Frame
+    // Motocross Frame, Tank & High Fenders
     ctx.strokeStyle = color;
-    ctx.lineWidth = 3.5;
+    ctx.lineWidth = 3.8;
     ctx.beginPath();
-    ctx.moveTo(-14, -4);
-    ctx.lineTo(-2, -16);
-    ctx.lineTo(12, -14);
-    ctx.lineTo(15, -4);
-    ctx.moveTo(-2, -16);
-    ctx.lineTo(4, -6);
+    // Rear fender & seat
+    ctx.moveTo(-22, -16);
+    ctx.lineTo(-10, -16);
+    ctx.lineTo(2, -15);
+    // Fuel tank & shroud
+    ctx.lineTo(10, -18);
+    // High front mudguard
+    ctx.moveTo(9, -16);
+    ctx.lineTo(22, -14);
     ctx.stroke();
 
-    // Rider torso & helmet
+    // White Number Plate
     ctx.fillStyle = PALETTE.WHITE;
-    ctx.fillRect(-6, -28, 9, 12);
-    this.renderer.drawGlowCircle(0, -32, 6, color, 8);
+    ctx.fillRect(-12, -15, 7, 5);
+    ctx.fillRect(9, -21, 5, 5);
+
+    // Motocross Rider (Boots, Pants, Jersey, Arms, Helmet & Visor)
+    // Boots & Lower Leg
+    ctx.fillStyle = '#1E293B';
+    ctx.fillRect(-7, -14, 5, 9);
+    // Rider Torso leaning into handlebars
+    ctx.fillStyle = PALETTE.WHITE;
+    ctx.fillRect(-9, -27, 10, 12);
+    // Jersey Stripe
+    ctx.fillStyle = color;
+    ctx.fillRect(-9, -23, 10, 4);
+    // Rider Arm reaching to handlebar
+    ctx.strokeStyle = PALETTE.WHITE;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-2, -25);
+    ctx.lineTo(7, -22);
+    ctx.stroke();
+
+    // Helmet & Goggles
+    this.renderer.drawGlowCircle(-1, -32, 6.5, color, 6);
+    ctx.fillStyle = PALETTE.WHITE;
+    ctx.fillRect(2, -35, 6, 2.5); // Helmet peak visor
+    ctx.fillStyle = '#090D16';
+    ctx.fillRect(1, -33, 5, 3.5); // Goggles
+
     ctx.restore();
   }
 
@@ -621,29 +706,75 @@ export class Excitebike {
     const b = this.bike;
     const camX = b.worldX - b.screenX;
 
-    // Stadium Sky & Grandstands
-    ctx.fillStyle = '#0B132B';
-    ctx.fillRect(0, 38, this.renderer.width, 250);
+    // Stadium Sky & Grandstands along Top Horizon
+    ctx.fillStyle = '#1E3A8A';
+    ctx.fillRect(0, 38, this.renderer.width, 118);
 
-    // Crowd Grandstand Lights
+    // Multi-Tiered Stadium Bleacher Structure
+    ctx.fillStyle = '#0F172A';
+    ctx.fillRect(0, 130, this.renderer.width, 132);
     ctx.fillStyle = '#1E293B';
-    ctx.fillRect(0, 175, this.renderer.width, 95);
-    for (let i = 0; i < 32; i++) {
-      const sx = ((i * 64 - camX * 0.25) % 960 + 960) % 960;
-      ctx.fillStyle = i % 3 === 0 ? PALETTE.CYAN : i % 3 === 1 ? PALETTE.PINK : PALETTE.GOLD;
-      ctx.fillRect(sx, 195 + (i % 4) * 14, 6, 6);
+    for (let r = 0; r < 5; r++) {
+      ctx.fillRect(0, 138 + r * 22, this.renderer.width, 14);
     }
 
-    // Green Stadium Infield Verge
+    // Animated Stadium Grandstand Crowd Spectators
+    const crowdWave = Math.floor(performance.now() / 180);
+    const crowdPalette = [PALETTE.RED, PALETTE.GOLD, PALETTE.CYAN, PALETTE.WHITE, PALETTE.PINK, PALETTE.GREEN];
+    for (let row = 0; row < 5; row++) {
+      for (let col = 0; col < 48; col++) {
+        const sx = ((col * 20 - camX * 0.25 + row * 7) % 960 + 960) % 960;
+        const bounce = (col + row + crowdWave) % 4 === 0 ? -2 : 0;
+        const cCol = crowdPalette[(col * 3 + row * 5) % crowdPalette.length];
+        ctx.fillStyle = cCol;
+        ctx.fillRect(sx, 136 + row * 22 + bounce, 6, 6);
+        ctx.fillStyle = '#FDBA74';
+        ctx.fillRect(sx + 1, 132 + row * 22 + bounce, 4, 4);
+      }
+    }
+
+    // Stadium Sponsor Fascia Wall & Retaining Barrier
+    ctx.fillStyle = '#E2E8F0';
+    ctx.fillRect(0, 246, this.renderer.width, 18);
+    ctx.fillStyle = '#1D4ED8';
+    ctx.fillRect(0, 248, this.renderer.width, 14);
+    for (let i = 0; i < 8; i++) {
+      const bx = ((i * 220 - camX * 0.45) % 1760 + 1760) % 1760 - 200;
+      ctx.fillStyle = i % 2 === 0 ? PALETTE.RED : PALETTE.GOLD;
+      ctx.fillRect(bx, 249, 96, 12);
+    }
+
+    // Green Turf Shoulders (Top & Bottom Infield Verge)
+    ctx.fillStyle = '#16A34A';
+    ctx.fillRect(0, 264, this.renderer.width, 276);
     ctx.fillStyle = '#15803D';
-    ctx.fillRect(0, 270, this.renderer.width, 270);
+    for (let gx = 0; gx < 960; gx += 40) {
+      const stripX = ((gx - camX * 0.8) % 960 + 960) % 960;
+      ctx.fillRect(stripX, 264, 20, 24);
+      ctx.fillRect(stripX, 472, 20, 20);
+    }
 
-    // 4-Lane Motocross Track Surface
-    ctx.fillStyle = '#9A3412';
+    // Red & White Alternating Track Curbing along Both Track Shoulders
+    for (let wx = Math.floor(camX / 24) * 24 - 24; wx < camX + 984; wx += 24) {
+      const sx = wx - camX;
+      const isRed = Math.floor(wx / 24) % 2 === 0;
+      ctx.fillStyle = isRed ? '#EF4444' : '#F8FAFC';
+      ctx.fillRect(sx, 286, 24, 10);
+      ctx.fillRect(sx, 464, 24, 10);
+    }
+
+    // 4-Lane Motocross Track Surface (Warm Tan/Clay Dirt)
+    ctx.fillStyle = '#B45309';
     ctx.fillRect(0, 296, this.renderer.width, 168);
+    ctx.fillStyle = '#9A3412';
+    for (let l = 0; l < 4; l++) {
+      if (l % 2 === 1) {
+        ctx.fillRect(0, 298 + l * 40, this.renderer.width, 40);
+      }
+    }
 
-    // Lane Divider Lines
-    ctx.strokeStyle = 'rgba(254, 240, 138, 0.35)';
+    // Crisp White Lane Divider Lines
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
     ctx.lineWidth = 2;
     for (let l = 0; l <= 4; l++) {
       const ly = 298 + l * 40;
@@ -651,16 +782,6 @@ export class Excitebike {
       ctx.moveTo(0, ly);
       ctx.lineTo(this.renderer.width, ly);
       ctx.stroke();
-    }
-
-    // Track Distance Markers
-    ctx.fillStyle = PALETTE.WHITE;
-    for (let wx = 0; wx < this.trackLength; wx += 160) {
-      const sx = wx - camX;
-      if (sx >= -20 && sx <= 980) {
-        ctx.fillRect(sx, 288, 12, 8);
-        ctx.fillRect(sx, 464, 12, 8);
-      }
     }
 
     // Draw Track Features (Ramps, Cooling [<<] Strips, Mud Slicks)

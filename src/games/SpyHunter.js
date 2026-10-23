@@ -13,7 +13,7 @@ export class SpyHunter {
     this.audio = audio;
 
     this.id = 'spyhunter';
-    this.title = 'Highway Agent';
+    this.title = 'Spy Hunter';
     this.width = 960;
     this.height = 540;
 
@@ -780,7 +780,7 @@ export class SpyHunter {
       }
     }
 
-    // Vehicles (Enemies, Civilians, Weapons Van)
+    // Vehicles (Enemies, Civilians, Red Weapons Van) — Detailed Top-Down Arcade Car Sprites
     for (const v of this.vehicles) {
       ctx.save();
       ctx.translate(v.x, v.y);
@@ -789,35 +789,103 @@ export class SpyHunter {
       }
 
       if (v.type === 'weaponsvan') {
-        // Red Weapons Van + Rear Ramp
+        // Iconic Red Weapons Van with Roof Stripes & Rear Loading Ramp
         if (!v.used) {
+          // Extended metal loading ramp with chevron guide stripes
+          ctx.fillStyle = '#64748B';
+          ctx.fillRect(-17, v.h / 2 - 4, 34, 24);
           ctx.fillStyle = '#94A3B8';
-          ctx.fillRect(-16, v.h / 2 - 4, 32, 22);
-          ctx.strokeStyle = PALETTE.GREEN;
-          ctx.strokeRect(-16, v.h / 2 - 4, 32, 22);
+          ctx.fillRect(-13, v.h / 2 - 2, 26, 20);
+          ctx.fillStyle = PALETTE.GREEN;
+          ctx.fillRect(-15, v.h / 2 + 2, 3, 14);
+          ctx.fillRect(12, v.h / 2 + 2, 3, 14);
         }
+        // Van Heavy Tires
+        ctx.fillStyle = '#09090B';
+        ctx.fillRect(-v.w / 2 - 3, -v.h / 2 + 10, 4, 14);
+        ctx.fillRect(v.w / 2 - 1, -v.h / 2 + 10, 4, 14);
+        ctx.fillRect(-v.w / 2 - 3, v.h / 2 - 24, 4, 16);
+        ctx.fillRect(v.w / 2 - 1, v.h / 2 - 24, 4, 16);
+
+        // Red Trailer Box & Cab Chassis
         this.renderer.drawGlowRect(-v.w / 2, -v.h / 2, v.w, v.h, PALETTE.RED, 10, true);
-        ctx.fillStyle = PALETTE.WHITE;
-        ctx.fillRect(-v.w / 2 + 6, -v.h / 2 + 12, v.w - 12, 6);
-        this.renderer.drawText('VAN', 0, 4, {
-          font: FONTS.HEADER,
-          size: 9,
-          color: PALETTE.WHITE,
-          align: 'center'
-        });
-      } else {
-        // Switchblade extending wheel spikes
-        if (v.type === 'switchblade') {
-          ctx.fillStyle = PALETTE.CYAN;
-          ctx.fillRect(-v.w / 2 - 7, -12, 7, 5);
-          ctx.fillRect(v.w / 2, -12, 7, 5);
-          ctx.fillRect(-v.w / 2 - 7, 10, 7, 5);
-          ctx.fillRect(v.w / 2, 10, 7, 5);
-        }
-        this.renderer.drawGlowRect(-v.w / 2, -v.h / 2, v.w, v.h, v.color, 8, true);
-        // Windshield
+        // Cab Windshield
         ctx.fillStyle = '#0F172A';
-        ctx.fillRect(-v.w / 2 + 4, -v.h / 2 + 8, v.w - 8, 12);
+        ctx.fillRect(-v.w / 2 + 5, -v.h / 2 + 6, v.w - 10, 10);
+        // Dual White Roof Stripes
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.fillRect(-9, -v.h / 2 + 20, 5, v.h - 26);
+        ctx.fillRect(4, -v.h / 2 + 20, 5, v.h - 26);
+      } else if (v.type === 'roadlord') {
+        // Road Lord: Heavy Armored Blue Rammer with Steel Front Bullbar
+        ctx.fillStyle = '#09090B';
+        ctx.fillRect(-v.w / 2 - 3, -18, 4, 12);
+        ctx.fillRect(v.w / 2 - 1, -18, 4, 12);
+        ctx.fillRect(-v.w / 2 - 3, 8, 4, 12);
+        ctx.fillRect(v.w / 2 - 1, 8, 4, 12);
+
+        this.renderer.drawGlowRect(-v.w / 2, -v.h / 2, v.w, v.h, '#1D4ED8', 8, true);
+        // Heavy Steel Ramming Wedge & Armor Plates
+        ctx.fillStyle = '#94A3B8';
+        ctx.fillRect(-v.w / 2 - 2, -v.h / 2 - 3, v.w + 4, 7);
+        ctx.fillRect(-v.w / 2 + 3, -4, v.w - 6, 22);
+        // Armored Slit Visor
+        ctx.fillStyle = '#090D16';
+        ctx.fillRect(-v.w / 2 + 5, -14, v.w - 10, 7);
+      } else if (v.type === 'enforcer') {
+        // Enforcer: Sleek Black/Purple Limousine with Side Shooter
+        ctx.fillStyle = '#09090B';
+        ctx.fillRect(-v.w / 2 - 2, -18, 3, 10);
+        ctx.fillRect(v.w / 2 - 1, -18, 3, 10);
+        ctx.fillRect(-v.w / 2 - 2, 10, 3, 10);
+        ctx.fillRect(v.w / 2 - 1, 10, 3, 10);
+
+        this.renderer.drawGlowRect(-v.w / 2, -v.h / 2, v.w, v.h, '#1E1B4B', 8, true);
+        ctx.strokeStyle = PALETTE.PURPLE;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-v.w / 2 + 1, -v.h / 2 + 1, v.w - 2, v.h - 2);
+        // Limo Tinted Windshield & Rear Glass
+        ctx.fillStyle = '#09090B';
+        ctx.fillRect(-v.w / 2 + 4, -14, v.w - 8, 10);
+        ctx.fillRect(-v.w / 2 + 5, 10, v.w - 10, 8);
+        // Side-window Gunner Barrel & Flash
+        const sideDir = this.player.x >= v.x ? 1 : -1;
+        ctx.fillStyle = '#E2E8F0';
+        ctx.fillRect(sideDir > 0 ? v.w / 2 - 2 : -v.w / 2 - 6, -4, 8, 3);
+      } else if (v.type === 'switchblade') {
+        // Switchblade: Red/Orange Coupe with Extending Silver Wheel-Slashers
+        ctx.fillStyle = '#09090B';
+        ctx.fillRect(-v.w / 2 - 2, -16, 3, 10);
+        ctx.fillRect(v.w / 2 - 1, -16, 3, 10);
+        ctx.fillRect(-v.w / 2 - 2, 8, 3, 10);
+        ctx.fillRect(v.w / 2 - 1, 8, 3, 10);
+
+        // Extending Silver Wheel-Slasher Blades
+        ctx.fillStyle = '#E2E8F0';
+        ctx.fillRect(-v.w / 2 - 9, -13, 8, 4);
+        ctx.fillRect(v.w / 2 + 1, -13, 8, 4);
+        ctx.fillRect(-v.w / 2 - 9, 11, 8, 4);
+        ctx.fillRect(v.w / 2 + 1, 11, 8, 4);
+
+        this.renderer.drawGlowRect(-v.w / 2, -v.h / 2, v.w, v.h, '#EA580C', 8, true);
+        ctx.fillStyle = PALETTE.GOLD;
+        ctx.fillRect(-4, -v.h / 2 + 3, 8, 10);
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(-v.w / 2 + 4, -9, v.w - 8, 10);
+      } else {
+        // Civilian Sedan
+        ctx.fillStyle = '#09090B';
+        ctx.fillRect(-v.w / 2 - 2, -14, 3, 9);
+        ctx.fillRect(v.w / 2 - 1, -14, 3, 9);
+        ctx.fillRect(-v.w / 2 - 2, 7, 3, 9);
+        ctx.fillRect(v.w / 2 - 1, 7, 3, 9);
+
+        this.renderer.drawGlowRect(-v.w / 2, -v.h / 2, v.w, v.h, '#38BDF8', 6, true);
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(-v.w / 2 + 4, -10, v.w - 8, 9);
+        ctx.fillRect(-v.w / 2 + 4, 7, v.w - 8, 7);
+        ctx.fillStyle = '#E0F2FE';
+        ctx.fillRect(-v.w / 2 + 5, -1, v.w - 10, 8);
       }
       ctx.restore();
     }
@@ -825,11 +893,57 @@ export class SpyHunter {
     // Player G-6155 Interceptor Supercar
     const p = this.player;
     if (p.invulnTimer <= 0 || Math.floor(p.invulnTimer * 14) % 2 === 0) {
-      this.renderer.drawGlowRect(p.x - p.w / 2, p.y - p.h / 2, p.w, p.h, PALETTE.WHITE, 12, true);
+      ctx.save();
+      ctx.translate(p.x, p.y);
+
+      // Dual Front Machine-Gun Muzzle Flashes when firing
+      if (this.input.isDown('actionA') && !p.dockedVan) {
+        const flashH = 8 + (Math.floor(performance.now() / 35) % 2) * 6;
+        ctx.fillStyle = PALETTE.GOLD;
+        ctx.fillRect(-11, -p.h / 2 - flashH, 4, flashH);
+        ctx.fillRect(7, -p.h / 2 - flashH, 4, flashH);
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.fillRect(-10, -p.h / 2 - flashH * 0.6, 2, flashH * 0.6);
+        ctx.fillRect(8, -p.h / 2 - flashH * 0.6, 2, flashH * 0.6);
+      }
+
+      // 4 Black Racing Tires
+      ctx.fillStyle = '#09090B';
+      ctx.fillRect(-p.w / 2 - 3, -17, 4, 11);
+      ctx.fillRect(p.w / 2 - 1, -17, 4, 11);
+      ctx.fillRect(-p.w / 2 - 3, 7, 4, 12);
+      ctx.fillRect(p.w / 2 - 1, 7, 4, 12);
+
+      // Sleek White G-6155 Sports Car Chassis & Sculpted Hood
+      this.renderer.drawGlowRect(-p.w / 2, -p.h / 2, p.w, p.h, PALETTE.WHITE, 12, true);
+      ctx.fillStyle = '#E2E8F0';
+      ctx.fillRect(-p.w / 2 + 3, -p.h / 2 + 2, p.w - 6, 12);
+
+      // Center Cyan Interceptor Stripe
       ctx.fillStyle = PALETTE.CYAN;
-      ctx.fillRect(p.x - 4, p.y - p.h / 2, 8, p.h);
+      ctx.fillRect(-3, -p.h / 2, 6, p.h);
+
+      // Dark Wrap-Around Cockpit Windshield
       ctx.fillStyle = '#0F172A';
-      ctx.fillRect(p.x - 9, p.y - 8, 18, 14);
+      ctx.fillPath ? null : null;
+      ctx.beginPath();
+      ctx.moveTo(-10, -9);
+      ctx.lineTo(10, -9);
+      ctx.lineTo(12, 3);
+      ctx.lineTo(-12, 3);
+      ctx.closePath();
+      ctx.fill();
+
+      // Rear Engine Louvers & Twin Red Taillights
+      ctx.fillStyle = '#334155';
+      for (let ly = 7; ly <= 17; ly += 4) {
+        ctx.fillRect(-8, ly, 16, 2);
+      }
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(-12, p.h / 2 - 3, 7, 3);
+      ctx.fillRect(5, p.h / 2 - 3, 7, 3);
+
+      ctx.restore();
     }
 
     // Bullets & Missiles

@@ -14,6 +14,34 @@ const ELEV_STEP = 14;
 const ORIGIN_X = 480;
 const ORIGIN_Y = 128;
 
+const BENTLEY_SPRITE = [
+  '.BBB....BBB.',
+  'BYYYB..BYYYB',
+  '.BBBBBBBBBB.',
+  '.BBWWKKWWBB.',
+  '.BBBBYYYYBB.',
+  '..BBBYYYYB..',
+  '.BBBBBBBBBB.',
+  'BBBBYYYYBBBB',
+  'BB.BYYYYB.BB',
+  '...BBBBBB...',
+  '..BBB..BBB..',
+  '.YYYY..YYYY.'
+];
+
+const GEM_EATER_SPRITE = [
+  '..RRRRRRRR..',
+  '.RRRRRRRRRR.',
+  'RRWWKKWWKKRR',
+  'RRRRRRRRRRRR',
+  'RRWWWWWWWWWR',
+  'RRK.K.K.K.RR',
+  'RRWWWWWWWWWR',
+  '.RRRRRRRRRR.',
+  '..RR....RR..',
+  '.YYY....YYY.'
+];
+
 const CASTLE_THEMES = [
   { name: 'CITADEL STEPS', top: '#1E293B', left: '#0F766E', right: '#115E59', accent: PALETTE.CYAN },
   { name: 'SPIRAL RAMPARTS', top: '#31102F', left: '#7E22CE', right: '#581C87', accent: PALETTE.PINK },
@@ -32,7 +60,7 @@ export class CrystalCastles {
     this.audio = audio;
 
     this.id = 'crystalcastles';
-    this.title = 'Gem Citadel';
+    this.title = 'Crystal Castles';
     this.width = 960;
     this.height = 540;
 
@@ -480,10 +508,30 @@ export class CrystalCastles {
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Sparkling Gem on tile
+    // Sparkling Faceted Isometric Diamond Gem on tile
     if (cell.hasGem) {
       const gemColor = (r + c) % 3 === 0 ? PALETTE.CYAN : (r + c) % 3 === 1 ? PALETTE.PINK : PALETTE.GREEN;
-      this.renderer.drawGlowCircle(x, y - 5, 4.5, gemColor, 8, true);
+      const gy = y - 6;
+      ctx.save();
+      ctx.fillStyle = gemColor;
+      ctx.shadowColor = gemColor;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(x, gy - 7);
+      ctx.lineTo(x + 6, gy);
+      ctx.lineTo(x, gy + 6);
+      ctx.lineTo(x - 6, gy);
+      ctx.closePath();
+      ctx.fill();
+      // Crown specular facet
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.beginPath();
+      ctx.moveTo(x, gy - 5);
+      ctx.lineTo(x + 3, gy - 1);
+      ctx.lineTo(x - 3, gy - 1);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
     }
 
     ctx.restore();
@@ -536,10 +584,23 @@ export class CrystalCastles {
 
       if (e.type === 'GEM_EATER') {
         const col = e.eatingTimer > 0 ? PALETTE.CYAN : PALETTE.RED;
-        this.renderer.drawGlowCircle(0, 0, 10, col, 8, true);
-        ctx.fillStyle = PALETTE.WHITE;
-        ctx.fillRect(-5, -4, 4, 4);
-        ctx.fillRect(1, -4, 4, 4);
+        const scale = 2.0;
+        const ew = GEM_EATER_SPRITE[0].length * scale;
+        const eh = GEM_EATER_SPRITE.length * scale;
+        const chompY = e.eatingTimer > 0 ? Math.sin(performance.now() * 0.04) * 2 : 0;
+        this.renderer.drawPixelSprite(
+          GEM_EATER_SPRITE,
+          pos.x - ew * 0.5 - pos.x,
+          pos.y - 10 - eh * 0.5 + chompY - (pos.y - 10),
+          scale,
+          {
+            R: col,
+            W: PALETTE.WHITE,
+            Y: PALETTE.GOLD,
+            K: '#090D16'
+          },
+          e.vc < 0
+        );
       } else if (e.type === 'CRYSTAL_BALL') {
         this.renderer.drawGlowCircle(0, 0, 11, PALETTE.GREEN, 12, true);
         ctx.fillStyle = PALETTE.WHITE;
@@ -584,38 +645,44 @@ export class CrystalCastles {
     ctx.fill();
 
     if (b.invuln <= 0 || Math.floor(b.invuln * 14) % 2 === 0) {
-      ctx.save();
-      ctx.translate(bPos.x, bPos.y - 12);
       const bearCol =
         b.hatTimer > 0
           ? Math.floor(performance.now() * 0.02) % 2 === 0
             ? PALETTE.PINK
             : PALETTE.CYAN
-          : PALETTE.ORANGE;
+          : '#D97706';
+      const scale = 2.2;
+      const bw = BENTLEY_SPRITE[0].length * scale;
+      const bh = BENTLEY_SPRITE.length * scale;
+      this.renderer.drawPixelSprite(
+        BENTLEY_SPRITE,
+        bPos.x - bw * 0.5,
+        bPos.y - bh - 2,
+        scale,
+        {
+          B: bearCol,
+          Y: '#FDE68A',
+          W: PALETTE.WHITE,
+          K: '#090D16'
+        },
+        b.facing < 0
+      );
 
-      // Bear Ears & Body
-      this.renderer.drawGlowCircle(-7, -12, 4.5, bearCol, 6, true);
-      this.renderer.drawGlowCircle(7, -12, 4.5, bearCol, 6, true);
-      this.renderer.drawGlowCircle(0, -2, 11, bearCol, 10, true);
-
-      // Eyes & Snout
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(-5, -7, 3, 4);
-      ctx.fillRect(2, -7, 3, 4);
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(-3, -2, 6, 4);
-
-      // Magic Wizard Hat if active
+      // Pointy Magic Wizard Hat if active
       if (b.hatTimer > 0) {
+        ctx.save();
+        ctx.translate(bPos.x, bPos.y - bh - 2);
         ctx.fillStyle = PALETTE.PINK;
         ctx.beginPath();
-        ctx.moveTo(0, -28);
-        ctx.lineTo(10, -12);
-        ctx.lineTo(-10, -12);
+        ctx.moveTo(0, -18);
+        ctx.lineTo(12, 2);
+        ctx.lineTo(-12, 2);
         ctx.closePath();
         ctx.fill();
+        ctx.fillStyle = PALETTE.GOLD;
+        ctx.fillRect(-14, 0, 28, 4);
+        ctx.restore();
       }
-      ctx.restore();
     }
 
     // 5. Floating Popups & Castle Title Legend

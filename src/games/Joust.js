@@ -111,7 +111,7 @@ export class Joust {
     this.audio = audio;
 
     this.id = 'joust';
-    this.title = 'Sky Lancer';
+    this.title = 'Joust';
     this.width = 960;
     this.height = 540;
 
@@ -570,55 +570,158 @@ export class Joust {
     }
   }
 
-  _drawMountAndKnight(ctx, x, y, dir, wingPhase, mountColor, knightColor, isWarmup = false) {
+  _drawMountAndKnight(
+    ctx,
+    x,
+    y,
+    dir,
+    wingPhase,
+    mountColor,
+    knightColor,
+    isWarmup = false,
+    onGround = true,
+    vx = 0,
+    isOstrich = false
+  ) {
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(dir, 1);
     if (isWarmup) ctx.globalAlpha = 0.55;
 
-    // Legs
-    ctx.strokeStyle = PALETTE.GOLD;
-    ctx.lineWidth = 2;
+    // Articulated Running Legs on Stone Platforms vs Tucked Talons in Flight
+    const stride = onGround && Math.abs(vx) > 8 ? Math.sin(x * 0.18) * 6 : 0;
+    ctx.strokeStyle = isOstrich ? PALETTE.GOLD : PALETTE.ORANGE;
+    ctx.lineWidth = 2.2;
     ctx.beginPath();
-    ctx.moveTo(-3, 8);
-    ctx.lineTo(-5, 20);
-    ctx.moveTo(3, 8);
-    ctx.lineTo(5, 20);
+    if (onGround) {
+      // Left leg with knee joint
+      ctx.moveTo(-3, 7);
+      ctx.lineTo(-4 + stride * 0.5, 14);
+      ctx.lineTo(-6 + stride, 20);
+      ctx.lineTo(-2 + stride, 20);
+      // Right leg with knee joint
+      ctx.moveTo(3, 7);
+      ctx.lineTo(4 - stride * 0.5, 14);
+      ctx.lineTo(4 - stride, 20);
+      ctx.lineTo(8 - stride, 20);
+    } else {
+      // Tucked claws while flying
+      ctx.moveTo(-3, 7);
+      ctx.lineTo(-6, 13);
+      ctx.lineTo(-2, 14);
+      ctx.moveTo(3, 7);
+      ctx.lineTo(0, 13);
+      ctx.lineTo(4, 14);
+    }
     ctx.stroke();
 
-    // Bird Body & Neck/Head
-    this.renderer.drawGlowCircle(0, 4, 10, mountColor, 8, true);
-    ctx.strokeStyle = mountColor;
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.moveTo(6, 0);
-    ctx.lineTo(13, -12);
-    ctx.lineTo(19, -12);
-    ctx.stroke();
+    if (isOstrich) {
+      // === PLAYER OSTRICH MOUNT (Yellow/Gold & White Feathers) ===
+      // Fluffy white tail feathers
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.beginPath();
+      ctx.moveTo(-10, 2);
+      ctx.lineTo(-17, -4);
+      ctx.lineTo(-15, 5);
+      ctx.closePath();
+      ctx.fill();
 
-    // Flapping Wing
-    const wingY = wingPhase > 0.2 ? 9 : -6;
-    ctx.fillStyle = PALETTE.WHITE;
+      // Ostrich body
+      this.renderer.drawGlowCircle(0, 4, 10.5, PALETTE.GOLD, 8, true);
+
+      // Tall slender Ostrich neck & head
+      ctx.strokeStyle = '#FDBA74';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.moveTo(7, 1);
+      ctx.lineTo(13, -13);
+      ctx.stroke();
+      // Ostrich head & beak
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(11, -16, 6, 5);
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(17, -15, 5, 3);
+      ctx.fillStyle = '#090D16';
+      ctx.fillRect(14, -15, 2, 2);
+    } else {
+      // === ENEMY BUZZARD MOUNT (Dark Rust/Vulture Feathers + Hooked Beak) ===
+      // Jagged tail feathers
+      ctx.fillStyle = '#7C2D12';
+      ctx.beginPath();
+      ctx.moveTo(-9, 3);
+      ctx.lineTo(-16, 0);
+      ctx.lineTo(-14, 7);
+      ctx.closePath();
+      ctx.fill();
+
+      // Buzzard body
+      this.renderer.drawGlowCircle(0, 4, 10.5, mountColor, 6, true);
+
+      // Hunched vulture neck & hooked predatory beak
+      ctx.strokeStyle = PALETTE.ORANGE;
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.moveTo(6, 1);
+      ctx.lineTo(13, -9);
+      ctx.stroke();
+      // Buzzard head & hooked beak
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(11, -13, 6, 5);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.beginPath();
+      ctx.moveTo(17, -13);
+      ctx.lineTo(22, -10);
+      ctx.lineTo(17, -8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(13, -12, 2, 2);
+    }
+
+    // 2-Frame Flapping Wings (Downstroke vs Upstroke with primary feather tips)
+    const flapDown = wingPhase > 0.22;
+    ctx.fillStyle = isOstrich ? PALETTE.WHITE : '#CBD5E1';
     ctx.beginPath();
-    ctx.moveTo(-8, 2);
-    ctx.lineTo(2, 2);
-    ctx.lineTo(-4, wingY);
+    if (flapDown) {
+      ctx.moveTo(-8, 2);
+      ctx.lineTo(4, 2);
+      ctx.lineTo(-2, 13);
+      ctx.lineTo(-9, 10);
+    } else {
+      ctx.moveTo(-8, 3);
+      ctx.lineTo(4, 2);
+      ctx.lineTo(-1, -10);
+      ctx.lineTo(-9, -6);
+    }
     ctx.closePath();
     ctx.fill();
 
-    // Knight Rider Torso & Helmet
+    // Knight Rider in Armor (Blue/Silver for Player, Red/Orange/Cyan/Purple for Buzzard Riders)
+    ctx.fillStyle = isOstrich ? '#CBD5E1' : '#1E293B';
+    ctx.fillRect(-6, -12, 10, 12);
     ctx.fillStyle = knightColor;
-    ctx.fillRect(-5, -12, 9, 12);
-    this.renderer.drawGlowCircle(0, -15, 4.5, knightColor, 6, true);
+    ctx.fillRect(-4, -11, 7, 9);
 
-    // Glowing Jousting Lance (Altitude indicator!)
+    // Visored Helmet & Crest
+    this.renderer.drawGlowCircle(-1, -16, 4.8, isOstrich ? '#E2E8F0' : knightColor, 6, true);
+    ctx.fillStyle = '#090D16';
+    ctx.fillRect(1, -17, 3, 2); // Helmet visor slit
+    if (isOstrich) {
+      // Heroic flowing helmet plume
+      ctx.fillStyle = PALETTE.CYAN;
+      ctx.fillRect(-7, -20, 5, 3);
+    }
+
+    // Glowing Horizontal Jousting Lance with Vamplate Handguard
+    ctx.fillStyle = PALETTE.GOLD;
+    ctx.fillRect(4, -11, 3, 6);
     ctx.strokeStyle = PALETTE.WHITE;
     ctx.shadowColor = knightColor;
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 12;
     ctx.lineWidth = 2.8;
     ctx.beginPath();
     ctx.moveTo(-6, -8);
-    ctx.lineTo(24, -8);
+    ctx.lineTo(25, -8);
     ctx.stroke();
 
     ctx.restore();
@@ -627,22 +730,31 @@ export class Joust {
   render(ctx = this.renderer.ctx) {
     this.renderer.clear(PALETTE.BG);
 
-    // Bubbling Lava Pit at bottom
+    // Bubbling Red/Orange Lava Pit at bottom
     const lavaGrad = ctx.createLinearGradient(0, LAVA_Y, 0, this.height);
-    lavaGrad.addColorStop(0, PALETTE.RED);
+    lavaGrad.addColorStop(0, PALETTE.ORANGE);
+    lavaGrad.addColorStop(0.35, PALETTE.RED);
     lavaGrad.addColorStop(1, '#7F1D1D');
     ctx.fillStyle = lavaGrad;
     ctx.fillRect(0, LAVA_Y, this.width, this.height - LAVA_Y);
 
+    // Animated molten surface waves
+    const waveTime = performance.now() * 0.005;
     ctx.strokeStyle = PALETTE.GOLD;
-    ctx.lineWidth = 2;
+    ctx.shadowColor = PALETTE.ORANGE;
+    ctx.shadowBlur = 10;
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.moveTo(0, LAVA_Y);
-    ctx.lineTo(this.width, LAVA_Y);
+    for (let x = 0; x <= this.width; x += 24) {
+      const wy = LAVA_Y + Math.sin(x * 0.05 + waveTime) * 2;
+      if (x === 0) ctx.moveTo(x, wy);
+      else ctx.lineTo(x, wy);
+    }
     ctx.stroke();
+    ctx.shadowBlur = 0;
 
     for (const b of this.lavaBubbles) {
-      this.renderer.drawGlowCircle(b.x, b.y, b.r, PALETTE.ORANGE, 6, true);
+      this.renderer.drawGlowCircle(b.x, b.y, b.r, PALETTE.GOLD, 8, true);
     }
 
     // Grasping Lava Troll Hand if player flies low over left/right lava
@@ -665,16 +777,36 @@ export class Joust {
       ctx.restore();
     }
 
-    // Floating Stone Ledges
+    // Textured Floating Stone Ledges (1982 Williams Craggy Rock Strata)
     const activePlatforms = this.platforms || PLATFORMS;
     for (const plat of activePlatforms) {
-      ctx.fillStyle = '#334155';
+      ctx.save();
+      // Main craggy rock slab
+      ctx.fillStyle = '#573B26';
       ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
-      this.renderer.drawGlowRect(plat.x, plat.y, plat.w, 4, PALETTE.ORANGE, 8, true);
-      // Rocky underside bevel
-      ctx.strokeStyle = '#64748B';
+
+      // Jagged rocky underside teeth
+      ctx.fillStyle = '#3E2718';
+      for (let rx = plat.x + 6; rx < plat.x + plat.w - 12; rx += 18) {
+        const toothH = 3 + ((rx * 7) % 5);
+        ctx.fillRect(rx, plat.y + plat.h - 2, 12, toothH);
+      }
+
+      // Stone block joints & strata cracks
+      ctx.strokeStyle = '#29180E';
       ctx.lineWidth = 1.5;
-      ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
+      for (let rx = plat.x + 28; rx < plat.x + plat.w - 10; rx += 32) {
+        ctx.beginPath();
+        ctx.moveTo(rx, plat.y + 3);
+        ctx.lineTo(rx - 4, plat.y + plat.h);
+        ctx.stroke();
+      }
+
+      // Glowing amber/gold top ledge surface
+      this.renderer.drawGlowRect(plat.x, plat.y, plat.w, 4, PALETTE.ORANGE, 6, true);
+      ctx.fillStyle = '#FDBA74';
+      ctx.fillRect(plat.x + 2, plat.y, plat.w - 4, 1.5);
+      ctx.restore();
     }
 
     // Render Bouncing Buzzard Eggs
@@ -688,17 +820,42 @@ export class Joust {
       ctx.restore();
     }
 
-    // Render Enemy Buzzard Riders
+    // Render Enemy Buzzard Riders (Red Bounder / Cyan Hunter / Purple Shadow Lord)
     for (const e of this.enemies) {
-      this._drawMountAndKnight(ctx, e.x, e.y, e.dir, e.wingPhase, '#94A3B8', e.color, e.spawnWarmup > 0);
+      const buzzardMountColor = e.tier === 1 ? '#B45309' : e.tier === 2 ? '#64748B' : '#4C1D95';
+      this._drawMountAndKnight(
+        ctx,
+        e.x,
+        e.y,
+        e.dir,
+        e.wingPhase,
+        buzzardMountColor,
+        e.color,
+        e.spawnWarmup > 0,
+        e.onGround,
+        e.vx,
+        false
+      );
     }
 
-    // Render Player Ostrich Knight
+    // Render Player Ostrich Knight (Yellow/White Ostrich + Blue/Silver Knight)
     const p = this.player;
     if (!p.dead) {
       const visible = p.invuln <= 0 || Math.floor(p.invuln * 14) % 2 === 0;
       if (visible) {
-        this._drawMountAndKnight(ctx, p.x, p.y, p.dir, p.wingPhase, PALETTE.GOLD, PALETTE.CYAN, false);
+        this._drawMountAndKnight(
+          ctx,
+          p.x,
+          p.y,
+          p.dir,
+          p.wingPhase,
+          PALETTE.GOLD,
+          PALETTE.CYAN,
+          false,
+          p.onGround,
+          p.vx,
+          true
+        );
       }
     }
 

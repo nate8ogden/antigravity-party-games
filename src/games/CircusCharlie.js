@@ -52,6 +52,18 @@ const HORSE_SPRITE = [
   '..YY..YY.YY.'
 ];
 
+const MONKEY_SPRITE = [
+  '..BBBBBB..',
+  '.BFFFFFFB.',
+  'BFKFFFFKFB',
+  '.BFFFFFFB.',
+  '..BBBBBB..',
+  '.BBBBBBBB.',
+  'BB.BBBB.BB',
+  '...B..B...',
+  '..BB..BB..'
+];
+
 export class CircusCharlie {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -59,7 +71,7 @@ export class CircusCharlie {
     this.audio = audio;
 
     this.id = 'circuscharlie';
-    this.title = 'Big Top Stunt';
+    this.title = 'Circus Charlie';
 
     this.state = 'PLAYING';
     this.score = 0;
@@ -843,10 +855,18 @@ export class CircusCharlie {
         ctx.ellipse(sx, ob.y, ob.rx, ob.ry, 0, 0, Math.PI * 2);
         ctx.stroke();
       } else if (ob.type === 'monkey') {
-        ctx.fillStyle = ob.isPurple ? PALETTE.PURPLE : '#B45309';
-        ctx.fillRect(sx - 10, ob.y - 22, 20, 20);
-        ctx.fillStyle = '#FDE68A';
-        ctx.fillRect(sx - 6, ob.y - 18, 12, 10);
+        this.renderer.drawPixelSprite(
+          MONKEY_SPRITE,
+          sx - 11,
+          ob.y - 22,
+          2.2,
+          {
+            B: ob.isPurple ? PALETTE.PURPLE : '#B45309',
+            F: '#FDE68A',
+            K: '#0B0F19'
+          },
+          ob.vx < 0
+        );
       } else if (ob.type === 'ball') {
         ctx.fillStyle = '#F8FAFC';
         ctx.beginPath();

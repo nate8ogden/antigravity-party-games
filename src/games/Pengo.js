@@ -13,6 +13,36 @@ const TILE = 40;
 const OFFSET_X = Math.floor((960 - COLS * TILE) * 0.5);
 const OFFSET_Y = 66;
 
+const PENGO_SPRITE = [
+  '...RRRRRR...',
+  '..RRRRRRRR..',
+  '.RRWWKKWWRR.',
+  '.RRWWKKWWRR.',
+  '.RRRRYYYYRR.',
+  'RRRWWWWWWWRR',
+  'RRRWWWWWWWRR',
+  'RRWWWWWWWWWR',
+  '.RRWWWWWWWR.',
+  '..RRRRRRRR..',
+  '..YYY..YYY..',
+  '.YYYY..YYYY.'
+];
+
+const SNOBEE_SPRITE = [
+  '.Y........Y.',
+  '..Y..SS..Y..',
+  '...SSSSSS...',
+  '..SSSSSSSS..',
+  '.SSWWKKWWSS.',
+  'SSSWWKKWWSSS',
+  'SSSSSSSSSSSS',
+  'SS.SSSSSS.SS',
+  '.SSSSSSSSSS.',
+  '..SSSSSSSS..',
+  '.SS..SS..SS.',
+  'SS...SS...SS'
+];
+
 export class Pengo {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -20,7 +50,7 @@ export class Pengo {
     this.audio = audio;
 
     this.id = 'pengo';
-    this.title = 'Ice Pusher';
+    this.title = 'Pengo';
     this.width = 960;
     this.height = 540;
 
@@ -635,24 +665,50 @@ export class Pengo {
       const pos = this._tileCenter(sb.r, sb.c);
       const col = sb.stunTimer > 0 ? PALETTE.CYAN : sb.color;
       const shake = sb.stunTimer > 0 ? Math.sin(performance.now() * 0.05) * 3 : 0;
-      this.renderer.drawGlowCircle(pos.x + shake, pos.y, 13, col, 10, true);
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(pos.x - 6, pos.y - 5, 4, 5);
-      ctx.fillRect(pos.x + 2, pos.y - 5, 4, 5);
+      const scale = 2.4;
+      const sw = SNOBEE_SPRITE[0].length * scale;
+      const sh = SNOBEE_SPRITE.length * scale;
+      this.renderer.drawPixelSprite(
+        SNOBEE_SPRITE,
+        pos.x + shake - sw * 0.5,
+        pos.y - sh * 0.5,
+        scale,
+        {
+          S: col,
+          Y: PALETTE.GOLD,
+          W: PALETTE.WHITE,
+          K: '#090D16'
+        },
+        sb.dc < 0
+      );
     }
 
     // 4. Red Penguin Pengo
     const p = this.pengo;
     if (p.invuln <= 0 || Math.floor(p.invuln * 14) % 2 === 0) {
       const pos = this._tileCenter(p.r, p.c);
-      this.renderer.drawGlowCircle(pos.x, pos.y, 14, PALETTE.RED, 10, true);
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y + 3, 8, 0, Math.PI * 2);
-      ctx.fill();
-      // Yellow Beak pointing in facing direction
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(pos.x + p.dc * 10 - 4, pos.y + p.dr * 10 - 4, 8, 8);
+      const scale = 2.5;
+      const pw = PENGO_SPRITE[0].length * scale;
+      const ph = PENGO_SPRITE.length * scale;
+      const waddleY = Math.sin(performance.now() * 0.018) * 1.5;
+      this.renderer.drawPixelSprite(
+        PENGO_SPRITE,
+        pos.x - pw * 0.5,
+        pos.y - ph * 0.5 + waddleY,
+        scale,
+        {
+          R: PALETTE.RED,
+          W: PALETTE.WHITE,
+          Y: PALETTE.GOLD,
+          K: '#090D16'
+        },
+        p.dc < 0
+      );
+      // Directional beak highlight when facing up or down
+      if (p.dr !== 0) {
+        ctx.fillStyle = PALETTE.GOLD;
+        ctx.fillRect(pos.x - 4, pos.y + p.dr * 11 - 3, 8, 6);
+      }
     }
 
     // 5. Particles & Popups

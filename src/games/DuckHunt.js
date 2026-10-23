@@ -8,36 +8,89 @@
 import { PALETTE, FONTS, HighScoreStore } from '../engine/Renderer.js';
 
 const DUCK_FLAP_UP = [
-  '....GGG...',
-  '...GGGGW..',
-  '...GGGGKO.',
-  'BBBBGGGG..',
-  '.BBBBGGG..',
-  '..BBBBBB..',
-  '...BBBB...',
-  '..OO..OO..'
+  '......GGGG....',
+  '.....GGGGWW...',
+  '.....GGGGKBO..',
+  '.....GGGGGOOO.',
+  '..WWWWGGGG....',
+  '.RRRRRRBBBB...',
+  'RRRRRRRRBBBB..',
+  '.RRRR..BBBBBB.',
+  '........BBBB..',
+  '......OO..OO..'
+];
+
+const DUCK_FLAP_MID = [
+  '......GGGG....',
+  '.....GGGGWW...',
+  '.....GGGGKBO..',
+  '.....GGGGGOOO.',
+  '.....WWWWG....',
+  '..BBBBBBBBBB..',
+  '.RRRRRRRRBBBB.',
+  '..RRRRR..BBBB.',
+  '.........BBB..',
+  '......OO..OO..'
 ];
 
 const DUCK_FLAP_DOWN = [
-  '....GGG...',
-  '...GGGGW..',
-  '...GGGGKO.',
-  '...GGGGG..',
-  '.BBBBBBBB.',
-  'BBBB..BBBB',
-  '..BB..BB..',
-  '..OO..OO..'
+  '......GGGG....',
+  '.....GGGGWW...',
+  '.....GGGGKBO..',
+  '.....GGGGGOOO.',
+  '.....WWWWG....',
+  '...BBBBBBBB...',
+  '..BBBBBBBBBB..',
+  '.RRRRR..RRRRR.',
+  'RRRR......RRRR',
+  '......OO..OO..'
 ];
 
 const DUCK_SHOT = [
-  '....GGG...',
-  '...GWWGW..',
-  '...GKKGKO.',
-  'BBBBGGGG..',
-  'BBBBBBBBBB',
-  '.BBBBBBBB.',
-  '..OO..OO..',
-  '..........'
+  '....GGGGGG....',
+  '...GGWWWWGG...',
+  '...GWKWWKWG...',
+  '...GGWWWWGG...',
+  '....GGOOGG....',
+  'RRRRWWWWWWRRRR',
+  '.RRRRBBBBBRRR.',
+  '..BBBBBBBBBB..',
+  '...OO....OO...',
+  '..............'
+];
+
+const DOG_CATCH_SPRITE = [
+  '..KKKK........KKKK..',
+  '.KDDDDK.TTTT.KDDDDK.',
+  'KDDDDDDTTTTTTDDDDDDK',
+  'KDDDDDTTTTTTTTDDDDDK',
+  'KDDDDTTWWTTWWTTDDDDK',
+  'KDDDDTTWKTTKWTTDDDDK',
+  '.KDDDTTWWTTWWTTDDDK.',
+  '..KDDTTTKKKKTTTDK...',
+  '...TTTTWWKKKKWWTTTT.',
+  '..TTTTWWWWWWWWWWTTTT',
+  '..TTTTWWKKKKKKWWTTTT',
+  '...TTTTWWWWWWWWTTTT.',
+  '..TTTTTTTTTTTTTTTT..',
+  '.TTTTTTTTTTTTTTTTTT.'
+];
+
+const DOG_LAUGH_SPRITE = [
+  '..KKKK........KKKK..',
+  '.KDDDDK.TTTT.KDDDDK.',
+  'KDDDDDDTTTTTTDDDDDDK',
+  'KDDDDDTTTTTTTTDDDDDK',
+  'KDDDDTTKKTTKKTTDDDDK',
+  'KDDDDTTTTTTTTTTDDDDK',
+  '.KDDDTTTTKKKKTTDDDK.',
+  '..KDDTTWWWWWWWWTDK..',
+  '...TTTTWWKKKKWWTTTT.',
+  '....TTTWWKPPKWWTTT..',
+  '....TTTWWWWWWWWTTT..',
+  '...TTTTTTTTTTTTTTTT.',
+  '..TTTTTTTTTTTTTTTTTT',
+  '.TTTTTTTTTTTTTTTTTT.'
 ];
 
 export class DuckHunt {
@@ -47,7 +100,7 @@ export class DuckHunt {
     this.audio = audio;
 
     this.id = 'duckhunt';
-    this.title = 'Wing Blaster';
+    this.title = 'Duck Hunt';
     this.state = 'PLAYING';
 
     this.score = 0;
@@ -440,29 +493,86 @@ export class DuckHunt {
   }
 
   render(ctx = this.renderer.ctx) {
-    // Sky Backdrop (turns warm pink-orange on FLY AWAY!)
-    ctx.fillStyle = this.flyAway ? '#3B0F2B' : '#0B192C';
+    // 1984 Nintendo Sky-Blue Daytime Hunting Backdrop (#38BDF8 sky, turning warm orange/pink on FLY AWAY!)
+    if (this.flyAway) {
+      const skyGrad = ctx.createLinearGradient(0, 38, 0, this.grassY);
+      skyGrad.addColorStop(0, '#FB7185');
+      skyGrad.addColorStop(1, '#FDBA74');
+      ctx.fillStyle = skyGrad;
+    } else {
+      ctx.fillStyle = '#38BDF8';
+    }
     ctx.fillRect(0, 38, this.renderer.width, this.grassY - 38);
 
     // Muzzle Flash White-Out Frame
     if (this.muzzleFlashTimer > 0) {
-      ctx.fillStyle = 'rgba(248, 250, 252, 0.72)';
+      ctx.fillStyle = 'rgba(248, 250, 252, 0.78)';
       ctx.fillRect(0, 38, this.renderer.width, this.renderer.height - 38);
     }
 
-    // Distant Trees & Bushes behind grass
+    // Classic Pixel-Art Deciduous Tree on the Left (x = 120)
+    const treeX = 120;
+    // Gnarled brown bark trunk, roots, and branches
+    ctx.fillStyle = '#78350F';
+    ctx.fillRect(treeX - 16, this.grassY - 155, 32, 155);
+    ctx.fillRect(treeX - 26, this.grassY - 18, 52, 18); // Roots
+    ctx.fillRect(treeX - 42, this.grassY - 115, 28, 12); // Left branch
+    ctx.fillRect(treeX + 14, this.grassY - 128, 30, 12); // Right branch
+    // Bark highlights
+    ctx.fillStyle = '#B45309';
+    ctx.fillRect(treeX - 8, this.grassY - 150, 8, 145);
+    ctx.fillRect(treeX + 4, this.grassY - 120, 5, 110);
+
+    // Multi-layered Pixel-Art Deciduous Canopy Clusters
+    const canopyClusters = [
+      { dx: 0, dy: -195, w: 96, h: 52, col: '#14532D' },
+      { dx: -44, dy: -162, w: 72, h: 44, col: '#14532D' },
+      { dx: 44, dy: -168, w: 76, h: 46, col: '#14532D' },
+      { dx: 0, dy: -202, w: 84, h: 44, col: '#15803D' },
+      { dx: -38, dy: -168, w: 62, h: 38, col: '#16A34A' },
+      { dx: 38, dy: -174, w: 66, h: 38, col: '#16A34A' },
+      { dx: -12, dy: -210, w: 54, h: 26, col: '#4ADE80' },
+      { dx: 24, dy: -182, w: 36, h: 20, col: '#4ADE80' }
+    ];
+    for (const c of canopyClusters) {
+      ctx.fillStyle = c.col;
+      ctx.fillRect(treeX + c.dx - c.w / 2, this.grassY + c.dy, c.w, c.h);
+    }
+    // Classic red/orange autumn leaf pixel accents on canopy
+    ctx.fillStyle = '#FACC15';
+    for (let i = 0; i < 8; i++) {
+      ctx.fillRect(treeX - 48 + (i * 15) % 92, this.grassY - 200 + (i * 19) % 55, 6, 6);
+    }
+
+    // Classic Pixel-Art Bush on the Right (x = 780)
+    const bushX = 780;
     ctx.fillStyle = '#14532D';
-    ctx.fillRect(90, this.grassY - 140, 22, 140);
-    this.renderer.drawGlowCircle(101, this.grassY - 150, 48, '#166534', 8);
-    this.renderer.drawGlowCircle(780, this.grassY - 35, 38, '#15803D', 6);
+    ctx.fillRect(bushX - 48, this.grassY - 54, 96, 54);
+    ctx.fillRect(bushX - 36, this.grassY - 68, 72, 20);
+    ctx.fillStyle = '#16A34A';
+    ctx.fillRect(bushX - 42, this.grassY - 50, 84, 42);
+    ctx.fillRect(bushX - 28, this.grassY - 64, 56, 18);
+    ctx.fillStyle = '#86EFAC';
+    ctx.fillRect(bushX - 22, this.grassY - 60, 44, 10);
+    ctx.fillRect(bushX - 34, this.grassY - 42, 26, 10);
+    // Pixel berries on bush
+    ctx.fillStyle = '#FACC15';
+    ctx.fillRect(bushX - 26, this.grassY - 32, 5, 5);
+    ctx.fillRect(bushX + 18, this.grassY - 38, 5, 5);
+    ctx.fillRect(bushX + 2, this.grassY - 52, 5, 5);
 
     if (this.flyAway) {
-      this.renderer.drawText('FLY AWAY!', 480, 130, {
+      ctx.fillStyle = '#090D16';
+      ctx.fillRect(380, 98, 200, 42);
+      ctx.strokeStyle = PALETTE.WHITE;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(380, 98, 200, 42);
+      this.renderer.drawText('FLY AWAY!', 480, 126, {
         font: FONTS.HEADER,
-        size: 22,
-        color: PALETTE.PINK,
+        size: 20,
+        color: PALETTE.WHITE,
         align: 'center',
-        glow: 12
+        glow: 10
       });
     }
 
@@ -475,72 +585,119 @@ export class DuckHunt {
       if (d.state === 'SHOT') {
         sprite = DUCK_SHOT;
       } else if (d.state === 'FALLING') {
-        sprite = Math.floor(d.flapTimer * 2) % 2 === 0 ? DUCK_FLAP_UP : DUCK_FLAP_DOWN;
+        sprite = Math.floor(d.flapTimer * 2) % 2 === 0 ? DUCK_FLAP_DOWN : DUCK_FLAP_MID;
         flipX = Math.floor(d.flapTimer * 3) % 2 === 0;
       } else {
-        sprite = Math.floor(d.flapTimer) % 2 === 0 ? DUCK_FLAP_UP : DUCK_FLAP_DOWN;
+        const frame = Math.floor(d.flapTimer) % 4;
+        sprite = frame === 0 ? DUCK_FLAP_UP : frame === 2 ? DUCK_FLAP_DOWN : DUCK_FLAP_MID;
       }
 
-      const palette = {
-        G: d.isFast ? PALETTE.PINK : PALETTE.GREEN,
-        B: d.isFast ? PALETTE.CYAN : '#92400E',
-        W: PALETTE.WHITE,
-        K: '#0B0F19',
-        O: PALETTE.ORANGE
-      };
-      const scale = 4.2;
+      // 3 Iconic NES Duck Varieties:
+      // 1. Green-Headed Mallard (Green head, chestnut wings, tan body)
+      // 2. Blue/Magenta Fast Duck (Blue head, magenta wings, cyan body)
+      // 3. Red Bonus Duck (Crimson head, black/red wings, gold collar)
+      const isRedBonus = d.isFast && d.slotIndex % 2 === 1;
+      const palette = isRedBonus
+        ? {
+            G: '#EF4444', // Red head
+            R: '#991B1B', // Deep crimson wing feathers
+            B: '#1E293B', // Dark slate/black body
+            W: '#FEF08A', // Gold/white neck ring & eye whites
+            K: '#090D16',
+            O: '#FACC15'  // Bright yellow beak & feet
+          }
+        : d.isFast
+        ? {
+            G: '#2563EB', // Royal blue head
+            R: '#EC4899', // Magenta flapping wings
+            B: '#38BDF8', // Sky-blue plumage
+            W: '#FFFFFF',
+            K: '#090D16',
+            O: '#FACC15'
+          }
+        : {
+            G: '#15803D', // Classic Mallard emerald green head
+            R: '#9A3412', // Chestnut brown wing feathers
+            B: '#451A03', // Dark brown body
+            W: '#FFFFFF', // Crisp white neck ring & shocked eyes
+            K: '#090D16',
+            O: '#FACC15'  // Yellow bill & webbed feet
+          };
+
+      const scale = 3.6;
       const drawX = d.x - (sprite[0].length * scale) / 2;
       const drawY = d.y - (sprite.length * scale) / 2;
       this.renderer.drawPixelSprite(sprite, drawX, drawY, scale, palette, flipX, false);
     }
 
-    // Draw Animated Hunting Dog popping up behind the grass
+    // Draw Animated Pixel-Art Hunting Dog popping up behind the grass
     if (this.dog.active && this.dog.yOffset > 2) {
       const dx = 480;
-      const dy = this.grassY - this.dog.yOffset;
+      const dy = this.grassY - this.dog.yOffset - 6;
+      const bob = this.dog.mode === 'laugh' ? Math.sin(performance.now() * 0.035) * 4 : 0;
       ctx.save();
-      ctx.translate(dx, dy);
+      ctx.translate(dx, dy + bob);
 
-      // Dog head & floppy ears
-      ctx.fillStyle = '#D97706';
-      ctx.fillRect(-22, 0, 44, 48);
-      ctx.fillStyle = '#451A03';
-      ctx.fillRect(-30, 4, 10, 26);
-      ctx.fillRect(20, 4, 10, 26);
-
-      // Eyes & snout
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(-12, 8, 8, 8);
-      ctx.fillRect(4, 8, 8, 8);
-      ctx.fillStyle = '#0B0F19';
-      ctx.fillRect(-9, 10, 4, 4);
-      ctx.fillRect(7, 10, 4, 4);
-      ctx.fillRect(-5, 18, 10, 6);
+      const dogSprite = this.dog.mode === 'catch' ? DOG_CATCH_SPRITE : DOG_LAUGH_SPRITE;
+      const dogScale = 3.2;
+      const dogPalette = {
+        T: '#D97706', // Warm tan hound fur
+        D: '#451A03', // Floppy dark brown ears
+        W: '#FFFFFF', // White muzzle & eyes
+        K: '#090D16', // Black nose & pupils
+        P: '#FB7185'  // Pink tongue
+      };
+      this.renderer.drawPixelSprite(
+        dogSprite,
+        -(dogSprite[0].length * dogScale) / 2,
+        0,
+        dogScale,
+        dogPalette,
+        false,
+        false
+      );
 
       if (this.dog.mode === 'catch') {
-        // Proud smile + holding caught duck(s) in paws!
-        ctx.fillStyle = PALETTE.GREEN;
-        ctx.fillRect(28, 8, 22, 16);
-        ctx.fillStyle = PALETTE.ORANGE;
-        ctx.fillRect(46, 12, 10, 6);
+        // Proudly holding up feathered duck(s) in paws!
+        // Right paw duck (Mallard)
+        ctx.fillStyle = '#D97706';
+        ctx.fillRect(28, 18, 12, 10); // Paw
+        ctx.fillStyle = '#9A3412';
+        ctx.fillRect(34, 4, 20, 18); // Feathered body
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(38, 0, 12, 4); // Neck ring
+        ctx.fillStyle = '#15803D';
+        ctx.fillRect(38, -10, 14, 10); // Mallard green head
+        ctx.fillStyle = '#FACC15';
+        ctx.fillRect(42, -16, 6, 6); // Yellow bill
+
         if (this.dog.caughtCount > 1) {
-          ctx.fillStyle = PALETTE.PINK;
-          ctx.fillRect(-50, 8, 22, 16);
+          // Left paw second duck (Blue/Magenta duck)
+          ctx.fillStyle = '#D97706';
+          ctx.fillRect(-40, 18, 12, 10);
+          ctx.fillStyle = '#EC4899';
+          ctx.fillRect(-54, 4, 20, 18);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(-50, 0, 12, 4);
+          ctx.fillStyle = '#2563EB';
+          ctx.fillRect(-52, -10, 14, 10);
+          ctx.fillStyle = '#FACC15';
+          ctx.fillRect(-48, -16, 6, 6);
         }
         this.renderer.drawText(
           this.dog.caughtCount > 1 ? 'DOUBLE CATCH!' : 'GOOD DOG!',
           0,
-          -12,
-          { size: 13, color: PALETTE.GOLD, align: 'center', glow: 8 }
+          -18,
+          { size: 13, color: '#FEF08A', align: 'center', glow: 8 }
         );
       } else {
-        // Chuckling dog shaking shoulders
-        const bob = Math.sin(performance.now() * 0.03) * 4;
-        ctx.fillStyle = PALETTE.PINK;
-        ctx.fillRect(-8, 26 + bob, 16, 8);
-        this.renderer.drawText('HEH HEH HEH!', 0, -12 + bob, {
+        // Laughing paws shaking at shoulders
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(-18, 34, 10, 8);
+        ctx.fillRect(8, 34, 10, 8);
+        this.renderer.drawText('HEH HEH HEH!', 0, -14, {
           size: 13,
-          color: PALETTE.ORANGE,
+          color: '#FEF08A',
           align: 'center',
           glow: 6
         });
@@ -548,15 +705,18 @@ export class DuckHunt {
       ctx.restore();
     }
 
-    // Foreground Tall Grass Meadow
-    ctx.fillStyle = '#15803D';
+    // Foreground Tall Green Grass Meadow & Earth Band
+    ctx.fillStyle = '#14532D';
     ctx.fillRect(0, this.grassY, this.renderer.width, 540 - this.grassY);
-    ctx.fillStyle = PALETTE.GREEN;
-    for (let x = 0; x < 960; x += 16) {
+    ctx.fillStyle = '#16A34A';
+    ctx.fillRect(0, this.grassY, this.renderer.width, 28);
+    // Multi-tone tall pixel grass blades
+    for (let x = 0; x < 960; x += 12) {
+      ctx.fillStyle = x % 24 === 0 ? '#4ADE80' : '#22C55E';
       ctx.beginPath();
-      ctx.moveTo(x, this.grassY);
-      ctx.lineTo(x + 8, this.grassY - 16);
-      ctx.lineTo(x + 16, this.grassY);
+      ctx.moveTo(x, this.grassY + 8);
+      ctx.lineTo(x + 6, this.grassY - 18 - (x % 3) * 4);
+      ctx.lineTo(x + 12, this.grassY + 8);
       ctx.fill();
     }
 

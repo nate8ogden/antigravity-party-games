@@ -110,7 +110,7 @@ export class Frogger {
     this.audio = audio;
 
     this.id = 'frogger';
-    this.title = 'Cyber Hopper';
+    this.title = 'Frogger';
 
     this.state = 'PLAYING';
     this.score = 0;
@@ -884,25 +884,36 @@ export class Frogger {
     ctx.strokeRect(0, 0, GRID_W, GRID_H);
   }
 
-  _renderSafeBank(ctx, y, label) {
-    ctx.fillStyle = '#2E1065';
+  _renderSafeBank(ctx, y) {
+    // Classic Konami purple/violet cobblestone roadside & median strip
+    ctx.fillStyle = '#3B0764';
     ctx.fillRect(0, y, GRID_W, CELL_H);
-    ctx.strokeStyle = '#A855F7';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(0, y + 1, GRID_W, CELL_H - 2);
 
-    // Repeating geometric sidewalk chevrons
-    ctx.fillStyle = 'rgba(184, 41, 255, 0.25)';
-    for (let c = 0; c < COLS; c++) {
-      ctx.fillRect(c * CELL_W + 6, y + 5, CELL_W - 12, CELL_H - 10);
+    // Top & bottom curb trim
+    ctx.fillStyle = '#C084FC';
+    ctx.fillRect(0, y, GRID_W, 2);
+    ctx.fillStyle = '#581C87';
+    ctx.fillRect(0, y + CELL_H - 2, GRID_W, 2);
+
+    // Two staggered courses of violet/magenta cobblestone blocks
+    const blockW = 27;
+    const halfH = Math.floor((CELL_H - 8) / 2);
+    for (let rowIdx = 0; rowIdx < 2; rowIdx++) {
+      const by = y + 3 + rowIdx * (halfH + 2);
+      const stagger = rowIdx === 1 ? 13 : 0;
+      for (let bx = -stagger; bx < GRID_W; bx += blockW) {
+        const drawX = Math.max(1, bx + 1);
+        const drawW = Math.min(GRID_W - 1, bx + blockW - 2) - drawX;
+        if (drawW <= 2) continue;
+
+        ctx.fillStyle = (Math.floor((bx + stagger) / blockW) + rowIdx) % 2 === 0 ? '#9333EA' : '#7E22CE';
+        ctx.fillRect(drawX, by, drawW, halfH);
+
+        // Cobblestone top highlight bevel
+        ctx.fillStyle = '#D8B4FE';
+        ctx.fillRect(drawX + 1, by + 1, Math.max(1, drawW - 2), 2);
+      }
     }
-
-    ctx.save();
-    ctx.font = `700 10px ${FONTS.HUD}`;
-    ctx.fillStyle = 'rgba(248, 250, 252, 0.35)';
-    ctx.textAlign = 'center';
-    ctx.fillText(label, GRID_W / 2, y + 22);
-    ctx.restore();
   }
 
   _renderRiverPlatforms(ctx) {
@@ -1046,45 +1057,96 @@ export class Frogger {
       for (const v of lane.items) {
         ctx.save();
         ctx.shadowColor = lane.color;
-        ctx.shadowBlur = 8;
-
-        // Tires
-        ctx.fillStyle = '#090D16';
-        ctx.fillRect(v.x + 5, vy - 2, 10, 4);
-        ctx.fillRect(v.x + v.w - 15, vy - 2, 10, 4);
-        ctx.fillRect(v.x + 5, vy + vh - 2, 10, 4);
-        ctx.fillRect(v.x + v.w - 15, vy + vh - 2, 10, 4);
+        ctx.shadowBlur = 6;
 
         if (lane.vehicleType === 'SEMI_TRUCK') {
-          // Articulated Cab + Long Cargo Trailer
-          ctx.fillStyle = '#E2E8F0';
-          ctx.fillRect(v.x + 28, vy, v.w - 28, vh);
-          ctx.strokeStyle = lane.accent;
-          ctx.lineWidth = 2;
-          ctx.strokeRect(v.x + 28, vy, v.w - 28, vh);
+          // White Tractor-Trailer Rig (heading Left: Red Cab on left + hitch + White Cargo Trailer on right)
+          ctx.fillStyle = '#090D16';
+          ctx.fillRect(v.x + 4, vy - 2, 9, 4);
+          ctx.fillRect(v.x + 4, vy + vh - 2, 9, 4);
+          ctx.fillRect(v.x + 34, vy - 2, 10, 4);
+          ctx.fillRect(v.x + 34, vy + vh - 2, 10, 4);
+          ctx.fillRect(v.x + v.w - 16, vy - 2, 11, 4);
+          ctx.fillRect(v.x + v.w - 16, vy + vh - 2, 11, 4);
+
+          // Hitch bar
+          ctx.fillStyle = '#64748B';
+          ctx.fillRect(v.x + 21, cy - 3, 8, 6);
 
           // Red Tractor Cab on left
-          ctx.fillStyle = lane.accent;
-          ctx.fillRect(v.x, vy + 2, 24, vh - 4);
+          ctx.fillStyle = '#EF4444';
+          ctx.fillRect(v.x, vy + 2, 23, vh - 4);
+          ctx.fillStyle = '#38BDF8';
+          ctx.fillRect(v.x + 3, vy + 4, 6, vh - 8);
+
+          // White Cargo Trailer with red side stripe
+          ctx.fillStyle = '#F8FAFC';
+          ctx.fillRect(v.x + 27, vy, v.w - 27, vh);
+          ctx.fillStyle = '#EF4444';
+          ctx.fillRect(v.x + 30, cy - 3, v.w - 34, 6);
+          ctx.strokeStyle = '#94A3B8';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(v.x + 27, vy, v.w - 27, vh);
         } else if (lane.vehicleType === 'BULLDOZER') {
-          // Heavy Bulldozer with front steel blade
-          ctx.fillStyle = lane.color;
+          // Bulldozer with continuous dark crawler treads and front steel blade
+          ctx.fillStyle = '#1E293B';
+          ctx.fillRect(v.x + 4, vy - 2, v.w - 14, 5);
+          ctx.fillRect(v.x + 4, vy + vh - 3, v.w - 14, 5);
+          ctx.fillStyle = '#94A3B8';
+          for (let tx = v.x + 6; tx < v.x + v.w - 12; tx += 6) {
+            ctx.fillRect(tx, vy - 2, 2, 4);
+            ctx.fillRect(tx, vy + vh - 2, 2, 4);
+          }
+
+          // Yellow/Orange body & engine cab
+          ctx.fillStyle = '#F97316';
           ctx.fillRect(v.x + 4, vy + 2, v.w - 12, vh - 4);
-          // Front blade on right
-          ctx.fillStyle = '#CBD5E1';
-          ctx.fillRect(v.x + v.w - 6, vy - 1, 6, vh + 2);
-        } else {
-          // Race Car / Neon Coupe / Turbo Cruiser
-          ctx.fillStyle = lane.color;
-          ctx.fillRect(v.x, vy + 1, v.w, vh - 2);
+          ctx.fillStyle = '#FACC15';
+          ctx.fillRect(v.x + 8, vy + 5, 18, vh - 10);
 
-          // Windshield & Roof Cockpit
+          // Heavy steel front blade on right
+          ctx.fillStyle = '#E2E8F0';
+          ctx.fillRect(v.x + v.w - 7, vy - 2, 7, vh + 4);
+          ctx.fillStyle = '#64748B';
+          ctx.fillRect(v.x + v.w - 9, cy - 6, 3, 12);
+        } else if (lane.vehicleType === 'RACE_CAR') {
+          // Yellow Open-Wheel Formula Racer (heading Left)
+          ctx.fillStyle = '#090D16';
+          ctx.fillRect(v.x + 5, vy - 3, 11, 5);
+          ctx.fillRect(v.x + v.w - 15, vy - 3, 11, 5);
+          ctx.fillRect(v.x + 5, vy + vh - 2, 11, 5);
+          ctx.fillRect(v.x + v.w - 15, vy + vh - 2, 11, 5);
+
+          // Nose cone & rear wing
+          ctx.fillStyle = '#EF4444';
+          ctx.fillRect(v.x, vy + 4, 8, vh - 8);
+          ctx.fillRect(v.x + v.w - 7, vy + 1, 7, vh - 2);
+
+          // Yellow fuselage
+          ctx.fillStyle = '#FACC15';
+          ctx.fillRect(v.x + 6, vy + 3, v.w - 12, vh - 6);
+
+          // Cockpit & driver helmet
           ctx.fillStyle = '#0F172A';
-          ctx.fillRect(v.x + v.w * 0.25, vy + 4, v.w * 0.5, vh - 8);
+          ctx.fillRect(v.x + 16, vy + 6, 14, vh - 12);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(v.x + 19, cy - 3, 6, 6);
+        } else {
+          // Pink Coupe / Turbo Cruiser
+          ctx.fillStyle = '#090D16';
+          ctx.fillRect(v.x + 5, vy - 2, 10, 4);
+          ctx.fillRect(v.x + v.w - 15, vy - 2, 10, 4);
+          ctx.fillRect(v.x + 5, vy + vh - 2, 10, 4);
+          ctx.fillRect(v.x + v.w - 15, vy + vh - 2, 10, 4);
 
-          // Racing stripe
+          ctx.fillStyle = lane.color;
+          ctx.fillRect(v.x + 1, vy + 1, v.w - 2, vh - 2);
+
+          // Windshield & Roof
+          ctx.fillStyle = '#0F172A';
+          ctx.fillRect(v.x + v.w * 0.22, vy + 4, v.w * 0.56, vh - 8);
           ctx.fillStyle = lane.accent;
-          ctx.fillRect(v.x + 2, cy - 2, v.w - 4, 4);
+          ctx.fillRect(v.x + v.w * 0.32, vy + 5, v.w * 0.36, vh - 10);
         }
 
         // Headlight beams in travel direction
@@ -1132,55 +1194,57 @@ export class Frogger {
     else if (facing === 'RIGHT') angle = Math.PI / 2;
     ctx.rotate(angle);
 
-    // Smooth hop arc scale & leg extension
-    const arcScale = (isSmall ? 0.78 : 1.0) * (1 + Math.sin(hopProgress * Math.PI) * 0.28);
+    // Smooth hop arc scale & full-body leap extension
+    const hopSin = Math.sin(hopProgress * Math.PI);
+    const arcScale = (isSmall ? 0.78 : 1.0) * (1 + hopSin * 0.3);
     ctx.scale(arcScale, arcScale);
-    const legExtend = Math.sin(hopProgress * Math.PI) * 7;
+    const legExtend = hopSin * 8.5;
 
     ctx.shadowColor = PALETTE.GREEN;
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 8;
 
-    // Front legs
-    ctx.strokeStyle = '#10B981';
+    // Front legs with webbed 3-toe pads
+    ctx.strokeStyle = '#16A34A';
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(-7, -4);
-    ctx.lineTo(-12, -9);
-    ctx.lineTo(-12, -13);
-    ctx.moveTo(7, -4);
-    ctx.lineTo(12, -9);
-    ctx.lineTo(12, -13);
+    ctx.moveTo(-6, -4);
+    ctx.lineTo(-12, -8 - hopSin * 3);
+    ctx.lineTo(-11, -13 - hopSin * 4);
+    ctx.moveTo(6, -4);
+    ctx.lineTo(12, -8 - hopSin * 3);
+    ctx.lineTo(11, -13 - hopSin * 4);
 
     // Hind legs (extend dramatically during hop arc!)
-    ctx.moveTo(-7, 5);
-    ctx.lineTo(-13, 8 + legExtend * 0.5);
-    ctx.lineTo(-11, 13 + legExtend);
-    ctx.moveTo(7, 5);
-    ctx.lineTo(13, 8 + legExtend * 0.5);
-    ctx.lineTo(11, 13 + legExtend);
+    ctx.moveTo(-6, 5);
+    ctx.lineTo(-13, 8 + legExtend * 0.45);
+    ctx.lineTo(-10, 12 + legExtend);
+    ctx.moveTo(6, 5);
+    ctx.lineTo(13, 8 + legExtend * 0.45);
+    ctx.lineTo(10, 12 + legExtend);
     ctx.stroke();
 
-    // Frog Torso
-    ctx.fillStyle = PALETTE.GREEN;
+    // Frog Torso (stretches slightly when mid-leap)
+    ctx.fillStyle = '#22C55E';
     ctx.beginPath();
-    ctx.ellipse(0, 0, 8.5, 10.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, 8.5, 10.2 + hopSin * 2.2, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Golden back stripe
-    ctx.fillStyle = PALETTE.GOLD;
-    ctx.fillRect(-2, -6, 4, 12);
+    // Classic Konami yellow dorsal markings
+    ctx.fillStyle = '#FACC15';
+    ctx.fillRect(-3.5, -5, 7, 3);
+    ctx.fillRect(-2, -2, 4, 8);
 
-    // Bulging Arcade Eyes
-    ctx.fillStyle = PALETTE.PINK;
+    // Bulging Red & White Arcade Eyes
+    ctx.fillStyle = '#EF4444';
     ctx.beginPath();
-    ctx.arc(-5.5, -7, 3.2, 0, Math.PI * 2);
-    ctx.arc(5.5, -7, 3.2, 0, Math.PI * 2);
+    ctx.arc(-5.5, -7.2, 3.3, 0, Math.PI * 2);
+    ctx.arc(5.5, -7.2, 3.3, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = '#FFFFFF';
     ctx.beginPath();
-    ctx.arc(-5.5, -7.8, 1.3, 0, Math.PI * 2);
-    ctx.arc(5.5, -7.8, 1.3, 0, Math.PI * 2);
+    ctx.arc(-5.5, -8.0, 1.4, 0, Math.PI * 2);
+    ctx.arc(5.5, -8.0, 1.4, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();

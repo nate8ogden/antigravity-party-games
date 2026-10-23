@@ -66,7 +66,7 @@ export class OutRun {
     this.audio = audio;
 
     this.id = 'outrun';
-    this.title = 'Synthwave Horizon';
+    this.title = 'OutRun';
     this.width = 960;
     this.height = 540;
 
@@ -642,9 +642,10 @@ export class OutRun {
       );
     }
 
-    // Draw Player Convertible Supercar (Testarossa rear view)
+    // Draw Player Ferrari-Red Testarossa Convertible Supercar (Detailed 1986 Sega Arcade Rear View)
     const carX = this.width / 2 + this.steerAngle * 14;
     const carY = 478 + (this.speed > 20 && Math.floor(performance.now() / 60) % 2 === 0 ? 1 : 0);
+    const windWave = Math.sin(performance.now() * 0.025) * 3;
     ctx.save();
     ctx.translate(carX, carY);
     if (this.drifting) {
@@ -653,28 +654,100 @@ export class OutRun {
       ctx.rotate(this.spinTimer * 12);
     }
 
-    // Rear Tires
-    ctx.fillStyle = '#09090B';
-    ctx.fillRect(-52, 2, 20, 16);
-    ctx.fillRect(32, 2, 20, 16);
-
-    // Convertible Red Chassis
-    this.renderer.drawGlowRect(-48, -18, 96, 26, PALETTE.RED, 12, true);
-    // Strakes / Grille
-    ctx.fillStyle = '#18181B';
-    ctx.fillRect(-42, -6, 84, 8);
-    // Dual Twin Taillights
-    this.renderer.drawGlowRect(-44, -8, 16, 6, PALETTE.GOLD, 8, true);
-    this.renderer.drawGlowRect(28, -8, 16, 6, PALETTE.GOLD, 8, true);
-
-    // Convertible Cockpit & Driver/Passenger
-    ctx.fillStyle = '#38BDF8';
-    ctx.fillRect(-32, -28, 64, 10);
-    ctx.fillStyle = PALETTE.GOLD;
+    // Ground Shadow under Testarossa
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
     ctx.beginPath();
-    ctx.arc(-14, -26, 7, 0, Math.PI * 2);
-    ctx.arc(14, -26, 7, 0, Math.PI * 2);
+    ctx.ellipse(0, 15, 58, 9, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    // Wide Rear Performance Tires
+    ctx.fillStyle = '#09090B';
+    ctx.fillRect(-54, 1, 22, 17);
+    ctx.fillRect(32, 1, 22, 17);
+    ctx.fillStyle = '#27272A';
+    ctx.fillRect(-50, 4, 14, 4);
+    ctx.fillRect(36, 4, 14, 4);
+
+    // Lower Rear Valance & Quad Chrome Exhaust Pipes
+    ctx.fillStyle = '#18181B';
+    ctx.fillRect(-44, 4, 88, 9);
+    ctx.fillStyle = '#E2E8F0';
+    ctx.fillRect(-38, 7, 5, 5);
+    ctx.fillRect(-31, 7, 5, 5);
+    ctx.fillRect(26, 7, 5, 5);
+    ctx.fillRect(33, 7, 5, 5);
+    ctx.fillStyle = '#09090B';
+    ctx.fillRect(-37, 8, 3, 3);
+    ctx.fillRect(-30, 8, 3, 3);
+    ctx.fillRect(27, 8, 3, 3);
+    ctx.fillRect(34, 8, 3, 3);
+
+    // Sculpted Ferrari-Red Testarossa Wide Rear Body & Side Strake Intakes
+    this.renderer.drawGlowRect(-50, -19, 100, 25, '#EF4444', 12, true);
+    ctx.fillStyle = '#DC2626';
+    ctx.fillRect(-52, -12, 104, 16);
+    // Testarossa signature horizontal rear black strake grille
+    ctx.fillStyle = '#09090B';
+    ctx.fillRect(-46, -10, 92, 10);
+    ctx.fillStyle = '#27272A';
+    for (let s = -9; s <= -2; s += 3) {
+      ctx.fillRect(-45, s, 90, 1);
+    }
+
+    // Detailed Twin Taillights (Left & Right Clusters behind Strakes)
+    this.renderer.drawGlowRect(-44, -9, 12, 7, PALETTE.RED, 8, true);
+    this.renderer.drawGlowRect(-31, -9, 9, 7, PALETTE.GOLD, 6, true);
+    this.renderer.drawGlowRect(22, -9, 9, 7, PALETTE.GOLD, 6, true);
+    this.renderer.drawGlowRect(32, -9, 12, 7, PALETTE.RED, 8, true);
+
+    // Center Rear License Plate & Prancing Horse Emblem
+    ctx.fillStyle = '#FEF08A';
+    ctx.fillRect(-9, -8, 18, 7);
+    ctx.fillStyle = '#09090B';
+    ctx.fillRect(-6, -6, 12, 3);
+
+    // Engine Decklid Louvers
+    ctx.fillStyle = '#991B1B';
+    ctx.fillRect(-26, -18, 52, 6);
+
+    // Convertible Windshield Frame & Tinted Glass
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.55)';
+    ctx.beginPath();
+    ctx.moveTo(-36, -19);
+    ctx.lineTo(-28, -32);
+    ctx.lineTo(28, -32);
+    ctx.lineTo(36, -19);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#E2E8F0';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Driver (Left) & Passenger (Right) with Hair Blowing in the Wind
+    // Driver torso & head
+    ctx.fillStyle = '#38BDF8';
+    ctx.fillRect(-22, -23, 14, 6);
+    ctx.fillStyle = '#FDBA74';
+    ctx.beginPath();
+    ctx.arc(-15, -26, 6, 0, Math.PI * 2);
+    ctx.fill();
+    // Driver dark brown hair blowing in wind
+    ctx.fillStyle = '#451A03';
+    ctx.fillRect(-21, -32, 12, 5);
+    ctx.fillRect(-22 + windWave, -30, 6, 4);
+
+    // Passenger torso & head
+    ctx.fillStyle = PALETTE.PINK;
+    ctx.fillRect(8, -23, 14, 6);
+    ctx.fillStyle = '#FDBA74';
+    ctx.beginPath();
+    ctx.arc(15, -26, 5.5, 0, Math.PI * 2);
+    ctx.fill();
+    // Blonde passenger hair streaming in wind
+    ctx.fillStyle = '#FACC15';
+    ctx.fillRect(9, -32, 12, 5);
+    ctx.fillRect(14 + windWave * 1.3, -29, 9, 5);
+
     ctx.restore();
 
     // Particles & Popups
@@ -692,16 +765,44 @@ export class OutRun {
       });
     }
 
-    // Speedometer & Time Remaining Overlay
-    this.renderer.drawText(`${Math.floor(this.speed)} KM/H`, 850, 515, {
+    // Dashboard Tachometer Bar, Gear Indicator & Speedometer Overlay
+    const rpmRatio = Math.min(1, (this.speed % 155) / 145 || this.speed / this.maxSpeed);
+    const gearLabel = this.speed > 155 ? 'GEAR: HI' : 'GEAR: LO';
+    ctx.fillStyle = 'rgba(9, 13, 22, 0.82)';
+    ctx.fillRect(625, 492, 315, 36);
+    ctx.strokeStyle = PALETTE.CYAN;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(625, 492, 315, 36);
+
+    // Tachometer LED segments
+    for (let b = 0; b < 10; b++) {
+      const active = b / 10 < rpmRatio;
+      ctx.fillStyle = !active
+        ? '#1E293B'
+        : b >= 8
+        ? PALETTE.RED
+        : b >= 6
+        ? PALETTE.GOLD
+        : PALETTE.GREEN;
+      ctx.fillRect(635 + b * 11, 502, 8, 16);
+    }
+
+    this.renderer.drawText(gearLabel, 755, 515, {
       font: FONTS.HEADER,
-      size: 18,
-      color: this.speed > 250 ? PALETTE.PINK : PALETTE.CYAN,
+      size: 10,
+      color: this.speed > 155 ? PALETTE.GOLD : PALETTE.CYAN,
+      align: 'left'
+    });
+
+    this.renderer.drawText(`${Math.floor(this.speed)} KM/H`, 930, 516, {
+      font: FONTS.HEADER,
+      size: 15,
+      color: this.speed > 250 ? PALETTE.PINK : PALETTE.WHITE,
       align: 'right',
       glow: 10
     });
     if (this.drifting) {
-      this.renderer.drawText('POWER DRIFT!', 850, 488, {
+      this.renderer.drawText('POWER DRIFT!', 930, 484, {
         font: FONTS.HEADER,
         size: 11,
         color: PALETTE.GOLD,

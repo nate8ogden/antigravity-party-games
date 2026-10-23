@@ -129,7 +129,7 @@ export class Galaxian {
     this.audio = audio;
 
     this.id = 'galaxian';
-    this.title = 'Star Swarm';
+    this.title = 'Galaxian';
     this.state = 'PLAYING';
 
     this.width = 960;

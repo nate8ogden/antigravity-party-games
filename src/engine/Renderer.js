@@ -496,7 +496,202 @@ export class Renderer {
   }
 
   /**
-   * Draws a standardized top arcade HUD bar (38px height)
+   * Draws a game-specific miniature pixel-art life icon in the arcade HUD
+   */
+  _drawLifeIcon(ctx, titleUpper, x, y, accent = PALETTE.CYAN) {
+    ctx.save();
+    if (titleUpper.includes('PAC')) {
+      // Classic yellow Pac-Man profile wedge facing left
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.beginPath();
+      ctx.arc(x + 6, y + 6, 5.5, 1.25 * Math.PI, 0.75 * Math.PI, false);
+      ctx.lineTo(x + 6, y + 6);
+      ctx.closePath();
+      ctx.fill();
+    } else if (
+      titleUpper.includes('GALAGA') ||
+      titleUpper.includes('GALAXIAN') ||
+      titleUpper.includes('DEFENDER') ||
+      titleUpper.includes('SINISTAR') ||
+      titleUpper.includes('EXERION') ||
+      titleUpper.includes('ZAXXON') ||
+      titleUpper.includes('STAR') ||
+      titleUpper.includes('HORIZON') ||
+      titleUpper.includes('INERTIA')
+    ) {
+      // Classic white/red Namco starfighter icon
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(x + 5, y + 1, 2, 10);
+      ctx.fillRect(x + 3, y + 4, 6, 5);
+      ctx.fillRect(x + 1, y + 6, 10, 4);
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(x + 1, y + 5, 2, 2);
+      ctx.fillRect(x + 9, y + 5, 2, 2);
+      ctx.fillRect(x + 5, y + 4, 2, 3);
+    } else if (titleUpper.includes('INVADER') || titleUpper.includes('ARMADA')) {
+      // Classic Taito green laser cannon base
+      ctx.fillStyle = PALETTE.GREEN;
+      ctx.fillRect(x + 5, y + 2, 2, 3);
+      ctx.fillRect(x + 3, y + 5, 6, 2);
+      ctx.fillRect(x + 1, y + 7, 10, 4);
+    } else if (titleUpper.includes('FROG') || titleUpper.includes('HOPPER')) {
+      // Mini green frog with yellow eyes
+      ctx.fillStyle = PALETTE.GREEN;
+      ctx.fillRect(x + 3, y + 3, 6, 7);
+      ctx.fillRect(x + 1, y + 2, 2, 3);
+      ctx.fillRect(x + 9, y + 2, 2, 3);
+      ctx.fillRect(x + 1, y + 8, 2, 3);
+      ctx.fillRect(x + 9, y + 8, 2, 3);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(x + 3, y + 2, 2, 2);
+      ctx.fillRect(x + 7, y + 2, 2, 2);
+    } else if (titleUpper.includes('DIG') || titleUpper.includes('DRILLER')) {
+      // Mini Taizo Hori white/blue helmet
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(x + 2, y + 1, 8, 9);
+      ctx.fillStyle = PALETTE.CYAN;
+      ctx.fillRect(x + 3, y + 3, 6, 3);
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(x + 3, y + 9, 6, 2);
+    } else if (
+      titleUpper.includes('KONG') ||
+      titleUpper.includes('GIRDER') ||
+      titleUpper.includes('LODE') ||
+      titleUpper.includes('VAULT') ||
+      titleUpper.includes('PITFALL') ||
+      titleUpper.includes('CONTRA') ||
+      titleUpper.includes('COMMANDO') ||
+      titleUpper.includes('KUNG')
+    ) {
+      // Mini Jumpman / Hero cap & face
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(x + 2, y + 1, 8, 3);
+      ctx.fillRect(x + 4, y + 3, 7, 2);
+      ctx.fillStyle = '#FDE68A';
+      ctx.fillRect(x + 3, y + 5, 6, 4);
+      ctx.fillStyle = PALETTE.BLUE;
+      ctx.fillRect(x + 3, y + 9, 6, 3);
+    } else if (
+      titleUpper.includes('ASTEROID') ||
+      titleUpper.includes('METEOR') ||
+      titleUpper.includes('LANDER') ||
+      titleUpper.includes('TEMPEST') ||
+      titleUpper.includes('VORTEX')
+    ) {
+      // Glowing vector A-frame ship
+      ctx.strokeStyle = accent || PALETTE.CYAN;
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(x + 6, y + 1);
+      ctx.lineTo(x + 11, y + 11);
+      ctx.lineTo(x + 8, y + 9);
+      ctx.lineTo(x + 4, y + 9);
+      ctx.lineTo(x + 1, y + 11);
+      ctx.closePath();
+      ctx.stroke();
+    } else if (
+      titleUpper.includes('OUTRUN') ||
+      titleUpper.includes('SPY') ||
+      titleUpper.includes('HIGHWAY') ||
+      titleUpper.includes('RALLY') ||
+      titleUpper.includes('ROAD') ||
+      titleUpper.includes('TRON') ||
+      titleUpper.includes('LIGHT')
+    ) {
+      // Mini top-down race car
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(x + 3, y + 1, 6, 10);
+      ctx.fillStyle = PALETTE.CYAN;
+      ctx.fillRect(x + 4, y + 3, 4, 3);
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(x + 1, y + 2, 2, 3);
+      ctx.fillRect(x + 9, y + 2, 2, 3);
+      ctx.fillRect(x + 1, y + 7, 2, 3);
+      ctx.fillRect(x + 9, y + 7, 2, 3);
+    } else if (titleUpper.includes('BATTLE') || titleUpper.includes('TANK')) {
+      // Mini golden tank
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(x + 1, y + 3, 2, 8);
+      ctx.fillRect(x + 9, y + 3, 2, 8);
+      ctx.fillRect(x + 3, y + 4, 6, 6);
+      ctx.fillRect(x + 5, y + 1, 2, 4);
+    } else if (titleUpper.includes('Q*BERT') || titleUpper.includes('ISO HOP')) {
+      // Mini orange Q*bert head & snout
+      ctx.fillStyle = PALETTE.ORANGE;
+      ctx.beginPath();
+      ctx.arc(x + 5, y + 6, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(x + 7, y + 5, 4, 3);
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(x + 3, y + 3, 3, 3);
+    } else if (titleUpper.includes('BUBBLE')) {
+      // Mini green Bub dragon
+      ctx.fillStyle = PALETTE.GREEN;
+      ctx.fillRect(x + 2, y + 2, 8, 8);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(x + 1, y + 3, 2, 5);
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(x + 6, y + 3, 3, 3);
+    } else if (titleUpper.includes('BURGER') || titleUpper.includes('BISTRO')) {
+      // Mini white Chef hat
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(x + 2, y + 1, 8, 5);
+      ctx.fillRect(x + 3, y + 6, 6, 3);
+      ctx.fillStyle = '#FDBA74';
+      ctx.fillRect(x + 3, y + 9, 6, 3);
+    } else {
+      // Classic arcade heart / badge icon
+      ctx.fillStyle = accent || PALETTE.PINK;
+      ctx.fillRect(x + 2, y + 2, 3, 3);
+      ctx.fillRect(x + 7, y + 2, 3, 3);
+      ctx.fillRect(x + 1, y + 4, 10, 4);
+      ctx.fillRect(x + 3, y + 8, 6, 2);
+      ctx.fillRect(x + 5, y + 10, 2, 2);
+    }
+    ctx.restore();
+  }
+
+  /**
+   * Draws classic Namco/Taito style stage pennant flags next to the stage counter
+   */
+  _drawStageFlags(ctx, level, x, y) {
+    ctx.save();
+    const tens = Math.min(3, Math.floor(level / 10));
+    const ones = Math.min(4, level % 10);
+    let curX = x;
+    for (let i = 0; i < tens; i++) {
+      // Large Red/Gold 10-Stage Pennant
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(curX, y, 1.5, 13);
+      ctx.fillStyle = PALETTE.RED;
+      ctx.beginPath();
+      ctx.moveTo(curX + 1.5, y);
+      ctx.lineTo(curX + 9, y + 4);
+      ctx.lineTo(curX + 1.5, y + 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(curX + 2, y + 3, 4, 2);
+      curX += 10;
+    }
+    for (let i = 0; i < ones; i++) {
+      // Classic Yellow/Red 1-Stage Pennant
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(curX, y + 1, 1.5, 12);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.beginPath();
+      ctx.moveTo(curX + 1.5, y + 1);
+      ctx.lineTo(curX + 7, y + 4);
+      ctx.lineTo(curX + 1.5, y + 7);
+      ctx.closePath();
+      ctx.fill();
+      curX += 7;
+    }
+    ctx.restore();
+  }
+
+  /**
+   * Draws an authentic 1980s coin-op top arcade HUD bar (38px height)
    */
   drawHUD({
     title = 'ARCADE',
@@ -508,78 +703,94 @@ export class Renderer {
     accent = PALETTE.CYAN
   } = {}) {
     const ctx = this.ctx;
+    const titleUpper = String(title || 'ARCADE').toUpperCase();
     ctx.save();
-    ctx.fillStyle = 'rgba(11, 15, 25, 0.92)';
+
+    // Pitch-black coin-op marquee header strip with double neon trim
+    ctx.fillStyle = '#04060C';
     ctx.fillRect(0, 0, this.width, 38);
     ctx.strokeStyle = accent;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(0, 38);
-    ctx.lineTo(this.width, 38);
+    ctx.moveTo(0, 36.5);
+    ctx.lineTo(this.width, 36.5);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, 34);
+    ctx.lineTo(this.width, 34);
     ctx.stroke();
 
-    // Game Title
-    this.drawText(title.toUpperCase(), 16, 25, {
+    // 1. Classic Arcade Marquee Title (left)
+    const displayTitle = titleUpper.length > 16 ? titleUpper.slice(0, 16) : titleUpper;
+    this.drawText(displayTitle, 12, 23, {
       font: FONTS.HEADER,
-      size: 13,
+      size: displayTitle.length > 13 ? 10 : 11.5,
       color: accent,
       glow: 8
     });
 
-    // 1UP Score
-    this.drawText(`1UP: ${String(Math.floor(score)).padStart(6, '0')}`, 275, 25, {
-      font: FONTS.HUD,
-      size: 16,
+    // 2. Classic Coin-Op 1UP Header + 6-Digit Bitmap Score
+    const blink1UP = Math.floor(performance.now() / 360) % 2 === 0;
+    this.drawText('1UP', 238, 13, {
+      font: FONTS.HEADER,
+      size: 7.5,
+      color: blink1UP ? PALETTE.RED : PALETTE.WHITE
+    });
+    this.drawText(String(Math.floor(score)).padStart(6, '0'), 238, 28, {
+      font: FONTS.HEADER,
+      size: 11,
       color: PALETTE.WHITE
     });
 
-    // HIGH SCORE + Champion Initials
+    // 3. HIGH SCORE + Champion Initials in Arcade Gold
     const holder = InitialsStore.getLastInitials();
+    this.drawText(`HIGH SCORE (${holder})`, 365, 13, {
+      font: FONTS.HEADER,
+      size: 7.5,
+      color: PALETTE.GOLD
+    });
     this.drawText(
-      `HI(${holder}): ${String(Math.floor(Math.max(score, highScore))).padStart(6, '0')}`,
-      435,
-      25,
+      String(Math.floor(Math.max(score, highScore))).padStart(6, '0'),
+      365,
+      28,
       {
-        font: FONTS.HUD,
-        size: 15,
+        font: FONTS.HEADER,
+        size: 11,
         color: PALETTE.GOLD,
         glow: 6
       }
     );
 
-    // Level / Wave
-    this.drawText(`LV:${level}`, 640, 25, {
-      font: FONTS.HUD,
-      size: 15,
+    // 4. Stage Counter + Classic Arcade Stage Pennant Flags
+    this.drawText(`RD:${String(level).padStart(2, '0')}`, 542, 24, {
+      font: FONTS.HEADER,
+      size: 9.5,
       color: PALETTE.GREEN
     });
+    this._drawStageFlags(ctx, level, 600, 12);
 
+    // 5. Game-specific status telemetry (e.g. GOLD, BONUS, BAYS, FUEL)
     if (extraLabel) {
-      this.drawText(extraLabel, 710, 25, {
-        font: FONTS.HUD,
-        size: 13.5,
+      const cleanExtra = String(extraLabel).length > 22 ? String(extraLabel).slice(0, 22) : extraLabel;
+      this.drawText(cleanExtra, 642, 24, {
+        font: FONTS.HEADER,
+        size: 8,
         color: PALETTE.CYAN
       });
     }
 
-    // Lives indicator on far right
+    // 6. Game-Specific Pixel-Art Life Icons on far right
     const maxLivesIcons = Math.max(0, Math.min(6, lives));
-    this.drawText('LIVES:', 835, 25, {
-      font: FONTS.HUD,
-      size: 13,
-      color: PALETTE.MUTED
-    });
     for (let i = 0; i < maxLivesIcons; i++) {
-      ctx.fillStyle = PALETTE.PINK;
-      ctx.shadowColor = PALETTE.PINK;
-      ctx.shadowBlur = 6;
-      ctx.fillRect(885 + i * 11, 14, 7, 12);
+      this._drawLifeIcon(ctx, titleUpper, 864 + i * 15, 12, accent);
     }
     ctx.restore();
   }
 
   /**
-   * Standard state overlay for MENU, PAUSED, and GAMEOVER states
+   * Authentic 1980s Coin-Op Attract / Pause / Game Over Cabinet Overlay
    */
   drawStateOverlay(
     state,
@@ -595,75 +806,106 @@ export class Renderer {
     if (state === 'PLAYING') return;
     const ctx = this.ctx;
     ctx.save();
-    ctx.fillStyle = 'rgba(11, 15, 25, 0.80)';
+    ctx.fillStyle = 'rgba(4, 6, 12, 0.84)';
     ctx.fillRect(0, 38, this.width, this.height - 38);
 
-    const boxW = 640;
-    const boxH = 290;
+    const boxW = 660;
+    const boxH = 304;
     const bx = (this.width - boxW) / 2;
-    const by = (this.height - boxH) / 2 + 10;
+    const by = (this.height - boxH) / 2 + 12;
+    const frameCol = state === 'GAMEOVER' ? PALETTE.PINK : accent;
 
-    ctx.fillStyle = 'rgba(19, 27, 46, 0.96)';
+    // Outer & inner double-line coin-op cabinet frame
+    ctx.fillStyle = 'rgba(10, 15, 28, 0.97)';
     ctx.fillRect(bx, by, boxW, boxH);
-    ctx.strokeStyle = state === 'GAMEOVER' ? PALETTE.PINK : accent;
-    ctx.lineWidth = 2.5;
-    ctx.shadowColor = state === 'GAMEOVER' ? PALETTE.PINK : accent;
+    ctx.strokeStyle = frameCol;
+    ctx.lineWidth = 3;
+    ctx.shadowColor = frameCol;
     ctx.shadowBlur = 16;
     ctx.strokeRect(bx, by, boxW, boxH);
     ctx.shadowBlur = 0;
 
+    ctx.strokeStyle = PALETTE.GOLD;
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(bx + 6, by + 6, boxW - 12, boxH - 12);
+
+    // Corner arcade rivets
+    ctx.fillStyle = PALETTE.GOLD;
+    for (const [rx, ry] of [
+      [bx + 10, by + 10],
+      [bx + boxW - 14, by + 10],
+      [bx + 10, by + boxH - 14],
+      [bx + boxW - 14, by + boxH - 14]
+    ]) {
+      ctx.fillRect(rx, ry, 4, 4);
+    }
+
     const pulse = 0.65 + 0.35 * Math.sin(performance.now() * 0.006);
+    const blinkCoin = Math.floor(performance.now() / 420) % 2 === 0;
 
     if (state === 'MENU') {
-      this.drawText(title.toUpperCase(), this.width / 2, by + 58, {
+      this.drawText(title.toUpperCase(), this.width / 2, by + 56, {
         font: FONTS.HEADER,
         size: 22,
         color: accent,
         align: 'center',
         glow: 12
       });
-      this.drawText(subtitle || 'MODERNIZED COIN-OP EDITION', this.width / 2, by + 95, {
-        font: FONTS.HUD,
-        size: 15,
+      this.drawText(subtitle || 'AUTHENTIC COIN-OP ARCADE EDITION', this.width / 2, by + 90, {
+        font: FONTS.HEADER,
+        size: 10,
         color: PALETTE.GOLD,
         align: 'center'
       });
-      this.drawText(controls, this.width / 2, by + 145, {
-        font: FONTS.BODY,
+      this.drawText(controls, this.width / 2, by + 138, {
+        font: FONTS.HUD,
         size: 13,
         color: PALETTE.WHITE,
         align: 'center'
       });
       ctx.globalAlpha = pulse;
-      this.drawText('PRESS [SPACE / Z / TAP] TO START COIN-OP', this.width / 2, by + 205, {
-        font: FONTS.HEADER,
-        size: 14,
-        color: PALETTE.GREEN,
-        align: 'center',
-        glow: 10
-      });
+      this.drawText(
+        blinkCoin
+          ? 'INSERT COIN  •  PRESS [SPACE / Z / TAP] FOR 1P START'
+          : 'PUSH 1P START BUTTON [SPACE / Z / TAP]',
+        this.width / 2,
+        by + 196,
+        {
+          font: FONTS.HEADER,
+          size: 12,
+          color: PALETTE.GREEN,
+          align: 'center',
+          glow: 10
+        }
+      );
       ctx.globalAlpha = 1;
       this.drawText(
-        `RECORD HIGH SCORE: ${String(highScore).padStart(6, '0')} (${InitialsStore.getLastInitials()})`,
+        `TOP SCORE: ${String(highScore).padStart(6, '0')} (${InitialsStore.getLastInitials()})   •   CREDIT 01 (FREE PLAY)`,
         this.width / 2,
-        by + 248,
+        by + 242,
         {
-          font: FONTS.HUD,
-          size: 14,
-          color: PALETTE.MUTED,
+          font: FONTS.HEADER,
+          size: 9.5,
+          color: PALETTE.GOLD,
           align: 'center'
         }
       );
-    } else if (state === 'PAUSED') {
-      this.drawText('SYSTEM PAUSED', this.width / 2, by + 64, {
+      this.drawText('© 1978-1989 RETRO ARCADE STUDIO ARCHIVE', this.width / 2, by + 276, {
         font: FONTS.HEADER,
-        size: 24,
+        size: 8,
+        color: PALETTE.MUTED,
+        align: 'center'
+      });
+    } else if (state === 'PAUSED') {
+      this.drawText('PAUSE / DIP SWITCHES', this.width / 2, by + 60, {
+        font: FONTS.HEADER,
+        size: 20,
         color: PALETTE.GOLD,
         align: 'center',
         glow: 12
       });
-      this.drawText(controls, this.width / 2, by + 118, {
-        font: FONTS.BODY,
+      this.drawText(controls, this.width / 2, by + 114, {
+        font: FONTS.HUD,
         size: 13,
         color: PALETTE.WHITE,
         align: 'center'
@@ -671,44 +913,50 @@ export class Renderer {
       this.drawText(
         '[F5] SAVE STATE  |  [F8] LOAD STATE  |  [.] FRAME STEP  |  [R] REWIND',
         this.width / 2,
-        158 + by,
+        by + 156,
         {
-          font: FONTS.HUD,
-          size: 13,
+          font: FONTS.HEADER,
+          size: 9,
           color: PALETTE.GOLD,
           align: 'center'
         }
       );
       ctx.globalAlpha = pulse;
       this.drawText(
-        'PRESS [P / SPACE / Z] TO RESUME  |  [BACKSPACE] STUDIO LOBBY',
+        'PRESS [P / SPACE / Z] TO RESUME  |  [BACKSPACE] ARCADE LOBBY',
         this.width / 2,
-        by + 218,
+        by + 216,
         {
-          font: FONTS.HUD,
-          size: 15,
+          font: FONTS.HEADER,
+          size: 10.5,
           color: PALETTE.CYAN,
           align: 'center'
         }
       );
       ctx.globalAlpha = 1;
+      this.drawText('CREDIT 01  •  CRT SCANLINE EMULATION ACTIVE', this.width / 2, by + 268, {
+        font: FONTS.HEADER,
+        size: 8,
+        color: PALETTE.MUTED,
+        align: 'center'
+      });
     } else if (state === 'GAMEOVER') {
       this.drawText('GAME OVER', this.width / 2, by + 54, {
         font: FONTS.HEADER,
-        size: 25,
+        size: 24,
         color: PALETTE.PINK,
         align: 'center',
         glow: 14
       });
       this.drawText(
-        `FINAL SCORE: ${String(Math.floor(score)).padStart(6, '0')}   •   HI: ${String(
+        `1UP SCORE: ${String(Math.floor(score)).padStart(6, '0')}    HIGH: ${String(
           Math.floor(Math.max(score, highScore))
         ).padStart(6, '0')}`,
         this.width / 2,
-        by + 98,
+        by + 96,
         {
-          font: FONTS.HUD,
-          size: 18,
+          font: FONTS.HEADER,
+          size: 11.5,
           color: PALETTE.WHITE,
           align: 'center'
         }
@@ -717,12 +965,12 @@ export class Renderer {
       // 3-Initial Arcade Champion Selector
       const chars = this.initialsChars || ['A', 'C', 'E'];
       this.drawText(
-        `CHAMPION INITIALS (UP/DOWN LETTER, LEFT/RIGHT SLOT):  [${chars[0]}] [${chars[1]}] [${chars[2]}]`,
+        `ENTER INITIALS (UP/DOWN CHAR, L/R SLOT):  [ ${chars[0]} ] [ ${chars[1]} ] [ ${chars[2]} ]`,
         this.width / 2,
-        by + 142,
+        by + 140,
         {
-          font: FONTS.HUD,
-          size: 15,
+          font: FONTS.HEADER,
+          size: 10,
           color: PALETTE.GOLD,
           align: 'center',
           glow: 8
@@ -732,27 +980,34 @@ export class Renderer {
       this.drawText(
         'PRESS [F8] TO LOAD SAVED STATE OR HOLD [R] TO REWIND!',
         this.width / 2,
-        by + 182,
+        by + 180,
         {
-          font: FONTS.HUD,
-          size: 13,
+          font: FONTS.HEADER,
+          size: 8.5,
           color: PALETTE.CYAN,
           align: 'center'
         }
       );
 
       ctx.globalAlpha = pulse;
-      this.drawText('PRESS [SPACE / Z / TAP] TO PLAY AGAIN', this.width / 2, by + 226, {
-        font: FONTS.HEADER,
-        size: 13,
-        color: PALETTE.GREEN,
-        align: 'center',
-        glow: 8
-      });
+      this.drawText(
+        blinkCoin
+          ? 'INSERT COIN  •  PRESS [SPACE / Z / TAP] TO CONTINUE'
+          : 'PRESS [SPACE / Z / TAP] TO PLAY AGAIN',
+        this.width / 2,
+        by + 226,
+        {
+          font: FONTS.HEADER,
+          size: 11.5,
+          color: PALETTE.GREEN,
+          align: 'center',
+          glow: 8
+        }
+      );
       ctx.globalAlpha = 1;
-      this.drawText('OR CLICK [STUDIO LOBBY] TO SWITCH CABINETS', this.width / 2, by + 260, {
-        font: FONTS.BODY,
-        size: 12.5,
+      this.drawText('OR CLICK [STUDIO LOBBY] TO SWITCH CABINETS', this.width / 2, by + 266, {
+        font: FONTS.HEADER,
+        size: 8.5,
         color: PALETTE.MUTED,
         align: 'center'
       });

@@ -9,6 +9,33 @@
 import { PALETTE, FONTS, HighScoreStore } from '../engine/Renderer.js';
 import { Vector2 } from '../engine/Vector2.js';
 
+const BOMBER_SPRITE = [
+  '.....RRRR.......',
+  '...RRRRRRRR.....',
+  '.RRRRWWWWWRRRR..',
+  'RRRRRRRRRRRRRRRR',
+  '..RRR..RRR..RRR.',
+  '.......RR.......'
+];
+
+const SATELLITE_SPRITE = [
+  'Y......YY......Y',
+  '.Y...RRRRRR...Y.',
+  '..Y.RRWWWWWR.Y..',
+  '...RRRRRRRRRR...',
+  '..Y.RRWWWWWR.Y..',
+  '.Y...RRRRRR...Y.',
+  'Y......YY......Y'
+];
+
+// 10-Missile Pyramid Offset Coordinates inside each ABM Mound (Rows of 1, 2, 3, 4)
+const PYRAMID_SLOTS = [
+  { dx: 0, dy: -22 },
+  { dx: -6, dy: -15 }, { dx: 6, dy: -15 },
+  { dx: -12, dy: -8 }, { dx: 0, dy: -8 }, { dx: 12, dy: -8 },
+  { dx: -18, dy: -1 }, { dx: -6, dy: -1 }, { dx: 6, dy: -1 }, { dx: 18, dy: -1 }
+];
+
 export class MissileCommand {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -16,7 +43,7 @@ export class MissileCommand {
     this.audio = audio;
 
     this.id = 'missilecommand';
-    this.title = 'Aegis Intercept';
+    this.title = 'Missile Command';
     this.state = 'PLAYING';
 
     this.score = 0;
@@ -426,49 +453,65 @@ export class MissileCommand {
   }
 
   render(ctx = this.renderer.ctx) {
-    // Deep Space Radar Backdrop
-    ctx.fillStyle = PALETTE.BG;
+    // 1980 Atari Coin-Op Pitch-Black Sky Backdrop
+    ctx.fillStyle = '#000000';
     ctx.fillRect(0, 38, this.renderer.width, this.renderer.height - 38);
 
-    // Draw Enemy ICBM Contrails & Warhead Tips
+    // Draw Enemy ICBM Contrails & Blinking Warhead Tips
+    const warheadFlash = Math.floor(performance.now() / 60) % 2 === 0 ? PALETTE.WHITE : PALETTE.GOLD;
     for (const em of this.enemyMissiles) {
       ctx.save();
       ctx.strokeStyle = PALETTE.RED;
       ctx.shadowColor = PALETTE.RED;
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 6;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(em.startX, em.startY);
       ctx.lineTo(em.x, em.y);
       ctx.stroke();
-      this.renderer.drawGlowCircle(em.x, em.y, 3, PALETTE.WHITE, 8);
+      ctx.fillStyle = warheadFlash;
+      ctx.fillRect(em.x - 2, em.y - 2, 4, 4);
       ctx.restore();
     }
 
-    // Draw Smart Bombers / Satellites
-    for (const bm of this.bombers) {
-      ctx.save();
-      ctx.translate(bm.x, bm.y);
-      this.renderer.drawGlowRect(-16, -6, 32, 12, PALETTE.PURPLE, 10);
-      this.renderer.drawGlowCircle(0, 0, 5, PALETTE.GOLD, 8);
-      ctx.restore();
+    // Draw Pixel-Art Enemy Strategic Bombers & Killer Satellites
+    for (let i = 0; i < this.bombers.length; i++) {
+      const bm = this.bombers[i];
+      const isSatellite = i % 2 === 1 || bm.y < 145;
+      const sprite = isSatellite ? SATELLITE_SPRITE : BOMBER_SPRITE;
+      const scale = 2.4;
+      const drawX = bm.x - (sprite[0].length * scale) / 2;
+      const drawY = bm.y - (sprite.length * scale) / 2;
+      this.renderer.drawPixelSprite(
+        sprite,
+        drawX,
+        drawY,
+        scale,
+        {
+          R: isSatellite ? PALETTE.PINK : PALETTE.RED,
+          W: PALETTE.CYAN,
+          Y: PALETTE.GOLD
+        },
+        bm.vx < 0,
+        false
+      );
     }
 
     // Draw Player ABM Interceptor Contrails & Target 'X' Markers
     for (const ic of this.interceptors) {
       ctx.save();
-      ctx.strokeStyle = PALETTE.CYAN;
+      ctx.strokeStyle = '#3B82F6';
       ctx.shadowColor = PALETTE.CYAN;
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 6;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(ic.startX, ic.startY);
       ctx.lineTo(ic.x, ic.y);
       ctx.stroke();
 
-      // Target X marker
-      ctx.strokeStyle = PALETTE.GOLD;
-      ctx.lineWidth = 1.5;
+      // Flashing Multi-Color Target 'X' Marker
+      ctx.strokeStyle = warheadFlash;
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
       ctx.moveTo(ic.targetX - 5, ic.targetY - 5);
       ctx.lineTo(ic.targetX + 5, ic.targetY + 5);
@@ -476,70 +519,132 @@ export class MissileCommand {
       ctx.lineTo(ic.targetX - 5, ic.targetY + 5);
       ctx.stroke();
 
-      this.renderer.drawGlowCircle(ic.x, ic.y, 3, PALETTE.WHITE, 8);
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(ic.x - 2, ic.y - 2, 4, 4);
       ctx.restore();
     }
 
-    // Draw Expanding / Contracting Multi-Color Circular Blast Radii
-    const blastPalette = [PALETTE.WHITE, PALETTE.CYAN, PALETTE.PINK, PALETTE.GOLD];
+    // Draw Cycling Multi-Color (Red/Yellow/White/Magenta/Cyan) Intercept Fireball Explosions
+    const blastPalette = [PALETTE.RED, PALETTE.GOLD, PALETTE.WHITE, PALETTE.PINK, PALETTE.CYAN];
     for (const ex of this.explosions) {
-      const col = blastPalette[Math.floor(ex.colorCycle) % blastPalette.length];
-      this.renderer.drawGlowCircle(ex.x, ex.y, ex.radius, col, 16, true);
-    }
-
-    // Draw Craggy Planetary Terrain & ABM Silo Mounds
-    ctx.fillStyle = '#1E1B4B';
-    ctx.fillRect(0, this.groundY, this.renderer.width, 540 - this.groundY);
-    ctx.strokeStyle = PALETTE.GOLD;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(0, this.groundY);
-    ctx.lineTo(this.renderer.width, this.groundY);
-    ctx.stroke();
-
-    // Draw 6 Crystal Neon Cities
-    for (const c of this.cities) {
-      if (c.alive) {
-        // Futuristic crystal skyline domes & spires
-        this.renderer.drawGlowRect(c.x - 18, c.y - 12, 36, 12, PALETTE.CYAN, 8);
-        this.renderer.drawGlowRect(c.x - 10, c.y - 22, 8, 10, PALETTE.BLUE, 6);
-        this.renderer.drawGlowRect(c.x + 2, c.y - 26, 10, 14, PALETTE.CYAN, 8);
-      } else {
-        // Scorched crater ruin
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(c.x - 14, c.y - 3, 28, 3);
+      const idx = Math.floor(ex.colorCycle) % blastPalette.length;
+      const outerCol = blastPalette[idx];
+      const innerCol = blastPalette[(idx + 2) % blastPalette.length];
+      this.renderer.drawGlowCircle(ex.x, ex.y, ex.radius, outerCol, 14, true);
+      if (ex.radius > 8) {
+        ctx.fillStyle = innerCol;
+        ctx.beginPath();
+        ctx.arc(ex.x, ex.y, ex.radius * 0.55, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
 
-    // Draw 3 ABM Defense Batteries (Alpha, Beta, Gamma)
-    for (const bat of this.batteries) {
-      // Silo mound
-      ctx.fillStyle = bat.alive ? '#312E81' : '#1E293B';
-      ctx.beginPath();
-      ctx.moveTo(bat.x - 36, this.groundY);
-      ctx.lineTo(bat.x - 20, this.groundY - 18);
-      ctx.lineTo(bat.x + 20, this.groundY - 18);
-      ctx.lineTo(bat.x + 36, this.groundY);
-      ctx.closePath();
-      ctx.fill();
+    // Draw Rugged Yellow Lunar/Desert Ground Terrain with 3 Raised ABM Battery Mounds
+    ctx.fillStyle = '#FACC15';
+    ctx.beginPath();
+    ctx.moveTo(0, 540);
+    ctx.lineTo(0, this.groundY - 4);
+    // Left Alpha Battery Mound (x = 85)
+    ctx.lineTo(38, this.groundY - 2);
+    ctx.lineTo(56, this.groundY - 28);
+    ctx.lineTo(114, this.groundY - 28);
+    ctx.lineTo(132, this.groundY - 2);
+    // Craggy lunar valley between Alpha and Beta
+    ctx.lineTo(160, this.groundY + 2);
+    ctx.lineTo(230, this.groundY - 3);
+    ctx.lineTo(320, this.groundY + 2);
+    ctx.lineTo(425, this.groundY - 2);
+    // Center Beta Battery Mound (x = 480)
+    ctx.lineTo(448, this.groundY - 28);
+    ctx.lineTo(512, this.groundY - 28);
+    ctx.lineTo(535, this.groundY - 2);
+    // Craggy lunar valley between Beta and Gamma
+    ctx.lineTo(565, this.groundY + 2);
+    ctx.lineTo(640, this.groundY - 3);
+    ctx.lineTo(730, this.groundY + 2);
+    ctx.lineTo(828, this.groundY - 2);
+    // Right Gamma Battery Mound (x = 875)
+    ctx.lineTo(846, this.groundY - 28);
+    ctx.lineTo(904, this.groundY - 28);
+    ctx.lineTo(922, this.groundY - 2);
+    ctx.lineTo(this.renderer.width, this.groundY - 4);
+    ctx.lineTo(this.renderer.width, 540);
+    ctx.closePath();
+    ctx.fill();
 
-      if (bat.alive) {
-        // Stacked pyramid of remaining ABM missiles
-        const col = bat.ammo <= 3 ? PALETTE.RED : PALETTE.GOLD;
-        for (let m = 0; m < bat.ammo; m++) {
-          const mx = bat.x - 18 + (m % 5) * 9;
-          const my = this.groundY - 14 + Math.floor(m / 5) * 7;
-          ctx.fillStyle = col;
-          ctx.fillRect(mx, my, 4, 6);
-        }
-        this.renderer.drawText(`${bat.name}:${bat.ammo}`, bat.x, this.groundY + 22, {
-          size: 12,
-          color: bat.ammo > 0 ? PALETTE.CYAN : PALETTE.RED,
-          align: 'center'
-        });
+    // Draw 6 Multi-Spire Cyan/Blue Crystal Dome Cities
+    for (const c of this.cities) {
+      if (c.alive) {
+        // Outer crystal base & dome
+        ctx.fillStyle = '#2563EB';
+        ctx.fillRect(c.x - 20, c.y - 8, 40, 8);
+        ctx.beginPath();
+        ctx.arc(c.x, c.y - 6, 15, Math.PI, 0);
+        ctx.fill();
+
+        // Multi-spire cyan skyline towers
+        ctx.fillStyle = PALETTE.CYAN;
+        ctx.fillRect(c.x - 16, c.y - 16, 5, 14);
+        ctx.fillRect(c.x - 9, c.y - 24, 6, 22);
+        ctx.fillRect(c.x - 1, c.y - 29, 5, 27);
+        ctx.fillRect(c.x + 6, c.y - 21, 6, 19);
+        ctx.fillRect(c.x + 13, c.y - 14, 4, 12);
+
+        // Glowing spire tips
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.fillRect(c.x - 8, c.y - 26, 2, 2);
+        ctx.fillRect(c.x + 1, c.y - 31, 2, 2);
+        ctx.fillRect(c.x + 8, c.y - 23, 2, 2);
       } else {
-        this.renderer.drawText('OUT', bat.x, this.groundY + 22, {
-          size: 12,
+        // Scorched crater ruin in yellow terrain
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(c.x - 16, c.y - 2, 32, 5);
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(c.x - 10, c.y, 6, 2);
+        ctx.fillRect(c.x + 4, c.y, 6, 2);
+      }
+    }
+
+    // Draw 3 ABM Defense Batteries with Pyramid of Remaining Mini-Missiles Inside Each Mound
+    for (const bat of this.batteries) {
+      if (bat.alive && bat.ammo > 0) {
+        // Draw 1-2-3-4 Pyramid of upright mini-missiles inside the yellow mound
+        for (let m = 0; m < bat.ammo && m < PYRAMID_SLOTS.length; m++) {
+          const slot = PYRAMID_SLOTS[m];
+          const mx = bat.x + slot.dx;
+          const my = this.groundY + slot.dy;
+          // Upright mini-missile body & fins
+          ctx.fillStyle = bat.ammo <= 3 ? PALETTE.RED : '#1D4ED8';
+          ctx.fillRect(mx - 1.5, my - 5, 3, 6);
+          ctx.fillRect(mx - 3, my - 1, 6, 2); // Fins
+          ctx.fillStyle = PALETTE.CYAN;
+          ctx.fillRect(mx - 1, my - 7, 2, 2); // Nosecone
+        }
+        if (bat.ammo <= 3) {
+          this.renderer.drawText('LOW', bat.x, this.groundY + 24, {
+            font: FONTS.HEADER,
+            size: 11,
+            color: PALETTE.RED,
+            align: 'center'
+          });
+        } else {
+          this.renderer.drawText(`${bat.name}:${bat.ammo}`, bat.x, this.groundY + 24, {
+            size: 11,
+            color: '#000000',
+            align: 'center'
+          });
+        }
+      } else {
+        // Destroyed or Empty ABM Mound
+        if (!bat.alive) {
+          ctx.fillStyle = '#000000';
+          ctx.beginPath();
+          ctx.arc(bat.x, this.groundY - 16, 16, Math.PI, 0, true);
+          ctx.fill();
+        }
+        this.renderer.drawText('OUT', bat.x, this.groundY + 24, {
+          font: FONTS.HEADER,
+          size: 11,
           color: PALETTE.RED,
           align: 'center'
         });

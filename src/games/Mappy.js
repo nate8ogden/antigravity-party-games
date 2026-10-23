@@ -69,7 +69,7 @@ export class Mappy {
     this.audio = audio;
 
     this.id = 'mappy';
-    this.title = 'Trampoline Cop';
+    this.title = 'Mappy';
 
     this.state = 'PLAYING';
     this.score = 0;

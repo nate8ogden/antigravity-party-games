@@ -118,7 +118,7 @@ export class MarbleMadness {
     this.audio = audio;
 
     this.id = 'marblemadness';
-    this.title = 'Gyro Sphere';
+    this.title = 'Marble Madness';
     this.state = 'PLAYING';
 
     this.score = 0;
@@ -1157,7 +1157,7 @@ export class MarbleMadness {
 
     const skirtDepth = 22;
 
-    // Left vertical skirt face (pW -> pS)
+    // Left vertical skirt face (pW -> pS) with Atari 1984 cliff grid-line shading
     ctx.fillStyle = theme.skirtL;
     ctx.beginPath();
     ctx.moveTo(pW.x, pW.y);
@@ -1166,6 +1166,9 @@ export class MarbleMadness {
     ctx.lineTo(pW.x, pW.y + skirtDepth);
     ctx.closePath();
     ctx.fill();
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.18)';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
 
     // Right vertical skirt face (pS -> pE)
     ctx.fillStyle = theme.skirtR;
@@ -1176,6 +1179,7 @@ export class MarbleMadness {
     ctx.lineTo(pS.x, pS.y + skirtDepth);
     ctx.closePath();
     ctx.fill();
+    ctx.stroke();
 
     // Top Isometric Diamond Face
     const checker = Math.abs(gx + gy) % 2 === 0;
@@ -1198,13 +1202,13 @@ export class MarbleMadness {
       fill = '#9A3412';
       stroke = PALETTE.GOLD;
     } else if (type === 'goal') {
-      fill = checker ? PALETTE.GOLD : '#1E293B';
+      fill = checker ? PALETTE.WHITE : '#0F172A';
       stroke = PALETTE.GOLD;
     }
 
     ctx.fillStyle = fill;
     ctx.strokeStyle = stroke;
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 1.25;
     ctx.beginPath();
     ctx.moveTo(pN.x, pN.y);
     ctx.lineTo(pE.x, pE.y);
@@ -1212,6 +1216,54 @@ export class MarbleMadness {
     ctx.lineTo(pW.x, pW.y);
     ctx.closePath();
     ctx.fill();
+
+    // Authentic 1984 Atari 2x2 sub-grid contour lines inside each isometric tile
+    const midNW = { x: (pN.x + pW.x) * 0.5, y: (pN.y + pW.y) * 0.5 };
+    const midES = { x: (pE.x + pS.x) * 0.5, y: (pE.y + pS.y) * 0.5 };
+    const midNE = { x: (pN.x + pE.x) * 0.5, y: (pN.y + pE.y) * 0.5 };
+    const midWS = { x: (pW.x + pS.x) * 0.5, y: (pW.y + pS.y) * 0.5 };
+
+    if (type === 'goal') {
+      // Checkered Finish Tile sub-quadrants
+      const center = { x: (pN.x + pS.x) * 0.5, y: (pN.y + pS.y) * 0.5 };
+      ctx.fillStyle = checker ? '#0F172A' : PALETTE.GOLD;
+      ctx.beginPath();
+      ctx.moveTo(pN.x, pN.y);
+      ctx.lineTo(midNE.x, midNE.y);
+      ctx.lineTo(center.x, center.y);
+      ctx.lineTo(midNW.x, midNW.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(center.x, center.y);
+      ctx.lineTo(midES.x, midES.y);
+      ctx.lineTo(pS.x, pS.y);
+      ctx.lineTo(midWS.x, midWS.y);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.save();
+      ctx.strokeStyle = stroke;
+      ctx.globalAlpha = 0.28;
+      ctx.lineWidth = 0.85;
+      ctx.beginPath();
+      ctx.moveTo(midNW.x, midNW.y);
+      ctx.lineTo(midES.x, midES.y);
+      ctx.moveTo(midNE.x, midNE.y);
+      ctx.lineTo(midWS.x, midWS.y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Outer tile border stroke
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 1.25;
+    ctx.beginPath();
+    ctx.moveTo(pN.x, pN.y);
+    ctx.lineTo(pE.x, pE.y);
+    ctx.lineTo(pS.x, pS.y);
+    ctx.lineTo(pW.x, pW.y);
+    ctx.closePath();
     ctx.stroke();
 
     // Draw directional chevron on slope & boost tiles
@@ -1261,8 +1313,76 @@ export class MarbleMadness {
     }
 
     // Render all Isometric Course Tiles back-to-front
+    let goalCenterSumX = 0;
+    let goalCenterSumY = 0;
+    let goalCenterZ = 0;
+    let goalCount = 0;
     for (const tile of this.tileList) {
       this._drawIsoTile(ctx, tile);
+      if (tile.type === 'goal') {
+        goalCenterSumX += tile.gx;
+        goalCenterSumY += tile.gy;
+        goalCenterZ = tile.z;
+        goalCount++;
+      }
+    }
+
+    // Checkered START & FINISH Banners on the Isometric Course
+    const startTile = this._getTileAt(0, 0);
+    if (startTile) {
+      const sp = this._isoProject(0.5, -0.8, startTile.z);
+      ctx.save();
+      ctx.strokeStyle = PALETTE.CYAN;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(sp.x - 24, sp.y);
+      ctx.lineTo(sp.x - 24, sp.y - 26);
+      ctx.moveTo(sp.x + 24, sp.y);
+      ctx.lineTo(sp.x + 24, sp.y - 26);
+      ctx.stroke();
+      ctx.fillStyle = '#0F172A';
+      ctx.fillRect(sp.x - 26, sp.y - 38, 52, 14);
+      ctx.strokeRect(sp.x - 26, sp.y - 38, 52, 14);
+      this.renderer.drawText('START', sp.x, sp.y - 28, {
+        font: FONTS.HEADER,
+        size: 8,
+        color: PALETTE.CYAN,
+        align: 'center'
+      });
+      ctx.restore();
+    }
+
+    if (goalCount > 0) {
+      const gp = this._isoProject(goalCenterSumX / goalCount, goalCenterSumY / goalCount, goalCenterZ);
+      ctx.save();
+      ctx.strokeStyle = PALETTE.GOLD;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(gp.x - 32, gp.y + 4);
+      ctx.lineTo(gp.x - 32, gp.y - 32);
+      ctx.moveTo(gp.x + 32, gp.y + 4);
+      ctx.lineTo(gp.x + 32, gp.y - 32);
+      ctx.stroke();
+
+      // Checkered FINISH Banner Header
+      ctx.fillStyle = '#090D16';
+      ctx.fillRect(gp.x - 36, gp.y - 48, 72, 17);
+      for (let c = 0; c < 12; c++) {
+        ctx.fillStyle = c % 2 === 0 ? PALETTE.WHITE : '#090D16';
+        ctx.fillRect(gp.x - 36 + c * 6, gp.y - 48, 6, 3);
+        ctx.fillRect(gp.x - 36 + c * 6, gp.y - 34, 6, 3);
+      }
+      ctx.strokeStyle = PALETTE.GOLD;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(gp.x - 36, gp.y - 48, 72, 17);
+      this.renderer.drawText('FINISH', gp.x, gp.y - 36, {
+        font: FONTS.HEADER,
+        size: 8.5,
+        color: PALETTE.GOLD,
+        align: 'center',
+        glow: 6
+      });
+      ctx.restore();
     }
 
     // Render Bumpers
@@ -1273,18 +1393,40 @@ export class MarbleMadness {
       this.renderer.drawGlowCircle(pt.x, pt.y - 7, rad * 0.55, PALETTE.GOLD, 6);
     }
 
-    // Render Roaming Enemy Marbles
+    // Render Menacing Black/Steel Enemy Marbles
     for (const h of this.hazards) {
       const pt = this._isoProject(h.gx, h.gy, h.z);
-      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      ctx.save();
+      // Drop shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
       ctx.beginPath();
-      ctx.ellipse(pt.x, pt.y + 2, 10, 5, 0, 0, Math.PI * 2);
+      ctx.ellipse(pt.x, pt.y + 2, 10.5, 5.5, 0, 0, Math.PI * 2);
       ctx.fill();
-      this.renderer.drawGlowCircle(pt.x, pt.y - 7, 10, PALETTE.RED, 10);
-      ctx.fillStyle = '#1E293B';
+
+      // Menacing Black/Steel Outer Rim & Dark Gunmetal Sphere
+      this.renderer.drawGlowCircle(pt.x, pt.y - 7, 10.5, PALETTE.RED, 8, true);
+      ctx.fillStyle = '#090D16';
       ctx.beginPath();
-      ctx.arc(pt.x, pt.y - 7, 7, 0, Math.PI * 2);
+      ctx.arc(pt.x, pt.y - 7, 9.5, 0, Math.PI * 2);
       ctx.fill();
+
+      // Rolling crimson/steel equator seam
+      ctx.save();
+      ctx.translate(pt.x, pt.y - 7);
+      ctx.rotate(h.phase * 1.6);
+      ctx.strokeStyle = PALETTE.RED;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 8.5, 3.2, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // Metallic steel highlight
+      ctx.fillStyle = '#CBD5E1';
+      ctx.beginPath();
+      ctx.arc(pt.x - 3, pt.y - 10, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
 
     // Render Player Marble Trail
@@ -1298,25 +1440,44 @@ export class MarbleMadness {
     }
     ctx.globalAlpha = 1;
 
-    // Render Player Marble
+    // Render Player Marble (Glossy 3D Specular Highlight + Rolling Seam)
     const m = this.marble;
     const mp = this._isoProject(m.gx, m.gy, m.z);
     if (!m.falling) {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.52)';
       ctx.beginPath();
-      ctx.ellipse(mp.x, mp.y + 2, 10, 5, 0, 0, Math.PI * 2);
+      ctx.ellipse(mp.x, mp.y + 2, 10.5, 5.5, 0, 0, Math.PI * 2);
       ctx.fill();
     }
 
     const r = m.falling ? Math.max(3, m.radius * (1 - m.fallTimer * 0.7)) : m.radius;
-    this.renderer.drawGlowCircle(mp.x, mp.y - 7, r, PALETTE.CYAN, 14);
-    // Specular highlight rotating with roll
-    const hx = mp.x - 3 + Math.cos(m.rollAngle) * 2.5;
-    const hy = mp.y - 10 + Math.sin(m.rollAngle) * 2.5;
+    ctx.save();
+    // Deep cobalt 3D base + electric cyan inner sphere
+    this.renderer.drawGlowCircle(mp.x, mp.y - 7, r, '#0284C7', 14, true);
+    ctx.fillStyle = PALETTE.CYAN;
+    ctx.beginPath();
+    ctx.arc(mp.x - 1, mp.y - 8, r * 0.82, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rolling seam band rotating with marble velocity/rollAngle
+    ctx.save();
+    ctx.translate(mp.x, mp.y - 7);
+    ctx.rotate(m.rollAngle);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r * 0.88, r * 0.36, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Glossy 3D Specular Highlight
+    const hx = mp.x - 3.2 + Math.cos(m.rollAngle) * 1.5;
+    const hy = mp.y - 10.2 + Math.sin(m.rollAngle) * 1.5;
     ctx.fillStyle = PALETTE.WHITE;
     ctx.beginPath();
-    ctx.arc(hx, hy, r * 0.32, 0, Math.PI * 2);
+    ctx.arc(hx, hy, r * 0.34, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
 
     // Render Particles
     for (const p of this.particles) {

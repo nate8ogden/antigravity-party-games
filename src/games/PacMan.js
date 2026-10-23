@@ -278,7 +278,7 @@ export class PacMan {
     this.audio = audio;
 
     this.id = 'pacman';
-    this.title = 'Neon Chomper';
+    this.title = 'Pac-Man';
 
     this.state = 'PLAYING';
     this.isMsPacMan = false;
@@ -578,7 +578,7 @@ export class PacMan {
       this.isMsPacMan = !this.isMsPacMan;
       this.audio.playMenuSelect();
       this._addPopup(
-        this.isMsPacMan ? 'CYBER CHOMPER!' : 'NEON CHOMPER!',
+        this.isMsPacMan ? 'MS. PAC-MAN!' : 'PAC-MAN!',
         this.player.x,
         this.player.y - 16,
         this.isMsPacMan ? PALETTE.PINK : PALETTE.GOLD
@@ -1154,20 +1154,20 @@ export class PacMan {
 
     // Top Arcade HUD
     this.renderer.drawHUD({
-      title: this.isMsPacMan ? 'CYBER CHOMPER' : 'NEON CHOMPER',
+      title: this.isMsPacMan ? 'MS. PAC-MAN' : 'PAC-MAN',
       score: this.score,
       highScore: this.highScore,
       lives: this.lives,
       level: this.level,
-      extraLabel: `[X] ${this.isMsPacMan ? 'CYBER' : 'NEON'}`,
+      extraLabel: `[X] ${this.isMsPacMan ? 'MS.PAC' : 'PAC-MAN'}`,
       accent: this.isMsPacMan ? PALETTE.PINK : PALETTE.GOLD
     });
 
     // State Overlay (MENU / PAUSED / GAMEOVER)
     this.renderer.drawStateOverlay(this.state, {
-      title: this.isMsPacMan ? 'CYBER CHOMPER' : 'NEON CHOMPER',
+      title: this.isMsPacMan ? 'MS. PAC-MAN' : 'PAC-MAN',
       subtitle: 'DUAL VARIANT COIN-OP EDITION',
-      controls: 'ARROWS/WASD/SWIPE: STEER  |  X/SHIFT: TOGGLE CYBER VARIANT  |  P: PAUSE',
+      controls: 'ARROWS/WASD/SWIPE: STEER  |  X/SHIFT: TOGGLE MS. PAC-MAN  |  P: PAUSE',
       score: this.score,
       highScore: this.highScore,
       accent: this.isMsPacMan ? PALETTE.PINK : PALETTE.GOLD
@@ -1273,7 +1273,7 @@ export class PacMan {
       align: 'center'
     });
 
-    this.renderer.drawText(this.isMsPacMan ? 'CYBER CHOMPER' : 'NEON CHOMPER', rx + rw / 2, ry + 48, {
+    this.renderer.drawText(this.isMsPacMan ? 'MS. PAC-MAN' : 'PAC-MAN', rx + rw / 2, ry + 48, {
       font: FONTS.HEADER,
       size: 11,
       color: this.isMsPacMan ? PALETTE.PINK : PALETTE.GOLD,
@@ -1398,24 +1398,94 @@ export class PacMan {
     if (!this.fruit) return;
     const f = this.fruit;
     const bounceY = f.wandering ? Math.abs(Math.sin(f.bouncePhase)) * -5 : 0;
-    const fx = f.x;
-    const fy = f.y + bounceY;
+    const fx = Math.round(f.x);
+    const fy = Math.round(f.y + bounceY);
 
     ctx.save();
     ctx.shadowColor = f.color;
-    ctx.shadowBlur = 10;
-    ctx.fillStyle = f.color;
-    ctx.beginPath();
-    ctx.arc(fx, fy + 2, 6.5, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.shadowBlur = 8;
 
-    // Stem / leaf accent
-    ctx.strokeStyle = f.accent;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(fx, fy - 4);
-    ctx.lineTo(fx + 3, fy - 8);
-    ctx.stroke();
+    if (f.name === 'CHERRY') {
+      // Twin cherries with curved green stems & white glints
+      ctx.strokeStyle = '#22C55E';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(fx - 3, fy + 2);
+      ctx.quadraticCurveTo(fx - 1, fy - 5, fx + 4, fy - 7);
+      ctx.moveTo(fx + 3, fy + 4);
+      ctx.quadraticCurveTo(fx + 4, fy - 2, fx + 4, fy - 7);
+      ctx.stroke();
+
+      ctx.fillStyle = '#FF2A55';
+      ctx.beginPath();
+      ctx.arc(fx - 3.5, fy + 3, 3.8, 0, Math.PI * 2);
+      ctx.arc(fx + 3, fy + 4.5, 3.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(fx - 5, fy + 1.5, 1.5, 1.5);
+      ctx.fillRect(fx + 1.5, fy + 3, 1.5, 1.5);
+    } else if (f.name === 'STRAWBERRY') {
+      // Strawberry with green leafy crown and white seeds
+      ctx.fillStyle = '#FF007A';
+      ctx.beginPath();
+      ctx.moveTo(fx - 6, fy - 2);
+      ctx.lineTo(fx + 6, fy - 2);
+      ctx.lineTo(fx, fy + 7);
+      ctx.closePath();
+      ctx.arc(fx - 2.5, fy - 2, 3.5, Math.PI, 0);
+      ctx.arc(fx + 2.5, fy - 2, 3.5, Math.PI, 0);
+      ctx.fill();
+
+      // Green leaf cap
+      ctx.fillStyle = '#22C55E';
+      ctx.fillRect(fx - 4, fy - 6, 8, 2.5);
+      ctx.fillRect(fx - 1, fy - 8, 2, 2);
+
+      // White seed dots
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(fx - 3, fy - 1, 1.5, 1.5);
+      ctx.fillRect(fx + 1.5, fy - 1, 1.5, 1.5);
+      ctx.fillRect(fx - 1, fy + 2, 1.5, 1.5);
+    } else if (f.name === 'PEACH') {
+      ctx.fillStyle = '#FB923C';
+      ctx.beginPath();
+      ctx.arc(fx - 1.5, fy + 1, 5.2, 0, Math.PI * 2);
+      ctx.arc(fx + 1.5, fy + 1, 5.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#22C55E';
+      ctx.fillRect(fx, fy - 6, 5, 2.5);
+    } else if (f.name === 'APPLE') {
+      ctx.fillStyle = '#EF4444';
+      ctx.beginPath();
+      ctx.arc(fx - 2, fy + 1, 5, 0, Math.PI * 2);
+      ctx.arc(fx + 2, fy + 1, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FACC15';
+      ctx.fillRect(fx - 1, fy - 6, 2, 3);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(fx - 4, fy - 1, 1.5, 2.5);
+    } else if (f.name === 'GALAXIAN') {
+      // Galaxian Flagship pixel icon
+      ctx.fillStyle = '#FFD700';
+      ctx.fillRect(fx - 2, fy - 6, 4, 10);
+      ctx.fillStyle = '#00F0FF';
+      ctx.fillRect(fx - 6, fy - 2, 12, 5);
+      ctx.fillStyle = '#FF2A55';
+      ctx.fillRect(fx - 4, fy - 4, 8, 2);
+    } else {
+      ctx.fillStyle = f.color;
+      ctx.beginPath();
+      ctx.arc(fx, fy + 2, 6.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = f.accent;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(fx, fy - 4);
+      ctx.lineTo(fx + 3, fy - 8);
+      ctx.stroke();
+    }
+
     ctx.restore();
   }
 
@@ -1453,41 +1523,36 @@ export class PacMan {
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // Ms. Pac-Man signature Red Bow, Eye & Beauty Mark!
+    // Ms. Pac-Man signature Red Pixel Bow with Blue Knot, Eye & Beauty Mark rotated cleanly with facing angle!
     if (this.isMsPacMan) {
       const flipY = p.facing === DIRS.LEFT ? -1 : 1;
       // Eye
       ctx.fillStyle = '#0B0F19';
-      ctx.beginPath();
-      ctx.arc(1.5, -4.2 * flipY, 1.4, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillRect(0.5, -5.2 * flipY - 1, 2.2, 2.2);
 
       // Beauty mark
-      ctx.fillRect(-2.5, 2.5 * flipY, 1.5, 1.5);
+      ctx.fillStyle = '#0B0F19';
+      ctx.fillRect(-3, 2.2 * flipY, 1.8, 1.8);
 
       // Red lipstick tip
       ctx.fillStyle = '#FF2A55';
-      ctx.beginPath();
-      ctx.arc(7.5, -2.5 * flipY, 1.5, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillRect(6.5, -2.5 * flipY - 1, 2.2, 2.2);
 
-      // Signature Red Bow on top of head
+      // Signature Red Pixel Bow on top of head with Blue Center Knot
+      const bowY = -7.8 * flipY;
       ctx.fillStyle = '#FF2A55';
-      ctx.beginPath();
-      ctx.arc(-4.5, -7.5 * flipY, 3.2, 0, Math.PI * 2);
-      ctx.arc(-0.5, -7.5 * flipY, 3.2, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(-2.5, -7.5 * flipY, 1.4, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillRect(-6.5, bowY - 2.5, 3.5, 5);
+      ctx.fillRect(-1.0, bowY - 2.5, 3.5, 5);
+      ctx.fillStyle = '#2563EB';
+      ctx.fillRect(-3.2, bowY - 1.5, 2.4, 3);
     }
 
     ctx.restore();
   }
 
   _renderGhosts(ctx) {
+    const skirtAlt = Math.floor(this.pelletPulse * 1.6) % 2 === 0;
+
     for (const g of this.ghosts) {
       ctx.save();
       ctx.translate(g.x, g.y);
@@ -1498,66 +1563,79 @@ export class PacMan {
         if (g.frightened) {
           const isFlashingWhite =
             this.frightTimer <= 2.0 && Math.floor(this.frightTimer * 8) % 2 === 0;
-          bodyColor = isFlashingWhite ? '#F8FAFC' : '#2563EB';
+          bodyColor = isFlashingWhite ? '#F8FAFC' : '#1D4ED8';
         }
 
         ctx.fillStyle = bodyColor;
         ctx.shadowColor = bodyColor;
         ctx.shadowBlur = 8;
 
-        // Dome head + wavy skirt
+        // Classic dome head + 3-scallop wavy bottom skirt (alternating 2 skirt frames as they move!)
         ctx.beginPath();
         ctx.arc(0, -2, 8.8, Math.PI, 0, false);
         ctx.lineTo(8.8, 8.5);
-        // 3 skirt waves
-        ctx.lineTo(5.8, 5.5);
-        ctx.lineTo(2.9, 8.5);
-        ctx.lineTo(0, 5.5);
-        ctx.lineTo(-2.9, 8.5);
-        ctx.lineTo(-5.8, 5.5);
-        ctx.lineTo(-8.8, 8.5);
+        if (skirtAlt) {
+          // Frame 0: 3 scallops
+          ctx.lineTo(5.8, 5.2);
+          ctx.lineTo(2.9, 8.5);
+          ctx.lineTo(0, 5.2);
+          ctx.lineTo(-2.9, 8.5);
+          ctx.lineTo(-5.8, 5.2);
+          ctx.lineTo(-8.8, 8.5);
+        } else {
+          // Frame 1: shifted scallops
+          ctx.lineTo(7.2, 8.5);
+          ctx.lineTo(4.4, 5.2);
+          ctx.lineTo(1.5, 8.5);
+          ctx.lineTo(-1.5, 8.5);
+          ctx.lineTo(-4.4, 5.2);
+          ctx.lineTo(-7.2, 8.5);
+          ctx.lineTo(-8.8, 6.2);
+        }
         ctx.closePath();
         ctx.fill();
         ctx.shadowBlur = 0;
 
         if (g.frightened) {
-          // Frightened squiggly mouth & eyes
+          // Classic wavy-mouth frightened face
           const featureColor =
             this.frightTimer <= 2.0 && Math.floor(this.frightTimer * 8) % 2 === 0
               ? '#FF2A55'
               : '#FDE68A';
           ctx.fillStyle = featureColor;
-          ctx.fillRect(-4, -3, 2.5, 2.5);
-          ctx.fillRect(1.5, -3, 2.5, 2.5);
+          ctx.fillRect(-4.2, -3.2, 2.5, 2.5);
+          ctx.fillRect(1.7, -3.2, 2.5, 2.5);
 
           ctx.strokeStyle = featureColor;
-          ctx.lineWidth = 1.4;
+          ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.moveTo(-5, 3.5);
-          ctx.lineTo(-2.5, 1.8);
-          ctx.lineTo(0, 3.5);
-          ctx.lineTo(2.5, 1.8);
-          ctx.lineTo(5, 3.5);
+          ctx.moveTo(-5.5, 3.8);
+          ctx.lineTo(-3.6, 1.8);
+          ctx.lineTo(-1.8, 3.8);
+          ctx.lineTo(0, 1.8);
+          ctx.lineTo(1.8, 3.8);
+          ctx.lineTo(3.6, 1.8);
+          ctx.lineTo(5.5, 3.8);
           ctx.stroke();
           ctx.restore();
           continue;
         }
       }
 
-      // Draw Directional Ghost Eyes (or disembodied returning eyes)
+      // Draw Directional Ghost Eyes (white sclera + blue pupils offset in g.dir travel direction)
       const lookX = g.dir.x * 2.2;
       const lookY = g.dir.y * 2.2;
 
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
-      ctx.arc(-3.2 + lookX * 0.5, -2.2 + lookY * 0.5, 3.0, 0, Math.PI * 2);
-      ctx.arc(3.2 + lookX * 0.5, -2.2 + lookY * 0.5, 3.0, 0, Math.PI * 2);
+      ctx.ellipse(-3.3 + lookX * 0.55, -2.2 + lookY * 0.55, 2.8, 3.4, 0, 0, Math.PI * 2);
+      ctx.ellipse(3.3 + lookX * 0.55, -2.2 + lookY * 0.55, 2.8, 3.4, 0, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#1D4ED8';
       ctx.beginPath();
-      ctx.arc(-3.2 + lookX, -2.2 + lookY, 1.5, 0, Math.PI * 2);
-      ctx.arc(3.2 + lookX, -2.2 + lookY, 1.5, 0, Math.PI * 2);
+      ctx.arc(-3.3 + lookX, -2.2 + lookY, 1.55, 0, Math.PI * 2);
+      ctx.arc(3.3 + lookX, -2.2 + lookY, 1.55, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.restore();

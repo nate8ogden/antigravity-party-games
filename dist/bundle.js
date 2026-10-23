@@ -6271,7 +6271,202 @@ class Renderer {
   }
 
   /**
-   * Draws a standardized top arcade HUD bar (38px height)
+   * Draws a game-specific miniature pixel-art life icon in the arcade HUD
+   */
+  _drawLifeIcon(ctx, titleUpper, x, y, accent = PALETTE.CYAN) {
+    ctx.save();
+    if (titleUpper.includes('PAC')) {
+      // Classic yellow Pac-Man profile wedge facing left
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.beginPath();
+      ctx.arc(x + 6, y + 6, 5.5, 1.25 * Math.PI, 0.75 * Math.PI, false);
+      ctx.lineTo(x + 6, y + 6);
+      ctx.closePath();
+      ctx.fill();
+    } else if (
+      titleUpper.includes('GALAGA') ||
+      titleUpper.includes('GALAXIAN') ||
+      titleUpper.includes('DEFENDER') ||
+      titleUpper.includes('SINISTAR') ||
+      titleUpper.includes('EXERION') ||
+      titleUpper.includes('ZAXXON') ||
+      titleUpper.includes('STAR') ||
+      titleUpper.includes('HORIZON') ||
+      titleUpper.includes('INERTIA')
+    ) {
+      // Classic white/red Namco starfighter icon
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(x + 5, y + 1, 2, 10);
+      ctx.fillRect(x + 3, y + 4, 6, 5);
+      ctx.fillRect(x + 1, y + 6, 10, 4);
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(x + 1, y + 5, 2, 2);
+      ctx.fillRect(x + 9, y + 5, 2, 2);
+      ctx.fillRect(x + 5, y + 4, 2, 3);
+    } else if (titleUpper.includes('INVADER') || titleUpper.includes('ARMADA')) {
+      // Classic Taito green laser cannon base
+      ctx.fillStyle = PALETTE.GREEN;
+      ctx.fillRect(x + 5, y + 2, 2, 3);
+      ctx.fillRect(x + 3, y + 5, 6, 2);
+      ctx.fillRect(x + 1, y + 7, 10, 4);
+    } else if (titleUpper.includes('FROG') || titleUpper.includes('HOPPER')) {
+      // Mini green frog with yellow eyes
+      ctx.fillStyle = PALETTE.GREEN;
+      ctx.fillRect(x + 3, y + 3, 6, 7);
+      ctx.fillRect(x + 1, y + 2, 2, 3);
+      ctx.fillRect(x + 9, y + 2, 2, 3);
+      ctx.fillRect(x + 1, y + 8, 2, 3);
+      ctx.fillRect(x + 9, y + 8, 2, 3);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(x + 3, y + 2, 2, 2);
+      ctx.fillRect(x + 7, y + 2, 2, 2);
+    } else if (titleUpper.includes('DIG') || titleUpper.includes('DRILLER')) {
+      // Mini Taizo Hori white/blue helmet
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(x + 2, y + 1, 8, 9);
+      ctx.fillStyle = PALETTE.CYAN;
+      ctx.fillRect(x + 3, y + 3, 6, 3);
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(x + 3, y + 9, 6, 2);
+    } else if (
+      titleUpper.includes('KONG') ||
+      titleUpper.includes('GIRDER') ||
+      titleUpper.includes('LODE') ||
+      titleUpper.includes('VAULT') ||
+      titleUpper.includes('PITFALL') ||
+      titleUpper.includes('CONTRA') ||
+      titleUpper.includes('COMMANDO') ||
+      titleUpper.includes('KUNG')
+    ) {
+      // Mini Jumpman / Hero cap & face
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(x + 2, y + 1, 8, 3);
+      ctx.fillRect(x + 4, y + 3, 7, 2);
+      ctx.fillStyle = '#FDE68A';
+      ctx.fillRect(x + 3, y + 5, 6, 4);
+      ctx.fillStyle = PALETTE.BLUE;
+      ctx.fillRect(x + 3, y + 9, 6, 3);
+    } else if (
+      titleUpper.includes('ASTEROID') ||
+      titleUpper.includes('METEOR') ||
+      titleUpper.includes('LANDER') ||
+      titleUpper.includes('TEMPEST') ||
+      titleUpper.includes('VORTEX')
+    ) {
+      // Glowing vector A-frame ship
+      ctx.strokeStyle = accent || PALETTE.CYAN;
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(x + 6, y + 1);
+      ctx.lineTo(x + 11, y + 11);
+      ctx.lineTo(x + 8, y + 9);
+      ctx.lineTo(x + 4, y + 9);
+      ctx.lineTo(x + 1, y + 11);
+      ctx.closePath();
+      ctx.stroke();
+    } else if (
+      titleUpper.includes('OUTRUN') ||
+      titleUpper.includes('SPY') ||
+      titleUpper.includes('HIGHWAY') ||
+      titleUpper.includes('RALLY') ||
+      titleUpper.includes('ROAD') ||
+      titleUpper.includes('TRON') ||
+      titleUpper.includes('LIGHT')
+    ) {
+      // Mini top-down race car
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(x + 3, y + 1, 6, 10);
+      ctx.fillStyle = PALETTE.CYAN;
+      ctx.fillRect(x + 4, y + 3, 4, 3);
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(x + 1, y + 2, 2, 3);
+      ctx.fillRect(x + 9, y + 2, 2, 3);
+      ctx.fillRect(x + 1, y + 7, 2, 3);
+      ctx.fillRect(x + 9, y + 7, 2, 3);
+    } else if (titleUpper.includes('BATTLE') || titleUpper.includes('TANK')) {
+      // Mini golden tank
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(x + 1, y + 3, 2, 8);
+      ctx.fillRect(x + 9, y + 3, 2, 8);
+      ctx.fillRect(x + 3, y + 4, 6, 6);
+      ctx.fillRect(x + 5, y + 1, 2, 4);
+    } else if (titleUpper.includes('Q*BERT') || titleUpper.includes('ISO HOP')) {
+      // Mini orange Q*bert head & snout
+      ctx.fillStyle = PALETTE.ORANGE;
+      ctx.beginPath();
+      ctx.arc(x + 5, y + 6, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(x + 7, y + 5, 4, 3);
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(x + 3, y + 3, 3, 3);
+    } else if (titleUpper.includes('BUBBLE')) {
+      // Mini green Bub dragon
+      ctx.fillStyle = PALETTE.GREEN;
+      ctx.fillRect(x + 2, y + 2, 8, 8);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(x + 1, y + 3, 2, 5);
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(x + 6, y + 3, 3, 3);
+    } else if (titleUpper.includes('BURGER') || titleUpper.includes('BISTRO')) {
+      // Mini white Chef hat
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(x + 2, y + 1, 8, 5);
+      ctx.fillRect(x + 3, y + 6, 6, 3);
+      ctx.fillStyle = '#FDBA74';
+      ctx.fillRect(x + 3, y + 9, 6, 3);
+    } else {
+      // Classic arcade heart / badge icon
+      ctx.fillStyle = accent || PALETTE.PINK;
+      ctx.fillRect(x + 2, y + 2, 3, 3);
+      ctx.fillRect(x + 7, y + 2, 3, 3);
+      ctx.fillRect(x + 1, y + 4, 10, 4);
+      ctx.fillRect(x + 3, y + 8, 6, 2);
+      ctx.fillRect(x + 5, y + 10, 2, 2);
+    }
+    ctx.restore();
+  }
+
+  /**
+   * Draws classic Namco/Taito style stage pennant flags next to the stage counter
+   */
+  _drawStageFlags(ctx, level, x, y) {
+    ctx.save();
+    const tens = Math.min(3, Math.floor(level / 10));
+    const ones = Math.min(4, level % 10);
+    let curX = x;
+    for (let i = 0; i < tens; i++) {
+      // Large Red/Gold 10-Stage Pennant
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(curX, y, 1.5, 13);
+      ctx.fillStyle = PALETTE.RED;
+      ctx.beginPath();
+      ctx.moveTo(curX + 1.5, y);
+      ctx.lineTo(curX + 9, y + 4);
+      ctx.lineTo(curX + 1.5, y + 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(curX + 2, y + 3, 4, 2);
+      curX += 10;
+    }
+    for (let i = 0; i < ones; i++) {
+      // Classic Yellow/Red 1-Stage Pennant
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(curX, y + 1, 1.5, 12);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.beginPath();
+      ctx.moveTo(curX + 1.5, y + 1);
+      ctx.lineTo(curX + 7, y + 4);
+      ctx.lineTo(curX + 1.5, y + 7);
+      ctx.closePath();
+      ctx.fill();
+      curX += 7;
+    }
+    ctx.restore();
+  }
+
+  /**
+   * Draws an authentic 1980s coin-op top arcade HUD bar (38px height)
    */
   drawHUD({
     title = 'ARCADE',
@@ -6283,78 +6478,94 @@ class Renderer {
     accent = PALETTE.CYAN
   } = {}) {
     const ctx = this.ctx;
+    const titleUpper = String(title || 'ARCADE').toUpperCase();
     ctx.save();
-    ctx.fillStyle = 'rgba(11, 15, 25, 0.92)';
+
+    // Pitch-black coin-op marquee header strip with double neon trim
+    ctx.fillStyle = '#04060C';
     ctx.fillRect(0, 0, this.width, 38);
     ctx.strokeStyle = accent;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(0, 38);
-    ctx.lineTo(this.width, 38);
+    ctx.moveTo(0, 36.5);
+    ctx.lineTo(this.width, 36.5);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, 34);
+    ctx.lineTo(this.width, 34);
     ctx.stroke();
 
-    // Game Title
-    this.drawText(title.toUpperCase(), 16, 25, {
+    // 1. Classic Arcade Marquee Title (left)
+    const displayTitle = titleUpper.length > 16 ? titleUpper.slice(0, 16) : titleUpper;
+    this.drawText(displayTitle, 12, 23, {
       font: FONTS.HEADER,
-      size: 13,
+      size: displayTitle.length > 13 ? 10 : 11.5,
       color: accent,
       glow: 8
     });
 
-    // 1UP Score
-    this.drawText(`1UP: ${String(Math.floor(score)).padStart(6, '0')}`, 275, 25, {
-      font: FONTS.HUD,
-      size: 16,
+    // 2. Classic Coin-Op 1UP Header + 6-Digit Bitmap Score
+    const blink1UP = Math.floor(performance.now() / 360) % 2 === 0;
+    this.drawText('1UP', 238, 13, {
+      font: FONTS.HEADER,
+      size: 7.5,
+      color: blink1UP ? PALETTE.RED : PALETTE.WHITE
+    });
+    this.drawText(String(Math.floor(score)).padStart(6, '0'), 238, 28, {
+      font: FONTS.HEADER,
+      size: 11,
       color: PALETTE.WHITE
     });
 
-    // HIGH SCORE + Champion Initials
+    // 3. HIGH SCORE + Champion Initials in Arcade Gold
     const holder = InitialsStore.getLastInitials();
+    this.drawText(`HIGH SCORE (${holder})`, 365, 13, {
+      font: FONTS.HEADER,
+      size: 7.5,
+      color: PALETTE.GOLD
+    });
     this.drawText(
-      `HI(${holder}): ${String(Math.floor(Math.max(score, highScore))).padStart(6, '0')}`,
-      435,
-      25,
+      String(Math.floor(Math.max(score, highScore))).padStart(6, '0'),
+      365,
+      28,
       {
-        font: FONTS.HUD,
-        size: 15,
+        font: FONTS.HEADER,
+        size: 11,
         color: PALETTE.GOLD,
         glow: 6
       }
     );
 
-    // Level / Wave
-    this.drawText(`LV:${level}`, 640, 25, {
-      font: FONTS.HUD,
-      size: 15,
+    // 4. Stage Counter + Classic Arcade Stage Pennant Flags
+    this.drawText(`RD:${String(level).padStart(2, '0')}`, 542, 24, {
+      font: FONTS.HEADER,
+      size: 9.5,
       color: PALETTE.GREEN
     });
+    this._drawStageFlags(ctx, level, 600, 12);
 
+    // 5. Game-specific status telemetry (e.g. GOLD, BONUS, BAYS, FUEL)
     if (extraLabel) {
-      this.drawText(extraLabel, 710, 25, {
-        font: FONTS.HUD,
-        size: 13.5,
+      const cleanExtra = String(extraLabel).length > 22 ? String(extraLabel).slice(0, 22) : extraLabel;
+      this.drawText(cleanExtra, 642, 24, {
+        font: FONTS.HEADER,
+        size: 8,
         color: PALETTE.CYAN
       });
     }
 
-    // Lives indicator on far right
+    // 6. Game-Specific Pixel-Art Life Icons on far right
     const maxLivesIcons = Math.max(0, Math.min(6, lives));
-    this.drawText('LIVES:', 835, 25, {
-      font: FONTS.HUD,
-      size: 13,
-      color: PALETTE.MUTED
-    });
     for (let i = 0; i < maxLivesIcons; i++) {
-      ctx.fillStyle = PALETTE.PINK;
-      ctx.shadowColor = PALETTE.PINK;
-      ctx.shadowBlur = 6;
-      ctx.fillRect(885 + i * 11, 14, 7, 12);
+      this._drawLifeIcon(ctx, titleUpper, 864 + i * 15, 12, accent);
     }
     ctx.restore();
   }
 
   /**
-   * Standard state overlay for MENU, PAUSED, and GAMEOVER states
+   * Authentic 1980s Coin-Op Attract / Pause / Game Over Cabinet Overlay
    */
   drawStateOverlay(
     state,
@@ -6370,75 +6581,106 @@ class Renderer {
     if (state === 'PLAYING') return;
     const ctx = this.ctx;
     ctx.save();
-    ctx.fillStyle = 'rgba(11, 15, 25, 0.80)';
+    ctx.fillStyle = 'rgba(4, 6, 12, 0.84)';
     ctx.fillRect(0, 38, this.width, this.height - 38);
 
-    const boxW = 640;
-    const boxH = 290;
+    const boxW = 660;
+    const boxH = 304;
     const bx = (this.width - boxW) / 2;
-    const by = (this.height - boxH) / 2 + 10;
+    const by = (this.height - boxH) / 2 + 12;
+    const frameCol = state === 'GAMEOVER' ? PALETTE.PINK : accent;
 
-    ctx.fillStyle = 'rgba(19, 27, 46, 0.96)';
+    // Outer & inner double-line coin-op cabinet frame
+    ctx.fillStyle = 'rgba(10, 15, 28, 0.97)';
     ctx.fillRect(bx, by, boxW, boxH);
-    ctx.strokeStyle = state === 'GAMEOVER' ? PALETTE.PINK : accent;
-    ctx.lineWidth = 2.5;
-    ctx.shadowColor = state === 'GAMEOVER' ? PALETTE.PINK : accent;
+    ctx.strokeStyle = frameCol;
+    ctx.lineWidth = 3;
+    ctx.shadowColor = frameCol;
     ctx.shadowBlur = 16;
     ctx.strokeRect(bx, by, boxW, boxH);
     ctx.shadowBlur = 0;
 
+    ctx.strokeStyle = PALETTE.GOLD;
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(bx + 6, by + 6, boxW - 12, boxH - 12);
+
+    // Corner arcade rivets
+    ctx.fillStyle = PALETTE.GOLD;
+    for (const [rx, ry] of [
+      [bx + 10, by + 10],
+      [bx + boxW - 14, by + 10],
+      [bx + 10, by + boxH - 14],
+      [bx + boxW - 14, by + boxH - 14]
+    ]) {
+      ctx.fillRect(rx, ry, 4, 4);
+    }
+
     const pulse = 0.65 + 0.35 * Math.sin(performance.now() * 0.006);
+    const blinkCoin = Math.floor(performance.now() / 420) % 2 === 0;
 
     if (state === 'MENU') {
-      this.drawText(title.toUpperCase(), this.width / 2, by + 58, {
+      this.drawText(title.toUpperCase(), this.width / 2, by + 56, {
         font: FONTS.HEADER,
         size: 22,
         color: accent,
         align: 'center',
         glow: 12
       });
-      this.drawText(subtitle || 'MODERNIZED COIN-OP EDITION', this.width / 2, by + 95, {
-        font: FONTS.HUD,
-        size: 15,
+      this.drawText(subtitle || 'AUTHENTIC COIN-OP ARCADE EDITION', this.width / 2, by + 90, {
+        font: FONTS.HEADER,
+        size: 10,
         color: PALETTE.GOLD,
         align: 'center'
       });
-      this.drawText(controls, this.width / 2, by + 145, {
-        font: FONTS.BODY,
+      this.drawText(controls, this.width / 2, by + 138, {
+        font: FONTS.HUD,
         size: 13,
         color: PALETTE.WHITE,
         align: 'center'
       });
       ctx.globalAlpha = pulse;
-      this.drawText('PRESS [SPACE / Z / TAP] TO START COIN-OP', this.width / 2, by + 205, {
-        font: FONTS.HEADER,
-        size: 14,
-        color: PALETTE.GREEN,
-        align: 'center',
-        glow: 10
-      });
+      this.drawText(
+        blinkCoin
+          ? 'INSERT COIN  •  PRESS [SPACE / Z / TAP] FOR 1P START'
+          : 'PUSH 1P START BUTTON [SPACE / Z / TAP]',
+        this.width / 2,
+        by + 196,
+        {
+          font: FONTS.HEADER,
+          size: 12,
+          color: PALETTE.GREEN,
+          align: 'center',
+          glow: 10
+        }
+      );
       ctx.globalAlpha = 1;
       this.drawText(
-        `RECORD HIGH SCORE: ${String(highScore).padStart(6, '0')} (${InitialsStore.getLastInitials()})`,
+        `TOP SCORE: ${String(highScore).padStart(6, '0')} (${InitialsStore.getLastInitials()})   •   CREDIT 01 (FREE PLAY)`,
         this.width / 2,
-        by + 248,
+        by + 242,
         {
-          font: FONTS.HUD,
-          size: 14,
-          color: PALETTE.MUTED,
+          font: FONTS.HEADER,
+          size: 9.5,
+          color: PALETTE.GOLD,
           align: 'center'
         }
       );
-    } else if (state === 'PAUSED') {
-      this.drawText('SYSTEM PAUSED', this.width / 2, by + 64, {
+      this.drawText('© 1978-1989 RETRO ARCADE STUDIO ARCHIVE', this.width / 2, by + 276, {
         font: FONTS.HEADER,
-        size: 24,
+        size: 8,
+        color: PALETTE.MUTED,
+        align: 'center'
+      });
+    } else if (state === 'PAUSED') {
+      this.drawText('PAUSE / DIP SWITCHES', this.width / 2, by + 60, {
+        font: FONTS.HEADER,
+        size: 20,
         color: PALETTE.GOLD,
         align: 'center',
         glow: 12
       });
-      this.drawText(controls, this.width / 2, by + 118, {
-        font: FONTS.BODY,
+      this.drawText(controls, this.width / 2, by + 114, {
+        font: FONTS.HUD,
         size: 13,
         color: PALETTE.WHITE,
         align: 'center'
@@ -6446,44 +6688,50 @@ class Renderer {
       this.drawText(
         '[F5] SAVE STATE  |  [F8] LOAD STATE  |  [.] FRAME STEP  |  [R] REWIND',
         this.width / 2,
-        158 + by,
+        by + 156,
         {
-          font: FONTS.HUD,
-          size: 13,
+          font: FONTS.HEADER,
+          size: 9,
           color: PALETTE.GOLD,
           align: 'center'
         }
       );
       ctx.globalAlpha = pulse;
       this.drawText(
-        'PRESS [P / SPACE / Z] TO RESUME  |  [BACKSPACE] STUDIO LOBBY',
+        'PRESS [P / SPACE / Z] TO RESUME  |  [BACKSPACE] ARCADE LOBBY',
         this.width / 2,
-        by + 218,
+        by + 216,
         {
-          font: FONTS.HUD,
-          size: 15,
+          font: FONTS.HEADER,
+          size: 10.5,
           color: PALETTE.CYAN,
           align: 'center'
         }
       );
       ctx.globalAlpha = 1;
+      this.drawText('CREDIT 01  •  CRT SCANLINE EMULATION ACTIVE', this.width / 2, by + 268, {
+        font: FONTS.HEADER,
+        size: 8,
+        color: PALETTE.MUTED,
+        align: 'center'
+      });
     } else if (state === 'GAMEOVER') {
       this.drawText('GAME OVER', this.width / 2, by + 54, {
         font: FONTS.HEADER,
-        size: 25,
+        size: 24,
         color: PALETTE.PINK,
         align: 'center',
         glow: 14
       });
       this.drawText(
-        `FINAL SCORE: ${String(Math.floor(score)).padStart(6, '0')}   •   HI: ${String(
+        `1UP SCORE: ${String(Math.floor(score)).padStart(6, '0')}    HIGH: ${String(
           Math.floor(Math.max(score, highScore))
         ).padStart(6, '0')}`,
         this.width / 2,
-        by + 98,
+        by + 96,
         {
-          font: FONTS.HUD,
-          size: 18,
+          font: FONTS.HEADER,
+          size: 11.5,
           color: PALETTE.WHITE,
           align: 'center'
         }
@@ -6492,12 +6740,12 @@ class Renderer {
       // 3-Initial Arcade Champion Selector
       const chars = this.initialsChars || ['A', 'C', 'E'];
       this.drawText(
-        `CHAMPION INITIALS (UP/DOWN LETTER, LEFT/RIGHT SLOT):  [${chars[0]}] [${chars[1]}] [${chars[2]}]`,
+        `ENTER INITIALS (UP/DOWN CHAR, L/R SLOT):  [ ${chars[0]} ] [ ${chars[1]} ] [ ${chars[2]} ]`,
         this.width / 2,
-        by + 142,
+        by + 140,
         {
-          font: FONTS.HUD,
-          size: 15,
+          font: FONTS.HEADER,
+          size: 10,
           color: PALETTE.GOLD,
           align: 'center',
           glow: 8
@@ -6507,27 +6755,34 @@ class Renderer {
       this.drawText(
         'PRESS [F8] TO LOAD SAVED STATE OR HOLD [R] TO REWIND!',
         this.width / 2,
-        by + 182,
+        by + 180,
         {
-          font: FONTS.HUD,
-          size: 13,
+          font: FONTS.HEADER,
+          size: 8.5,
           color: PALETTE.CYAN,
           align: 'center'
         }
       );
 
       ctx.globalAlpha = pulse;
-      this.drawText('PRESS [SPACE / Z / TAP] TO PLAY AGAIN', this.width / 2, by + 226, {
-        font: FONTS.HEADER,
-        size: 13,
-        color: PALETTE.GREEN,
-        align: 'center',
-        glow: 8
-      });
+      this.drawText(
+        blinkCoin
+          ? 'INSERT COIN  •  PRESS [SPACE / Z / TAP] TO CONTINUE'
+          : 'PRESS [SPACE / Z / TAP] TO PLAY AGAIN',
+        this.width / 2,
+        by + 226,
+        {
+          font: FONTS.HEADER,
+          size: 11.5,
+          color: PALETTE.GREEN,
+          align: 'center',
+          glow: 8
+        }
+      );
       ctx.globalAlpha = 1;
-      this.drawText('OR CLICK [STUDIO LOBBY] TO SWITCH CABINETS', this.width / 2, by + 260, {
-        font: FONTS.BODY,
-        size: 12.5,
+      this.drawText('OR CLICK [STUDIO LOBBY] TO SWITCH CABINETS', this.width / 2, by + 266, {
+        font: FONTS.HEADER,
+        size: 8.5,
         color: PALETTE.MUTED,
         align: 'center'
       });
@@ -6573,8 +6828,8 @@ const GAME_CATALOG = [
   {
     id: 'loderunner',
     icon: '🧱',
-    title: 'Vault Runner',
-    classicRef: 'Lode Runner Style',
+    title: 'Lode Runner',
+    classicRef: '1983 Irem / Brøderbund',
     category: 'core',
     genre: 'Puzzle Platformer',
     accent: PALETTE.GOLD,
@@ -6585,68 +6840,68 @@ const GAME_CATALOG = [
   {
     id: 'digdug',
     icon: '⛏️',
-    title: 'Sub-Terra Driller',
-    classicRef: 'Dig Dug Style',
+    title: 'Dig Dug',
+    classicRef: '1982 Namco Coin-Op',
     category: 'core',
     genre: 'Underground Action',
     accent: PALETTE.ORANGE,
-    mechanics: 'Carve dirt tunnels, inflate monsters with your air pump & drop boulders on them',
+    mechanics: 'Carve dirt tunnels, inflate Pookas & Fygars with your air pump & drop boulders',
     controls: '4-Way Tunneling + Pump Harpoon (Z/Space)',
     enhancements: '4-color soil strata, 4-stage monster inflation & rock crushes'
   },
   {
     id: 'donkeykong',
     icon: '🦍',
-    title: 'Girder Titan',
-    classicRef: 'Donkey Kong Style',
+    title: 'Donkey Kong',
+    classicRef: '1981 Nintendo Coin-Op',
     category: 'core',
     genre: 'Arcade Platformer',
     accent: PALETTE.PINK,
-    mechanics: 'Climb slanted steel girders, jump rolling barrels & grab hammers across 4 stages',
+    mechanics: 'Climb slanted steel girders, jump rolling barrels & grab hammers across 8 stages',
     controls: 'Left/Right + Up/Down Ladders + Jump (Z/Space)',
     enhancements: '25m Girders, 50m Conveyor, 75m Elevators & 100m Rivet Tower'
   },
   {
     id: 'sumo',
     icon: '🥋',
-    title: 'Dohyo Clash',
-    classicRef: 'Sumo Wrestling',
+    title: 'Sumo Arcade',
+    classicRef: '1984 Technōs / Data East',
     category: 'core',
     genre: 'Ring Combat',
     accent: PALETTE.RED,
-    mechanics: 'Push, slap-stun & sidestep your rival sumo wrestler out of the circular clay ring',
+    mechanics: 'Push, slap-stun & sidestep your rival sumo wrestler out of the circular Dohyo ring',
     controls: 'Move + Power Shove(Z) + Palm Slap/Sidestep(X)',
     enhancements: 'Stamina friction physics & pulsing ring-edge danger tension'
   },
   {
     id: 'pacman',
     icon: '🍒',
-    title: 'Neon Chomper',
-    classicRef: 'Pac-Man / Ms. Pac Style',
+    title: 'Pac-Man / Ms. Pac',
+    classicRef: '1980 Namco / Midway',
     category: 'core',
     genre: 'Maze Chase',
     accent: PALETTE.GOLD,
-    mechanics: 'Eat all maze dots & power pellets to chomp the 4 colorful ghosts for 200-1600 pts',
-    controls: '4-Way D-Pad/Swipe + Toggle Ms. Chomper (X)',
+    mechanics: 'Eat all maze dots & power pellets to chomp Blinky, Pinky, Inky & Clyde for 1600 pts',
+    controls: '4-Way D-Pad/Swipe + Toggle Ms. Pac-Man (X)',
     enhancements: '4 distinct arcade mazes, 4 ghost AI personalities & bonus fruit'
   },
   {
     id: 'frogger',
     icon: '🐸',
-    title: 'Cyber Hopper',
-    classicRef: 'Frogger Style',
+    title: 'Frogger',
+    classicRef: '1981 Konami / Sega',
     category: 'core',
     genre: 'Road & River Hop',
     accent: PALETTE.GREEN,
     mechanics: 'Hop your frog across 5 lanes of speeding cars & ride floating river logs to home bays',
     controls: '4-Way Hop / Tap-to-Leap Direction',
-    enhancements: 'Diving turtles, bonus flies & strict 60-second life timer'
+    enhancements: 'Diving turtles, crocodiles, bonus flies & strict 60s life timer'
   },
   {
     id: 'galaga',
     icon: '🚀',
-    title: 'Star Squadron',
-    classicRef: 'Galaga Style',
+    title: 'Galaga',
+    classicRef: '1981 Namco Coin-Op',
     category: 'core',
     genre: 'Space Shooter',
     accent: PALETTE.CYAN,
@@ -6657,8 +6912,8 @@ const GAME_CATALOG = [
   {
     id: 'spaceinvaders',
     icon: '👾',
-    title: 'Cosmic Armada',
-    classicRef: 'Space Invaders Style',
+    title: 'Space Invaders',
+    classicRef: '1978 Taito Coin-Op',
     category: 'core',
     genre: 'Fixed Shooter',
     accent: PALETTE.GREEN,
@@ -6671,8 +6926,8 @@ const GAME_CATALOG = [
   {
     id: 'asteroids',
     icon: '☄️',
-    title: 'Meteor Vector',
-    classicRef: 'Asteroids Style',
+    title: 'Asteroids',
+    classicRef: '1979 Atari Vector',
     category: 'expanded',
     genre: 'Vector Shooter',
     accent: PALETTE.CYAN,
@@ -6683,8 +6938,8 @@ const GAME_CATALOG = [
   {
     id: 'centipede',
     icon: '🐛',
-    title: 'Mycelium Crawler',
-    classicRef: 'Centipede Style',
+    title: 'Centipede',
+    classicRef: '1980 Atari Coin-Op',
     category: 'expanded',
     genre: 'Bug Blaster',
     accent: PALETTE.GREEN,
@@ -6695,32 +6950,32 @@ const GAME_CATALOG = [
   {
     id: 'defender',
     icon: '🛸',
-    title: 'Horizon Vanguard',
-    classicRef: 'Defender Style',
+    title: 'Defender',
+    classicRef: '1981 Williams Coin-Op',
     category: 'expanded',
     genre: 'Radar Shooter',
     accent: PALETTE.PINK,
-    mechanics: 'Fly across a wrap-around alien planet with radar scanner to save colonists',
+    mechanics: 'Fly across a wrap-around alien planet with radar scanner to save humanoids',
     controls: 'Thrust/Move + Laser(Z) + Smart Bomb(X)',
     enhancements: 'Live top radar minimap, mid-air human catches & Mutant AI'
   },
   {
     id: 'arkanoid',
     icon: '🏓',
-    title: 'Prism Breaker',
-    classicRef: 'Arkanoid / Breakout',
+    title: 'Arkanoid',
+    classicRef: '1986 Taito Coin-Op',
     category: 'expanded',
     genre: 'Brick Breaker',
     accent: PALETTE.CYAN,
-    mechanics: 'Bounce the energy ball off your paddle to smash 6 brick fortresses & catch capsules',
+    mechanics: 'Bounce the energy ball off your Vaus paddle to smash 12 brick fortresses & capsules',
     controls: 'Left/Right Paddle + Launch/Fire Laser (Z)',
     enhancements: '[E] Expand, [M] 3-Ball Multiball, [L] Dual Lasers & [S] Slow'
   },
   {
     id: 'paperboy',
     icon: '🚲',
-    title: 'Courier Dash',
-    classicRef: 'Paperboy Style',
+    title: 'Paperboy',
+    classicRef: '1985 Atari System 2',
     category: 'expanded',
     genre: 'Street Action',
     accent: PALETTE.GOLD,
@@ -6731,32 +6986,32 @@ const GAME_CATALOG = [
   {
     id: 'joust',
     icon: '🦩',
-    title: 'Sky Lancer',
-    classicRef: 'Joust Style',
+    title: 'Joust',
+    classicRef: '1982 Williams Coin-Op',
     category: 'expanded',
     genre: 'Flying Duel',
     accent: PALETTE.ORANGE,
-    mechanics: 'Flap your flying mount above lava & defeat enemy riders by striking from higher up',
+    mechanics: 'Flap your flying ostrich above lava & defeat buzzard riders by striking from higher up',
     controls: 'Left/Right + Flap Wings (Z / Up)',
     enhancements: 'Higher-lance wins, hatching eggs & grasping Lava Troll Hand'
   },
   {
     id: 'qbert',
     icon: '🟧',
-    title: 'Iso Hop',
-    classicRef: 'Q*bert Style',
+    title: 'Q*bert',
+    classicRef: '1982 Gottlieb Coin-Op',
     category: 'expanded',
     genre: 'Isometric Puzzle',
     accent: PALETTE.ORANGE,
-    mechanics: 'Hop diagonally across a 3D cube pyramid to flip every tile color while dodging snakes',
+    mechanics: 'Hop diagonally across a 3D cube pyramid to flip every tile color while dodging Coily',
     controls: '4-Way Diagonal Pyramid Hops',
     enhancements: 'Coily snake chase AI & floating escape discs on pyramid sides'
   },
   {
     id: 'rampage',
     icon: '🦖',
-    title: 'Kaiju Crush',
-    classicRef: 'Rampage Style',
+    title: 'Rampage',
+    classicRef: '1986 Bally Midway',
     category: 'expanded',
     genre: 'City Smash',
     accent: PALETTE.RED,
@@ -6767,20 +7022,20 @@ const GAME_CATALOG = [
   {
     id: 'marblemadness',
     icon: '🔮',
-    title: 'Gyro Sphere',
-    classicRef: 'Marble Madness Style',
+    title: 'Marble Madness',
+    classicRef: '1984 Atari System 1',
     category: 'expanded',
     genre: 'Isometric Race',
     accent: PALETTE.CYAN,
-    mechanics: 'Roll your marble down 6 steep 3D isometric ramp courses before the timer expires',
+    mechanics: 'Roll your marble down 10 steep 3D isometric ramp courses before the timer expires',
     controls: '4-Way Roll Acceleration + Turbo Boost (Z)',
-    enhancements: '6 courses with 3D slopes, ice patches, bumpers & speed pads'
+    enhancements: '10 courses with 3D slopes, ice patches, bumpers & speed pads'
   },
   {
     id: 'pitfall',
     icon: '🌴',
-    title: 'Jungle Strider',
-    classicRef: 'Pitfall! Style',
+    title: 'Pitfall!',
+    classicRef: '1982 Activision Classic',
     category: 'expanded',
     genre: 'Jungle Adventure',
     accent: PALETTE.GREEN,
@@ -6791,8 +7046,8 @@ const GAME_CATALOG = [
   {
     id: 'duckhunt',
     icon: '🦆',
-    title: 'Wing Blaster',
-    classicRef: 'Duck Hunt Style',
+    title: 'Duck Hunt',
+    classicRef: '1984 Nintendo Vs./NES',
     category: 'expanded',
     genre: 'Light-Gun Shooter',
     accent: PALETTE.GOLD,
@@ -6803,8 +7058,8 @@ const GAME_CATALOG = [
   {
     id: 'excitebike',
     icon: '🏍️',
-    title: 'Nitro Moto',
-    classicRef: 'Excitebike Style',
+    title: 'Excitebike',
+    classicRef: '1984 Nintendo Vs. System',
     category: 'expanded',
     genre: 'Motocross Stunt',
     accent: PALETTE.PINK,
@@ -6815,8 +7070,8 @@ const GAME_CATALOG = [
   {
     id: 'missilecommand',
     icon: '💥',
-    title: 'Aegis Intercept',
-    classicRef: 'Missile Command Style',
+    title: 'Missile Command',
+    classicRef: '1980 Atari Coin-Op',
     category: 'expanded',
     genre: 'City Defense',
     accent: PALETTE.RED,
@@ -6827,8 +7082,8 @@ const GAME_CATALOG = [
   {
     id: 'burgertime',
     icon: '🍔',
-    title: 'Bistro Stacker',
-    classicRef: 'BurgerTime Style',
+    title: 'BurgerTime',
+    classicRef: '1982 Data East Coin-Op',
     category: 'expanded',
     genre: 'Kitchen Platform',
     accent: PALETTE.GOLD,
@@ -6839,32 +7094,32 @@ const GAME_CATALOG = [
   {
     id: 'bubblebobble',
     icon: '🫧',
-    title: 'Bubble Dragons',
-    classicRef: 'Bubble Bobble Style',
+    title: 'Bubble Bobble',
+    classicRef: '1986 Taito Coin-Op',
     category: 'expanded',
     genre: 'Cave Platformer',
     accent: PALETTE.PINK,
     mechanics: 'Blow bubbles to trap cave monsters, pop them in chains & collect giant bonus fruit',
     controls: 'Move + Blow Bubble(Z) + Jump(X / Up)',
-    enhancements: '6 cave layouts, air currents & chain-pop fruit multipliers'
+    enhancements: '12 cave layouts, air currents & chain-pop fruit multipliers'
   },
   {
     id: 'spyhunter',
     icon: '🏎️',
-    title: 'Highway Agent',
-    classicRef: 'Spy Hunter Style',
+    title: 'Spy Hunter',
+    classicRef: '1983 Bally Midway',
     category: 'expanded',
     genre: 'Combat Driving',
     accent: PALETTE.CYAN,
-    mechanics: 'Drive your armed spy car at high speed, firing machine guns & dropping oil slicks',
+    mechanics: 'Drive the G-6155 Interceptor at high speed, firing machine guns & dropping oil slicks',
     controls: 'Steer/Speed + Machine Gun(Z) + Oil/Smoke(X)',
     enhancements: 'Dock inside the red Weapons Van for Oil & Smoke upgrades'
   },
   {
     id: 'tron',
     icon: '🟦',
-    title: 'Light Grid',
-    classicRef: 'Tron Light Cycles',
+    title: 'Tron',
+    classicRef: '1982 Bally Midway',
     category: 'expanded',
     genre: 'Light Cycle Arena',
     accent: PALETTE.CYAN,
@@ -6875,20 +7130,20 @@ const GAME_CATALOG = [
   {
     id: 'trackandfield',
     icon: '🏅',
-    title: 'Cyber Decathlon',
-    classicRef: 'Track & Field Style',
+    title: 'Track & Field',
+    classicRef: '1983 Konami Coin-Op',
     category: 'expanded',
     genre: 'Olympic Sports',
     accent: PALETTE.GOLD,
-    mechanics: 'Mash sprint buttons to build speed & time your launch angle in 3 stadium events',
+    mechanics: 'Mash sprint buttons to build speed & time your launch angle across 5 Olympic events',
     controls: 'Mash Run(Z or L/R) + Jump/Throw Angle(X)',
-    enhancements: '100m Dash, Long Jump & Javelin Throw with foul-line angles'
+    enhancements: '100m Dash, Long Jump, Javelin, 110m Hurdles & High Jump'
   },
   {
     id: 'outrun',
     icon: '🌅',
-    title: 'Synthwave Horizon',
-    classicRef: 'OutRun Style',
+    title: 'OutRun',
+    classicRef: '1986 Sega Super Scaler',
     category: 'expanded',
     genre: '3D Arcade Racer',
     accent: PALETTE.PINK,
@@ -6899,8 +7154,8 @@ const GAME_CATALOG = [
   {
     id: 'contra',
     icon: '🪖',
-    title: 'Commando Strike',
-    classicRef: 'Contra Style',
+    title: 'Contra',
+    classicRef: '1987 Konami Coin-Op',
     category: 'expanded',
     genre: 'Run & Gun',
     accent: PALETTE.RED,
@@ -6913,8 +7168,8 @@ const GAME_CATALOG = [
   {
     id: 'galaxian',
     icon: '🛸',
-    title: 'Star Swarm',
-    classicRef: 'Galaxian Style',
+    title: 'Galaxian',
+    classicRef: '1979 Namco Coin-Op',
     category: 'vault2',
     genre: 'Space Shooter',
     accent: PALETTE.GOLD,
@@ -6925,8 +7180,8 @@ const GAME_CATALOG = [
   {
     id: 'digdug2',
     icon: '🏝️',
-    title: 'Island Driller',
-    classicRef: 'Dig Dug II Style',
+    title: 'Dig Dug II',
+    classicRef: '1985 Namco Coin-Op',
     category: 'vault2',
     genre: 'Island Action',
     accent: PALETTE.GREEN,
@@ -6937,8 +7192,8 @@ const GAME_CATALOG = [
   {
     id: 'elevatoraction',
     icon: '🕵️',
-    title: 'Tower Agent',
-    classicRef: 'Elevator Action Style',
+    title: 'Elevator Action',
+    classicRef: '1983 Taito Coin-Op',
     category: 'vault2',
     genre: 'Spy Platformer',
     accent: PALETTE.RED,
@@ -6949,8 +7204,8 @@ const GAME_CATALOG = [
   {
     id: 'tapper',
     icon: '🍺',
-    title: 'Root Beer Dash',
-    classicRef: 'Tapper Style',
+    title: 'Tapper',
+    classicRef: '1983 Bally Midway',
     category: 'vault2',
     genre: 'Bar Arcade',
     accent: PALETTE.GOLD,
@@ -6961,8 +7216,8 @@ const GAME_CATALOG = [
   {
     id: 'lunarlander',
     icon: '🌕',
-    title: 'Apollo Lander',
-    classicRef: 'Lunar Lander Style',
+    title: 'Lunar Lander',
+    classicRef: '1979 Atari Vector',
     category: 'vault2',
     genre: 'Vector Physics',
     accent: PALETTE.CYAN,
@@ -6973,20 +7228,20 @@ const GAME_CATALOG = [
   {
     id: 'tempest',
     icon: '🕸️',
-    title: 'Vortex Tube',
-    classicRef: 'Tempest Style',
+    title: 'Tempest',
+    classicRef: '1981 Atari Color Vector',
     category: 'vault2',
     genre: '3D Tube Shooter',
     accent: PALETTE.PINK,
     mechanics: 'Spin your yellow claw blaster around 3D neon wireframe tubes to blast Flippers',
     controls: 'Left/Right Rim Spin + Rapid Fire(Z) + Superzapper(X)',
-    enhancements: 'Circle, Square, Plus & Star 3D tubes + screen-wiping Superzapper'
+    enhancements: '12 Atari 3D vector tubes + screen-wiping Superzapper'
   },
   {
     id: 'robotron',
     icon: '🤖',
-    title: 'Cyber Arena 2084',
-    classicRef: 'Robotron: 2084 Style',
+    title: 'Robotron: 2084',
+    classicRef: '1982 Williams Coin-Op',
     category: 'vault2',
     genre: 'Arena Shooter',
     accent: PALETTE.RED,
@@ -6997,8 +7252,8 @@ const GAME_CATALOG = [
   {
     id: 'sinistar',
     icon: '💀',
-    title: 'Dread Star',
-    classicRef: 'Sinistar Style',
+    title: 'Sinistar',
+    classicRef: '1982 Williams Coin-Op',
     category: 'vault2',
     genre: 'Space Boss Hunt',
     accent: PALETTE.RED,
@@ -7009,20 +7264,20 @@ const GAME_CATALOG = [
   {
     id: 'crystalcastles',
     icon: '🐻',
-    title: 'Gem Citadel',
-    classicRef: 'Crystal Castles Style',
+    title: 'Crystal Castles',
+    classicRef: '1983 Atari Coin-Op',
     category: 'vault2',
     genre: 'Isometric 3D',
     accent: PALETTE.PINK,
-    mechanics: 'Guide the bear across 3D isometric castle ramps & elevators to scoop up every gem',
+    mechanics: 'Guide Bentley Bear across 3D isometric castle ramps & elevators to scoop up every gem',
     controls: '4-Way Isometric Walk + Jump(Z)',
     enhancements: 'Magic Hat invincibility, Honey Pots, Gem Eaters & Witch hazard'
   },
   {
     id: 'zaxxon',
     icon: '✈️',
-    title: 'Iso Fortress',
-    classicRef: 'Zaxxon Style',
+    title: 'Zaxxon',
+    classicRef: '1982 Sega Coin-Op',
     category: 'vault2',
     genre: 'Isometric Shooter',
     accent: PALETTE.CYAN,
@@ -7033,20 +7288,20 @@ const GAME_CATALOG = [
   {
     id: 'moonpatrol',
     icon: '🛞',
-    title: 'Crater Buggy',
-    classicRef: 'Moon Patrol Style',
+    title: 'Moon Patrol',
+    classicRef: '1982 Irem / Williams',
     category: 'vault2',
     genre: 'Lunar Runner',
     accent: PALETTE.PINK,
     mechanics: 'Drive a 6-wheel lunar buggy jumping craters while firing forward & upward lasers',
     controls: 'Speed L/R + Dual Cannon/AA Laser(Z) + Jump(X/Up)',
-    enhancements: 'Articulated 6-wheel suspension, bomb-dropping UFOs & checkpoints A-E'
+    enhancements: 'Articulated 6-wheel suspension, bomb-dropping UFOs & checkpoints A-Z'
   },
   {
     id: 'pengo',
     icon: '🐧',
-    title: 'Ice Pusher',
-    classicRef: 'Pengo Style',
+    title: 'Pengo',
+    classicRef: '1982 Sega Coin-Op',
     category: 'vault2',
     genre: 'Ice Maze Action',
     accent: PALETTE.CYAN,
@@ -7057,8 +7312,8 @@ const GAME_CATALOG = [
   {
     id: 'rallyx',
     icon: '💨',
-    title: 'Smoke Rally',
-    classicRef: 'Rally-X Style',
+    title: 'Rally-X',
+    classicRef: '1980 Namco Coin-Op',
     category: 'vault2',
     genre: 'Maze Racer',
     accent: PALETTE.GOLD,
@@ -7069,8 +7324,8 @@ const GAME_CATALOG = [
   {
     id: 'roadfighter',
     icon: '🛣️',
-    title: 'Turbo Highway',
-    classicRef: 'Road Fighter Style',
+    title: 'Road Fighter',
+    classicRef: '1984 Konami Coin-Op',
     category: 'vault2',
     genre: 'High-Speed Racer',
     accent: PALETTE.RED,
@@ -7081,20 +7336,20 @@ const GAME_CATALOG = [
   {
     id: 'flicky',
     icon: '🐦',
-    title: 'Chirpy Rescue',
-    classicRef: 'Flicky Style',
+    title: 'Flicky',
+    classicRef: '1984 Sega Coin-Op',
     category: 'vault2',
     genre: 'Platform Rescue',
     accent: PALETTE.GOLD,
-    mechanics: 'Lead a trailing chain of rescued yellow chicks to the exit door while dodging cats',
+    mechanics: 'Lead a trailing chain of rescued yellow Piopio chicks to the exit door while dodging cats',
     controls: 'Left/Right Run + Jump/Flutter(Z) + Throw Item(X)',
     enhancements: 'Chain-rescue score multipliers & throwable flowerpots vs Tiger Cats'
   },
   {
     id: 'mappy',
     icon: '🐭',
-    title: 'Trampoline Cop',
-    classicRef: 'Mappy Style',
+    title: 'Mappy',
+    classicRef: '1983 Namco Coin-Op',
     category: 'vault2',
     genre: 'Mansion Platform',
     accent: PALETTE.CYAN,
@@ -7105,20 +7360,20 @@ const GAME_CATALOG = [
   {
     id: 'circuscharlie',
     icon: '🎪',
-    title: 'Big Top Stunt',
-    classicRef: 'Circus Charlie Style',
+    title: 'Circus Charlie',
+    classicRef: '1984 Konami Coin-Op',
     category: 'vault2',
     genre: 'Circus Action',
     accent: PALETTE.GOLD,
     mechanics: 'Jump a lion through flaming rings, walk tightropes over monkeys & hop circus balls',
     controls: 'Left/Right Pace + Stunt Leap(Z/Up)',
-    enhancements: '3 classic Big Top events: Lion Rings, Tightrope Monkeys & Rolling Balls'
+    enhancements: '5 classic Big Top events: Lion Rings, Tightrope, Balls, Horse & Trapeze'
   },
   {
     id: 'battlecity',
     icon: '🛡️',
-    title: 'Tank Battalion',
-    classicRef: 'Battle City Style',
+    title: 'Battle City',
+    classicRef: '1985 Namco Classic',
     category: 'vault2',
     genre: 'Tank Defense',
     accent: PALETTE.GOLD,
@@ -7129,8 +7384,8 @@ const GAME_CATALOG = [
   {
     id: 'kungfumaster',
     icon: '🥋',
-    title: 'Dragon Dojo',
-    classicRef: 'Kung-Fu Master Style',
+    title: 'Kung-Fu Master',
+    classicRef: '1984 Irem / Data East',
     category: 'vault2',
     genre: 'Martial Arts',
     accent: PALETTE.RED,
@@ -7141,8 +7396,8 @@ const GAME_CATALOG = [
   {
     id: 'wildgunman',
     icon: '🤠',
-    title: 'High Noon Draw',
-    classicRef: 'Wild Gunman Style',
+    title: 'Wild Gunman',
+    classicRef: '1984 Nintendo Zapper',
     category: 'vault2',
     genre: 'Quick-Draw Duel',
     accent: PALETTE.ORANGE,
@@ -7153,8 +7408,8 @@ const GAME_CATALOG = [
   {
     id: 'exerion',
     icon: '🦅',
-    title: 'Inertia Wing',
-    classicRef: 'Exerion Style',
+    title: 'Exerion',
+    classicRef: '1983 Jaleco Coin-Op',
     category: 'vault2',
     genre: 'Inertia Shooter',
     accent: PALETTE.CYAN,
@@ -7165,8 +7420,8 @@ const GAME_CATALOG = [
   {
     id: 'tetrisretro',
     icon: '💎',
-    title: 'Neon Blocks & Gems',
-    classicRef: 'Tetris & Columns 2-in-1',
+    title: 'Tetris & Columns',
+    classicRef: '1988 Atari / 1990 Sega',
     category: 'vault2',
     genre: 'Arcade Puzzle',
     accent: PALETTE.PINK,
@@ -9272,7 +9527,7 @@ class LodeRunner {
     this.audio = audio;
 
     this.id = 'loderunner';
-    this.title = 'Vault Runner';
+    this.title = 'Lode Runner';
 
     // 28x16 grid metrics inside 960x540 logical canvas
     this.cols = 28;
@@ -10350,27 +10605,26 @@ class LodeRunner {
   }
 
   render(ctx = this.renderer.ctx) {
-    // Deep arcade background
-    this.renderer.clear(PALETTE.BG);
+    // Classic pitch-dark subterranean cavern background
+    this.renderer.clear('#05070D');
 
-    // Subtle cyber grid lines in background
+    // Subtle subterranean framing border
     ctx.save();
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)';
-    ctx.lineWidth = 1;
-    for (let c = 0; c <= this.cols; c++) {
-      const x = this.colToX(c);
-      ctx.beginPath();
-      ctx.moveTo(x, this.offsetY);
-      ctx.lineTo(x, this.offsetY + this.rows * this.tileH);
-      ctx.stroke();
-    }
-    for (let r = 0; r <= this.rows; r++) {
-      const y = this.rowToY(r);
-      ctx.beginPath();
-      ctx.moveTo(this.offsetX, y);
-      ctx.lineTo(this.offsetX + this.cols * this.tileW, y);
-      ctx.stroke();
-    }
+    ctx.fillStyle = '#070A12';
+    ctx.fillRect(
+      this.offsetX,
+      this.offsetY,
+      this.cols * this.tileW,
+      this.rows * this.tileH
+    );
+    ctx.strokeStyle = 'rgba(194, 65, 12, 0.22)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(
+      this.offsetX - 1,
+      this.offsetY - 1,
+      this.cols * this.tileW + 2,
+      this.rows * this.tileH + 2
+    );
     ctx.restore();
 
     // Render 28x16 Tile Grid
@@ -10393,12 +10647,19 @@ class LodeRunner {
     this.renderEffects(ctx);
 
     // Bottom bedrock frame strip
-    ctx.fillStyle = '#1E293B';
+    ctx.fillStyle = '#475569';
     ctx.fillRect(
       this.offsetX,
       this.offsetY + this.rows * this.tileH,
       this.cols * this.tileW,
       10
+    );
+    ctx.fillStyle = '#94A3B8';
+    ctx.fillRect(
+      this.offsetX,
+      this.offsetY + this.rows * this.tileH,
+      this.cols * this.tileW,
+      2
     );
 
     // Top HUD Bar
@@ -10428,7 +10689,7 @@ class LodeRunner {
     // Overlay for MENU / PAUSED / GAMEOVER
     this.renderer.drawStateOverlay(this.state, {
       title: this.title,
-      subtitle: '28x16 PUZZLE PLATFORMER  |  A* GUARD AI & BRICK TRAPS',
+      subtitle: '1983 CHAMPIONSHIP PUZZLE PLATFORMER  |  A* GUARD AI & BRICK TRAPS',
       controls: 'ARROWS/WASD: MOVE & CLIMB  |  Z/SPACE: DIG LEFT  |  X/SHIFT: DIG RIGHT',
       score: this.score,
       highScore: this.highScore,
@@ -10450,74 +10711,122 @@ class LodeRunner {
         const h = this.tileH;
 
         if (t === TILE.BRICK) {
-          // Classic red/terracotta masonry brick pattern with mortar lines
-          ctx.fillStyle = '#7F1D1D';
+          // Authentic 1983 terracotta red masonry brick with dark #431407 mortar lines
+          ctx.fillStyle = '#431407';
           ctx.fillRect(x, y, w, h);
+
+          // Top course (2 full half-bricks)
+          const topH = Math.floor(h / 2) - 2;
+          const botY = y + Math.floor(h / 2) + 1;
+          const botH = h - Math.floor(h / 2) - 2;
 
           ctx.fillStyle = '#C2410C';
-          ctx.fillRect(x + 1, y + 1, w / 2 - 2, h / 2 - 2);
-          ctx.fillRect(x + w / 2 + 1, y + 1, w / 2 - 2, h / 2 - 2);
-          ctx.fillRect(x + 1, y + h / 2 + 1, w / 4 - 1, h / 2 - 2);
-          ctx.fillRect(x + w / 4 + 2, y + h / 2 + 1, w / 2 - 2, h / 2 - 2);
-          ctx.fillRect(x + (w * 3) / 4 + 2, y + h / 2 + 1, w / 4 - 3, h / 2 - 2);
+          ctx.fillRect(x + 1, y + 1, w / 2 - 2, topH);
+          ctx.fillStyle = '#9A3412';
+          ctx.fillRect(x + w / 2 + 1, y + 1, w / 2 - 2, topH);
 
-          // Top highlight
+          // Bottom course (staggered running bond: quarter, half, quarter)
+          ctx.fillStyle = '#9A3412';
+          ctx.fillRect(x + 1, botY, w / 4 - 1, botH);
+          ctx.fillStyle = '#C2410C';
+          ctx.fillRect(x + w / 4 + 2, botY, w / 2 - 2, botH);
+          ctx.fillStyle = '#9A3412';
+          ctx.fillRect(x + (w * 3) / 4 + 2, botY, w / 4 - 3, botH);
+
+          // Crisp top edge kiln highlights
           ctx.fillStyle = '#FB923C';
-          ctx.fillRect(x + 2, y + 2, w / 2 - 4, 2);
-          ctx.fillRect(x + w / 2 + 2, y + 2, w / 2 - 4, 2);
+          ctx.fillRect(x + 2, y + 1, w / 2 - 4, 2);
+          ctx.fillRect(x + w / 2 + 2, y + 1, w / 2 - 4, 2);
+          ctx.fillRect(x + w / 4 + 3, botY, w / 2 - 4, 2);
         } else if (t === TILE.SOLID) {
-          // Indestructible steel/concrete block with rivets
-          ctx.fillStyle = '#334155';
-          ctx.fillRect(x, y, w, h);
-          ctx.strokeStyle = '#94A3B8';
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+          // Solid gray concrete bedrock (#64748B with riveted border)
           ctx.fillStyle = '#64748B';
-          ctx.fillRect(x + 4, y + 4, 3, 3);
-          ctx.fillRect(x + w - 7, y + 4, 3, 3);
-          ctx.fillRect(x + 4, y + h - 7, 3, 3);
-          ctx.fillRect(x + w - 7, y + h - 7, 3, 3);
+          ctx.fillRect(x, y, w, h);
+          ctx.fillStyle = '#94A3B8';
+          ctx.fillRect(x, y, w, 3);
+          ctx.fillRect(x, y, 3, h);
+          ctx.fillStyle = '#334155';
+          ctx.fillRect(x, y + h - 3, w, 3);
+          ctx.fillRect(x + w - 3, y, 3, h);
+          ctx.strokeStyle = '#1E293B';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+
+          // Corner rivets
+          ctx.fillStyle = '#E2E8F0';
+          ctx.fillRect(x + 4, y + 4, 2, 2);
+          ctx.fillRect(x + w - 6, y + 4, 2, 2);
+          ctx.fillRect(x + 4, y + h - 6, 2, 2);
+          ctx.fillRect(x + w - 6, y + h - 6, 2, 2);
         } else if (t === TILE.LADDER || (t === TILE.EXIT_LADDER && this.exitRevealed)) {
           const isExit = t === TILE.EXIT_LADDER;
-          const color = isExit ? PALETTE.GREEN : PALETTE.GOLD;
+          const railColor = isExit ? PALETTE.GREEN : '#F59E0B';
+          const rungColor = isExit ? '#86EFAC' : '#FDE047';
           ctx.save();
           if (isExit) {
             ctx.shadowColor = PALETTE.GREEN;
             ctx.shadowBlur = 8 * pulse;
           }
-          ctx.fillStyle = color;
           // Left & right rails
+          ctx.fillStyle = railColor;
           ctx.fillRect(x + 5, y, 3, h);
           ctx.fillRect(x + w - 8, y, 3, h);
-          // Rungs
-          for (let ry = 4; ry < h; ry += 7) {
+          // Rungs with top highlight
+          for (let ry = 3; ry < h; ry += 7) {
+            ctx.fillStyle = rungColor;
             ctx.fillRect(x + 5, y + ry, w - 10, 2.5);
           }
           ctx.restore();
         } else if (t === TILE.ROPE) {
-          // Glowing cyan highwire cable near top of tile
+          // Suspended highwire traverse bar near top of tile
           ctx.save();
-          ctx.shadowColor = PALETTE.CYAN;
-          ctx.shadowBlur = 6;
-          ctx.fillStyle = PALETTE.CYAN;
-          ctx.fillRect(x, y + 5, w, 3);
+          ctx.fillStyle = '#94A3B8';
+          ctx.fillRect(x, y + 4, w, 3);
           ctx.fillStyle = PALETTE.WHITE;
-          for (let rx = 2; rx < w; rx += 8) {
-            ctx.fillRect(x + rx, y + 5, 3, 1.5);
+          for (let rx = 2; rx < w; rx += 6) {
+            ctx.fillRect(x + rx, y + 4, 3, 1.5);
           }
           ctx.restore();
         } else if (t === TILE.GOLD) {
-          // Glowing arcade gold ingot chest
-          const bob = Math.sin(this.animTime * 5 + c) * 1.5;
+          // Ornate gleaming Gold Chest with clasps and keyhole highlights
+          const bob = Math.sin(this.animTime * 5 + c) * 1.2;
+          const cx = x + 5;
+          const cy = Math.round(y + 10 + bob);
+          const cw = w - 10; // 22
+          const ch = h - 12; // 18
+
           ctx.save();
           ctx.shadowColor = PALETTE.GOLD;
-          ctx.shadowBlur = 10;
-          ctx.fillStyle = '#D97706';
-          ctx.fillRect(x + 6, y + 11 + bob, w - 12, h - 14);
-          ctx.fillStyle = PALETTE.GOLD;
-          ctx.fillRect(x + 8, y + 13 + bob, w - 16, h - 18);
-          ctx.fillStyle = PALETTE.WHITE;
-          ctx.fillRect(x + 10, y + 14 + bob, 5, 3);
+          ctx.shadowBlur = 8;
+
+          // Chest outer bronze frame
+          ctx.fillStyle = '#92400E';
+          ctx.fillRect(cx, cy, cw, ch);
+
+          // Gleaming gold body & arched lid
+          ctx.fillStyle = '#FACC15';
+          ctx.fillRect(cx + 2, cy + 2, cw - 4, 5);
+          ctx.fillStyle = '#EAB308';
+          ctx.fillRect(cx + 2, cy + 8, cw - 4, ch - 10);
+
+          // Dark band seam between lid and base
+          ctx.fillStyle = '#78350F';
+          ctx.fillRect(cx + 1, cy + 7, cw - 2, 2);
+
+          // Brass vertical straps
+          ctx.fillStyle = '#FEF08A';
+          ctx.fillRect(cx + 4, cy + 2, 2, ch - 4);
+          ctx.fillRect(cx + cw - 6, cy + 2, 2, ch - 4);
+
+          // Center lock plate & keyhole
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(cx + Math.floor(cw / 2) - 2, cy + 5, 4, 6);
+          ctx.fillStyle = '#0F172A';
+          ctx.fillRect(cx + Math.floor(cw / 2) - 1, cy + 7, 2, 3);
+
+          // Specular corner sparkle
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(cx + 3, cy + 3, 4, 2);
           ctx.restore();
         }
       }
@@ -10581,6 +10890,7 @@ class LodeRunner {
       ctx.restore();
     }
 
+    // Classic white/cyan Lode Runner sprites for run, rope (hand-over-hand), and climb (ladder rungs)
     const spriteRun1 = [
       '....WWWW....',
       '...WCCCCW...',
@@ -10607,18 +10917,77 @@ class LodeRunner {
       '...BB...BB..',
       '...WW...WW..'
     ];
+    const spriteRope1 = [
+      '..WW....WW..',
+      '..CC....CC..',
+      '...CCWWWW...',
+      '....WCCCW...',
+      '....WWWW....',
+      '...CCCCCC...',
+      '...CCCCCC...',
+      '....BBBB....',
+      '...BB..BB...',
+      '...WW..WW...',
+      '............'
+    ];
+    const spriteRope2 = [
+      '....WW..WW..',
+      '....CC..CC..',
+      '....WWWWCC..',
+      '...WCCCW....',
+      '....WWWW....',
+      '...CCCCCC...',
+      '...CCCCCC...',
+      '....BBBB....',
+      '....BBBB....',
+      '....WWWW....',
+      '............'
+    ];
+    const spriteClimb1 = [
+      '..WW........',
+      '..CCWWWW....',
+      '...WWCCCW...',
+      '....WWWW..WW',
+      '...CCCCCC.CC',
+      '...CCCCCC...',
+      '....BBBB....',
+      '...BB..BB...',
+      '...WW..BB...',
+      '.......WW...',
+      '............'
+    ];
+    const spriteClimb2 = [
+      '........WW..',
+      '....WWWWCC..',
+      '...WCCCWW...',
+      'WW..WWWW....',
+      'CC.CCCCCC...',
+      '...CCCCCC...',
+      '....BBBB....',
+      '...BB..BB...',
+      '...BB..WW...',
+      '...WW.......',
+      '............'
+    ];
+
+    let activeSprite = step ? spriteRun1 : spriteRun2;
+    if (p.pose === 'rope') {
+      activeSprite = step ? spriteRope1 : spriteRope2;
+    } else if (p.pose === 'climb') {
+      activeSprite = step ? spriteClimb1 : spriteClimb2;
+    }
 
     this.renderer.drawPixelSprite(
-      step ? spriteRun1 : spriteRun2,
+      activeSprite,
       x,
-      y,
+      p.pose === 'rope' ? y + 1 : y,
       2,
       {
         W: PALETTE.WHITE,
         C: PALETTE.CYAN,
         B: '#38BDF8'
       },
-      p.facing < 0,
+      p.pose === 'climb' ? false : p.facing < 0,
       false
     );
   }
@@ -10633,48 +11002,120 @@ class LodeRunner {
       x += Math.sin(this.animTime * 40) * 2.5;
     }
 
-    const guardSprite1 = [
+    const gc = Math.round(g.col);
+    const gr = Math.round(g.row);
+    const curTile = this.getTile(gc, gr);
+    const pose =
+      g.state === 'active' && curTile === TILE.ROPE
+        ? 'rope'
+        : curTile === TILE.LADDER || g.state === 'climbing_out'
+          ? 'climb'
+          : 'run';
+
+    // Red-robed Bungeling Empire Monk guard sprites (run, rope, climb)
+    const guardRun1 = [
       '....RRRR....',
-      '...RYYYYR...',
+      '...RFFFFR...',
       '...RRRRRR...',
       '....YYYY....',
       '..RRRRRRRR..',
       '.RR.RRRR.RR.',
-      '.Y..RRRR..Y.',
+      '.F..YYYY..F.',
       '....PPPP....',
       '...PP..PP...',
       '..PP....PP..',
-      '.YY......YY.'
+      '.WW......WW.'
     ];
-    const guardSprite2 = [
+    const guardRun2 = [
       '....RRRR....',
-      '...RYYYYR...',
+      '...RFFFFR...',
       '...RRRRRR...',
       '....YYYY....',
       '...RRRRRR...',
       '..RRRRRRRR..',
-      '....RRRR....',
+      '....YYYY....',
       '...PPPPPP...',
       '....PP.PP...',
       '...PP...PP..',
-      '...YY...YY..'
+      '...WW...WW..'
+    ];
+    const guardRope1 = [
+      '..FF....FF..',
+      '..RR....RR..',
+      '...RRRRRR...',
+      '....RFFR....',
+      '....YYYY....',
+      '...RRRRRR...',
+      '...PPPPPP...',
+      '....PPPP....',
+      '...PP..PP...',
+      '...WW..WW...',
+      '............'
+    ];
+    const guardRope2 = [
+      '....FF..FF..',
+      '....RR..RR..',
+      '....RRRRRR..',
+      '....RFFR....',
+      '....YYYY....',
+      '...RRRRRR...',
+      '...PPPPPP...',
+      '....PPPP....',
+      '....PPPP....',
+      '....WWWW....',
+      '............'
+    ];
+    const guardClimb1 = [
+      '..FF........',
+      '..RRRRRR....',
+      '...RRFFRR...',
+      '....YYYY..FF',
+      '...RRRRRR.RR',
+      '...YYYYYY...',
+      '....PPPP....',
+      '...PP..PP...',
+      '...WW..PP...',
+      '.......WW...',
+      '............'
+    ];
+    const guardClimb2 = [
+      '........FF..',
+      '....RRRRRR..',
+      '...RRFFRR...',
+      'FF..YYYY....',
+      'RR.RRRRRR...',
+      '...YYYYYY...',
+      '....PPPP....',
+      '...PP..PP...',
+      '...PP..WW...',
+      '...WW.......',
+      '............'
     ];
 
+    let activeSprite = step ? guardRun1 : guardRun2;
+    if (pose === 'rope') {
+      activeSprite = step ? guardRope1 : guardRope2;
+    } else if (pose === 'climb') {
+      activeSprite = step ? guardClimb1 : guardClimb2;
+    }
+
     this.renderer.drawPixelSprite(
-      step ? guardSprite1 : guardSprite2,
+      activeSprite,
       x,
-      y,
+      pose === 'rope' ? y + 1 : y,
       2,
       {
-        R: PALETTE.PINK,
-        Y: g.hasGold ? PALETTE.GOLD : '#FDE047',
-        P: '#9D174D'
+        R: '#EF4444',
+        F: '#FDE68A',
+        Y: g.hasGold ? PALETTE.GOLD : '#F8FAFC',
+        P: '#991B1B',
+        W: PALETTE.WHITE
       },
-      g.facing < 0,
+      pose === 'climb' ? false : g.facing < 0,
       false
     );
 
-    // Small gold indicator if carrying stolen gold
+    // Gleaming gold bar indicator if carrying stolen gold
     if (g.hasGold) {
       this.renderer.drawGlowCircle(x + 12, y - 3, 3.5, PALETTE.GOLD, 8, true);
     }
@@ -10948,7 +11389,7 @@ class DigDug {
     this.audio = audio;
 
     this.id = 'digdug';
-    this.title = 'Sub-Terra Driller';
+    this.title = 'Dig Dug';
 
     // Soil mask grid covering y: 86..540 (960x454) at 10x10px resolution
     this.surfaceY = 86;
@@ -12161,140 +12602,232 @@ class DigDug {
   }
 
   renderRock(ctx, rock) {
-    const rx = rock.x + (rock.wobbleOffset || 0);
-    const ry = rock.y;
-    const r = rock.radius;
+    const rx = Math.round(rock.x + (rock.wobbleOffset || 0));
+    const ry = Math.round(rock.y);
 
     ctx.save();
     if (rock.state === 'shattering') {
       ctx.globalAlpha = Math.max(0, rock.shatterTimer / 0.42);
     }
 
-    // Craggy retro boulder polygon
-    ctx.fillStyle = '#64748B';
-    ctx.strokeStyle = '#E2E8F0';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(rx, ry, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+    // Craggy multi-tone pixel-art boulder (14x14 matrix at scale 2.5 = 35x35px)
+    const rockSprite = [
+      '....DDDDDD....',
+      '..DDLLLLLLDD..',
+      '.DLLHHHHLLLLD.',
+      '.DLHHHLLLLDDD.',
+      'DLLLLLLCCLLLLD',
+      'DLLLLCCLLLLLLD',
+      'DDDDCCLLLLDDDD',
+      'DDLLLLCCLLDDDD',
+      'DLLLLLLCCDDDDD',
+      'DLLLLLDDDDDDDD',
+      '.DDDDDDDDDDDD.',
+      '.DDDDCCDDDDDD.',
+      '..DDDDDDDDDD..',
+      '....DDDDDD....'
+    ];
+    this.renderer.drawPixelSprite(
+      rockSprite,
+      rx - 17,
+      ry - 17,
+      2.5,
+      {
+        H: '#F8FAFC',
+        L: '#94A3B8',
+        D: '#64748B',
+        C: '#1E293B'
+      }
+    );
 
-    // Facet highlights & cracks
-    ctx.fillStyle = '#94A3B8';
-    ctx.fillRect(rx - r * 0.5, ry - r * 0.5, r * 0.6, r * 0.4);
-    ctx.strokeStyle = '#1E293B';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(rx - 6, ry - 4);
-    ctx.lineTo(rx + 2, ry + 2);
-    ctx.lineTo(rx + 8, ry - 2);
-    ctx.stroke();
+    // Shaking dust particles around the boulder when wobbling
+    if (rock.state === 'wobbling') {
+      ctx.fillStyle = '#FDE047';
+      for (let i = 0; i < 4; i++) {
+        const dx = Math.sin(this.animTime * 36 + i * 1.7) * 15;
+        const dy = 14 + ((this.animTime * 40 + i * 5) % 8);
+        ctx.fillRect(rx + dx - 1.5, ry + dy, 3, 3);
+      }
+    }
+
     ctx.restore();
   }
 
   renderEnemy(ctx, e) {
     const scale = INFLATION_SCALES[e.inflationStage] || 1.0;
-    const r = e.baseRadius * scale;
 
     ctx.save();
 
     // Ghost-Eyes disembodied drift mode
     if (e.ghostMode) {
-      const blink = 0.6 + 0.4 * Math.sin(this.animTime * 18);
+      const blink = 0.65 + 0.35 * Math.sin(this.animTime * 18);
       ctx.globalAlpha = blink;
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(e.x - 8, e.y - 5, 6, 8);
-      ctx.fillRect(e.x + 2, e.y - 5, 6, 8);
-      ctx.fillStyle = e.type === 'pooka' ? PALETTE.RED : PALETTE.GREEN;
-      ctx.fillRect(e.x - 6 + e.facing * 1.5, e.y - 2, 3, 4);
-      ctx.fillRect(e.x + 4 + e.facing * 1.5, e.y - 2, 3, 4);
+      const ghostSprite = [
+        '.WWWW..WWWW.',
+        'WWWWWWWWWWWW',
+        'WWPPWWWWPPWW',
+        'WWPPWWWWPPWW',
+        '.WWWW..WWWW.'
+      ];
+      this.renderer.drawPixelSprite(
+        ghostSprite,
+        e.x - 12,
+        e.y - 5,
+        2,
+        {
+          W: PALETTE.WHITE,
+          P: e.type === 'pooka' ? PALETTE.RED : PALETTE.GREEN
+        },
+        e.facing < 0,
+        false
+      );
       ctx.restore();
       return;
     }
 
-    // Fygar Fire Breath Jet
+    // Fygar Multi-Flame Pixelated Fire Breath Jet
     if (e.type === 'fygar' && e.fireActiveTimer > 0) {
-      const fireLen = 72;
       const sx = e.x + e.facing * 14;
+      const flicker = Math.floor(this.animTime * 28) % 2 === 0;
+      const flameColors = {
+        R: '#EF4444',
+        O: '#F97316',
+        Y: '#FACC15',
+        W: '#FFFFFF'
+      };
+      const flameSprite = [
+        '........RRRR..RRRRRRRR....',
+        '....RRRRROOORROOOOOOOORR..',
+        '.RRROOOOOYYYOYYYYYYYYYOOR.',
+        'ROOOYYYYYWWWWWWWWYYYYYYOOR',
+        '.RRROOOOOYYYOYYYYYYYYYOOR.',
+        '....RRRRROOORROOOOOOOORR..',
+        '........RRRR..RRRRRRRR....'
+      ];
       ctx.save();
       ctx.shadowColor = PALETTE.ORANGE;
-      ctx.shadowBlur = 16;
-      ctx.fillStyle = Math.sin(this.animTime * 45) > 0 ? PALETTE.ORANGE : PALETTE.GOLD;
-      ctx.beginPath();
-      ctx.moveTo(sx, e.y - 6);
-      ctx.lineTo(sx + e.facing * fireLen, e.y - 16);
-      ctx.lineTo(sx + e.facing * fireLen, e.y + 16);
-      ctx.lineTo(sx, e.y + 6);
-      ctx.closePath();
-      ctx.fill();
+      ctx.shadowBlur = 14;
+      const fw = 26 * 2.7;
+      const drawX = e.facing > 0 ? sx : sx - fw;
+      this.renderer.drawPixelSprite(
+        flameSprite,
+        drawX,
+        e.y - 10,
+        2.7,
+         {
+          R: flicker ? flameColors.R : flameColors.O,
+          O: flicker ? flameColors.O : flameColors.Y,
+          Y: flameColors.Y,
+          W: flameColors.W
+        },
+        e.facing < 0,
+        false
+      );
       ctx.restore();
     }
 
     // Flatten slightly if crushed under a falling boulder
     const scaleX = e.crushed ? scale * 1.35 : scale;
     const scaleY = e.crushed ? scale * 0.5 : scale;
+    const step = Math.floor(e.animFrame) % 2 === 0;
 
     ctx.translate(e.x, e.y);
     ctx.scale(scaleX, scaleY);
 
     if (e.type === 'pooka') {
-      // POOKA: Round Red Monster with big yellow goggles
-      ctx.shadowColor = PALETTE.RED;
-      ctx.shadowBlur = e.inflationStage > 0 ? 14 : 6;
-      ctx.fillStyle = e.inflationStage === 3 ? '#FB7185' : PALETTE.RED;
-      ctx.beginPath();
-      ctx.arc(0, 0, e.baseRadius, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Yellow Goggle Visor
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(-9, -6, 18, 8);
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(-7, -4, 6, 5);
-      ctx.fillRect(1, -4, 6, 5);
-
-      // Comical stretched pupils when inflated
-      const eyeSize = e.inflationStage >= 2 ? 3.5 : 2.5;
-      ctx.fillStyle = '#0F172A';
-      ctx.fillRect(-5 + e.facing, -3, eyeSize, eyeSize);
-      ctx.fillRect(3 + e.facing, -3, eyeSize, eyeSize);
-
-      // Little yellow boots
-      const step = Math.sin(e.animFrame) * 2;
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(-8, e.baseRadius - 3 + step, 6, 4);
-      ctx.fillRect(2, e.baseRadius - 3 - step, 6, 4);
+      // POOKA: Round Red Body, Big Yellow Goggles with White Lenses, Walking Yellow Boots
+      const pooka1 = [
+        '....RRRRRR....',
+        '..RRRRRRRRRR..',
+        '.RRRYYYYYYRRR.',
+        '.RYYWWWWWWYYR.',
+        'RRYWWKWWWKWWYR',
+        'RRYWWWWWWWWYRR',
+        'RRRYYYYYYYYRRR',
+        'RRRRRRRRRRRRRR',
+        '.RRRRRRRRRRRR.',
+        '..RRRRRRRRRR..',
+        '...YY....YY...',
+        '..YYYY..YYYY..'
+      ];
+      const pooka2 = [
+        '....RRRRRR....',
+        '..RRRRRRRRRR..',
+        '.RRRYYYYYYRRR.',
+        '.RYYWWWWWWYYR.',
+        'RRYWWKWWWKWWYR',
+        'RRYWWWWWWWWYRR',
+        'RRRYYYYYYYYRRR',
+        'RRRRRRRRRRRRRR',
+        '.RRRRRRRRRRRR.',
+        '..RRRRRRRRRR..',
+        '....YY..YY....',
+        '...YYYYYYYY...'
+      ];
+      this.renderer.drawPixelSprite(
+        step ? pooka1 : pooka2,
+        -14,
+        -12,
+        2,
+        {
+          R: e.inflationStage === 3 ? '#FB7185' : '#EF4444',
+          Y: '#FACC15',
+          W: '#FFFFFF',
+          K: '#0F172A'
+        },
+        e.facing < 0,
+        false
+      );
     } else {
-      // FYGAR: Green Dragon with flashing orange wings & dorsal spikes
+      // FYGAR: Green Pixelated Dragon Body, Orange Wings, Yellow Belly Plates, Dorsal Spikes
       const charging = e.fireChargeTimer > 0 && Math.sin(this.animTime * 35) > 0;
-      const bodyColor = charging
-        ? PALETTE.ORANGE
-        : e.inflationStage === 3
-          ? '#86EFAC'
-          : PALETTE.GREEN;
-
-      ctx.shadowColor = bodyColor;
-      ctx.shadowBlur = e.inflationStage > 0 || charging ? 14 : 6;
-      ctx.fillStyle = bodyColor;
-      ctx.beginPath();
-      ctx.arc(0, 0, e.baseRadius, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Orange dorsal wings
-      ctx.fillStyle = PALETTE.ORANGE;
-      ctx.fillRect(-e.facing * 11 - 3, -7, 7, 11);
-
-      // Eyes
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(e.facing * 2 - 4, -6, 8, 6);
-      ctx.fillStyle = PALETTE.RED;
-      ctx.fillRect(e.facing * 4 - 2, -4, 3, 4);
+      const fygar1 = [
+        '.W..W..GGGG...',
+        '.GGGGGGGGGGGG.',
+        '..GGGGGGWWKGGG',
+        '.WGGGGGGWWKGGG',
+        '..GOOOOGGGGGGG',
+        '.WGOOOOGGGGYY.',
+        '..GGGGGGGGGYY.',
+        '..GGGGGGGGYYY.',
+        '...GGGGGGYYY..',
+        '....GG...GG...',
+        '...GGG..GGG...'
+      ];
+      const fygar2 = [
+        '.W..W..GGGG...',
+        '.GGGGGGGGGGGG.',
+        '..GGGGGGWWKGGG',
+        '.WGGGGGGWWKGGG',
+        '..GGOOOOGGGGGG',
+        '.WGGOOOOGGGYY.',
+        '..GGGGGGGGGYY.',
+        '..GGGGGGGGYYY.',
+        '...GGGGGGYYY..',
+        '...GG....GG...',
+        '..GGG....GGG..'
+      ];
+      this.renderer.drawPixelSprite(
+        step ? fygar1 : fygar2,
+        -14,
+        -11,
+        2,
+        {
+          G: charging ? '#F97316' : e.inflationStage === 3 ? '#86EFAC' : '#22C55E',
+          O: charging ? '#FACC15' : '#F97316',
+          Y: '#FACC15',
+          W: '#FFFFFF',
+          K: '#EF4444'
+        },
+        e.facing < 0,
+        false
+      );
     }
 
     // Inflation stage indicator outline when pumped up
     if (e.inflationStage > 0) {
       ctx.strokeStyle = PALETTE.WHITE;
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.2;
       ctx.setLineDash([3, 3]);
       ctx.beginPath();
       ctx.arc(0, 0, e.baseRadius + 2, 0, Math.PI * 2);
@@ -12341,44 +12874,83 @@ class DigDug {
 
   renderPlayer(ctx) {
     const p = this.player;
-    const x = p.x - 12;
-    const y = p.y - 12;
+    const x = Math.round(p.x - 13);
+    const y = Math.round(p.y - 13);
     const step = Math.floor(p.animFrame) % 2 === 0;
+    const isPumping = !!(this.harpoon && this.harpoon.latchedEnemy);
 
-    const sprite1 = [
-      '....WWWW....',
-      '..WWWWWWWW..',
-      '..WWBBBBWW..',
-      '..WWWWWWWW..',
-      '...BBBBBB...',
-      '..WWBBBBWW..',
-      '.WW.BBBB.WW.',
-      '....RRRR....',
-      '...RR..RR...',
-      '..RR....RR..'
+    // Taizo Hori iconic white/blue digging helmet & suit pixel-art sprites
+    const walkSprite1 = [
+      '....WWWWWW....',
+      '..WWWWWWWWWW..',
+      '..WWBBBBFFFF..',
+      '..WWBBBBFKFF..',
+      '...WWWWFFFF...',
+      '..WWWWBBBBWW..',
+      '.WW.BBBBBBBBRR',
+      '....WWWWWWWW..',
+      '...BB....BB...',
+      '..BBB....BBB..'
     ];
-    const sprite2 = [
-      '....WWWW....',
-      '..WWWWWWWW..',
-      '..WWBBBBWW..',
-      '..WWWWWWWW..',
-      '...BBBBBB...',
-      '..WWBBBBWW..',
-      '..W.BBBB.W..',
-      '....RRRR....',
-      '....RR.RR...',
-      '...RR...RR..'
+    const walkSprite2 = [
+      '....WWWWWW....',
+      '..WWWWWWWWWW..',
+      '..WWBBBBFFFF..',
+      '..WWBBBBFKFF..',
+      '...WWWWFFFF...',
+      '...WWWBBBBW...',
+      '..WWBBBBBBBBRR',
+      '....WWWWWWWW..',
+      '....BB..BB....',
+      '...BBB..BBB...'
     ];
+
+    // Air-pump handle animation when latched onto an enemy
+    const pumpDown = Math.floor(this.animTime * 10) % 2 === 0;
+    const pumpSprite1 = [
+      '....WWWWWW.RRR',
+      '..WWWWWWWW. .R.',
+      '..WWBBBBFF..R.',
+      '..WWBBBBFK..R.',
+      '...WWWWFFF.RRR',
+      '..WWWWBBBBWW..',
+      '..WWBBBBBBBB..',
+      '....WWWWWWWW..',
+      '...BB....BB...',
+      '..BBB....BBB..'
+    ];
+    const pumpSprite2 = [
+      '....WWWWWW....',
+      '..WWWWWWWW....',
+      '..WWBBBBFF.RRR',
+      '..WWBBBBFK..R.',
+      '...WWWWFFF.RRR',
+      '..WWWWBBBBWW..',
+      '..WWBBBBBBBB..',
+      '....WWWWWWWW..',
+      '...BB....BB...',
+      '..BBB....BBB..'
+    ];
+
+    const activeSprite = isPumping
+      ? pumpDown
+        ? pumpSprite2
+        : pumpSprite1
+      : step
+        ? walkSprite1
+        : walkSprite2;
 
     this.renderer.drawPixelSprite(
-      step ? sprite1 : sprite2,
+      activeSprite,
       x,
       y,
-      2.2,
+      2.1,
       {
-        W: PALETTE.WHITE,
-        B: PALETTE.CYAN,
-        R: PALETTE.RED
+        W: '#F8FAFC',
+        B: '#2563EB',
+        F: '#FDE68A',
+        K: '#0F172A',
+        R: '#EF4444'
       },
       p.facing < 0,
       false
@@ -12429,7 +13001,7 @@ class DonkeyKong {
     this.audio = audio;
 
     this.id = 'donkeykong';
-    this.title = 'Girder Titan';
+    this.title = 'Donkey Kong';
 
     this.width = 960;
     this.height = 540;
@@ -13585,7 +14157,7 @@ class DonkeyKong {
 
     // Top HUD & Bonus Box
     this.renderer.drawHUD({
-      title: 'GIRDER TITAN',
+      title: 'DONKEY KONG',
       score: this.score,
       highScore: this.highScore,
       lives: this.lives,
@@ -13595,8 +14167,8 @@ class DonkeyKong {
     });
 
     this.renderer.drawStateOverlay(this.state, {
-      title: 'GIRDER TITAN',
-      subtitle: '25M INCLINED GIRDER & BARREL ARCADE EDITION',
+      title: 'DONKEY KONG',
+      subtitle: '1981 INCLINED GIRDER & BARREL ARCADE EDITION',
       controls: 'ARROWS/WASD: CLIMB & RUN  |  Z/SPACE: JUMP BARRELS  |  HAMMER: AUTO-SMASH',
       score: this.score,
       highScore: this.highScore,
@@ -13840,33 +14412,68 @@ class DonkeyKong {
   }
 
   _drawPauline(ctx) {
-    const px = this.pauline.x;
-    const py = this.pauline.y;
+    const px = Math.round(this.pauline.x);
+    const py = Math.round(this.pauline.y);
     const bounce = Math.sin(this.pauline.helpTimer * 6) > 0 ? -2 : 0;
 
     ctx.save();
-    // Golden hair
-    ctx.fillStyle = PALETTE.GOLD;
-    ctx.fillRect(px - 6, py - 28 + bounce, 12, 8);
-    // Pink dress
-    ctx.fillStyle = PALETTE.PINK;
-    ctx.fillRect(px - 7, py - 20 + bounce, 14, 14);
-    // Feet
-    ctx.fillStyle = PALETTE.WHITE;
-    ctx.fillRect(px - 5, py - 6, 4, 6);
-    ctx.fillRect(px + 1, py - 6, 4, 6);
+    // Pauline pixel-art sprite: golden hair, pink gown with white frill trim
+    const paulineSprite = [
+      '...GGGGGG...',
+      '..GGGGGGGG..',
+      '..GGFFFFKW..',
+      '..GGGFFFF...',
+      '....FFFF....',
+      '...PPPPPP...',
+      '..WPPPPPPW..',
+      '..PPPPPPPP..',
+      '.PPPPPPPPPP.',
+      '.WWWWWWWWWW.',
+      '.PPPPPPPPPP.',
+      '...WW..WW...',
+      '..WWW..WWW..'
+    ];
+    this.renderer.drawPixelSprite(
+      paulineSprite,
+      px - 12,
+      py - 26 + bounce,
+      2,
+      {
+        G: '#FACC15',
+        F: '#FDE68A',
+        K: '#0F172A',
+        P: '#FF007A',
+        W: '#FFFFFF'
+      }
+    );
 
-    if (this.stageClearTimer > 0) {
-      // Victory heart between Pauline and Jumpman
-      this.renderer.drawText('STAGE CLEAR!', px + 55, py - 36, {
+    if (this.stageClearTimer > 0 || this.player.tier === 6) {
+      // Classic floating Heart (♥) between Pauline and Jumpman on reaching top platform!
+      const heartY = py - 34 + Math.sin(this.animTime * 8) * 3;
+      const heartSprite = [
+        '.RR..RR.',
+        'RRRRRRRR',
+        'RRRRRRRR',
+        '.RRRRRR.',
+        '..RRRR..',
+        '...RR...'
+      ];
+      this.renderer.drawPixelSprite(
+        heartSprite,
+        px + 26,
+        heartY - 8,
+        2.2,
+        { R: '#FF2A55' }
+      );
+      this.renderer.drawText('♥ STAGE CLEAR! ♥', px + 58, py - 38, {
         font: FONTS.HEADER,
         size: 11,
-        color: PALETTE.GOLD,
+        color: PALETTE.PINK,
         align: 'center',
         glow: 10
       });
     } else if (Math.sin(this.pauline.helpTimer * 3) > -0.2) {
-      this.renderer.drawText('HELP!', px + 34, py - 24, {
+      this.renderer.drawText('HELP!', px + 26, py - 24, {
         font: FONTS.HEADER,
         size: 9,
         color: PALETTE.CYAN,
@@ -13878,43 +14485,106 @@ class DonkeyKong {
   }
 
   _drawKong(ctx) {
-    const kx = this.kong.x;
-    const ky = this.kong.y;
+    const kx = Math.round(this.kong.x);
+    const ky = Math.round(this.kong.y);
     ctx.save();
 
-    // Muscular torso & fur
-    ctx.fillStyle = '#92400E';
-    ctx.fillRect(kx - 24, ky - 44, 48, 32);
-    // Chest plate
-    ctx.fillStyle = '#D97706';
-    ctx.fillRect(kx - 14, ky - 36, 28, 18);
-    // Head & grin
-    ctx.fillStyle = '#92400E';
-    ctx.fillRect(kx - 16, ky - 58, 32, 16);
-    ctx.fillStyle = '#FDE68A';
-    ctx.fillRect(kx - 10, ky - 49, 20, 5);
-    // Eyes
-    ctx.fillStyle = PALETTE.WHITE;
-    ctx.fillRect(kx - 8, ky - 55, 5, 4);
-    ctx.fillRect(kx + 3, ky - 55, 5, 4);
+    // Rich multi-color pixel-art Donkey Kong sprite (24x20 matrix at scale 2.8 = 67x56px)
+    const beatLeft = Math.sin(this.animTime * 8) > 0;
+    const kongChest1 = [
+      '.......BBBBBBBBBB.......',
+      '.....BBBBBBBBBBBBBB.....',
+      '....BBBBTTTTTTTTBBBB....',
+      '....BBBTTWWKKWWTTBBB....',
+      '...BBBBTTTTTTTTTTBBBB...',
+      '...BBBTTTWWWWWWTTTBBB...',
+      '....BBBBTTTTTTTTBBBB....',
+      '.TTTBBBBBBBBBBBBBBBB....',
+      'TTTTBBBBTTTTTTTTBBBBBBBB',
+      'TTT.BBBTTTTTTTTTTBBBBBBB',
+      '....BBBTTTTDDTTTTBBBTTTT',
+      '....BBBBTTTTTTTTBBBBTTTT',
+      '.....BBBBBBBBBBBBBB..TT.',
+      '....BBBBBBBBBBBBBBBB....',
+      '...BBBBBB......BBBBBB...',
+      '..BBBBBB........BBBBBB..',
+      '..TTTTT..........TTTTT..'
+    ];
+    const kongChest2 = [
+      '.......BBBBBBBBBB.......',
+      '.....BBBBBBBBBBBBBB.....',
+      '....BBBBTTTTTTTTBBBB....',
+      '....BBBTTWWKKWWTTBBB....',
+      '...BBBBTTTTTTTTTTBBBB...',
+      '...BBBTTTWWWWWWTTTBBB...',
+      '....BBBBTTTTTTTTBBBB....',
+      '....BBBBBBBBBBBBBBBBTTT.',
+      'BBBBBBBBTTTTTTTTBBBBTTTT',
+      'BBBBBBBTTTTTTTTTTBBB.TTT',
+      'TTTTBBBTTTTDDTTTTBBB....',
+      'TTTTBBBBTTTTTTTTBBBB....',
+      '.TT..BBBBBBBBBBBBBB.....',
+      '....BBBBBBBBBBBBBBBB....',
+      '...BBBBBB......BBBBBB...',
+      '..BBBBBB........BBBBBB..',
+      '..TTTTT..........TTTTT..'
+    ];
+    const kongRoll = [
+      '.......BBBBBBBBBB.......',
+      '.....BBBBBBBBBBBBBB.....',
+      '....BBBBTTTTTTTTBBBB....',
+      '....BBBTTWWKKWWTTBBB....',
+      '...BBBBTTTTTTTTTTBBBB...',
+      '...BBBTTTWWWWWWTTTBBB...',
+      '....BBBBTTTTTTTTBBBB....',
+      '....BBBBBBBBBBBBBBBB....',
+      '..BBBBBBTTTTTTTTBBBBBB..',
+      '.BBBBBBTTTTTTTTTTBBBBBB.',
+      '.TTTBBBTTTTDDTTTTBBBTTT.',
+      '..TTBBBBTTTTTTTTBBBBTT..',
+      '.....BBBBBBBBBBBBBB.....',
+      '....BBBBBBBBBBBBBBBB....',
+      '...BBBBBB......BBBBBB...',
+      '..BBBBBB........BBBBBB..',
+      '..TTTTT..........TTTTT..'
+    ];
 
-    // Legs
-    ctx.fillStyle = '#78350F';
-    ctx.fillRect(kx - 20, ky - 12, 12, 12);
-    ctx.fillRect(kx + 8, ky - 12, 12, 12);
+    const activeKong =
+      this.kong.pose === 'GRAB' || this.kong.pose === 'ROLL'
+        ? kongRoll
+        : beatLeft
+          ? kongChest1
+          : kongChest2;
 
-    // Arms based on Kong's barrel-throwing pose
-    ctx.fillStyle = '#92400E';
+    this.renderer.drawPixelSprite(
+      activeKong,
+      kx - 33,
+      ky - 48,
+      2.8,
+      {
+        B: '#92400E',
+        D: '#78350F',
+        T: '#FDBA74',
+        W: '#FFFFFF',
+        K: '#0F172A'
+      },
+      this.kong.pose === 'GRAB',
+      false
+    );
+
+    // Draw barrel in Kong's hands during GRAB / ROLL poses
     if (this.kong.pose === 'GRAB') {
-      ctx.fillRect(kx - 36, ky - 42, 14, 14);
-      ctx.fillRect(kx + 22, ky - 40, 12, 14);
+      ctx.fillStyle = '#D97706';
+      ctx.fillRect(kx - 36, ky - 28, 16, 18);
+      ctx.strokeStyle = PALETTE.GOLD;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(kx - 36, ky - 28, 16, 18);
     } else if (this.kong.pose === 'ROLL') {
-      ctx.fillRect(kx - 28, ky - 40, 10, 14);
-      ctx.fillRect(kx + 24, ky - 30, 18, 12);
-    } else {
-      const armOffset = Math.sin(this.animTime * 8) > 0 ? -6 : 2;
-      ctx.fillRect(kx - 34, ky - 44 + armOffset, 12, 18);
-      ctx.fillRect(kx + 22, ky - 44 - armOffset, 12, 18);
+      ctx.fillStyle = '#D97706';
+      ctx.fillRect(kx + 20, ky - 22, 16, 18);
+      ctx.strokeStyle = PALETTE.GOLD;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(kx + 20, ky - 22, 16, 18);
     }
 
     ctx.restore();
@@ -13925,27 +14595,50 @@ class DonkeyKong {
     for (const b of this.barrels) {
       const cx = b.x;
       const cy = b.y - 9;
-      const mainColor = b.isBlue ? PALETTE.CYAN : '#D97706';
-      const rimColor = b.isBlue ? PALETTE.WHITE : PALETTE.GOLD;
+      const mainColor = b.isBlue ? '#0284C7' : '#D97706';
+      const darkWood = b.isBlue ? '#0369A1' : '#92400E';
+      const rimColor = b.isBlue ? PALETTE.CYAN : PALETTE.GOLD;
 
       ctx.save();
       ctx.translate(cx, cy);
-      ctx.rotate(b.rot);
 
-      ctx.fillStyle = mainColor;
-      ctx.beginPath();
-      ctx.arc(0, 0, 9, 0, Math.PI * 2);
-      ctx.fill();
+      if (b.state === 'LADDER') {
+        // Barrel rolling broadside down a ladder (wide cylindrical view with hoops)
+        ctx.fillStyle = mainColor;
+        ctx.fillRect(-12, -7, 24, 14);
+        ctx.fillStyle = darkWood;
+        ctx.fillRect(-12, -2, 24, 4);
+        ctx.strokeStyle = rimColor;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-12, -7, 24, 14);
+        ctx.beginPath();
+        ctx.moveTo(-6, -7);
+        ctx.lineTo(-6, 7);
+        ctx.moveTo(6, -7);
+        ctx.lineTo(6, 7);
+        ctx.stroke();
+      } else {
+        ctx.rotate(b.rot);
+        ctx.fillStyle = mainColor;
+        ctx.beginPath();
+        ctx.arc(0, 0, 9.5, 0, Math.PI * 2);
+        ctx.fill();
 
-      ctx.strokeStyle = rimColor;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(0, 0, 9, 0, Math.PI * 2);
-      ctx.moveTo(-7, 0);
-      ctx.lineTo(7, 0);
-      ctx.moveTo(0, -7);
-      ctx.lineTo(0, 7);
-      ctx.stroke();
+        ctx.fillStyle = darkWood;
+        ctx.beginPath();
+        ctx.arc(0, 0, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = rimColor;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 9.5, 0, Math.PI * 2);
+        ctx.moveTo(-7, 0);
+        ctx.lineTo(7, 0);
+        ctx.moveTo(0, -7);
+        ctx.lineTo(0, 7);
+        ctx.stroke();
+      }
 
       ctx.restore();
     }
@@ -13954,30 +14647,48 @@ class DonkeyKong {
 
   _drawFireballs(ctx) {
     ctx.save();
+    const fireSprite1 = [
+      '....YY..YY....',
+      '..YYOOOOOOYY..',
+      '.YOOORRRROOOY.',
+      'YOORRRRRRRROOY',
+      'YORRWWKRRWWKRY',
+      'YORRWWKRRWWKRY',
+      'YOORRRRRRRROOY',
+      '.YOOOOOOOOOOY.',
+      '..YYYYYYYYYY..'
+    ];
+    const fireSprite2 = [
+      '..YY..YY..YY..',
+      '.YOOOOOOOOOOY.',
+      'YOORRRRRRRROOY',
+      'YORRRRRRRRRROY',
+      'YORRWWKRRWWKRY',
+      'YORRWWKRRWWKRY',
+      '.YOORRRRRRROY.',
+      '..YOOOOOOOOY..',
+      '...YYYYYYYY...'
+    ];
+
     for (const f of this.fireballs) {
-      const fx = f.x;
-      const fy = f.y - 10 + Math.sin(f.phase) * 2;
-      ctx.fillStyle = PALETTE.ORANGE;
-      ctx.shadowColor = PALETTE.RED;
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      ctx.arc(fx, fy, 8, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Flame crown
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.beginPath();
-      ctx.moveTo(fx - 6, fy - 4);
-      ctx.lineTo(fx, fy - 14);
-      ctx.lineTo(fx + 6, fy - 4);
-      ctx.closePath();
-      ctx.fill();
-
-      // Eyes
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = PALETTE.BG;
-      ctx.fillRect(fx - 4, fy - 2, 2, 3);
-      ctx.fillRect(fx + 2, fy - 2, 2, 3);
+      const fx = Math.round(f.x - 12);
+      const fy = Math.round(f.y - 19 + Math.sin(f.phase) * 2);
+      const alt = Math.floor(f.phase * 2) % 2 === 0;
+      this.renderer.drawPixelSprite(
+        alt ? fireSprite1 : fireSprite2,
+        fx,
+        fy,
+        1.8,
+        {
+          Y: PALETTE.GOLD,
+          O: PALETTE.ORANGE,
+          R: PALETTE.RED,
+          W: PALETTE.WHITE,
+          K: '#0F172A'
+        },
+        f.dir < 0,
+        false
+      );
     }
     ctx.restore();
   }
@@ -13997,27 +14708,109 @@ class DonkeyKong {
 
     const px = Math.round(p.x);
     const py = Math.round(p.y);
-    const stride = p.jumping ? 3 : Math.sin(p.walkCycle) * 3;
+    const step = Math.floor(p.walkCycle) % 2 === 0;
 
-    // Red cap & visor
-    ctx.fillStyle = PALETTE.RED;
-    ctx.fillRect(px - 6, py - 26, 12, 4);
-    ctx.fillRect(px + (p.facing > 0 ? 0 : -8), py - 24, 8, 2);
+    // Jumpman (Mario) authentic multi-color pixel-art sprites:
+    // R = Red Hat/Overalls, B = Blue Shirt/Hair, F = Tan Face, M = Dark Mustache/Boots, Y = Gold Buttons
+    const marioWalk1 = [
+      '...RRRRRR...',
+      '..RRRRRRRRR.',
+      '..BBBFFKFF..',
+      '.BFFFFFMMFF.',
+      '.BFFFMMMMM..',
+      '..BBBBFFFF..',
+      '..BBRBBBRB..',
+      '.BBBBRRRRBBB',
+      '.FF.RRRRRR.F',
+      '....RRYRRY..',
+      '...RRRRRRRR.',
+      '..RRRR..RRRR',
+      '.MMMM....MMM'
+    ];
+    const marioWalk2 = [
+      '...RRRRRR...',
+      '..RRRRRRRRR.',
+      '..BBBFFKFF..',
+      '.BFFFFFMMFF.',
+      '.BFFFMMMMM..',
+      '..BBBBFFFF..',
+      '...BBRBBR...',
+      '..BBBRRRRBB.',
+      '..FFRRRRRRFF',
+      '....RRYRRY..',
+      '....RRRRRR..',
+      '....RRR.RRR.',
+      '...MMMM.MMMM'
+    ];
+    const marioJump = [
+      '...RRRRRR.FF',
+      '..RRRRRRRRFF',
+      '..BBBFFKFFBB',
+      '.BFFFFFMMFFB',
+      '.BFFFMMMMMB.',
+      '..BBBBFFFF..',
+      '.BBBRRRRRB..',
+      'FF.RRRRRRRR.',
+      '...RRYRRYRR.',
+      '..RRRRRRRRR.',
+      '.MMMM...MMMM',
+      'MM........MM',
+      '............'
+    ];
+    const marioClimb1 = [
+      '..FFRRRRRR..',
+      '..BBRRRRRR..',
+      '...BBBBBBBB.',
+      '...BBBBBBBB.',
+      '..BBBRRRR...',
+      '..BBRRRRRRFF',
+      '....RRRRRRBB',
+      '...RRRRRRRR.',
+      '...RRR..RRR.',
+      '..MMMM..RRRR',
+      '........MMMM',
+      '............',
+      '............'
+    ];
+    const marioClimb2 = [
+      '..RRRRRRFF..',
+      '..RRRRRRBB..',
+      '.BBBBBBBB...',
+      '.BBBBBBBB...',
+      '...RRRRBBB..',
+      'FFRRRRRRBB..',
+      'BBRRRRRR....',
+      '.RRRRRRRR...',
+      '.RRR..RRR...',
+      'RRRR..MMMM..',
+      'MMMM........',
+      '............',
+      '............'
+    ];
 
-    // Face
-    ctx.fillStyle = '#FDE68A';
-    ctx.fillRect(px - 5, py - 22, 10, 6);
+    let activeSprite = step ? marioWalk1 : marioWalk2;
+    if (p.onLadder) {
+      activeSprite = step ? marioClimb1 : marioClimb2;
+    } else if (p.jumping) {
+      activeSprite = marioJump;
+    }
 
-    // Blue shirt & red overalls
-    ctx.fillStyle = PALETTE.BLUE;
-    ctx.fillRect(px - 6, py - 16, 12, 9);
-    ctx.fillStyle = PALETTE.RED;
-    ctx.fillRect(px - 5, py - 11, 10, 6);
-
-    // Boots
-    ctx.fillStyle = PALETTE.GOLD;
-    ctx.fillRect(px - 6 + stride, py - 5, 5, 5);
-    ctx.fillRect(px + 1 - stride, py - 5, 5, 5);
+    this.renderer.drawPixelSprite(
+      activeSprite,
+      px - 12,
+      py - 26,
+      2,
+      {
+        R: '#EF4444',
+        B: '#2563EB',
+        F: '#FDE68A',
+        M: '#78350F',
+        K: '#0F172A',
+        Y: '#FACC15'
+      },
+      p.onLadder ? false : p.facing < 0,
+      false
+    );
 
     // Active Hammer swing visual
     const hammerBox = this._getHammerHitbox();
@@ -14029,10 +14822,13 @@ class DonkeyKong {
       ctx.lineTo(hammerBox.x, hammerBox.y);
       ctx.stroke();
 
-      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillStyle = '#991B1B';
       ctx.shadowColor = PALETTE.GOLD;
       ctx.shadowBlur = 10;
-      ctx.fillRect(hammerBox.x - 8, hammerBox.y - 6, 16, 12);
+      ctx.fillRect(hammerBox.x - 9, hammerBox.y - 7, 18, 14);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(hammerBox.x - 9, hammerBox.y - 7, 4, 14);
+      ctx.fillRect(hammerBox.x + 5, hammerBox.y - 7, 4, 14);
       ctx.shadowBlur = 0;
     }
 
@@ -14098,7 +14894,7 @@ class Sumo {
     this.audio = audio;
 
     this.id = 'sumo';
-    this.title = 'Dohyo Clash';
+    this.title = 'Sumo Arcade';
 
     this.width = 960;
     this.height = 540;
@@ -14198,6 +14994,23 @@ class Sumo {
     this.shockwaves = [];
     this.particles = [];
     this.afterimages = [];
+
+    // Ceremonial salt scatter (Shio) burst at bout start from East & West corners
+    for (let i = 0; i < 20; i++) {
+      const side = i < 10 ? -1 : 1;
+      const sx = this.ringCenter.x + side * 120 + (Math.random() - 0.5) * 24;
+      const sy = this.ringCenter.y + (Math.random() - 0.5) * 40;
+      this.particles.push({
+        x: sx,
+        y: sy,
+        vx: -side * (35 + Math.random() * 85),
+        vy: (Math.random() - 0.5) * 70 - 15,
+        color: '#F8FAFC',
+        size: 2.5,
+        life: 0.75 + Math.random() * 0.35,
+        maxLife: 1.1
+      });
+    }
   }
 
   update(dt) {
@@ -14698,22 +15511,64 @@ class Sumo {
 
     ctx.save();
 
-    // Outer square clay mound (Dohyo platform)
-    ctx.fillStyle = '#19151E';
-    ctx.strokeStyle = '#33293A';
-    ctx.lineWidth = 3;
-    ctx.fillRect(cx - r - 42, cy - r - 30, (r + 42) * 2, (r + 30) * 2);
-    ctx.strokeRect(cx - r - 42, cy - r - 30, (r + 42) * 2, (r + 30) * 2);
+    // Outer square clay mound (Dohyo platform) with bevel border
+    ctx.fillStyle = '#241B15';
+    ctx.strokeStyle = '#5C4332';
+    ctx.lineWidth = 4;
+    ctx.fillRect(cx - r - 44, cy - r - 32, (r + 44) * 2, (r + 32) * 2);
+    ctx.strokeRect(cx - r - 44, cy - r - 32, (r + 44) * 2, (r + 32) * 2);
 
-    // Packed clay circle
-    const grad = ctx.createRadialGradient(cx, cy, 20, cx, cy, r);
-    grad.addColorStop(0, '#3D2E24');
-    grad.addColorStop(0.78, '#2C211B');
-    grad.addColorStop(1, '#1E1612');
+    // 4 Ceremonial Tsuri-yane corner tassel markers (Ao-dusa, Aka-dusa, Shiro-dusa, Kuro-dusa)
+    const corners = [
+      { x: cx + r + 28, y: cy - r - 18, color: '#38BDF8' }, // NE Blue
+      { x: cx + r + 28, y: cy + r + 18, color: '#EF4444' }, // SE Red
+      { x: cx - r - 28, y: cy + r + 18, color: '#F8FAFC' }, // SW White
+      { x: cx - r - 28, y: cy - r - 18, color: '#FACC15' }  // NW Gold/Black
+    ];
+    for (const c of corners) {
+      ctx.fillStyle = c.color;
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#0F172A';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // Janome-no-suna (swept sand ring outside the Tawara bales)
+    ctx.strokeStyle = '#6B513E';
+    ctx.lineWidth = 14;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r + 9, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Packed Arakida clay circle
+    const grad = ctx.createRadialGradient(cx, cy, 18, cx, cy, r);
+    grad.addColorStop(0, '#594233');
+    grad.addColorStop(0.72, '#3E2E23');
+    grad.addColorStop(1, '#291E17');
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.fill();
+
+    // Subtle concentric broom-swept clay texture rings
+    ctx.strokeStyle = 'rgba(254, 215, 170, 0.08)';
+    ctx.lineWidth = 1;
+    for (let rr = 45; rr < r - 10; rr += 36) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, rr, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Ceremonial salt scatter (Shio) crystals on East & West approaches
+    ctx.fillStyle = 'rgba(248, 250, 252, 0.65)';
+    for (let i = 0; i < 28; i++) {
+      const side = i % 2 === 0 ? -1 : 1;
+      const sx = cx + side * (86 + ((i * 19) % 72));
+      const sy = cy + (((i * 37) % 84) - 42);
+      ctx.fillRect(sx, sy, 2, 2);
+    }
 
     // Danger zone 72% threshold ring (subtle tactical guide)
     ctx.strokeStyle = 'rgba(255, 136, 0, 0.18)';
@@ -14724,30 +15579,43 @@ class Sumo {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // White Shikiri-sen starting lines in the center of the Dohyo
-    ctx.strokeStyle = PALETTE.WHITE;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(cx - 56, cy - 34);
-    ctx.lineTo(cx - 56, cy + 34);
-    ctx.moveTo(cx + 56, cy - 34);
-    ctx.lineTo(cx + 56, cy + 34);
-    ctx.stroke();
+    // Authentic White Shikiri-sen starting lines in the center of the Dohyo
+    ctx.fillStyle = '#FFFFFF';
+    ctx.strokeStyle = '#7C2D12';
+    ctx.lineWidth = 1.5;
+    ctx.fillRect(cx - 59, cy - 36, 6, 72);
+    ctx.strokeRect(cx - 59, cy - 36, 6, 72);
+    ctx.fillRect(cx + 53, cy - 36, 6, 72);
+    ctx.strokeRect(cx + 53, cy - 36, 6, 72);
 
-    // Tawara straw bales ring perimeter
+    // Tawara straw bales around the Dohyo perimeter with woven bindings
     for (let i = 0; i < this.tawaraCount; i++) {
       const a = (Math.PI * 2 * i) / this.tawaraCount;
-      const bx = cx + Math.cos(a) * r;
-      const by = cy + Math.sin(a) * r;
+      // N/S/E/W Toku-dawara bales sit slightly recessed outward for drainage/stepping
+      const isToku = i % (this.tawaraCount / 4) === 0;
+      const baleR = isToku ? r + 5 : r;
+      const bx = cx + Math.cos(a) * baleR;
+      const by = cy + Math.sin(a) * baleR;
 
       ctx.save();
       ctx.translate(bx, by);
       ctx.rotate(a + Math.PI / 2);
+
+      // Straw bale cylinder
       ctx.fillStyle = i % 2 === 0 ? '#D97706' : '#F59E0B';
-      ctx.fillRect(-11, -5, 22, 10);
-      ctx.strokeStyle = '#78350F';
+      ctx.fillRect(-12, -5.5, 24, 11);
+      // Highlight stripe along top of straw bale
+      ctx.fillStyle = '#FDE68A';
+      ctx.fillRect(-11, -3.5, 22, 2.5);
+      // Dark woven straw rope bindings
+      ctx.fillStyle = '#78350F';
+      ctx.fillRect(-7, -5.5, 2, 11);
+      ctx.fillRect(-1, -5.5, 2, 11);
+      ctx.fillRect(5, -5.5, 2, 11);
+
+      ctx.strokeStyle = '#451A03';
       ctx.lineWidth = 1.2;
-      ctx.strokeRect(-11, -5, 22, 10);
+      ctx.strokeRect(-12, -5.5, 24, 11);
       ctx.restore();
     }
 
@@ -14823,7 +15691,7 @@ class Sumo {
     // Lunge / Slap visual extension
     const armReach = w.shoveTimer > 0 ? 12 : w.slapTimer > 0 ? 15 : 4;
 
-    // Shoulders & outstretched grappling arms
+    // Outstretched grappling arms & taped wrists
     ctx.fillStyle = '#FDBA74';
     ctx.strokeStyle = '#7C2D12';
     ctx.lineWidth = 2;
@@ -14833,29 +15701,60 @@ class Sumo {
     ctx.fill();
     ctx.stroke();
 
-    // Rikishi body
+    // White wrist tape bands
+    ctx.fillStyle = '#F8FAFC';
+    ctx.fillRect(4 + armReach, -r * 0.68 - 4, 4, 8);
+    ctx.fillRect(4 + armReach, r * 0.68 - 4, 4, 8);
+
+    // Rikishi muscular torso & back shoulders
     ctx.fillStyle = '#FED7AA';
     ctx.beginPath();
     ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.fill();
     ctx.lineWidth = 2.5;
-    ctx.strokeStyle = w.mawashiColor;
+    ctx.strokeStyle = '#9A3412';
     ctx.stroke();
 
-    // Ceremonial Mawashi belt
+    // Ceremonial silk Mawashi belt with rear knot & front Sagari fringes
     ctx.fillStyle = w.mawashiColor;
     ctx.shadowColor = w.mawashiColor;
     ctx.shadowBlur = 8;
-    ctx.fillRect(-10, -r + 3, 14, (r - 3) * 2);
+    ctx.fillRect(-11, -r + 2, 15, (r - 2) * 2);
     ctx.shadowBlur = 0;
 
-    // Chonmage topknot hair
+    // Mawashi folded silk seams & rear bow knot
+    ctx.strokeStyle = '#0F172A';
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(-11, -r + 2, 15, (r - 2) * 2);
+    ctx.fillStyle = w.mawashiColor;
+    ctx.fillRect(-16, -8, 6, 16);
+    ctx.strokeRect(-16, -8, 6, 16);
+
+    // Front Sagari fringes along belt edge
+    ctx.fillStyle = PALETTE.GOLD;
+    for (let sy = -r + 6; sy <= r - 8; sy += 7) {
+      ctx.fillRect(4, sy, 4, 2.5);
+    }
+
+    // Detailed Chonmage topknot (dark hair crown + Oicho-mage ginkgo fan + white paper tie)
     ctx.fillStyle = '#0F172A';
     ctx.beginPath();
-    ctx.arc(-2, 0, 11, 0, Math.PI * 2);
+    ctx.arc(-1, 0, 11.5, 0, Math.PI * 2);
     ctx.fill();
+
+    // Oicho-mage fan-shaped topknot tail folded forward
+    ctx.fillStyle = '#1E293B';
+    ctx.beginPath();
+    ctx.moveTo(-6, -2);
+    ctx.lineTo(6, -5.5);
+    ctx.lineTo(6, 5.5);
+    ctx.lineTo(-6, 2);
+    ctx.closePath();
+    ctx.fill();
+
+    // White motoyui paper cord binding
     ctx.fillStyle = PALETTE.WHITE;
-    ctx.fillRect(-4, -2, 8, 4);
+    ctx.fillRect(-2, -3, 4, 6);
 
     ctx.restore();
 
@@ -15352,7 +16251,7 @@ class PacMan {
     this.audio = audio;
 
     this.id = 'pacman';
-    this.title = 'Neon Chomper';
+    this.title = 'Pac-Man';
 
     this.state = 'PLAYING';
     this.isMsPacMan = false;
@@ -15652,7 +16551,7 @@ class PacMan {
       this.isMsPacMan = !this.isMsPacMan;
       this.audio.playMenuSelect();
       this._addPopup(
-        this.isMsPacMan ? 'CYBER CHOMPER!' : 'NEON CHOMPER!',
+        this.isMsPacMan ? 'MS. PAC-MAN!' : 'PAC-MAN!',
         this.player.x,
         this.player.y - 16,
         this.isMsPacMan ? PALETTE.PINK : PALETTE.GOLD
@@ -16228,20 +17127,20 @@ class PacMan {
 
     // Top Arcade HUD
     this.renderer.drawHUD({
-      title: this.isMsPacMan ? 'CYBER CHOMPER' : 'NEON CHOMPER',
+      title: this.isMsPacMan ? 'MS. PAC-MAN' : 'PAC-MAN',
       score: this.score,
       highScore: this.highScore,
       lives: this.lives,
       level: this.level,
-      extraLabel: `[X] ${this.isMsPacMan ? 'CYBER' : 'NEON'}`,
+      extraLabel: `[X] ${this.isMsPacMan ? 'MS.PAC' : 'PAC-MAN'}`,
       accent: this.isMsPacMan ? PALETTE.PINK : PALETTE.GOLD
     });
 
     // State Overlay (MENU / PAUSED / GAMEOVER)
     this.renderer.drawStateOverlay(this.state, {
-      title: this.isMsPacMan ? 'CYBER CHOMPER' : 'NEON CHOMPER',
+      title: this.isMsPacMan ? 'MS. PAC-MAN' : 'PAC-MAN',
       subtitle: 'DUAL VARIANT COIN-OP EDITION',
-      controls: 'ARROWS/WASD/SWIPE: STEER  |  X/SHIFT: TOGGLE CYBER VARIANT  |  P: PAUSE',
+      controls: 'ARROWS/WASD/SWIPE: STEER  |  X/SHIFT: TOGGLE MS. PAC-MAN  |  P: PAUSE',
       score: this.score,
       highScore: this.highScore,
       accent: this.isMsPacMan ? PALETTE.PINK : PALETTE.GOLD
@@ -16347,7 +17246,7 @@ class PacMan {
       align: 'center'
     });
 
-    this.renderer.drawText(this.isMsPacMan ? 'CYBER CHOMPER' : 'NEON CHOMPER', rx + rw / 2, ry + 48, {
+    this.renderer.drawText(this.isMsPacMan ? 'MS. PAC-MAN' : 'PAC-MAN', rx + rw / 2, ry + 48, {
       font: FONTS.HEADER,
       size: 11,
       color: this.isMsPacMan ? PALETTE.PINK : PALETTE.GOLD,
@@ -16472,24 +17371,94 @@ class PacMan {
     if (!this.fruit) return;
     const f = this.fruit;
     const bounceY = f.wandering ? Math.abs(Math.sin(f.bouncePhase)) * -5 : 0;
-    const fx = f.x;
-    const fy = f.y + bounceY;
+    const fx = Math.round(f.x);
+    const fy = Math.round(f.y + bounceY);
 
     ctx.save();
     ctx.shadowColor = f.color;
-    ctx.shadowBlur = 10;
-    ctx.fillStyle = f.color;
-    ctx.beginPath();
-    ctx.arc(fx, fy + 2, 6.5, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.shadowBlur = 8;
 
-    // Stem / leaf accent
-    ctx.strokeStyle = f.accent;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(fx, fy - 4);
-    ctx.lineTo(fx + 3, fy - 8);
-    ctx.stroke();
+    if (f.name === 'CHERRY') {
+      // Twin cherries with curved green stems & white glints
+      ctx.strokeStyle = '#22C55E';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(fx - 3, fy + 2);
+      ctx.quadraticCurveTo(fx - 1, fy - 5, fx + 4, fy - 7);
+      ctx.moveTo(fx + 3, fy + 4);
+      ctx.quadraticCurveTo(fx + 4, fy - 2, fx + 4, fy - 7);
+      ctx.stroke();
+
+      ctx.fillStyle = '#FF2A55';
+      ctx.beginPath();
+      ctx.arc(fx - 3.5, fy + 3, 3.8, 0, Math.PI * 2);
+      ctx.arc(fx + 3, fy + 4.5, 3.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(fx - 5, fy + 1.5, 1.5, 1.5);
+      ctx.fillRect(fx + 1.5, fy + 3, 1.5, 1.5);
+    } else if (f.name === 'STRAWBERRY') {
+      // Strawberry with green leafy crown and white seeds
+      ctx.fillStyle = '#FF007A';
+      ctx.beginPath();
+      ctx.moveTo(fx - 6, fy - 2);
+      ctx.lineTo(fx + 6, fy - 2);
+      ctx.lineTo(fx, fy + 7);
+      ctx.closePath();
+      ctx.arc(fx - 2.5, fy - 2, 3.5, Math.PI, 0);
+      ctx.arc(fx + 2.5, fy - 2, 3.5, Math.PI, 0);
+      ctx.fill();
+
+      // Green leaf cap
+      ctx.fillStyle = '#22C55E';
+      ctx.fillRect(fx - 4, fy - 6, 8, 2.5);
+      ctx.fillRect(fx - 1, fy - 8, 2, 2);
+
+      // White seed dots
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(fx - 3, fy - 1, 1.5, 1.5);
+      ctx.fillRect(fx + 1.5, fy - 1, 1.5, 1.5);
+      ctx.fillRect(fx - 1, fy + 2, 1.5, 1.5);
+    } else if (f.name === 'PEACH') {
+      ctx.fillStyle = '#FB923C';
+      ctx.beginPath();
+      ctx.arc(fx - 1.5, fy + 1, 5.2, 0, Math.PI * 2);
+      ctx.arc(fx + 1.5, fy + 1, 5.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#22C55E';
+      ctx.fillRect(fx, fy - 6, 5, 2.5);
+    } else if (f.name === 'APPLE') {
+      ctx.fillStyle = '#EF4444';
+      ctx.beginPath();
+      ctx.arc(fx - 2, fy + 1, 5, 0, Math.PI * 2);
+      ctx.arc(fx + 2, fy + 1, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FACC15';
+      ctx.fillRect(fx - 1, fy - 6, 2, 3);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(fx - 4, fy - 1, 1.5, 2.5);
+    } else if (f.name === 'GALAXIAN') {
+      // Galaxian Flagship pixel icon
+      ctx.fillStyle = '#FFD700';
+      ctx.fillRect(fx - 2, fy - 6, 4, 10);
+      ctx.fillStyle = '#00F0FF';
+      ctx.fillRect(fx - 6, fy - 2, 12, 5);
+      ctx.fillStyle = '#FF2A55';
+      ctx.fillRect(fx - 4, fy - 4, 8, 2);
+    } else {
+      ctx.fillStyle = f.color;
+      ctx.beginPath();
+      ctx.arc(fx, fy + 2, 6.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = f.accent;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(fx, fy - 4);
+      ctx.lineTo(fx + 3, fy - 8);
+      ctx.stroke();
+    }
+
     ctx.restore();
   }
 
@@ -16527,41 +17496,36 @@ class PacMan {
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // Ms. Pac-Man signature Red Bow, Eye & Beauty Mark!
+    // Ms. Pac-Man signature Red Pixel Bow with Blue Knot, Eye & Beauty Mark rotated cleanly with facing angle!
     if (this.isMsPacMan) {
       const flipY = p.facing === DIRS.LEFT ? -1 : 1;
       // Eye
       ctx.fillStyle = '#0B0F19';
-      ctx.beginPath();
-      ctx.arc(1.5, -4.2 * flipY, 1.4, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillRect(0.5, -5.2 * flipY - 1, 2.2, 2.2);
 
       // Beauty mark
-      ctx.fillRect(-2.5, 2.5 * flipY, 1.5, 1.5);
+      ctx.fillStyle = '#0B0F19';
+      ctx.fillRect(-3, 2.2 * flipY, 1.8, 1.8);
 
       // Red lipstick tip
       ctx.fillStyle = '#FF2A55';
-      ctx.beginPath();
-      ctx.arc(7.5, -2.5 * flipY, 1.5, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillRect(6.5, -2.5 * flipY - 1, 2.2, 2.2);
 
-      // Signature Red Bow on top of head
+      // Signature Red Pixel Bow on top of head with Blue Center Knot
+      const bowY = -7.8 * flipY;
       ctx.fillStyle = '#FF2A55';
-      ctx.beginPath();
-      ctx.arc(-4.5, -7.5 * flipY, 3.2, 0, Math.PI * 2);
-      ctx.arc(-0.5, -7.5 * flipY, 3.2, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(-2.5, -7.5 * flipY, 1.4, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillRect(-6.5, bowY - 2.5, 3.5, 5);
+      ctx.fillRect(-1.0, bowY - 2.5, 3.5, 5);
+      ctx.fillStyle = '#2563EB';
+      ctx.fillRect(-3.2, bowY - 1.5, 2.4, 3);
     }
 
     ctx.restore();
   }
 
   _renderGhosts(ctx) {
+    const skirtAlt = Math.floor(this.pelletPulse * 1.6) % 2 === 0;
+
     for (const g of this.ghosts) {
       ctx.save();
       ctx.translate(g.x, g.y);
@@ -16572,66 +17536,79 @@ class PacMan {
         if (g.frightened) {
           const isFlashingWhite =
             this.frightTimer <= 2.0 && Math.floor(this.frightTimer * 8) % 2 === 0;
-          bodyColor = isFlashingWhite ? '#F8FAFC' : '#2563EB';
+          bodyColor = isFlashingWhite ? '#F8FAFC' : '#1D4ED8';
         }
 
         ctx.fillStyle = bodyColor;
         ctx.shadowColor = bodyColor;
         ctx.shadowBlur = 8;
 
-        // Dome head + wavy skirt
+        // Classic dome head + 3-scallop wavy bottom skirt (alternating 2 skirt frames as they move!)
         ctx.beginPath();
         ctx.arc(0, -2, 8.8, Math.PI, 0, false);
         ctx.lineTo(8.8, 8.5);
-        // 3 skirt waves
-        ctx.lineTo(5.8, 5.5);
-        ctx.lineTo(2.9, 8.5);
-        ctx.lineTo(0, 5.5);
-        ctx.lineTo(-2.9, 8.5);
-        ctx.lineTo(-5.8, 5.5);
-        ctx.lineTo(-8.8, 8.5);
+        if (skirtAlt) {
+          // Frame 0: 3 scallops
+          ctx.lineTo(5.8, 5.2);
+          ctx.lineTo(2.9, 8.5);
+          ctx.lineTo(0, 5.2);
+          ctx.lineTo(-2.9, 8.5);
+          ctx.lineTo(-5.8, 5.2);
+          ctx.lineTo(-8.8, 8.5);
+        } else {
+          // Frame 1: shifted scallops
+          ctx.lineTo(7.2, 8.5);
+          ctx.lineTo(4.4, 5.2);
+          ctx.lineTo(1.5, 8.5);
+          ctx.lineTo(-1.5, 8.5);
+          ctx.lineTo(-4.4, 5.2);
+          ctx.lineTo(-7.2, 8.5);
+          ctx.lineTo(-8.8, 6.2);
+        }
         ctx.closePath();
         ctx.fill();
         ctx.shadowBlur = 0;
 
         if (g.frightened) {
-          // Frightened squiggly mouth & eyes
+          // Classic wavy-mouth frightened face
           const featureColor =
             this.frightTimer <= 2.0 && Math.floor(this.frightTimer * 8) % 2 === 0
               ? '#FF2A55'
               : '#FDE68A';
           ctx.fillStyle = featureColor;
-          ctx.fillRect(-4, -3, 2.5, 2.5);
-          ctx.fillRect(1.5, -3, 2.5, 2.5);
+          ctx.fillRect(-4.2, -3.2, 2.5, 2.5);
+          ctx.fillRect(1.7, -3.2, 2.5, 2.5);
 
           ctx.strokeStyle = featureColor;
-          ctx.lineWidth = 1.4;
+          ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.moveTo(-5, 3.5);
-          ctx.lineTo(-2.5, 1.8);
-          ctx.lineTo(0, 3.5);
-          ctx.lineTo(2.5, 1.8);
-          ctx.lineTo(5, 3.5);
+          ctx.moveTo(-5.5, 3.8);
+          ctx.lineTo(-3.6, 1.8);
+          ctx.lineTo(-1.8, 3.8);
+          ctx.lineTo(0, 1.8);
+          ctx.lineTo(1.8, 3.8);
+          ctx.lineTo(3.6, 1.8);
+          ctx.lineTo(5.5, 3.8);
           ctx.stroke();
           ctx.restore();
           continue;
         }
       }
 
-      // Draw Directional Ghost Eyes (or disembodied returning eyes)
+      // Draw Directional Ghost Eyes (white sclera + blue pupils offset in g.dir travel direction)
       const lookX = g.dir.x * 2.2;
       const lookY = g.dir.y * 2.2;
 
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
-      ctx.arc(-3.2 + lookX * 0.5, -2.2 + lookY * 0.5, 3.0, 0, Math.PI * 2);
-      ctx.arc(3.2 + lookX * 0.5, -2.2 + lookY * 0.5, 3.0, 0, Math.PI * 2);
+      ctx.ellipse(-3.3 + lookX * 0.55, -2.2 + lookY * 0.55, 2.8, 3.4, 0, 0, Math.PI * 2);
+      ctx.ellipse(3.3 + lookX * 0.55, -2.2 + lookY * 0.55, 2.8, 3.4, 0, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#1D4ED8';
       ctx.beginPath();
-      ctx.arc(-3.2 + lookX, -2.2 + lookY, 1.5, 0, Math.PI * 2);
-      ctx.arc(3.2 + lookX, -2.2 + lookY, 1.5, 0, Math.PI * 2);
+      ctx.arc(-3.3 + lookX, -2.2 + lookY, 1.55, 0, Math.PI * 2);
+      ctx.arc(3.3 + lookX, -2.2 + lookY, 1.55, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.restore();
@@ -16776,7 +17753,7 @@ class Frogger {
     this.audio = audio;
 
     this.id = 'frogger';
-    this.title = 'Cyber Hopper';
+    this.title = 'Frogger';
 
     this.state = 'PLAYING';
     this.score = 0;
@@ -17550,25 +18527,36 @@ class Frogger {
     ctx.strokeRect(0, 0, GRID_W, GRID_H);
   }
 
-  _renderSafeBank(ctx, y, label) {
-    ctx.fillStyle = '#2E1065';
+  _renderSafeBank(ctx, y) {
+    // Classic Konami purple/violet cobblestone roadside & median strip
+    ctx.fillStyle = '#3B0764';
     ctx.fillRect(0, y, GRID_W, CELL_H);
-    ctx.strokeStyle = '#A855F7';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(0, y + 1, GRID_W, CELL_H - 2);
 
-    // Repeating geometric sidewalk chevrons
-    ctx.fillStyle = 'rgba(184, 41, 255, 0.25)';
-    for (let c = 0; c < COLS; c++) {
-      ctx.fillRect(c * CELL_W + 6, y + 5, CELL_W - 12, CELL_H - 10);
+    // Top & bottom curb trim
+    ctx.fillStyle = '#C084FC';
+    ctx.fillRect(0, y, GRID_W, 2);
+    ctx.fillStyle = '#581C87';
+    ctx.fillRect(0, y + CELL_H - 2, GRID_W, 2);
+
+    // Two staggered courses of violet/magenta cobblestone blocks
+    const blockW = 27;
+    const halfH = Math.floor((CELL_H - 8) / 2);
+    for (let rowIdx = 0; rowIdx < 2; rowIdx++) {
+      const by = y + 3 + rowIdx * (halfH + 2);
+      const stagger = rowIdx === 1 ? 13 : 0;
+      for (let bx = -stagger; bx < GRID_W; bx += blockW) {
+        const drawX = Math.max(1, bx + 1);
+        const drawW = Math.min(GRID_W - 1, bx + blockW - 2) - drawX;
+        if (drawW <= 2) continue;
+
+        ctx.fillStyle = (Math.floor((bx + stagger) / blockW) + rowIdx) % 2 === 0 ? '#9333EA' : '#7E22CE';
+        ctx.fillRect(drawX, by, drawW, halfH);
+
+        // Cobblestone top highlight bevel
+        ctx.fillStyle = '#D8B4FE';
+        ctx.fillRect(drawX + 1, by + 1, Math.max(1, drawW - 2), 2);
+      }
     }
-
-    ctx.save();
-    ctx.font = `700 10px ${FONTS.HUD}`;
-    ctx.fillStyle = 'rgba(248, 250, 252, 0.35)';
-    ctx.textAlign = 'center';
-    ctx.fillText(label, GRID_W / 2, y + 22);
-    ctx.restore();
   }
 
   _renderRiverPlatforms(ctx) {
@@ -17712,45 +18700,96 @@ class Frogger {
       for (const v of lane.items) {
         ctx.save();
         ctx.shadowColor = lane.color;
-        ctx.shadowBlur = 8;
-
-        // Tires
-        ctx.fillStyle = '#090D16';
-        ctx.fillRect(v.x + 5, vy - 2, 10, 4);
-        ctx.fillRect(v.x + v.w - 15, vy - 2, 10, 4);
-        ctx.fillRect(v.x + 5, vy + vh - 2, 10, 4);
-        ctx.fillRect(v.x + v.w - 15, vy + vh - 2, 10, 4);
+        ctx.shadowBlur = 6;
 
         if (lane.vehicleType === 'SEMI_TRUCK') {
-          // Articulated Cab + Long Cargo Trailer
-          ctx.fillStyle = '#E2E8F0';
-          ctx.fillRect(v.x + 28, vy, v.w - 28, vh);
-          ctx.strokeStyle = lane.accent;
-          ctx.lineWidth = 2;
-          ctx.strokeRect(v.x + 28, vy, v.w - 28, vh);
+          // White Tractor-Trailer Rig (heading Left: Red Cab on left + hitch + White Cargo Trailer on right)
+          ctx.fillStyle = '#090D16';
+          ctx.fillRect(v.x + 4, vy - 2, 9, 4);
+          ctx.fillRect(v.x + 4, vy + vh - 2, 9, 4);
+          ctx.fillRect(v.x + 34, vy - 2, 10, 4);
+          ctx.fillRect(v.x + 34, vy + vh - 2, 10, 4);
+          ctx.fillRect(v.x + v.w - 16, vy - 2, 11, 4);
+          ctx.fillRect(v.x + v.w - 16, vy + vh - 2, 11, 4);
+
+          // Hitch bar
+          ctx.fillStyle = '#64748B';
+          ctx.fillRect(v.x + 21, cy - 3, 8, 6);
 
           // Red Tractor Cab on left
-          ctx.fillStyle = lane.accent;
-          ctx.fillRect(v.x, vy + 2, 24, vh - 4);
+          ctx.fillStyle = '#EF4444';
+          ctx.fillRect(v.x, vy + 2, 23, vh - 4);
+          ctx.fillStyle = '#38BDF8';
+          ctx.fillRect(v.x + 3, vy + 4, 6, vh - 8);
+
+          // White Cargo Trailer with red side stripe
+          ctx.fillStyle = '#F8FAFC';
+          ctx.fillRect(v.x + 27, vy, v.w - 27, vh);
+          ctx.fillStyle = '#EF4444';
+          ctx.fillRect(v.x + 30, cy - 3, v.w - 34, 6);
+          ctx.strokeStyle = '#94A3B8';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(v.x + 27, vy, v.w - 27, vh);
         } else if (lane.vehicleType === 'BULLDOZER') {
-          // Heavy Bulldozer with front steel blade
-          ctx.fillStyle = lane.color;
+          // Bulldozer with continuous dark crawler treads and front steel blade
+          ctx.fillStyle = '#1E293B';
+          ctx.fillRect(v.x + 4, vy - 2, v.w - 14, 5);
+          ctx.fillRect(v.x + 4, vy + vh - 3, v.w - 14, 5);
+          ctx.fillStyle = '#94A3B8';
+          for (let tx = v.x + 6; tx < v.x + v.w - 12; tx += 6) {
+            ctx.fillRect(tx, vy - 2, 2, 4);
+            ctx.fillRect(tx, vy + vh - 2, 2, 4);
+          }
+
+          // Yellow/Orange body & engine cab
+          ctx.fillStyle = '#F97316';
           ctx.fillRect(v.x + 4, vy + 2, v.w - 12, vh - 4);
-          // Front blade on right
-          ctx.fillStyle = '#CBD5E1';
-          ctx.fillRect(v.x + v.w - 6, vy - 1, 6, vh + 2);
-        } else {
-          // Race Car / Neon Coupe / Turbo Cruiser
-          ctx.fillStyle = lane.color;
-          ctx.fillRect(v.x, vy + 1, v.w, vh - 2);
+          ctx.fillStyle = '#FACC15';
+          ctx.fillRect(v.x + 8, vy + 5, 18, vh - 10);
 
-          // Windshield & Roof Cockpit
+          // Heavy steel front blade on right
+          ctx.fillStyle = '#E2E8F0';
+          ctx.fillRect(v.x + v.w - 7, vy - 2, 7, vh + 4);
+          ctx.fillStyle = '#64748B';
+          ctx.fillRect(v.x + v.w - 9, cy - 6, 3, 12);
+        } else if (lane.vehicleType === 'RACE_CAR') {
+          // Yellow Open-Wheel Formula Racer (heading Left)
+          ctx.fillStyle = '#090D16';
+          ctx.fillRect(v.x + 5, vy - 3, 11, 5);
+          ctx.fillRect(v.x + v.w - 15, vy - 3, 11, 5);
+          ctx.fillRect(v.x + 5, vy + vh - 2, 11, 5);
+          ctx.fillRect(v.x + v.w - 15, vy + vh - 2, 11, 5);
+
+          // Nose cone & rear wing
+          ctx.fillStyle = '#EF4444';
+          ctx.fillRect(v.x, vy + 4, 8, vh - 8);
+          ctx.fillRect(v.x + v.w - 7, vy + 1, 7, vh - 2);
+
+          // Yellow fuselage
+          ctx.fillStyle = '#FACC15';
+          ctx.fillRect(v.x + 6, vy + 3, v.w - 12, vh - 6);
+
+          // Cockpit & driver helmet
           ctx.fillStyle = '#0F172A';
-          ctx.fillRect(v.x + v.w * 0.25, vy + 4, v.w * 0.5, vh - 8);
+          ctx.fillRect(v.x + 16, vy + 6, 14, vh - 12);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(v.x + 19, cy - 3, 6, 6);
+        } else {
+          // Pink Coupe / Turbo Cruiser
+          ctx.fillStyle = '#090D16';
+          ctx.fillRect(v.x + 5, vy - 2, 10, 4);
+          ctx.fillRect(v.x + v.w - 15, vy - 2, 10, 4);
+          ctx.fillRect(v.x + 5, vy + vh - 2, 10, 4);
+          ctx.fillRect(v.x + v.w - 15, vy + vh - 2, 10, 4);
 
-          // Racing stripe
+          ctx.fillStyle = lane.color;
+          ctx.fillRect(v.x + 1, vy + 1, v.w - 2, vh - 2);
+
+          // Windshield & Roof
+          ctx.fillStyle = '#0F172A';
+          ctx.fillRect(v.x + v.w * 0.22, vy + 4, v.w * 0.56, vh - 8);
           ctx.fillStyle = lane.accent;
-          ctx.fillRect(v.x + 2, cy - 2, v.w - 4, 4);
+          ctx.fillRect(v.x + v.w * 0.32, vy + 5, v.w * 0.36, vh - 10);
         }
 
         // Headlight beams in travel direction
@@ -17798,55 +18837,57 @@ class Frogger {
     else if (facing === 'RIGHT') angle = Math.PI / 2;
     ctx.rotate(angle);
 
-    // Smooth hop arc scale & leg extension
-    const arcScale = (isSmall ? 0.78 : 1.0) * (1 + Math.sin(hopProgress * Math.PI) * 0.28);
+    // Smooth hop arc scale & full-body leap extension
+    const hopSin = Math.sin(hopProgress * Math.PI);
+    const arcScale = (isSmall ? 0.78 : 1.0) * (1 + hopSin * 0.3);
     ctx.scale(arcScale, arcScale);
-    const legExtend = Math.sin(hopProgress * Math.PI) * 7;
+    const legExtend = hopSin * 8.5;
 
     ctx.shadowColor = PALETTE.GREEN;
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 8;
 
-    // Front legs
-    ctx.strokeStyle = '#10B981';
+    // Front legs with webbed 3-toe pads
+    ctx.strokeStyle = '#16A34A';
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(-7, -4);
-    ctx.lineTo(-12, -9);
-    ctx.lineTo(-12, -13);
-    ctx.moveTo(7, -4);
-    ctx.lineTo(12, -9);
-    ctx.lineTo(12, -13);
+    ctx.moveTo(-6, -4);
+    ctx.lineTo(-12, -8 - hopSin * 3);
+    ctx.lineTo(-11, -13 - hopSin * 4);
+    ctx.moveTo(6, -4);
+    ctx.lineTo(12, -8 - hopSin * 3);
+    ctx.lineTo(11, -13 - hopSin * 4);
 
     // Hind legs (extend dramatically during hop arc!)
-    ctx.moveTo(-7, 5);
-    ctx.lineTo(-13, 8 + legExtend * 0.5);
-    ctx.lineTo(-11, 13 + legExtend);
-    ctx.moveTo(7, 5);
-    ctx.lineTo(13, 8 + legExtend * 0.5);
-    ctx.lineTo(11, 13 + legExtend);
+    ctx.moveTo(-6, 5);
+    ctx.lineTo(-13, 8 + legExtend * 0.45);
+    ctx.lineTo(-10, 12 + legExtend);
+    ctx.moveTo(6, 5);
+    ctx.lineTo(13, 8 + legExtend * 0.45);
+    ctx.lineTo(10, 12 + legExtend);
     ctx.stroke();
 
-    // Frog Torso
-    ctx.fillStyle = PALETTE.GREEN;
+    // Frog Torso (stretches slightly when mid-leap)
+    ctx.fillStyle = '#22C55E';
     ctx.beginPath();
-    ctx.ellipse(0, 0, 8.5, 10.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, 8.5, 10.2 + hopSin * 2.2, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Golden back stripe
-    ctx.fillStyle = PALETTE.GOLD;
-    ctx.fillRect(-2, -6, 4, 12);
+    // Classic Konami yellow dorsal markings
+    ctx.fillStyle = '#FACC15';
+    ctx.fillRect(-3.5, -5, 7, 3);
+    ctx.fillRect(-2, -2, 4, 8);
 
-    // Bulging Arcade Eyes
-    ctx.fillStyle = PALETTE.PINK;
+    // Bulging Red & White Arcade Eyes
+    ctx.fillStyle = '#EF4444';
     ctx.beginPath();
-    ctx.arc(-5.5, -7, 3.2, 0, Math.PI * 2);
-    ctx.arc(5.5, -7, 3.2, 0, Math.PI * 2);
+    ctx.arc(-5.5, -7.2, 3.3, 0, Math.PI * 2);
+    ctx.arc(5.5, -7.2, 3.3, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = '#FFFFFF';
     ctx.beginPath();
-    ctx.arc(-5.5, -7.8, 1.3, 0, Math.PI * 2);
-    ctx.arc(5.5, -7.8, 1.3, 0, Math.PI * 2);
+    ctx.arc(-5.5, -8.0, 1.4, 0, Math.PI * 2);
+    ctx.arc(5.5, -8.0, 1.4, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
@@ -18072,7 +19113,7 @@ class Galaga {
     this.audio = audio;
 
     this.id = 'galaga';
-    this.title = 'Star Squadron';
+    this.title = 'Galaga';
     this.state = 'PLAYING';
 
     this.width = 960;
@@ -19080,6 +20121,9 @@ class Galaga {
       });
     }
 
+    // 8b. Classic Namco Bottom-Left Reserve Fighters & Bottom-Right Stage Badges
+    this._renderBottomArcadeBar(ctx);
+
     // 9. Standardized Arcade HUD & State Overlay
     this.renderer.drawHUD({
       title: 'GALAGA',
@@ -19099,6 +20143,65 @@ class Galaga {
       highScore: this.highScore,
       accent: PALETTE.CYAN
     });
+  }
+
+  _renderBottomArcadeBar(ctx) {
+    ctx.save();
+    // Bottom-left reserve mini Galaga fighters
+    const reserveCount = Math.max(0, Math.min(5, this.lives - 1));
+    for (let i = 0; i < reserveCount; i++) {
+      const rx = 26 + i * 22;
+      const ry = 524;
+      this.renderer.drawPixelSprite(
+        SPRITES.PLAYER,
+        rx - 7,
+        ry - 7,
+        1.2,
+        SPRITE_PALETTES.PLAYER
+      );
+    }
+
+    // Bottom-right Namco Stage Rank Badges (10s, 5s, and 1s badges)
+    let rem = Math.max(1, this.level);
+    const tens = Math.floor(rem / 10);
+    rem %= 10;
+    const fives = Math.floor(rem / 5);
+    const ones = rem % 5;
+
+    let bx = this.width - 20;
+    const by = 515;
+
+    // 1-stage narrow yellow/blue badges
+    for (let i = 0; i < ones; i++) {
+      bx -= 10;
+      ctx.fillStyle = '#2563EB';
+      ctx.fillRect(bx, by, 7, 16);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(bx + 1, by + 2, 5, 6);
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(bx + 2, by, 3, 2);
+    }
+    // 5-stage medium green/gold badges
+    for (let i = 0; i < fives; i++) {
+      bx -= 15;
+      ctx.fillStyle = PALETTE.GREEN;
+      ctx.fillRect(bx, by - 2, 11, 18);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(bx + 2, by + 1, 7, 7);
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(bx + 3, by - 4, 5, 2);
+    }
+    // 10-stage wide crimson/gold badges
+    for (let i = 0; i < Math.min(4, tens); i++) {
+      bx -= 20;
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(bx, by - 3, 15, 19);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(bx + 2, by, 11, 8);
+      ctx.fillStyle = PALETTE.CYAN;
+      ctx.fillRect(bx + 4, by + 2, 7, 4);
+    }
+    ctx.restore();
   }
 
   _renderStarfield(ctx) {
@@ -19359,7 +20462,7 @@ class SpaceInvaders {
     this.audio = audio;
 
     this.id = 'spaceinvaders';
-    this.title = 'Cosmic Armada';
+    this.title = 'Space Invaders';
     this.state = 'PLAYING';
 
     this.width = 960;
@@ -19978,8 +21081,13 @@ class SpaceInvaders {
   render(ctx = this.renderer.ctx) {
     this.renderer.clear(PALETTE.BG);
 
-    // 1. Subtle deep-space starfield & phosphor ground baseline
+    // 1. Subtle Taito 1978 cellophane color-band CRT overlay & deep-space starfield
     ctx.save();
+    ctx.fillStyle = 'rgba(255, 42, 85, 0.045)';
+    ctx.fillRect(0, 38, this.width, 46); // Top Red UFO band
+    ctx.fillStyle = 'rgba(0, 255, 102, 0.04)';
+    ctx.fillRect(0, 376, this.width, this.height - 376); // Bottom Green Bunker & Cannon band
+
     for (const s of this.bgStars) {
       ctx.globalAlpha = 0.25 + 0.35 * Math.sin(s.phase);
       ctx.fillStyle = PALETTE.WHITE;
@@ -19987,8 +21095,32 @@ class SpaceInvaders {
     }
     ctx.restore();
 
-    // Glowing green arcade ground line at y = 514
-    this.renderer.drawGlowRect(30, 514, this.width - 60, 2, PALETTE.GREEN, 8);
+    // Classic Taito green ground baseline at y = 516 under the player cannon
+    this.renderer.drawGlowRect(30, 516, this.width - 60, 2, PALETTE.GREEN, 8);
+
+    // Reserve cannon life icons & CREDIT readout below the y = 516 ground baseline
+    ctx.save();
+    this.renderer.drawText(String(this.lives), 38, 533, {
+      font: FONTS.HEADER,
+      size: 10,
+      color: PALETTE.GREEN
+    });
+    for (let i = 0; i < Math.max(0, Math.min(5, this.lives - 1)); i++) {
+      this.renderer.drawPixelSprite(
+        INVADER_SPRITES.CANNON,
+        62 + i * 26,
+        522,
+        1.3,
+        SPRITE_COLORS
+      );
+    }
+    this.renderer.drawText('CREDIT 01', this.width - 36, 533, {
+      font: FONTS.HEADER,
+      size: 10,
+      color: PALETTE.CYAN,
+      align: 'right'
+    });
+    ctx.restore();
 
     // 2. Render 4 Destructible Defense Bunkers (voxel grids)
     this._renderBunkers(ctx);
@@ -20116,6 +21248,16 @@ class SpaceInvaders {
         sprite = this.animFrame === 0 ? INVADER_SPRITES.OCTOPUS_0 : INVADER_SPRITES.OCTOPUS_1;
       }
 
+      // Authentic Taito cellophane color-band shift: invaders entering the lower defense zone turn green
+      const inGreenBand = inv.y >= 376;
+      const palette = inGreenBand
+        ? { P: PALETTE.GREEN, C: PALETTE.GREEN, G: PALETTE.GREEN }
+        : {
+            P: PALETTE.PINK,
+            C: PALETTE.CYAN,
+            G: PALETTE.WHITE
+          };
+
       const w = sprite[0].length * scale;
       const h = sprite.length * scale;
       this.renderer.drawPixelSprite(
@@ -20123,7 +21265,7 @@ class SpaceInvaders {
         inv.x - w / 2,
         inv.y - h / 2,
         scale,
-        SPRITE_COLORS
+        palette
       );
     }
   }
@@ -20179,7 +21321,7 @@ class Asteroids {
     this.audio = audio;
 
     this.id = 'asteroids';
-    this.title = 'Meteor Vector';
+    this.title = 'Asteroids';
     this.width = 960;
     this.height = 540;
     this.arenaTop = 40;
@@ -20276,11 +21418,18 @@ class Asteroids {
     const speed = (speedBase + this.level * 8) * (0.75 + Math.random() * 0.5);
     const angle = Math.random() * Math.PI * 2;
 
-    const numVerts = sizeTier === 3 ? 11 : sizeTier === 2 ? 9 : 8;
+    const numVerts = sizeTier === 3 ? 12 : sizeTier === 2 ? 10 : 8;
+    // Authentic Atari-style notched asteroid radial templates
+    const templates = [
+      [1.0, 0.78, 1.05, 0.62, 0.96, 1.08, 0.72, 0.98, 0.68, 1.04, 0.85, 1.02],
+      [0.95, 1.08, 0.65, 0.92, 1.06, 0.76, 1.02, 0.60, 0.96, 1.05, 0.80, 0.94],
+      [1.06, 0.72, 0.94, 1.05, 0.58, 0.88, 1.04, 0.82, 1.08, 0.68, 0.95, 0.86]
+    ];
+    const tpl = templates[Math.floor(Math.random() * templates.length)];
     const verts = [];
     for (let i = 0; i < numVerts; i++) {
-      const a = (i / numVerts) * Math.PI * 2;
-      const jag = 0.72 + Math.random() * 0.44;
+      const a = (i / numVerts) * Math.PI * 2 + (Math.random() - 0.5) * 0.12;
+      const jag = tpl[i % tpl.length] * (0.9 + Math.random() * 0.18);
       verts.push({ a, r: radius * jag });
     }
 
@@ -20695,10 +21844,13 @@ class Asteroids {
     ctx.save();
     ctx.translate(rock.pos.x + offsetX, rock.pos.y + offsetY);
     ctx.rotate(rock.rot);
+
+    // Outer CRT phosphor bloom pass
     ctx.strokeStyle = rock.color;
-    ctx.lineWidth = 2;
     ctx.shadowColor = rock.color;
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 14;
+    ctx.lineWidth = 3.5;
+    ctx.globalAlpha = 0.3;
     ctx.beginPath();
     for (let i = 0; i < rock.verts.length; i++) {
       const v = rock.verts[i];
@@ -20709,6 +21861,33 @@ class Asteroids {
     }
     ctx.closePath();
     ctx.stroke();
+
+    // Crisp vector beam pass + internal facet ridge
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 1.9;
+    ctx.shadowBlur = 8;
+    ctx.stroke();
+
+    if (rock.verts.length >= 6) {
+      ctx.globalAlpha = 0.38;
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      const v0 = rock.verts[0];
+      const vMid = rock.verts[Math.floor(rock.verts.length / 2)];
+      ctx.moveTo(Math.cos(v0.a) * v0.r * 0.55, Math.sin(v0.a) * v0.r * 0.55);
+      ctx.lineTo(0, 0);
+      ctx.lineTo(Math.cos(vMid.a) * vMid.r * 0.6, Math.sin(vMid.a) * vMid.r * 0.6);
+      ctx.stroke();
+    }
+
+    // QuadraScan XY vertex phosphor dwell dots
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = PALETTE.WHITE;
+    for (let i = 0; i < rock.verts.length; i++) {
+      const v = rock.verts[i];
+      ctx.fillRect(Math.cos(v.a) * v.r - 1, Math.sin(v.a) * v.r - 1, 2, 2);
+    }
+
     ctx.restore();
   }
 
@@ -20729,38 +21908,51 @@ class Asteroids {
       if (rock.pos.x > this.width - rock.radius) this._drawAsteroidVector(ctx, rock, -this.width, 0);
     }
 
-    // Render UFO Saucer
+    // Render Classic Twin-Dome Flying Saucer (Large & Small UFOs)
     if (this.ufo) {
       const u = this.ufo;
       const r = u.radius;
+      const ufoColor = u.isSmall ? PALETTE.GOLD : PALETTE.PINK;
       ctx.save();
       ctx.translate(u.pos.x, u.pos.y);
-      ctx.strokeStyle = PALETTE.PINK;
+      ctx.strokeStyle = ufoColor;
       ctx.lineWidth = 2;
-      ctx.shadowColor = PALETTE.PINK;
-      ctx.shadowBlur = 12;
+      ctx.shadowColor = ufoColor;
+      ctx.shadowBlur = 14;
 
       ctx.beginPath();
-      // Classic vector saucer silhouette
+      // Main hexagonal saucer hull
       ctx.moveTo(-r, 0);
-      ctx.lineTo(-r * 0.45, -r * 0.42);
-      ctx.lineTo(r * 0.45, -r * 0.42);
+      ctx.lineTo(-r * 0.52, -r * 0.38);
+      ctx.lineTo(r * 0.52, -r * 0.38);
       ctx.lineTo(r, 0);
-      ctx.lineTo(r * 0.55, r * 0.42);
-      ctx.lineTo(-r * 0.55, r * 0.42);
+      ctx.lineTo(r * 0.52, r * 0.38);
+      ctx.lineTo(-r * 0.52, r * 0.38);
       ctx.closePath();
+      // Center equator seam
       ctx.moveTo(-r, 0);
       ctx.lineTo(r, 0);
-      // Upper dome
-      ctx.moveTo(-r * 0.35, -r * 0.42);
-      ctx.lineTo(-r * 0.2, -r * 0.78);
-      ctx.lineTo(r * 0.2, -r * 0.78);
-      ctx.lineTo(r * 0.35, -r * 0.42);
+      // Upper observation dome
+      ctx.moveTo(-r * 0.34, -r * 0.38);
+      ctx.lineTo(-r * 0.18, -r * 0.78);
+      ctx.lineTo(r * 0.18, -r * 0.78);
+      ctx.lineTo(r * 0.34, -r * 0.38);
+      // Lower twin belly dome
+      ctx.moveTo(-r * 0.28, r * 0.38);
+      ctx.lineTo(-r * 0.15, r * 0.62);
+      ctx.lineTo(r * 0.15, r * 0.62);
+      ctx.lineTo(r * 0.28, r * 0.38);
       ctx.stroke();
+
+      // Glowing saucer porthole vertices
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(-r * 0.42 - 1, -2, 2.5, 2.5);
+      ctx.fillRect(-1, -2, 2.5, 2.5);
+      ctx.fillRect(r * 0.42 - 1, -2, 2.5, 2.5);
       ctx.restore();
     }
 
-    // Render Player Vector Ship
+    // Render Classic Atari Vector Wedge Player Ship
     const ship = this.ship;
     if (!ship.dead) {
       const blinkVisible = ship.invuln <= 0 || Math.floor(ship.invuln * 14) % 2 === 0;
@@ -20778,32 +21970,64 @@ class Asteroids {
           ctx.stroke();
         }
 
-        // Rocket Thrust Flame
+        // Flickering Vector Triangle Thruster Flame behind inset rear strut
         if (ship.thrusting && Math.sin(ship.flamePhase) > -0.3) {
+          const flameLen = 18 + Math.random() * 7;
           ctx.strokeStyle = PALETTE.ORANGE;
           ctx.shadowColor = PALETTE.ORANGE;
-          ctx.shadowBlur = 12;
+          ctx.shadowBlur = 14;
           ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.moveTo(-9, -5);
-          ctx.lineTo(-19 - Math.random() * 6, 0);
-          ctx.lineTo(-9, 5);
+          ctx.moveTo(-8, -4.5);
+          ctx.lineTo(-flameLen, 0);
+          ctx.lineTo(-8, 4.5);
+          ctx.stroke();
+
+          ctx.strokeStyle = PALETTE.WHITE;
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(-8, -2.5);
+          ctx.lineTo(-flameLen * 0.72, 0);
+          ctx.lineTo(-8, 2.5);
           ctx.stroke();
         }
 
-        // Vector A-Frame Ship
+        // Outer phosphor glow pass for Atari A-Frame Wedge Ship
+        const drawWedgePath = () => {
+          ctx.beginPath();
+          // Outer wedge sides extending past the rear strut
+          ctx.moveTo(16, 0);
+          ctx.lineTo(-13, -10.5);
+          ctx.lineTo(-8, -5.5);
+          ctx.lineTo(-8, 5.5);
+          ctx.lineTo(-13, 10.5);
+          ctx.closePath();
+          // Inset rear crossbar strut
+          ctx.moveTo(-8, -6);
+          ctx.lineTo(-8, 6);
+        };
+
         ctx.strokeStyle = PALETTE.CYAN;
         ctx.shadowColor = PALETTE.CYAN;
-        ctx.shadowBlur = 12;
-        ctx.lineWidth = 2.2;
-        ctx.beginPath();
-        ctx.moveTo(16, 0);
-        ctx.lineTo(-12, -10);
-        ctx.lineTo(-7, -4);
-        ctx.lineTo(-7, 4);
-        ctx.lineTo(-12, 10);
-        ctx.closePath();
+        ctx.shadowBlur = 16;
+        ctx.lineWidth = 3.6;
+        ctx.globalAlpha = 0.35;
+        drawWedgePath();
         ctx.stroke();
+
+        // Crisp bright vector core pass
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = PALETTE.WHITE;
+        ctx.lineWidth = 1.9;
+        ctx.shadowBlur = 10;
+        drawWedgePath();
+        ctx.stroke();
+
+        // Vertex phosphor dots
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.fillRect(15, -1, 2.5, 2.5);
+        ctx.fillRect(-14, -11.5, 2, 2);
+        ctx.fillRect(-14, 9.5, 2, 2);
         ctx.restore();
       }
     }
@@ -20892,6 +22116,39 @@ const ROWS = 24; // rows 0..23 starting at y = 40 -> y = 40..520
 const ARENA_TOP = 40;
 const PLAYER_ZONE_TOP = 390;
 const PLAYER_ZONE_BOTTOM = 524;
+
+const BLASTER_SPRITE = [
+  '....CC....',
+  '....CC....',
+  '...CWWC...',
+  '..CCPPCC..',
+  '.CCPPPPCC.',
+  'CCCPWWPCCC',
+  'CCCCCCCCCC',
+  'CC.CCCC.CC',
+  'C...CC...C'
+];
+
+const FLEA_SPRITE = [
+  '..WW..WW..',
+  '.WWWWWWWW.',
+  '..CCCCCC..',
+  '.CCYCCYCC.',
+  'CCCCCCCCCC',
+  '.GGGGGGGG.',
+  '..GG..GG..',
+  '.GG....GG.'
+];
+
+const SCORPION_SPRITE = [
+  '......PPP...',
+  '.....PP..P..',
+  '....PP....R.',
+  'RR.PPPPPPPP.',
+  'RRRPPPPPPPPP',
+  '.R..P.P..P.P',
+  '....P.P..P.P'
+];
 class Centipede {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -20899,7 +22156,7 @@ class Centipede {
     this.audio = audio;
 
     this.id = 'centipede';
-    this.title = 'Mycelium Crawler';
+    this.title = 'Centipede';
     this.width = 960;
     this.height = 540;
 
@@ -21488,32 +22745,63 @@ class Centipede {
   _drawMushroom(ctx, r, c, m) {
     const x = c * CELL;
     const y = ARENA_TOP + r * CELL;
-    const capColor = m.poisoned ? PALETTE.PURPLE : PALETTE.PINK;
-    const rimColor = m.poisoned ? PALETTE.CYAN : PALETTE.GOLD;
+    // Poisoned mushrooms glow electric cyan & magenta like the 1980 Atari coin-op
+    const rimColor = m.poisoned ? PALETTE.CYAN : PALETTE.PINK;
+    const capColor = m.poisoned ? PALETTE.PINK : '#9D174D';
+    const spotColor = m.poisoned ? PALETTE.WHITE : PALETTE.GOLD;
+    const stemColor = m.poisoned ? PALETTE.CYAN : '#FDE68A';
 
     ctx.save();
-    ctx.fillStyle = capColor;
-    ctx.shadowColor = capColor;
-    ctx.shadowBlur = 6;
+    ctx.shadowColor = rimColor;
+    ctx.shadowBlur = m.poisoned ? 9 : 4;
 
-    // Mushroom cap dome
-    const capH = m.hp >= 3 ? 11 : m.hp === 2 ? 8 : 5;
-    ctx.beginPath();
-    ctx.arc(x + CELL / 2, y + 10, 8, Math.PI, 0);
-    ctx.fillRect(x + 2, y + 9, CELL - 4, Math.max(2, capH - 6));
-    ctx.fill();
-
-    // Spots on cap
+    // Rounded stepped pixel-art mushroom cap (always has top dome, erodes from bottom up)
+    // Row 1 (top crown, always present for hp >= 1)
     ctx.fillStyle = rimColor;
-    ctx.fillRect(x + 6, y + 5, 3, 3);
-    ctx.fillRect(x + 12, y + 6, 3, 2);
+    ctx.fillRect(x + 6, y + 2, 8, 2);
+    ctx.fillRect(x + 4, y + 4, 12, 2);
+    ctx.fillStyle = capColor;
+    ctx.fillRect(x + 6, y + 4, 8, 2);
 
-    // Stem eroded based on HP (4..1)
+    // Row 2 (upper-mid cap, present for hp >= 2)
     if (m.hp >= 2) {
-      ctx.fillStyle = PALETTE.WHITE;
-      const stemH = m.hp === 4 ? 7 : m.hp === 3 ? 5 : 3;
-      ctx.fillRect(x + 7, y + 11, 6, stemH);
+      ctx.fillStyle = rimColor;
+      ctx.fillRect(x + 2, y + 6, 16, 3);
+      ctx.fillStyle = capColor;
+      ctx.fillRect(x + 4, y + 6, 12, 2);
+      // Pixel spots on cap
+      ctx.fillStyle = spotColor;
+      ctx.fillRect(x + 5, y + 5, 2, 2);
+      ctx.fillRect(x + 12, y + 6, 2, 2);
+    } else {
+      // Jagged bite marks when hp === 1
+      ctx.fillStyle = spotColor;
+      ctx.fillRect(x + 7, y + 3, 2, 2);
     }
+
+    // Row 3 (lower cap brim, present for hp >= 3)
+    if (m.hp >= 3) {
+      ctx.fillStyle = rimColor;
+      ctx.fillRect(x + 2, y + 9, 16, 2);
+      ctx.fillStyle = capColor;
+      ctx.fillRect(x + 4, y + 9, 12, 1);
+      ctx.fillStyle = spotColor;
+      ctx.fillRect(x + 9, y + 8, 2, 2);
+    }
+
+    // Stem (erodes between hp 4 and hp 3)
+    if (m.hp === 4) {
+      ctx.fillStyle = stemColor;
+      ctx.fillRect(x + 7, y + 11, 6, 7);
+      ctx.fillStyle = rimColor;
+      ctx.fillRect(x + 7, y + 11, 1, 7);
+      ctx.fillRect(x + 12, y + 11, 1, 7);
+    } else if (m.hp === 3) {
+      ctx.fillStyle = stemColor;
+      ctx.fillRect(x + 7, y + 11, 6, 4);
+      ctx.fillRect(x + 8, y + 15, 3, 1);
+    }
+
     ctx.restore();
   }
 
@@ -21538,107 +22826,136 @@ class Centipede {
       }
     }
 
-    // Render Centipede Segments
+    // Render Centipede Segments with animated walking legs & head pincers
     for (const seg of this.segments) {
       const color = seg.isHead ? PALETTE.PINK : seg.poisonDive ? PALETTE.PURPLE : PALETTE.GREEN;
       ctx.save();
       ctx.translate(seg.x, seg.y);
 
-      // Animated legs
-      const legSwing = Math.sin(seg.animPhase) * 3;
+      // Articulated walking legs on both sides of the segment
+      const legSwing = Math.sin(seg.animPhase) * 3.5;
       ctx.strokeStyle = PALETTE.GOLD;
-      ctx.lineWidth = 1.6;
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
-      ctx.moveTo(-5, -7);
-      ctx.lineTo(-8 + legSwing, -11);
-      ctx.moveTo(5, 7);
-      ctx.lineTo(8 - legSwing, 11);
+      // Top pair of legs
+      ctx.moveTo(-3, -6);
+      ctx.lineTo(-6 + legSwing, -11);
+      ctx.moveTo(3, -6);
+      ctx.lineTo(6 - legSwing, -11);
+      // Bottom pair of legs
+      ctx.moveTo(-3, 6);
+      ctx.lineTo(-6 - legSwing, 11);
+      ctx.moveTo(3, 6);
+      ctx.lineTo(6 + legSwing, 11);
       ctx.stroke();
 
-      // Segment body sphere
-      this.renderer.drawGlowCircle(0, 0, seg.isHead ? 8.5 : 7.5, color, 8, true);
+      // Segment rounded carapace body + dorsal band
+      this.renderer.drawGlowCircle(0, 0, seg.isHead ? 8.5 : 7.8, color, 8, true);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+      ctx.fillRect(-3, -5, 4, 10);
 
-      // Eyes on Head segments
+      // Distinct pincer mandibles & compound eyes on Head segments
       if (seg.isHead) {
-        const eyeX = seg.dir * 4;
+        const d = seg.dir >= 0 ? 1 : -1;
+        // Protruding mandibles/pincers
+        ctx.strokeStyle = PALETTE.CYAN;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(d * 6, -4);
+        ctx.lineTo(d * 12, -6);
+        ctx.lineTo(d * 10, -2);
+        ctx.moveTo(d * 6, 4);
+        ctx.lineTo(d * 12, 6);
+        ctx.lineTo(d * 10, 2);
+        ctx.stroke();
+
+        // Glowing compound eyes
+        const eyeX = d * 4;
         ctx.fillStyle = PALETTE.GOLD;
-        ctx.fillRect(eyeX - 1.5, -4.5, 3, 3);
-        ctx.fillRect(eyeX - 1.5, 1.5, 3, 3);
+        ctx.fillRect(eyeX - 1.5, -5, 3.5, 3.5);
+        ctx.fillRect(eyeX - 1.5, 1.5, 3.5, 3.5);
+        ctx.fillStyle = PALETTE.RED;
+        ctx.fillRect(eyeX - 0.5, -4, 2, 2);
+        ctx.fillRect(eyeX - 0.5, 2.5, 2, 2);
       }
       ctx.restore();
     }
 
-    // Render Spider
+    // Render Bouncing Spider (8 articulated legs + fangs + striped body)
     if (this.spider) {
       const sp = this.spider;
       ctx.save();
       ctx.translate(sp.x, sp.y);
       ctx.strokeStyle = PALETTE.ORANGE;
+      ctx.shadowColor = PALETTE.ORANGE;
+      ctx.shadowBlur = 6;
       ctx.lineWidth = 2;
       const wave = Math.sin(sp.legPhase) * 4;
-      for (let side of [-1, 1]) {
-        for (let l = -1; l <= 1; l++) {
+      // 4 articulated jointed legs on each side (8 total)
+      const legOffsets = [-4.5, -1.5, 1.5, 4.5];
+      for (const side of [-1, 1]) {
+        legOffsets.forEach((ly, idx) => {
+          const swing = (idx % 2 === 0 ? wave : -wave) * side;
+          const kneeX = side * 10;
+          const kneeY = ly * 1.4 - 4 + swing * 0.5;
+          const footX = side * 16;
+          const footY = ly * 2.2 + 3 + swing;
           ctx.beginPath();
-          ctx.moveTo(side * 4, l * 3);
-          ctx.lineTo(side * 13, l * 6 + wave * side * l);
+          ctx.moveTo(side * 5, ly * 0.8);
+          ctx.lineTo(kneeX, kneeY);
+          ctx.lineTo(footX, footY);
           ctx.stroke();
-        }
+        });
       }
-      this.renderer.drawGlowCircle(0, 0, 7, PALETTE.RED, 10, true);
+      // Spider abdomen & head
+      this.renderer.drawGlowCircle(0, -2, 7.5, PALETTE.RED, 10, true);
       ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(-4, -2, 2.5, 2.5);
-      ctx.fillRect(1.5, -2, 2.5, 2.5);
+      ctx.fillRect(-5, -5, 10, 2);
+      // Glowing eyes
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(-4.5, -1, 3, 3);
+      ctx.fillRect(1.5, -1, 3, 3);
+      // Twin front fangs
+      ctx.fillStyle = PALETTE.CYAN;
+      ctx.fillRect(-3.5, 5, 2, 4);
+      ctx.fillRect(1.5, 5, 2, 4);
       ctx.restore();
     }
 
-    // Render Flea
+    // Render Flea (pixel insect body + fluttering wings)
     if (this.flea) {
       const fl = this.flea;
-      this.renderer.drawGlowCircle(fl.x, fl.y, 7.5, PALETTE.CYAN, 10, true);
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(fl.x - 5, fl.y + 3, 10, 3);
+      const palette = {
+        W: PALETTE.WHITE,
+        C: PALETTE.CYAN,
+        Y: PALETTE.GOLD,
+        G: PALETTE.GREEN
+      };
+      this.renderer.drawPixelSprite(FLEA_SPRITE, fl.x - 10, fl.y - 8, 2, palette, false, false);
     }
 
-    // Render Scorpion
+    // Render Scorpion (segmented pixel body + pincers + curved stinger tail)
     if (this.scorpion) {
       const sc = this.scorpion;
-      ctx.save();
-      ctx.translate(sc.x, sc.y);
-      this.renderer.drawGlowRect(-11, -5, 22, 10, PALETTE.PURPLE, 10, true);
-      // Curved stinger tail
-      const dir = sc.vx >= 0 ? 1 : -1;
-      ctx.strokeStyle = PALETTE.PINK;
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(-dir * 10, 0);
-      ctx.lineTo(-dir * 15, -9);
-      ctx.lineTo(-dir * 7, -12);
-      ctx.stroke();
-      ctx.restore();
+      const palette = {
+        P: PALETTE.PURPLE,
+        R: PALETTE.PINK
+      };
+      const flipX = sc.vx > 0; // Sprite faces left by default, flip when moving right
+      this.renderer.drawPixelSprite(SCORPION_SPRITE, sc.x - 15, sc.y - 9, 2.5, palette, flipX, false);
     }
 
-    // Render Player Bug Blaster
+    // Render Player Bug Blaster Defender
     const p = this.player;
     if (!p.dead) {
       const visible = p.invuln <= 0 || Math.floor(p.invuln * 14) % 2 === 0;
       if (visible) {
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.fillStyle = PALETTE.CYAN;
-        ctx.shadowColor = PALETTE.CYAN;
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.moveTo(0, -12);
-        ctx.lineTo(10, 8);
-        ctx.lineTo(4, 11);
-        ctx.lineTo(-4, 11);
-        ctx.lineTo(-10, 8);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = PALETTE.PINK;
-        ctx.fillRect(-3, -3, 6, 7);
-        ctx.restore();
+        const palette = {
+          C: PALETTE.CYAN,
+          W: PALETTE.WHITE,
+          P: PALETTE.PINK
+        };
+        this.renderer.drawPixelSprite(BLASTER_SPRITE, p.x - 12.5, p.y - 11, 2.5, palette, false, false);
       }
     }
 
@@ -21706,6 +23023,46 @@ const SCANNER_X = 210;
 const SCANNER_Y = 42;
 const SCANNER_W = 540;
 const SCANNER_H = 48;
+
+const DEFENDER_SHIP_SPRITE = [
+  '..CC............',
+  '.CCCC...........',
+  'CCCCCCPPP.......',
+  '.CCCCCCCCCCCC...',
+  '..CCWWWWCCCCGGGG',
+  '...CCCCCCCCCCC..',
+  '....CC...CC.....'
+];
+
+const LANDER_SPRITE = [
+  '...YYYY...',
+  '.GGGGGGGG.',
+  'GGYGGGGYGG',
+  'GGGGGGGGGG',
+  '.G..GG..G.',
+  'G...GG...G',
+  'G........G'
+];
+
+const MUTANT_SPRITE = [
+  '..PPPPPP..',
+  '.PPRRRRPP.',
+  'PPRKPPKRPP',
+  'PPPPPPPPPP',
+  '.PG.PP.GP.',
+  'G..G..G..G'
+];
+
+const BOMBER_SPRITE = [
+  'BBBBBBBB',
+  'BCCCCCCB',
+  'BCPPPPCB',
+  'BCPYYPCB',
+  'BCPYYPCB',
+  'BCPPPPCB',
+  'BCCCCCCB',
+  'BBBBBBBB'
+];
 class Defender {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -21713,7 +23070,7 @@ class Defender {
     this.audio = audio;
 
     this.id = 'defender';
-    this.title = 'Horizon Vanguard';
+    this.title = 'Defender';
     this.width = 960;
     this.height = 540;
     this.worldWidth = WORLD_WIDTH;
@@ -22466,86 +23823,107 @@ class Defender {
       ctx.restore();
     }
 
-    // Enemies (Landers, Mutants, Bombers)
+    // Enemies (Landers, Mutants, Bombers) rendered with 1981 Williams pixel-art sprites
     for (const e of this.enemies) {
       const sx = this._worldToScreenX(e.wx);
       if (sx < -35 || sx > this.width + 35) continue;
 
-      ctx.save();
-      ctx.translate(sx, e.y);
-
       if (e.type === 'LANDER') {
-        const color = e.state === 'ABDUCTING' ? PALETTE.GOLD : PALETTE.GREEN;
         // Tractor beam when descending/abducting
         if (e.state === 'ABDUCTING' && e.targetHuman) {
-          ctx.strokeStyle = 'rgba(0, 240, 255, 0.55)';
+          ctx.save();
+          ctx.translate(sx, e.y);
+          ctx.strokeStyle = 'rgba(0, 240, 255, 0.65)';
           ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.moveTo(-6, 8);
-          ctx.lineTo(0, 18);
-          ctx.lineTo(6, 8);
+          ctx.moveTo(-7, 8);
+          ctx.lineTo(0, 19);
+          ctx.lineTo(7, 8);
           ctx.stroke();
+          ctx.restore();
         }
-        this.renderer.drawGlowRect(-11, -7, 22, 9, color, 8, true);
-        ctx.fillStyle = PALETTE.GOLD;
-        ctx.fillRect(-6, -11, 12, 4);
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(-8, 2);
-        ctx.lineTo(-12, 9);
-        ctx.moveTo(0, 2);
-        ctx.lineTo(0, 9);
-        ctx.moveTo(8, 2);
-        ctx.lineTo(12, 9);
-        ctx.stroke();
+        const palette = {
+          G: e.state === 'ABDUCTING' ? PALETTE.GOLD : PALETTE.GREEN,
+          Y: PALETTE.GOLD
+        };
+        this.renderer.drawPixelSprite(LANDER_SPRITE, sx - 12, e.y - 9, 2.4, palette, false, false);
       } else if (e.type === 'MUTANT') {
-        this.renderer.drawGlowRect(-11, -8, 22, 16, PALETTE.PURPLE, 12, false, 2.5);
-        ctx.fillStyle = PALETTE.PINK;
-        ctx.fillRect(-6, -4, 4, 4);
-        ctx.fillRect(2, -4, 4, 4);
+        const palette = {
+          P: PALETTE.PURPLE,
+          R: PALETTE.PINK,
+          K: PALETTE.GOLD,
+          G: PALETTE.GREEN
+        };
+        this.renderer.drawPixelSprite(MUTANT_SPRITE, sx - 12, e.y - 8, 2.4, palette, false, false);
       } else if (e.type === 'BOMBER') {
-        this.renderer.drawGlowRect(-10, -10, 20, 20, PALETTE.BLUE, 10, false, 2.5);
-        this.renderer.drawGlowRect(-5, -5, 10, 10, PALETTE.PINK, 6, true);
+        const pulse = Math.floor(e.phase * 3) % 2 === 0;
+        const palette = {
+          B: PALETTE.BLUE,
+          C: pulse ? PALETTE.CYAN : PALETTE.PURPLE,
+          P: PALETTE.PINK,
+          Y: PALETTE.GOLD
+        };
+        this.renderer.drawPixelSprite(BOMBER_SPRITE, sx - 10, e.y - 10, 2.5, palette, false, false);
       }
-      ctx.restore();
     }
 
-    // Player Defender Ship
+    // Player Defender Ship (1981 Williams pixel-art sprite + thrust exhaust plume)
     const s = this.ship;
     if (!s.dead) {
       const visible = s.invuln <= 0 || Math.floor(s.invuln * 14) % 2 === 0;
       if (visible) {
         const sx = this._worldToScreenX(s.wx);
-        ctx.save();
-        ctx.translate(sx, s.y);
-        ctx.scale(s.dir, 1);
+        const palette = {
+          C: PALETTE.CYAN,
+          W: PALETTE.WHITE,
+          P: PALETTE.PINK,
+          G: PALETTE.GOLD
+        };
+        const scale = 2.4;
+        const flipX = s.dir < 0;
+        this.renderer.drawPixelSprite(
+          DEFENDER_SHIP_SPRITE,
+          sx - (16 * scale) / 2,
+          s.y - (7 * scale) / 2,
+          scale,
+          palette,
+          flipX,
+          false
+        );
 
-        ctx.fillStyle = PALETTE.CYAN;
-        ctx.shadowColor = PALETTE.CYAN;
-        ctx.shadowBlur = 12;
-        ctx.beginPath();
-        ctx.moveTo(20, 2);
-        ctx.lineTo(-14, -9);
-        ctx.lineTo(-9, 0);
-        ctx.lineTo(-16, 6);
-        ctx.closePath();
-        ctx.fill();
-
-        // Cockpit canopy
-        ctx.fillStyle = PALETTE.WHITE;
-        ctx.fillRect(-2, -4, 9, 4);
-        ctx.restore();
+        // Flickering reverse/forward thrust exhaust plume behind ship
+        if (Math.abs(s.vx) > 35 || this.input.isDown('left') || this.input.isDown('right')) {
+          const tailX = sx - s.dir * 21;
+          const flameW = 8 + Math.random() * 10;
+          ctx.save();
+          ctx.fillStyle = Math.random() < 0.5 ? PALETTE.ORANGE : PALETTE.GOLD;
+          ctx.shadowColor = PALETTE.ORANGE;
+          ctx.shadowBlur = 10;
+          ctx.fillRect(s.dir > 0 ? tailX - flameW : tailX, s.y - 2.5, flameW, 5);
+          ctx.fillStyle = PALETTE.WHITE;
+          ctx.fillRect(s.dir > 0 ? tailX - flameW * 0.5 : tailX, s.y - 1, flameW * 0.5, 2);
+          ctx.restore();
+        }
       }
     }
 
-    // Horizontal Multicolor Laser Bolts
+    // Classic Williams Multi-Color Striped Horizontal Laser Beams
+    const stripeColors = [PALETTE.WHITE, PALETTE.CYAN, PALETTE.PINK, PALETTE.GOLD, PALETTE.PURPLE];
     for (const l of this.lasers) {
       const sx = this._worldToScreenX(l.wx);
-      if (sx < -60 || sx > this.width + 60) continue;
-      this.renderer.drawGlowRect(sx - 24, l.y - 1.5, 48, 3, PALETTE.CYAN, 10, true);
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(sx - 12, l.y - 1, 24, 2);
+      if (sx < -80 || sx > this.width + 80) continue;
+      ctx.save();
+      const baseX = sx - 32;
+      const segW = 11;
+      for (let seg = 0; seg < 6; seg++) {
+        if (seg === 2 && Math.random() < 0.25) continue; // Classic Williams laser gap flicker
+        const col = stripeColors[(seg + Math.floor(l.life * 30)) % stripeColors.length];
+        ctx.fillStyle = col;
+        ctx.shadowColor = col;
+        ctx.shadowBlur = 8;
+        ctx.fillRect(baseX + seg * (segW + 2), l.y - 1.5, segW, 3);
+      }
+      ctx.restore();
     }
 
     // Enemy Shots & Mines
@@ -22651,7 +24029,7 @@ class Arkanoid {
     this.audio = audio;
 
     this.id = 'arkanoid';
-    this.title = 'Prism Breaker';
+    this.title = 'Arkanoid';
     this.width = 960;
     this.height = 540;
 
@@ -23248,16 +24626,88 @@ class Arkanoid {
   render(ctx = this.renderer.ctx) {
     this.renderer.clear(PALETTE.BG);
 
-    // Hex-grid cyber background inside playfield walls
-    ctx.fillStyle = '#0D1426';
-    ctx.fillRect(WALL_LEFT, WALL_TOP, WALL_RIGHT - WALL_LEFT, this.height - WALL_TOP);
+    // Classic Taito geometric/hexagonal patterned arcade backgrounds cycling by level
+    const bgThemes = [
+      { base: '#08183A', line: '#1D4ED8', node: '#2563EB', mode: 'hex' },     // Blue Hexagonal Lattice
+      { base: '#05291E', line: '#047857', node: '#10B981', mode: 'diamond' }, // Emerald Geometric Lattice
+      { base: '#340A18', line: '#9F1239', node: '#E11D48', mode: 'circuit' }, // Crimson Tech Grid
+      { base: '#1B103B', line: '#5B21B6', node: '#8B5CF6', mode: 'octagon' }  // Indigo Warp Matrix
+    ];
+    const bg = bgThemes[(this.level - 1) % bgThemes.length];
+    const pfW = WALL_RIGHT - WALL_LEFT;
+    const pfH = this.height - WALL_TOP;
 
-    // Glowing Fortress Border Walls
     ctx.save();
+    ctx.beginPath();
+    ctx.rect(WALL_LEFT, WALL_TOP, pfW, pfH);
+    ctx.clip();
+
+    ctx.fillStyle = bg.base;
+    ctx.fillRect(WALL_LEFT, WALL_TOP, pfW, pfH);
+
+    ctx.strokeStyle = bg.line;
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.42;
+    const cell = 48;
+    for (let y = WALL_TOP; y < this.height + cell; y += cell) {
+      const rowIdx = Math.floor((y - WALL_TOP) / cell);
+      const xOffset = (rowIdx % 2) * (cell / 2);
+      for (let x = WALL_LEFT - cell; x < WALL_RIGHT + cell; x += cell) {
+        const cx = x + xOffset;
+        const cy = y;
+        ctx.beginPath();
+        if (bg.mode === 'hex' || bg.mode === 'octagon') {
+          const r = cell * 0.44;
+          for (let k = 0; k < 6; k++) {
+            const ang = (k * Math.PI) / 3 + Math.PI / 6;
+            const vx = cx + Math.cos(ang) * r;
+            const vy = cy + Math.sin(ang) * r;
+            if (k === 0) ctx.moveTo(vx, vy);
+            else ctx.lineTo(vx, vy);
+          }
+          ctx.closePath();
+        } else if (bg.mode === 'diamond') {
+          ctx.moveTo(cx, cy - 20);
+          ctx.lineTo(cx + 20, cy);
+          ctx.lineTo(cx, cy + 20);
+          ctx.lineTo(cx - 20, cy);
+          ctx.closePath();
+        } else {
+          ctx.strokeRect(cx - 16, cy - 16, 32, 32);
+          ctx.moveTo(cx - 16, cy);
+          ctx.lineTo(cx - 24, cy);
+          ctx.moveTo(cx + 16, cy);
+          ctx.lineTo(cx + 24, cy);
+        }
+        ctx.stroke();
+
+        ctx.fillStyle = bg.node;
+        ctx.fillRect(cx - 2, cy - 2, 4, 4);
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    // Inner wall drop-shadow inside playfield
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+    ctx.fillRect(WALL_LEFT, WALL_TOP, 10, pfH);
+    ctx.fillRect(WALL_LEFT, WALL_TOP, pfW, 10);
+    ctx.restore();
+
+    // Ribbed Metallic Taito Border Frame
+    ctx.save();
+    ctx.strokeStyle = '#94A3B8';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.moveTo(WALL_LEFT - 4, this.height);
+    ctx.lineTo(WALL_LEFT - 4, WALL_TOP - 4);
+    ctx.lineTo(WALL_RIGHT + 4, WALL_TOP - 4);
+    ctx.lineTo(WALL_RIGHT + 4, this.height);
+    ctx.stroke();
+
     ctx.strokeStyle = PALETTE.CYAN;
     ctx.shadowColor = PALETTE.CYAN;
-    ctx.shadowBlur = 12;
-    ctx.lineWidth = 4;
+    ctx.shadowBlur = 10;
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(WALL_LEFT, this.height);
     ctx.lineTo(WALL_LEFT, WALL_TOP);
@@ -23288,19 +24738,36 @@ class Arkanoid {
       });
     });
 
-    // Render Bricks
+    // Render Beveled 3D Arcade Bricks with Dark Drop-Shadows
     for (const br of this.bricks) {
       const color = br.flashTimer > 0 ? PALETTE.WHITE : br.color;
-      this.renderer.drawGlowRect(br.x, br.y, br.w, br.h, color, br.type === 'GOLD' ? 10 : 6, true);
 
-      // Bevel highlight & armor pips on Silver/Gold bricks
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.32)';
-      ctx.fillRect(br.x + 2, br.y + 2, br.w - 4, 3);
+      // Dark 3D arcade drop-shadow offset down-right
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.68)';
+      ctx.fillRect(br.x + 5, br.y + 5, br.w, br.h);
+
+      // Main brick fill
+      this.renderer.drawGlowRect(br.x, br.y, br.w, br.h, color, br.type === 'GOLD' ? 10 : 4, true);
+
+      // Top & Left bright 3D bevel highlight
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.fillRect(br.x, br.y, br.w, 3);
+      ctx.fillRect(br.x, br.y, 3, br.h);
+
+      // Bottom & Right dark 3D bevel edge
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
+      ctx.fillRect(br.x, br.y + br.h - 3, br.w, 3);
+      ctx.fillRect(br.x + br.w - 3, br.y, 3, br.h);
+
+      // Crisp black outline
+      ctx.strokeStyle = '#090D16';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(br.x, br.y, br.w, br.h);
 
       if (br.maxHp > 1) {
         ctx.strokeStyle = PALETTE.BG;
         ctx.lineWidth = 1.5;
-        ctx.strokeRect(br.x + 3, br.y + 3, br.w - 6, br.h - 6);
+        ctx.strokeRect(br.x + 4, br.y + 4, br.w - 8, br.h - 8);
         for (let h = 0; h < br.hp; h++) {
           ctx.fillStyle = PALETTE.BG;
           ctx.fillRect(br.x + 8 + h * 8, br.y + br.h / 2 - 2, 4, 4);
@@ -23312,8 +24779,10 @@ class Arkanoid {
     for (const cap of this.capsules) {
       ctx.save();
       ctx.translate(cap.x, cap.y);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.fillRect(-12, -5, 30, 16);
       this.renderer.drawGlowRect(-15, -8, 30, 16, cap.color, 10, true);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
       ctx.fillRect(-12, -5 + Math.sin(cap.phase) * 2, 24, 3);
       this.renderer.drawText(cap.code, 0, 4, {
         font: FONTS.HEADER,
@@ -23324,22 +24793,70 @@ class Arkanoid {
       ctx.restore();
     }
 
-    // Render Vaus Space Vessel Paddle
+    // Render Vaus Space Vessel Paddle (Metallic silver hull, pulsing red side domes & dual laser cannons)
     const p = this.paddle;
     const halfW = p.width / 2;
+    const pulse = 0.65 + 0.35 * Math.sin(performance.now() * 0.01);
     ctx.save();
     ctx.translate(p.x, p.y);
-    // Metallic core
-    this.renderer.drawGlowRect(-halfW + 10, -p.height / 2, p.width - 20, p.height, PALETTE.CYAN, 10, true);
-    // Glowing red/orange side pods
-    const podColor = p.laserEnabled ? PALETTE.RED : PALETTE.PINK;
-    this.renderer.drawGlowRect(-halfW, -p.height / 2 + 1, 12, p.height - 2, podColor, 8, true);
-    this.renderer.drawGlowRect(halfW - 12, -p.height / 2 + 1, 12, p.height - 2, podColor, 8, true);
 
+    // Paddle drop-shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+    ctx.fillRect(-halfW + 4, -p.height / 2 + 5, p.width, p.height);
+
+    // Metallic Silver Hull Core
+    const hullW = p.width - 24;
+    ctx.fillStyle = '#94A3B8';
+    ctx.fillRect(-hullW / 2, -p.height / 2, hullW, p.height);
+    // Bright silver top bevel
+    ctx.fillStyle = '#F8FAFC';
+    ctx.fillRect(-hullW / 2, -p.height / 2, hullW, 4);
+    // Dark steel bottom bevel
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(-hullW / 2, p.height / 2 - 3, hullW, 3);
+
+    // Central Vaus bridge & glowing energy core
+    ctx.fillStyle = '#0F172A';
+    ctx.fillRect(-14, -p.height / 2 + 2, 28, p.height - 4);
+    this.renderer.drawGlowRect(-9, -3, 18, 6, p.laserEnabled ? PALETTE.GOLD : PALETTE.CYAN, 8, true);
+
+    // Metallic seam ribs
+    ctx.fillStyle = '#1E293B';
+    ctx.fillRect(-hullW / 2 + 8, -p.height / 2, 2, p.height);
+    ctx.fillRect(hullW / 2 - 10, -p.height / 2, 2, p.height);
+
+    // Pulsing Red Side Domes
+    const domeColor = PALETTE.RED;
+    ctx.shadowColor = domeColor;
+    ctx.shadowBlur = 8 + pulse * 6;
+    ctx.fillStyle = domeColor;
+    ctx.beginPath();
+    ctx.arc(-halfW + 10, 0, p.height / 2, Math.PI / 2, -Math.PI / 2);
+    ctx.lineTo(-halfW + 14, -p.height / 2);
+    ctx.lineTo(-halfW + 14, p.height / 2);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(halfW - 10, 0, p.height / 2, -Math.PI / 2, Math.PI / 2);
+    ctx.lineTo(halfW - 14, p.height / 2);
+    ctx.lineTo(halfW - 14, -p.height / 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Specular highlights on red side domes
+    ctx.fillStyle = `rgba(255, 255, 255, ${0.45 + pulse * 0.4})`;
+    ctx.fillRect(-halfW + 6, -4, 5, 3);
+    ctx.fillRect(halfW - 11, -4, 5, 3);
+
+    // Dual Laser Cannons when laserEnabled is active
     if (p.laserEnabled) {
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(-halfW + 8, -p.height / 2 - 5, 4, 5);
-      ctx.fillRect(halfW - 12, -p.height / 2 - 5, 4, 5);
+      ctx.fillStyle = '#CBD5E1';
+      ctx.fillRect(-halfW + 14, -p.height / 2 - 6, 6, 6);
+      ctx.fillRect(halfW - 20, -p.height / 2 - 6, 6, 6);
+      this.renderer.drawGlowRect(-halfW + 15, -p.height / 2 - 9, 4, 4, PALETTE.GOLD, 8, true);
+      this.renderer.drawGlowRect(halfW - 19, -p.height / 2 - 9, 4, 4, PALETTE.GOLD, 8, true);
     }
     ctx.restore();
 
@@ -23417,7 +24934,7 @@ class Paperboy {
     this.audio = audio;
 
     this.id = 'paperboy';
-    this.title = 'Courier Dash';
+    this.title = 'Paperboy';
     this.width = 960;
     this.height = 540;
 
@@ -24066,37 +25583,163 @@ class Paperboy {
       ctx.strokeRect(bx - 11, b.y - 8, 22, 16);
     }
 
-    // Render Street Obstacles
+    // Render Street Obstacles (Cars, Chasing Dogs, Breakdancers, Lawnmowers)
     for (const ob of this.obstacles) {
       const ox = this._projectX(ob.laneX, ob.y);
       ctx.save();
       ctx.translate(ox, ob.y);
       if (ob.type === 'CAR') {
-        this.renderer.drawGlowRect(-20, -34, 40, 68, ob.color, 10, true);
+        // Drop shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx.fillRect(-20, -32, 44, 70);
+
+        // 4 Protruding Rubber Wheels
+        ctx.fillStyle = '#090D16';
+        ctx.fillRect(-24, -26, 5, 14);
+        ctx.fillRect(19, -26, 5, 14);
+        ctx.fillRect(-24, 12, 5, 14);
+        ctx.fillRect(19, 12, 5, 14);
+
+        // Main Car Chassis
+        this.renderer.drawGlowRect(-20, -34, 40, 68, ob.color, 8, true);
+
+        // Chrome Bumpers
+        ctx.fillStyle = '#E2E8F0';
+        ctx.fillRect(-19, -36, 38, 3);
+        ctx.fillRect(-19, 33, 38, 3);
+
+        // Roof & Tinted Windshields
         ctx.fillStyle = '#0F172A';
-        ctx.fillRect(-15, -18, 30, 32);
-        // Headlights
+        ctx.fillRect(-16, -20, 32, 36);
+        // Front & Rear Windshield Glass
+        ctx.fillStyle = '#38BDF8';
+        ctx.fillRect(-14, 6, 28, 9);
+        ctx.fillRect(-14, -18, 28, 7);
+        // Roof panel
+        ctx.fillStyle = ob.color;
+        ctx.fillRect(-14, -9, 28, 13);
+        // Windshield glare line
+        ctx.strokeStyle = PALETTE.WHITE;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-10, 8);
+        ctx.lineTo(-3, 13);
+        ctx.stroke();
+
+        // Headlights & Taillights
         ctx.fillStyle = PALETTE.GOLD;
-        ctx.fillRect(-16, 28, 8, 5);
-        ctx.fillRect(8, 28, 8, 5);
+        ctx.shadowColor = PALETTE.GOLD;
+        ctx.shadowBlur = 8;
+        ctx.fillRect(-16, 29, 9, 5);
+        ctx.fillRect(7, 29, 9, 5);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = PALETTE.RED;
+        ctx.fillRect(-16, -33, 8, 4);
+        ctx.fillRect(8, -33, 8, 4);
       } else if (ob.type === 'DOG') {
-        this.renderer.drawGlowRect(-12, -8, 24, 16, PALETTE.ORANGE, 8, true);
-        ctx.fillStyle = PALETTE.WHITE;
-        ctx.fillRect(8, -11, 7, 7);
-      } else if (ob.type === 'DANCER') {
-        // Cardboard mat + spinning breakdancer
-        ctx.fillStyle = '#92400E';
-        ctx.fillRect(-18, -14, 36, 28);
-        ctx.rotate(ob.phase);
-        this.renderer.drawGlowCircle(0, 0, 10, PALETTE.PURPLE, 8, true);
-        ctx.strokeStyle = PALETTE.CYAN;
+        const runSwing = Math.sin(ob.phase * 1.8) * 4;
+        const wag = Math.sin(ob.phase * 2.6) * 5;
+        // Shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.beginPath();
+        ctx.ellipse(0, 9, 14, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Animated running legs
+        ctx.fillStyle = '#9A3412';
+        ctx.fillRect(-10 + runSwing, 4, 4, 7);
+        ctx.fillRect(-4 - runSwing, 4, 4, 7);
+        ctx.fillRect(4 + runSwing, 4, 4, 7);
+        ctx.fillRect(9 - runSwing, 4, 4, 7);
+
+        // Wagging Tail
+        ctx.strokeStyle = PALETTE.ORANGE;
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.moveTo(-13, 0);
-        ctx.lineTo(13, 0);
+        ctx.moveTo(-12, -2);
+        ctx.lineTo(-19, -7 + wag);
         ctx.stroke();
+
+        // Hound Body & Collar
+        this.renderer.drawGlowRect(-12, -6, 22, 11, PALETTE.ORANGE, 6, true);
+        ctx.fillStyle = PALETTE.RED;
+        ctx.fillRect(6, -6, 3, 11);
+
+        // Dog Head, Snout & Floppy Ears
+        ctx.fillStyle = PALETTE.ORANGE;
+        ctx.fillRect(7, -13, 10, 9);
+        ctx.fillRect(15, -10, 6, 5);
+        // Floppy Ear
+        ctx.fillStyle = '#7C2D12';
+        ctx.fillRect(8, -11, 4, 7);
+        // Eye & Nose
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.fillRect(13, -12, 3, 3);
+        ctx.fillStyle = '#090D16';
+        ctx.fillRect(19, -10, 3, 3);
+      } else if (ob.type === 'DANCER') {
+        // Corrugated Cardboard Mat + Boombox Radio
+        ctx.fillStyle = '#92400E';
+        ctx.fillRect(-20, -15, 40, 30);
+        ctx.strokeStyle = '#B45309';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(-20, -15, 40, 30);
+
+        // Boombox stereo beside mat
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(14, -18, 14, 9);
+        ctx.fillStyle = '#090D16';
+        ctx.fillRect(16, -16, 4, 5);
+        ctx.fillRect(22, -16, 4, 5);
+
+        // Spinning Breakdancer in Tracksuit & Sneakers
+        ctx.save();
+        ctx.rotate(ob.phase);
+        // Windmill legs & white sneakers
+        ctx.strokeStyle = PALETTE.CYAN;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(-14, -4);
+        ctx.lineTo(14, 4);
+        ctx.moveTo(-6, 12);
+        ctx.lineTo(6, -12);
+        ctx.stroke();
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.fillRect(-16, -6, 4, 4);
+        ctx.fillRect(12, 2, 4, 4);
+        // Tracksuit torso & headspin cap
+        this.renderer.drawGlowRect(-7, -7, 14, 14, PALETTE.PURPLE, 8, true);
+        this.renderer.drawGlowCircle(0, 0, 5, PALETTE.GOLD, 4, true);
+        ctx.restore();
       } else if (ob.type === 'TIRE') {
-        this.renderer.drawGlowCircle(0, 0, 11, PALETTE.CYAN, 8, false, 4);
+        // Runaway Motorized Lawnmower
+        const jitter = Math.sin(ob.phase * 4) * 1.2;
+        ctx.translate(jitter, 0);
+        // Chrome Push Handlebar
+        ctx.strokeStyle = '#CBD5E1';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(-8, -6);
+        ctx.lineTo(-14, -18);
+        ctx.moveTo(8, -6);
+        ctx.lineTo(14, -18);
+        ctx.moveTo(-14, -18);
+        ctx.lineTo(14, -18);
+        ctx.stroke();
+
+        // 4 Lawnmower Wheels
+        ctx.fillStyle = '#090D16';
+        ctx.fillRect(-14, -9, 4, 7);
+        ctx.fillRect(10, -9, 4, 7);
+        ctx.fillRect(-14, 3, 4, 7);
+        ctx.fillRect(10, 3, 4, 7);
+
+        // Red Mower Deck & Silver Engine Block
+        this.renderer.drawGlowRect(-11, -10, 22, 20, PALETTE.RED, 8, true);
+        ctx.fillStyle = '#E2E8F0';
+        ctx.fillRect(-6, -5, 12, 10);
+        ctx.fillStyle = PALETTE.GOLD;
+        ctx.fillRect(-3, -2, 6, 4);
       }
       ctx.restore();
     }
@@ -24119,7 +25762,7 @@ class Paperboy {
       ctx.restore();
     }
 
-    // Render Paperboy on Bicycle
+    // Render Paperboy Pedaling Bicycle with Handlebar Newspaper Bag
     const r = this.rider;
     const rx = this._projectX(r.laneX, r.y);
     const visible = r.invuln <= 0 || Math.floor(r.invuln * 14) % 2 === 0;
@@ -24129,20 +25772,83 @@ class Paperboy {
       if (r.crashTimer > 0) {
         ctx.rotate(r.crashTimer * 8);
       }
-      // Bike Frame & Tires
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(-3, -22, 6, 42);
-      // Handlebars
-      ctx.strokeStyle = PALETTE.GOLD;
+
+      // Ground shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+      ctx.beginPath();
+      ctx.ellipse(0, 6, 12, 22, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Front & Rear Rubber Tires
+      ctx.fillStyle = '#090D16';
+      ctx.fillRect(-3.5, -26, 7, 14);
+      ctx.fillRect(-3.5, 10, 7, 14);
+      ctx.fillStyle = '#94A3B8';
+      ctx.fillRect(-1.5, -23, 3, 8);
+      ctx.fillRect(-1.5, 13, 3, 8);
+
+      // Red Bicycle Frame Tube
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(-2.5, -16, 5, 28);
+
+      // Chrome Handlebars & Grips
+      ctx.strokeStyle = '#E2E8F0';
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(-14, -14);
-      ctx.lineTo(14, -14);
+      ctx.moveTo(-15, -13);
+      ctx.lineTo(-8, -17);
+      ctx.lineTo(8, -17);
+      ctx.lineTo(15, -13);
+      ctx.stroke();
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(-17, -14, 4, 4);
+      ctx.fillRect(13, -14, 4, 4);
+
+      // Canvas Handlebar Newspaper Bag stuffed with rolled papers
+      ctx.fillStyle = '#F8FAFC';
+      ctx.fillRect(-9, -23, 18, 7);
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(-9, -23, 18, 7);
+      if (this.papersLeft > 0) {
+        ctx.fillStyle = PALETTE.GOLD;
+        ctx.fillRect(-6, -25, 4, 3);
+        ctx.fillRect(2, -25, 4, 3);
+      }
+
+      // Animated Pedaling Legs & Sneakers
+      const leftPedalY = Math.sin(r.pedalPhase * 2.2) * 5;
+      const rightPedalY = -leftPedalY;
+      ctx.fillStyle = '#1D4ED8';
+      ctx.fillRect(-10, -2 + leftPedalY, 5, 11);
+      ctx.fillRect(5, -2 + rightPedalY, 5, 11);
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(-10, 7 + leftPedalY, 5, 3);
+      ctx.fillRect(5, 7 + rightPedalY, 5, 3);
+
+      // Rider Arms reaching to Handlebars
+      ctx.strokeStyle = '#FDBA74';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-8, -4);
+      ctx.lineTo(-13, -13);
+      ctx.moveTo(8, -4);
+      ctx.lineTo(13, -13);
       ctx.stroke();
 
-      // Rider Torso & Cap
-      this.renderer.drawGlowRect(-9, -8, 18, 16, PALETTE.CYAN, 10, true);
-      this.renderer.drawGlowCircle(0, -4, 6, PALETTE.GOLD, 6, true);
+      // Rider Varsity Jacket Torso & Canvas Shoulder Strap
+      this.renderer.drawGlowRect(-9, -8, 18, 15, PALETTE.CYAN, 8, true);
+      ctx.strokeStyle = PALETTE.WHITE;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-8, -7);
+      ctx.lineTo(8, 6);
+      ctx.stroke();
+
+      // Baseball Cap & Visor pointing forward
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(-5, -13, 10, 5);
+      this.renderer.drawGlowCircle(0, -5, 6.5, PALETTE.GOLD, 6, true);
       ctx.restore();
     }
 
@@ -24300,7 +26006,7 @@ class Joust {
     this.audio = audio;
 
     this.id = 'joust';
-    this.title = 'Sky Lancer';
+    this.title = 'Joust';
     this.width = 960;
     this.height = 540;
 
@@ -24759,55 +26465,158 @@ class Joust {
     }
   }
 
-  _drawMountAndKnight(ctx, x, y, dir, wingPhase, mountColor, knightColor, isWarmup = false) {
+  _drawMountAndKnight(
+    ctx,
+    x,
+    y,
+    dir,
+    wingPhase,
+    mountColor,
+    knightColor,
+    isWarmup = false,
+    onGround = true,
+    vx = 0,
+    isOstrich = false
+  ) {
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(dir, 1);
     if (isWarmup) ctx.globalAlpha = 0.55;
 
-    // Legs
-    ctx.strokeStyle = PALETTE.GOLD;
-    ctx.lineWidth = 2;
+    // Articulated Running Legs on Stone Platforms vs Tucked Talons in Flight
+    const stride = onGround && Math.abs(vx) > 8 ? Math.sin(x * 0.18) * 6 : 0;
+    ctx.strokeStyle = isOstrich ? PALETTE.GOLD : PALETTE.ORANGE;
+    ctx.lineWidth = 2.2;
     ctx.beginPath();
-    ctx.moveTo(-3, 8);
-    ctx.lineTo(-5, 20);
-    ctx.moveTo(3, 8);
-    ctx.lineTo(5, 20);
+    if (onGround) {
+      // Left leg with knee joint
+      ctx.moveTo(-3, 7);
+      ctx.lineTo(-4 + stride * 0.5, 14);
+      ctx.lineTo(-6 + stride, 20);
+      ctx.lineTo(-2 + stride, 20);
+      // Right leg with knee joint
+      ctx.moveTo(3, 7);
+      ctx.lineTo(4 - stride * 0.5, 14);
+      ctx.lineTo(4 - stride, 20);
+      ctx.lineTo(8 - stride, 20);
+    } else {
+      // Tucked claws while flying
+      ctx.moveTo(-3, 7);
+      ctx.lineTo(-6, 13);
+      ctx.lineTo(-2, 14);
+      ctx.moveTo(3, 7);
+      ctx.lineTo(0, 13);
+      ctx.lineTo(4, 14);
+    }
     ctx.stroke();
 
-    // Bird Body & Neck/Head
-    this.renderer.drawGlowCircle(0, 4, 10, mountColor, 8, true);
-    ctx.strokeStyle = mountColor;
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.moveTo(6, 0);
-    ctx.lineTo(13, -12);
-    ctx.lineTo(19, -12);
-    ctx.stroke();
+    if (isOstrich) {
+      // === PLAYER OSTRICH MOUNT (Yellow/Gold & White Feathers) ===
+      // Fluffy white tail feathers
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.beginPath();
+      ctx.moveTo(-10, 2);
+      ctx.lineTo(-17, -4);
+      ctx.lineTo(-15, 5);
+      ctx.closePath();
+      ctx.fill();
 
-    // Flapping Wing
-    const wingY = wingPhase > 0.2 ? 9 : -6;
-    ctx.fillStyle = PALETTE.WHITE;
+      // Ostrich body
+      this.renderer.drawGlowCircle(0, 4, 10.5, PALETTE.GOLD, 8, true);
+
+      // Tall slender Ostrich neck & head
+      ctx.strokeStyle = '#FDBA74';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.moveTo(7, 1);
+      ctx.lineTo(13, -13);
+      ctx.stroke();
+      // Ostrich head & beak
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(11, -16, 6, 5);
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(17, -15, 5, 3);
+      ctx.fillStyle = '#090D16';
+      ctx.fillRect(14, -15, 2, 2);
+    } else {
+      // === ENEMY BUZZARD MOUNT (Dark Rust/Vulture Feathers + Hooked Beak) ===
+      // Jagged tail feathers
+      ctx.fillStyle = '#7C2D12';
+      ctx.beginPath();
+      ctx.moveTo(-9, 3);
+      ctx.lineTo(-16, 0);
+      ctx.lineTo(-14, 7);
+      ctx.closePath();
+      ctx.fill();
+
+      // Buzzard body
+      this.renderer.drawGlowCircle(0, 4, 10.5, mountColor, 6, true);
+
+      // Hunched vulture neck & hooked predatory beak
+      ctx.strokeStyle = PALETTE.ORANGE;
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.moveTo(6, 1);
+      ctx.lineTo(13, -9);
+      ctx.stroke();
+      // Buzzard head & hooked beak
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(11, -13, 6, 5);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.beginPath();
+      ctx.moveTo(17, -13);
+      ctx.lineTo(22, -10);
+      ctx.lineTo(17, -8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(13, -12, 2, 2);
+    }
+
+    // 2-Frame Flapping Wings (Downstroke vs Upstroke with primary feather tips)
+    const flapDown = wingPhase > 0.22;
+    ctx.fillStyle = isOstrich ? PALETTE.WHITE : '#CBD5E1';
     ctx.beginPath();
-    ctx.moveTo(-8, 2);
-    ctx.lineTo(2, 2);
-    ctx.lineTo(-4, wingY);
+    if (flapDown) {
+      ctx.moveTo(-8, 2);
+      ctx.lineTo(4, 2);
+      ctx.lineTo(-2, 13);
+      ctx.lineTo(-9, 10);
+    } else {
+      ctx.moveTo(-8, 3);
+      ctx.lineTo(4, 2);
+      ctx.lineTo(-1, -10);
+      ctx.lineTo(-9, -6);
+    }
     ctx.closePath();
     ctx.fill();
 
-    // Knight Rider Torso & Helmet
+    // Knight Rider in Armor (Blue/Silver for Player, Red/Orange/Cyan/Purple for Buzzard Riders)
+    ctx.fillStyle = isOstrich ? '#CBD5E1' : '#1E293B';
+    ctx.fillRect(-6, -12, 10, 12);
     ctx.fillStyle = knightColor;
-    ctx.fillRect(-5, -12, 9, 12);
-    this.renderer.drawGlowCircle(0, -15, 4.5, knightColor, 6, true);
+    ctx.fillRect(-4, -11, 7, 9);
 
-    // Glowing Jousting Lance (Altitude indicator!)
+    // Visored Helmet & Crest
+    this.renderer.drawGlowCircle(-1, -16, 4.8, isOstrich ? '#E2E8F0' : knightColor, 6, true);
+    ctx.fillStyle = '#090D16';
+    ctx.fillRect(1, -17, 3, 2); // Helmet visor slit
+    if (isOstrich) {
+      // Heroic flowing helmet plume
+      ctx.fillStyle = PALETTE.CYAN;
+      ctx.fillRect(-7, -20, 5, 3);
+    }
+
+    // Glowing Horizontal Jousting Lance with Vamplate Handguard
+    ctx.fillStyle = PALETTE.GOLD;
+    ctx.fillRect(4, -11, 3, 6);
     ctx.strokeStyle = PALETTE.WHITE;
     ctx.shadowColor = knightColor;
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 12;
     ctx.lineWidth = 2.8;
     ctx.beginPath();
     ctx.moveTo(-6, -8);
-    ctx.lineTo(24, -8);
+    ctx.lineTo(25, -8);
     ctx.stroke();
 
     ctx.restore();
@@ -24816,22 +26625,31 @@ class Joust {
   render(ctx = this.renderer.ctx) {
     this.renderer.clear(PALETTE.BG);
 
-    // Bubbling Lava Pit at bottom
+    // Bubbling Red/Orange Lava Pit at bottom
     const lavaGrad = ctx.createLinearGradient(0, LAVA_Y, 0, this.height);
-    lavaGrad.addColorStop(0, PALETTE.RED);
+    lavaGrad.addColorStop(0, PALETTE.ORANGE);
+    lavaGrad.addColorStop(0.35, PALETTE.RED);
     lavaGrad.addColorStop(1, '#7F1D1D');
     ctx.fillStyle = lavaGrad;
     ctx.fillRect(0, LAVA_Y, this.width, this.height - LAVA_Y);
 
+    // Animated molten surface waves
+    const waveTime = performance.now() * 0.005;
     ctx.strokeStyle = PALETTE.GOLD;
-    ctx.lineWidth = 2;
+    ctx.shadowColor = PALETTE.ORANGE;
+    ctx.shadowBlur = 10;
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.moveTo(0, LAVA_Y);
-    ctx.lineTo(this.width, LAVA_Y);
+    for (let x = 0; x <= this.width; x += 24) {
+      const wy = LAVA_Y + Math.sin(x * 0.05 + waveTime) * 2;
+      if (x === 0) ctx.moveTo(x, wy);
+      else ctx.lineTo(x, wy);
+    }
     ctx.stroke();
+    ctx.shadowBlur = 0;
 
     for (const b of this.lavaBubbles) {
-      this.renderer.drawGlowCircle(b.x, b.y, b.r, PALETTE.ORANGE, 6, true);
+      this.renderer.drawGlowCircle(b.x, b.y, b.r, PALETTE.GOLD, 8, true);
     }
 
     // Grasping Lava Troll Hand if player flies low over left/right lava
@@ -24854,16 +26672,36 @@ class Joust {
       ctx.restore();
     }
 
-    // Floating Stone Ledges
+    // Textured Floating Stone Ledges (1982 Williams Craggy Rock Strata)
     const activePlatforms = this.platforms || PLATFORMS;
     for (const plat of activePlatforms) {
-      ctx.fillStyle = '#334155';
+      ctx.save();
+      // Main craggy rock slab
+      ctx.fillStyle = '#573B26';
       ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
-      this.renderer.drawGlowRect(plat.x, plat.y, plat.w, 4, PALETTE.ORANGE, 8, true);
-      // Rocky underside bevel
-      ctx.strokeStyle = '#64748B';
+
+      // Jagged rocky underside teeth
+      ctx.fillStyle = '#3E2718';
+      for (let rx = plat.x + 6; rx < plat.x + plat.w - 12; rx += 18) {
+        const toothH = 3 + ((rx * 7) % 5);
+        ctx.fillRect(rx, plat.y + plat.h - 2, 12, toothH);
+      }
+
+      // Stone block joints & strata cracks
+      ctx.strokeStyle = '#29180E';
       ctx.lineWidth = 1.5;
-      ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
+      for (let rx = plat.x + 28; rx < plat.x + plat.w - 10; rx += 32) {
+        ctx.beginPath();
+        ctx.moveTo(rx, plat.y + 3);
+        ctx.lineTo(rx - 4, plat.y + plat.h);
+        ctx.stroke();
+      }
+
+      // Glowing amber/gold top ledge surface
+      this.renderer.drawGlowRect(plat.x, plat.y, plat.w, 4, PALETTE.ORANGE, 6, true);
+      ctx.fillStyle = '#FDBA74';
+      ctx.fillRect(plat.x + 2, plat.y, plat.w - 4, 1.5);
+      ctx.restore();
     }
 
     // Render Bouncing Buzzard Eggs
@@ -24877,17 +26715,42 @@ class Joust {
       ctx.restore();
     }
 
-    // Render Enemy Buzzard Riders
+    // Render Enemy Buzzard Riders (Red Bounder / Cyan Hunter / Purple Shadow Lord)
     for (const e of this.enemies) {
-      this._drawMountAndKnight(ctx, e.x, e.y, e.dir, e.wingPhase, '#94A3B8', e.color, e.spawnWarmup > 0);
+      const buzzardMountColor = e.tier === 1 ? '#B45309' : e.tier === 2 ? '#64748B' : '#4C1D95';
+      this._drawMountAndKnight(
+        ctx,
+        e.x,
+        e.y,
+        e.dir,
+        e.wingPhase,
+        buzzardMountColor,
+        e.color,
+        e.spawnWarmup > 0,
+        e.onGround,
+        e.vx,
+        false
+      );
     }
 
-    // Render Player Ostrich Knight
+    // Render Player Ostrich Knight (Yellow/White Ostrich + Blue/Silver Knight)
     const p = this.player;
     if (!p.dead) {
       const visible = p.invuln <= 0 || Math.floor(p.invuln * 14) % 2 === 0;
       if (visible) {
-        this._drawMountAndKnight(ctx, p.x, p.y, p.dir, p.wingPhase, PALETTE.GOLD, PALETTE.CYAN, false);
+        this._drawMountAndKnight(
+          ctx,
+          p.x,
+          p.y,
+          p.dir,
+          p.wingPhase,
+          PALETTE.GOLD,
+          PALETTE.CYAN,
+          false,
+          p.onGround,
+          p.vx,
+          true
+        );
       }
     }
 
@@ -25088,7 +26951,7 @@ class Qbert {
     this.audio = audio;
 
     this.id = 'qbert';
-    this.title = 'Iso Hop';
+    this.title = 'Q*bert';
     this.width = 960;
     this.height = 540;
 
@@ -25612,9 +27475,29 @@ class Qbert {
     ctx.closePath();
     ctx.fill();
 
-    // Crisp Neon Wireframe Edges
-    ctx.strokeStyle = 'rgba(248, 250, 252, 0.35)';
-    ctx.lineWidth = 1.3;
+    // Crisp 3D Shaded Isometric Pyramid Cube Edges & Specular Bevels
+    // Top diamond inner highlight
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(x - CUBE_RX + 3, y);
+    ctx.lineTo(x, y - CUBE_RY + 2);
+    ctx.lineTo(x + CUBE_RX - 3, y);
+    ctx.stroke();
+
+    // Dark shadow overlay on right vertical face for deep 3D contrast
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.24)';
+    ctx.beginPath();
+    ctx.moveTo(x + CUBE_RX, y);
+    ctx.lineTo(x, y + CUBE_RY);
+    ctx.lineTo(x, y + CUBE_RY + CUBE_H);
+    ctx.lineTo(x + CUBE_RX, y + CUBE_H);
+    ctx.closePath();
+    ctx.fill();
+
+    // Crisp Gottlieb-style block seams
+    ctx.strokeStyle = '#090D16';
+    ctx.lineWidth = 1.6;
     ctx.beginPath();
     ctx.moveTo(x, y - CUBE_RY);
     ctx.lineTo(x + CUBE_RX, y);
@@ -25701,62 +27584,135 @@ class Qbert {
       if (e.type === 'RED_BALL') {
         this.renderer.drawGlowCircle(0, 0, 10, PALETTE.RED, 10, true);
         ctx.fillStyle = PALETTE.WHITE;
-        ctx.fillRect(-4, -4, 3, 3);
+        ctx.beginPath();
+        ctx.arc(-3.5, -3.5, 2.8, 0, Math.PI * 2);
+        ctx.fill();
       } else if (e.type === 'PURPLE_EGG') {
         const shake = e.hatchTimer > 0 ? Math.sin(e.hatchTimer * 40) * 3 : 0;
         this.renderer.drawGlowCircle(shake, 0, 11, PALETTE.PURPLE, 10, true);
+        ctx.fillStyle = '#F0ABFC';
+        ctx.beginPath();
+        ctx.arc(shake - 3.5, -3.5, 3, 0, Math.PI * 2);
+        ctx.fill();
       } else if (e.type === 'COILY') {
-        // Coiled spring body + menacing snake head
+        // Coiled purple spring body + snake head with eyes & fangs
+        const springStretch = e.hopping ? 6.5 : 4.8;
         ctx.strokeStyle = PALETTE.PURPLE;
         ctx.shadowColor = PALETTE.PINK;
         ctx.shadowBlur = 10;
-        ctx.lineWidth = 3.5;
-        for (let ring = 0; ring < 3; ring++) {
+        ctx.lineWidth = 3.2;
+        for (let ring = 0; ring < 4; ring++) {
           ctx.beginPath();
-          ctx.ellipse(0, 4 - ring * 6, 11, 4.5, 0, 0, Math.PI * 2);
+          ctx.ellipse(0, 6 - ring * springStretch, 11 - ring * 0.5, 4.2, 0, 0, Math.PI * 2);
           ctx.stroke();
         }
-        this.renderer.drawGlowCircle(0, -14, 9, PALETTE.PINK, 8, true);
-        ctx.fillStyle = PALETTE.GOLD;
-        ctx.fillRect(-5, -17, 3, 4);
-        ctx.fillRect(2, -17, 3, 4);
+        const headY = 6 - 3.5 * springStretch - 4;
+        // Snake head
+        this.renderer.drawGlowCircle(0, headY, 9.5, PALETTE.PURPLE, 8, true);
+        // Angry Reptilian Eyes
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.fillRect(-6, headY - 5, 4.5, 5);
+        ctx.fillRect(1.5, headY - 5, 4.5, 5);
+        ctx.fillStyle = PALETTE.RED;
+        ctx.fillRect(-4, headY - 3, 2, 3);
+        ctx.fillRect(2.5, headY - 3, 2, 3);
+        // Twin White Venomous Fangs & Forked Tongue
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.beginPath();
+        ctx.moveTo(-5, headY + 4);
+        ctx.lineTo(-3, headY + 10);
+        ctx.lineTo(-1, headY + 4);
+        ctx.moveTo(1, headY + 4);
+        ctx.lineTo(3, headY + 10);
+        ctx.lineTo(5, headY + 4);
+        ctx.fill();
       }
       ctx.restore();
     }
 
-    // Render Q*bert
+    // Render Q*bert (Orange body, big white eyes, long tubular snout with oval tip, webbed feet)
     const q = this.qbert;
     const visible = q.invuln <= 0 || Math.floor(q.invuln * 14) % 2 === 0;
     if (visible) {
       ctx.save();
       ctx.translate(q.x, q.y - 12);
 
-      // Feet
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(-7, 9, 5, 5);
-      ctx.fillRect(2, 9, 5, 5);
+      // Shadow on cube top
+      if (!q.falling) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+        ctx.beginPath();
+        ctx.ellipse(0, 14, 11, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
-      // Orange Spherical Body
-      this.renderer.drawGlowCircle(0, 0, 13, PALETTE.ORANGE, 12, true);
-
-      // Big Cartoon Eyes
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(-6, -8, 5, 6);
-      ctx.fillRect(1, -8, 5, 6);
-      ctx.fillStyle = PALETTE.BG;
-      ctx.fillRect(-4, -6, 2.5, 3);
-      ctx.fillRect(3, -6, 2.5, 3);
-
-      // Iconic Tubular Snout pointing in hop direction
-      const snoutX = q.facing.includes('L') ? -14 : 14;
-      const snoutY = q.facing.includes('U') ? -4 : 4;
-      ctx.strokeStyle = PALETTE.ORANGE;
-      ctx.lineWidth = 7;
+      // Legs & Webbed Feet
+      ctx.strokeStyle = '#EA580C';
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.moveTo(0, 1);
+      ctx.moveTo(-4, 7);
+      ctx.lineTo(-6, 13);
+      ctx.moveTo(4, 7);
+      ctx.lineTo(6, 13);
+      ctx.stroke();
+
+      ctx.fillStyle = PALETTE.GOLD;
+      // Left webbed foot
+      ctx.beginPath();
+      ctx.ellipse(-7, 13.5, 5.5, 2.8, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+      // Right webbed foot
+      ctx.beginPath();
+      ctx.ellipse(7, 13.5, 5.5, 2.8, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Plump Orange Spherical Body with highlight
+      this.renderer.drawGlowCircle(0, 0, 13, PALETTE.ORANGE, 12, true);
+      ctx.fillStyle = '#FDBA74';
+      ctx.beginPath();
+      ctx.arc(-4, -4, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Big White Cartoon Eyes with pupils tracking facing direction
+      const lookX = q.facing.includes('L') ? -1 : 1.5;
+      const lookY = q.facing.includes('U') ? -1 : 1;
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.beginPath();
+      ctx.ellipse(-4.5, -6, 3.8, 5, 0, 0, Math.PI * 2);
+      ctx.ellipse(3.5, -6, 3.8, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#090D16';
+      ctx.beginPath();
+      ctx.arc(-4.5 + lookX, -6 + lookY, 2, 0, Math.PI * 2);
+      ctx.arc(3.5 + lookX, -6 + lookY, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Long Tubular Snout with Oval Tip pointing in hop direction
+      const dirX = q.facing.includes('L') ? -1 : 1;
+      const dirY = q.facing.includes('U') ? -0.45 : 0.45;
+      const snoutX = dirX * 15;
+      const snoutY = dirY * 10;
+
+      ctx.strokeStyle = PALETTE.ORANGE;
+      ctx.lineWidth = 8.5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(dirX * 4, 1);
       ctx.lineTo(snoutX, snoutY);
       ctx.stroke();
-      this.renderer.drawGlowCircle(snoutX, snoutY, 4.5, '#7C2D12', 4, true);
+
+      // Oval Snout Tip & Dark Mouth Opening
+      ctx.save();
+      ctx.translate(snoutX + dirX * 2, snoutY);
+      ctx.rotate(dirX * 0.25);
+      ctx.fillStyle = '#EA580C';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 4.2, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#271206';
+      ctx.beginPath();
+      ctx.ellipse(dirX * 0.6, 0, 2.6, 4.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
 
       // Classic "@!#?@!" Speech Bubble when hit!
       if (this.swearTimer > 0) {
@@ -25862,7 +27818,7 @@ class Rampage {
     this.audio = audio;
 
     this.id = 'rampage';
-    this.title = 'Kaiju Crush';
+    this.title = 'Rampage';
     this.state = 'PLAYING';
 
     this.score = 0;
@@ -26579,13 +28535,36 @@ class Rampage {
     ctx.fillStyle = PALETTE.BG;
     ctx.fillRect(0, 38, this.renderer.width, this.renderer.height - 38);
 
-    // Distant silhouette skyline
-    ctx.fillStyle = '#111827';
-    for (let i = 0; i < 12; i++) {
-      const sx = i * 84;
-      const sh = 90 + ((i * 47) % 130);
-      ctx.fillRect(sx, this.groundY - sh, 76, sh);
+    // Classic 1986 Bally Midway City Skyline Silhouettes in the Background
+    ctx.save();
+    for (let i = 0; i < 14; i++) {
+      const sx = i * 70 - 6;
+      const sh = 95 + ((i * 53) % 145);
+      const sy = this.groundY - sh;
+      ctx.fillStyle = i % 2 === 0 ? '#111827' : '#0F172A';
+      ctx.fillRect(sx, sy, 66, sh);
+
+      // Stepped Art Deco crown & radio spire on select towers
+      if (i % 3 === 0) {
+        ctx.fillRect(sx + 14, sy - 18, 38, 18);
+        ctx.fillRect(sx + 31, sy - 38, 4, 20);
+        // Blinking red aviation beacon
+        if (Math.floor(performance.now() * 0.003 + i) % 2 === 0) {
+          ctx.fillStyle = PALETTE.RED;
+          ctx.fillRect(sx + 31, sy - 41, 4, 4);
+        }
+      }
+      // Distant lit skyline windows
+      ctx.fillStyle = 'rgba(253, 224, 71, 0.25)';
+      for (let wy = sy + 12; wy < this.groundY - 16; wy += 16) {
+        for (let wx = sx + 10; wx < sx + 54; wx += 14) {
+          if ((wx + wy + i * 7) % 3 === 0) {
+            ctx.fillRect(wx, wy, 6, 8);
+          }
+        }
+      }
     }
+    ctx.restore();
 
     // Draw Destructible Skyscrapers
     for (const b of this.buildings) {
@@ -26661,20 +28640,53 @@ class Rampage {
             ctx.strokeRect(wx, wy + wh / 2 - 2, ww, 4);
           }
 
-          // Revealed Item inside window
+          // Revealed Item inside window (Roast Chicken, Waving Civilian, Gold Bullion, Toaster Hazard)
           if (w.itemRevealed && w.item) {
             const cx = wx + ww / 2;
             const cy = wy + wh / 2;
             if (w.item === 'food') {
-              this.renderer.drawGlowCircle(cx, cy, 6, PALETTE.GREEN, 8);
-            } else if (w.item === 'civilian') {
-              this.renderer.drawGlowCircle(cx, cy - 3, 4, PALETTE.PINK, 8);
+              // Roast Chicken / Drumstick
               ctx.fillStyle = PALETTE.WHITE;
-              ctx.fillRect(cx - 3, cy + 1, 6, 7);
+              ctx.fillRect(cx - 9, cy - 2, 18, 4);
+              ctx.fillRect(cx - 10, cy - 4, 3, 8);
+              this.renderer.drawGlowCircle(cx + 2, cy, 6.5, '#D97706', 8, true);
+              ctx.fillStyle = '#FDE68A';
+              ctx.fillRect(cx, cy - 4, 5, 3);
+            } else if (w.item === 'civilian') {
+              // Waving Civilian in window
+              const waveY = Math.sin(performance.now() * 0.015) * 3;
+              ctx.strokeStyle = '#FDBA74';
+              ctx.lineWidth = 2.2;
+              ctx.beginPath();
+              ctx.moveTo(cx - 9, cy - 3 + waveY);
+              ctx.lineTo(cx, cy + 1);
+              ctx.lineTo(cx + 9, cy - 3 - waveY);
+              ctx.stroke();
+              this.renderer.drawGlowCircle(cx, cy - 5, 4, '#FDBA74', 6, true);
+              ctx.fillStyle = PALETTE.PINK;
+              ctx.fillRect(cx - 4, cy - 1, 8, 9);
             } else if (w.item === 'gold') {
-              this.renderer.drawGlowRect(cx - 6, cy - 4, 12, 8, PALETTE.GOLD, 10);
+              // Stacked Gold Bullion Bars
+              this.renderer.drawGlowRect(cx - 8, cy + 1, 16, 6, PALETTE.GOLD, 10, true);
+              this.renderer.drawGlowRect(cx - 5, cy - 5, 10, 6, '#FDE047', 8, true);
+              ctx.fillStyle = PALETTE.WHITE;
+              ctx.fillRect(cx - 3, cy - 4, 4, 2);
             } else if (w.item === 'hazard') {
-              this.renderer.drawGlowCircle(cx, cy, 6, PALETTE.RED, 10);
+              // Sparking Electric Toaster Hazard
+              ctx.fillStyle = '#CBD5E1';
+              ctx.fillRect(cx - 7, cy - 3, 14, 10);
+              ctx.fillStyle = '#090D16';
+              ctx.fillRect(cx - 5, cy - 3, 3, 2);
+              ctx.fillRect(cx + 2, cy - 3, 3, 2);
+              // Electric arcs
+              ctx.strokeStyle = PALETTE.CYAN;
+              ctx.lineWidth = 1.5;
+              ctx.beginPath();
+              ctx.moveTo(cx - 6, cy - 4);
+              ctx.lineTo(cx - 2, cy - 9);
+              ctx.lineTo(cx + 2, cy - 5);
+              ctx.lineTo(cx + 6, cy - 10);
+              ctx.stroke();
             }
           }
         }
@@ -26693,11 +28705,29 @@ class Rampage {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Draw Dynamite Sticks
+    // Draw Bundled TNT Dynamite Sticks with Sizzling Fuse
     for (const dyn of this.dynamites) {
+      ctx.save();
+      ctx.translate(dyn.x, dyn.y);
+      // 3 Red TNT sticks + black straps
       ctx.fillStyle = PALETTE.RED;
-      ctx.fillRect(dyn.x - 6, dyn.y - 12, 12, 12);
-      this.renderer.drawText(dyn.fuse.toFixed(1), dyn.x, dyn.y - 16, {
+      ctx.fillRect(-7, -14, 4, 14);
+      ctx.fillRect(-2, -14, 4, 14);
+      ctx.fillRect(3, -14, 4, 14);
+      ctx.fillStyle = '#090D16';
+      ctx.fillRect(-8, -11, 16, 2);
+      ctx.fillRect(-8, -5, 16, 2);
+      // Burning fuse & spark
+      ctx.strokeStyle = '#E2E8F0';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, -14);
+      ctx.lineTo(4, -20);
+      ctx.stroke();
+      this.renderer.drawGlowCircle(4, -20, 3, PALETTE.GOLD, 8, true);
+      ctx.restore();
+
+      this.renderer.drawText(dyn.fuse.toFixed(1), dyn.x, dyn.y - 24, {
         size: 11,
         color: PALETTE.GOLD,
         align: 'center'
@@ -26734,35 +28764,69 @@ class Rampage {
       }
     }
 
-    // Draw Enemies (Helicopters & Tanks)
+    // Draw Enemies (Detailed Police/Military Helicopters & Armored Tanks)
     for (const e of this.enemies) {
       if (e.type === 'heli') {
         ctx.save();
         ctx.translate(e.x, e.y);
-        // Helicopter body
-        this.renderer.drawGlowRect(-16, -8, 32, 16, PALETTE.CYAN, 8);
-        ctx.fillStyle = '#0F172A';
-        ctx.fillRect(e.dir > 0 ? 2 : -14, -5, 12, 8);
-        // Tail boom
-        ctx.fillStyle = PALETTE.CYAN;
-        ctx.fillRect(e.dir > 0 ? -28 : 16, -3, 12, 5);
-        // Spinning Rotor
-        const bladeW = 22 * Math.cos(e.rotorPhase);
-        ctx.strokeStyle = PALETTE.WHITE;
+        ctx.scale(e.dir, 1);
+
+        // Landing skids
+        ctx.strokeStyle = '#94A3B8';
         ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-10, 8);
+        ctx.lineTo(-10, 12);
+        ctx.moveTo(8, 8);
+        ctx.lineTo(8, 12);
+        ctx.moveTo(-15, 12);
+        ctx.lineTo(15, 12);
+        ctx.stroke();
+
+        // Tail boom & vertical fin
+        ctx.fillStyle = PALETTE.CYAN;
+        ctx.fillRect(-30, -3, 16, 5);
+        ctx.fillRect(-32, -9, 5, 9);
+
+        // Rounded Helicopter Cabin & Glass Bubble Canopy
+        this.renderer.drawGlowRect(-15, -8, 30, 16, PALETTE.CYAN, 8, true);
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(1, -6, 13, 9);
+        ctx.fillStyle = '#38BDF8';
+        ctx.fillRect(3, -5, 9, 6);
+
+        // Rotor mast & spinning main blades
+        ctx.fillStyle = '#CBD5E1';
+        ctx.fillRect(-2, -12, 4, 4);
+        const bladeW = Math.max(6, Math.abs(26 * Math.cos(e.rotorPhase)));
+        ctx.strokeStyle = PALETTE.WHITE;
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
         ctx.moveTo(-bladeW, -12);
         ctx.lineTo(bladeW, -12);
         ctx.stroke();
         ctx.restore();
       } else {
-        // Tank on street
+        // Armored Military Tank on street
         ctx.save();
         ctx.translate(e.x, e.y);
-        this.renderer.drawGlowRect(-18, -12, 36, 12, PALETTE.ORANGE, 8);
+        ctx.scale(e.dir, 1);
+
+        // Caterpillar Treads & Road Wheels
+        ctx.fillStyle = '#090D16';
+        ctx.fillRect(-20, -7, 40, 7);
+        ctx.fillStyle = '#64748B';
+        for (let wx = -15; wx <= 15; wx += 7.5) {
+          ctx.fillRect(wx - 2, -5, 4, 4);
+        }
+
+        // Armored Hull
+        this.renderer.drawGlowRect(-18, -14, 36, 8, PALETTE.ORANGE, 6, true);
+        // Turret Dome & Cannon Barrel
         ctx.fillStyle = PALETTE.GOLD;
-        ctx.fillRect(-10, -20, 20, 8);
-        ctx.fillRect(e.dir > 0 ? 8 : -24, -18, 16, 4);
+        ctx.fillRect(-10, -21, 20, 7);
+        ctx.fillStyle = '#FDE047';
+        ctx.fillRect(10, -19, 16, 4);
         ctx.restore();
       }
     }
@@ -26951,7 +29015,7 @@ class MarbleMadness {
     this.audio = audio;
 
     this.id = 'marblemadness';
-    this.title = 'Gyro Sphere';
+    this.title = 'Marble Madness';
     this.state = 'PLAYING';
 
     this.score = 0;
@@ -27990,7 +30054,7 @@ class MarbleMadness {
 
     const skirtDepth = 22;
 
-    // Left vertical skirt face (pW -> pS)
+    // Left vertical skirt face (pW -> pS) with Atari 1984 cliff grid-line shading
     ctx.fillStyle = theme.skirtL;
     ctx.beginPath();
     ctx.moveTo(pW.x, pW.y);
@@ -27999,6 +30063,9 @@ class MarbleMadness {
     ctx.lineTo(pW.x, pW.y + skirtDepth);
     ctx.closePath();
     ctx.fill();
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.18)';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
 
     // Right vertical skirt face (pS -> pE)
     ctx.fillStyle = theme.skirtR;
@@ -28009,6 +30076,7 @@ class MarbleMadness {
     ctx.lineTo(pS.x, pS.y + skirtDepth);
     ctx.closePath();
     ctx.fill();
+    ctx.stroke();
 
     // Top Isometric Diamond Face
     const checker = Math.abs(gx + gy) % 2 === 0;
@@ -28031,13 +30099,13 @@ class MarbleMadness {
       fill = '#9A3412';
       stroke = PALETTE.GOLD;
     } else if (type === 'goal') {
-      fill = checker ? PALETTE.GOLD : '#1E293B';
+      fill = checker ? PALETTE.WHITE : '#0F172A';
       stroke = PALETTE.GOLD;
     }
 
     ctx.fillStyle = fill;
     ctx.strokeStyle = stroke;
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 1.25;
     ctx.beginPath();
     ctx.moveTo(pN.x, pN.y);
     ctx.lineTo(pE.x, pE.y);
@@ -28045,6 +30113,54 @@ class MarbleMadness {
     ctx.lineTo(pW.x, pW.y);
     ctx.closePath();
     ctx.fill();
+
+    // Authentic 1984 Atari 2x2 sub-grid contour lines inside each isometric tile
+    const midNW = { x: (pN.x + pW.x) * 0.5, y: (pN.y + pW.y) * 0.5 };
+    const midES = { x: (pE.x + pS.x) * 0.5, y: (pE.y + pS.y) * 0.5 };
+    const midNE = { x: (pN.x + pE.x) * 0.5, y: (pN.y + pE.y) * 0.5 };
+    const midWS = { x: (pW.x + pS.x) * 0.5, y: (pW.y + pS.y) * 0.5 };
+
+    if (type === 'goal') {
+      // Checkered Finish Tile sub-quadrants
+      const center = { x: (pN.x + pS.x) * 0.5, y: (pN.y + pS.y) * 0.5 };
+      ctx.fillStyle = checker ? '#0F172A' : PALETTE.GOLD;
+      ctx.beginPath();
+      ctx.moveTo(pN.x, pN.y);
+      ctx.lineTo(midNE.x, midNE.y);
+      ctx.lineTo(center.x, center.y);
+      ctx.lineTo(midNW.x, midNW.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(center.x, center.y);
+      ctx.lineTo(midES.x, midES.y);
+      ctx.lineTo(pS.x, pS.y);
+      ctx.lineTo(midWS.x, midWS.y);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.save();
+      ctx.strokeStyle = stroke;
+      ctx.globalAlpha = 0.28;
+      ctx.lineWidth = 0.85;
+      ctx.beginPath();
+      ctx.moveTo(midNW.x, midNW.y);
+      ctx.lineTo(midES.x, midES.y);
+      ctx.moveTo(midNE.x, midNE.y);
+      ctx.lineTo(midWS.x, midWS.y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Outer tile border stroke
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 1.25;
+    ctx.beginPath();
+    ctx.moveTo(pN.x, pN.y);
+    ctx.lineTo(pE.x, pE.y);
+    ctx.lineTo(pS.x, pS.y);
+    ctx.lineTo(pW.x, pW.y);
+    ctx.closePath();
     ctx.stroke();
 
     // Draw directional chevron on slope & boost tiles
@@ -28094,8 +30210,76 @@ class MarbleMadness {
     }
 
     // Render all Isometric Course Tiles back-to-front
+    let goalCenterSumX = 0;
+    let goalCenterSumY = 0;
+    let goalCenterZ = 0;
+    let goalCount = 0;
     for (const tile of this.tileList) {
       this._drawIsoTile(ctx, tile);
+      if (tile.type === 'goal') {
+        goalCenterSumX += tile.gx;
+        goalCenterSumY += tile.gy;
+        goalCenterZ = tile.z;
+        goalCount++;
+      }
+    }
+
+    // Checkered START & FINISH Banners on the Isometric Course
+    const startTile = this._getTileAt(0, 0);
+    if (startTile) {
+      const sp = this._isoProject(0.5, -0.8, startTile.z);
+      ctx.save();
+      ctx.strokeStyle = PALETTE.CYAN;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(sp.x - 24, sp.y);
+      ctx.lineTo(sp.x - 24, sp.y - 26);
+      ctx.moveTo(sp.x + 24, sp.y);
+      ctx.lineTo(sp.x + 24, sp.y - 26);
+      ctx.stroke();
+      ctx.fillStyle = '#0F172A';
+      ctx.fillRect(sp.x - 26, sp.y - 38, 52, 14);
+      ctx.strokeRect(sp.x - 26, sp.y - 38, 52, 14);
+      this.renderer.drawText('START', sp.x, sp.y - 28, {
+        font: FONTS.HEADER,
+        size: 8,
+        color: PALETTE.CYAN,
+        align: 'center'
+      });
+      ctx.restore();
+    }
+
+    if (goalCount > 0) {
+      const gp = this._isoProject(goalCenterSumX / goalCount, goalCenterSumY / goalCount, goalCenterZ);
+      ctx.save();
+      ctx.strokeStyle = PALETTE.GOLD;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(gp.x - 32, gp.y + 4);
+      ctx.lineTo(gp.x - 32, gp.y - 32);
+      ctx.moveTo(gp.x + 32, gp.y + 4);
+      ctx.lineTo(gp.x + 32, gp.y - 32);
+      ctx.stroke();
+
+      // Checkered FINISH Banner Header
+      ctx.fillStyle = '#090D16';
+      ctx.fillRect(gp.x - 36, gp.y - 48, 72, 17);
+      for (let c = 0; c < 12; c++) {
+        ctx.fillStyle = c % 2 === 0 ? PALETTE.WHITE : '#090D16';
+        ctx.fillRect(gp.x - 36 + c * 6, gp.y - 48, 6, 3);
+        ctx.fillRect(gp.x - 36 + c * 6, gp.y - 34, 6, 3);
+      }
+      ctx.strokeStyle = PALETTE.GOLD;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(gp.x - 36, gp.y - 48, 72, 17);
+      this.renderer.drawText('FINISH', gp.x, gp.y - 36, {
+        font: FONTS.HEADER,
+        size: 8.5,
+        color: PALETTE.GOLD,
+        align: 'center',
+        glow: 6
+      });
+      ctx.restore();
     }
 
     // Render Bumpers
@@ -28106,18 +30290,40 @@ class MarbleMadness {
       this.renderer.drawGlowCircle(pt.x, pt.y - 7, rad * 0.55, PALETTE.GOLD, 6);
     }
 
-    // Render Roaming Enemy Marbles
+    // Render Menacing Black/Steel Enemy Marbles
     for (const h of this.hazards) {
       const pt = this._isoProject(h.gx, h.gy, h.z);
-      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      ctx.save();
+      // Drop shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
       ctx.beginPath();
-      ctx.ellipse(pt.x, pt.y + 2, 10, 5, 0, 0, Math.PI * 2);
+      ctx.ellipse(pt.x, pt.y + 2, 10.5, 5.5, 0, 0, Math.PI * 2);
       ctx.fill();
-      this.renderer.drawGlowCircle(pt.x, pt.y - 7, 10, PALETTE.RED, 10);
-      ctx.fillStyle = '#1E293B';
+
+      // Menacing Black/Steel Outer Rim & Dark Gunmetal Sphere
+      this.renderer.drawGlowCircle(pt.x, pt.y - 7, 10.5, PALETTE.RED, 8, true);
+      ctx.fillStyle = '#090D16';
       ctx.beginPath();
-      ctx.arc(pt.x, pt.y - 7, 7, 0, Math.PI * 2);
+      ctx.arc(pt.x, pt.y - 7, 9.5, 0, Math.PI * 2);
       ctx.fill();
+
+      // Rolling crimson/steel equator seam
+      ctx.save();
+      ctx.translate(pt.x, pt.y - 7);
+      ctx.rotate(h.phase * 1.6);
+      ctx.strokeStyle = PALETTE.RED;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 8.5, 3.2, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // Metallic steel highlight
+      ctx.fillStyle = '#CBD5E1';
+      ctx.beginPath();
+      ctx.arc(pt.x - 3, pt.y - 10, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
 
     // Render Player Marble Trail
@@ -28131,25 +30337,44 @@ class MarbleMadness {
     }
     ctx.globalAlpha = 1;
 
-    // Render Player Marble
+    // Render Player Marble (Glossy 3D Specular Highlight + Rolling Seam)
     const m = this.marble;
     const mp = this._isoProject(m.gx, m.gy, m.z);
     if (!m.falling) {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.52)';
       ctx.beginPath();
-      ctx.ellipse(mp.x, mp.y + 2, 10, 5, 0, 0, Math.PI * 2);
+      ctx.ellipse(mp.x, mp.y + 2, 10.5, 5.5, 0, 0, Math.PI * 2);
       ctx.fill();
     }
 
     const r = m.falling ? Math.max(3, m.radius * (1 - m.fallTimer * 0.7)) : m.radius;
-    this.renderer.drawGlowCircle(mp.x, mp.y - 7, r, PALETTE.CYAN, 14);
-    // Specular highlight rotating with roll
-    const hx = mp.x - 3 + Math.cos(m.rollAngle) * 2.5;
-    const hy = mp.y - 10 + Math.sin(m.rollAngle) * 2.5;
+    ctx.save();
+    // Deep cobalt 3D base + electric cyan inner sphere
+    this.renderer.drawGlowCircle(mp.x, mp.y - 7, r, '#0284C7', 14, true);
+    ctx.fillStyle = PALETTE.CYAN;
+    ctx.beginPath();
+    ctx.arc(mp.x - 1, mp.y - 8, r * 0.82, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rolling seam band rotating with marble velocity/rollAngle
+    ctx.save();
+    ctx.translate(mp.x, mp.y - 7);
+    ctx.rotate(m.rollAngle);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r * 0.88, r * 0.36, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Glossy 3D Specular Highlight
+    const hx = mp.x - 3.2 + Math.cos(m.rollAngle) * 1.5;
+    const hy = mp.y - 10.2 + Math.sin(m.rollAngle) * 1.5;
     ctx.fillStyle = PALETTE.WHITE;
     ctx.beginPath();
-    ctx.arc(hx, hy, r * 0.32, 0, Math.PI * 2);
+    ctx.arc(hx, hy, r * 0.34, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
 
     // Render Particles
     for (const p of this.particles) {
@@ -28276,6 +30501,36 @@ const HARRY_RUN_2 = [
   '.KK..KK.',
   '........'
 ];
+
+const PITFALL_SCORPION_1 = [
+  '..WWW.......',
+  '.WW..W......',
+  '.WW.........',
+  '..WWWWWWWWRR',
+  '.WWWWWWWWWWR',
+  '..W.W.W.W...',
+  '.W..W.W..W..'
+];
+
+const PITFALL_SCORPION_2 = [
+  '...WWW......',
+  '..WW..W.....',
+  '.WW.........',
+  '..WWWWWWWWRR',
+  '.WWWWWWWWWWR',
+  '..W.W.W.W...',
+  '..W..W..W...'
+];
+
+const PITFALL_COBRA_SPRITE = [
+  '...KKKKR..',
+  '..KKYKK...',
+  '..KKKK....',
+  '...KK.....',
+  '..KKKK....',
+  '.KKKKKK...',
+  'KKKKKKKK..'
+];
 class Pitfall {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -28283,7 +30538,7 @@ class Pitfall {
     this.audio = audio;
 
     this.id = 'pitfall';
-    this.title = 'Jungle Strider';
+    this.title = 'Pitfall!';
     this.state = 'PLAYING';
 
     this.score = 2000;
@@ -28880,40 +31135,90 @@ class Pitfall {
   }
 
   render(ctx = this.renderer.ctx) {
-    // Jungle Canopy Background
-    ctx.fillStyle = '#06281E';
+    // Iconic Activision 1982 Jungle Canopy Background
+    ctx.fillStyle = '#0B3824';
     ctx.fillRect(0, 38, this.renderer.width, this.upperGroundY - 38);
 
-    // Jungle Tree Trunks & Canopy Leaves
-    const trunkPositions = [80, 270, 690, 880];
-    ctx.fillStyle = '#3F2305';
+    // 4 Tall Brown Tree Trunks rising from the ground to the top foliage canopy
+    const trunkPositions = [95, 290, 670, 865];
     for (const tx of trunkPositions) {
-      ctx.fillRect(tx - 18, 70, 36, this.upperGroundY - 70);
-      ctx.fillStyle = '#2B1702';
-      ctx.fillRect(tx - 6, 70, 12, this.upperGroundY - 70);
-      ctx.fillStyle = '#3F2305';
+      // Main trunk column
+      ctx.fillStyle = '#4A2506';
+      ctx.fillRect(tx - 20, 74, 40, this.upperGroundY - 74);
+      // Flared root base on jungle floor
+      ctx.fillRect(tx - 28, this.upperGroundY - 12, 56, 12);
+      ctx.fillRect(tx - 24, this.upperGroundY - 22, 48, 10);
+      // Spreading upper branches into the canopy
+      ctx.fillRect(tx - 34, 74, 68, 14);
+      ctx.fillRect(tx - 26, 88, 52, 10);
+      // Vertical bark shadow grooves
+      ctx.fillStyle = '#2E1502';
+      ctx.fillRect(tx - 8, 84, 6, this.upperGroundY - 84);
+      ctx.fillRect(tx + 4, 84, 5, this.upperGroundY - 84);
     }
 
-    // Upper Lush Leaf Canopy Archway
-    ctx.fillStyle = '#047857';
+    // Lush Pixelated Green Foliage Canopy across the top of the screen
+    ctx.fillStyle = '#15803D';
     ctx.fillRect(0, 38, this.renderer.width, 46);
-    for (let x = 0; x < 960; x += 60) {
-      ctx.beginPath();
-      ctx.arc(x + 30, 84, 34, 0, Math.PI);
-      ctx.fill();
+    ctx.fillStyle = '#166534';
+    ctx.fillRect(0, 38, this.renderer.width, 18);
+
+    // Stepped pixelated leaf arches hanging between the tree trunks
+    for (let x = 0; x < 960; x += 64) {
+      ctx.fillStyle = '#15803D';
+      ctx.fillRect(x + 4, 84, 56, 10);
+      ctx.fillRect(x + 12, 94, 40, 8);
+      ctx.fillRect(x + 22, 102, 20, 6);
+      // Bright pixel leaf highlights
+      ctx.fillStyle = '#22C55E';
+      ctx.fillRect(x + 10, 56, 18, 6);
+      ctx.fillRect(x + 34, 66, 16, 6);
+      ctx.fillRect(x + 18, 80, 24, 6);
     }
 
-    // Upper Jungle Floor
+    // Upper Jungle Floor (Atari Gold/Tan Dirt Path + Green Grass Rim)
     ctx.fillStyle = '#CA8A04';
     ctx.fillRect(0, this.upperGroundY, this.renderer.width, 28);
+    ctx.fillStyle = '#A16207';
+    ctx.fillRect(0, this.upperGroundY + 20, this.renderer.width, 8);
     ctx.fillStyle = '#15803D';
     ctx.fillRect(0, this.upperGroundY, this.renderer.width, 6);
 
-    // Underground Scorpion Tunnel Background
+    // Underground Passage Background & Iconic Red Brick Wall with Mortar Lines
+    const tunnelTop = this.upperGroundY + 28;
+    const tunnelH = this.lowerGroundY - tunnelTop;
     ctx.fillStyle = '#090D16';
-    ctx.fillRect(0, this.upperGroundY + 28, this.renderer.width, this.lowerGroundY - (this.upperGroundY + 28));
+    ctx.fillRect(0, tunnelTop, this.renderer.width, tunnelH);
+
+    // Classic Activision Red Brick Wall panels & background brickwork in the underground tunnel
+    const drawBrickPanel = (bx, bw, alpha = 1) => {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#991B1B';
+      ctx.fillRect(bx, tunnelTop, bw, tunnelH);
+      ctx.fillStyle = '#CBD5E1';
+      const brickH = 12;
+      const brickW = 24;
+      for (let by = tunnelTop; by < this.lowerGroundY; by += brickH) {
+        ctx.fillRect(bx, by, bw, 2);
+        const rowIdx = Math.floor((by - tunnelTop) / brickH);
+        const offset = (rowIdx % 2) * (brickW / 2);
+        for (let mx = bx + offset; mx < bx + bw; mx += brickW) {
+          ctx.fillRect(mx, by, 2, brickH);
+        }
+      }
+      ctx.restore();
+    };
+    // Subtle full-tunnel brick backdrop + solid iconic red brick wall columns on left/right
+    drawBrickPanel(0, this.renderer.width, 0.22);
+    drawBrickPanel(18, 48, 0.92);
+    drawBrickPanel(894, 48, 0.92);
+
+    // Underground Tunnel Floor
     ctx.fillStyle = '#7F1D1D';
     ctx.fillRect(0, this.lowerGroundY, this.renderer.width, 540 - this.lowerGroundY);
+    ctx.fillStyle = '#B91C1C';
+    ctx.fillRect(0, this.lowerGroundY, this.renderer.width, 5);
 
     // Draw Pit (Tar Pit / Quicksand / Crocodile Pond)
     if (this.pit.halfW > 4) {
@@ -28940,32 +31245,55 @@ class Pitfall {
       );
     }
 
-    // Draw Crocodiles in Pond
+    // Draw Pixel-Art Crocodile Heads in Pond
     for (const croc of this.crocodiles) {
       ctx.save();
       ctx.translate(croc.x, croc.y);
+      // Lower pixel jaw & throat submerged at water line
+      ctx.fillStyle = '#15803D';
+      ctx.fillRect(-22, -5, 44, 7);
       ctx.fillStyle = PALETTE.GREEN;
-      // Lower jaw / head base
-      ctx.fillRect(-22, -6, 44, 8);
+      ctx.fillRect(-20, -6, 40, 4);
+
       if (croc.mouthOpen) {
-        // Upper jaw raised at menacing angle with white teeth!
+        // Hinged upper pixel-art jaw raised wide open with white interlocking teeth!
         ctx.save();
-        ctx.rotate(-0.48);
+        ctx.translate(10, -6);
+        ctx.rotate(-0.46);
         ctx.fillStyle = PALETTE.GREEN;
-        ctx.fillRect(-20, -12, 40, 7);
+        ctx.fillRect(-32, -8, 40, 7);
+        ctx.fillStyle = '#166534';
+        ctx.fillRect(-30, -11, 10, 4); // Nostrils & brow bump
+        ctx.fillRect(-10, -12, 12, 5);
+        // Upper white pixel teeth
         ctx.fillStyle = PALETTE.WHITE;
-        for (let t = -14; t <= 14; t += 7) {
-          ctx.fillRect(t, -5, 3, 4);
+        for (let t = -28; t <= 2; t += 7) {
+          ctx.fillRect(t, -1, 3, 4);
         }
         ctx.restore();
-        // Red warning eye
-        this.renderer.drawGlowCircle(-12, -10, 3, PALETTE.RED, 6);
+        // Lower white pixel teeth
+        ctx.fillStyle = PALETTE.WHITE;
+        for (let t = -18; t <= 6; t += 7) {
+          ctx.fillRect(t, -9, 3, 3);
+        }
+        // Glowing red eye
+        this.renderer.drawGlowCircle(6, -12, 3, PALETTE.RED, 6);
       } else {
-        // Closed flat head (safe to step on!)
+        // Closed flat pixel-art crocodile head (safe to step on!)
         ctx.fillStyle = '#22C55E';
         ctx.fillRect(-22, -11, 44, 6);
+        // Nostrils & ridged brow
+        ctx.fillStyle = '#15803D';
+        ctx.fillRect(-20, -14, 6, 3);
+        ctx.fillRect(4, -15, 12, 4);
+        // Eye
         ctx.fillStyle = PALETTE.GOLD;
-        ctx.fillRect(-14, -14, 5, 4);
+        ctx.fillRect(8, -14, 5, 3);
+        // Closed tooth seam
+        ctx.fillStyle = PALETTE.WHITE;
+        for (let t = -16; t <= 8; t += 8) {
+          ctx.fillRect(t, -6, 3, 2);
+        }
       }
       ctx.restore();
     }
@@ -29020,41 +31348,63 @@ class Pitfall {
       ctx.restore();
     }
 
-    // Draw Underground Scorpion
+    // Draw Underground Scorpion (Detailed Pixel-Art Sprite)
     if (this.scorpion) {
       const s = this.scorpion;
-      ctx.save();
-      ctx.translate(s.x, s.y - 10);
-      ctx.scale(s.dir, 1);
-      this.renderer.drawGlowRect(-12, -4, 22, 10, PALETTE.WHITE, 8);
-      // Raised stinger tail
-      ctx.strokeStyle = PALETTE.PINK;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(-10, -4);
-      ctx.lineTo(-16, -14);
-      ctx.lineTo(-8, -18);
-      ctx.stroke();
-      // Pincers
-      ctx.fillStyle = PALETTE.RED;
-      ctx.fillRect(10, -6, 6, 5);
-      ctx.restore();
+      const sprite = Math.floor(s.anim) % 2 === 0 ? PITFALL_SCORPION_1 : PITFALL_SCORPION_2;
+      const palette = {
+        W: PALETTE.WHITE,
+        R: PALETTE.RED
+      };
+      const scale = 2.6;
+      this.renderer.drawPixelSprite(
+        sprite,
+        s.x - (12 * scale) / 2,
+        s.y - 7 * scale,
+        scale,
+        palette,
+        s.dir < 0,
+        false
+      );
     }
 
-    // Draw Cobra Hazard if present on screen
+    // Draw Cobra & Campfire Hazard if present on screen
     if (this.cobra) {
       const cx = this.cobra.x;
       const cy = this.cobra.y;
-      const sway = Math.sin(this.cobra.phase) * 3;
+      const flicker = Math.floor(this.cobra.phase * 2) % 2 === 0;
+
+      // Pixel-Art Cobra Sprite
+      const cobraPalette = {
+        K: '#E2E8F0',
+        Y: PALETTE.GOLD,
+        R: PALETTE.RED
+      };
+      this.renderer.drawPixelSprite(
+        PITFALL_COBRA_SPRITE,
+        cx - 14,
+        cy - 21,
+        3,
+        cobraPalette,
+        flicker,
+        false
+      );
+
+      // Flickering Pixel-Art Campfire beside the Cobra
+      const fx = cx + 22;
       ctx.save();
-      this.renderer.drawGlowRect(cx - 10, cy - 8, 20, 8, PALETTE.GOLD, 6);
-      ctx.strokeStyle = PALETTE.RED;
-      ctx.lineWidth = 3.5;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy - 8);
-      ctx.lineTo(cx + sway, cy - 22);
-      ctx.lineTo(cx - 5 + sway, cy - 26);
-      ctx.stroke();
+      // Crossed firewood logs
+      ctx.fillStyle = '#78350F';
+      ctx.fillRect(fx - 10, cy - 5, 20, 5);
+      ctx.fillStyle = '#92400E';
+      ctx.fillRect(fx - 7, cy - 8, 14, 4);
+      // Multi-layered flickering pixel flames
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(fx - 8, cy - 16, 16, 8);
+      ctx.fillStyle = PALETTE.ORANGE;
+      ctx.fillRect(fx - 6, cy - (flicker ? 22 : 19), 12, 10);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(fx - 3, cy - (flicker ? 25 : 21), 6, 9);
       ctx.restore();
     }
 
@@ -29164,36 +31514,89 @@ const DuckHunt = (function() {
  */
 
 const DUCK_FLAP_UP = [
-  '....GGG...',
-  '...GGGGW..',
-  '...GGGGKO.',
-  'BBBBGGGG..',
-  '.BBBBGGG..',
-  '..BBBBBB..',
-  '...BBBB...',
-  '..OO..OO..'
+  '......GGGG....',
+  '.....GGGGWW...',
+  '.....GGGGKBO..',
+  '.....GGGGGOOO.',
+  '..WWWWGGGG....',
+  '.RRRRRRBBBB...',
+  'RRRRRRRRBBBB..',
+  '.RRRR..BBBBBB.',
+  '........BBBB..',
+  '......OO..OO..'
+];
+
+const DUCK_FLAP_MID = [
+  '......GGGG....',
+  '.....GGGGWW...',
+  '.....GGGGKBO..',
+  '.....GGGGGOOO.',
+  '.....WWWWG....',
+  '..BBBBBBBBBB..',
+  '.RRRRRRRRBBBB.',
+  '..RRRRR..BBBB.',
+  '.........BBB..',
+  '......OO..OO..'
 ];
 
 const DUCK_FLAP_DOWN = [
-  '....GGG...',
-  '...GGGGW..',
-  '...GGGGKO.',
-  '...GGGGG..',
-  '.BBBBBBBB.',
-  'BBBB..BBBB',
-  '..BB..BB..',
-  '..OO..OO..'
+  '......GGGG....',
+  '.....GGGGWW...',
+  '.....GGGGKBO..',
+  '.....GGGGGOOO.',
+  '.....WWWWG....',
+  '...BBBBBBBB...',
+  '..BBBBBBBBBB..',
+  '.RRRRR..RRRRR.',
+  'RRRR......RRRR',
+  '......OO..OO..'
 ];
 
 const DUCK_SHOT = [
-  '....GGG...',
-  '...GWWGW..',
-  '...GKKGKO.',
-  'BBBBGGGG..',
-  'BBBBBBBBBB',
-  '.BBBBBBBB.',
-  '..OO..OO..',
-  '..........'
+  '....GGGGGG....',
+  '...GGWWWWGG...',
+  '...GWKWWKWG...',
+  '...GGWWWWGG...',
+  '....GGOOGG....',
+  'RRRRWWWWWWRRRR',
+  '.RRRRBBBBBRRR.',
+  '..BBBBBBBBBB..',
+  '...OO....OO...',
+  '..............'
+];
+
+const DOG_CATCH_SPRITE = [
+  '..KKKK........KKKK..',
+  '.KDDDDK.TTTT.KDDDDK.',
+  'KDDDDDDTTTTTTDDDDDDK',
+  'KDDDDDTTTTTTTTDDDDDK',
+  'KDDDDTTWWTTWWTTDDDDK',
+  'KDDDDTTWKTTKWTTDDDDK',
+  '.KDDDTTWWTTWWTTDDDK.',
+  '..KDDTTTKKKKTTTDK...',
+  '...TTTTWWKKKKWWTTTT.',
+  '..TTTTWWWWWWWWWWTTTT',
+  '..TTTTWWKKKKKKWWTTTT',
+  '...TTTTWWWWWWWWTTTT.',
+  '..TTTTTTTTTTTTTTTT..',
+  '.TTTTTTTTTTTTTTTTTT.'
+];
+
+const DOG_LAUGH_SPRITE = [
+  '..KKKK........KKKK..',
+  '.KDDDDK.TTTT.KDDDDK.',
+  'KDDDDDDTTTTTTDDDDDDK',
+  'KDDDDDTTTTTTTTDDDDDK',
+  'KDDDDTTKKTTKKTTDDDDK',
+  'KDDDDTTTTTTTTTTDDDDK',
+  '.KDDDTTTTKKKKTTDDDK.',
+  '..KDDTTWWWWWWWWTDK..',
+  '...TTTTWWKKKKWWTTTT.',
+  '....TTTWWKPPKWWTTT..',
+  '....TTTWWWWWWWWTTT..',
+  '...TTTTTTTTTTTTTTTT.',
+  '..TTTTTTTTTTTTTTTTTT',
+  '.TTTTTTTTTTTTTTTTTT.'
 ];
 class DuckHunt {
   constructor(renderer, input, audio) {
@@ -29202,7 +31605,7 @@ class DuckHunt {
     this.audio = audio;
 
     this.id = 'duckhunt';
-    this.title = 'Wing Blaster';
+    this.title = 'Duck Hunt';
     this.state = 'PLAYING';
 
     this.score = 0;
@@ -29595,29 +31998,86 @@ class DuckHunt {
   }
 
   render(ctx = this.renderer.ctx) {
-    // Sky Backdrop (turns warm pink-orange on FLY AWAY!)
-    ctx.fillStyle = this.flyAway ? '#3B0F2B' : '#0B192C';
+    // 1984 Nintendo Sky-Blue Daytime Hunting Backdrop (#38BDF8 sky, turning warm orange/pink on FLY AWAY!)
+    if (this.flyAway) {
+      const skyGrad = ctx.createLinearGradient(0, 38, 0, this.grassY);
+      skyGrad.addColorStop(0, '#FB7185');
+      skyGrad.addColorStop(1, '#FDBA74');
+      ctx.fillStyle = skyGrad;
+    } else {
+      ctx.fillStyle = '#38BDF8';
+    }
     ctx.fillRect(0, 38, this.renderer.width, this.grassY - 38);
 
     // Muzzle Flash White-Out Frame
     if (this.muzzleFlashTimer > 0) {
-      ctx.fillStyle = 'rgba(248, 250, 252, 0.72)';
+      ctx.fillStyle = 'rgba(248, 250, 252, 0.78)';
       ctx.fillRect(0, 38, this.renderer.width, this.renderer.height - 38);
     }
 
-    // Distant Trees & Bushes behind grass
+    // Classic Pixel-Art Deciduous Tree on the Left (x = 120)
+    const treeX = 120;
+    // Gnarled brown bark trunk, roots, and branches
+    ctx.fillStyle = '#78350F';
+    ctx.fillRect(treeX - 16, this.grassY - 155, 32, 155);
+    ctx.fillRect(treeX - 26, this.grassY - 18, 52, 18); // Roots
+    ctx.fillRect(treeX - 42, this.grassY - 115, 28, 12); // Left branch
+    ctx.fillRect(treeX + 14, this.grassY - 128, 30, 12); // Right branch
+    // Bark highlights
+    ctx.fillStyle = '#B45309';
+    ctx.fillRect(treeX - 8, this.grassY - 150, 8, 145);
+    ctx.fillRect(treeX + 4, this.grassY - 120, 5, 110);
+
+    // Multi-layered Pixel-Art Deciduous Canopy Clusters
+    const canopyClusters = [
+      { dx: 0, dy: -195, w: 96, h: 52, col: '#14532D' },
+      { dx: -44, dy: -162, w: 72, h: 44, col: '#14532D' },
+      { dx: 44, dy: -168, w: 76, h: 46, col: '#14532D' },
+      { dx: 0, dy: -202, w: 84, h: 44, col: '#15803D' },
+      { dx: -38, dy: -168, w: 62, h: 38, col: '#16A34A' },
+      { dx: 38, dy: -174, w: 66, h: 38, col: '#16A34A' },
+      { dx: -12, dy: -210, w: 54, h: 26, col: '#4ADE80' },
+      { dx: 24, dy: -182, w: 36, h: 20, col: '#4ADE80' }
+    ];
+    for (const c of canopyClusters) {
+      ctx.fillStyle = c.col;
+      ctx.fillRect(treeX + c.dx - c.w / 2, this.grassY + c.dy, c.w, c.h);
+    }
+    // Classic red/orange autumn leaf pixel accents on canopy
+    ctx.fillStyle = '#FACC15';
+    for (let i = 0; i < 8; i++) {
+      ctx.fillRect(treeX - 48 + (i * 15) % 92, this.grassY - 200 + (i * 19) % 55, 6, 6);
+    }
+
+    // Classic Pixel-Art Bush on the Right (x = 780)
+    const bushX = 780;
     ctx.fillStyle = '#14532D';
-    ctx.fillRect(90, this.grassY - 140, 22, 140);
-    this.renderer.drawGlowCircle(101, this.grassY - 150, 48, '#166534', 8);
-    this.renderer.drawGlowCircle(780, this.grassY - 35, 38, '#15803D', 6);
+    ctx.fillRect(bushX - 48, this.grassY - 54, 96, 54);
+    ctx.fillRect(bushX - 36, this.grassY - 68, 72, 20);
+    ctx.fillStyle = '#16A34A';
+    ctx.fillRect(bushX - 42, this.grassY - 50, 84, 42);
+    ctx.fillRect(bushX - 28, this.grassY - 64, 56, 18);
+    ctx.fillStyle = '#86EFAC';
+    ctx.fillRect(bushX - 22, this.grassY - 60, 44, 10);
+    ctx.fillRect(bushX - 34, this.grassY - 42, 26, 10);
+    // Pixel berries on bush
+    ctx.fillStyle = '#FACC15';
+    ctx.fillRect(bushX - 26, this.grassY - 32, 5, 5);
+    ctx.fillRect(bushX + 18, this.grassY - 38, 5, 5);
+    ctx.fillRect(bushX + 2, this.grassY - 52, 5, 5);
 
     if (this.flyAway) {
-      this.renderer.drawText('FLY AWAY!', 480, 130, {
+      ctx.fillStyle = '#090D16';
+      ctx.fillRect(380, 98, 200, 42);
+      ctx.strokeStyle = PALETTE.WHITE;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(380, 98, 200, 42);
+      this.renderer.drawText('FLY AWAY!', 480, 126, {
         font: FONTS.HEADER,
-        size: 22,
-        color: PALETTE.PINK,
+        size: 20,
+        color: PALETTE.WHITE,
         align: 'center',
-        glow: 12
+        glow: 10
       });
     }
 
@@ -29630,72 +32090,119 @@ class DuckHunt {
       if (d.state === 'SHOT') {
         sprite = DUCK_SHOT;
       } else if (d.state === 'FALLING') {
-        sprite = Math.floor(d.flapTimer * 2) % 2 === 0 ? DUCK_FLAP_UP : DUCK_FLAP_DOWN;
+        sprite = Math.floor(d.flapTimer * 2) % 2 === 0 ? DUCK_FLAP_DOWN : DUCK_FLAP_MID;
         flipX = Math.floor(d.flapTimer * 3) % 2 === 0;
       } else {
-        sprite = Math.floor(d.flapTimer) % 2 === 0 ? DUCK_FLAP_UP : DUCK_FLAP_DOWN;
+        const frame = Math.floor(d.flapTimer) % 4;
+        sprite = frame === 0 ? DUCK_FLAP_UP : frame === 2 ? DUCK_FLAP_DOWN : DUCK_FLAP_MID;
       }
 
-      const palette = {
-        G: d.isFast ? PALETTE.PINK : PALETTE.GREEN,
-        B: d.isFast ? PALETTE.CYAN : '#92400E',
-        W: PALETTE.WHITE,
-        K: '#0B0F19',
-        O: PALETTE.ORANGE
-      };
-      const scale = 4.2;
+      // 3 Iconic NES Duck Varieties:
+      // 1. Green-Headed Mallard (Green head, chestnut wings, tan body)
+      // 2. Blue/Magenta Fast Duck (Blue head, magenta wings, cyan body)
+      // 3. Red Bonus Duck (Crimson head, black/red wings, gold collar)
+      const isRedBonus = d.isFast && d.slotIndex % 2 === 1;
+      const palette = isRedBonus
+        ? {
+            G: '#EF4444', // Red head
+            R: '#991B1B', // Deep crimson wing feathers
+            B: '#1E293B', // Dark slate/black body
+            W: '#FEF08A', // Gold/white neck ring & eye whites
+            K: '#090D16',
+            O: '#FACC15'  // Bright yellow beak & feet
+          }
+        : d.isFast
+        ? {
+            G: '#2563EB', // Royal blue head
+            R: '#EC4899', // Magenta flapping wings
+            B: '#38BDF8', // Sky-blue plumage
+            W: '#FFFFFF',
+            K: '#090D16',
+            O: '#FACC15'
+          }
+        : {
+            G: '#15803D', // Classic Mallard emerald green head
+            R: '#9A3412', // Chestnut brown wing feathers
+            B: '#451A03', // Dark brown body
+            W: '#FFFFFF', // Crisp white neck ring & shocked eyes
+            K: '#090D16',
+            O: '#FACC15'  // Yellow bill & webbed feet
+          };
+
+      const scale = 3.6;
       const drawX = d.x - (sprite[0].length * scale) / 2;
       const drawY = d.y - (sprite.length * scale) / 2;
       this.renderer.drawPixelSprite(sprite, drawX, drawY, scale, palette, flipX, false);
     }
 
-    // Draw Animated Hunting Dog popping up behind the grass
+    // Draw Animated Pixel-Art Hunting Dog popping up behind the grass
     if (this.dog.active && this.dog.yOffset > 2) {
       const dx = 480;
-      const dy = this.grassY - this.dog.yOffset;
+      const dy = this.grassY - this.dog.yOffset - 6;
+      const bob = this.dog.mode === 'laugh' ? Math.sin(performance.now() * 0.035) * 4 : 0;
       ctx.save();
-      ctx.translate(dx, dy);
+      ctx.translate(dx, dy + bob);
 
-      // Dog head & floppy ears
-      ctx.fillStyle = '#D97706';
-      ctx.fillRect(-22, 0, 44, 48);
-      ctx.fillStyle = '#451A03';
-      ctx.fillRect(-30, 4, 10, 26);
-      ctx.fillRect(20, 4, 10, 26);
-
-      // Eyes & snout
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(-12, 8, 8, 8);
-      ctx.fillRect(4, 8, 8, 8);
-      ctx.fillStyle = '#0B0F19';
-      ctx.fillRect(-9, 10, 4, 4);
-      ctx.fillRect(7, 10, 4, 4);
-      ctx.fillRect(-5, 18, 10, 6);
+      const dogSprite = this.dog.mode === 'catch' ? DOG_CATCH_SPRITE : DOG_LAUGH_SPRITE;
+      const dogScale = 3.2;
+      const dogPalette = {
+        T: '#D97706', // Warm tan hound fur
+        D: '#451A03', // Floppy dark brown ears
+        W: '#FFFFFF', // White muzzle & eyes
+        K: '#090D16', // Black nose & pupils
+        P: '#FB7185'  // Pink tongue
+      };
+      this.renderer.drawPixelSprite(
+        dogSprite,
+        -(dogSprite[0].length * dogScale) / 2,
+        0,
+        dogScale,
+        dogPalette,
+        false,
+        false
+      );
 
       if (this.dog.mode === 'catch') {
-        // Proud smile + holding caught duck(s) in paws!
-        ctx.fillStyle = PALETTE.GREEN;
-        ctx.fillRect(28, 8, 22, 16);
-        ctx.fillStyle = PALETTE.ORANGE;
-        ctx.fillRect(46, 12, 10, 6);
+        // Proudly holding up feathered duck(s) in paws!
+        // Right paw duck (Mallard)
+        ctx.fillStyle = '#D97706';
+        ctx.fillRect(28, 18, 12, 10); // Paw
+        ctx.fillStyle = '#9A3412';
+        ctx.fillRect(34, 4, 20, 18); // Feathered body
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(38, 0, 12, 4); // Neck ring
+        ctx.fillStyle = '#15803D';
+        ctx.fillRect(38, -10, 14, 10); // Mallard green head
+        ctx.fillStyle = '#FACC15';
+        ctx.fillRect(42, -16, 6, 6); // Yellow bill
+
         if (this.dog.caughtCount > 1) {
-          ctx.fillStyle = PALETTE.PINK;
-          ctx.fillRect(-50, 8, 22, 16);
+          // Left paw second duck (Blue/Magenta duck)
+          ctx.fillStyle = '#D97706';
+          ctx.fillRect(-40, 18, 12, 10);
+          ctx.fillStyle = '#EC4899';
+          ctx.fillRect(-54, 4, 20, 18);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(-50, 0, 12, 4);
+          ctx.fillStyle = '#2563EB';
+          ctx.fillRect(-52, -10, 14, 10);
+          ctx.fillStyle = '#FACC15';
+          ctx.fillRect(-48, -16, 6, 6);
         }
         this.renderer.drawText(
           this.dog.caughtCount > 1 ? 'DOUBLE CATCH!' : 'GOOD DOG!',
           0,
-          -12,
-          { size: 13, color: PALETTE.GOLD, align: 'center', glow: 8 }
+          -18,
+          { size: 13, color: '#FEF08A', align: 'center', glow: 8 }
         );
       } else {
-        // Chuckling dog shaking shoulders
-        const bob = Math.sin(performance.now() * 0.03) * 4;
-        ctx.fillStyle = PALETTE.PINK;
-        ctx.fillRect(-8, 26 + bob, 16, 8);
-        this.renderer.drawText('HEH HEH HEH!', 0, -12 + bob, {
+        // Laughing paws shaking at shoulders
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(-18, 34, 10, 8);
+        ctx.fillRect(8, 34, 10, 8);
+        this.renderer.drawText('HEH HEH HEH!', 0, -14, {
           size: 13,
-          color: PALETTE.ORANGE,
+          color: '#FEF08A',
           align: 'center',
           glow: 6
         });
@@ -29703,15 +32210,18 @@ class DuckHunt {
       ctx.restore();
     }
 
-    // Foreground Tall Grass Meadow
-    ctx.fillStyle = '#15803D';
+    // Foreground Tall Green Grass Meadow & Earth Band
+    ctx.fillStyle = '#14532D';
     ctx.fillRect(0, this.grassY, this.renderer.width, 540 - this.grassY);
-    ctx.fillStyle = PALETTE.GREEN;
-    for (let x = 0; x < 960; x += 16) {
+    ctx.fillStyle = '#16A34A';
+    ctx.fillRect(0, this.grassY, this.renderer.width, 28);
+    // Multi-tone tall pixel grass blades
+    for (let x = 0; x < 960; x += 12) {
+      ctx.fillStyle = x % 24 === 0 ? '#4ADE80' : '#22C55E';
       ctx.beginPath();
-      ctx.moveTo(x, this.grassY);
-      ctx.lineTo(x + 8, this.grassY - 16);
-      ctx.lineTo(x + 16, this.grassY);
+      ctx.moveTo(x, this.grassY + 8);
+      ctx.lineTo(x + 6, this.grassY - 18 - (x % 3) * 4);
+      ctx.lineTo(x + 12, this.grassY + 8);
       ctx.fill();
     }
 
@@ -29842,7 +32352,7 @@ class Excitebike {
     this.audio = audio;
 
     this.id = 'excitebike';
-    this.title = 'Nitro Moto';
+    this.title = 'Excitebike';
     this.state = 'PLAYING';
 
     this.score = 0;
@@ -30403,45 +32913,130 @@ class Excitebike {
   }
 
   _drawBike(ctx, screenX, laneY, z, pitch, color, wipedOut = false) {
-    // Ground Shadow
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+    // Ground Shadow (scales with height z)
+    const shadowScale = Math.max(0.45, 1 - z * 0.004);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.48)';
     ctx.beginPath();
-    ctx.ellipse(screenX, laneY + 6, 20, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(screenX, laneY + 7, 23 * shadowScale, 6 * shadowScale, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    // Dirt Roostertail Spray behind Rear Tire when on track and moving fast
+    if (!wipedOut && z <= 3 && this.bike.speed > 95) {
+      const roosterPhase = performance.now() * 0.025;
+      for (let r = 0; r < 5; r++) {
+        const rx = -21 - r * 6 - ((roosterPhase * 8 + r * 3) % 7);
+        const ry = -2 - r * 3.2 - Math.sin(roosterPhase + r) * 3;
+        ctx.fillStyle = r % 2 === 0 ? '#D97706' : '#FEF08A';
+        ctx.fillRect(screenX + rx, laneY + ry, 4 - r * 0.4, 4 - r * 0.4);
+      }
+    }
 
     ctx.save();
     ctx.translate(screenX, laneY - z);
     ctx.rotate(wipedOut ? Math.PI * 0.65 : pitch);
 
-    // Rear & Front Tires
-    this.renderer.drawGlowCircle(-14, -4, 9, '#0F172A', 4);
-    ctx.strokeStyle = PALETTE.WHITE;
-    ctx.lineWidth = 2;
+    const spokeAngle = this.bike.wheelPhase || 0;
+    const drawSpokedWheel = (wx, wy) => {
+      // Knobby black motocross tire
+      ctx.fillStyle = '#090D16';
+      ctx.beginPath();
+      ctx.arc(wx, wy, 10, 0, Math.PI * 2);
+      ctx.fill();
+      // Silver wheel rim
+      ctx.strokeStyle = '#E2E8F0';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(wx, wy, 7, 0, Math.PI * 2);
+      ctx.stroke();
+      // Rotating wheel spokes
+      ctx.strokeStyle = '#94A3B8';
+      ctx.lineWidth = 1.2;
+      for (let s = 0; s < 4; s++) {
+        const a = spokeAngle + (s * Math.PI) / 4;
+        ctx.beginPath();
+        ctx.moveTo(wx + Math.cos(a) * 6.5, wy + Math.sin(a) * 6.5);
+        ctx.lineTo(wx - Math.cos(a) * 6.5, wy - Math.sin(a) * 6.5);
+        ctx.stroke();
+      }
+      // Hub
+      ctx.fillStyle = color;
+      ctx.fillRect(wx - 2, wy - 2, 4, 4);
+    };
+
+    // Rear & Front Spoked Wheels
+    drawSpokedWheel(-15, -4);
+    drawSpokedWheel(16, -4);
+
+    // Chrome Exhaust Muffler & Swingarm
+    ctx.strokeStyle = '#CBD5E1';
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(-14, -4, 7, 0, Math.PI * 2);
+    ctx.moveTo(-15, -4);
+    ctx.lineTo(-2, -6);
+    ctx.moveTo(-4, -9);
+    ctx.lineTo(-21, -15);
     ctx.stroke();
 
-    this.renderer.drawGlowCircle(15, -4, 9, '#0F172A', 4);
+    // Engine Block & Crankcase
+    ctx.fillStyle = '#475569';
+    ctx.fillRect(-5, -13, 10, 8);
+    ctx.fillStyle = '#94A3B8';
+    ctx.fillRect(-3, -11, 6, 4);
+
+    // Front Suspension Forks & Handlebars
+    ctx.strokeStyle = '#E2E8F0';
+    ctx.lineWidth = 2.8;
     ctx.beginPath();
-    ctx.arc(15, -4, 7, 0, Math.PI * 2);
+    ctx.moveTo(16, -4);
+    ctx.lineTo(8, -22);
+    ctx.lineTo(4, -24);
     ctx.stroke();
 
-    // Motocross Frame
+    // Motocross Frame, Tank & High Fenders
     ctx.strokeStyle = color;
-    ctx.lineWidth = 3.5;
+    ctx.lineWidth = 3.8;
     ctx.beginPath();
-    ctx.moveTo(-14, -4);
-    ctx.lineTo(-2, -16);
-    ctx.lineTo(12, -14);
-    ctx.lineTo(15, -4);
-    ctx.moveTo(-2, -16);
-    ctx.lineTo(4, -6);
+    // Rear fender & seat
+    ctx.moveTo(-22, -16);
+    ctx.lineTo(-10, -16);
+    ctx.lineTo(2, -15);
+    // Fuel tank & shroud
+    ctx.lineTo(10, -18);
+    // High front mudguard
+    ctx.moveTo(9, -16);
+    ctx.lineTo(22, -14);
     ctx.stroke();
 
-    // Rider torso & helmet
+    // White Number Plate
     ctx.fillStyle = PALETTE.WHITE;
-    ctx.fillRect(-6, -28, 9, 12);
-    this.renderer.drawGlowCircle(0, -32, 6, color, 8);
+    ctx.fillRect(-12, -15, 7, 5);
+    ctx.fillRect(9, -21, 5, 5);
+
+    // Motocross Rider (Boots, Pants, Jersey, Arms, Helmet & Visor)
+    // Boots & Lower Leg
+    ctx.fillStyle = '#1E293B';
+    ctx.fillRect(-7, -14, 5, 9);
+    // Rider Torso leaning into handlebars
+    ctx.fillStyle = PALETTE.WHITE;
+    ctx.fillRect(-9, -27, 10, 12);
+    // Jersey Stripe
+    ctx.fillStyle = color;
+    ctx.fillRect(-9, -23, 10, 4);
+    // Rider Arm reaching to handlebar
+    ctx.strokeStyle = PALETTE.WHITE;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-2, -25);
+    ctx.lineTo(7, -22);
+    ctx.stroke();
+
+    // Helmet & Goggles
+    this.renderer.drawGlowCircle(-1, -32, 6.5, color, 6);
+    ctx.fillStyle = PALETTE.WHITE;
+    ctx.fillRect(2, -35, 6, 2.5); // Helmet peak visor
+    ctx.fillStyle = '#090D16';
+    ctx.fillRect(1, -33, 5, 3.5); // Goggles
+
     ctx.restore();
   }
 
@@ -30449,29 +33044,75 @@ class Excitebike {
     const b = this.bike;
     const camX = b.worldX - b.screenX;
 
-    // Stadium Sky & Grandstands
-    ctx.fillStyle = '#0B132B';
-    ctx.fillRect(0, 38, this.renderer.width, 250);
+    // Stadium Sky & Grandstands along Top Horizon
+    ctx.fillStyle = '#1E3A8A';
+    ctx.fillRect(0, 38, this.renderer.width, 118);
 
-    // Crowd Grandstand Lights
+    // Multi-Tiered Stadium Bleacher Structure
+    ctx.fillStyle = '#0F172A';
+    ctx.fillRect(0, 130, this.renderer.width, 132);
     ctx.fillStyle = '#1E293B';
-    ctx.fillRect(0, 175, this.renderer.width, 95);
-    for (let i = 0; i < 32; i++) {
-      const sx = ((i * 64 - camX * 0.25) % 960 + 960) % 960;
-      ctx.fillStyle = i % 3 === 0 ? PALETTE.CYAN : i % 3 === 1 ? PALETTE.PINK : PALETTE.GOLD;
-      ctx.fillRect(sx, 195 + (i % 4) * 14, 6, 6);
+    for (let r = 0; r < 5; r++) {
+      ctx.fillRect(0, 138 + r * 22, this.renderer.width, 14);
     }
 
-    // Green Stadium Infield Verge
+    // Animated Stadium Grandstand Crowd Spectators
+    const crowdWave = Math.floor(performance.now() / 180);
+    const crowdPalette = [PALETTE.RED, PALETTE.GOLD, PALETTE.CYAN, PALETTE.WHITE, PALETTE.PINK, PALETTE.GREEN];
+    for (let row = 0; row < 5; row++) {
+      for (let col = 0; col < 48; col++) {
+        const sx = ((col * 20 - camX * 0.25 + row * 7) % 960 + 960) % 960;
+        const bounce = (col + row + crowdWave) % 4 === 0 ? -2 : 0;
+        const cCol = crowdPalette[(col * 3 + row * 5) % crowdPalette.length];
+        ctx.fillStyle = cCol;
+        ctx.fillRect(sx, 136 + row * 22 + bounce, 6, 6);
+        ctx.fillStyle = '#FDBA74';
+        ctx.fillRect(sx + 1, 132 + row * 22 + bounce, 4, 4);
+      }
+    }
+
+    // Stadium Sponsor Fascia Wall & Retaining Barrier
+    ctx.fillStyle = '#E2E8F0';
+    ctx.fillRect(0, 246, this.renderer.width, 18);
+    ctx.fillStyle = '#1D4ED8';
+    ctx.fillRect(0, 248, this.renderer.width, 14);
+    for (let i = 0; i < 8; i++) {
+      const bx = ((i * 220 - camX * 0.45) % 1760 + 1760) % 1760 - 200;
+      ctx.fillStyle = i % 2 === 0 ? PALETTE.RED : PALETTE.GOLD;
+      ctx.fillRect(bx, 249, 96, 12);
+    }
+
+    // Green Turf Shoulders (Top & Bottom Infield Verge)
+    ctx.fillStyle = '#16A34A';
+    ctx.fillRect(0, 264, this.renderer.width, 276);
     ctx.fillStyle = '#15803D';
-    ctx.fillRect(0, 270, this.renderer.width, 270);
+    for (let gx = 0; gx < 960; gx += 40) {
+      const stripX = ((gx - camX * 0.8) % 960 + 960) % 960;
+      ctx.fillRect(stripX, 264, 20, 24);
+      ctx.fillRect(stripX, 472, 20, 20);
+    }
 
-    // 4-Lane Motocross Track Surface
-    ctx.fillStyle = '#9A3412';
+    // Red & White Alternating Track Curbing along Both Track Shoulders
+    for (let wx = Math.floor(camX / 24) * 24 - 24; wx < camX + 984; wx += 24) {
+      const sx = wx - camX;
+      const isRed = Math.floor(wx / 24) % 2 === 0;
+      ctx.fillStyle = isRed ? '#EF4444' : '#F8FAFC';
+      ctx.fillRect(sx, 286, 24, 10);
+      ctx.fillRect(sx, 464, 24, 10);
+    }
+
+    // 4-Lane Motocross Track Surface (Warm Tan/Clay Dirt)
+    ctx.fillStyle = '#B45309';
     ctx.fillRect(0, 296, this.renderer.width, 168);
+    ctx.fillStyle = '#9A3412';
+    for (let l = 0; l < 4; l++) {
+      if (l % 2 === 1) {
+        ctx.fillRect(0, 298 + l * 40, this.renderer.width, 40);
+      }
+    }
 
-    // Lane Divider Lines
-    ctx.strokeStyle = 'rgba(254, 240, 138, 0.35)';
+    // Crisp White Lane Divider Lines
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
     ctx.lineWidth = 2;
     for (let l = 0; l <= 4; l++) {
       const ly = 298 + l * 40;
@@ -30479,16 +33120,6 @@ class Excitebike {
       ctx.moveTo(0, ly);
       ctx.lineTo(this.renderer.width, ly);
       ctx.stroke();
-    }
-
-    // Track Distance Markers
-    ctx.fillStyle = PALETTE.WHITE;
-    for (let wx = 0; wx < this.trackLength; wx += 160) {
-      const sx = wx - camX;
-      if (sx >= -20 && sx <= 980) {
-        ctx.fillRect(sx, 288, 12, 8);
-        ctx.fillRect(sx, 464, 12, 8);
-      }
     }
 
     // Draw Track Features (Ramps, Cooling [<<] Strips, Mud Slicks)
@@ -30690,6 +33321,34 @@ const MissileCommand = (function() {
  * interceptor trajectory vectors, and expanding/contracting circular blast radii that
  * chain-detonate incoming MIRV split warheads and smart bombers!
  */
+
+
+const BOMBER_SPRITE = [
+  '.....RRRR.......',
+  '...RRRRRRRR.....',
+  '.RRRRWWWWWRRRR..',
+  'RRRRRRRRRRRRRRRR',
+  '..RRR..RRR..RRR.',
+  '.......RR.......'
+];
+
+const SATELLITE_SPRITE = [
+  'Y......YY......Y',
+  '.Y...RRRRRR...Y.',
+  '..Y.RRWWWWWR.Y..',
+  '...RRRRRRRRRR...',
+  '..Y.RRWWWWWR.Y..',
+  '.Y...RRRRRR...Y.',
+  'Y......YY......Y'
+];
+
+// 10-Missile Pyramid Offset Coordinates inside each ABM Mound (Rows of 1, 2, 3, 4)
+const PYRAMID_SLOTS = [
+  { dx: 0, dy: -22 },
+  { dx: -6, dy: -15 }, { dx: 6, dy: -15 },
+  { dx: -12, dy: -8 }, { dx: 0, dy: -8 }, { dx: 12, dy: -8 },
+  { dx: -18, dy: -1 }, { dx: -6, dy: -1 }, { dx: 6, dy: -1 }, { dx: 18, dy: -1 }
+];
 class MissileCommand {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -30697,7 +33356,7 @@ class MissileCommand {
     this.audio = audio;
 
     this.id = 'missilecommand';
-    this.title = 'Aegis Intercept';
+    this.title = 'Missile Command';
     this.state = 'PLAYING';
 
     this.score = 0;
@@ -31107,49 +33766,65 @@ class MissileCommand {
   }
 
   render(ctx = this.renderer.ctx) {
-    // Deep Space Radar Backdrop
-    ctx.fillStyle = PALETTE.BG;
+    // 1980 Atari Coin-Op Pitch-Black Sky Backdrop
+    ctx.fillStyle = '#000000';
     ctx.fillRect(0, 38, this.renderer.width, this.renderer.height - 38);
 
-    // Draw Enemy ICBM Contrails & Warhead Tips
+    // Draw Enemy ICBM Contrails & Blinking Warhead Tips
+    const warheadFlash = Math.floor(performance.now() / 60) % 2 === 0 ? PALETTE.WHITE : PALETTE.GOLD;
     for (const em of this.enemyMissiles) {
       ctx.save();
       ctx.strokeStyle = PALETTE.RED;
       ctx.shadowColor = PALETTE.RED;
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 6;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(em.startX, em.startY);
       ctx.lineTo(em.x, em.y);
       ctx.stroke();
-      this.renderer.drawGlowCircle(em.x, em.y, 3, PALETTE.WHITE, 8);
+      ctx.fillStyle = warheadFlash;
+      ctx.fillRect(em.x - 2, em.y - 2, 4, 4);
       ctx.restore();
     }
 
-    // Draw Smart Bombers / Satellites
-    for (const bm of this.bombers) {
-      ctx.save();
-      ctx.translate(bm.x, bm.y);
-      this.renderer.drawGlowRect(-16, -6, 32, 12, PALETTE.PURPLE, 10);
-      this.renderer.drawGlowCircle(0, 0, 5, PALETTE.GOLD, 8);
-      ctx.restore();
+    // Draw Pixel-Art Enemy Strategic Bombers & Killer Satellites
+    for (let i = 0; i < this.bombers.length; i++) {
+      const bm = this.bombers[i];
+      const isSatellite = i % 2 === 1 || bm.y < 145;
+      const sprite = isSatellite ? SATELLITE_SPRITE : BOMBER_SPRITE;
+      const scale = 2.4;
+      const drawX = bm.x - (sprite[0].length * scale) / 2;
+      const drawY = bm.y - (sprite.length * scale) / 2;
+      this.renderer.drawPixelSprite(
+        sprite,
+        drawX,
+        drawY,
+        scale,
+        {
+          R: isSatellite ? PALETTE.PINK : PALETTE.RED,
+          W: PALETTE.CYAN,
+          Y: PALETTE.GOLD
+        },
+        bm.vx < 0,
+        false
+      );
     }
 
     // Draw Player ABM Interceptor Contrails & Target 'X' Markers
     for (const ic of this.interceptors) {
       ctx.save();
-      ctx.strokeStyle = PALETTE.CYAN;
+      ctx.strokeStyle = '#3B82F6';
       ctx.shadowColor = PALETTE.CYAN;
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 6;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(ic.startX, ic.startY);
       ctx.lineTo(ic.x, ic.y);
       ctx.stroke();
 
-      // Target X marker
-      ctx.strokeStyle = PALETTE.GOLD;
-      ctx.lineWidth = 1.5;
+      // Flashing Multi-Color Target 'X' Marker
+      ctx.strokeStyle = warheadFlash;
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
       ctx.moveTo(ic.targetX - 5, ic.targetY - 5);
       ctx.lineTo(ic.targetX + 5, ic.targetY + 5);
@@ -31157,70 +33832,132 @@ class MissileCommand {
       ctx.lineTo(ic.targetX - 5, ic.targetY + 5);
       ctx.stroke();
 
-      this.renderer.drawGlowCircle(ic.x, ic.y, 3, PALETTE.WHITE, 8);
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(ic.x - 2, ic.y - 2, 4, 4);
       ctx.restore();
     }
 
-    // Draw Expanding / Contracting Multi-Color Circular Blast Radii
-    const blastPalette = [PALETTE.WHITE, PALETTE.CYAN, PALETTE.PINK, PALETTE.GOLD];
+    // Draw Cycling Multi-Color (Red/Yellow/White/Magenta/Cyan) Intercept Fireball Explosions
+    const blastPalette = [PALETTE.RED, PALETTE.GOLD, PALETTE.WHITE, PALETTE.PINK, PALETTE.CYAN];
     for (const ex of this.explosions) {
-      const col = blastPalette[Math.floor(ex.colorCycle) % blastPalette.length];
-      this.renderer.drawGlowCircle(ex.x, ex.y, ex.radius, col, 16, true);
-    }
-
-    // Draw Craggy Planetary Terrain & ABM Silo Mounds
-    ctx.fillStyle = '#1E1B4B';
-    ctx.fillRect(0, this.groundY, this.renderer.width, 540 - this.groundY);
-    ctx.strokeStyle = PALETTE.GOLD;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(0, this.groundY);
-    ctx.lineTo(this.renderer.width, this.groundY);
-    ctx.stroke();
-
-    // Draw 6 Crystal Neon Cities
-    for (const c of this.cities) {
-      if (c.alive) {
-        // Futuristic crystal skyline domes & spires
-        this.renderer.drawGlowRect(c.x - 18, c.y - 12, 36, 12, PALETTE.CYAN, 8);
-        this.renderer.drawGlowRect(c.x - 10, c.y - 22, 8, 10, PALETTE.BLUE, 6);
-        this.renderer.drawGlowRect(c.x + 2, c.y - 26, 10, 14, PALETTE.CYAN, 8);
-      } else {
-        // Scorched crater ruin
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(c.x - 14, c.y - 3, 28, 3);
+      const idx = Math.floor(ex.colorCycle) % blastPalette.length;
+      const outerCol = blastPalette[idx];
+      const innerCol = blastPalette[(idx + 2) % blastPalette.length];
+      this.renderer.drawGlowCircle(ex.x, ex.y, ex.radius, outerCol, 14, true);
+      if (ex.radius > 8) {
+        ctx.fillStyle = innerCol;
+        ctx.beginPath();
+        ctx.arc(ex.x, ex.y, ex.radius * 0.55, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
 
-    // Draw 3 ABM Defense Batteries (Alpha, Beta, Gamma)
-    for (const bat of this.batteries) {
-      // Silo mound
-      ctx.fillStyle = bat.alive ? '#312E81' : '#1E293B';
-      ctx.beginPath();
-      ctx.moveTo(bat.x - 36, this.groundY);
-      ctx.lineTo(bat.x - 20, this.groundY - 18);
-      ctx.lineTo(bat.x + 20, this.groundY - 18);
-      ctx.lineTo(bat.x + 36, this.groundY);
-      ctx.closePath();
-      ctx.fill();
+    // Draw Rugged Yellow Lunar/Desert Ground Terrain with 3 Raised ABM Battery Mounds
+    ctx.fillStyle = '#FACC15';
+    ctx.beginPath();
+    ctx.moveTo(0, 540);
+    ctx.lineTo(0, this.groundY - 4);
+    // Left Alpha Battery Mound (x = 85)
+    ctx.lineTo(38, this.groundY - 2);
+    ctx.lineTo(56, this.groundY - 28);
+    ctx.lineTo(114, this.groundY - 28);
+    ctx.lineTo(132, this.groundY - 2);
+    // Craggy lunar valley between Alpha and Beta
+    ctx.lineTo(160, this.groundY + 2);
+    ctx.lineTo(230, this.groundY - 3);
+    ctx.lineTo(320, this.groundY + 2);
+    ctx.lineTo(425, this.groundY - 2);
+    // Center Beta Battery Mound (x = 480)
+    ctx.lineTo(448, this.groundY - 28);
+    ctx.lineTo(512, this.groundY - 28);
+    ctx.lineTo(535, this.groundY - 2);
+    // Craggy lunar valley between Beta and Gamma
+    ctx.lineTo(565, this.groundY + 2);
+    ctx.lineTo(640, this.groundY - 3);
+    ctx.lineTo(730, this.groundY + 2);
+    ctx.lineTo(828, this.groundY - 2);
+    // Right Gamma Battery Mound (x = 875)
+    ctx.lineTo(846, this.groundY - 28);
+    ctx.lineTo(904, this.groundY - 28);
+    ctx.lineTo(922, this.groundY - 2);
+    ctx.lineTo(this.renderer.width, this.groundY - 4);
+    ctx.lineTo(this.renderer.width, 540);
+    ctx.closePath();
+    ctx.fill();
 
-      if (bat.alive) {
-        // Stacked pyramid of remaining ABM missiles
-        const col = bat.ammo <= 3 ? PALETTE.RED : PALETTE.GOLD;
-        for (let m = 0; m < bat.ammo; m++) {
-          const mx = bat.x - 18 + (m % 5) * 9;
-          const my = this.groundY - 14 + Math.floor(m / 5) * 7;
-          ctx.fillStyle = col;
-          ctx.fillRect(mx, my, 4, 6);
-        }
-        this.renderer.drawText(`${bat.name}:${bat.ammo}`, bat.x, this.groundY + 22, {
-          size: 12,
-          color: bat.ammo > 0 ? PALETTE.CYAN : PALETTE.RED,
-          align: 'center'
-        });
+    // Draw 6 Multi-Spire Cyan/Blue Crystal Dome Cities
+    for (const c of this.cities) {
+      if (c.alive) {
+        // Outer crystal base & dome
+        ctx.fillStyle = '#2563EB';
+        ctx.fillRect(c.x - 20, c.y - 8, 40, 8);
+        ctx.beginPath();
+        ctx.arc(c.x, c.y - 6, 15, Math.PI, 0);
+        ctx.fill();
+
+        // Multi-spire cyan skyline towers
+        ctx.fillStyle = PALETTE.CYAN;
+        ctx.fillRect(c.x - 16, c.y - 16, 5, 14);
+        ctx.fillRect(c.x - 9, c.y - 24, 6, 22);
+        ctx.fillRect(c.x - 1, c.y - 29, 5, 27);
+        ctx.fillRect(c.x + 6, c.y - 21, 6, 19);
+        ctx.fillRect(c.x + 13, c.y - 14, 4, 12);
+
+        // Glowing spire tips
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.fillRect(c.x - 8, c.y - 26, 2, 2);
+        ctx.fillRect(c.x + 1, c.y - 31, 2, 2);
+        ctx.fillRect(c.x + 8, c.y - 23, 2, 2);
       } else {
-        this.renderer.drawText('OUT', bat.x, this.groundY + 22, {
-          size: 12,
+        // Scorched crater ruin in yellow terrain
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(c.x - 16, c.y - 2, 32, 5);
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(c.x - 10, c.y, 6, 2);
+        ctx.fillRect(c.x + 4, c.y, 6, 2);
+      }
+    }
+
+    // Draw 3 ABM Defense Batteries with Pyramid of Remaining Mini-Missiles Inside Each Mound
+    for (const bat of this.batteries) {
+      if (bat.alive && bat.ammo > 0) {
+        // Draw 1-2-3-4 Pyramid of upright mini-missiles inside the yellow mound
+        for (let m = 0; m < bat.ammo && m < PYRAMID_SLOTS.length; m++) {
+          const slot = PYRAMID_SLOTS[m];
+          const mx = bat.x + slot.dx;
+          const my = this.groundY + slot.dy;
+          // Upright mini-missile body & fins
+          ctx.fillStyle = bat.ammo <= 3 ? PALETTE.RED : '#1D4ED8';
+          ctx.fillRect(mx - 1.5, my - 5, 3, 6);
+          ctx.fillRect(mx - 3, my - 1, 6, 2); // Fins
+          ctx.fillStyle = PALETTE.CYAN;
+          ctx.fillRect(mx - 1, my - 7, 2, 2); // Nosecone
+        }
+        if (bat.ammo <= 3) {
+          this.renderer.drawText('LOW', bat.x, this.groundY + 24, {
+            font: FONTS.HEADER,
+            size: 11,
+            color: PALETTE.RED,
+            align: 'center'
+          });
+        } else {
+          this.renderer.drawText(`${bat.name}:${bat.ammo}`, bat.x, this.groundY + 24, {
+            size: 11,
+            color: '#000000',
+            align: 'center'
+          });
+        }
+      } else {
+        // Destroyed or Empty ABM Mound
+        if (!bat.alive) {
+          ctx.fillStyle = '#000000';
+          ctx.beginPath();
+          ctx.arc(bat.x, this.groundY - 16, 16, Math.PI, 0, true);
+          ctx.fill();
+        }
+        this.renderer.drawText('OUT', bat.x, this.groundY + 24, {
+          font: FONTS.HEADER,
+          size: 11,
           color: PALETTE.RED,
           align: 'center'
         });
@@ -31315,6 +34052,78 @@ const CHEF_SPRITE = [
   '..BBBBBB..',
   '..BB..BB..',
   '.KK....KK.'
+];
+
+const HOTDOG_SPRITE_A = [
+  '...RRRR...',
+  '.TTRRRRTT.',
+  'TTRWKRWKTT',
+  'TTRRRRRRTT',
+  'TTMRRRRRTT',
+  '.TTRRRRTT.',
+  '...RRRR...',
+  '..RR..RR..',
+  '.YY....YY.'
+];
+
+const HOTDOG_SPRITE_B = [
+  '...RRRR...',
+  '.TTRRRRTT.',
+  'TTRWKRWKTT',
+  'TTRRRRRRTT',
+  'TTMRRRRRTT',
+  '.TTRRRRTT.',
+  '...RRRR...',
+  '...RRRR...',
+  '..YY..YY..'
+];
+
+const EGG_SPRITE_A = [
+  '..WWWWWW..',
+  '.WWWWWWWW.',
+  'WWYYYYYYWW',
+  'WWYKWYKWWW',
+  'WWYYYYYYWW',
+  '.WWWWWWWW.',
+  '..WWWWWW..',
+  '..OO..OO..',
+  '.OO....OO.'
+];
+
+const EGG_SPRITE_B = [
+  '..WWWWWW..',
+  '.WWWWWWWW.',
+  'WWYYYYYYWW',
+  'WWYKWYKWWW',
+  'WWYYYYYYWW',
+  '.WWWWWWWW.',
+  '..WWWWWW..',
+  '...OOOO...',
+  '..OO..OO..'
+];
+
+const PICKLE_SPRITE_A = [
+  '..GGGGGG..',
+  '.GLGGGGGL.',
+  'GGWKGGWKGG',
+  'GGGGGGGGGG',
+  'GLGGLLGGLG',
+  '.GGGGGGGG.',
+  '..GGGGGG..',
+  '..DD..DD..',
+  '.DD....DD.'
+];
+
+const PICKLE_SPRITE_B = [
+  '..GGGGGG..',
+  '.GLGGGGGL.',
+  'GGWKGGWKGG',
+  'GGGGGGGGGG',
+  'GLGGLLGGLG',
+  '.GGGGGGGG.',
+  '..GGGGGG..',
+  '...DDDD...',
+  '..DD..DD..'
 ];
 
 const INGREDIENT_TYPES = [
@@ -31456,7 +34265,7 @@ class BurgerTime {
     this.audio = audio;
 
     this.id = 'burgertime';
-    this.title = 'Bistro Stacker';
+    this.title = 'BurgerTime';
     this.state = 'PLAYING';
 
     this.score = 0;
@@ -32094,22 +34903,66 @@ class BurgerTime {
 
       ctx.save();
       ctx.shadowColor = s.color;
-      ctx.shadowBlur = 6;
+      ctx.shadowBlur = 5;
       ctx.fillStyle = s.color;
 
       if (s.type === 'topBun') {
-        ctx.fillRect(sx + 1, sy, segW - 2, 11);
-        // Sesame seeds
+        // Domed golden top bun segment
+        const topInset = i === 0 || i === 4 ? 3 : 1;
+        ctx.fillRect(sx + 0.5, sy + topInset, segW - 1, 12 - topInset);
+        ctx.fillStyle = s.rim;
+        ctx.fillRect(sx + 2, sy + topInset + 1, segW - 4, 2);
+        // White sesame seeds
         ctx.fillStyle = PALETTE.WHITE;
-        ctx.fillRect(sx + segW * 0.4, sy + 3, 3, 2);
+        ctx.fillRect(sx + segW * 0.25, sy + topInset + 2, 3, 2);
+        ctx.fillRect(sx + segW * 0.65, sy + topInset + 5, 3, 2);
       } else if (s.type === 'lettuce') {
+        // Ruffled wavy green lettuce leaf edges
         ctx.beginPath();
-        ctx.arc(sx + segW / 2, sy + 6, segW * 0.55, 0, Math.PI);
+        ctx.arc(sx + segW * 0.3, sy + 6, segW * 0.38, 0, Math.PI * 2);
+        ctx.arc(sx + segW * 0.72, sy + 7, segW * 0.38, 0, Math.PI * 2);
         ctx.fill();
-      } else {
-        ctx.fillRect(sx + 1, sy + 2, segW - 2, 9);
+        ctx.fillStyle = s.rim;
+        ctx.fillRect(sx + 3, sy + 4, segW - 6, 2);
+      } else if (s.type === 'patty') {
+        // Seared beef patty with char-grill marks
+        ctx.fillRect(sx + 0.5, sy + 1, segW - 1, 10);
         ctx.fillStyle = s.rim;
         ctx.fillRect(sx + 2, sy + 2, segW - 4, 2);
+        // Dark char-grill diagonal/vertical sear bars
+        ctx.fillStyle = '#451A03';
+        ctx.fillRect(sx + 4, sy + 2, 3, 8);
+        ctx.fillRect(sx + 12, sy + 2, 3, 8);
+      } else if (s.type === 'tomato') {
+        // Bright red tomato slice with yellow seed pockets
+        ctx.fillRect(sx + 1, sy + 2, segW - 2, 9);
+        ctx.fillStyle = '#B91C1C';
+        ctx.fillRect(sx + 3, sy + 4, segW - 6, 5);
+        // Tomato slice seeds
+        ctx.fillStyle = '#FEF08A';
+        ctx.fillRect(sx + 5, sy + 5, 2, 2);
+        ctx.fillRect(sx + segW - 7, sy + 6, 2, 2);
+      } else if (s.type === 'cheese') {
+        // Melted yellow cheese slice with dripping corners
+        ctx.fillRect(sx + 0.5, sy + 2, segW - 1, 7);
+        // Melted triangular cheese drips
+        ctx.beginPath();
+        ctx.moveTo(sx + 2, sy + 9);
+        ctx.lineTo(sx + 6, sy + 14);
+        ctx.lineTo(sx + 10, sy + 9);
+        if (i % 2 === 0) {
+          ctx.moveTo(sx + 12, sy + 9);
+          ctx.lineTo(sx + 15, sy + 13);
+          ctx.lineTo(sx + 18, sy + 9);
+        }
+        ctx.fill();
+        ctx.fillStyle = s.rim;
+        ctx.fillRect(sx + 2, sy + 3, segW - 4, 2);
+      } else {
+        // Bottom Bun with toasted top crust & rounded base
+        ctx.fillRect(sx + 0.5, sy + 2, segW - 1, 9);
+        ctx.fillStyle = s.rim;
+        ctx.fillRect(sx + 1, sy + 2, segW - 2, 2.5);
       }
       ctx.restore();
     }
@@ -32170,42 +35023,64 @@ class BurgerTime {
       });
     }
 
-    // Draw Enemies (Mr. Hot Dog, Mr. Egg, Mr. Pickle)
+    // Draw Enemies (Mr. Hot Dog, Mr. Egg, Mr. Pickle) with detailed multi-color pixel-art sprites
     for (const e of this.enemies) {
       if (e.respawnTimer > 0) continue;
-      ctx.save();
       const wobble = e.stunTimer > 0 ? Math.sin(performance.now() * 0.04) * 4 : 0;
-      ctx.translate(e.x + wobble, e.y);
+      const stepFrame = Math.floor(e.anim) % 2 === 0;
+      let sprite = HOTDOG_SPRITE_A;
+      let palette = {};
 
       if (e.type === 'hotdog') {
-        this.renderer.drawGlowRect(-9, -28, 18, 24, e.color, 8);
-        ctx.fillStyle = e.accent;
-        ctx.fillRect(-11, -24, 3, 18);
-        ctx.fillRect(8, -24, 3, 18);
+        sprite = stepFrame ? HOTDOG_SPRITE_A : HOTDOG_SPRITE_B;
+        palette = {
+          R: '#EF4444', // Red frankfurter
+          T: '#FDBA74', // Tan hot dog bun
+          M: '#FACC15', // Mustard squiggle
+          W: PALETTE.WHITE,
+          K: '#0B0F19',
+          Y: '#FEF08A'  // Boots
+        };
       } else if (e.type === 'egg') {
-        this.renderer.drawGlowCircle(0, -16, 12, e.color, 8);
-        this.renderer.drawGlowCircle(0, -16, 6, e.accent, 6);
+        sprite = stepFrame ? EGG_SPRITE_A : EGG_SPRITE_B;
+        palette = {
+          W: '#F8FAFC', // White fried egg albumen
+          Y: '#FACC15', // Bright yellow yolk face
+          K: '#0B0F19', // Eyes
+          O: '#F97316'  // Walking legs
+        };
       } else {
-        this.renderer.drawGlowRect(-10, -26, 20, 22, e.color, 8);
-        ctx.fillStyle = e.accent;
-        ctx.fillRect(-6, -22, 4, 4);
-        ctx.fillRect(2, -16, 4, 4);
+        sprite = stepFrame ? PICKLE_SPRITE_A : PICKLE_SPRITE_B;
+        palette = {
+          G: '#22C55E', // Ridged green pickle body
+          L: '#86EFAC', // Light green pickle bumps/ridges
+          W: PALETTE.WHITE,
+          K: '#0B0F19',
+          D: '#15803D'  // Dark green pickle legs
+        };
       }
 
-      // Eyes & Legs
-      ctx.fillStyle = '#0B0F19';
-      ctx.fillRect(-5, -20, 3, 4);
-      ctx.fillRect(2, -20, 3, 4);
+      const scale = 3.0;
+      const drawX = e.x + wobble - (sprite[0].length * scale) / 2;
+      const drawY = e.y - sprite.length * scale;
+      this.renderer.drawPixelSprite(
+        sprite,
+        drawX,
+        drawY,
+        scale,
+        palette,
+        e.dir < 0,
+        e.stunTimer > 0 && Math.floor(e.stunTimer * 12) % 2 === 0
+      );
 
       if (e.stunTimer > 0) {
         // Pepper-stunned timer halo
-        this.renderer.drawText(`${e.stunTimer.toFixed(1)}s`, 0, -34, {
+        this.renderer.drawText(`${e.stunTimer.toFixed(1)}s`, e.x + wobble, e.y - 34, {
           size: 11,
           color: PALETTE.CYAN,
           align: 'center'
         });
       }
-      ctx.restore();
     }
 
     // Draw Chef Peter Pepper
@@ -32472,9 +35347,65 @@ const LEVEL_LAYOUTS = [
 
 const FRUIT_TYPES = [
   { name: 'BANANA', points: 500, color: '#FFD700', accent: '#FFF380' },
+  { name: 'CHERRIES', points: 800, color: '#EF4444', accent: '#22C55E' },
   { name: 'WATERMELON', points: 1000, color: '#FF2A55', accent: '#00FF66' },
-  { name: 'PINEAPPLE', points: 1500, color: '#FF8800', accent: '#00FF66' },
+  { name: 'GRAPES', points: 1500, color: '#A855F7', accent: '#22C55E' },
   { name: 'DIAMOND', points: 3000, color: '#00F0FF', accent: '#FFFFFF' }
+];
+
+const BANANA_SPRITE = [
+  '....GG....',
+  '...YYYY...',
+  '..YYWWYY..',
+  '.YYYY.YYY.',
+  'YYYY..YYYY',
+  'YYY...YYYY',
+  '.YY....YY.',
+  '.......K..'
+];
+
+const CHERRIES_SPRITE = [
+  '.....GGG..',
+  '....G..G..',
+  '...G...G..',
+  '..G....G..',
+  '.RRR..RRR.',
+  'RWWWRRWWWR',
+  'RRRRRRRRRR',
+  '.RRR..RRR.'
+];
+
+const WATERMELON_SPRITE = [
+  '....RR....',
+  '...RRRR...',
+  '..RRKRRR..',
+  '.RRRRKRRR.',
+  'RRRRKRRRRR',
+  'WWWWWWWWWW',
+  'GGGGGGGGGG',
+  '.GGGGGGGG.'
+];
+
+const GRAPES_SPRITE = [
+  '....GG....',
+  '..GGGGGG..',
+  '..PPPPPP..',
+  '.PPWPPWPP.',
+  '..PPPPPP..',
+  '..PPWPPP..',
+  '...PPPP...',
+  '....PP....'
+];
+
+const DIAMOND_SPRITE = [
+  '..CCCCCC..',
+  '.CCWWWWCC.',
+  'CCWWCCWWCC',
+  'CCCCCCCCCC',
+  '.CCWWCCCC.',
+  '..CCCCCC..',
+  '...CCCC...',
+  '....CC....'
 ];
 class BubbleBobble {
   constructor(renderer, input, audio) {
@@ -32483,7 +35414,7 @@ class BubbleBobble {
     this.audio = audio;
 
     this.id = 'bubblebobble';
-    this.title = 'Bubble Dragons';
+    this.title = 'Bubble Bobble';
     this.width = 960;
     this.height = 540;
 
@@ -33186,33 +36117,90 @@ class BubbleBobble {
     }
     ctx.restore();
 
-    // Cave Brick Walls & Floor
+    // Cave Brick Walls & Floor (1986 Taito Arcade Decorative Brick Tile Patterns)
     const theme = this.caveTheme || CAVE_THEMES[(this.level - 1) % CAVE_THEMES.length];
     const wallColor = theme.wall;
     const platColor = theme.plat;
+
+    // Outer wall & floor frames
     this.renderer.drawGlowRect(0, 38, this.wallLeft, this.height - 38, wallColor, 8, false, 2);
     this.renderer.drawGlowRect(this.wallRight, 38, this.width - this.wallRight, this.height - 38, wallColor, 8, false, 2);
     this.renderer.drawGlowRect(0, this.floorY, this.width, this.height - this.floorY, wallColor, 8, false, 2);
 
-    // Brick pattern inside walls
-    ctx.fillStyle = theme.fill;
-    for (let y = 44; y < this.floorY; y += 22) {
-      ctx.fillRect(4, y, this.wallLeft - 8, 16);
-      ctx.fillRect(this.wallRight + 4, y, this.width - this.wallRight - 8, 16);
+    // Decorative Brick Tile Patterns inside Left & Right Cave Walls
+    for (let y = 40, row = 0; y < this.floorY - 4; y += 18, row++) {
+      const shift = (row % 2) * 8;
+      // Left wall bricks
+      ctx.fillStyle = theme.fill;
+      ctx.fillRect(3, y + 1, this.wallLeft - 6, 15);
+      ctx.strokeStyle = wallColor;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(3, y + 1, this.wallLeft - 6, 15);
+      ctx.fillStyle = wallColor;
+      ctx.fillRect(10 + shift, y + 1, 2, 15);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.fillRect(5, y + 3, this.wallLeft - 10, 2);
+
+      // Right wall bricks
+      ctx.fillStyle = theme.fill;
+      ctx.fillRect(this.wallRight + 3, y + 1, this.width - this.wallRight - 6, 15);
+      ctx.strokeRect(this.wallRight + 3, y + 1, this.width - this.wallRight - 6, 15);
+      ctx.fillStyle = wallColor;
+      ctx.fillRect(this.wallRight + 10 + shift, y + 1, 2, 15);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.fillRect(this.wallRight + 5, y + 3, this.width - this.wallRight - 10, 2);
     }
 
-    // One-Way Neon Platforms
+    // Decorative Brick Tile Pattern along Bottom Cave Floor
+    for (let x = 2; x < this.width - 4; x += 28) {
+      ctx.fillStyle = theme.fill;
+      ctx.fillRect(x, this.floorY + 3, 25, 12);
+      ctx.fillRect(x + 12, this.floorY + 17, 25, 11);
+      ctx.strokeStyle = wallColor;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x, this.floorY + 3, 25, 12);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+      ctx.fillRect(x + 2, this.floorY + 5, 21, 2);
+    }
+
+    // One-Way Neon Platforms with Decorative Taito Brick Tile Segments
     for (const plat of this.platforms) {
       this.renderer.drawGlowRect(plat.x, plat.y, plat.w, plat.h, platColor, 8, false, 2);
       ctx.fillStyle = theme.fill;
       ctx.fillRect(plat.x + 2, plat.y + 2, plat.w - 4, plat.h - 4);
+      // Brick joints & inner bevel highlights across each platform
+      ctx.fillStyle = platColor;
+      for (let bx = plat.x + 20; bx < plat.x + plat.w - 6; bx += 20) {
+        ctx.fillRect(bx, plat.y + 2, 2, plat.h - 4);
+      }
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      for (let bx = plat.x + 4; bx < plat.x + plat.w - 8; bx += 20) {
+        ctx.fillRect(bx, plat.y + 3, Math.min(14, plat.x + plat.w - bx - 4), 2);
+      }
     }
 
-    // Fruits
+    // Detailed Pixel-Art Fruit & Treasure Sprites (Banana, Cherries, Watermelon, Grapes, Diamond)
     for (const f of this.fruits) {
-      this.renderer.drawGlowCircle(f.x + 11, f.y + 11, 10, f.color, 10, true);
-      ctx.fillStyle = f.accent;
-      ctx.fillRect(f.x + 9, f.y - 2, 4, 5);
+      let fSprite = BANANA_SPRITE;
+      if (f.name === 'DIAMOND' || f.points >= 3000) {
+        fSprite = DIAMOND_SPRITE;
+      } else if (f.name === 'GRAPES' || f.points === 1500) {
+        fSprite = GRAPES_SPRITE;
+      } else if (f.name === 'WATERMELON' || f.points === 1000) {
+        fSprite = WATERMELON_SPRITE;
+      } else if (f.name === 'CHERRIES' || f.points === 800) {
+        fSprite = CHERRIES_SPRITE;
+      }
+      const fPalette = {
+        Y: '#FFD700',
+        W: '#FFFFFF',
+        G: '#22C55E',
+        R: '#FF2A55',
+        P: '#A855F7',
+        C: '#00F0FF',
+        K: '#0B0F19'
+      };
+      this.renderer.drawPixelSprite(fSprite, f.x, f.y, 2.2, fPalette, false, false);
     }
 
     // Enemies
@@ -33341,7 +36329,7 @@ class SpyHunter {
     this.audio = audio;
 
     this.id = 'spyhunter';
-    this.title = 'Highway Agent';
+    this.title = 'Spy Hunter';
     this.width = 960;
     this.height = 540;
 
@@ -34108,7 +37096,7 @@ class SpyHunter {
       }
     }
 
-    // Vehicles (Enemies, Civilians, Weapons Van)
+    // Vehicles (Enemies, Civilians, Red Weapons Van) — Detailed Top-Down Arcade Car Sprites
     for (const v of this.vehicles) {
       ctx.save();
       ctx.translate(v.x, v.y);
@@ -34117,35 +37105,103 @@ class SpyHunter {
       }
 
       if (v.type === 'weaponsvan') {
-        // Red Weapons Van + Rear Ramp
+        // Iconic Red Weapons Van with Roof Stripes & Rear Loading Ramp
         if (!v.used) {
+          // Extended metal loading ramp with chevron guide stripes
+          ctx.fillStyle = '#64748B';
+          ctx.fillRect(-17, v.h / 2 - 4, 34, 24);
           ctx.fillStyle = '#94A3B8';
-          ctx.fillRect(-16, v.h / 2 - 4, 32, 22);
-          ctx.strokeStyle = PALETTE.GREEN;
-          ctx.strokeRect(-16, v.h / 2 - 4, 32, 22);
+          ctx.fillRect(-13, v.h / 2 - 2, 26, 20);
+          ctx.fillStyle = PALETTE.GREEN;
+          ctx.fillRect(-15, v.h / 2 + 2, 3, 14);
+          ctx.fillRect(12, v.h / 2 + 2, 3, 14);
         }
+        // Van Heavy Tires
+        ctx.fillStyle = '#09090B';
+        ctx.fillRect(-v.w / 2 - 3, -v.h / 2 + 10, 4, 14);
+        ctx.fillRect(v.w / 2 - 1, -v.h / 2 + 10, 4, 14);
+        ctx.fillRect(-v.w / 2 - 3, v.h / 2 - 24, 4, 16);
+        ctx.fillRect(v.w / 2 - 1, v.h / 2 - 24, 4, 16);
+
+        // Red Trailer Box & Cab Chassis
         this.renderer.drawGlowRect(-v.w / 2, -v.h / 2, v.w, v.h, PALETTE.RED, 10, true);
-        ctx.fillStyle = PALETTE.WHITE;
-        ctx.fillRect(-v.w / 2 + 6, -v.h / 2 + 12, v.w - 12, 6);
-        this.renderer.drawText('VAN', 0, 4, {
-          font: FONTS.HEADER,
-          size: 9,
-          color: PALETTE.WHITE,
-          align: 'center'
-        });
-      } else {
-        // Switchblade extending wheel spikes
-        if (v.type === 'switchblade') {
-          ctx.fillStyle = PALETTE.CYAN;
-          ctx.fillRect(-v.w / 2 - 7, -12, 7, 5);
-          ctx.fillRect(v.w / 2, -12, 7, 5);
-          ctx.fillRect(-v.w / 2 - 7, 10, 7, 5);
-          ctx.fillRect(v.w / 2, 10, 7, 5);
-        }
-        this.renderer.drawGlowRect(-v.w / 2, -v.h / 2, v.w, v.h, v.color, 8, true);
-        // Windshield
+        // Cab Windshield
         ctx.fillStyle = '#0F172A';
-        ctx.fillRect(-v.w / 2 + 4, -v.h / 2 + 8, v.w - 8, 12);
+        ctx.fillRect(-v.w / 2 + 5, -v.h / 2 + 6, v.w - 10, 10);
+        // Dual White Roof Stripes
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.fillRect(-9, -v.h / 2 + 20, 5, v.h - 26);
+        ctx.fillRect(4, -v.h / 2 + 20, 5, v.h - 26);
+      } else if (v.type === 'roadlord') {
+        // Road Lord: Heavy Armored Blue Rammer with Steel Front Bullbar
+        ctx.fillStyle = '#09090B';
+        ctx.fillRect(-v.w / 2 - 3, -18, 4, 12);
+        ctx.fillRect(v.w / 2 - 1, -18, 4, 12);
+        ctx.fillRect(-v.w / 2 - 3, 8, 4, 12);
+        ctx.fillRect(v.w / 2 - 1, 8, 4, 12);
+
+        this.renderer.drawGlowRect(-v.w / 2, -v.h / 2, v.w, v.h, '#1D4ED8', 8, true);
+        // Heavy Steel Ramming Wedge & Armor Plates
+        ctx.fillStyle = '#94A3B8';
+        ctx.fillRect(-v.w / 2 - 2, -v.h / 2 - 3, v.w + 4, 7);
+        ctx.fillRect(-v.w / 2 + 3, -4, v.w - 6, 22);
+        // Armored Slit Visor
+        ctx.fillStyle = '#090D16';
+        ctx.fillRect(-v.w / 2 + 5, -14, v.w - 10, 7);
+      } else if (v.type === 'enforcer') {
+        // Enforcer: Sleek Black/Purple Limousine with Side Shooter
+        ctx.fillStyle = '#09090B';
+        ctx.fillRect(-v.w / 2 - 2, -18, 3, 10);
+        ctx.fillRect(v.w / 2 - 1, -18, 3, 10);
+        ctx.fillRect(-v.w / 2 - 2, 10, 3, 10);
+        ctx.fillRect(v.w / 2 - 1, 10, 3, 10);
+
+        this.renderer.drawGlowRect(-v.w / 2, -v.h / 2, v.w, v.h, '#1E1B4B', 8, true);
+        ctx.strokeStyle = PALETTE.PURPLE;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-v.w / 2 + 1, -v.h / 2 + 1, v.w - 2, v.h - 2);
+        // Limo Tinted Windshield & Rear Glass
+        ctx.fillStyle = '#09090B';
+        ctx.fillRect(-v.w / 2 + 4, -14, v.w - 8, 10);
+        ctx.fillRect(-v.w / 2 + 5, 10, v.w - 10, 8);
+        // Side-window Gunner Barrel & Flash
+        const sideDir = this.player.x >= v.x ? 1 : -1;
+        ctx.fillStyle = '#E2E8F0';
+        ctx.fillRect(sideDir > 0 ? v.w / 2 - 2 : -v.w / 2 - 6, -4, 8, 3);
+      } else if (v.type === 'switchblade') {
+        // Switchblade: Red/Orange Coupe with Extending Silver Wheel-Slashers
+        ctx.fillStyle = '#09090B';
+        ctx.fillRect(-v.w / 2 - 2, -16, 3, 10);
+        ctx.fillRect(v.w / 2 - 1, -16, 3, 10);
+        ctx.fillRect(-v.w / 2 - 2, 8, 3, 10);
+        ctx.fillRect(v.w / 2 - 1, 8, 3, 10);
+
+        // Extending Silver Wheel-Slasher Blades
+        ctx.fillStyle = '#E2E8F0';
+        ctx.fillRect(-v.w / 2 - 9, -13, 8, 4);
+        ctx.fillRect(v.w / 2 + 1, -13, 8, 4);
+        ctx.fillRect(-v.w / 2 - 9, 11, 8, 4);
+        ctx.fillRect(v.w / 2 + 1, 11, 8, 4);
+
+        this.renderer.drawGlowRect(-v.w / 2, -v.h / 2, v.w, v.h, '#EA580C', 8, true);
+        ctx.fillStyle = PALETTE.GOLD;
+        ctx.fillRect(-4, -v.h / 2 + 3, 8, 10);
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(-v.w / 2 + 4, -9, v.w - 8, 10);
+      } else {
+        // Civilian Sedan
+        ctx.fillStyle = '#09090B';
+        ctx.fillRect(-v.w / 2 - 2, -14, 3, 9);
+        ctx.fillRect(v.w / 2 - 1, -14, 3, 9);
+        ctx.fillRect(-v.w / 2 - 2, 7, 3, 9);
+        ctx.fillRect(v.w / 2 - 1, 7, 3, 9);
+
+        this.renderer.drawGlowRect(-v.w / 2, -v.h / 2, v.w, v.h, '#38BDF8', 6, true);
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(-v.w / 2 + 4, -10, v.w - 8, 9);
+        ctx.fillRect(-v.w / 2 + 4, 7, v.w - 8, 7);
+        ctx.fillStyle = '#E0F2FE';
+        ctx.fillRect(-v.w / 2 + 5, -1, v.w - 10, 8);
       }
       ctx.restore();
     }
@@ -34153,11 +37209,57 @@ class SpyHunter {
     // Player G-6155 Interceptor Supercar
     const p = this.player;
     if (p.invulnTimer <= 0 || Math.floor(p.invulnTimer * 14) % 2 === 0) {
-      this.renderer.drawGlowRect(p.x - p.w / 2, p.y - p.h / 2, p.w, p.h, PALETTE.WHITE, 12, true);
+      ctx.save();
+      ctx.translate(p.x, p.y);
+
+      // Dual Front Machine-Gun Muzzle Flashes when firing
+      if (this.input.isDown('actionA') && !p.dockedVan) {
+        const flashH = 8 + (Math.floor(performance.now() / 35) % 2) * 6;
+        ctx.fillStyle = PALETTE.GOLD;
+        ctx.fillRect(-11, -p.h / 2 - flashH, 4, flashH);
+        ctx.fillRect(7, -p.h / 2 - flashH, 4, flashH);
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.fillRect(-10, -p.h / 2 - flashH * 0.6, 2, flashH * 0.6);
+        ctx.fillRect(8, -p.h / 2 - flashH * 0.6, 2, flashH * 0.6);
+      }
+
+      // 4 Black Racing Tires
+      ctx.fillStyle = '#09090B';
+      ctx.fillRect(-p.w / 2 - 3, -17, 4, 11);
+      ctx.fillRect(p.w / 2 - 1, -17, 4, 11);
+      ctx.fillRect(-p.w / 2 - 3, 7, 4, 12);
+      ctx.fillRect(p.w / 2 - 1, 7, 4, 12);
+
+      // Sleek White G-6155 Sports Car Chassis & Sculpted Hood
+      this.renderer.drawGlowRect(-p.w / 2, -p.h / 2, p.w, p.h, PALETTE.WHITE, 12, true);
+      ctx.fillStyle = '#E2E8F0';
+      ctx.fillRect(-p.w / 2 + 3, -p.h / 2 + 2, p.w - 6, 12);
+
+      // Center Cyan Interceptor Stripe
       ctx.fillStyle = PALETTE.CYAN;
-      ctx.fillRect(p.x - 4, p.y - p.h / 2, 8, p.h);
+      ctx.fillRect(-3, -p.h / 2, 6, p.h);
+
+      // Dark Wrap-Around Cockpit Windshield
       ctx.fillStyle = '#0F172A';
-      ctx.fillRect(p.x - 9, p.y - 8, 18, 14);
+      ctx.fillPath ? null : null;
+      ctx.beginPath();
+      ctx.moveTo(-10, -9);
+      ctx.lineTo(10, -9);
+      ctx.lineTo(12, 3);
+      ctx.lineTo(-12, 3);
+      ctx.closePath();
+      ctx.fill();
+
+      // Rear Engine Louvers & Twin Red Taillights
+      ctx.fillStyle = '#334155';
+      for (let ly = 7; ly <= 17; ly += 4) {
+        ctx.fillRect(-8, ly, 16, 2);
+      }
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(-12, p.h / 2 - 3, 7, 3);
+      ctx.fillRect(5, p.h / 2 - 3, 7, 3);
+
+      ctx.restore();
     }
 
     // Bullets & Missiles
@@ -34240,7 +37342,7 @@ class Tron {
     this.audio = audio;
 
     this.id = 'tron';
-    this.title = 'Light Grid';
+    this.title = 'Tron';
     this.width = 960;
     this.height = 540;
 
@@ -34713,13 +37815,62 @@ class Tron {
     if (!cycle.alive) return;
     const cx = this.arenaX + cycle.gx * this.cellSize + this.cellSize * 0.5;
     const cy = this.arenaY + cycle.gy * this.cellSize + this.cellSize * 0.5;
-    const isVert = cycle.dir === 0 || cycle.dir === 2;
-    const w = isVert ? 8 : 14;
-    const h = isVert ? 14 : 8;
 
-    this.renderer.drawGlowRect(cx - w / 2, cy - h / 2, w, h, cycle.color, 12, true);
+    // 1982 Bally Midway Top-Down Light Cycle Oriented by Travel Direction (dir: 0=UP, 1=RIGHT, 2=DOWN, 3=LEFT)
+    // Base orientation draws facing RIGHT (+X), rotated by (dir - 1) * 90deg
+    const angles = [-Math.PI / 2, 0, Math.PI / 2, Math.PI];
+    const rot = angles[cycle.dir] || 0;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rot);
+
+    // Outer neon aura glow
+    ctx.shadowColor = cycle.color;
+    ctx.shadowBlur = 12;
+
+    // Rear Power Wheel Housing & Jet-Wall Emitter
+    ctx.fillStyle = cycle.color;
+    ctx.beginPath();
+    ctx.arc(-6, 0, 5.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#090D16';
+    ctx.beginPath();
+    ctx.arc(-6, 0, 2.6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Streamlined Enclosed Body Fairing & Tapered Front Wheel Cowling
+    ctx.fillStyle = cycle.color;
+    ctx.beginPath();
+    ctx.moveTo(-8, -4.8);
+    ctx.lineTo(3, -4.8);
+    ctx.lineTo(10, -2.6);
+    ctx.lineTo(10, 2.6);
+    ctx.lineTo(3, 4.8);
+    ctx.lineTo(-8, 4.8);
+    ctx.closePath();
+    ctx.fill();
+
+    // Front Wheel Hub inside Cowling
     ctx.fillStyle = PALETTE.WHITE;
-    ctx.fillRect(cx - 2, cy - 2, 4, 4);
+    ctx.beginPath();
+    ctx.arc(6.5, 0, 2.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Enclosed Dark Tinted Canopy Dome with Glowing Circuit Trim
+    ctx.fillStyle = '#050811';
+    ctx.beginPath();
+    ctx.ellipse(-0.5, 0, 5.2, 3.0, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = PALETTE.WHITE;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // Neon Spine Circuit Rib
+    ctx.fillStyle = PALETTE.WHITE;
+    ctx.fillRect(-7, -0.8, 12, 1.6);
+
+    ctx.restore();
   }
 
   render(ctx = this.renderer.ctx) {
@@ -34749,18 +37900,34 @@ class Tron {
     // Glowing Outer Game Grid Border
     this.renderer.drawGlowRect(this.arenaX, this.arenaY, arenaW, arenaH, PALETTE.CYAN, 12, false, 2.5);
 
-    // Draw Grid Monolith Obstacles (cell value 9)
-    ctx.fillStyle = PALETTE.PURPLE;
-    for (let gy = 0; gy < this.gridH; gy++) {
-      for (let gx = 0; gx < this.gridW; gx++) {
-        if (this.grid[gy * this.gridW + gx] === 9) {
-          ctx.fillRect(
-            this.arenaX + gx * this.cellSize,
-            this.arenaY + gy * this.cellSize,
-            this.cellSize,
-            this.cellSize
-          );
-        }
+    // Draw Grid Obstacles Styled as Glowing MCP Grid Cones (cell value 9)
+    if (this.level >= 3) {
+      const coneBlocks = [
+        { x: 55, y: 26, w: 6, h: 14 },
+        { x: 119, y: 26, w: 6, h: 14 },
+        { x: 55, y: 54, w: 6, h: 14 },
+        { x: 119, y: 54, w: 6, h: 14 }
+      ];
+      const pulse = 0.65 + 0.35 * Math.sin(performance.now() * 0.008);
+      for (const b of coneBlocks) {
+        const bx = this.arenaX + b.x * this.cellSize;
+        const by = this.arenaY + b.y * this.cellSize;
+        const bw = b.w * this.cellSize;
+        const bh = b.h * this.cellSize;
+        const mcx = bx + bw / 2;
+        const mcy = by + bh / 2;
+
+        // Outer MCP Crimson/Purple Cone Base
+        this.renderer.drawGlowRect(bx, by, bw, bh, PALETTE.RED, 10, true);
+        // Inner Concentric MCP Cone Tiers
+        ctx.fillStyle = PALETTE.PURPLE;
+        ctx.fillRect(bx + 4, by + 6, bw - 8, bh - 12);
+        ctx.strokeStyle = PALETTE.GOLD;
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(bx + 4, by + 6, bw - 8, bh - 12);
+        // Pulsing MCP Core Apex
+        ctx.fillStyle = pulse > 0.8 ? PALETTE.WHITE : PALETTE.GOLD;
+        ctx.fillRect(mcx - 4, mcy - 10, 8, 20);
       }
     }
 
@@ -34888,7 +38055,7 @@ class TrackAndField {
     this.audio = audio;
 
     this.id = 'trackandfield';
-    this.title = 'Cyber Decathlon';
+    this.title = 'Track & Field';
     this.width = 960;
     this.height = 540;
 
@@ -35404,41 +38571,88 @@ class TrackAndField {
   }
 
   _drawAthlete(ctx, x, y, speed, airborne, color = PALETTE.CYAN, carryingJavelin = false) {
-    const stride = airborne ? 0.8 : Math.sin(performance.now() * 0.025 * Math.max(1, speed * 0.4));
+    const phase = performance.now() * 0.026 * Math.max(1, speed * 0.42);
+    const stride = airborne ? 0.92 : Math.sin(phase);
+    const kneeBend = airborne ? 0.45 : Math.max(0, Math.cos(phase));
+    const lean = airborne ? -0.18 : Math.min(0.24, speed * 0.018);
+
     ctx.save();
     ctx.translate(x, y);
 
-    // Head
-    this.renderer.drawGlowCircle(0, -34, 7, color, 8, true);
-    // Headband
-    ctx.fillStyle = PALETTE.WHITE;
-    ctx.fillRect(-7, -37, 14, 3);
+    // Track shadow under athlete
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+    ctx.beginPath();
+    ctx.ellipse(0, 5, 13, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Torso
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 5;
+    ctx.rotate(lean);
+
+    // Back Arm (pumping opposite to front leg)
+    ctx.strokeStyle = '#D97706';
+    ctx.lineWidth = 3.5;
     ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(0, -26);
-    ctx.lineTo(-2, -10);
+    ctx.moveTo(0, -25);
+    ctx.lineTo(-stride * 9, -17);
+    ctx.lineTo(-stride * 13 + 4, -22);
     ctx.stroke();
 
-    // Arms
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.moveTo(0, -24);
-    ctx.lineTo(stride * 12, -14);
-    ctx.moveTo(0, -24);
-    ctx.lineTo(-stride * 12, -14);
-    ctx.stroke();
-
-    // Legs
+    // Back Leg (articulated thigh + shin + shoe)
+    const backKneeX = -stride * 9;
+    const backKneeY = -3;
+    const backFootX = -stride * 14 - kneeBend * 4;
+    const backFootY = 4 - (stride > 0 ? kneeBend * 5 : 0);
+    ctx.strokeStyle = '#D97706';
     ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.moveTo(-2, -10);
-    ctx.lineTo(stride * 14, 4);
-    ctx.moveTo(-2, -10);
-    ctx.lineTo(-stride * 14, 4);
+    ctx.moveTo(-2, -11);
+    ctx.lineTo(backKneeX, backKneeY);
+    ctx.lineTo(backFootX, backFootY);
+    ctx.stroke();
+    ctx.fillStyle = PALETTE.WHITE;
+    ctx.fillRect(backFootX - 2, backFootY - 2, 6, 3);
+
+    // Athletic Singlet Torso & White Running Shorts
+    ctx.fillStyle = color;
+    ctx.fillRect(-5, -27, 10, 13);
+    ctx.fillStyle = PALETTE.WHITE;
+    ctx.fillRect(-5, -21, 10, 2.5); // Chest stripe
+    ctx.fillRect(-5.5, -14, 11, 5); // Running shorts
+
+    // Front Leg (articulated thigh + shin + running spike)
+    const frontKneeX = stride * 10;
+    const frontKneeY = -3;
+    const frontFootX = stride * 15 - (1 - kneeBend) * 3;
+    const frontFootY = 4 - (stride < 0 ? (1 - kneeBend) * 5 : 0);
+    ctx.strokeStyle = '#FDBA74';
+    ctx.lineWidth = 4.2;
+    ctx.beginPath();
+    ctx.moveTo(0, -11);
+    ctx.lineTo(frontKneeX, frontKneeY);
+    ctx.lineTo(frontFootX, frontFootY);
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.fillRect(frontFootX - 2, frontFootY - 2, 7, 3.5);
+
+    // Head, Hair, Mustache & Headband
+    ctx.fillStyle = '#FDBA74';
+    ctx.beginPath();
+    ctx.arc(1, -34, 6.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#451A03';
+    ctx.fillRect(-5, -40, 11, 4); // Hair
+    ctx.fillRect(3, -33, 4, 1.8); // Mustache
+    ctx.fillStyle = PALETTE.RED;
+    ctx.fillRect(-6, -37, 13, 2.5); // Iconic red headband
+    ctx.fillRect(-9, -36, 3, 2); // Fluttering headband tail
+
+    // Front Arm
+    ctx.strokeStyle = '#FDBA74';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(1, -24);
+    ctx.lineTo(stride * 10, -16);
+    ctx.lineTo(stride * 13 + 5, -21);
     ctx.stroke();
 
     if (carryingJavelin) {
@@ -35447,6 +38661,8 @@ class TrackAndField {
       ctx.translate(4, -24);
       ctx.rotate(ang);
       this.renderer.drawGlowRect(-26, -1.5, 56, 3, PALETTE.GOLD, 8, true);
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(26, -2, 6, 4);
       ctx.restore();
     }
 
@@ -35460,18 +38676,53 @@ class TrackAndField {
     // Stadium Night Sky & Crowd Bleachers
     this.renderer.clear('#090D1A');
 
-    // Stadium Floodlights & Scoreboard Header
+    // Stadium Upper Deck & Electronic Scoreboard Header
     ctx.fillStyle = '#131B2E';
     ctx.fillRect(0, 38, this.width, 145);
+    ctx.fillStyle = '#0B0F19';
+    ctx.fillRect(210, 44, 540, 46);
+    ctx.strokeStyle = PALETTE.GOLD;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(210, 44, 540, 46);
 
-    // Animated crowd dots in stadium bleachers
-    const t = performance.now() * 0.004;
-    for (let row = 0; row < 4; row++) {
-      for (let col = 0; col < 48; col++) {
-        const cx = 12 + col * 20;
-        const cy = 115 + row * 15 + (Math.sin(t + col) > 0.5 ? -2 : 0);
-        ctx.fillStyle = (col + row) % 3 === 0 ? PALETTE.CYAN : (col + row) % 2 === 0 ? PALETTE.PINK : '#475569';
-        ctx.fillRect(cx, cy, 4, 4);
+    // Iconic Olympic Flame Cauldron on Left & Right Stadium Towers
+    const flameT = performance.now() * 0.012;
+    for (const towerX of [115, 845]) {
+      // Cauldron pedestal & bowl
+      ctx.fillStyle = '#94A3B8';
+      ctx.fillRect(towerX - 10, 74, 20, 26);
+      ctx.fillStyle = '#CBD5E1';
+      ctx.beginPath();
+      ctx.moveTo(towerX - 22, 62);
+      ctx.lineTo(towerX + 22, 62);
+      ctx.lineTo(towerX + 12, 75);
+      ctx.lineTo(towerX - 12, 75);
+      ctx.closePath();
+      ctx.fill();
+
+      // Flickering Olympic Flame
+      const flicker = Math.sin(flameT + towerX) * 4;
+      this.renderer.drawGlowCircle(towerX + flicker * 0.4, 52, 12, PALETTE.RED, 12, true);
+      this.renderer.drawGlowCircle(towerX - flicker * 0.3, 50, 8, PALETTE.ORANGE, 8, true);
+      this.renderer.drawGlowCircle(towerX, 53, 5, PALETTE.GOLD, 6, true);
+    }
+
+    // Tiered Stadium Grandstand Bleachers & Cheering Crowd Spectators
+    ctx.fillStyle = '#1E293B';
+    for (let r = 0; r < 5; r++) {
+      ctx.fillRect(0, 98 + r * 16, this.width, 12);
+    }
+    const t = performance.now() * 0.006;
+    const jerseyColors = [PALETTE.CYAN, PALETTE.PINK, PALETTE.GOLD, PALETTE.GREEN, PALETTE.WHITE, '#38BDF8'];
+    for (let row = 0; row < 5; row++) {
+      for (let col = 0; col < 56; col++) {
+        const cx = 10 + col * 17 + (row % 2) * 6;
+        const bounce = Math.sin(t + col * 0.7 + row) > 0.35 ? -2 : 0;
+        const cy = 99 + row * 16 + bounce;
+        ctx.fillStyle = jerseyColors[(col * 3 + row * 2) % jerseyColors.length];
+        ctx.fillRect(cx, cy + 3, 6, 6);
+        ctx.fillStyle = '#FDBA74';
+        ctx.fillRect(cx + 1, cy, 4, 3);
       }
     }
 
@@ -35822,7 +39073,7 @@ class OutRun {
     this.audio = audio;
 
     this.id = 'outrun';
-    this.title = 'Synthwave Horizon';
+    this.title = 'OutRun';
     this.width = 960;
     this.height = 540;
 
@@ -36398,9 +39649,10 @@ class OutRun {
       );
     }
 
-    // Draw Player Convertible Supercar (Testarossa rear view)
+    // Draw Player Ferrari-Red Testarossa Convertible Supercar (Detailed 1986 Sega Arcade Rear View)
     const carX = this.width / 2 + this.steerAngle * 14;
     const carY = 478 + (this.speed > 20 && Math.floor(performance.now() / 60) % 2 === 0 ? 1 : 0);
+    const windWave = Math.sin(performance.now() * 0.025) * 3;
     ctx.save();
     ctx.translate(carX, carY);
     if (this.drifting) {
@@ -36409,28 +39661,100 @@ class OutRun {
       ctx.rotate(this.spinTimer * 12);
     }
 
-    // Rear Tires
-    ctx.fillStyle = '#09090B';
-    ctx.fillRect(-52, 2, 20, 16);
-    ctx.fillRect(32, 2, 20, 16);
-
-    // Convertible Red Chassis
-    this.renderer.drawGlowRect(-48, -18, 96, 26, PALETTE.RED, 12, true);
-    // Strakes / Grille
-    ctx.fillStyle = '#18181B';
-    ctx.fillRect(-42, -6, 84, 8);
-    // Dual Twin Taillights
-    this.renderer.drawGlowRect(-44, -8, 16, 6, PALETTE.GOLD, 8, true);
-    this.renderer.drawGlowRect(28, -8, 16, 6, PALETTE.GOLD, 8, true);
-
-    // Convertible Cockpit & Driver/Passenger
-    ctx.fillStyle = '#38BDF8';
-    ctx.fillRect(-32, -28, 64, 10);
-    ctx.fillStyle = PALETTE.GOLD;
+    // Ground Shadow under Testarossa
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
     ctx.beginPath();
-    ctx.arc(-14, -26, 7, 0, Math.PI * 2);
-    ctx.arc(14, -26, 7, 0, Math.PI * 2);
+    ctx.ellipse(0, 15, 58, 9, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    // Wide Rear Performance Tires
+    ctx.fillStyle = '#09090B';
+    ctx.fillRect(-54, 1, 22, 17);
+    ctx.fillRect(32, 1, 22, 17);
+    ctx.fillStyle = '#27272A';
+    ctx.fillRect(-50, 4, 14, 4);
+    ctx.fillRect(36, 4, 14, 4);
+
+    // Lower Rear Valance & Quad Chrome Exhaust Pipes
+    ctx.fillStyle = '#18181B';
+    ctx.fillRect(-44, 4, 88, 9);
+    ctx.fillStyle = '#E2E8F0';
+    ctx.fillRect(-38, 7, 5, 5);
+    ctx.fillRect(-31, 7, 5, 5);
+    ctx.fillRect(26, 7, 5, 5);
+    ctx.fillRect(33, 7, 5, 5);
+    ctx.fillStyle = '#09090B';
+    ctx.fillRect(-37, 8, 3, 3);
+    ctx.fillRect(-30, 8, 3, 3);
+    ctx.fillRect(27, 8, 3, 3);
+    ctx.fillRect(34, 8, 3, 3);
+
+    // Sculpted Ferrari-Red Testarossa Wide Rear Body & Side Strake Intakes
+    this.renderer.drawGlowRect(-50, -19, 100, 25, '#EF4444', 12, true);
+    ctx.fillStyle = '#DC2626';
+    ctx.fillRect(-52, -12, 104, 16);
+    // Testarossa signature horizontal rear black strake grille
+    ctx.fillStyle = '#09090B';
+    ctx.fillRect(-46, -10, 92, 10);
+    ctx.fillStyle = '#27272A';
+    for (let s = -9; s <= -2; s += 3) {
+      ctx.fillRect(-45, s, 90, 1);
+    }
+
+    // Detailed Twin Taillights (Left & Right Clusters behind Strakes)
+    this.renderer.drawGlowRect(-44, -9, 12, 7, PALETTE.RED, 8, true);
+    this.renderer.drawGlowRect(-31, -9, 9, 7, PALETTE.GOLD, 6, true);
+    this.renderer.drawGlowRect(22, -9, 9, 7, PALETTE.GOLD, 6, true);
+    this.renderer.drawGlowRect(32, -9, 12, 7, PALETTE.RED, 8, true);
+
+    // Center Rear License Plate & Prancing Horse Emblem
+    ctx.fillStyle = '#FEF08A';
+    ctx.fillRect(-9, -8, 18, 7);
+    ctx.fillStyle = '#09090B';
+    ctx.fillRect(-6, -6, 12, 3);
+
+    // Engine Decklid Louvers
+    ctx.fillStyle = '#991B1B';
+    ctx.fillRect(-26, -18, 52, 6);
+
+    // Convertible Windshield Frame & Tinted Glass
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.55)';
+    ctx.beginPath();
+    ctx.moveTo(-36, -19);
+    ctx.lineTo(-28, -32);
+    ctx.lineTo(28, -32);
+    ctx.lineTo(36, -19);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#E2E8F0';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Driver (Left) & Passenger (Right) with Hair Blowing in the Wind
+    // Driver torso & head
+    ctx.fillStyle = '#38BDF8';
+    ctx.fillRect(-22, -23, 14, 6);
+    ctx.fillStyle = '#FDBA74';
+    ctx.beginPath();
+    ctx.arc(-15, -26, 6, 0, Math.PI * 2);
+    ctx.fill();
+    // Driver dark brown hair blowing in wind
+    ctx.fillStyle = '#451A03';
+    ctx.fillRect(-21, -32, 12, 5);
+    ctx.fillRect(-22 + windWave, -30, 6, 4);
+
+    // Passenger torso & head
+    ctx.fillStyle = PALETTE.PINK;
+    ctx.fillRect(8, -23, 14, 6);
+    ctx.fillStyle = '#FDBA74';
+    ctx.beginPath();
+    ctx.arc(15, -26, 5.5, 0, Math.PI * 2);
+    ctx.fill();
+    // Blonde passenger hair streaming in wind
+    ctx.fillStyle = '#FACC15';
+    ctx.fillRect(9, -32, 12, 5);
+    ctx.fillRect(14 + windWave * 1.3, -29, 9, 5);
+
     ctx.restore();
 
     // Particles & Popups
@@ -36448,16 +39772,44 @@ class OutRun {
       });
     }
 
-    // Speedometer & Time Remaining Overlay
-    this.renderer.drawText(`${Math.floor(this.speed)} KM/H`, 850, 515, {
+    // Dashboard Tachometer Bar, Gear Indicator & Speedometer Overlay
+    const rpmRatio = Math.min(1, (this.speed % 155) / 145 || this.speed / this.maxSpeed);
+    const gearLabel = this.speed > 155 ? 'GEAR: HI' : 'GEAR: LO';
+    ctx.fillStyle = 'rgba(9, 13, 22, 0.82)';
+    ctx.fillRect(625, 492, 315, 36);
+    ctx.strokeStyle = PALETTE.CYAN;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(625, 492, 315, 36);
+
+    // Tachometer LED segments
+    for (let b = 0; b < 10; b++) {
+      const active = b / 10 < rpmRatio;
+      ctx.fillStyle = !active
+        ? '#1E293B'
+        : b >= 8
+        ? PALETTE.RED
+        : b >= 6
+        ? PALETTE.GOLD
+        : PALETTE.GREEN;
+      ctx.fillRect(635 + b * 11, 502, 8, 16);
+    }
+
+    this.renderer.drawText(gearLabel, 755, 515, {
       font: FONTS.HEADER,
-      size: 18,
-      color: this.speed > 250 ? PALETTE.PINK : PALETTE.CYAN,
+      size: 10,
+      color: this.speed > 155 ? PALETTE.GOLD : PALETTE.CYAN,
+      align: 'left'
+    });
+
+    this.renderer.drawText(`${Math.floor(this.speed)} KM/H`, 930, 516, {
+      font: FONTS.HEADER,
+      size: 15,
+      color: this.speed > 250 ? PALETTE.PINK : PALETTE.WHITE,
       align: 'right',
       glow: 10
     });
     if (this.drifting) {
-      this.renderer.drawText('POWER DRIFT!', 850, 488, {
+      this.renderer.drawText('POWER DRIFT!', 930, 484, {
         font: FONTS.HEADER,
         size: 11,
         color: PALETTE.GOLD,
@@ -36721,7 +40073,7 @@ class Contra {
     this.audio = audio;
 
     this.id = 'contra';
-    this.title = 'Commando Strike';
+    this.title = 'Contra';
     this.width = 960;
     this.height = 540;
 
@@ -38430,7 +41782,7 @@ class Contra {
 
     this.renderer.drawStateOverlay(this.state, {
       title: this.title,
-      subtitle: '8-WAY RUN & GUN JUNGLE FORTRESS ASSAULT',
+      subtitle: '1987 KONAMI RUN & GUN JUNGLE FORTRESS ASSAULT',
       controls: 'ARROWS: 8-WAY AIM & PRONE  |  Z/SPACE: FIRE  |  X/SHIFT: JUMP (DOWN+X: DROP)',
       score: this.score,
       highScore: this.highScore,
@@ -38574,7 +41926,7 @@ class Galaxian {
     this.audio = audio;
 
     this.id = 'galaxian';
-    this.title = 'Star Swarm';
+    this.title = 'Galaxian';
     this.state = 'PLAYING';
 
     this.width = 960;
@@ -39312,7 +42664,7 @@ class DigDug2 {
     this.audio = audio;
 
     this.id = 'digdug2';
-    this.title = 'Island Driller';
+    this.title = 'Dig Dug II';
     this.state = 'PLAYING';
 
     this.width = 960;
@@ -40336,7 +43688,7 @@ class ElevatorAction {
     this.audio = audio;
 
     this.id = 'elevatoraction';
-    this.title = 'Tower Agent';
+    this.title = 'Elevator Action';
     this.state = 'PLAYING';
 
     this.width = 960;
@@ -41496,7 +44848,7 @@ class Tapper {
     this.audio = audio;
 
     this.id = 'tapper';
-    this.title = 'Root Beer Dash';
+    this.title = 'Tapper';
     this.state = 'PLAYING';
 
     this.width = 960;
@@ -42117,7 +45469,7 @@ class LunarLander {
     this.audio = audio;
 
     this.id = 'lunarlander';
-    this.title = 'Apollo Lander';
+    this.title = 'Lunar Lander';
     this.state = 'PLAYING';
 
     this.width = 960;
@@ -42809,7 +46161,7 @@ class Tempest {
     this.audio = audio;
 
     this.id = 'tempest';
-    this.title = 'Vortex Tube';
+    this.title = 'Tempest';
     this.state = 'PLAYING';
 
     this.width = 960;
@@ -43767,7 +47119,7 @@ class Robotron {
     this.audio = audio;
 
     this.id = 'robotron';
-    this.title = 'Cyber Arena 2084';
+    this.title = 'Robotron: 2084';
     this.state = 'PLAYING';
 
     this.width = 960;
@@ -44609,7 +47961,7 @@ class Sinistar {
     this.audio = audio;
 
     this.id = 'sinistar';
-    this.title = 'Dread Star';
+    this.title = 'Sinistar';
     this.width = 960;
     this.height = 540;
 
@@ -45618,6 +48970,34 @@ const ELEV_STEP = 14;
 const ORIGIN_X = 480;
 const ORIGIN_Y = 128;
 
+const BENTLEY_SPRITE = [
+  '.BBB....BBB.',
+  'BYYYB..BYYYB',
+  '.BBBBBBBBBB.',
+  '.BBWWKKWWBB.',
+  '.BBBBYYYYBB.',
+  '..BBBYYYYB..',
+  '.BBBBBBBBBB.',
+  'BBBBYYYYBBBB',
+  'BB.BYYYYB.BB',
+  '...BBBBBB...',
+  '..BBB..BBB..',
+  '.YYYY..YYYY.'
+];
+
+const GEM_EATER_SPRITE = [
+  '..RRRRRRRR..',
+  '.RRRRRRRRRR.',
+  'RRWWKKWWKKRR',
+  'RRRRRRRRRRRR',
+  'RRWWWWWWWWWR',
+  'RRK.K.K.K.RR',
+  'RRWWWWWWWWWR',
+  '.RRRRRRRRRR.',
+  '..RR....RR..',
+  '.YYY....YYY.'
+];
+
 const CASTLE_THEMES = [
   { name: 'CITADEL STEPS', top: '#1E293B', left: '#0F766E', right: '#115E59', accent: PALETTE.CYAN },
   { name: 'SPIRAL RAMPARTS', top: '#31102F', left: '#7E22CE', right: '#581C87', accent: PALETTE.PINK },
@@ -45635,7 +49015,7 @@ class CrystalCastles {
     this.audio = audio;
 
     this.id = 'crystalcastles';
-    this.title = 'Gem Citadel';
+    this.title = 'Crystal Castles';
     this.width = 960;
     this.height = 540;
 
@@ -46083,10 +49463,30 @@ class CrystalCastles {
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Sparkling Gem on tile
+    // Sparkling Faceted Isometric Diamond Gem on tile
     if (cell.hasGem) {
       const gemColor = (r + c) % 3 === 0 ? PALETTE.CYAN : (r + c) % 3 === 1 ? PALETTE.PINK : PALETTE.GREEN;
-      this.renderer.drawGlowCircle(x, y - 5, 4.5, gemColor, 8, true);
+      const gy = y - 6;
+      ctx.save();
+      ctx.fillStyle = gemColor;
+      ctx.shadowColor = gemColor;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(x, gy - 7);
+      ctx.lineTo(x + 6, gy);
+      ctx.lineTo(x, gy + 6);
+      ctx.lineTo(x - 6, gy);
+      ctx.closePath();
+      ctx.fill();
+      // Crown specular facet
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.beginPath();
+      ctx.moveTo(x, gy - 5);
+      ctx.lineTo(x + 3, gy - 1);
+      ctx.lineTo(x - 3, gy - 1);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
     }
 
     ctx.restore();
@@ -46139,10 +49539,23 @@ class CrystalCastles {
 
       if (e.type === 'GEM_EATER') {
         const col = e.eatingTimer > 0 ? PALETTE.CYAN : PALETTE.RED;
-        this.renderer.drawGlowCircle(0, 0, 10, col, 8, true);
-        ctx.fillStyle = PALETTE.WHITE;
-        ctx.fillRect(-5, -4, 4, 4);
-        ctx.fillRect(1, -4, 4, 4);
+        const scale = 2.0;
+        const ew = GEM_EATER_SPRITE[0].length * scale;
+        const eh = GEM_EATER_SPRITE.length * scale;
+        const chompY = e.eatingTimer > 0 ? Math.sin(performance.now() * 0.04) * 2 : 0;
+        this.renderer.drawPixelSprite(
+          GEM_EATER_SPRITE,
+          pos.x - ew * 0.5 - pos.x,
+          pos.y - 10 - eh * 0.5 + chompY - (pos.y - 10),
+          scale,
+          {
+            R: col,
+            W: PALETTE.WHITE,
+            Y: PALETTE.GOLD,
+            K: '#090D16'
+          },
+          e.vc < 0
+        );
       } else if (e.type === 'CRYSTAL_BALL') {
         this.renderer.drawGlowCircle(0, 0, 11, PALETTE.GREEN, 12, true);
         ctx.fillStyle = PALETTE.WHITE;
@@ -46187,38 +49600,44 @@ class CrystalCastles {
     ctx.fill();
 
     if (b.invuln <= 0 || Math.floor(b.invuln * 14) % 2 === 0) {
-      ctx.save();
-      ctx.translate(bPos.x, bPos.y - 12);
       const bearCol =
         b.hatTimer > 0
           ? Math.floor(performance.now() * 0.02) % 2 === 0
             ? PALETTE.PINK
             : PALETTE.CYAN
-          : PALETTE.ORANGE;
+          : '#D97706';
+      const scale = 2.2;
+      const bw = BENTLEY_SPRITE[0].length * scale;
+      const bh = BENTLEY_SPRITE.length * scale;
+      this.renderer.drawPixelSprite(
+        BENTLEY_SPRITE,
+        bPos.x - bw * 0.5,
+        bPos.y - bh - 2,
+        scale,
+        {
+          B: bearCol,
+          Y: '#FDE68A',
+          W: PALETTE.WHITE,
+          K: '#090D16'
+        },
+        b.facing < 0
+      );
 
-      // Bear Ears & Body
-      this.renderer.drawGlowCircle(-7, -12, 4.5, bearCol, 6, true);
-      this.renderer.drawGlowCircle(7, -12, 4.5, bearCol, 6, true);
-      this.renderer.drawGlowCircle(0, -2, 11, bearCol, 10, true);
-
-      // Eyes & Snout
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(-5, -7, 3, 4);
-      ctx.fillRect(2, -7, 3, 4);
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(-3, -2, 6, 4);
-
-      // Magic Wizard Hat if active
+      // Pointy Magic Wizard Hat if active
       if (b.hatTimer > 0) {
+        ctx.save();
+        ctx.translate(bPos.x, bPos.y - bh - 2);
         ctx.fillStyle = PALETTE.PINK;
         ctx.beginPath();
-        ctx.moveTo(0, -28);
-        ctx.lineTo(10, -12);
-        ctx.lineTo(-10, -12);
+        ctx.moveTo(0, -18);
+        ctx.lineTo(12, 2);
+        ctx.lineTo(-12, 2);
         ctx.closePath();
         ctx.fill();
+        ctx.fillStyle = PALETTE.GOLD;
+        ctx.fillRect(-14, 0, 28, 4);
+        ctx.restore();
       }
-      ctx.restore();
     }
 
     // 5. Floating Popups & Castle Title Legend
@@ -46292,7 +49711,7 @@ class Zaxxon {
     this.audio = audio;
 
     this.id = 'zaxxon';
-    this.title = 'Iso Fortress';
+    this.title = 'Zaxxon';
     this.width = 960;
     this.height = 540;
 
@@ -46838,38 +50257,99 @@ class Zaxxon {
         }
 
         if (o.type === 'FUEL_TANK') {
-          this.renderer.drawGlowRect(pos.x - 12, pos.y - 22, 24, 22, PALETTE.RED, 8, true);
-          this.renderer.drawText('F', pos.x, pos.y - 6, {
+          // Cylindrical Fuel Tank Drum with caps & 'F' stencil
+          this.renderer.drawGlowRect(pos.x - 13, pos.y - 24, 26, 22, PALETTE.RED, 8, true);
+          ctx.fillStyle = PALETTE.WHITE;
+          ctx.fillRect(pos.x - 13, pos.y - 24, 26, 4);
+          ctx.fillRect(pos.x - 13, pos.y - 6, 26, 4);
+          this.renderer.drawText('FUEL', pos.x, pos.y - 10, {
             font: FONTS.HEADER,
-            size: 10,
-            color: PALETTE.WHITE,
+            size: 6.5,
+            color: PALETTE.GOLD,
             align: 'center'
           });
         } else if (o.type === 'RADAR') {
-          this.renderer.drawGlowCircle(pos.x, pos.y - 16, 11, PALETTE.CYAN, 10, true);
           ctx.fillStyle = '#64748B';
-          ctx.fillRect(pos.x - 4, pos.y - 6, 8, 8);
+          ctx.fillRect(pos.x - 5, pos.y - 10, 10, 10);
+          this.renderer.drawGlowCircle(pos.x, pos.y - 18, 11, PALETTE.CYAN, 10, true);
+          ctx.strokeStyle = PALETTE.WHITE;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(pos.x, pos.y - 18);
+          ctx.lineTo(pos.x - 8, pos.y - 24);
+          ctx.stroke();
         } else if (o.type === 'TURRET') {
-          this.renderer.drawGlowRect(pos.x - 11, pos.y - 14, 22, 14, PALETTE.GOLD, 6, true);
+          this.renderer.drawGlowRect(pos.x - 12, pos.y - 12, 24, 12, '#475569', 6, true);
+          this.renderer.drawGlowCircle(pos.x, pos.y - 13, 8, PALETTE.GOLD, 6, true);
+          ctx.strokeStyle = PALETTE.WHITE;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(pos.x, pos.y - 14);
+          ctx.lineTo(pos.x - 14, pos.y - 8);
+          ctx.stroke();
         } else if (o.type === 'INTERCEPTOR') {
-          this.renderer.drawGlowCircle(pos.x, pos.y - 8, 10, PALETTE.PURPLE, 10, true);
+          // Isometric Enemy Interceptor Jet
+          ctx.save();
+          ctx.translate(pos.x, pos.y - 8);
+          ctx.fillStyle = PALETTE.PURPLE;
+          ctx.strokeStyle = PALETTE.PINK;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-16, 6);
+          ctx.lineTo(10, -10);
+          ctx.lineTo(14, 4);
+          ctx.lineTo(-4, 12);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = PALETTE.GOLD;
+          ctx.fillRect(-8, 1, 6, 4);
+          ctx.restore();
         }
       }
     }
 
-    // 3. Zaxxon Robot Boss
+    // 3. Zaxxon Armored Robot Boss
     if (this.boss.active) {
       const relBoss = this.boss.dist - this.scrollDist;
       const bGround = this._isoToScreen(relBoss, this.boss.lane, 0);
       const bPos = this._isoToScreen(relBoss, this.boss.lane, this.boss.alt);
       ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
       ctx.beginPath();
-      ctx.ellipse(bGround.x, bGround.y, 26, 11, 0, 0, Math.PI * 2);
+      ctx.ellipse(bGround.x, bGround.y, 28, 12, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      const col = this.boss.flash > 0 ? PALETTE.WHITE : PALETTE.PINK;
-      this.renderer.drawGlowRect(bPos.x - 26, bPos.y - 44, 52, 44, col, 14, true);
-      this.renderer.drawGlowCircle(bPos.x, bPos.y - 26, 10, PALETTE.GOLD, 10, true);
+      ctx.save();
+      ctx.translate(bPos.x, bPos.y);
+      const armorCol = this.boss.flash > 0 ? PALETTE.WHITE : '#334155';
+      const trimCol = this.boss.flash > 0 ? PALETTE.CYAN : PALETTE.PINK;
+
+      // Bipedal Mech Legs & Treads
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(-20, -14, 12, 16);
+      ctx.fillRect(8, -14, 12, 16);
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(-22, -2, 16, 6);
+      ctx.fillRect(6, -2, 16, 6);
+
+      // Shoulder Missile Pods & Arms
+      this.renderer.drawGlowRect(-34, -44, 12, 24, trimCol, 10, true);
+      this.renderer.drawGlowRect(22, -44, 12, 24, trimCol, 10, true);
+
+      // Armored Mech Torso & Chest Missile Launcher
+      this.renderer.drawGlowRect(-22, -46, 44, 34, armorCol, 12, true);
+      ctx.strokeStyle = trimCol;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-22, -46, 44, 34);
+      this.renderer.drawGlowCircle(0, -28, 9, PALETTE.GOLD, 10, true);
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(-4, -32, 8, 8);
+
+      // Armored Head & Glowing Visor
+      ctx.fillStyle = armorCol;
+      ctx.fillRect(-12, -58, 24, 12);
+      this.renderer.drawGlowRect(-9, -54, 18, 5, PALETTE.CYAN, 8, true);
+      ctx.restore();
     }
 
     // 4. Player Shadow Projection & Vertical Height Guide on Fortress Floor!
@@ -46891,26 +50371,65 @@ class Zaxxon {
     ctx.stroke();
     ctx.restore();
 
-    // 5. Player Isometric Fighter Jet
+    // 5. Player Isometric Delta-Wing Starfighter Jet
     if (p.invuln <= 0 || Math.floor(p.invuln * 14) % 2 === 0) {
       ctx.save();
       ctx.translate(pPos.x, pPos.y);
-      ctx.fillStyle = PALETTE.WHITE;
+
+      // Swept Isometric Delta Wings (pointing Top-Right along runway vector)
+      ctx.fillStyle = '#E2E8F0';
       ctx.strokeStyle = PALETTE.CYAN;
       ctx.shadowColor = PALETTE.CYAN;
       ctx.shadowBlur = 10;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(18, -10);
-      ctx.lineTo(-6, -16);
-      ctx.lineTo(-18, 4);
-      ctx.lineTo(6, 10);
+      ctx.moveTo(22, -12);   // Nose tip
+      ctx.lineTo(-8, -20);   // Left wingtip
+      ctx.lineTo(-14, -8);   // Left rear fuselage
+      ctx.lineTo(-20, 4);    // Tail base
+      ctx.lineTo(-8, 10);    // Right rear fuselage
+      ctx.lineTo(8, 14);     // Right wingtip
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
-      // Twin thruster glow
-      this.renderer.drawGlowCircle(-12, 4, 4.5, PALETTE.ORANGE, 8, true);
+      // Red & Blue Sega Wing Squadron Stripes
+      ctx.fillStyle = PALETTE.RED;
+      ctx.beginPath();
+      ctx.moveTo(6, -10);
+      ctx.lineTo(-6, -16);
+      ctx.lineTo(-10, -11);
+      ctx.lineTo(2, -5);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = PALETTE.RED;
+      ctx.beginPath();
+      ctx.moveTo(8, 0);
+      ctx.lineTo(4, 10);
+      ctx.lineTo(-2, 7);
+      ctx.lineTo(2, -2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Center Fuselage Spine & Glowing Blue Cockpit Canopy
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.beginPath();
+      ctx.moveTo(22, -12);
+      ctx.lineTo(-14, 6);
+      ctx.lineTo(-18, 2);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = PALETTE.BLUE;
+      ctx.beginPath();
+      ctx.ellipse(5, -5, 6, 3.2, -0.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Twin Afterburner Thruster Plumes
+      const thrustFlicker = Math.floor(performance.now() * 0.03) % 2 === 0 ? PALETTE.ORANGE : PALETTE.GOLD;
+      this.renderer.drawGlowCircle(-15, 1, 4, thrustFlicker, 10, true);
+      this.renderer.drawGlowCircle(-11, 6, 4, thrustFlicker, 10, true);
       ctx.restore();
     }
 
@@ -47032,7 +50551,7 @@ class MoonPatrol {
     this.audio = audio;
 
     this.id = 'moonpatrol';
-    this.title = 'Crater Buggy';
+    this.title = 'Moon Patrol';
     this.width = 960;
     this.height = 540;
 
@@ -47571,11 +51090,11 @@ class MoonPatrol {
       const tilt = Math.atan2(wheelYs[2] - wheelYs[0], 44);
       const chassisY = (b.jumping ? b.y : avgWheelY) - 20 + Math.sin(b.wheelPhase) * 1.5;
 
-      // Draw Suspension Struts & 3 Independent Bouncing Wheels
+      // Draw Suspension Struts & 3 Independent Bouncing Spoked Wheels
       ctx.save();
       for (let i = 0; i < 3; i++) {
         const wx = b.x + wheelOffsets[i];
-        const wy = wheelYs[i] - 7;
+        const wy = wheelYs[i] - 8;
         ctx.strokeStyle = PALETTE.CYAN;
         ctx.lineWidth = 2.5;
         ctx.beginPath();
@@ -47583,23 +51102,77 @@ class MoonPatrol {
         ctx.lineTo(wx, wy);
         ctx.stroke();
 
-        this.renderer.drawGlowCircle(wx, wy, 8.5, '#1E293B', 4, true);
+        // Tire tread & hubcap spokes
+        this.renderer.drawGlowCircle(wx, wy, 9.5, '#0F172A', 4, true);
         ctx.strokeStyle = PALETTE.WHITE;
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(wx, wy, 8.5, 0, Math.PI * 2);
+        ctx.arc(wx, wy, 9.5, 0, Math.PI * 2);
+        ctx.stroke();
+
+        const spokeAng = b.wheelPhase + i * 0.8;
+        ctx.strokeStyle = PALETTE.GOLD;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(wx - Math.cos(spokeAng) * 6, wy - Math.sin(spokeAng) * 6);
+        ctx.lineTo(wx + Math.cos(spokeAng) * 6, wy + Math.sin(spokeAng) * 6);
+        ctx.moveTo(wx - Math.sin(spokeAng) * 6, wy + Math.cos(spokeAng) * 6);
+        ctx.lineTo(wx + Math.sin(spokeAng) * 6, wy - Math.cos(spokeAng) * 6);
         ctx.stroke();
       }
 
-      // Articulated Pink/Cyan Buggy Chassis & Turret Canopy
+      // Articulated Pink/Cyan Irem Lunar Buggy Hull, Bubble Canopy & Astronaut Helmet
       ctx.translate(b.x, chassisY);
       ctx.rotate(tilt * 0.65);
-      this.renderer.drawGlowRect(-30, -8, 60, 14, PALETTE.PINK, 10, true);
-      this.renderer.drawGlowRect(-14, -18, 26, 10, PALETTE.CYAN, 8, true);
-      // Forward & Upward Gun Barrels
+
+      // Rear Thruster Flame
+      ctx.fillStyle = Math.floor(performance.now() * 0.03) % 2 === 0 ? PALETTE.ORANGE : PALETTE.GOLD;
+      ctx.beginPath();
+      ctx.moveTo(-32, -4);
+      ctx.lineTo(-42, -1);
+      ctx.lineTo(-32, 3);
+      ctx.closePath();
+      ctx.fill();
+
+      // Contoured Pink Armored Buggy Hull with Fenders
+      ctx.fillStyle = PALETTE.PINK;
+      ctx.shadowColor = PALETTE.PINK;
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.moveTo(-32, 6);
+      ctx.lineTo(-28, -8);
+      ctx.lineTo(22, -8);
+      ctx.lineTo(32, 0);
+      ctx.lineTo(30, 6);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Cyan Hull Stripe & Side Panel
+      ctx.fillStyle = PALETTE.CYAN;
+      ctx.fillRect(-24, -3, 46, 4);
+
+      // Translucent Cyan Bubble Canopy + White Astronaut Helmet & Visor
+      ctx.fillStyle = 'rgba(0, 240, 255, 0.35)';
+      ctx.strokeStyle = PALETTE.CYAN;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(-2, -8, 13, Math.PI, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.beginPath();
+      ctx.arc(-2, -13, 5.5, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(14, -6, 20, 4);
-      ctx.fillRect(2, -26, 4, 10);
+      ctx.fillRect(0, -15, 4, 4);
+
+      // Forward Cannon & Upward Anti-Air Laser Barrels
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(22, -5, 16, 4);
+      ctx.fillRect(-14, -24, 4, 12);
       ctx.restore();
     }
 
@@ -47715,6 +51288,36 @@ const ROWS = 11;
 const TILE = 40;
 const OFFSET_X = Math.floor((960 - COLS * TILE) * 0.5);
 const OFFSET_Y = 66;
+
+const PENGO_SPRITE = [
+  '...RRRRRR...',
+  '..RRRRRRRR..',
+  '.RRWWKKWWRR.',
+  '.RRWWKKWWRR.',
+  '.RRRRYYYYRR.',
+  'RRRWWWWWWWRR',
+  'RRRWWWWWWWRR',
+  'RRWWWWWWWWWR',
+  '.RRWWWWWWWR.',
+  '..RRRRRRRR..',
+  '..YYY..YYY..',
+  '.YYYY..YYYY.'
+];
+
+const SNOBEE_SPRITE = [
+  '.Y........Y.',
+  '..Y..SS..Y..',
+  '...SSSSSS...',
+  '..SSSSSSSS..',
+  '.SSWWKKWWSS.',
+  'SSSWWKKWWSSS',
+  'SSSSSSSSSSSS',
+  'SS.SSSSSS.SS',
+  '.SSSSSSSSSS.',
+  '..SSSSSSSS..',
+  '.SS..SS..SS.',
+  'SS...SS...SS'
+];
 class Pengo {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -47722,7 +51325,7 @@ class Pengo {
     this.audio = audio;
 
     this.id = 'pengo';
-    this.title = 'Ice Pusher';
+    this.title = 'Pengo';
     this.width = 960;
     this.height = 540;
 
@@ -48337,24 +51940,50 @@ class Pengo {
       const pos = this._tileCenter(sb.r, sb.c);
       const col = sb.stunTimer > 0 ? PALETTE.CYAN : sb.color;
       const shake = sb.stunTimer > 0 ? Math.sin(performance.now() * 0.05) * 3 : 0;
-      this.renderer.drawGlowCircle(pos.x + shake, pos.y, 13, col, 10, true);
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(pos.x - 6, pos.y - 5, 4, 5);
-      ctx.fillRect(pos.x + 2, pos.y - 5, 4, 5);
+      const scale = 2.4;
+      const sw = SNOBEE_SPRITE[0].length * scale;
+      const sh = SNOBEE_SPRITE.length * scale;
+      this.renderer.drawPixelSprite(
+        SNOBEE_SPRITE,
+        pos.x + shake - sw * 0.5,
+        pos.y - sh * 0.5,
+        scale,
+        {
+          S: col,
+          Y: PALETTE.GOLD,
+          W: PALETTE.WHITE,
+          K: '#090D16'
+        },
+        sb.dc < 0
+      );
     }
 
     // 4. Red Penguin Pengo
     const p = this.pengo;
     if (p.invuln <= 0 || Math.floor(p.invuln * 14) % 2 === 0) {
       const pos = this._tileCenter(p.r, p.c);
-      this.renderer.drawGlowCircle(pos.x, pos.y, 14, PALETTE.RED, 10, true);
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y + 3, 8, 0, Math.PI * 2);
-      ctx.fill();
-      // Yellow Beak pointing in facing direction
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(pos.x + p.dc * 10 - 4, pos.y + p.dr * 10 - 4, 8, 8);
+      const scale = 2.5;
+      const pw = PENGO_SPRITE[0].length * scale;
+      const ph = PENGO_SPRITE.length * scale;
+      const waddleY = Math.sin(performance.now() * 0.018) * 1.5;
+      this.renderer.drawPixelSprite(
+        PENGO_SPRITE,
+        pos.x - pw * 0.5,
+        pos.y - ph * 0.5 + waddleY,
+        scale,
+        {
+          R: PALETTE.RED,
+          W: PALETTE.WHITE,
+          Y: PALETTE.GOLD,
+          K: '#090D16'
+        },
+        p.dc < 0
+      );
+      // Directional beak highlight when facing up or down
+      if (p.dr !== 0) {
+        ctx.fillStyle = PALETTE.GOLD;
+        ctx.fillRect(pos.x - 4, pos.y + p.dr * 11 - 3, 8, 6);
+      }
     }
 
     // 5. Particles & Popups
@@ -48420,7 +52049,7 @@ class RallyX {
     this.audio = audio;
 
     this.id = 'rallyx';
-    this.title = 'Smoke Rally';
+    this.title = 'Rally-X';
     this.width = 960;
     this.height = 540;
 
@@ -48865,14 +52494,22 @@ class RallyX {
     // Checkered Flags (Normal, Special 'S', Lucky 'L')
     for (const f of this.flags) {
       if (f.collected) continue;
+      // Flagpole + Gold Finial
       ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(f.x - 2, f.y - 14, 3, 28);
+      ctx.fillRect(f.x - 8, f.y - 15, 3, 30);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(f.x - 9, f.y - 17, 5, 3);
+
       const flagCol = f.type === 'SPECIAL' ? PALETTE.PINK : f.type === 'LUCKY' ? PALETTE.GREEN : PALETTE.GOLD;
-      this.renderer.drawGlowRect(f.x + 1, f.y - 14, 16, 12, flagCol, 8, true);
+      this.renderer.drawGlowRect(f.x - 5, f.y - 14, 18, 13, flagCol, 8, true);
+      // Classic 2x2 Checkered Pennant squares
+      ctx.fillStyle = '#0F172A';
+      ctx.fillRect(f.x - 3, f.y - 12, 4, 4);
+      ctx.fillRect(f.x + 1, f.y - 8, 4, 4);
       if (f.type !== 'NORMAL') {
-        this.renderer.drawText(f.type === 'SPECIAL' ? 'S' : 'L', f.x + 9, f.y - 4, {
+        this.renderer.drawText(f.type === 'SPECIAL' ? 'S' : 'L', f.x + 8, f.y - 4, {
           font: FONTS.HEADER,
-          size: 9,
+          size: 8.5,
           color: PALETTE.WHITE,
           align: 'center'
         });
@@ -48881,29 +52518,68 @@ class RallyX {
 
     // Smoke Screen Clouds
     for (const sm of this.smokes) {
-      this.renderer.drawGlowCircle(sm.x, sm.y, 18, PALETTE.WHITE, 12, true);
+      this.renderer.drawGlowCircle(sm.x, sm.y, 16, PALETTE.WHITE, 12, true);
+      this.renderer.drawGlowCircle(sm.x - 8, sm.y + 5, 10, '#E2E8F0', 6, true);
+      this.renderer.drawGlowCircle(sm.x + 8, sm.y - 4, 11, '#E2E8F0', 6, true);
     }
 
-    // Red Rival Cars
+    const drawFormulaCar = (bodyCol, stripeCol, visorCol) => {
+      // 4 Exposed Black Formula-1 Tires & Axles
+      ctx.fillStyle = '#64748B';
+      ctx.fillRect(-10, -13, 3, 26);
+      ctx.fillRect(6, -12, 3, 24);
+      ctx.fillStyle = '#090D16';
+      ctx.fillRect(-14, -14, 9, 5);
+      ctx.fillRect(-14, 9, 9, 5);
+      ctx.fillRect(4, -13, 8, 4);
+      ctx.fillRect(4, 9, 8, 4);
+
+      // Rear Spoiler Wing
+      ctx.fillStyle = stripeCol;
+      ctx.fillRect(-17, -11, 4, 22);
+
+      // Sidepods & Tapered Nose Cone
+      this.renderer.drawGlowRect(-12, -8, 18, 16, bodyCol, 8, true);
+      ctx.fillStyle = bodyCol;
+      ctx.beginPath();
+      ctx.moveTo(6, -6);
+      ctx.lineTo(17, -3);
+      ctx.lineTo(17, 3);
+      ctx.lineTo(6, 6);
+      ctx.closePath();
+      ctx.fill();
+
+      // Front Wing
+      ctx.fillStyle = stripeCol;
+      ctx.fillRect(13, -9, 3, 18);
+
+      // Cockpit & White Driver Helmet
+      ctx.fillStyle = '#0F172A';
+      ctx.fillRect(-5, -5, 9, 10);
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.beginPath();
+      ctx.arc(-1, 0, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = visorCol;
+      ctx.fillRect(1, -2.5, 2.5, 5);
+    };
+
+    // Red Rival Formula-1 Cars
     for (const rv of this.rivals) {
       ctx.save();
       ctx.translate(rv.x, rv.y);
       ctx.rotate(rv.angle);
-      this.renderer.drawGlowRect(-14, -9, 28, 18, PALETTE.RED, 8, true);
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(4, -6, 6, 12);
+      drawFormulaCar(PALETTE.RED, PALETTE.GOLD, '#0F172A');
       ctx.restore();
     }
 
-    // Player Blue Formula Car
+    // Player Blue Formula-1 Car
     const p = this.player;
     if (p.invuln <= 0 || Math.floor(p.invuln * 14) % 2 === 0) {
       ctx.save();
       ctx.translate(p.x, p.y);
       ctx.rotate(p.angle);
-      this.renderer.drawGlowRect(-14, -9, 28, 18, PALETTE.CYAN, 10, true);
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(4, -6, 7, 12);
+      drawFormulaCar(PALETTE.CYAN, PALETTE.WHITE, PALETTE.BLUE);
       ctx.restore();
     }
 
@@ -49031,7 +52707,7 @@ class RoadFighter {
     this.audio = audio;
 
     this.id = 'roadfighter';
-    this.title = 'Turbo Highway';
+    this.title = 'Road Fighter';
     this.width = 960;
     this.height = 540;
 
@@ -49391,19 +53067,62 @@ class RoadFighter {
       const geom = this._getRoadGeometry(car.dist);
       const cx = geom.centerX + car.laneOffset;
 
-      let col = PALETTE.BLUE;
-      if (car.type === 'FUEL_CAR') {
-        col = Math.floor(performance.now() * 0.02) % 2 === 0 ? PALETTE.PINK : PALETTE.CYAN;
-      } else if (car.type === 'WEAVER') {
-        col = PALETTE.GOLD;
-      } else if (car.type === 'TRUCK') {
-        col = PALETTE.MUTED;
-      }
+      ctx.save();
+      ctx.translate(cx, sy);
 
-      const h = car.type === 'TRUCK' ? 54 : 36;
-      this.renderer.drawGlowRect(cx - 14, sy - h * 0.5, 28, h, col, 8, true);
-      ctx.fillStyle = '#0F172A';
-      ctx.fillRect(cx - 10, sy - 8, 20, 10);
+      if (car.type === 'TRUCK') {
+        // 18-Wheeler Highway Semi-Truck (Cab + Ribbed Trailer + 6 Tires)
+        ctx.fillStyle = '#090D16';
+        for (const ty of [-24, -4, 18]) {
+          ctx.fillRect(-17, ty, 4, 8);
+          ctx.fillRect(13, ty, 4, 8);
+        }
+        // Tractor Cab (front)
+        this.renderer.drawGlowRect(-13, -30, 26, 16, '#38BDF8', 6, true);
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(-10, -25, 20, 6);
+        ctx.fillStyle = PALETTE.GOLD;
+        ctx.fillRect(-11, -31, 5, 2);
+        ctx.fillRect(6, -31, 5, 2);
+        // Trailer Container
+        this.renderer.drawGlowRect(-14, -12, 28, 40, '#CBD5E1', 6, true);
+        ctx.fillStyle = '#94A3B8';
+        for (let ry = -6; ry <= 20; ry += 8) {
+          ctx.fillRect(-12, ry, 24, 3);
+        }
+        ctx.fillStyle = PALETTE.RED;
+        ctx.fillRect(-12, 25, 7, 3);
+        ctx.fillRect(5, 25, 7, 3);
+      } else {
+        let col = PALETTE.BLUE;
+        if (car.type === 'FUEL_CAR') {
+          col = Math.floor(performance.now() * 0.02) % 2 === 0 ? PALETTE.PINK : PALETTE.CYAN;
+        } else if (car.type === 'WEAVER') {
+          col = PALETTE.GOLD;
+        }
+        // 4 Black Tires
+        ctx.fillStyle = '#090D16';
+        ctx.fillRect(-16, -14, 4, 8);
+        ctx.fillRect(12, -14, 4, 8);
+        ctx.fillRect(-16, 6, 4, 8);
+        ctx.fillRect(12, 6, 4, 8);
+        // Contoured Car Body & Hood
+        this.renderer.drawGlowRect(-13, -18, 26, 36, col, 8, true);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.fillRect(-9, -16, 18, 6);
+        // Windshield & Rear Window
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(-10, -8, 20, 8);
+        ctx.fillRect(-9, 7, 18, 5);
+        // Headlights & Taillights
+        ctx.fillStyle = PALETTE.GOLD;
+        ctx.fillRect(-10, -19, 5, 2);
+        ctx.fillRect(5, -19, 5, 2);
+        ctx.fillStyle = PALETTE.RED;
+        ctx.fillRect(-10, 16, 6, 2);
+        ctx.fillRect(4, 16, 6, 2);
+      }
+      ctx.restore();
     }
 
     // 4. Render Player Red Turbo Sports Car
@@ -49413,11 +53132,35 @@ class RoadFighter {
       if (p.skidTimer > 0) {
         ctx.rotate(p.skidDir * 0.48);
       }
-      this.renderer.drawGlowRect(-15, -20, 30, 40, PALETTE.RED, 12, true);
+      // 4 Wide Black Racing Tires
+      ctx.fillStyle = '#090D16';
+      ctx.fillRect(-18, -15, 4, 9);
+      ctx.fillRect(14, -15, 4, 9);
+      ctx.fillRect(-18, 7, 4, 9);
+      ctx.fillRect(14, 7, 4, 9);
+
+      // Sculpted Red Sports Car Body + Tapered Nose
+      this.renderer.drawGlowRect(-15, -18, 30, 38, PALETTE.RED, 12, true);
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(-12, -22, 24, 5);
+
+      // Twin White Center Racing Stripes
       ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(-3, -20, 6, 40);
+      ctx.fillRect(-4, -22, 3, 42);
+      ctx.fillRect(1, -22, 3, 42);
+
+      // Wrap-Around Cyan Cockpit Windshield & Rear Louvers
       ctx.fillStyle = PALETTE.CYAN;
-      ctx.fillRect(-11, -8, 22, 10);
+      ctx.fillRect(-11, -9, 22, 9);
+      ctx.fillStyle = '#0F172A';
+      ctx.fillRect(-9, 6, 18, 6);
+
+      // Rear GT Spoiler Wing & Glowing Taillights
+      ctx.fillStyle = '#991B1B';
+      ctx.fillRect(-16, 15, 32, 4);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(-11, -23, 5, 2);
+      ctx.fillRect(6, -23, 5, 2);
       ctx.restore();
     }
 
@@ -49521,6 +53264,65 @@ const Flicky = (function() {
  */
 
 const FLOORS = [496, 396, 296, 196];
+
+const FLICKY_SPRITE = [
+  '....CCCC....',
+  '..CCCCCCCC..',
+  '.CCWWKKCCCC.',
+  '.CCWWKKCCYY.',
+  'CCCCCCCCYYYY',
+  'CCBBBBCCCC..',
+  'CCBBBBBBCC..',
+  '.CCCCCCCC...',
+  '..CC..CC....',
+  '..YY..YY....'
+];
+
+const CHICK_SPRITE = [
+  '..YYYYY..',
+  '.YYYYYYY.',
+  'YYWWKYYYY',
+  'YYYYYYYYO',
+  'YYOYYYYOO',
+  '.YYYYYYY.',
+  '..Y...Y..',
+  '..O...O..'
+];
+
+const CHICK_SHADES_SPRITE = [
+  '..YYYYY..',
+  '.YYYYYYY.',
+  'YYKKKKKYY',
+  'YYKYYYKYY',
+  'YYYYYYYYO',
+  '.YYYYYYY.',
+  '..Y...Y..',
+  '..O...O..'
+];
+
+const TIGER_CAT_SPRITE = [
+  '.O.O....O.O.',
+  'OOOOOOOOOOOO',
+  'OKKOOOOOOKKO',
+  'OWKOOOOOOKWO',
+  'OOWWKKKKWWOO',
+  '.OOOOOOOOOO.',
+  '..OOKKKKOO.O',
+  '.OOOOOOOO.OO',
+  '.OO.OOOO.OO.',
+  '.WW..WW..WW.'
+];
+
+const IGUANA_SPRITE = [
+  '..G.G.G.G...',
+  '.GGGGGGGGGG.',
+  'GGWWKGGGGGGG',
+  'GGGGGGGGYYYY',
+  '.GGGGGGGGGG.',
+  'GG.GGGGGG.GG',
+  'G..GG..GG..G',
+  '..YY....YY..'
+];
 
 const STAGE_LAYOUTS = [
   {
@@ -49737,7 +53539,7 @@ class Flicky {
     this.audio = audio;
 
     this.id = 'flicky';
-    this.title = 'Chirpy Rescue';
+    this.title = 'Flicky';
     this.width = 960;
     this.height = 540;
 
@@ -50126,43 +53928,83 @@ class Flicky {
     // 4. Chirping Yellow Piopio Chicks
     for (const c of this.chicks) {
       if (c.state === 'RESCUED') continue;
-      this.renderer.drawGlowCircle(c.x, c.y - 9, 8.5, PALETTE.GOLD, 8, true);
-      if (c.sunglasses) {
-        ctx.fillStyle = '#090D16';
-        ctx.fillRect(c.x - 6, c.y - 12, 12, 4);
-      } else {
-        ctx.fillStyle = '#090D16';
-        ctx.fillRect(c.x + 2, c.y - 11, 3, 3);
-      }
+      const sprite = c.sunglasses ? CHICK_SHADES_SPRITE : CHICK_SPRITE;
+      const scale = 2.2;
+      const cw = sprite[0].length * scale;
+      const ch = sprite.length * scale;
+      this.renderer.drawPixelSprite(
+        sprite,
+        c.x - cw * 0.5,
+        c.y - ch,
+        scale,
+        {
+          Y: PALETTE.GOLD,
+          O: PALETTE.ORANGE,
+          W: PALETTE.WHITE,
+          K: '#090D16'
+        },
+        c.vx < 0
+      );
     }
 
-    // 5. Tiger Cats (Nyannan) & Green Iguanas
+    // 5. Tiger Cats (Nyannan) & Green Iguanas (Choro)
     for (const e of this.enemies) {
-      const col = e.type === 'IGUANA' ? PALETTE.GREEN : PALETTE.ORANGE;
-      this.renderer.drawGlowCircle(e.x, e.y - 12, 12, col, 10, true);
-      // Cat ears
-      ctx.fillStyle = col;
-      ctx.beginPath();
-      ctx.moveTo(e.x - 10, e.y - 18);
-      ctx.lineTo(e.x - 6, e.y - 28);
-      ctx.lineTo(e.x - 2, e.y - 20);
-      ctx.moveTo(e.x + 10, e.y - 18);
-      ctx.lineTo(e.x + 6, e.y - 28);
-      ctx.lineTo(e.x + 2, e.y - 20);
-      ctx.fill();
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(e.x - 6, e.y - 15, 4, 4);
-      ctx.fillRect(e.x + 2, e.y - 15, 4, 4);
+      if (e.type === 'IGUANA') {
+        const scale = 2.3;
+        const ew = IGUANA_SPRITE[0].length * scale;
+        const eh = IGUANA_SPRITE.length * scale;
+        this.renderer.drawPixelSprite(
+          IGUANA_SPRITE,
+          e.x - ew * 0.5,
+          e.y - eh,
+          scale,
+          {
+            G: PALETTE.GREEN,
+            Y: PALETTE.GOLD,
+            W: PALETTE.WHITE,
+            K: '#090D16'
+          },
+          e.vx > 0
+        );
+      } else {
+        const scale = 2.3;
+        const ew = TIGER_CAT_SPRITE[0].length * scale;
+        const eh = TIGER_CAT_SPRITE.length * scale;
+        this.renderer.drawPixelSprite(
+          TIGER_CAT_SPRITE,
+          e.x - ew * 0.5,
+          e.y - eh,
+          scale,
+          {
+            O: PALETTE.ORANGE,
+            W: PALETTE.WHITE,
+            K: '#090D16'
+          },
+          e.vx < 0
+        );
+      }
     }
 
     // 6. Bluebird Flicky
     const f = this.flicky;
     if (f.invuln <= 0 || Math.floor(f.invuln * 14) % 2 === 0) {
-      this.renderer.drawGlowCircle(f.x, f.y - 13, 13, PALETTE.CYAN, 12, true);
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(f.x + f.facing * 10 - 3, f.y - 15, 8, 5);
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(f.x + f.facing * 4 - 2, f.y - 18, 4, 5);
+      const scale = 2.5;
+      const fw = FLICKY_SPRITE[0].length * scale;
+      const fh = FLICKY_SPRITE.length * scale;
+      this.renderer.drawPixelSprite(
+        FLICKY_SPRITE,
+        f.x - fw * 0.5,
+        f.y - fh,
+        scale,
+        {
+          C: PALETTE.CYAN,
+          B: '#2563EB',
+          Y: PALETTE.GOLD,
+          W: PALETTE.WHITE,
+          K: '#090D16'
+        },
+        f.facing < 0
+      );
     }
 
     // 7. Popups
@@ -50274,7 +54116,7 @@ class Mappy {
     this.audio = audio;
 
     this.id = 'mappy';
-    this.title = 'Trampoline Cop';
+    this.title = 'Mappy';
 
     this.state = 'PLAYING';
     this.score = 0;
@@ -51532,6 +55374,18 @@ const HORSE_SPRITE = [
   '..WW..WW.WW.',
   '..YY..YY.YY.'
 ];
+
+const MONKEY_SPRITE = [
+  '..BBBBBB..',
+  '.BFFFFFFB.',
+  'BFKFFFFKFB',
+  '.BFFFFFFB.',
+  '..BBBBBB..',
+  '.BBBBBBBB.',
+  'BB.BBBB.BB',
+  '...B..B...',
+  '..BB..BB..'
+];
 class CircusCharlie {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -51539,7 +55393,7 @@ class CircusCharlie {
     this.audio = audio;
 
     this.id = 'circuscharlie';
-    this.title = 'Big Top Stunt';
+    this.title = 'Circus Charlie';
 
     this.state = 'PLAYING';
     this.score = 0;
@@ -52323,10 +56177,18 @@ class CircusCharlie {
         ctx.ellipse(sx, ob.y, ob.rx, ob.ry, 0, 0, Math.PI * 2);
         ctx.stroke();
       } else if (ob.type === 'monkey') {
-        ctx.fillStyle = ob.isPurple ? PALETTE.PURPLE : '#B45309';
-        ctx.fillRect(sx - 10, ob.y - 22, 20, 20);
-        ctx.fillStyle = '#FDE68A';
-        ctx.fillRect(sx - 6, ob.y - 18, 12, 10);
+        this.renderer.drawPixelSprite(
+          MONKEY_SPRITE,
+          sx - 11,
+          ob.y - 22,
+          2.2,
+          {
+            B: ob.isPurple ? PALETTE.PURPLE : '#B45309',
+            F: '#FDE68A',
+            K: '#0B0F19'
+          },
+          ob.vx < 0
+        );
       } else if (ob.type === 'ball') {
         ctx.fillStyle = '#F8FAFC';
         ctx.beginPath();
@@ -52530,7 +56392,7 @@ class BattleCity {
     this.audio = audio;
 
     this.id = 'battlecity';
-    this.title = 'Tank Battalion';
+    this.title = 'Battle City';
 
     this.state = 'PLAYING';
     this.score = 0;
@@ -53657,7 +57519,7 @@ class KungFuMaster {
     this.audio = audio;
 
     this.id = 'kungfumaster';
-    this.title = 'Dragon Dojo';
+    this.title = 'Kung-Fu Master';
 
     this.state = 'PLAYING';
     this.score = 0;
@@ -54584,7 +58446,7 @@ class WildGunman {
     this.audio = audio;
 
     this.id = 'wildgunman';
-    this.title = 'High Noon Draw';
+    this.title = 'Wild Gunman';
 
     this.state = 'PLAYING';
     this.score = 0;
@@ -55265,7 +59127,7 @@ class Exerion {
     this.audio = audio;
 
     this.id = 'exerion';
-    this.title = 'Inertia Wing';
+    this.title = 'Exerion';
 
     this.state = 'PLAYING';
     this.score = 0;
@@ -55982,7 +59844,7 @@ class TetrisRetro {
     this.audio = audio;
 
     this.id = 'tetrisretro';
-    this.title = 'Neon Blocks & Gems';
+    this.title = 'Tetris & Columns';
 
     this.state = 'PLAYING';
     this.score = 0;

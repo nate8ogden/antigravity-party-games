@@ -59,7 +59,7 @@ export class TrackAndField {
     this.audio = audio;
 
     this.id = 'trackandfield';
-    this.title = 'Cyber Decathlon';
+    this.title = 'Track & Field';
     this.width = 960;
     this.height = 540;
 
@@ -575,41 +575,88 @@ export class TrackAndField {
   }
 
   _drawAthlete(ctx, x, y, speed, airborne, color = PALETTE.CYAN, carryingJavelin = false) {
-    const stride = airborne ? 0.8 : Math.sin(performance.now() * 0.025 * Math.max(1, speed * 0.4));
+    const phase = performance.now() * 0.026 * Math.max(1, speed * 0.42);
+    const stride = airborne ? 0.92 : Math.sin(phase);
+    const kneeBend = airborne ? 0.45 : Math.max(0, Math.cos(phase));
+    const lean = airborne ? -0.18 : Math.min(0.24, speed * 0.018);
+
     ctx.save();
     ctx.translate(x, y);
 
-    // Head
-    this.renderer.drawGlowCircle(0, -34, 7, color, 8, true);
-    // Headband
-    ctx.fillStyle = PALETTE.WHITE;
-    ctx.fillRect(-7, -37, 14, 3);
+    // Track shadow under athlete
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+    ctx.beginPath();
+    ctx.ellipse(0, 5, 13, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Torso
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 5;
+    ctx.rotate(lean);
+
+    // Back Arm (pumping opposite to front leg)
+    ctx.strokeStyle = '#D97706';
+    ctx.lineWidth = 3.5;
     ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(0, -26);
-    ctx.lineTo(-2, -10);
+    ctx.moveTo(0, -25);
+    ctx.lineTo(-stride * 9, -17);
+    ctx.lineTo(-stride * 13 + 4, -22);
     ctx.stroke();
 
-    // Arms
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.moveTo(0, -24);
-    ctx.lineTo(stride * 12, -14);
-    ctx.moveTo(0, -24);
-    ctx.lineTo(-stride * 12, -14);
-    ctx.stroke();
-
-    // Legs
+    // Back Leg (articulated thigh + shin + shoe)
+    const backKneeX = -stride * 9;
+    const backKneeY = -3;
+    const backFootX = -stride * 14 - kneeBend * 4;
+    const backFootY = 4 - (stride > 0 ? kneeBend * 5 : 0);
+    ctx.strokeStyle = '#D97706';
     ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.moveTo(-2, -10);
-    ctx.lineTo(stride * 14, 4);
-    ctx.moveTo(-2, -10);
-    ctx.lineTo(-stride * 14, 4);
+    ctx.moveTo(-2, -11);
+    ctx.lineTo(backKneeX, backKneeY);
+    ctx.lineTo(backFootX, backFootY);
+    ctx.stroke();
+    ctx.fillStyle = PALETTE.WHITE;
+    ctx.fillRect(backFootX - 2, backFootY - 2, 6, 3);
+
+    // Athletic Singlet Torso & White Running Shorts
+    ctx.fillStyle = color;
+    ctx.fillRect(-5, -27, 10, 13);
+    ctx.fillStyle = PALETTE.WHITE;
+    ctx.fillRect(-5, -21, 10, 2.5); // Chest stripe
+    ctx.fillRect(-5.5, -14, 11, 5); // Running shorts
+
+    // Front Leg (articulated thigh + shin + running spike)
+    const frontKneeX = stride * 10;
+    const frontKneeY = -3;
+    const frontFootX = stride * 15 - (1 - kneeBend) * 3;
+    const frontFootY = 4 - (stride < 0 ? (1 - kneeBend) * 5 : 0);
+    ctx.strokeStyle = '#FDBA74';
+    ctx.lineWidth = 4.2;
+    ctx.beginPath();
+    ctx.moveTo(0, -11);
+    ctx.lineTo(frontKneeX, frontKneeY);
+    ctx.lineTo(frontFootX, frontFootY);
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.fillRect(frontFootX - 2, frontFootY - 2, 7, 3.5);
+
+    // Head, Hair, Mustache & Headband
+    ctx.fillStyle = '#FDBA74';
+    ctx.beginPath();
+    ctx.arc(1, -34, 6.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#451A03';
+    ctx.fillRect(-5, -40, 11, 4); // Hair
+    ctx.fillRect(3, -33, 4, 1.8); // Mustache
+    ctx.fillStyle = PALETTE.RED;
+    ctx.fillRect(-6, -37, 13, 2.5); // Iconic red headband
+    ctx.fillRect(-9, -36, 3, 2); // Fluttering headband tail
+
+    // Front Arm
+    ctx.strokeStyle = '#FDBA74';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(1, -24);
+    ctx.lineTo(stride * 10, -16);
+    ctx.lineTo(stride * 13 + 5, -21);
     ctx.stroke();
 
     if (carryingJavelin) {
@@ -618,6 +665,8 @@ export class TrackAndField {
       ctx.translate(4, -24);
       ctx.rotate(ang);
       this.renderer.drawGlowRect(-26, -1.5, 56, 3, PALETTE.GOLD, 8, true);
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(26, -2, 6, 4);
       ctx.restore();
     }
 
@@ -631,18 +680,53 @@ export class TrackAndField {
     // Stadium Night Sky & Crowd Bleachers
     this.renderer.clear('#090D1A');
 
-    // Stadium Floodlights & Scoreboard Header
+    // Stadium Upper Deck & Electronic Scoreboard Header
     ctx.fillStyle = '#131B2E';
     ctx.fillRect(0, 38, this.width, 145);
+    ctx.fillStyle = '#0B0F19';
+    ctx.fillRect(210, 44, 540, 46);
+    ctx.strokeStyle = PALETTE.GOLD;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(210, 44, 540, 46);
 
-    // Animated crowd dots in stadium bleachers
-    const t = performance.now() * 0.004;
-    for (let row = 0; row < 4; row++) {
-      for (let col = 0; col < 48; col++) {
-        const cx = 12 + col * 20;
-        const cy = 115 + row * 15 + (Math.sin(t + col) > 0.5 ? -2 : 0);
-        ctx.fillStyle = (col + row) % 3 === 0 ? PALETTE.CYAN : (col + row) % 2 === 0 ? PALETTE.PINK : '#475569';
-        ctx.fillRect(cx, cy, 4, 4);
+    // Iconic Olympic Flame Cauldron on Left & Right Stadium Towers
+    const flameT = performance.now() * 0.012;
+    for (const towerX of [115, 845]) {
+      // Cauldron pedestal & bowl
+      ctx.fillStyle = '#94A3B8';
+      ctx.fillRect(towerX - 10, 74, 20, 26);
+      ctx.fillStyle = '#CBD5E1';
+      ctx.beginPath();
+      ctx.moveTo(towerX - 22, 62);
+      ctx.lineTo(towerX + 22, 62);
+      ctx.lineTo(towerX + 12, 75);
+      ctx.lineTo(towerX - 12, 75);
+      ctx.closePath();
+      ctx.fill();
+
+      // Flickering Olympic Flame
+      const flicker = Math.sin(flameT + towerX) * 4;
+      this.renderer.drawGlowCircle(towerX + flicker * 0.4, 52, 12, PALETTE.RED, 12, true);
+      this.renderer.drawGlowCircle(towerX - flicker * 0.3, 50, 8, PALETTE.ORANGE, 8, true);
+      this.renderer.drawGlowCircle(towerX, 53, 5, PALETTE.GOLD, 6, true);
+    }
+
+    // Tiered Stadium Grandstand Bleachers & Cheering Crowd Spectators
+    ctx.fillStyle = '#1E293B';
+    for (let r = 0; r < 5; r++) {
+      ctx.fillRect(0, 98 + r * 16, this.width, 12);
+    }
+    const t = performance.now() * 0.006;
+    const jerseyColors = [PALETTE.CYAN, PALETTE.PINK, PALETTE.GOLD, PALETTE.GREEN, PALETTE.WHITE, '#38BDF8'];
+    for (let row = 0; row < 5; row++) {
+      for (let col = 0; col < 56; col++) {
+        const cx = 10 + col * 17 + (row % 2) * 6;
+        const bounce = Math.sin(t + col * 0.7 + row) > 0.35 ? -2 : 0;
+        const cy = 99 + row * 16 + bounce;
+        ctx.fillStyle = jerseyColors[(col * 3 + row * 2) % jerseyColors.length];
+        ctx.fillRect(cx, cy + 3, 6, 6);
+        ctx.fillStyle = '#FDBA74';
+        ctx.fillRect(cx + 1, cy, 4, 3);
       }
     }
 

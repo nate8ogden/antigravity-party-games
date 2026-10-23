@@ -93,7 +93,7 @@ export class TetrisRetro {
     this.audio = audio;
 
     this.id = 'tetrisretro';
-    this.title = 'Neon Blocks & Gems';
+    this.title = 'Tetris & Columns';
 
     this.state = 'PLAYING';
     this.score = 0;

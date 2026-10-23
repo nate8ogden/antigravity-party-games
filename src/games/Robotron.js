@@ -97,7 +97,7 @@ export class Robotron {
     this.audio = audio;
 
     this.id = 'robotron';
-    this.title = 'Cyber Arena 2084';
+    this.title = 'Robotron: 2084';
     this.state = 'PLAYING';
 
     this.width = 960;

@@ -181,9 +181,65 @@ const LEVEL_LAYOUTS = [
 
 const FRUIT_TYPES = [
   { name: 'BANANA', points: 500, color: '#FFD700', accent: '#FFF380' },
+  { name: 'CHERRIES', points: 800, color: '#EF4444', accent: '#22C55E' },
   { name: 'WATERMELON', points: 1000, color: '#FF2A55', accent: '#00FF66' },
-  { name: 'PINEAPPLE', points: 1500, color: '#FF8800', accent: '#00FF66' },
+  { name: 'GRAPES', points: 1500, color: '#A855F7', accent: '#22C55E' },
   { name: 'DIAMOND', points: 3000, color: '#00F0FF', accent: '#FFFFFF' }
+];
+
+const BANANA_SPRITE = [
+  '....GG....',
+  '...YYYY...',
+  '..YYWWYY..',
+  '.YYYY.YYY.',
+  'YYYY..YYYY',
+  'YYY...YYYY',
+  '.YY....YY.',
+  '.......K..'
+];
+
+const CHERRIES_SPRITE = [
+  '.....GGG..',
+  '....G..G..',
+  '...G...G..',
+  '..G....G..',
+  '.RRR..RRR.',
+  'RWWWRRWWWR',
+  'RRRRRRRRRR',
+  '.RRR..RRR.'
+];
+
+const WATERMELON_SPRITE = [
+  '....RR....',
+  '...RRRR...',
+  '..RRKRRR..',
+  '.RRRRKRRR.',
+  'RRRRKRRRRR',
+  'WWWWWWWWWW',
+  'GGGGGGGGGG',
+  '.GGGGGGGG.'
+];
+
+const GRAPES_SPRITE = [
+  '....GG....',
+  '..GGGGGG..',
+  '..PPPPPP..',
+  '.PPWPPWPP.',
+  '..PPPPPP..',
+  '..PPWPPP..',
+  '...PPPP...',
+  '....PP....'
+];
+
+const DIAMOND_SPRITE = [
+  '..CCCCCC..',
+  '.CCWWWWCC.',
+  'CCWWCCWWCC',
+  'CCCCCCCCCC',
+  '.CCWWCCCC.',
+  '..CCCCCC..',
+  '...CCCC...',
+  '....CC....'
 ];
 
 export class BubbleBobble {
@@ -193,7 +249,7 @@ export class BubbleBobble {
     this.audio = audio;
 
     this.id = 'bubblebobble';
-    this.title = 'Bubble Dragons';
+    this.title = 'Bubble Bobble';
     this.width = 960;
     this.height = 540;
 
@@ -896,33 +952,90 @@ export class BubbleBobble {
     }
     ctx.restore();
 
-    // Cave Brick Walls & Floor
+    // Cave Brick Walls & Floor (1986 Taito Arcade Decorative Brick Tile Patterns)
     const theme = this.caveTheme || CAVE_THEMES[(this.level - 1) % CAVE_THEMES.length];
     const wallColor = theme.wall;
     const platColor = theme.plat;
+
+    // Outer wall & floor frames
     this.renderer.drawGlowRect(0, 38, this.wallLeft, this.height - 38, wallColor, 8, false, 2);
     this.renderer.drawGlowRect(this.wallRight, 38, this.width - this.wallRight, this.height - 38, wallColor, 8, false, 2);
     this.renderer.drawGlowRect(0, this.floorY, this.width, this.height - this.floorY, wallColor, 8, false, 2);
 
-    // Brick pattern inside walls
-    ctx.fillStyle = theme.fill;
-    for (let y = 44; y < this.floorY; y += 22) {
-      ctx.fillRect(4, y, this.wallLeft - 8, 16);
-      ctx.fillRect(this.wallRight + 4, y, this.width - this.wallRight - 8, 16);
+    // Decorative Brick Tile Patterns inside Left & Right Cave Walls
+    for (let y = 40, row = 0; y < this.floorY - 4; y += 18, row++) {
+      const shift = (row % 2) * 8;
+      // Left wall bricks
+      ctx.fillStyle = theme.fill;
+      ctx.fillRect(3, y + 1, this.wallLeft - 6, 15);
+      ctx.strokeStyle = wallColor;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(3, y + 1, this.wallLeft - 6, 15);
+      ctx.fillStyle = wallColor;
+      ctx.fillRect(10 + shift, y + 1, 2, 15);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.fillRect(5, y + 3, this.wallLeft - 10, 2);
+
+      // Right wall bricks
+      ctx.fillStyle = theme.fill;
+      ctx.fillRect(this.wallRight + 3, y + 1, this.width - this.wallRight - 6, 15);
+      ctx.strokeRect(this.wallRight + 3, y + 1, this.width - this.wallRight - 6, 15);
+      ctx.fillStyle = wallColor;
+      ctx.fillRect(this.wallRight + 10 + shift, y + 1, 2, 15);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.fillRect(this.wallRight + 5, y + 3, this.width - this.wallRight - 10, 2);
     }
 
-    // One-Way Neon Platforms
+    // Decorative Brick Tile Pattern along Bottom Cave Floor
+    for (let x = 2; x < this.width - 4; x += 28) {
+      ctx.fillStyle = theme.fill;
+      ctx.fillRect(x, this.floorY + 3, 25, 12);
+      ctx.fillRect(x + 12, this.floorY + 17, 25, 11);
+      ctx.strokeStyle = wallColor;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x, this.floorY + 3, 25, 12);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+      ctx.fillRect(x + 2, this.floorY + 5, 21, 2);
+    }
+
+    // One-Way Neon Platforms with Decorative Taito Brick Tile Segments
     for (const plat of this.platforms) {
       this.renderer.drawGlowRect(plat.x, plat.y, plat.w, plat.h, platColor, 8, false, 2);
       ctx.fillStyle = theme.fill;
       ctx.fillRect(plat.x + 2, plat.y + 2, plat.w - 4, plat.h - 4);
+      // Brick joints & inner bevel highlights across each platform
+      ctx.fillStyle = platColor;
+      for (let bx = plat.x + 20; bx < plat.x + plat.w - 6; bx += 20) {
+        ctx.fillRect(bx, plat.y + 2, 2, plat.h - 4);
+      }
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      for (let bx = plat.x + 4; bx < plat.x + plat.w - 8; bx += 20) {
+        ctx.fillRect(bx, plat.y + 3, Math.min(14, plat.x + plat.w - bx - 4), 2);
+      }
     }
 
-    // Fruits
+    // Detailed Pixel-Art Fruit & Treasure Sprites (Banana, Cherries, Watermelon, Grapes, Diamond)
     for (const f of this.fruits) {
-      this.renderer.drawGlowCircle(f.x + 11, f.y + 11, 10, f.color, 10, true);
-      ctx.fillStyle = f.accent;
-      ctx.fillRect(f.x + 9, f.y - 2, 4, 5);
+      let fSprite = BANANA_SPRITE;
+      if (f.name === 'DIAMOND' || f.points >= 3000) {
+        fSprite = DIAMOND_SPRITE;
+      } else if (f.name === 'GRAPES' || f.points === 1500) {
+        fSprite = GRAPES_SPRITE;
+      } else if (f.name === 'WATERMELON' || f.points === 1000) {
+        fSprite = WATERMELON_SPRITE;
+      } else if (f.name === 'CHERRIES' || f.points === 800) {
+        fSprite = CHERRIES_SPRITE;
+      }
+      const fPalette = {
+        Y: '#FFD700',
+        W: '#FFFFFF',
+        G: '#22C55E',
+        R: '#FF2A55',
+        P: '#A855F7',
+        C: '#00F0FF',
+        K: '#0B0F19'
+      };
+      this.renderer.drawPixelSprite(fSprite, f.x, f.y, 2.2, fPalette, false, false);
     }
 
     // Enemies

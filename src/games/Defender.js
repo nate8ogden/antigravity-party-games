@@ -13,6 +13,46 @@ const SCANNER_Y = 42;
 const SCANNER_W = 540;
 const SCANNER_H = 48;
 
+const DEFENDER_SHIP_SPRITE = [
+  '..CC............',
+  '.CCCC...........',
+  'CCCCCCPPP.......',
+  '.CCCCCCCCCCCC...',
+  '..CCWWWWCCCCGGGG',
+  '...CCCCCCCCCCC..',
+  '....CC...CC.....'
+];
+
+const LANDER_SPRITE = [
+  '...YYYY...',
+  '.GGGGGGGG.',
+  'GGYGGGGYGG',
+  'GGGGGGGGGG',
+  '.G..GG..G.',
+  'G...GG...G',
+  'G........G'
+];
+
+const MUTANT_SPRITE = [
+  '..PPPPPP..',
+  '.PPRRRRPP.',
+  'PPRKPPKRPP',
+  'PPPPPPPPPP',
+  '.PG.PP.GP.',
+  'G..G..G..G'
+];
+
+const BOMBER_SPRITE = [
+  'BBBBBBBB',
+  'BCCCCCCB',
+  'BCPPPPCB',
+  'BCPYYPCB',
+  'BCPYYPCB',
+  'BCPPPPCB',
+  'BCCCCCCB',
+  'BBBBBBBB'
+];
+
 export class Defender {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -20,7 +60,7 @@ export class Defender {
     this.audio = audio;
 
     this.id = 'defender';
-    this.title = 'Horizon Vanguard';
+    this.title = 'Defender';
     this.width = 960;
     this.height = 540;
     this.worldWidth = WORLD_WIDTH;
@@ -773,86 +813,107 @@ export class Defender {
       ctx.restore();
     }
 
-    // Enemies (Landers, Mutants, Bombers)
+    // Enemies (Landers, Mutants, Bombers) rendered with 1981 Williams pixel-art sprites
     for (const e of this.enemies) {
       const sx = this._worldToScreenX(e.wx);
       if (sx < -35 || sx > this.width + 35) continue;
 
-      ctx.save();
-      ctx.translate(sx, e.y);
-
       if (e.type === 'LANDER') {
-        const color = e.state === 'ABDUCTING' ? PALETTE.GOLD : PALETTE.GREEN;
         // Tractor beam when descending/abducting
         if (e.state === 'ABDUCTING' && e.targetHuman) {
-          ctx.strokeStyle = 'rgba(0, 240, 255, 0.55)';
+          ctx.save();
+          ctx.translate(sx, e.y);
+          ctx.strokeStyle = 'rgba(0, 240, 255, 0.65)';
           ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.moveTo(-6, 8);
-          ctx.lineTo(0, 18);
-          ctx.lineTo(6, 8);
+          ctx.moveTo(-7, 8);
+          ctx.lineTo(0, 19);
+          ctx.lineTo(7, 8);
           ctx.stroke();
+          ctx.restore();
         }
-        this.renderer.drawGlowRect(-11, -7, 22, 9, color, 8, true);
-        ctx.fillStyle = PALETTE.GOLD;
-        ctx.fillRect(-6, -11, 12, 4);
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(-8, 2);
-        ctx.lineTo(-12, 9);
-        ctx.moveTo(0, 2);
-        ctx.lineTo(0, 9);
-        ctx.moveTo(8, 2);
-        ctx.lineTo(12, 9);
-        ctx.stroke();
+        const palette = {
+          G: e.state === 'ABDUCTING' ? PALETTE.GOLD : PALETTE.GREEN,
+          Y: PALETTE.GOLD
+        };
+        this.renderer.drawPixelSprite(LANDER_SPRITE, sx - 12, e.y - 9, 2.4, palette, false, false);
       } else if (e.type === 'MUTANT') {
-        this.renderer.drawGlowRect(-11, -8, 22, 16, PALETTE.PURPLE, 12, false, 2.5);
-        ctx.fillStyle = PALETTE.PINK;
-        ctx.fillRect(-6, -4, 4, 4);
-        ctx.fillRect(2, -4, 4, 4);
+        const palette = {
+          P: PALETTE.PURPLE,
+          R: PALETTE.PINK,
+          K: PALETTE.GOLD,
+          G: PALETTE.GREEN
+        };
+        this.renderer.drawPixelSprite(MUTANT_SPRITE, sx - 12, e.y - 8, 2.4, palette, false, false);
       } else if (e.type === 'BOMBER') {
-        this.renderer.drawGlowRect(-10, -10, 20, 20, PALETTE.BLUE, 10, false, 2.5);
-        this.renderer.drawGlowRect(-5, -5, 10, 10, PALETTE.PINK, 6, true);
+        const pulse = Math.floor(e.phase * 3) % 2 === 0;
+        const palette = {
+          B: PALETTE.BLUE,
+          C: pulse ? PALETTE.CYAN : PALETTE.PURPLE,
+          P: PALETTE.PINK,
+          Y: PALETTE.GOLD
+        };
+        this.renderer.drawPixelSprite(BOMBER_SPRITE, sx - 10, e.y - 10, 2.5, palette, false, false);
       }
-      ctx.restore();
     }
 
-    // Player Defender Ship
+    // Player Defender Ship (1981 Williams pixel-art sprite + thrust exhaust plume)
     const s = this.ship;
     if (!s.dead) {
       const visible = s.invuln <= 0 || Math.floor(s.invuln * 14) % 2 === 0;
       if (visible) {
         const sx = this._worldToScreenX(s.wx);
-        ctx.save();
-        ctx.translate(sx, s.y);
-        ctx.scale(s.dir, 1);
+        const palette = {
+          C: PALETTE.CYAN,
+          W: PALETTE.WHITE,
+          P: PALETTE.PINK,
+          G: PALETTE.GOLD
+        };
+        const scale = 2.4;
+        const flipX = s.dir < 0;
+        this.renderer.drawPixelSprite(
+          DEFENDER_SHIP_SPRITE,
+          sx - (16 * scale) / 2,
+          s.y - (7 * scale) / 2,
+          scale,
+          palette,
+          flipX,
+          false
+        );
 
-        ctx.fillStyle = PALETTE.CYAN;
-        ctx.shadowColor = PALETTE.CYAN;
-        ctx.shadowBlur = 12;
-        ctx.beginPath();
-        ctx.moveTo(20, 2);
-        ctx.lineTo(-14, -9);
-        ctx.lineTo(-9, 0);
-        ctx.lineTo(-16, 6);
-        ctx.closePath();
-        ctx.fill();
-
-        // Cockpit canopy
-        ctx.fillStyle = PALETTE.WHITE;
-        ctx.fillRect(-2, -4, 9, 4);
-        ctx.restore();
+        // Flickering reverse/forward thrust exhaust plume behind ship
+        if (Math.abs(s.vx) > 35 || this.input.isDown('left') || this.input.isDown('right')) {
+          const tailX = sx - s.dir * 21;
+          const flameW = 8 + Math.random() * 10;
+          ctx.save();
+          ctx.fillStyle = Math.random() < 0.5 ? PALETTE.ORANGE : PALETTE.GOLD;
+          ctx.shadowColor = PALETTE.ORANGE;
+          ctx.shadowBlur = 10;
+          ctx.fillRect(s.dir > 0 ? tailX - flameW : tailX, s.y - 2.5, flameW, 5);
+          ctx.fillStyle = PALETTE.WHITE;
+          ctx.fillRect(s.dir > 0 ? tailX - flameW * 0.5 : tailX, s.y - 1, flameW * 0.5, 2);
+          ctx.restore();
+        }
       }
     }
 
-    // Horizontal Multicolor Laser Bolts
+    // Classic Williams Multi-Color Striped Horizontal Laser Beams
+    const stripeColors = [PALETTE.WHITE, PALETTE.CYAN, PALETTE.PINK, PALETTE.GOLD, PALETTE.PURPLE];
     for (const l of this.lasers) {
       const sx = this._worldToScreenX(l.wx);
-      if (sx < -60 || sx > this.width + 60) continue;
-      this.renderer.drawGlowRect(sx - 24, l.y - 1.5, 48, 3, PALETTE.CYAN, 10, true);
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(sx - 12, l.y - 1, 24, 2);
+      if (sx < -80 || sx > this.width + 80) continue;
+      ctx.save();
+      const baseX = sx - 32;
+      const segW = 11;
+      for (let seg = 0; seg < 6; seg++) {
+        if (seg === 2 && Math.random() < 0.25) continue; // Classic Williams laser gap flicker
+        const col = stripeColors[(seg + Math.floor(l.life * 30)) % stripeColors.length];
+        ctx.fillStyle = col;
+        ctx.shadowColor = col;
+        ctx.shadowBlur = 8;
+        ctx.fillRect(baseX + seg * (segW + 2), l.y - 1.5, segW, 3);
+      }
+      ctx.restore();
     }
 
     // Enemy Shots & Mines

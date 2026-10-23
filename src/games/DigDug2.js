@@ -69,7 +69,7 @@ export class DigDug2 {
     this.audio = audio;
 
     this.id = 'digdug2';
-    this.title = 'Island Driller';
+    this.title = 'Dig Dug II';
     this.state = 'PLAYING';
 
     this.width = 960;

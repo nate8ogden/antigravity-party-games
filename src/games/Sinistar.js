@@ -31,7 +31,7 @@ export class Sinistar {
     this.audio = audio;
 
     this.id = 'sinistar';
-    this.title = 'Dread Star';
+    this.title = 'Sinistar';
     this.width = 960;
     this.height = 540;
 

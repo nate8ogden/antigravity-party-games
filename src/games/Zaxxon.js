@@ -17,7 +17,7 @@ export class Zaxxon {
     this.audio = audio;
 
     this.id = 'zaxxon';
-    this.title = 'Iso Fortress';
+    this.title = 'Zaxxon';
     this.width = 960;
     this.height = 540;
 
@@ -563,38 +563,99 @@ export class Zaxxon {
         }
 
         if (o.type === 'FUEL_TANK') {
-          this.renderer.drawGlowRect(pos.x - 12, pos.y - 22, 24, 22, PALETTE.RED, 8, true);
-          this.renderer.drawText('F', pos.x, pos.y - 6, {
+          // Cylindrical Fuel Tank Drum with caps & 'F' stencil
+          this.renderer.drawGlowRect(pos.x - 13, pos.y - 24, 26, 22, PALETTE.RED, 8, true);
+          ctx.fillStyle = PALETTE.WHITE;
+          ctx.fillRect(pos.x - 13, pos.y - 24, 26, 4);
+          ctx.fillRect(pos.x - 13, pos.y - 6, 26, 4);
+          this.renderer.drawText('FUEL', pos.x, pos.y - 10, {
             font: FONTS.HEADER,
-            size: 10,
-            color: PALETTE.WHITE,
+            size: 6.5,
+            color: PALETTE.GOLD,
             align: 'center'
           });
         } else if (o.type === 'RADAR') {
-          this.renderer.drawGlowCircle(pos.x, pos.y - 16, 11, PALETTE.CYAN, 10, true);
           ctx.fillStyle = '#64748B';
-          ctx.fillRect(pos.x - 4, pos.y - 6, 8, 8);
+          ctx.fillRect(pos.x - 5, pos.y - 10, 10, 10);
+          this.renderer.drawGlowCircle(pos.x, pos.y - 18, 11, PALETTE.CYAN, 10, true);
+          ctx.strokeStyle = PALETTE.WHITE;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(pos.x, pos.y - 18);
+          ctx.lineTo(pos.x - 8, pos.y - 24);
+          ctx.stroke();
         } else if (o.type === 'TURRET') {
-          this.renderer.drawGlowRect(pos.x - 11, pos.y - 14, 22, 14, PALETTE.GOLD, 6, true);
+          this.renderer.drawGlowRect(pos.x - 12, pos.y - 12, 24, 12, '#475569', 6, true);
+          this.renderer.drawGlowCircle(pos.x, pos.y - 13, 8, PALETTE.GOLD, 6, true);
+          ctx.strokeStyle = PALETTE.WHITE;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(pos.x, pos.y - 14);
+          ctx.lineTo(pos.x - 14, pos.y - 8);
+          ctx.stroke();
         } else if (o.type === 'INTERCEPTOR') {
-          this.renderer.drawGlowCircle(pos.x, pos.y - 8, 10, PALETTE.PURPLE, 10, true);
+          // Isometric Enemy Interceptor Jet
+          ctx.save();
+          ctx.translate(pos.x, pos.y - 8);
+          ctx.fillStyle = PALETTE.PURPLE;
+          ctx.strokeStyle = PALETTE.PINK;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-16, 6);
+          ctx.lineTo(10, -10);
+          ctx.lineTo(14, 4);
+          ctx.lineTo(-4, 12);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = PALETTE.GOLD;
+          ctx.fillRect(-8, 1, 6, 4);
+          ctx.restore();
         }
       }
     }
 
-    // 3. Zaxxon Robot Boss
+    // 3. Zaxxon Armored Robot Boss
     if (this.boss.active) {
       const relBoss = this.boss.dist - this.scrollDist;
       const bGround = this._isoToScreen(relBoss, this.boss.lane, 0);
       const bPos = this._isoToScreen(relBoss, this.boss.lane, this.boss.alt);
       ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
       ctx.beginPath();
-      ctx.ellipse(bGround.x, bGround.y, 26, 11, 0, 0, Math.PI * 2);
+      ctx.ellipse(bGround.x, bGround.y, 28, 12, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      const col = this.boss.flash > 0 ? PALETTE.WHITE : PALETTE.PINK;
-      this.renderer.drawGlowRect(bPos.x - 26, bPos.y - 44, 52, 44, col, 14, true);
-      this.renderer.drawGlowCircle(bPos.x, bPos.y - 26, 10, PALETTE.GOLD, 10, true);
+      ctx.save();
+      ctx.translate(bPos.x, bPos.y);
+      const armorCol = this.boss.flash > 0 ? PALETTE.WHITE : '#334155';
+      const trimCol = this.boss.flash > 0 ? PALETTE.CYAN : PALETTE.PINK;
+
+      // Bipedal Mech Legs & Treads
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(-20, -14, 12, 16);
+      ctx.fillRect(8, -14, 12, 16);
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(-22, -2, 16, 6);
+      ctx.fillRect(6, -2, 16, 6);
+
+      // Shoulder Missile Pods & Arms
+      this.renderer.drawGlowRect(-34, -44, 12, 24, trimCol, 10, true);
+      this.renderer.drawGlowRect(22, -44, 12, 24, trimCol, 10, true);
+
+      // Armored Mech Torso & Chest Missile Launcher
+      this.renderer.drawGlowRect(-22, -46, 44, 34, armorCol, 12, true);
+      ctx.strokeStyle = trimCol;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-22, -46, 44, 34);
+      this.renderer.drawGlowCircle(0, -28, 9, PALETTE.GOLD, 10, true);
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(-4, -32, 8, 8);
+
+      // Armored Head & Glowing Visor
+      ctx.fillStyle = armorCol;
+      ctx.fillRect(-12, -58, 24, 12);
+      this.renderer.drawGlowRect(-9, -54, 18, 5, PALETTE.CYAN, 8, true);
+      ctx.restore();
     }
 
     // 4. Player Shadow Projection & Vertical Height Guide on Fortress Floor!
@@ -616,26 +677,65 @@ export class Zaxxon {
     ctx.stroke();
     ctx.restore();
 
-    // 5. Player Isometric Fighter Jet
+    // 5. Player Isometric Delta-Wing Starfighter Jet
     if (p.invuln <= 0 || Math.floor(p.invuln * 14) % 2 === 0) {
       ctx.save();
       ctx.translate(pPos.x, pPos.y);
-      ctx.fillStyle = PALETTE.WHITE;
+
+      // Swept Isometric Delta Wings (pointing Top-Right along runway vector)
+      ctx.fillStyle = '#E2E8F0';
       ctx.strokeStyle = PALETTE.CYAN;
       ctx.shadowColor = PALETTE.CYAN;
       ctx.shadowBlur = 10;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(18, -10);
-      ctx.lineTo(-6, -16);
-      ctx.lineTo(-18, 4);
-      ctx.lineTo(6, 10);
+      ctx.moveTo(22, -12);   // Nose tip
+      ctx.lineTo(-8, -20);   // Left wingtip
+      ctx.lineTo(-14, -8);   // Left rear fuselage
+      ctx.lineTo(-20, 4);    // Tail base
+      ctx.lineTo(-8, 10);    // Right rear fuselage
+      ctx.lineTo(8, 14);     // Right wingtip
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
-      // Twin thruster glow
-      this.renderer.drawGlowCircle(-12, 4, 4.5, PALETTE.ORANGE, 8, true);
+      // Red & Blue Sega Wing Squadron Stripes
+      ctx.fillStyle = PALETTE.RED;
+      ctx.beginPath();
+      ctx.moveTo(6, -10);
+      ctx.lineTo(-6, -16);
+      ctx.lineTo(-10, -11);
+      ctx.lineTo(2, -5);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = PALETTE.RED;
+      ctx.beginPath();
+      ctx.moveTo(8, 0);
+      ctx.lineTo(4, 10);
+      ctx.lineTo(-2, 7);
+      ctx.lineTo(2, -2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Center Fuselage Spine & Glowing Blue Cockpit Canopy
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.beginPath();
+      ctx.moveTo(22, -12);
+      ctx.lineTo(-14, 6);
+      ctx.lineTo(-18, 2);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = PALETTE.BLUE;
+      ctx.beginPath();
+      ctx.ellipse(5, -5, 6, 3.2, -0.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Twin Afterburner Thruster Plumes
+      const thrustFlicker = Math.floor(performance.now() * 0.03) % 2 === 0 ? PALETTE.ORANGE : PALETTE.GOLD;
+      this.renderer.drawGlowCircle(-15, 1, 4, thrustFlicker, 10, true);
+      this.renderer.drawGlowCircle(-11, 6, 4, thrustFlicker, 10, true);
       ctx.restore();
     }
 

@@ -20,7 +20,7 @@ export class Paperboy {
     this.audio = audio;
 
     this.id = 'paperboy';
-    this.title = 'Courier Dash';
+    this.title = 'Paperboy';
     this.width = 960;
     this.height = 540;
 
@@ -669,37 +669,163 @@ export class Paperboy {
       ctx.strokeRect(bx - 11, b.y - 8, 22, 16);
     }
 
-    // Render Street Obstacles
+    // Render Street Obstacles (Cars, Chasing Dogs, Breakdancers, Lawnmowers)
     for (const ob of this.obstacles) {
       const ox = this._projectX(ob.laneX, ob.y);
       ctx.save();
       ctx.translate(ox, ob.y);
       if (ob.type === 'CAR') {
-        this.renderer.drawGlowRect(-20, -34, 40, 68, ob.color, 10, true);
+        // Drop shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx.fillRect(-20, -32, 44, 70);
+
+        // 4 Protruding Rubber Wheels
+        ctx.fillStyle = '#090D16';
+        ctx.fillRect(-24, -26, 5, 14);
+        ctx.fillRect(19, -26, 5, 14);
+        ctx.fillRect(-24, 12, 5, 14);
+        ctx.fillRect(19, 12, 5, 14);
+
+        // Main Car Chassis
+        this.renderer.drawGlowRect(-20, -34, 40, 68, ob.color, 8, true);
+
+        // Chrome Bumpers
+        ctx.fillStyle = '#E2E8F0';
+        ctx.fillRect(-19, -36, 38, 3);
+        ctx.fillRect(-19, 33, 38, 3);
+
+        // Roof & Tinted Windshields
         ctx.fillStyle = '#0F172A';
-        ctx.fillRect(-15, -18, 30, 32);
-        // Headlights
+        ctx.fillRect(-16, -20, 32, 36);
+        // Front & Rear Windshield Glass
+        ctx.fillStyle = '#38BDF8';
+        ctx.fillRect(-14, 6, 28, 9);
+        ctx.fillRect(-14, -18, 28, 7);
+        // Roof panel
+        ctx.fillStyle = ob.color;
+        ctx.fillRect(-14, -9, 28, 13);
+        // Windshield glare line
+        ctx.strokeStyle = PALETTE.WHITE;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-10, 8);
+        ctx.lineTo(-3, 13);
+        ctx.stroke();
+
+        // Headlights & Taillights
         ctx.fillStyle = PALETTE.GOLD;
-        ctx.fillRect(-16, 28, 8, 5);
-        ctx.fillRect(8, 28, 8, 5);
+        ctx.shadowColor = PALETTE.GOLD;
+        ctx.shadowBlur = 8;
+        ctx.fillRect(-16, 29, 9, 5);
+        ctx.fillRect(7, 29, 9, 5);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = PALETTE.RED;
+        ctx.fillRect(-16, -33, 8, 4);
+        ctx.fillRect(8, -33, 8, 4);
       } else if (ob.type === 'DOG') {
-        this.renderer.drawGlowRect(-12, -8, 24, 16, PALETTE.ORANGE, 8, true);
-        ctx.fillStyle = PALETTE.WHITE;
-        ctx.fillRect(8, -11, 7, 7);
-      } else if (ob.type === 'DANCER') {
-        // Cardboard mat + spinning breakdancer
-        ctx.fillStyle = '#92400E';
-        ctx.fillRect(-18, -14, 36, 28);
-        ctx.rotate(ob.phase);
-        this.renderer.drawGlowCircle(0, 0, 10, PALETTE.PURPLE, 8, true);
-        ctx.strokeStyle = PALETTE.CYAN;
+        const runSwing = Math.sin(ob.phase * 1.8) * 4;
+        const wag = Math.sin(ob.phase * 2.6) * 5;
+        // Shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.beginPath();
+        ctx.ellipse(0, 9, 14, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Animated running legs
+        ctx.fillStyle = '#9A3412';
+        ctx.fillRect(-10 + runSwing, 4, 4, 7);
+        ctx.fillRect(-4 - runSwing, 4, 4, 7);
+        ctx.fillRect(4 + runSwing, 4, 4, 7);
+        ctx.fillRect(9 - runSwing, 4, 4, 7);
+
+        // Wagging Tail
+        ctx.strokeStyle = PALETTE.ORANGE;
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.moveTo(-13, 0);
-        ctx.lineTo(13, 0);
+        ctx.moveTo(-12, -2);
+        ctx.lineTo(-19, -7 + wag);
         ctx.stroke();
+
+        // Hound Body & Collar
+        this.renderer.drawGlowRect(-12, -6, 22, 11, PALETTE.ORANGE, 6, true);
+        ctx.fillStyle = PALETTE.RED;
+        ctx.fillRect(6, -6, 3, 11);
+
+        // Dog Head, Snout & Floppy Ears
+        ctx.fillStyle = PALETTE.ORANGE;
+        ctx.fillRect(7, -13, 10, 9);
+        ctx.fillRect(15, -10, 6, 5);
+        // Floppy Ear
+        ctx.fillStyle = '#7C2D12';
+        ctx.fillRect(8, -11, 4, 7);
+        // Eye & Nose
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.fillRect(13, -12, 3, 3);
+        ctx.fillStyle = '#090D16';
+        ctx.fillRect(19, -10, 3, 3);
+      } else if (ob.type === 'DANCER') {
+        // Corrugated Cardboard Mat + Boombox Radio
+        ctx.fillStyle = '#92400E';
+        ctx.fillRect(-20, -15, 40, 30);
+        ctx.strokeStyle = '#B45309';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(-20, -15, 40, 30);
+
+        // Boombox stereo beside mat
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(14, -18, 14, 9);
+        ctx.fillStyle = '#090D16';
+        ctx.fillRect(16, -16, 4, 5);
+        ctx.fillRect(22, -16, 4, 5);
+
+        // Spinning Breakdancer in Tracksuit & Sneakers
+        ctx.save();
+        ctx.rotate(ob.phase);
+        // Windmill legs & white sneakers
+        ctx.strokeStyle = PALETTE.CYAN;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(-14, -4);
+        ctx.lineTo(14, 4);
+        ctx.moveTo(-6, 12);
+        ctx.lineTo(6, -12);
+        ctx.stroke();
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.fillRect(-16, -6, 4, 4);
+        ctx.fillRect(12, 2, 4, 4);
+        // Tracksuit torso & headspin cap
+        this.renderer.drawGlowRect(-7, -7, 14, 14, PALETTE.PURPLE, 8, true);
+        this.renderer.drawGlowCircle(0, 0, 5, PALETTE.GOLD, 4, true);
+        ctx.restore();
       } else if (ob.type === 'TIRE') {
-        this.renderer.drawGlowCircle(0, 0, 11, PALETTE.CYAN, 8, false, 4);
+        // Runaway Motorized Lawnmower
+        const jitter = Math.sin(ob.phase * 4) * 1.2;
+        ctx.translate(jitter, 0);
+        // Chrome Push Handlebar
+        ctx.strokeStyle = '#CBD5E1';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(-8, -6);
+        ctx.lineTo(-14, -18);
+        ctx.moveTo(8, -6);
+        ctx.lineTo(14, -18);
+        ctx.moveTo(-14, -18);
+        ctx.lineTo(14, -18);
+        ctx.stroke();
+
+        // 4 Lawnmower Wheels
+        ctx.fillStyle = '#090D16';
+        ctx.fillRect(-14, -9, 4, 7);
+        ctx.fillRect(10, -9, 4, 7);
+        ctx.fillRect(-14, 3, 4, 7);
+        ctx.fillRect(10, 3, 4, 7);
+
+        // Red Mower Deck & Silver Engine Block
+        this.renderer.drawGlowRect(-11, -10, 22, 20, PALETTE.RED, 8, true);
+        ctx.fillStyle = '#E2E8F0';
+        ctx.fillRect(-6, -5, 12, 10);
+        ctx.fillStyle = PALETTE.GOLD;
+        ctx.fillRect(-3, -2, 6, 4);
       }
       ctx.restore();
     }
@@ -722,7 +848,7 @@ export class Paperboy {
       ctx.restore();
     }
 
-    // Render Paperboy on Bicycle
+    // Render Paperboy Pedaling Bicycle with Handlebar Newspaper Bag
     const r = this.rider;
     const rx = this._projectX(r.laneX, r.y);
     const visible = r.invuln <= 0 || Math.floor(r.invuln * 14) % 2 === 0;
@@ -732,20 +858,83 @@ export class Paperboy {
       if (r.crashTimer > 0) {
         ctx.rotate(r.crashTimer * 8);
       }
-      // Bike Frame & Tires
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(-3, -22, 6, 42);
-      // Handlebars
-      ctx.strokeStyle = PALETTE.GOLD;
+
+      // Ground shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+      ctx.beginPath();
+      ctx.ellipse(0, 6, 12, 22, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Front & Rear Rubber Tires
+      ctx.fillStyle = '#090D16';
+      ctx.fillRect(-3.5, -26, 7, 14);
+      ctx.fillRect(-3.5, 10, 7, 14);
+      ctx.fillStyle = '#94A3B8';
+      ctx.fillRect(-1.5, -23, 3, 8);
+      ctx.fillRect(-1.5, 13, 3, 8);
+
+      // Red Bicycle Frame Tube
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(-2.5, -16, 5, 28);
+
+      // Chrome Handlebars & Grips
+      ctx.strokeStyle = '#E2E8F0';
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(-14, -14);
-      ctx.lineTo(14, -14);
+      ctx.moveTo(-15, -13);
+      ctx.lineTo(-8, -17);
+      ctx.lineTo(8, -17);
+      ctx.lineTo(15, -13);
+      ctx.stroke();
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(-17, -14, 4, 4);
+      ctx.fillRect(13, -14, 4, 4);
+
+      // Canvas Handlebar Newspaper Bag stuffed with rolled papers
+      ctx.fillStyle = '#F8FAFC';
+      ctx.fillRect(-9, -23, 18, 7);
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(-9, -23, 18, 7);
+      if (this.papersLeft > 0) {
+        ctx.fillStyle = PALETTE.GOLD;
+        ctx.fillRect(-6, -25, 4, 3);
+        ctx.fillRect(2, -25, 4, 3);
+      }
+
+      // Animated Pedaling Legs & Sneakers
+      const leftPedalY = Math.sin(r.pedalPhase * 2.2) * 5;
+      const rightPedalY = -leftPedalY;
+      ctx.fillStyle = '#1D4ED8';
+      ctx.fillRect(-10, -2 + leftPedalY, 5, 11);
+      ctx.fillRect(5, -2 + rightPedalY, 5, 11);
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(-10, 7 + leftPedalY, 5, 3);
+      ctx.fillRect(5, 7 + rightPedalY, 5, 3);
+
+      // Rider Arms reaching to Handlebars
+      ctx.strokeStyle = '#FDBA74';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-8, -4);
+      ctx.lineTo(-13, -13);
+      ctx.moveTo(8, -4);
+      ctx.lineTo(13, -13);
       ctx.stroke();
 
-      // Rider Torso & Cap
-      this.renderer.drawGlowRect(-9, -8, 18, 16, PALETTE.CYAN, 10, true);
-      this.renderer.drawGlowCircle(0, -4, 6, PALETTE.GOLD, 6, true);
+      // Rider Varsity Jacket Torso & Canvas Shoulder Strap
+      this.renderer.drawGlowRect(-9, -8, 18, 15, PALETTE.CYAN, 8, true);
+      ctx.strokeStyle = PALETTE.WHITE;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-8, -7);
+      ctx.lineTo(8, 6);
+      ctx.stroke();
+
+      // Baseball Cap & Visor pointing forward
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(-5, -13, 10, 5);
+      this.renderer.drawGlowCircle(0, -5, 6.5, PALETTE.GOLD, 6, true);
       ctx.restore();
     }
 

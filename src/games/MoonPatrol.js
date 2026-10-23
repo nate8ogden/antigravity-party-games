@@ -18,7 +18,7 @@ export class MoonPatrol {
     this.audio = audio;
 
     this.id = 'moonpatrol';
-    this.title = 'Crater Buggy';
+    this.title = 'Moon Patrol';
     this.width = 960;
     this.height = 540;
 
@@ -557,11 +557,11 @@ export class MoonPatrol {
       const tilt = Math.atan2(wheelYs[2] - wheelYs[0], 44);
       const chassisY = (b.jumping ? b.y : avgWheelY) - 20 + Math.sin(b.wheelPhase) * 1.5;
 
-      // Draw Suspension Struts & 3 Independent Bouncing Wheels
+      // Draw Suspension Struts & 3 Independent Bouncing Spoked Wheels
       ctx.save();
       for (let i = 0; i < 3; i++) {
         const wx = b.x + wheelOffsets[i];
-        const wy = wheelYs[i] - 7;
+        const wy = wheelYs[i] - 8;
         ctx.strokeStyle = PALETTE.CYAN;
         ctx.lineWidth = 2.5;
         ctx.beginPath();
@@ -569,23 +569,77 @@ export class MoonPatrol {
         ctx.lineTo(wx, wy);
         ctx.stroke();
 
-        this.renderer.drawGlowCircle(wx, wy, 8.5, '#1E293B', 4, true);
+        // Tire tread & hubcap spokes
+        this.renderer.drawGlowCircle(wx, wy, 9.5, '#0F172A', 4, true);
         ctx.strokeStyle = PALETTE.WHITE;
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(wx, wy, 8.5, 0, Math.PI * 2);
+        ctx.arc(wx, wy, 9.5, 0, Math.PI * 2);
+        ctx.stroke();
+
+        const spokeAng = b.wheelPhase + i * 0.8;
+        ctx.strokeStyle = PALETTE.GOLD;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(wx - Math.cos(spokeAng) * 6, wy - Math.sin(spokeAng) * 6);
+        ctx.lineTo(wx + Math.cos(spokeAng) * 6, wy + Math.sin(spokeAng) * 6);
+        ctx.moveTo(wx - Math.sin(spokeAng) * 6, wy + Math.cos(spokeAng) * 6);
+        ctx.lineTo(wx + Math.sin(spokeAng) * 6, wy - Math.cos(spokeAng) * 6);
         ctx.stroke();
       }
 
-      // Articulated Pink/Cyan Buggy Chassis & Turret Canopy
+      // Articulated Pink/Cyan Irem Lunar Buggy Hull, Bubble Canopy & Astronaut Helmet
       ctx.translate(b.x, chassisY);
       ctx.rotate(tilt * 0.65);
-      this.renderer.drawGlowRect(-30, -8, 60, 14, PALETTE.PINK, 10, true);
-      this.renderer.drawGlowRect(-14, -18, 26, 10, PALETTE.CYAN, 8, true);
-      // Forward & Upward Gun Barrels
+
+      // Rear Thruster Flame
+      ctx.fillStyle = Math.floor(performance.now() * 0.03) % 2 === 0 ? PALETTE.ORANGE : PALETTE.GOLD;
+      ctx.beginPath();
+      ctx.moveTo(-32, -4);
+      ctx.lineTo(-42, -1);
+      ctx.lineTo(-32, 3);
+      ctx.closePath();
+      ctx.fill();
+
+      // Contoured Pink Armored Buggy Hull with Fenders
+      ctx.fillStyle = PALETTE.PINK;
+      ctx.shadowColor = PALETTE.PINK;
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.moveTo(-32, 6);
+      ctx.lineTo(-28, -8);
+      ctx.lineTo(22, -8);
+      ctx.lineTo(32, 0);
+      ctx.lineTo(30, 6);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Cyan Hull Stripe & Side Panel
+      ctx.fillStyle = PALETTE.CYAN;
+      ctx.fillRect(-24, -3, 46, 4);
+
+      // Translucent Cyan Bubble Canopy + White Astronaut Helmet & Visor
+      ctx.fillStyle = 'rgba(0, 240, 255, 0.35)';
+      ctx.strokeStyle = PALETTE.CYAN;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(-2, -8, 13, Math.PI, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.beginPath();
+      ctx.arc(-2, -13, 5.5, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(14, -6, 20, 4);
-      ctx.fillRect(2, -26, 4, 10);
+      ctx.fillRect(0, -15, 4, 4);
+
+      // Forward Cannon & Upward Anti-Air Laser Barrels
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(22, -5, 16, 4);
+      ctx.fillRect(-14, -24, 4, 12);
       ctx.restore();
     }
 

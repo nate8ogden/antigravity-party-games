@@ -22,7 +22,7 @@ export class Exerion {
     this.audio = audio;
 
     this.id = 'exerion';
-    this.title = 'Inertia Wing';
+    this.title = 'Exerion';
 
     this.state = 'PLAYING';
     this.score = 0;

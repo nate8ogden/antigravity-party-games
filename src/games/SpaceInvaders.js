@@ -122,7 +122,7 @@ export class SpaceInvaders {
     this.audio = audio;
 
     this.id = 'spaceinvaders';
-    this.title = 'Cosmic Armada';
+    this.title = 'Space Invaders';
     this.state = 'PLAYING';
 
     this.width = 960;
@@ -741,8 +741,13 @@ export class SpaceInvaders {
   render(ctx = this.renderer.ctx) {
     this.renderer.clear(PALETTE.BG);
 
-    // 1. Subtle deep-space starfield & phosphor ground baseline
+    // 1. Subtle Taito 1978 cellophane color-band CRT overlay & deep-space starfield
     ctx.save();
+    ctx.fillStyle = 'rgba(255, 42, 85, 0.045)';
+    ctx.fillRect(0, 38, this.width, 46); // Top Red UFO band
+    ctx.fillStyle = 'rgba(0, 255, 102, 0.04)';
+    ctx.fillRect(0, 376, this.width, this.height - 376); // Bottom Green Bunker & Cannon band
+
     for (const s of this.bgStars) {
       ctx.globalAlpha = 0.25 + 0.35 * Math.sin(s.phase);
       ctx.fillStyle = PALETTE.WHITE;
@@ -750,8 +755,32 @@ export class SpaceInvaders {
     }
     ctx.restore();
 
-    // Glowing green arcade ground line at y = 514
-    this.renderer.drawGlowRect(30, 514, this.width - 60, 2, PALETTE.GREEN, 8);
+    // Classic Taito green ground baseline at y = 516 under the player cannon
+    this.renderer.drawGlowRect(30, 516, this.width - 60, 2, PALETTE.GREEN, 8);
+
+    // Reserve cannon life icons & CREDIT readout below the y = 516 ground baseline
+    ctx.save();
+    this.renderer.drawText(String(this.lives), 38, 533, {
+      font: FONTS.HEADER,
+      size: 10,
+      color: PALETTE.GREEN
+    });
+    for (let i = 0; i < Math.max(0, Math.min(5, this.lives - 1)); i++) {
+      this.renderer.drawPixelSprite(
+        INVADER_SPRITES.CANNON,
+        62 + i * 26,
+        522,
+        1.3,
+        SPRITE_COLORS
+      );
+    }
+    this.renderer.drawText('CREDIT 01', this.width - 36, 533, {
+      font: FONTS.HEADER,
+      size: 10,
+      color: PALETTE.CYAN,
+      align: 'right'
+    });
+    ctx.restore();
 
     // 2. Render 4 Destructible Defense Bunkers (voxel grids)
     this._renderBunkers(ctx);
@@ -879,6 +908,16 @@ export class SpaceInvaders {
         sprite = this.animFrame === 0 ? INVADER_SPRITES.OCTOPUS_0 : INVADER_SPRITES.OCTOPUS_1;
       }
 
+      // Authentic Taito cellophane color-band shift: invaders entering the lower defense zone turn green
+      const inGreenBand = inv.y >= 376;
+      const palette = inGreenBand
+        ? { P: PALETTE.GREEN, C: PALETTE.GREEN, G: PALETTE.GREEN }
+        : {
+            P: PALETTE.PINK,
+            C: PALETTE.CYAN,
+            G: PALETTE.WHITE
+          };
+
       const w = sprite[0].length * scale;
       const h = sprite.length * scale;
       this.renderer.drawPixelSprite(
@@ -886,7 +925,7 @@ export class SpaceInvaders {
         inv.x - w / 2,
         inv.y - h / 2,
         scale,
-        SPRITE_COLORS
+        palette
       );
     }
   }

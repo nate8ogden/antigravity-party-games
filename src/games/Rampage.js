@@ -40,7 +40,7 @@ export class Rampage {
     this.audio = audio;
 
     this.id = 'rampage';
-    this.title = 'Kaiju Crush';
+    this.title = 'Rampage';
     this.state = 'PLAYING';
 
     this.score = 0;
@@ -757,13 +757,36 @@ export class Rampage {
     ctx.fillStyle = PALETTE.BG;
     ctx.fillRect(0, 38, this.renderer.width, this.renderer.height - 38);
 
-    // Distant silhouette skyline
-    ctx.fillStyle = '#111827';
-    for (let i = 0; i < 12; i++) {
-      const sx = i * 84;
-      const sh = 90 + ((i * 47) % 130);
-      ctx.fillRect(sx, this.groundY - sh, 76, sh);
+    // Classic 1986 Bally Midway City Skyline Silhouettes in the Background
+    ctx.save();
+    for (let i = 0; i < 14; i++) {
+      const sx = i * 70 - 6;
+      const sh = 95 + ((i * 53) % 145);
+      const sy = this.groundY - sh;
+      ctx.fillStyle = i % 2 === 0 ? '#111827' : '#0F172A';
+      ctx.fillRect(sx, sy, 66, sh);
+
+      // Stepped Art Deco crown & radio spire on select towers
+      if (i % 3 === 0) {
+        ctx.fillRect(sx + 14, sy - 18, 38, 18);
+        ctx.fillRect(sx + 31, sy - 38, 4, 20);
+        // Blinking red aviation beacon
+        if (Math.floor(performance.now() * 0.003 + i) % 2 === 0) {
+          ctx.fillStyle = PALETTE.RED;
+          ctx.fillRect(sx + 31, sy - 41, 4, 4);
+        }
+      }
+      // Distant lit skyline windows
+      ctx.fillStyle = 'rgba(253, 224, 71, 0.25)';
+      for (let wy = sy + 12; wy < this.groundY - 16; wy += 16) {
+        for (let wx = sx + 10; wx < sx + 54; wx += 14) {
+          if ((wx + wy + i * 7) % 3 === 0) {
+            ctx.fillRect(wx, wy, 6, 8);
+          }
+        }
+      }
     }
+    ctx.restore();
 
     // Draw Destructible Skyscrapers
     for (const b of this.buildings) {
@@ -839,20 +862,53 @@ export class Rampage {
             ctx.strokeRect(wx, wy + wh / 2 - 2, ww, 4);
           }
 
-          // Revealed Item inside window
+          // Revealed Item inside window (Roast Chicken, Waving Civilian, Gold Bullion, Toaster Hazard)
           if (w.itemRevealed && w.item) {
             const cx = wx + ww / 2;
             const cy = wy + wh / 2;
             if (w.item === 'food') {
-              this.renderer.drawGlowCircle(cx, cy, 6, PALETTE.GREEN, 8);
-            } else if (w.item === 'civilian') {
-              this.renderer.drawGlowCircle(cx, cy - 3, 4, PALETTE.PINK, 8);
+              // Roast Chicken / Drumstick
               ctx.fillStyle = PALETTE.WHITE;
-              ctx.fillRect(cx - 3, cy + 1, 6, 7);
+              ctx.fillRect(cx - 9, cy - 2, 18, 4);
+              ctx.fillRect(cx - 10, cy - 4, 3, 8);
+              this.renderer.drawGlowCircle(cx + 2, cy, 6.5, '#D97706', 8, true);
+              ctx.fillStyle = '#FDE68A';
+              ctx.fillRect(cx, cy - 4, 5, 3);
+            } else if (w.item === 'civilian') {
+              // Waving Civilian in window
+              const waveY = Math.sin(performance.now() * 0.015) * 3;
+              ctx.strokeStyle = '#FDBA74';
+              ctx.lineWidth = 2.2;
+              ctx.beginPath();
+              ctx.moveTo(cx - 9, cy - 3 + waveY);
+              ctx.lineTo(cx, cy + 1);
+              ctx.lineTo(cx + 9, cy - 3 - waveY);
+              ctx.stroke();
+              this.renderer.drawGlowCircle(cx, cy - 5, 4, '#FDBA74', 6, true);
+              ctx.fillStyle = PALETTE.PINK;
+              ctx.fillRect(cx - 4, cy - 1, 8, 9);
             } else if (w.item === 'gold') {
-              this.renderer.drawGlowRect(cx - 6, cy - 4, 12, 8, PALETTE.GOLD, 10);
+              // Stacked Gold Bullion Bars
+              this.renderer.drawGlowRect(cx - 8, cy + 1, 16, 6, PALETTE.GOLD, 10, true);
+              this.renderer.drawGlowRect(cx - 5, cy - 5, 10, 6, '#FDE047', 8, true);
+              ctx.fillStyle = PALETTE.WHITE;
+              ctx.fillRect(cx - 3, cy - 4, 4, 2);
             } else if (w.item === 'hazard') {
-              this.renderer.drawGlowCircle(cx, cy, 6, PALETTE.RED, 10);
+              // Sparking Electric Toaster Hazard
+              ctx.fillStyle = '#CBD5E1';
+              ctx.fillRect(cx - 7, cy - 3, 14, 10);
+              ctx.fillStyle = '#090D16';
+              ctx.fillRect(cx - 5, cy - 3, 3, 2);
+              ctx.fillRect(cx + 2, cy - 3, 3, 2);
+              // Electric arcs
+              ctx.strokeStyle = PALETTE.CYAN;
+              ctx.lineWidth = 1.5;
+              ctx.beginPath();
+              ctx.moveTo(cx - 6, cy - 4);
+              ctx.lineTo(cx - 2, cy - 9);
+              ctx.lineTo(cx + 2, cy - 5);
+              ctx.lineTo(cx + 6, cy - 10);
+              ctx.stroke();
             }
           }
         }
@@ -871,11 +927,29 @@ export class Rampage {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Draw Dynamite Sticks
+    // Draw Bundled TNT Dynamite Sticks with Sizzling Fuse
     for (const dyn of this.dynamites) {
+      ctx.save();
+      ctx.translate(dyn.x, dyn.y);
+      // 3 Red TNT sticks + black straps
       ctx.fillStyle = PALETTE.RED;
-      ctx.fillRect(dyn.x - 6, dyn.y - 12, 12, 12);
-      this.renderer.drawText(dyn.fuse.toFixed(1), dyn.x, dyn.y - 16, {
+      ctx.fillRect(-7, -14, 4, 14);
+      ctx.fillRect(-2, -14, 4, 14);
+      ctx.fillRect(3, -14, 4, 14);
+      ctx.fillStyle = '#090D16';
+      ctx.fillRect(-8, -11, 16, 2);
+      ctx.fillRect(-8, -5, 16, 2);
+      // Burning fuse & spark
+      ctx.strokeStyle = '#E2E8F0';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, -14);
+      ctx.lineTo(4, -20);
+      ctx.stroke();
+      this.renderer.drawGlowCircle(4, -20, 3, PALETTE.GOLD, 8, true);
+      ctx.restore();
+
+      this.renderer.drawText(dyn.fuse.toFixed(1), dyn.x, dyn.y - 24, {
         size: 11,
         color: PALETTE.GOLD,
         align: 'center'
@@ -912,35 +986,69 @@ export class Rampage {
       }
     }
 
-    // Draw Enemies (Helicopters & Tanks)
+    // Draw Enemies (Detailed Police/Military Helicopters & Armored Tanks)
     for (const e of this.enemies) {
       if (e.type === 'heli') {
         ctx.save();
         ctx.translate(e.x, e.y);
-        // Helicopter body
-        this.renderer.drawGlowRect(-16, -8, 32, 16, PALETTE.CYAN, 8);
-        ctx.fillStyle = '#0F172A';
-        ctx.fillRect(e.dir > 0 ? 2 : -14, -5, 12, 8);
-        // Tail boom
-        ctx.fillStyle = PALETTE.CYAN;
-        ctx.fillRect(e.dir > 0 ? -28 : 16, -3, 12, 5);
-        // Spinning Rotor
-        const bladeW = 22 * Math.cos(e.rotorPhase);
-        ctx.strokeStyle = PALETTE.WHITE;
+        ctx.scale(e.dir, 1);
+
+        // Landing skids
+        ctx.strokeStyle = '#94A3B8';
         ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-10, 8);
+        ctx.lineTo(-10, 12);
+        ctx.moveTo(8, 8);
+        ctx.lineTo(8, 12);
+        ctx.moveTo(-15, 12);
+        ctx.lineTo(15, 12);
+        ctx.stroke();
+
+        // Tail boom & vertical fin
+        ctx.fillStyle = PALETTE.CYAN;
+        ctx.fillRect(-30, -3, 16, 5);
+        ctx.fillRect(-32, -9, 5, 9);
+
+        // Rounded Helicopter Cabin & Glass Bubble Canopy
+        this.renderer.drawGlowRect(-15, -8, 30, 16, PALETTE.CYAN, 8, true);
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(1, -6, 13, 9);
+        ctx.fillStyle = '#38BDF8';
+        ctx.fillRect(3, -5, 9, 6);
+
+        // Rotor mast & spinning main blades
+        ctx.fillStyle = '#CBD5E1';
+        ctx.fillRect(-2, -12, 4, 4);
+        const bladeW = Math.max(6, Math.abs(26 * Math.cos(e.rotorPhase)));
+        ctx.strokeStyle = PALETTE.WHITE;
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
         ctx.moveTo(-bladeW, -12);
         ctx.lineTo(bladeW, -12);
         ctx.stroke();
         ctx.restore();
       } else {
-        // Tank on street
+        // Armored Military Tank on street
         ctx.save();
         ctx.translate(e.x, e.y);
-        this.renderer.drawGlowRect(-18, -12, 36, 12, PALETTE.ORANGE, 8);
+        ctx.scale(e.dir, 1);
+
+        // Caterpillar Treads & Road Wheels
+        ctx.fillStyle = '#090D16';
+        ctx.fillRect(-20, -7, 40, 7);
+        ctx.fillStyle = '#64748B';
+        for (let wx = -15; wx <= 15; wx += 7.5) {
+          ctx.fillRect(wx - 2, -5, 4, 4);
+        }
+
+        // Armored Hull
+        this.renderer.drawGlowRect(-18, -14, 36, 8, PALETTE.ORANGE, 6, true);
+        // Turret Dome & Cannon Barrel
         ctx.fillStyle = PALETTE.GOLD;
-        ctx.fillRect(-10, -20, 20, 8);
-        ctx.fillRect(e.dir > 0 ? 8 : -24, -18, 16, 4);
+        ctx.fillRect(-10, -21, 20, 7);
+        ctx.fillStyle = '#FDE047';
+        ctx.fillRect(10, -19, 16, 4);
         ctx.restore();
       }
     }

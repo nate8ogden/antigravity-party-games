@@ -24,7 +24,7 @@ export class WildGunman {
     this.audio = audio;
 
     this.id = 'wildgunman';
-    this.title = 'High Noon Draw';
+    this.title = 'Wild Gunman';
 
     this.state = 'PLAYING';
     this.score = 0;

@@ -153,7 +153,7 @@ export class Qbert {
     this.audio = audio;
 
     this.id = 'qbert';
-    this.title = 'Iso Hop';
+    this.title = 'Q*bert';
     this.width = 960;
     this.height = 540;
 
@@ -677,9 +677,29 @@ export class Qbert {
     ctx.closePath();
     ctx.fill();
 
-    // Crisp Neon Wireframe Edges
-    ctx.strokeStyle = 'rgba(248, 250, 252, 0.35)';
-    ctx.lineWidth = 1.3;
+    // Crisp 3D Shaded Isometric Pyramid Cube Edges & Specular Bevels
+    // Top diamond inner highlight
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(x - CUBE_RX + 3, y);
+    ctx.lineTo(x, y - CUBE_RY + 2);
+    ctx.lineTo(x + CUBE_RX - 3, y);
+    ctx.stroke();
+
+    // Dark shadow overlay on right vertical face for deep 3D contrast
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.24)';
+    ctx.beginPath();
+    ctx.moveTo(x + CUBE_RX, y);
+    ctx.lineTo(x, y + CUBE_RY);
+    ctx.lineTo(x, y + CUBE_RY + CUBE_H);
+    ctx.lineTo(x + CUBE_RX, y + CUBE_H);
+    ctx.closePath();
+    ctx.fill();
+
+    // Crisp Gottlieb-style block seams
+    ctx.strokeStyle = '#090D16';
+    ctx.lineWidth = 1.6;
     ctx.beginPath();
     ctx.moveTo(x, y - CUBE_RY);
     ctx.lineTo(x + CUBE_RX, y);
@@ -766,62 +786,135 @@ export class Qbert {
       if (e.type === 'RED_BALL') {
         this.renderer.drawGlowCircle(0, 0, 10, PALETTE.RED, 10, true);
         ctx.fillStyle = PALETTE.WHITE;
-        ctx.fillRect(-4, -4, 3, 3);
+        ctx.beginPath();
+        ctx.arc(-3.5, -3.5, 2.8, 0, Math.PI * 2);
+        ctx.fill();
       } else if (e.type === 'PURPLE_EGG') {
         const shake = e.hatchTimer > 0 ? Math.sin(e.hatchTimer * 40) * 3 : 0;
         this.renderer.drawGlowCircle(shake, 0, 11, PALETTE.PURPLE, 10, true);
+        ctx.fillStyle = '#F0ABFC';
+        ctx.beginPath();
+        ctx.arc(shake - 3.5, -3.5, 3, 0, Math.PI * 2);
+        ctx.fill();
       } else if (e.type === 'COILY') {
-        // Coiled spring body + menacing snake head
+        // Coiled purple spring body + snake head with eyes & fangs
+        const springStretch = e.hopping ? 6.5 : 4.8;
         ctx.strokeStyle = PALETTE.PURPLE;
         ctx.shadowColor = PALETTE.PINK;
         ctx.shadowBlur = 10;
-        ctx.lineWidth = 3.5;
-        for (let ring = 0; ring < 3; ring++) {
+        ctx.lineWidth = 3.2;
+        for (let ring = 0; ring < 4; ring++) {
           ctx.beginPath();
-          ctx.ellipse(0, 4 - ring * 6, 11, 4.5, 0, 0, Math.PI * 2);
+          ctx.ellipse(0, 6 - ring * springStretch, 11 - ring * 0.5, 4.2, 0, 0, Math.PI * 2);
           ctx.stroke();
         }
-        this.renderer.drawGlowCircle(0, -14, 9, PALETTE.PINK, 8, true);
-        ctx.fillStyle = PALETTE.GOLD;
-        ctx.fillRect(-5, -17, 3, 4);
-        ctx.fillRect(2, -17, 3, 4);
+        const headY = 6 - 3.5 * springStretch - 4;
+        // Snake head
+        this.renderer.drawGlowCircle(0, headY, 9.5, PALETTE.PURPLE, 8, true);
+        // Angry Reptilian Eyes
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.fillRect(-6, headY - 5, 4.5, 5);
+        ctx.fillRect(1.5, headY - 5, 4.5, 5);
+        ctx.fillStyle = PALETTE.RED;
+        ctx.fillRect(-4, headY - 3, 2, 3);
+        ctx.fillRect(2.5, headY - 3, 2, 3);
+        // Twin White Venomous Fangs & Forked Tongue
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.beginPath();
+        ctx.moveTo(-5, headY + 4);
+        ctx.lineTo(-3, headY + 10);
+        ctx.lineTo(-1, headY + 4);
+        ctx.moveTo(1, headY + 4);
+        ctx.lineTo(3, headY + 10);
+        ctx.lineTo(5, headY + 4);
+        ctx.fill();
       }
       ctx.restore();
     }
 
-    // Render Q*bert
+    // Render Q*bert (Orange body, big white eyes, long tubular snout with oval tip, webbed feet)
     const q = this.qbert;
     const visible = q.invuln <= 0 || Math.floor(q.invuln * 14) % 2 === 0;
     if (visible) {
       ctx.save();
       ctx.translate(q.x, q.y - 12);
 
-      // Feet
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(-7, 9, 5, 5);
-      ctx.fillRect(2, 9, 5, 5);
+      // Shadow on cube top
+      if (!q.falling) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+        ctx.beginPath();
+        ctx.ellipse(0, 14, 11, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
-      // Orange Spherical Body
-      this.renderer.drawGlowCircle(0, 0, 13, PALETTE.ORANGE, 12, true);
-
-      // Big Cartoon Eyes
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(-6, -8, 5, 6);
-      ctx.fillRect(1, -8, 5, 6);
-      ctx.fillStyle = PALETTE.BG;
-      ctx.fillRect(-4, -6, 2.5, 3);
-      ctx.fillRect(3, -6, 2.5, 3);
-
-      // Iconic Tubular Snout pointing in hop direction
-      const snoutX = q.facing.includes('L') ? -14 : 14;
-      const snoutY = q.facing.includes('U') ? -4 : 4;
-      ctx.strokeStyle = PALETTE.ORANGE;
-      ctx.lineWidth = 7;
+      // Legs & Webbed Feet
+      ctx.strokeStyle = '#EA580C';
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.moveTo(0, 1);
+      ctx.moveTo(-4, 7);
+      ctx.lineTo(-6, 13);
+      ctx.moveTo(4, 7);
+      ctx.lineTo(6, 13);
+      ctx.stroke();
+
+      ctx.fillStyle = PALETTE.GOLD;
+      // Left webbed foot
+      ctx.beginPath();
+      ctx.ellipse(-7, 13.5, 5.5, 2.8, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+      // Right webbed foot
+      ctx.beginPath();
+      ctx.ellipse(7, 13.5, 5.5, 2.8, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Plump Orange Spherical Body with highlight
+      this.renderer.drawGlowCircle(0, 0, 13, PALETTE.ORANGE, 12, true);
+      ctx.fillStyle = '#FDBA74';
+      ctx.beginPath();
+      ctx.arc(-4, -4, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Big White Cartoon Eyes with pupils tracking facing direction
+      const lookX = q.facing.includes('L') ? -1 : 1.5;
+      const lookY = q.facing.includes('U') ? -1 : 1;
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.beginPath();
+      ctx.ellipse(-4.5, -6, 3.8, 5, 0, 0, Math.PI * 2);
+      ctx.ellipse(3.5, -6, 3.8, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#090D16';
+      ctx.beginPath();
+      ctx.arc(-4.5 + lookX, -6 + lookY, 2, 0, Math.PI * 2);
+      ctx.arc(3.5 + lookX, -6 + lookY, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Long Tubular Snout with Oval Tip pointing in hop direction
+      const dirX = q.facing.includes('L') ? -1 : 1;
+      const dirY = q.facing.includes('U') ? -0.45 : 0.45;
+      const snoutX = dirX * 15;
+      const snoutY = dirY * 10;
+
+      ctx.strokeStyle = PALETTE.ORANGE;
+      ctx.lineWidth = 8.5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(dirX * 4, 1);
       ctx.lineTo(snoutX, snoutY);
       ctx.stroke();
-      this.renderer.drawGlowCircle(snoutX, snoutY, 4.5, '#7C2D12', 4, true);
+
+      // Oval Snout Tip & Dark Mouth Opening
+      ctx.save();
+      ctx.translate(snoutX + dirX * 2, snoutY);
+      ctx.rotate(dirX * 0.25);
+      ctx.fillStyle = '#EA580C';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 4.2, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#271206';
+      ctx.beginPath();
+      ctx.ellipse(dirX * 0.6, 0, 2.6, 4.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
 
       // Classic "@!#?@!" Speech Bubble when hit!
       if (this.swearTimer > 0) {

@@ -22,6 +22,78 @@ const CHEF_SPRITE = [
   '.KK....KK.'
 ];
 
+const HOTDOG_SPRITE_A = [
+  '...RRRR...',
+  '.TTRRRRTT.',
+  'TTRWKRWKTT',
+  'TTRRRRRRTT',
+  'TTMRRRRRTT',
+  '.TTRRRRTT.',
+  '...RRRR...',
+  '..RR..RR..',
+  '.YY....YY.'
+];
+
+const HOTDOG_SPRITE_B = [
+  '...RRRR...',
+  '.TTRRRRTT.',
+  'TTRWKRWKTT',
+  'TTRRRRRRTT',
+  'TTMRRRRRTT',
+  '.TTRRRRTT.',
+  '...RRRR...',
+  '...RRRR...',
+  '..YY..YY..'
+];
+
+const EGG_SPRITE_A = [
+  '..WWWWWW..',
+  '.WWWWWWWW.',
+  'WWYYYYYYWW',
+  'WWYKWYKWWW',
+  'WWYYYYYYWW',
+  '.WWWWWWWW.',
+  '..WWWWWW..',
+  '..OO..OO..',
+  '.OO....OO.'
+];
+
+const EGG_SPRITE_B = [
+  '..WWWWWW..',
+  '.WWWWWWWW.',
+  'WWYYYYYYWW',
+  'WWYKWYKWWW',
+  'WWYYYYYYWW',
+  '.WWWWWWWW.',
+  '..WWWWWW..',
+  '...OOOO...',
+  '..OO..OO..'
+];
+
+const PICKLE_SPRITE_A = [
+  '..GGGGGG..',
+  '.GLGGGGGL.',
+  'GGWKGGWKGG',
+  'GGGGGGGGGG',
+  'GLGGLLGGLG',
+  '.GGGGGGGG.',
+  '..GGGGGG..',
+  '..DD..DD..',
+  '.DD....DD.'
+];
+
+const PICKLE_SPRITE_B = [
+  '..GGGGGG..',
+  '.GLGGGGGL.',
+  'GGWKGGWKGG',
+  'GGGGGGGGGG',
+  'GLGGLLGGLG',
+  '.GGGGGGGG.',
+  '..GGGGGG..',
+  '...DDDD...',
+  '..DD..DD..'
+];
+
 const INGREDIENT_TYPES = [
   { id: 'topBun', label: 'TOP BUN', color: '#F59E0B', rim: '#FEF08A' },
   { id: 'lettuce', label: 'LETTUCE', color: '#22C55E', rim: '#86EFAC' },
@@ -162,7 +234,7 @@ export class BurgerTime {
     this.audio = audio;
 
     this.id = 'burgertime';
-    this.title = 'Bistro Stacker';
+    this.title = 'BurgerTime';
     this.state = 'PLAYING';
 
     this.score = 0;
@@ -800,22 +872,66 @@ export class BurgerTime {
 
       ctx.save();
       ctx.shadowColor = s.color;
-      ctx.shadowBlur = 6;
+      ctx.shadowBlur = 5;
       ctx.fillStyle = s.color;
 
       if (s.type === 'topBun') {
-        ctx.fillRect(sx + 1, sy, segW - 2, 11);
-        // Sesame seeds
+        // Domed golden top bun segment
+        const topInset = i === 0 || i === 4 ? 3 : 1;
+        ctx.fillRect(sx + 0.5, sy + topInset, segW - 1, 12 - topInset);
+        ctx.fillStyle = s.rim;
+        ctx.fillRect(sx + 2, sy + topInset + 1, segW - 4, 2);
+        // White sesame seeds
         ctx.fillStyle = PALETTE.WHITE;
-        ctx.fillRect(sx + segW * 0.4, sy + 3, 3, 2);
+        ctx.fillRect(sx + segW * 0.25, sy + topInset + 2, 3, 2);
+        ctx.fillRect(sx + segW * 0.65, sy + topInset + 5, 3, 2);
       } else if (s.type === 'lettuce') {
+        // Ruffled wavy green lettuce leaf edges
         ctx.beginPath();
-        ctx.arc(sx + segW / 2, sy + 6, segW * 0.55, 0, Math.PI);
+        ctx.arc(sx + segW * 0.3, sy + 6, segW * 0.38, 0, Math.PI * 2);
+        ctx.arc(sx + segW * 0.72, sy + 7, segW * 0.38, 0, Math.PI * 2);
         ctx.fill();
-      } else {
-        ctx.fillRect(sx + 1, sy + 2, segW - 2, 9);
+        ctx.fillStyle = s.rim;
+        ctx.fillRect(sx + 3, sy + 4, segW - 6, 2);
+      } else if (s.type === 'patty') {
+        // Seared beef patty with char-grill marks
+        ctx.fillRect(sx + 0.5, sy + 1, segW - 1, 10);
         ctx.fillStyle = s.rim;
         ctx.fillRect(sx + 2, sy + 2, segW - 4, 2);
+        // Dark char-grill diagonal/vertical sear bars
+        ctx.fillStyle = '#451A03';
+        ctx.fillRect(sx + 4, sy + 2, 3, 8);
+        ctx.fillRect(sx + 12, sy + 2, 3, 8);
+      } else if (s.type === 'tomato') {
+        // Bright red tomato slice with yellow seed pockets
+        ctx.fillRect(sx + 1, sy + 2, segW - 2, 9);
+        ctx.fillStyle = '#B91C1C';
+        ctx.fillRect(sx + 3, sy + 4, segW - 6, 5);
+        // Tomato slice seeds
+        ctx.fillStyle = '#FEF08A';
+        ctx.fillRect(sx + 5, sy + 5, 2, 2);
+        ctx.fillRect(sx + segW - 7, sy + 6, 2, 2);
+      } else if (s.type === 'cheese') {
+        // Melted yellow cheese slice with dripping corners
+        ctx.fillRect(sx + 0.5, sy + 2, segW - 1, 7);
+        // Melted triangular cheese drips
+        ctx.beginPath();
+        ctx.moveTo(sx + 2, sy + 9);
+        ctx.lineTo(sx + 6, sy + 14);
+        ctx.lineTo(sx + 10, sy + 9);
+        if (i % 2 === 0) {
+          ctx.moveTo(sx + 12, sy + 9);
+          ctx.lineTo(sx + 15, sy + 13);
+          ctx.lineTo(sx + 18, sy + 9);
+        }
+        ctx.fill();
+        ctx.fillStyle = s.rim;
+        ctx.fillRect(sx + 2, sy + 3, segW - 4, 2);
+      } else {
+        // Bottom Bun with toasted top crust & rounded base
+        ctx.fillRect(sx + 0.5, sy + 2, segW - 1, 9);
+        ctx.fillStyle = s.rim;
+        ctx.fillRect(sx + 1, sy + 2, segW - 2, 2.5);
       }
       ctx.restore();
     }
@@ -876,42 +992,64 @@ export class BurgerTime {
       });
     }
 
-    // Draw Enemies (Mr. Hot Dog, Mr. Egg, Mr. Pickle)
+    // Draw Enemies (Mr. Hot Dog, Mr. Egg, Mr. Pickle) with detailed multi-color pixel-art sprites
     for (const e of this.enemies) {
       if (e.respawnTimer > 0) continue;
-      ctx.save();
       const wobble = e.stunTimer > 0 ? Math.sin(performance.now() * 0.04) * 4 : 0;
-      ctx.translate(e.x + wobble, e.y);
+      const stepFrame = Math.floor(e.anim) % 2 === 0;
+      let sprite = HOTDOG_SPRITE_A;
+      let palette = {};
 
       if (e.type === 'hotdog') {
-        this.renderer.drawGlowRect(-9, -28, 18, 24, e.color, 8);
-        ctx.fillStyle = e.accent;
-        ctx.fillRect(-11, -24, 3, 18);
-        ctx.fillRect(8, -24, 3, 18);
+        sprite = stepFrame ? HOTDOG_SPRITE_A : HOTDOG_SPRITE_B;
+        palette = {
+          R: '#EF4444', // Red frankfurter
+          T: '#FDBA74', // Tan hot dog bun
+          M: '#FACC15', // Mustard squiggle
+          W: PALETTE.WHITE,
+          K: '#0B0F19',
+          Y: '#FEF08A'  // Boots
+        };
       } else if (e.type === 'egg') {
-        this.renderer.drawGlowCircle(0, -16, 12, e.color, 8);
-        this.renderer.drawGlowCircle(0, -16, 6, e.accent, 6);
+        sprite = stepFrame ? EGG_SPRITE_A : EGG_SPRITE_B;
+        palette = {
+          W: '#F8FAFC', // White fried egg albumen
+          Y: '#FACC15', // Bright yellow yolk face
+          K: '#0B0F19', // Eyes
+          O: '#F97316'  // Walking legs
+        };
       } else {
-        this.renderer.drawGlowRect(-10, -26, 20, 22, e.color, 8);
-        ctx.fillStyle = e.accent;
-        ctx.fillRect(-6, -22, 4, 4);
-        ctx.fillRect(2, -16, 4, 4);
+        sprite = stepFrame ? PICKLE_SPRITE_A : PICKLE_SPRITE_B;
+        palette = {
+          G: '#22C55E', // Ridged green pickle body
+          L: '#86EFAC', // Light green pickle bumps/ridges
+          W: PALETTE.WHITE,
+          K: '#0B0F19',
+          D: '#15803D'  // Dark green pickle legs
+        };
       }
 
-      // Eyes & Legs
-      ctx.fillStyle = '#0B0F19';
-      ctx.fillRect(-5, -20, 3, 4);
-      ctx.fillRect(2, -20, 3, 4);
+      const scale = 3.0;
+      const drawX = e.x + wobble - (sprite[0].length * scale) / 2;
+      const drawY = e.y - sprite.length * scale;
+      this.renderer.drawPixelSprite(
+        sprite,
+        drawX,
+        drawY,
+        scale,
+        palette,
+        e.dir < 0,
+        e.stunTimer > 0 && Math.floor(e.stunTimer * 12) % 2 === 0
+      );
 
       if (e.stunTimer > 0) {
         // Pepper-stunned timer halo
-        this.renderer.drawText(`${e.stunTimer.toFixed(1)}s`, 0, -34, {
+        this.renderer.drawText(`${e.stunTimer.toFixed(1)}s`, e.x + wobble, e.y - 34, {
           size: 11,
           color: PALETTE.CYAN,
           align: 'center'
         });
       }
-      ctx.restore();
     }
 
     // Draw Chef Peter Pepper

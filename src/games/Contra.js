@@ -219,7 +219,7 @@ export class Contra {
     this.audio = audio;
 
     this.id = 'contra';
-    this.title = 'Commando Strike';
+    this.title = 'Contra';
     this.width = 960;
     this.height = 540;
 
@@ -1928,7 +1928,7 @@ export class Contra {
 
     this.renderer.drawStateOverlay(this.state, {
       title: this.title,
-      subtitle: '8-WAY RUN & GUN JUNGLE FORTRESS ASSAULT',
+      subtitle: '1987 KONAMI RUN & GUN JUNGLE FORTRESS ASSAULT',
       controls: 'ARROWS: 8-WAY AIM & PRONE  |  Z/SPACE: FIRE  |  X/SHIFT: JUMP (DOWN+X: DROP)',
       score: this.score,
       highScore: this.highScore,

@@ -13,6 +13,39 @@ const ARENA_TOP = 40;
 const PLAYER_ZONE_TOP = 390;
 const PLAYER_ZONE_BOTTOM = 524;
 
+const BLASTER_SPRITE = [
+  '....CC....',
+  '....CC....',
+  '...CWWC...',
+  '..CCPPCC..',
+  '.CCPPPPCC.',
+  'CCCPWWPCCC',
+  'CCCCCCCCCC',
+  'CC.CCCC.CC',
+  'C...CC...C'
+];
+
+const FLEA_SPRITE = [
+  '..WW..WW..',
+  '.WWWWWWWW.',
+  '..CCCCCC..',
+  '.CCYCCYCC.',
+  'CCCCCCCCCC',
+  '.GGGGGGGG.',
+  '..GG..GG..',
+  '.GG....GG.'
+];
+
+const SCORPION_SPRITE = [
+  '......PPP...',
+  '.....PP..P..',
+  '....PP....R.',
+  'RR.PPPPPPPP.',
+  'RRRPPPPPPPPP',
+  '.R..P.P..P.P',
+  '....P.P..P.P'
+];
+
 export class Centipede {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -20,7 +53,7 @@ export class Centipede {
     this.audio = audio;
 
     this.id = 'centipede';
-    this.title = 'Mycelium Crawler';
+    this.title = 'Centipede';
     this.width = 960;
     this.height = 540;
 
@@ -609,32 +642,63 @@ export class Centipede {
   _drawMushroom(ctx, r, c, m) {
     const x = c * CELL;
     const y = ARENA_TOP + r * CELL;
-    const capColor = m.poisoned ? PALETTE.PURPLE : PALETTE.PINK;
-    const rimColor = m.poisoned ? PALETTE.CYAN : PALETTE.GOLD;
+    // Poisoned mushrooms glow electric cyan & magenta like the 1980 Atari coin-op
+    const rimColor = m.poisoned ? PALETTE.CYAN : PALETTE.PINK;
+    const capColor = m.poisoned ? PALETTE.PINK : '#9D174D';
+    const spotColor = m.poisoned ? PALETTE.WHITE : PALETTE.GOLD;
+    const stemColor = m.poisoned ? PALETTE.CYAN : '#FDE68A';
 
     ctx.save();
-    ctx.fillStyle = capColor;
-    ctx.shadowColor = capColor;
-    ctx.shadowBlur = 6;
+    ctx.shadowColor = rimColor;
+    ctx.shadowBlur = m.poisoned ? 9 : 4;
 
-    // Mushroom cap dome
-    const capH = m.hp >= 3 ? 11 : m.hp === 2 ? 8 : 5;
-    ctx.beginPath();
-    ctx.arc(x + CELL / 2, y + 10, 8, Math.PI, 0);
-    ctx.fillRect(x + 2, y + 9, CELL - 4, Math.max(2, capH - 6));
-    ctx.fill();
-
-    // Spots on cap
+    // Rounded stepped pixel-art mushroom cap (always has top dome, erodes from bottom up)
+    // Row 1 (top crown, always present for hp >= 1)
     ctx.fillStyle = rimColor;
-    ctx.fillRect(x + 6, y + 5, 3, 3);
-    ctx.fillRect(x + 12, y + 6, 3, 2);
+    ctx.fillRect(x + 6, y + 2, 8, 2);
+    ctx.fillRect(x + 4, y + 4, 12, 2);
+    ctx.fillStyle = capColor;
+    ctx.fillRect(x + 6, y + 4, 8, 2);
 
-    // Stem eroded based on HP (4..1)
+    // Row 2 (upper-mid cap, present for hp >= 2)
     if (m.hp >= 2) {
-      ctx.fillStyle = PALETTE.WHITE;
-      const stemH = m.hp === 4 ? 7 : m.hp === 3 ? 5 : 3;
-      ctx.fillRect(x + 7, y + 11, 6, stemH);
+      ctx.fillStyle = rimColor;
+      ctx.fillRect(x + 2, y + 6, 16, 3);
+      ctx.fillStyle = capColor;
+      ctx.fillRect(x + 4, y + 6, 12, 2);
+      // Pixel spots on cap
+      ctx.fillStyle = spotColor;
+      ctx.fillRect(x + 5, y + 5, 2, 2);
+      ctx.fillRect(x + 12, y + 6, 2, 2);
+    } else {
+      // Jagged bite marks when hp === 1
+      ctx.fillStyle = spotColor;
+      ctx.fillRect(x + 7, y + 3, 2, 2);
     }
+
+    // Row 3 (lower cap brim, present for hp >= 3)
+    if (m.hp >= 3) {
+      ctx.fillStyle = rimColor;
+      ctx.fillRect(x + 2, y + 9, 16, 2);
+      ctx.fillStyle = capColor;
+      ctx.fillRect(x + 4, y + 9, 12, 1);
+      ctx.fillStyle = spotColor;
+      ctx.fillRect(x + 9, y + 8, 2, 2);
+    }
+
+    // Stem (erodes between hp 4 and hp 3)
+    if (m.hp === 4) {
+      ctx.fillStyle = stemColor;
+      ctx.fillRect(x + 7, y + 11, 6, 7);
+      ctx.fillStyle = rimColor;
+      ctx.fillRect(x + 7, y + 11, 1, 7);
+      ctx.fillRect(x + 12, y + 11, 1, 7);
+    } else if (m.hp === 3) {
+      ctx.fillStyle = stemColor;
+      ctx.fillRect(x + 7, y + 11, 6, 4);
+      ctx.fillRect(x + 8, y + 15, 3, 1);
+    }
+
     ctx.restore();
   }
 
@@ -659,107 +723,136 @@ export class Centipede {
       }
     }
 
-    // Render Centipede Segments
+    // Render Centipede Segments with animated walking legs & head pincers
     for (const seg of this.segments) {
       const color = seg.isHead ? PALETTE.PINK : seg.poisonDive ? PALETTE.PURPLE : PALETTE.GREEN;
       ctx.save();
       ctx.translate(seg.x, seg.y);
 
-      // Animated legs
-      const legSwing = Math.sin(seg.animPhase) * 3;
+      // Articulated walking legs on both sides of the segment
+      const legSwing = Math.sin(seg.animPhase) * 3.5;
       ctx.strokeStyle = PALETTE.GOLD;
-      ctx.lineWidth = 1.6;
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
-      ctx.moveTo(-5, -7);
-      ctx.lineTo(-8 + legSwing, -11);
-      ctx.moveTo(5, 7);
-      ctx.lineTo(8 - legSwing, 11);
+      // Top pair of legs
+      ctx.moveTo(-3, -6);
+      ctx.lineTo(-6 + legSwing, -11);
+      ctx.moveTo(3, -6);
+      ctx.lineTo(6 - legSwing, -11);
+      // Bottom pair of legs
+      ctx.moveTo(-3, 6);
+      ctx.lineTo(-6 - legSwing, 11);
+      ctx.moveTo(3, 6);
+      ctx.lineTo(6 + legSwing, 11);
       ctx.stroke();
 
-      // Segment body sphere
-      this.renderer.drawGlowCircle(0, 0, seg.isHead ? 8.5 : 7.5, color, 8, true);
+      // Segment rounded carapace body + dorsal band
+      this.renderer.drawGlowCircle(0, 0, seg.isHead ? 8.5 : 7.8, color, 8, true);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+      ctx.fillRect(-3, -5, 4, 10);
 
-      // Eyes on Head segments
+      // Distinct pincer mandibles & compound eyes on Head segments
       if (seg.isHead) {
-        const eyeX = seg.dir * 4;
+        const d = seg.dir >= 0 ? 1 : -1;
+        // Protruding mandibles/pincers
+        ctx.strokeStyle = PALETTE.CYAN;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(d * 6, -4);
+        ctx.lineTo(d * 12, -6);
+        ctx.lineTo(d * 10, -2);
+        ctx.moveTo(d * 6, 4);
+        ctx.lineTo(d * 12, 6);
+        ctx.lineTo(d * 10, 2);
+        ctx.stroke();
+
+        // Glowing compound eyes
+        const eyeX = d * 4;
         ctx.fillStyle = PALETTE.GOLD;
-        ctx.fillRect(eyeX - 1.5, -4.5, 3, 3);
-        ctx.fillRect(eyeX - 1.5, 1.5, 3, 3);
+        ctx.fillRect(eyeX - 1.5, -5, 3.5, 3.5);
+        ctx.fillRect(eyeX - 1.5, 1.5, 3.5, 3.5);
+        ctx.fillStyle = PALETTE.RED;
+        ctx.fillRect(eyeX - 0.5, -4, 2, 2);
+        ctx.fillRect(eyeX - 0.5, 2.5, 2, 2);
       }
       ctx.restore();
     }
 
-    // Render Spider
+    // Render Bouncing Spider (8 articulated legs + fangs + striped body)
     if (this.spider) {
       const sp = this.spider;
       ctx.save();
       ctx.translate(sp.x, sp.y);
       ctx.strokeStyle = PALETTE.ORANGE;
+      ctx.shadowColor = PALETTE.ORANGE;
+      ctx.shadowBlur = 6;
       ctx.lineWidth = 2;
       const wave = Math.sin(sp.legPhase) * 4;
-      for (let side of [-1, 1]) {
-        for (let l = -1; l <= 1; l++) {
+      // 4 articulated jointed legs on each side (8 total)
+      const legOffsets = [-4.5, -1.5, 1.5, 4.5];
+      for (const side of [-1, 1]) {
+        legOffsets.forEach((ly, idx) => {
+          const swing = (idx % 2 === 0 ? wave : -wave) * side;
+          const kneeX = side * 10;
+          const kneeY = ly * 1.4 - 4 + swing * 0.5;
+          const footX = side * 16;
+          const footY = ly * 2.2 + 3 + swing;
           ctx.beginPath();
-          ctx.moveTo(side * 4, l * 3);
-          ctx.lineTo(side * 13, l * 6 + wave * side * l);
+          ctx.moveTo(side * 5, ly * 0.8);
+          ctx.lineTo(kneeX, kneeY);
+          ctx.lineTo(footX, footY);
           ctx.stroke();
-        }
+        });
       }
-      this.renderer.drawGlowCircle(0, 0, 7, PALETTE.RED, 10, true);
+      // Spider abdomen & head
+      this.renderer.drawGlowCircle(0, -2, 7.5, PALETTE.RED, 10, true);
       ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(-4, -2, 2.5, 2.5);
-      ctx.fillRect(1.5, -2, 2.5, 2.5);
+      ctx.fillRect(-5, -5, 10, 2);
+      // Glowing eyes
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(-4.5, -1, 3, 3);
+      ctx.fillRect(1.5, -1, 3, 3);
+      // Twin front fangs
+      ctx.fillStyle = PALETTE.CYAN;
+      ctx.fillRect(-3.5, 5, 2, 4);
+      ctx.fillRect(1.5, 5, 2, 4);
       ctx.restore();
     }
 
-    // Render Flea
+    // Render Flea (pixel insect body + fluttering wings)
     if (this.flea) {
       const fl = this.flea;
-      this.renderer.drawGlowCircle(fl.x, fl.y, 7.5, PALETTE.CYAN, 10, true);
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(fl.x - 5, fl.y + 3, 10, 3);
+      const palette = {
+        W: PALETTE.WHITE,
+        C: PALETTE.CYAN,
+        Y: PALETTE.GOLD,
+        G: PALETTE.GREEN
+      };
+      this.renderer.drawPixelSprite(FLEA_SPRITE, fl.x - 10, fl.y - 8, 2, palette, false, false);
     }
 
-    // Render Scorpion
+    // Render Scorpion (segmented pixel body + pincers + curved stinger tail)
     if (this.scorpion) {
       const sc = this.scorpion;
-      ctx.save();
-      ctx.translate(sc.x, sc.y);
-      this.renderer.drawGlowRect(-11, -5, 22, 10, PALETTE.PURPLE, 10, true);
-      // Curved stinger tail
-      const dir = sc.vx >= 0 ? 1 : -1;
-      ctx.strokeStyle = PALETTE.PINK;
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(-dir * 10, 0);
-      ctx.lineTo(-dir * 15, -9);
-      ctx.lineTo(-dir * 7, -12);
-      ctx.stroke();
-      ctx.restore();
+      const palette = {
+        P: PALETTE.PURPLE,
+        R: PALETTE.PINK
+      };
+      const flipX = sc.vx > 0; // Sprite faces left by default, flip when moving right
+      this.renderer.drawPixelSprite(SCORPION_SPRITE, sc.x - 15, sc.y - 9, 2.5, palette, flipX, false);
     }
 
-    // Render Player Bug Blaster
+    // Render Player Bug Blaster Defender
     const p = this.player;
     if (!p.dead) {
       const visible = p.invuln <= 0 || Math.floor(p.invuln * 14) % 2 === 0;
       if (visible) {
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.fillStyle = PALETTE.CYAN;
-        ctx.shadowColor = PALETTE.CYAN;
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.moveTo(0, -12);
-        ctx.lineTo(10, 8);
-        ctx.lineTo(4, 11);
-        ctx.lineTo(-4, 11);
-        ctx.lineTo(-10, 8);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = PALETTE.PINK;
-        ctx.fillRect(-3, -3, 6, 7);
-        ctx.restore();
+        const palette = {
+          C: PALETTE.CYAN,
+          W: PALETTE.WHITE,
+          P: PALETTE.PINK
+        };
+        this.renderer.drawPixelSprite(BLASTER_SPRITE, p.x - 12.5, p.y - 11, 2.5, palette, false, false);
       }
     }
 

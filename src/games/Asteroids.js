@@ -14,7 +14,7 @@ export class Asteroids {
     this.audio = audio;
 
     this.id = 'asteroids';
-    this.title = 'Meteor Vector';
+    this.title = 'Asteroids';
     this.width = 960;
     this.height = 540;
     this.arenaTop = 40;
@@ -111,11 +111,18 @@ export class Asteroids {
     const speed = (speedBase + this.level * 8) * (0.75 + Math.random() * 0.5);
     const angle = Math.random() * Math.PI * 2;
 
-    const numVerts = sizeTier === 3 ? 11 : sizeTier === 2 ? 9 : 8;
+    const numVerts = sizeTier === 3 ? 12 : sizeTier === 2 ? 10 : 8;
+    // Authentic Atari-style notched asteroid radial templates
+    const templates = [
+      [1.0, 0.78, 1.05, 0.62, 0.96, 1.08, 0.72, 0.98, 0.68, 1.04, 0.85, 1.02],
+      [0.95, 1.08, 0.65, 0.92, 1.06, 0.76, 1.02, 0.60, 0.96, 1.05, 0.80, 0.94],
+      [1.06, 0.72, 0.94, 1.05, 0.58, 0.88, 1.04, 0.82, 1.08, 0.68, 0.95, 0.86]
+    ];
+    const tpl = templates[Math.floor(Math.random() * templates.length)];
     const verts = [];
     for (let i = 0; i < numVerts; i++) {
-      const a = (i / numVerts) * Math.PI * 2;
-      const jag = 0.72 + Math.random() * 0.44;
+      const a = (i / numVerts) * Math.PI * 2 + (Math.random() - 0.5) * 0.12;
+      const jag = tpl[i % tpl.length] * (0.9 + Math.random() * 0.18);
       verts.push({ a, r: radius * jag });
     }
 
@@ -530,10 +537,13 @@ export class Asteroids {
     ctx.save();
     ctx.translate(rock.pos.x + offsetX, rock.pos.y + offsetY);
     ctx.rotate(rock.rot);
+
+    // Outer CRT phosphor bloom pass
     ctx.strokeStyle = rock.color;
-    ctx.lineWidth = 2;
     ctx.shadowColor = rock.color;
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 14;
+    ctx.lineWidth = 3.5;
+    ctx.globalAlpha = 0.3;
     ctx.beginPath();
     for (let i = 0; i < rock.verts.length; i++) {
       const v = rock.verts[i];
@@ -544,6 +554,33 @@ export class Asteroids {
     }
     ctx.closePath();
     ctx.stroke();
+
+    // Crisp vector beam pass + internal facet ridge
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 1.9;
+    ctx.shadowBlur = 8;
+    ctx.stroke();
+
+    if (rock.verts.length >= 6) {
+      ctx.globalAlpha = 0.38;
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      const v0 = rock.verts[0];
+      const vMid = rock.verts[Math.floor(rock.verts.length / 2)];
+      ctx.moveTo(Math.cos(v0.a) * v0.r * 0.55, Math.sin(v0.a) * v0.r * 0.55);
+      ctx.lineTo(0, 0);
+      ctx.lineTo(Math.cos(vMid.a) * vMid.r * 0.6, Math.sin(vMid.a) * vMid.r * 0.6);
+      ctx.stroke();
+    }
+
+    // QuadraScan XY vertex phosphor dwell dots
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = PALETTE.WHITE;
+    for (let i = 0; i < rock.verts.length; i++) {
+      const v = rock.verts[i];
+      ctx.fillRect(Math.cos(v.a) * v.r - 1, Math.sin(v.a) * v.r - 1, 2, 2);
+    }
+
     ctx.restore();
   }
 
@@ -564,38 +601,51 @@ export class Asteroids {
       if (rock.pos.x > this.width - rock.radius) this._drawAsteroidVector(ctx, rock, -this.width, 0);
     }
 
-    // Render UFO Saucer
+    // Render Classic Twin-Dome Flying Saucer (Large & Small UFOs)
     if (this.ufo) {
       const u = this.ufo;
       const r = u.radius;
+      const ufoColor = u.isSmall ? PALETTE.GOLD : PALETTE.PINK;
       ctx.save();
       ctx.translate(u.pos.x, u.pos.y);
-      ctx.strokeStyle = PALETTE.PINK;
+      ctx.strokeStyle = ufoColor;
       ctx.lineWidth = 2;
-      ctx.shadowColor = PALETTE.PINK;
-      ctx.shadowBlur = 12;
+      ctx.shadowColor = ufoColor;
+      ctx.shadowBlur = 14;
 
       ctx.beginPath();
-      // Classic vector saucer silhouette
+      // Main hexagonal saucer hull
       ctx.moveTo(-r, 0);
-      ctx.lineTo(-r * 0.45, -r * 0.42);
-      ctx.lineTo(r * 0.45, -r * 0.42);
+      ctx.lineTo(-r * 0.52, -r * 0.38);
+      ctx.lineTo(r * 0.52, -r * 0.38);
       ctx.lineTo(r, 0);
-      ctx.lineTo(r * 0.55, r * 0.42);
-      ctx.lineTo(-r * 0.55, r * 0.42);
+      ctx.lineTo(r * 0.52, r * 0.38);
+      ctx.lineTo(-r * 0.52, r * 0.38);
       ctx.closePath();
+      // Center equator seam
       ctx.moveTo(-r, 0);
       ctx.lineTo(r, 0);
-      // Upper dome
-      ctx.moveTo(-r * 0.35, -r * 0.42);
-      ctx.lineTo(-r * 0.2, -r * 0.78);
-      ctx.lineTo(r * 0.2, -r * 0.78);
-      ctx.lineTo(r * 0.35, -r * 0.42);
+      // Upper observation dome
+      ctx.moveTo(-r * 0.34, -r * 0.38);
+      ctx.lineTo(-r * 0.18, -r * 0.78);
+      ctx.lineTo(r * 0.18, -r * 0.78);
+      ctx.lineTo(r * 0.34, -r * 0.38);
+      // Lower twin belly dome
+      ctx.moveTo(-r * 0.28, r * 0.38);
+      ctx.lineTo(-r * 0.15, r * 0.62);
+      ctx.lineTo(r * 0.15, r * 0.62);
+      ctx.lineTo(r * 0.28, r * 0.38);
       ctx.stroke();
+
+      // Glowing saucer porthole vertices
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.fillRect(-r * 0.42 - 1, -2, 2.5, 2.5);
+      ctx.fillRect(-1, -2, 2.5, 2.5);
+      ctx.fillRect(r * 0.42 - 1, -2, 2.5, 2.5);
       ctx.restore();
     }
 
-    // Render Player Vector Ship
+    // Render Classic Atari Vector Wedge Player Ship
     const ship = this.ship;
     if (!ship.dead) {
       const blinkVisible = ship.invuln <= 0 || Math.floor(ship.invuln * 14) % 2 === 0;
@@ -613,32 +663,64 @@ export class Asteroids {
           ctx.stroke();
         }
 
-        // Rocket Thrust Flame
+        // Flickering Vector Triangle Thruster Flame behind inset rear strut
         if (ship.thrusting && Math.sin(ship.flamePhase) > -0.3) {
+          const flameLen = 18 + Math.random() * 7;
           ctx.strokeStyle = PALETTE.ORANGE;
           ctx.shadowColor = PALETTE.ORANGE;
-          ctx.shadowBlur = 12;
+          ctx.shadowBlur = 14;
           ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.moveTo(-9, -5);
-          ctx.lineTo(-19 - Math.random() * 6, 0);
-          ctx.lineTo(-9, 5);
+          ctx.moveTo(-8, -4.5);
+          ctx.lineTo(-flameLen, 0);
+          ctx.lineTo(-8, 4.5);
+          ctx.stroke();
+
+          ctx.strokeStyle = PALETTE.WHITE;
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(-8, -2.5);
+          ctx.lineTo(-flameLen * 0.72, 0);
+          ctx.lineTo(-8, 2.5);
           ctx.stroke();
         }
 
-        // Vector A-Frame Ship
+        // Outer phosphor glow pass for Atari A-Frame Wedge Ship
+        const drawWedgePath = () => {
+          ctx.beginPath();
+          // Outer wedge sides extending past the rear strut
+          ctx.moveTo(16, 0);
+          ctx.lineTo(-13, -10.5);
+          ctx.lineTo(-8, -5.5);
+          ctx.lineTo(-8, 5.5);
+          ctx.lineTo(-13, 10.5);
+          ctx.closePath();
+          // Inset rear crossbar strut
+          ctx.moveTo(-8, -6);
+          ctx.lineTo(-8, 6);
+        };
+
         ctx.strokeStyle = PALETTE.CYAN;
         ctx.shadowColor = PALETTE.CYAN;
-        ctx.shadowBlur = 12;
-        ctx.lineWidth = 2.2;
-        ctx.beginPath();
-        ctx.moveTo(16, 0);
-        ctx.lineTo(-12, -10);
-        ctx.lineTo(-7, -4);
-        ctx.lineTo(-7, 4);
-        ctx.lineTo(-12, 10);
-        ctx.closePath();
+        ctx.shadowBlur = 16;
+        ctx.lineWidth = 3.6;
+        ctx.globalAlpha = 0.35;
+        drawWedgePath();
         ctx.stroke();
+
+        // Crisp bright vector core pass
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = PALETTE.WHITE;
+        ctx.lineWidth = 1.9;
+        ctx.shadowBlur = 10;
+        drawWedgePath();
+        ctx.stroke();
+
+        // Vertex phosphor dots
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.fillRect(15, -1, 2.5, 2.5);
+        ctx.fillRect(-14, -11.5, 2, 2);
+        ctx.fillRect(-14, 9.5, 2, 2);
         ctx.restore();
       }
     }

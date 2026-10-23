@@ -156,7 +156,7 @@ export class Galaga {
     this.audio = audio;
 
     this.id = 'galaga';
-    this.title = 'Star Squadron';
+    this.title = 'Galaga';
     this.state = 'PLAYING';
 
     this.width = 960;
@@ -1164,6 +1164,9 @@ export class Galaga {
       });
     }
 
+    // 8b. Classic Namco Bottom-Left Reserve Fighters & Bottom-Right Stage Badges
+    this._renderBottomArcadeBar(ctx);
+
     // 9. Standardized Arcade HUD & State Overlay
     this.renderer.drawHUD({
       title: 'GALAGA',
@@ -1183,6 +1186,65 @@ export class Galaga {
       highScore: this.highScore,
       accent: PALETTE.CYAN
     });
+  }
+
+  _renderBottomArcadeBar(ctx) {
+    ctx.save();
+    // Bottom-left reserve mini Galaga fighters
+    const reserveCount = Math.max(0, Math.min(5, this.lives - 1));
+    for (let i = 0; i < reserveCount; i++) {
+      const rx = 26 + i * 22;
+      const ry = 524;
+      this.renderer.drawPixelSprite(
+        SPRITES.PLAYER,
+        rx - 7,
+        ry - 7,
+        1.2,
+        SPRITE_PALETTES.PLAYER
+      );
+    }
+
+    // Bottom-right Namco Stage Rank Badges (10s, 5s, and 1s badges)
+    let rem = Math.max(1, this.level);
+    const tens = Math.floor(rem / 10);
+    rem %= 10;
+    const fives = Math.floor(rem / 5);
+    const ones = rem % 5;
+
+    let bx = this.width - 20;
+    const by = 515;
+
+    // 1-stage narrow yellow/blue badges
+    for (let i = 0; i < ones; i++) {
+      bx -= 10;
+      ctx.fillStyle = '#2563EB';
+      ctx.fillRect(bx, by, 7, 16);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(bx + 1, by + 2, 5, 6);
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(bx + 2, by, 3, 2);
+    }
+    // 5-stage medium green/gold badges
+    for (let i = 0; i < fives; i++) {
+      bx -= 15;
+      ctx.fillStyle = PALETTE.GREEN;
+      ctx.fillRect(bx, by - 2, 11, 18);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(bx + 2, by + 1, 7, 7);
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(bx + 3, by - 4, 5, 2);
+    }
+    // 10-stage wide crimson/gold badges
+    for (let i = 0; i < Math.min(4, tens); i++) {
+      bx -= 20;
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(bx, by - 3, 15, 19);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(bx + 2, by, 11, 8);
+      ctx.fillStyle = PALETTE.CYAN;
+      ctx.fillRect(bx + 4, by + 2, 7, 4);
+    }
+    ctx.restore();
   }
 
   _renderStarfield(ctx) {

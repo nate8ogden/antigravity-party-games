@@ -20,7 +20,7 @@ export class RallyX {
     this.audio = audio;
 
     this.id = 'rallyx';
-    this.title = 'Smoke Rally';
+    this.title = 'Rally-X';
     this.width = 960;
     this.height = 540;
 
@@ -465,14 +465,22 @@ export class RallyX {
     // Checkered Flags (Normal, Special 'S', Lucky 'L')
     for (const f of this.flags) {
       if (f.collected) continue;
+      // Flagpole + Gold Finial
       ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(f.x - 2, f.y - 14, 3, 28);
+      ctx.fillRect(f.x - 8, f.y - 15, 3, 30);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(f.x - 9, f.y - 17, 5, 3);
+
       const flagCol = f.type === 'SPECIAL' ? PALETTE.PINK : f.type === 'LUCKY' ? PALETTE.GREEN : PALETTE.GOLD;
-      this.renderer.drawGlowRect(f.x + 1, f.y - 14, 16, 12, flagCol, 8, true);
+      this.renderer.drawGlowRect(f.x - 5, f.y - 14, 18, 13, flagCol, 8, true);
+      // Classic 2x2 Checkered Pennant squares
+      ctx.fillStyle = '#0F172A';
+      ctx.fillRect(f.x - 3, f.y - 12, 4, 4);
+      ctx.fillRect(f.x + 1, f.y - 8, 4, 4);
       if (f.type !== 'NORMAL') {
-        this.renderer.drawText(f.type === 'SPECIAL' ? 'S' : 'L', f.x + 9, f.y - 4, {
+        this.renderer.drawText(f.type === 'SPECIAL' ? 'S' : 'L', f.x + 8, f.y - 4, {
           font: FONTS.HEADER,
-          size: 9,
+          size: 8.5,
           color: PALETTE.WHITE,
           align: 'center'
         });
@@ -481,29 +489,68 @@ export class RallyX {
 
     // Smoke Screen Clouds
     for (const sm of this.smokes) {
-      this.renderer.drawGlowCircle(sm.x, sm.y, 18, PALETTE.WHITE, 12, true);
+      this.renderer.drawGlowCircle(sm.x, sm.y, 16, PALETTE.WHITE, 12, true);
+      this.renderer.drawGlowCircle(sm.x - 8, sm.y + 5, 10, '#E2E8F0', 6, true);
+      this.renderer.drawGlowCircle(sm.x + 8, sm.y - 4, 11, '#E2E8F0', 6, true);
     }
 
-    // Red Rival Cars
+    const drawFormulaCar = (bodyCol, stripeCol, visorCol) => {
+      // 4 Exposed Black Formula-1 Tires & Axles
+      ctx.fillStyle = '#64748B';
+      ctx.fillRect(-10, -13, 3, 26);
+      ctx.fillRect(6, -12, 3, 24);
+      ctx.fillStyle = '#090D16';
+      ctx.fillRect(-14, -14, 9, 5);
+      ctx.fillRect(-14, 9, 9, 5);
+      ctx.fillRect(4, -13, 8, 4);
+      ctx.fillRect(4, 9, 8, 4);
+
+      // Rear Spoiler Wing
+      ctx.fillStyle = stripeCol;
+      ctx.fillRect(-17, -11, 4, 22);
+
+      // Sidepods & Tapered Nose Cone
+      this.renderer.drawGlowRect(-12, -8, 18, 16, bodyCol, 8, true);
+      ctx.fillStyle = bodyCol;
+      ctx.beginPath();
+      ctx.moveTo(6, -6);
+      ctx.lineTo(17, -3);
+      ctx.lineTo(17, 3);
+      ctx.lineTo(6, 6);
+      ctx.closePath();
+      ctx.fill();
+
+      // Front Wing
+      ctx.fillStyle = stripeCol;
+      ctx.fillRect(13, -9, 3, 18);
+
+      // Cockpit & White Driver Helmet
+      ctx.fillStyle = '#0F172A';
+      ctx.fillRect(-5, -5, 9, 10);
+      ctx.fillStyle = PALETTE.WHITE;
+      ctx.beginPath();
+      ctx.arc(-1, 0, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = visorCol;
+      ctx.fillRect(1, -2.5, 2.5, 5);
+    };
+
+    // Red Rival Formula-1 Cars
     for (const rv of this.rivals) {
       ctx.save();
       ctx.translate(rv.x, rv.y);
       ctx.rotate(rv.angle);
-      this.renderer.drawGlowRect(-14, -9, 28, 18, PALETTE.RED, 8, true);
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(4, -6, 6, 12);
+      drawFormulaCar(PALETTE.RED, PALETTE.GOLD, '#0F172A');
       ctx.restore();
     }
 
-    // Player Blue Formula Car
+    // Player Blue Formula-1 Car
     const p = this.player;
     if (p.invuln <= 0 || Math.floor(p.invuln * 14) % 2 === 0) {
       ctx.save();
       ctx.translate(p.x, p.y);
       ctx.rotate(p.angle);
-      this.renderer.drawGlowRect(-14, -9, 28, 18, PALETTE.CYAN, 10, true);
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(4, -6, 7, 12);
+      drawFormulaCar(PALETTE.CYAN, PALETTE.WHITE, PALETTE.BLUE);
       ctx.restore();
     }
 

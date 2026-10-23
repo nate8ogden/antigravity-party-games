@@ -21,7 +21,7 @@ export class Tron {
     this.audio = audio;
 
     this.id = 'tron';
-    this.title = 'Light Grid';
+    this.title = 'Tron';
     this.width = 960;
     this.height = 540;
 
@@ -494,13 +494,62 @@ export class Tron {
     if (!cycle.alive) return;
     const cx = this.arenaX + cycle.gx * this.cellSize + this.cellSize * 0.5;
     const cy = this.arenaY + cycle.gy * this.cellSize + this.cellSize * 0.5;
-    const isVert = cycle.dir === 0 || cycle.dir === 2;
-    const w = isVert ? 8 : 14;
-    const h = isVert ? 14 : 8;
 
-    this.renderer.drawGlowRect(cx - w / 2, cy - h / 2, w, h, cycle.color, 12, true);
+    // 1982 Bally Midway Top-Down Light Cycle Oriented by Travel Direction (dir: 0=UP, 1=RIGHT, 2=DOWN, 3=LEFT)
+    // Base orientation draws facing RIGHT (+X), rotated by (dir - 1) * 90deg
+    const angles = [-Math.PI / 2, 0, Math.PI / 2, Math.PI];
+    const rot = angles[cycle.dir] || 0;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rot);
+
+    // Outer neon aura glow
+    ctx.shadowColor = cycle.color;
+    ctx.shadowBlur = 12;
+
+    // Rear Power Wheel Housing & Jet-Wall Emitter
+    ctx.fillStyle = cycle.color;
+    ctx.beginPath();
+    ctx.arc(-6, 0, 5.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#090D16';
+    ctx.beginPath();
+    ctx.arc(-6, 0, 2.6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Streamlined Enclosed Body Fairing & Tapered Front Wheel Cowling
+    ctx.fillStyle = cycle.color;
+    ctx.beginPath();
+    ctx.moveTo(-8, -4.8);
+    ctx.lineTo(3, -4.8);
+    ctx.lineTo(10, -2.6);
+    ctx.lineTo(10, 2.6);
+    ctx.lineTo(3, 4.8);
+    ctx.lineTo(-8, 4.8);
+    ctx.closePath();
+    ctx.fill();
+
+    // Front Wheel Hub inside Cowling
     ctx.fillStyle = PALETTE.WHITE;
-    ctx.fillRect(cx - 2, cy - 2, 4, 4);
+    ctx.beginPath();
+    ctx.arc(6.5, 0, 2.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Enclosed Dark Tinted Canopy Dome with Glowing Circuit Trim
+    ctx.fillStyle = '#050811';
+    ctx.beginPath();
+    ctx.ellipse(-0.5, 0, 5.2, 3.0, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = PALETTE.WHITE;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // Neon Spine Circuit Rib
+    ctx.fillStyle = PALETTE.WHITE;
+    ctx.fillRect(-7, -0.8, 12, 1.6);
+
+    ctx.restore();
   }
 
   render(ctx = this.renderer.ctx) {
@@ -530,18 +579,34 @@ export class Tron {
     // Glowing Outer Game Grid Border
     this.renderer.drawGlowRect(this.arenaX, this.arenaY, arenaW, arenaH, PALETTE.CYAN, 12, false, 2.5);
 
-    // Draw Grid Monolith Obstacles (cell value 9)
-    ctx.fillStyle = PALETTE.PURPLE;
-    for (let gy = 0; gy < this.gridH; gy++) {
-      for (let gx = 0; gx < this.gridW; gx++) {
-        if (this.grid[gy * this.gridW + gx] === 9) {
-          ctx.fillRect(
-            this.arenaX + gx * this.cellSize,
-            this.arenaY + gy * this.cellSize,
-            this.cellSize,
-            this.cellSize
-          );
-        }
+    // Draw Grid Obstacles Styled as Glowing MCP Grid Cones (cell value 9)
+    if (this.level >= 3) {
+      const coneBlocks = [
+        { x: 55, y: 26, w: 6, h: 14 },
+        { x: 119, y: 26, w: 6, h: 14 },
+        { x: 55, y: 54, w: 6, h: 14 },
+        { x: 119, y: 54, w: 6, h: 14 }
+      ];
+      const pulse = 0.65 + 0.35 * Math.sin(performance.now() * 0.008);
+      for (const b of coneBlocks) {
+        const bx = this.arenaX + b.x * this.cellSize;
+        const by = this.arenaY + b.y * this.cellSize;
+        const bw = b.w * this.cellSize;
+        const bh = b.h * this.cellSize;
+        const mcx = bx + bw / 2;
+        const mcy = by + bh / 2;
+
+        // Outer MCP Crimson/Purple Cone Base
+        this.renderer.drawGlowRect(bx, by, bw, bh, PALETTE.RED, 10, true);
+        // Inner Concentric MCP Cone Tiers
+        ctx.fillStyle = PALETTE.PURPLE;
+        ctx.fillRect(bx + 4, by + 6, bw - 8, bh - 12);
+        ctx.strokeStyle = PALETTE.GOLD;
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(bx + 4, by + 6, bw - 8, bh - 12);
+        // Pulsing MCP Core Apex
+        ctx.fillStyle = pulse > 0.8 ? PALETTE.WHITE : PALETTE.GOLD;
+        ctx.fillRect(mcx - 4, mcy - 10, 8, 20);
       }
     }
 

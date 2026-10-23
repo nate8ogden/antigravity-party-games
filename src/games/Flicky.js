@@ -9,6 +9,65 @@ import { PALETTE, FONTS, HighScoreStore } from '../engine/Renderer.js';
 
 const FLOORS = [496, 396, 296, 196];
 
+const FLICKY_SPRITE = [
+  '....CCCC....',
+  '..CCCCCCCC..',
+  '.CCWWKKCCCC.',
+  '.CCWWKKCCYY.',
+  'CCCCCCCCYYYY',
+  'CCBBBBCCCC..',
+  'CCBBBBBBCC..',
+  '.CCCCCCCC...',
+  '..CC..CC....',
+  '..YY..YY....'
+];
+
+const CHICK_SPRITE = [
+  '..YYYYY..',
+  '.YYYYYYY.',
+  'YYWWKYYYY',
+  'YYYYYYYYO',
+  'YYOYYYYOO',
+  '.YYYYYYY.',
+  '..Y...Y..',
+  '..O...O..'
+];
+
+const CHICK_SHADES_SPRITE = [
+  '..YYYYY..',
+  '.YYYYYYY.',
+  'YYKKKKKYY',
+  'YYKYYYKYY',
+  'YYYYYYYYO',
+  '.YYYYYYY.',
+  '..Y...Y..',
+  '..O...O..'
+];
+
+const TIGER_CAT_SPRITE = [
+  '.O.O....O.O.',
+  'OOOOOOOOOOOO',
+  'OKKOOOOOOKKO',
+  'OWKOOOOOOKWO',
+  'OOWWKKKKWWOO',
+  '.OOOOOOOOOO.',
+  '..OOKKKKOO.O',
+  '.OOOOOOOO.OO',
+  '.OO.OOOO.OO.',
+  '.WW..WW..WW.'
+];
+
+const IGUANA_SPRITE = [
+  '..G.G.G.G...',
+  '.GGGGGGGGGG.',
+  'GGWWKGGGGGGG',
+  'GGGGGGGGYYYY',
+  '.GGGGGGGGGG.',
+  'GG.GGGGGG.GG',
+  'G..GG..GG..G',
+  '..YY....YY..'
+];
+
 const STAGE_LAYOUTS = [
   {
     // Round 1: Classic Blue Brick Living Room
@@ -225,7 +284,7 @@ export class Flicky {
     this.audio = audio;
 
     this.id = 'flicky';
-    this.title = 'Chirpy Rescue';
+    this.title = 'Flicky';
     this.width = 960;
     this.height = 540;
 
@@ -614,43 +673,83 @@ export class Flicky {
     // 4. Chirping Yellow Piopio Chicks
     for (const c of this.chicks) {
       if (c.state === 'RESCUED') continue;
-      this.renderer.drawGlowCircle(c.x, c.y - 9, 8.5, PALETTE.GOLD, 8, true);
-      if (c.sunglasses) {
-        ctx.fillStyle = '#090D16';
-        ctx.fillRect(c.x - 6, c.y - 12, 12, 4);
-      } else {
-        ctx.fillStyle = '#090D16';
-        ctx.fillRect(c.x + 2, c.y - 11, 3, 3);
-      }
+      const sprite = c.sunglasses ? CHICK_SHADES_SPRITE : CHICK_SPRITE;
+      const scale = 2.2;
+      const cw = sprite[0].length * scale;
+      const ch = sprite.length * scale;
+      this.renderer.drawPixelSprite(
+        sprite,
+        c.x - cw * 0.5,
+        c.y - ch,
+        scale,
+        {
+          Y: PALETTE.GOLD,
+          O: PALETTE.ORANGE,
+          W: PALETTE.WHITE,
+          K: '#090D16'
+        },
+        c.vx < 0
+      );
     }
 
-    // 5. Tiger Cats (Nyannan) & Green Iguanas
+    // 5. Tiger Cats (Nyannan) & Green Iguanas (Choro)
     for (const e of this.enemies) {
-      const col = e.type === 'IGUANA' ? PALETTE.GREEN : PALETTE.ORANGE;
-      this.renderer.drawGlowCircle(e.x, e.y - 12, 12, col, 10, true);
-      // Cat ears
-      ctx.fillStyle = col;
-      ctx.beginPath();
-      ctx.moveTo(e.x - 10, e.y - 18);
-      ctx.lineTo(e.x - 6, e.y - 28);
-      ctx.lineTo(e.x - 2, e.y - 20);
-      ctx.moveTo(e.x + 10, e.y - 18);
-      ctx.lineTo(e.x + 6, e.y - 28);
-      ctx.lineTo(e.x + 2, e.y - 20);
-      ctx.fill();
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(e.x - 6, e.y - 15, 4, 4);
-      ctx.fillRect(e.x + 2, e.y - 15, 4, 4);
+      if (e.type === 'IGUANA') {
+        const scale = 2.3;
+        const ew = IGUANA_SPRITE[0].length * scale;
+        const eh = IGUANA_SPRITE.length * scale;
+        this.renderer.drawPixelSprite(
+          IGUANA_SPRITE,
+          e.x - ew * 0.5,
+          e.y - eh,
+          scale,
+          {
+            G: PALETTE.GREEN,
+            Y: PALETTE.GOLD,
+            W: PALETTE.WHITE,
+            K: '#090D16'
+          },
+          e.vx > 0
+        );
+      } else {
+        const scale = 2.3;
+        const ew = TIGER_CAT_SPRITE[0].length * scale;
+        const eh = TIGER_CAT_SPRITE.length * scale;
+        this.renderer.drawPixelSprite(
+          TIGER_CAT_SPRITE,
+          e.x - ew * 0.5,
+          e.y - eh,
+          scale,
+          {
+            O: PALETTE.ORANGE,
+            W: PALETTE.WHITE,
+            K: '#090D16'
+          },
+          e.vx < 0
+        );
+      }
     }
 
     // 6. Bluebird Flicky
     const f = this.flicky;
     if (f.invuln <= 0 || Math.floor(f.invuln * 14) % 2 === 0) {
-      this.renderer.drawGlowCircle(f.x, f.y - 13, 13, PALETTE.CYAN, 12, true);
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(f.x + f.facing * 10 - 3, f.y - 15, 8, 5);
-      ctx.fillStyle = PALETTE.WHITE;
-      ctx.fillRect(f.x + f.facing * 4 - 2, f.y - 18, 4, 5);
+      const scale = 2.5;
+      const fw = FLICKY_SPRITE[0].length * scale;
+      const fh = FLICKY_SPRITE.length * scale;
+      this.renderer.drawPixelSprite(
+        FLICKY_SPRITE,
+        f.x - fw * 0.5,
+        f.y - fh,
+        scale,
+        {
+          C: PALETTE.CYAN,
+          B: '#2563EB',
+          Y: PALETTE.GOLD,
+          W: PALETTE.WHITE,
+          K: '#090D16'
+        },
+        f.facing < 0
+      );
     }
 
     // 7. Popups

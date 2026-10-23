@@ -30,7 +30,7 @@ export class Arkanoid {
     this.audio = audio;
 
     this.id = 'arkanoid';
-    this.title = 'Prism Breaker';
+    this.title = 'Arkanoid';
     this.width = 960;
     this.height = 540;
 
@@ -627,16 +627,88 @@ export class Arkanoid {
   render(ctx = this.renderer.ctx) {
     this.renderer.clear(PALETTE.BG);
 
-    // Hex-grid cyber background inside playfield walls
-    ctx.fillStyle = '#0D1426';
-    ctx.fillRect(WALL_LEFT, WALL_TOP, WALL_RIGHT - WALL_LEFT, this.height - WALL_TOP);
+    // Classic Taito geometric/hexagonal patterned arcade backgrounds cycling by level
+    const bgThemes = [
+      { base: '#08183A', line: '#1D4ED8', node: '#2563EB', mode: 'hex' },     // Blue Hexagonal Lattice
+      { base: '#05291E', line: '#047857', node: '#10B981', mode: 'diamond' }, // Emerald Geometric Lattice
+      { base: '#340A18', line: '#9F1239', node: '#E11D48', mode: 'circuit' }, // Crimson Tech Grid
+      { base: '#1B103B', line: '#5B21B6', node: '#8B5CF6', mode: 'octagon' }  // Indigo Warp Matrix
+    ];
+    const bg = bgThemes[(this.level - 1) % bgThemes.length];
+    const pfW = WALL_RIGHT - WALL_LEFT;
+    const pfH = this.height - WALL_TOP;
 
-    // Glowing Fortress Border Walls
     ctx.save();
+    ctx.beginPath();
+    ctx.rect(WALL_LEFT, WALL_TOP, pfW, pfH);
+    ctx.clip();
+
+    ctx.fillStyle = bg.base;
+    ctx.fillRect(WALL_LEFT, WALL_TOP, pfW, pfH);
+
+    ctx.strokeStyle = bg.line;
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.42;
+    const cell = 48;
+    for (let y = WALL_TOP; y < this.height + cell; y += cell) {
+      const rowIdx = Math.floor((y - WALL_TOP) / cell);
+      const xOffset = (rowIdx % 2) * (cell / 2);
+      for (let x = WALL_LEFT - cell; x < WALL_RIGHT + cell; x += cell) {
+        const cx = x + xOffset;
+        const cy = y;
+        ctx.beginPath();
+        if (bg.mode === 'hex' || bg.mode === 'octagon') {
+          const r = cell * 0.44;
+          for (let k = 0; k < 6; k++) {
+            const ang = (k * Math.PI) / 3 + Math.PI / 6;
+            const vx = cx + Math.cos(ang) * r;
+            const vy = cy + Math.sin(ang) * r;
+            if (k === 0) ctx.moveTo(vx, vy);
+            else ctx.lineTo(vx, vy);
+          }
+          ctx.closePath();
+        } else if (bg.mode === 'diamond') {
+          ctx.moveTo(cx, cy - 20);
+          ctx.lineTo(cx + 20, cy);
+          ctx.lineTo(cx, cy + 20);
+          ctx.lineTo(cx - 20, cy);
+          ctx.closePath();
+        } else {
+          ctx.strokeRect(cx - 16, cy - 16, 32, 32);
+          ctx.moveTo(cx - 16, cy);
+          ctx.lineTo(cx - 24, cy);
+          ctx.moveTo(cx + 16, cy);
+          ctx.lineTo(cx + 24, cy);
+        }
+        ctx.stroke();
+
+        ctx.fillStyle = bg.node;
+        ctx.fillRect(cx - 2, cy - 2, 4, 4);
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    // Inner wall drop-shadow inside playfield
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+    ctx.fillRect(WALL_LEFT, WALL_TOP, 10, pfH);
+    ctx.fillRect(WALL_LEFT, WALL_TOP, pfW, 10);
+    ctx.restore();
+
+    // Ribbed Metallic Taito Border Frame
+    ctx.save();
+    ctx.strokeStyle = '#94A3B8';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.moveTo(WALL_LEFT - 4, this.height);
+    ctx.lineTo(WALL_LEFT - 4, WALL_TOP - 4);
+    ctx.lineTo(WALL_RIGHT + 4, WALL_TOP - 4);
+    ctx.lineTo(WALL_RIGHT + 4, this.height);
+    ctx.stroke();
+
     ctx.strokeStyle = PALETTE.CYAN;
     ctx.shadowColor = PALETTE.CYAN;
-    ctx.shadowBlur = 12;
-    ctx.lineWidth = 4;
+    ctx.shadowBlur = 10;
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(WALL_LEFT, this.height);
     ctx.lineTo(WALL_LEFT, WALL_TOP);
@@ -667,19 +739,36 @@ export class Arkanoid {
       });
     });
 
-    // Render Bricks
+    // Render Beveled 3D Arcade Bricks with Dark Drop-Shadows
     for (const br of this.bricks) {
       const color = br.flashTimer > 0 ? PALETTE.WHITE : br.color;
-      this.renderer.drawGlowRect(br.x, br.y, br.w, br.h, color, br.type === 'GOLD' ? 10 : 6, true);
 
-      // Bevel highlight & armor pips on Silver/Gold bricks
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.32)';
-      ctx.fillRect(br.x + 2, br.y + 2, br.w - 4, 3);
+      // Dark 3D arcade drop-shadow offset down-right
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.68)';
+      ctx.fillRect(br.x + 5, br.y + 5, br.w, br.h);
+
+      // Main brick fill
+      this.renderer.drawGlowRect(br.x, br.y, br.w, br.h, color, br.type === 'GOLD' ? 10 : 4, true);
+
+      // Top & Left bright 3D bevel highlight
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.fillRect(br.x, br.y, br.w, 3);
+      ctx.fillRect(br.x, br.y, 3, br.h);
+
+      // Bottom & Right dark 3D bevel edge
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
+      ctx.fillRect(br.x, br.y + br.h - 3, br.w, 3);
+      ctx.fillRect(br.x + br.w - 3, br.y, 3, br.h);
+
+      // Crisp black outline
+      ctx.strokeStyle = '#090D16';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(br.x, br.y, br.w, br.h);
 
       if (br.maxHp > 1) {
         ctx.strokeStyle = PALETTE.BG;
         ctx.lineWidth = 1.5;
-        ctx.strokeRect(br.x + 3, br.y + 3, br.w - 6, br.h - 6);
+        ctx.strokeRect(br.x + 4, br.y + 4, br.w - 8, br.h - 8);
         for (let h = 0; h < br.hp; h++) {
           ctx.fillStyle = PALETTE.BG;
           ctx.fillRect(br.x + 8 + h * 8, br.y + br.h / 2 - 2, 4, 4);
@@ -691,8 +780,10 @@ export class Arkanoid {
     for (const cap of this.capsules) {
       ctx.save();
       ctx.translate(cap.x, cap.y);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.fillRect(-12, -5, 30, 16);
       this.renderer.drawGlowRect(-15, -8, 30, 16, cap.color, 10, true);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
       ctx.fillRect(-12, -5 + Math.sin(cap.phase) * 2, 24, 3);
       this.renderer.drawText(cap.code, 0, 4, {
         font: FONTS.HEADER,
@@ -703,22 +794,70 @@ export class Arkanoid {
       ctx.restore();
     }
 
-    // Render Vaus Space Vessel Paddle
+    // Render Vaus Space Vessel Paddle (Metallic silver hull, pulsing red side domes & dual laser cannons)
     const p = this.paddle;
     const halfW = p.width / 2;
+    const pulse = 0.65 + 0.35 * Math.sin(performance.now() * 0.01);
     ctx.save();
     ctx.translate(p.x, p.y);
-    // Metallic core
-    this.renderer.drawGlowRect(-halfW + 10, -p.height / 2, p.width - 20, p.height, PALETTE.CYAN, 10, true);
-    // Glowing red/orange side pods
-    const podColor = p.laserEnabled ? PALETTE.RED : PALETTE.PINK;
-    this.renderer.drawGlowRect(-halfW, -p.height / 2 + 1, 12, p.height - 2, podColor, 8, true);
-    this.renderer.drawGlowRect(halfW - 12, -p.height / 2 + 1, 12, p.height - 2, podColor, 8, true);
 
+    // Paddle drop-shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+    ctx.fillRect(-halfW + 4, -p.height / 2 + 5, p.width, p.height);
+
+    // Metallic Silver Hull Core
+    const hullW = p.width - 24;
+    ctx.fillStyle = '#94A3B8';
+    ctx.fillRect(-hullW / 2, -p.height / 2, hullW, p.height);
+    // Bright silver top bevel
+    ctx.fillStyle = '#F8FAFC';
+    ctx.fillRect(-hullW / 2, -p.height / 2, hullW, 4);
+    // Dark steel bottom bevel
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(-hullW / 2, p.height / 2 - 3, hullW, 3);
+
+    // Central Vaus bridge & glowing energy core
+    ctx.fillStyle = '#0F172A';
+    ctx.fillRect(-14, -p.height / 2 + 2, 28, p.height - 4);
+    this.renderer.drawGlowRect(-9, -3, 18, 6, p.laserEnabled ? PALETTE.GOLD : PALETTE.CYAN, 8, true);
+
+    // Metallic seam ribs
+    ctx.fillStyle = '#1E293B';
+    ctx.fillRect(-hullW / 2 + 8, -p.height / 2, 2, p.height);
+    ctx.fillRect(hullW / 2 - 10, -p.height / 2, 2, p.height);
+
+    // Pulsing Red Side Domes
+    const domeColor = PALETTE.RED;
+    ctx.shadowColor = domeColor;
+    ctx.shadowBlur = 8 + pulse * 6;
+    ctx.fillStyle = domeColor;
+    ctx.beginPath();
+    ctx.arc(-halfW + 10, 0, p.height / 2, Math.PI / 2, -Math.PI / 2);
+    ctx.lineTo(-halfW + 14, -p.height / 2);
+    ctx.lineTo(-halfW + 14, p.height / 2);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(halfW - 10, 0, p.height / 2, -Math.PI / 2, Math.PI / 2);
+    ctx.lineTo(halfW - 14, p.height / 2);
+    ctx.lineTo(halfW - 14, -p.height / 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Specular highlights on red side domes
+    ctx.fillStyle = `rgba(255, 255, 255, ${0.45 + pulse * 0.4})`;
+    ctx.fillRect(-halfW + 6, -4, 5, 3);
+    ctx.fillRect(halfW - 11, -4, 5, 3);
+
+    // Dual Laser Cannons when laserEnabled is active
     if (p.laserEnabled) {
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(-halfW + 8, -p.height / 2 - 5, 4, 5);
-      ctx.fillRect(halfW - 12, -p.height / 2 - 5, 4, 5);
+      ctx.fillStyle = '#CBD5E1';
+      ctx.fillRect(-halfW + 14, -p.height / 2 - 6, 6, 6);
+      ctx.fillRect(halfW - 20, -p.height / 2 - 6, 6, 6);
+      this.renderer.drawGlowRect(-halfW + 15, -p.height / 2 - 9, 4, 4, PALETTE.GOLD, 8, true);
+      this.renderer.drawGlowRect(halfW - 19, -p.height / 2 - 9, 4, 4, PALETTE.GOLD, 8, true);
     }
     ctx.restore();
 

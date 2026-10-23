@@ -70,7 +70,7 @@ export class ElevatorAction {
     this.audio = audio;
 
     this.id = 'elevatoraction';
-    this.title = 'Tower Agent';
+    this.title = 'Elevator Action';
     this.state = 'PLAYING';
 
     this.width = 960;

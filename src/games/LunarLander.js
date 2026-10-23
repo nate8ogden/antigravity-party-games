@@ -19,7 +19,7 @@ export class LunarLander {
     this.audio = audio;
 
     this.id = 'lunarlander';
-    this.title = 'Apollo Lander';
+    this.title = 'Lunar Lander';
     this.state = 'PLAYING';
 
     this.width = 960;

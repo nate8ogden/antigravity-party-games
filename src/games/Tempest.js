@@ -21,7 +21,7 @@ export class Tempest {
     this.audio = audio;
 
     this.id = 'tempest';
-    this.title = 'Vortex Tube';
+    this.title = 'Tempest';
     this.state = 'PLAYING';
 
     this.width = 960;

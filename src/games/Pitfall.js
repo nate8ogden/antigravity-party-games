@@ -32,6 +32,36 @@ const HARRY_RUN_2 = [
   '........'
 ];
 
+const PITFALL_SCORPION_1 = [
+  '..WWW.......',
+  '.WW..W......',
+  '.WW.........',
+  '..WWWWWWWWRR',
+  '.WWWWWWWWWWR',
+  '..W.W.W.W...',
+  '.W..W.W..W..'
+];
+
+const PITFALL_SCORPION_2 = [
+  '...WWW......',
+  '..WW..W.....',
+  '.WW.........',
+  '..WWWWWWWWRR',
+  '.WWWWWWWWWWR',
+  '..W.W.W.W...',
+  '..W..W..W...'
+];
+
+const PITFALL_COBRA_SPRITE = [
+  '...KKKKR..',
+  '..KKYKK...',
+  '..KKKK....',
+  '...KK.....',
+  '..KKKK....',
+  '.KKKKKK...',
+  'KKKKKKKK..'
+];
+
 export class Pitfall {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -39,7 +69,7 @@ export class Pitfall {
     this.audio = audio;
 
     this.id = 'pitfall';
-    this.title = 'Jungle Strider';
+    this.title = 'Pitfall!';
     this.state = 'PLAYING';
 
     this.score = 2000;
@@ -636,40 +666,90 @@ export class Pitfall {
   }
 
   render(ctx = this.renderer.ctx) {
-    // Jungle Canopy Background
-    ctx.fillStyle = '#06281E';
+    // Iconic Activision 1982 Jungle Canopy Background
+    ctx.fillStyle = '#0B3824';
     ctx.fillRect(0, 38, this.renderer.width, this.upperGroundY - 38);
 
-    // Jungle Tree Trunks & Canopy Leaves
-    const trunkPositions = [80, 270, 690, 880];
-    ctx.fillStyle = '#3F2305';
+    // 4 Tall Brown Tree Trunks rising from the ground to the top foliage canopy
+    const trunkPositions = [95, 290, 670, 865];
     for (const tx of trunkPositions) {
-      ctx.fillRect(tx - 18, 70, 36, this.upperGroundY - 70);
-      ctx.fillStyle = '#2B1702';
-      ctx.fillRect(tx - 6, 70, 12, this.upperGroundY - 70);
-      ctx.fillStyle = '#3F2305';
+      // Main trunk column
+      ctx.fillStyle = '#4A2506';
+      ctx.fillRect(tx - 20, 74, 40, this.upperGroundY - 74);
+      // Flared root base on jungle floor
+      ctx.fillRect(tx - 28, this.upperGroundY - 12, 56, 12);
+      ctx.fillRect(tx - 24, this.upperGroundY - 22, 48, 10);
+      // Spreading upper branches into the canopy
+      ctx.fillRect(tx - 34, 74, 68, 14);
+      ctx.fillRect(tx - 26, 88, 52, 10);
+      // Vertical bark shadow grooves
+      ctx.fillStyle = '#2E1502';
+      ctx.fillRect(tx - 8, 84, 6, this.upperGroundY - 84);
+      ctx.fillRect(tx + 4, 84, 5, this.upperGroundY - 84);
     }
 
-    // Upper Lush Leaf Canopy Archway
-    ctx.fillStyle = '#047857';
+    // Lush Pixelated Green Foliage Canopy across the top of the screen
+    ctx.fillStyle = '#15803D';
     ctx.fillRect(0, 38, this.renderer.width, 46);
-    for (let x = 0; x < 960; x += 60) {
-      ctx.beginPath();
-      ctx.arc(x + 30, 84, 34, 0, Math.PI);
-      ctx.fill();
+    ctx.fillStyle = '#166534';
+    ctx.fillRect(0, 38, this.renderer.width, 18);
+
+    // Stepped pixelated leaf arches hanging between the tree trunks
+    for (let x = 0; x < 960; x += 64) {
+      ctx.fillStyle = '#15803D';
+      ctx.fillRect(x + 4, 84, 56, 10);
+      ctx.fillRect(x + 12, 94, 40, 8);
+      ctx.fillRect(x + 22, 102, 20, 6);
+      // Bright pixel leaf highlights
+      ctx.fillStyle = '#22C55E';
+      ctx.fillRect(x + 10, 56, 18, 6);
+      ctx.fillRect(x + 34, 66, 16, 6);
+      ctx.fillRect(x + 18, 80, 24, 6);
     }
 
-    // Upper Jungle Floor
+    // Upper Jungle Floor (Atari Gold/Tan Dirt Path + Green Grass Rim)
     ctx.fillStyle = '#CA8A04';
     ctx.fillRect(0, this.upperGroundY, this.renderer.width, 28);
+    ctx.fillStyle = '#A16207';
+    ctx.fillRect(0, this.upperGroundY + 20, this.renderer.width, 8);
     ctx.fillStyle = '#15803D';
     ctx.fillRect(0, this.upperGroundY, this.renderer.width, 6);
 
-    // Underground Scorpion Tunnel Background
+    // Underground Passage Background & Iconic Red Brick Wall with Mortar Lines
+    const tunnelTop = this.upperGroundY + 28;
+    const tunnelH = this.lowerGroundY - tunnelTop;
     ctx.fillStyle = '#090D16';
-    ctx.fillRect(0, this.upperGroundY + 28, this.renderer.width, this.lowerGroundY - (this.upperGroundY + 28));
+    ctx.fillRect(0, tunnelTop, this.renderer.width, tunnelH);
+
+    // Classic Activision Red Brick Wall panels & background brickwork in the underground tunnel
+    const drawBrickPanel = (bx, bw, alpha = 1) => {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#991B1B';
+      ctx.fillRect(bx, tunnelTop, bw, tunnelH);
+      ctx.fillStyle = '#CBD5E1';
+      const brickH = 12;
+      const brickW = 24;
+      for (let by = tunnelTop; by < this.lowerGroundY; by += brickH) {
+        ctx.fillRect(bx, by, bw, 2);
+        const rowIdx = Math.floor((by - tunnelTop) / brickH);
+        const offset = (rowIdx % 2) * (brickW / 2);
+        for (let mx = bx + offset; mx < bx + bw; mx += brickW) {
+          ctx.fillRect(mx, by, 2, brickH);
+        }
+      }
+      ctx.restore();
+    };
+    // Subtle full-tunnel brick backdrop + solid iconic red brick wall columns on left/right
+    drawBrickPanel(0, this.renderer.width, 0.22);
+    drawBrickPanel(18, 48, 0.92);
+    drawBrickPanel(894, 48, 0.92);
+
+    // Underground Tunnel Floor
     ctx.fillStyle = '#7F1D1D';
     ctx.fillRect(0, this.lowerGroundY, this.renderer.width, 540 - this.lowerGroundY);
+    ctx.fillStyle = '#B91C1C';
+    ctx.fillRect(0, this.lowerGroundY, this.renderer.width, 5);
 
     // Draw Pit (Tar Pit / Quicksand / Crocodile Pond)
     if (this.pit.halfW > 4) {
@@ -696,32 +776,55 @@ export class Pitfall {
       );
     }
 
-    // Draw Crocodiles in Pond
+    // Draw Pixel-Art Crocodile Heads in Pond
     for (const croc of this.crocodiles) {
       ctx.save();
       ctx.translate(croc.x, croc.y);
+      // Lower pixel jaw & throat submerged at water line
+      ctx.fillStyle = '#15803D';
+      ctx.fillRect(-22, -5, 44, 7);
       ctx.fillStyle = PALETTE.GREEN;
-      // Lower jaw / head base
-      ctx.fillRect(-22, -6, 44, 8);
+      ctx.fillRect(-20, -6, 40, 4);
+
       if (croc.mouthOpen) {
-        // Upper jaw raised at menacing angle with white teeth!
+        // Hinged upper pixel-art jaw raised wide open with white interlocking teeth!
         ctx.save();
-        ctx.rotate(-0.48);
+        ctx.translate(10, -6);
+        ctx.rotate(-0.46);
         ctx.fillStyle = PALETTE.GREEN;
-        ctx.fillRect(-20, -12, 40, 7);
+        ctx.fillRect(-32, -8, 40, 7);
+        ctx.fillStyle = '#166534';
+        ctx.fillRect(-30, -11, 10, 4); // Nostrils & brow bump
+        ctx.fillRect(-10, -12, 12, 5);
+        // Upper white pixel teeth
         ctx.fillStyle = PALETTE.WHITE;
-        for (let t = -14; t <= 14; t += 7) {
-          ctx.fillRect(t, -5, 3, 4);
+        for (let t = -28; t <= 2; t += 7) {
+          ctx.fillRect(t, -1, 3, 4);
         }
         ctx.restore();
-        // Red warning eye
-        this.renderer.drawGlowCircle(-12, -10, 3, PALETTE.RED, 6);
+        // Lower white pixel teeth
+        ctx.fillStyle = PALETTE.WHITE;
+        for (let t = -18; t <= 6; t += 7) {
+          ctx.fillRect(t, -9, 3, 3);
+        }
+        // Glowing red eye
+        this.renderer.drawGlowCircle(6, -12, 3, PALETTE.RED, 6);
       } else {
-        // Closed flat head (safe to step on!)
+        // Closed flat pixel-art crocodile head (safe to step on!)
         ctx.fillStyle = '#22C55E';
         ctx.fillRect(-22, -11, 44, 6);
+        // Nostrils & ridged brow
+        ctx.fillStyle = '#15803D';
+        ctx.fillRect(-20, -14, 6, 3);
+        ctx.fillRect(4, -15, 12, 4);
+        // Eye
         ctx.fillStyle = PALETTE.GOLD;
-        ctx.fillRect(-14, -14, 5, 4);
+        ctx.fillRect(8, -14, 5, 3);
+        // Closed tooth seam
+        ctx.fillStyle = PALETTE.WHITE;
+        for (let t = -16; t <= 8; t += 8) {
+          ctx.fillRect(t, -6, 3, 2);
+        }
       }
       ctx.restore();
     }
@@ -776,41 +879,63 @@ export class Pitfall {
       ctx.restore();
     }
 
-    // Draw Underground Scorpion
+    // Draw Underground Scorpion (Detailed Pixel-Art Sprite)
     if (this.scorpion) {
       const s = this.scorpion;
-      ctx.save();
-      ctx.translate(s.x, s.y - 10);
-      ctx.scale(s.dir, 1);
-      this.renderer.drawGlowRect(-12, -4, 22, 10, PALETTE.WHITE, 8);
-      // Raised stinger tail
-      ctx.strokeStyle = PALETTE.PINK;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(-10, -4);
-      ctx.lineTo(-16, -14);
-      ctx.lineTo(-8, -18);
-      ctx.stroke();
-      // Pincers
-      ctx.fillStyle = PALETTE.RED;
-      ctx.fillRect(10, -6, 6, 5);
-      ctx.restore();
+      const sprite = Math.floor(s.anim) % 2 === 0 ? PITFALL_SCORPION_1 : PITFALL_SCORPION_2;
+      const palette = {
+        W: PALETTE.WHITE,
+        R: PALETTE.RED
+      };
+      const scale = 2.6;
+      this.renderer.drawPixelSprite(
+        sprite,
+        s.x - (12 * scale) / 2,
+        s.y - 7 * scale,
+        scale,
+        palette,
+        s.dir < 0,
+        false
+      );
     }
 
-    // Draw Cobra Hazard if present on screen
+    // Draw Cobra & Campfire Hazard if present on screen
     if (this.cobra) {
       const cx = this.cobra.x;
       const cy = this.cobra.y;
-      const sway = Math.sin(this.cobra.phase) * 3;
+      const flicker = Math.floor(this.cobra.phase * 2) % 2 === 0;
+
+      // Pixel-Art Cobra Sprite
+      const cobraPalette = {
+        K: '#E2E8F0',
+        Y: PALETTE.GOLD,
+        R: PALETTE.RED
+      };
+      this.renderer.drawPixelSprite(
+        PITFALL_COBRA_SPRITE,
+        cx - 14,
+        cy - 21,
+        3,
+        cobraPalette,
+        flicker,
+        false
+      );
+
+      // Flickering Pixel-Art Campfire beside the Cobra
+      const fx = cx + 22;
       ctx.save();
-      this.renderer.drawGlowRect(cx - 10, cy - 8, 20, 8, PALETTE.GOLD, 6);
-      ctx.strokeStyle = PALETTE.RED;
-      ctx.lineWidth = 3.5;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy - 8);
-      ctx.lineTo(cx + sway, cy - 22);
-      ctx.lineTo(cx - 5 + sway, cy - 26);
-      ctx.stroke();
+      // Crossed firewood logs
+      ctx.fillStyle = '#78350F';
+      ctx.fillRect(fx - 10, cy - 5, 20, 5);
+      ctx.fillStyle = '#92400E';
+      ctx.fillRect(fx - 7, cy - 8, 14, 4);
+      // Multi-layered flickering pixel flames
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(fx - 8, cy - 16, 16, 8);
+      ctx.fillStyle = PALETTE.ORANGE;
+      ctx.fillRect(fx - 6, cy - (flicker ? 22 : 19), 12, 10);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(fx - 3, cy - (flicker ? 25 : 21), 6, 9);
       ctx.restore();
     }
 

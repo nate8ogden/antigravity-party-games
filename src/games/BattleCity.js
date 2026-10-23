@@ -42,7 +42,7 @@ export class BattleCity {
     this.audio = audio;
 
     this.id = 'battlecity';
-    this.title = 'Tank Battalion';
+    this.title = 'Battle City';
 
     this.state = 'PLAYING';
     this.score = 0;
