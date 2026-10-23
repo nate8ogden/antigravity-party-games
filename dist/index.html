@@ -578,7 +578,7 @@
     </div>
 
     <div class="studio-controls">
-      <a href="./index.html" class="deck-btn" id="btn-party-suite" style="text-decoration:none;border-color:var(--arcade-gold);color:var(--arcade-gold);" title="Switch to Antigravity 1-4P Party Games">🎮 1-4P PARTY</a>
+      <a href="../" class="deck-btn" id="btn-party-suite" style="text-decoration:none;border-color:var(--arcade-gold);color:var(--arcade-gold);" title="Switch to Antigravity 1-4P Party Games">🎮 1-4P PARTY</a>
       <button type="button" class="deck-btn lobby-btn" id="btn-studio-lobby" title="Return to Arcade Selection Lobby [ESC]">★ LOBBY</button>
       <button type="button" class="deck-btn emu-btn" id="btn-stage-prev" title="Previous OG Level / Stage [BracketLeft '[']">⏮ LVL -</button>
       <button type="button" class="deck-btn emu-btn" id="btn-stage-next" title="Next OG Level / Stage [BracketRight ']']">LVL + ⏭</button>
@@ -61868,6 +61868,15 @@ class RetroArcadeStudio {
     }
 
     // Header control buttons
+    const partyBtn = document.getElementById('btn-party-suite');
+    if (partyBtn) {
+      if (window.location.protocol === 'file:') {
+        partyBtn.href = '../Antigravity_Games.html';
+      } else {
+        partyBtn.href = '../';
+      }
+    }
+
     const btnLobby = document.getElementById('btn-studio-lobby');
     if (btnLobby) {
       btnLobby.addEventListener('click', () => {

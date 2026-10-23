@@ -1,4 +1,4 @@
-name: Deploy Retro Arcade Studio to GitHub Pages
+name: Test & Build Retro Arcade Studio
 
 on:
   push:
@@ -7,18 +7,9 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages-classic"
-  cancel-in-progress: false
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  test-and-build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,17 +20,8 @@ jobs:
         with:
           node-version: 20
 
+      - name: Run 50-Game Verification Suite
+        run: npm test
+
       - name: Build ROMs & Standalone Bundle
         run: npm run build:rom
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: './dist'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4

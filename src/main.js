@@ -465,6 +465,15 @@ export class RetroArcadeStudio {
     }
 
     // Header control buttons
+    const partyBtn = document.getElementById('btn-party-suite');
+    if (partyBtn) {
+      if (window.location.protocol === 'file:') {
+        partyBtn.href = '../Antigravity_Games.html';
+      } else {
+        partyBtn.href = '../';
+      }
+    }
+
     const btnLobby = document.getElementById('btn-studio-lobby');
     if (btnLobby) {
       btnLobby.addEventListener('click', () => {
