@@ -1041,8 +1041,8 @@ class CloudPersistenceManager {
       return;
     }
     const timer = this.writeDebounceTimers.get(rec.gameId);
-    if (timer) window.clearTimeout(timer);
-    const newTimer = window.setTimeout(() => {
+    if (timer) clearTimeout(timer);
+    const newTimer = setTimeout(() => {
       this.writeDebounceTimers.delete(rec.gameId);
       this.pushRecordToFirebase(rec);
     }, 350);
@@ -1178,7 +1178,7 @@ class CloudPersistenceManager {
       });
 
       if (!res.ok && retryCount < 1 && typeof window !== 'undefined') {
-        window.setTimeout(() => this.pushRecordToFirebase(rec, retryCount + 1), 200);
+        setTimeout(() => this.pushRecordToFirebase(rec, retryCount + 1), 200);
         return;
       }
 
@@ -1209,7 +1209,7 @@ const CloudPersistence = {
     return cloudPersistence.recordPlay(gameId);
   },
   submitHighScore(gameId, score, initials = 'ACE') {
-    return cloudPersistence.submitHighScore(gameId, score, initials);
+    return cloudPersistence.recordScore(gameId, score, initials);
   }
 };
 
@@ -2501,21 +2501,55 @@ class InputManager {
     this.syncVirtualState();
   }
 
-  setAttractInput(up, down, left, right, actionA, actionB) {
-    this.attractState.active = true;
-    if (actionA && !this.attractState.actionA) this.latchedPress.actionA = true;
-    if (actionB && !this.attractState.actionB) this.latchedPress.actionB = true;
-    if (up && !this.attractState.up) this.latchedPress.up = true;
-    if (down && !this.attractState.down) this.latchedPress.down = true;
-    if (left && !this.attractState.left) this.latchedPress.left = true;
-    if (right && !this.attractState.right) this.latchedPress.right = true;
+  toggleTurbo(forceState) {
+    this.turboEnabled = typeof forceState === 'boolean' ? forceState : !this.turboEnabled;
+    this._turboTick = 0;
+    return this.turboEnabled;
+  }
 
-    this.attractState.up = !!up;
-    this.attractState.down = !!down;
-    this.attractState.left = !!left;
-    this.attractState.right = !!right;
-    this.attractState.actionA = !!actionA;
-    this.attractState.actionB = !!actionB;
+  updateTurbo(dt = 0.016) {
+    if (!this.turboEnabled) return;
+    this._turboAccum = (this._turboAccum || 0) + dt;
+    if (this._turboAccum >= 1 / 15) {
+      this._turboAccum = 0;
+      if (this.keyState.actionA || this.touchState.actionA || this.gamepadState.actionA) {
+        this.latchedPress.actionA = true;
+      }
+      if (this.keyState.actionB || this.touchState.actionB || this.gamepadState.actionB) {
+        this.latchedPress.actionB = true;
+      }
+    }
+  }
+
+  setAttractInput(upOrObj, down, left, right, actionA, actionB) {
+    let u = upOrObj;
+    let d = down;
+    let l = left;
+    let r = right;
+    let a = actionA;
+    let b = actionB;
+    if (upOrObj && typeof upOrObj === 'object') {
+      u = upOrObj.up;
+      d = upOrObj.down;
+      l = upOrObj.left;
+      r = upOrObj.right;
+      a = upOrObj.actionA;
+      b = upOrObj.actionB;
+    }
+    this.attractState.active = true;
+    if (a && !this.attractState.actionA) this.latchedPress.actionA = true;
+    if (b && !this.attractState.actionB) this.latchedPress.actionB = true;
+    if (u && !this.attractState.up) this.latchedPress.up = true;
+    if (d && !this.attractState.down) this.latchedPress.down = true;
+    if (l && !this.attractState.left) this.latchedPress.left = true;
+    if (r && !this.attractState.right) this.latchedPress.right = true;
+
+    this.attractState.up = !!u;
+    this.attractState.down = !!d;
+    this.attractState.left = !!l;
+    this.attractState.right = !!r;
+    this.attractState.actionA = !!a;
+    this.attractState.actionB = !!b;
     this.syncVirtualState();
   }
 
@@ -5969,6 +6003,8 @@ class Renderer {
   resizeViewport() {
     if (!this.displayCanvas || !this.viewportContainer) return;
     const rect = this.viewportContainer.getBoundingClientRect();
+    this._lastVpW = rect.width || window.innerWidth || 960;
+    this._lastVpH = rect.height || window.innerHeight || 540;
     const touchEl =
       typeof document !== 'undefined' ? document.getElementById('arcade-touch-overlay') : null;
     const touchVisible = !!(touchEl && touchEl.classList.contains('visible'));
@@ -5994,8 +6030,10 @@ class Renderer {
     const padLeft = style ? parseFloat(style.paddingLeft) || 0 : 6;
     const padRight = style ? parseFloat(style.paddingRight) || 0 : 6;
 
-    const availW = Math.max(200, rect.width - padLeft - padRight - reservedSides - 6);
-    const availH = Math.max(120, rect.height - padTop - padBot - 6);
+    const rawW = rect.width > 40 ? rect.width : winW;
+    const rawH = rect.height > 40 ? rect.height : Math.max(240, winH - 90);
+    const availW = Math.max(200, rawW - padLeft - padRight - reservedSides - 6);
+    const availH = Math.max(120, rawH - padTop - padBot - 6);
     const targetAspect = 16 / 9;
 
     let drawW = availW;
@@ -6019,6 +6057,13 @@ class Renderer {
   }
 
   beginFrame(dt = 0.016) {
+    if (this.viewportContainer) {
+      const cw = this.viewportContainer.clientWidth || 0;
+      const ch = this.viewportContainer.clientHeight || 0;
+      if (cw > 40 && ch > 40 && (Math.abs(cw - (this._lastVpW || 0)) > 4 || Math.abs(ch - (this._lastVpH || 0)) > 4)) {
+        this.resizeViewport();
+      }
+    }
     const ctx = this.ctx;
     ctx.save();
     ctx.fillStyle = PALETTE.BG;

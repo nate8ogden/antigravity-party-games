@@ -228,6 +228,8 @@ export class Renderer {
   resizeViewport() {
     if (!this.displayCanvas || !this.viewportContainer) return;
     const rect = this.viewportContainer.getBoundingClientRect();
+    this._lastVpW = rect.width || window.innerWidth || 960;
+    this._lastVpH = rect.height || window.innerHeight || 540;
     const touchEl =
       typeof document !== 'undefined' ? document.getElementById('arcade-touch-overlay') : null;
     const touchVisible = !!(touchEl && touchEl.classList.contains('visible'));
@@ -253,8 +255,10 @@ export class Renderer {
     const padLeft = style ? parseFloat(style.paddingLeft) || 0 : 6;
     const padRight = style ? parseFloat(style.paddingRight) || 0 : 6;
 
-    const availW = Math.max(200, rect.width - padLeft - padRight - reservedSides - 6);
-    const availH = Math.max(120, rect.height - padTop - padBot - 6);
+    const rawW = rect.width > 40 ? rect.width : winW;
+    const rawH = rect.height > 40 ? rect.height : Math.max(240, winH - 90);
+    const availW = Math.max(200, rawW - padLeft - padRight - reservedSides - 6);
+    const availH = Math.max(120, rawH - padTop - padBot - 6);
     const targetAspect = 16 / 9;
 
     let drawW = availW;
@@ -278,6 +282,13 @@ export class Renderer {
   }
 
   beginFrame(dt = 0.016) {
+    if (this.viewportContainer) {
+      const cw = this.viewportContainer.clientWidth || 0;
+      const ch = this.viewportContainer.clientHeight || 0;
+      if (cw > 40 && ch > 40 && (Math.abs(cw - (this._lastVpW || 0)) > 4 || Math.abs(ch - (this._lastVpH || 0)) > 4)) {
+        this.resizeViewport();
+      }
+    }
     const ctx = this.ctx;
     ctx.save();
     ctx.fillStyle = PALETTE.BG;

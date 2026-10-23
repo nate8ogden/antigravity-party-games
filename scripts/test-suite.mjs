@@ -462,6 +462,35 @@ try {
   failures++;
 }
 
+// Check 7: Full RetroArcadeStudio Orchestrator Frame-Loop Verification
+try {
+  let rafCallback = null;
+  globalThis.requestAnimationFrame = (cb) => {
+    rafCallback = cb;
+    return 1;
+  };
+  const { RetroArcadeStudio } = await import('../src/main.js');
+  const studio = new RetroArcadeStudio();
+  if (!rafCallback) {
+    throw new Error('RetroArcadeStudio did not register a requestAnimationFrame loop');
+  }
+  for (let frame = 1; frame <= 10; frame++) {
+    rafCallback(frame * 16.67);
+  }
+  studio.launchGame('loderunner');
+  for (let frame = 11; frame <= 20; frame++) {
+    rafCallback(frame * 16.67);
+  }
+  studio.returnToLobby();
+  for (let frame = 21; frame <= 25; frame++) {
+    rafCallback(frame * 16.67);
+  }
+  console.log('✅ Verified RetroArcadeStudio live requestAnimationFrame render loop (Lobby -> Game -> Lobby).');
+} catch (err) {
+  console.error('❌ RetroArcadeStudio live frame-loop check failed:', err);
+  failures++;
+}
+
 console.log('===================================================================');
 
 if (failures > 0) {

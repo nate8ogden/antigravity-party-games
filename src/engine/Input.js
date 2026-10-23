@@ -404,21 +404,55 @@ export class InputManager {
     this.syncVirtualState();
   }
 
-  setAttractInput(up, down, left, right, actionA, actionB) {
-    this.attractState.active = true;
-    if (actionA && !this.attractState.actionA) this.latchedPress.actionA = true;
-    if (actionB && !this.attractState.actionB) this.latchedPress.actionB = true;
-    if (up && !this.attractState.up) this.latchedPress.up = true;
-    if (down && !this.attractState.down) this.latchedPress.down = true;
-    if (left && !this.attractState.left) this.latchedPress.left = true;
-    if (right && !this.attractState.right) this.latchedPress.right = true;
+  toggleTurbo(forceState) {
+    this.turboEnabled = typeof forceState === 'boolean' ? forceState : !this.turboEnabled;
+    this._turboTick = 0;
+    return this.turboEnabled;
+  }
 
-    this.attractState.up = !!up;
-    this.attractState.down = !!down;
-    this.attractState.left = !!left;
-    this.attractState.right = !!right;
-    this.attractState.actionA = !!actionA;
-    this.attractState.actionB = !!actionB;
+  updateTurbo(dt = 0.016) {
+    if (!this.turboEnabled) return;
+    this._turboAccum = (this._turboAccum || 0) + dt;
+    if (this._turboAccum >= 1 / 15) {
+      this._turboAccum = 0;
+      if (this.keyState.actionA || this.touchState.actionA || this.gamepadState.actionA) {
+        this.latchedPress.actionA = true;
+      }
+      if (this.keyState.actionB || this.touchState.actionB || this.gamepadState.actionB) {
+        this.latchedPress.actionB = true;
+      }
+    }
+  }
+
+  setAttractInput(upOrObj, down, left, right, actionA, actionB) {
+    let u = upOrObj;
+    let d = down;
+    let l = left;
+    let r = right;
+    let a = actionA;
+    let b = actionB;
+    if (upOrObj && typeof upOrObj === 'object') {
+      u = upOrObj.up;
+      d = upOrObj.down;
+      l = upOrObj.left;
+      r = upOrObj.right;
+      a = upOrObj.actionA;
+      b = upOrObj.actionB;
+    }
+    this.attractState.active = true;
+    if (a && !this.attractState.actionA) this.latchedPress.actionA = true;
+    if (b && !this.attractState.actionB) this.latchedPress.actionB = true;
+    if (u && !this.attractState.up) this.latchedPress.up = true;
+    if (d && !this.attractState.down) this.latchedPress.down = true;
+    if (l && !this.attractState.left) this.latchedPress.left = true;
+    if (r && !this.attractState.right) this.latchedPress.right = true;
+
+    this.attractState.up = !!u;
+    this.attractState.down = !!d;
+    this.attractState.left = !!l;
+    this.attractState.right = !!r;
+    this.attractState.actionA = !!a;
+    this.attractState.actionB = !!b;
     this.syncVirtualState();
   }
 

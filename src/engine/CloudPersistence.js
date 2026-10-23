@@ -244,8 +244,8 @@ export class CloudPersistenceManager {
       return;
     }
     const timer = this.writeDebounceTimers.get(rec.gameId);
-    if (timer) window.clearTimeout(timer);
-    const newTimer = window.setTimeout(() => {
+    if (timer) clearTimeout(timer);
+    const newTimer = setTimeout(() => {
       this.writeDebounceTimers.delete(rec.gameId);
       this.pushRecordToFirebase(rec);
     }, 350);
@@ -381,7 +381,7 @@ export class CloudPersistenceManager {
       });
 
       if (!res.ok && retryCount < 1 && typeof window !== 'undefined') {
-        window.setTimeout(() => this.pushRecordToFirebase(rec, retryCount + 1), 200);
+        setTimeout(() => this.pushRecordToFirebase(rec, retryCount + 1), 200);
         return;
       }
 
@@ -414,7 +414,7 @@ export const CloudPersistence = {
     return cloudPersistence.recordPlay(gameId);
   },
   submitHighScore(gameId, score, initials = 'ACE') {
-    return cloudPersistence.submitHighScore(gameId, score, initials);
+    return cloudPersistence.recordScore(gameId, score, initials);
   }
 };
 
