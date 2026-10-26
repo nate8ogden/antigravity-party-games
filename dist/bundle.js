@@ -25312,16 +25312,40 @@ class Paperboy {
       }
       if (hitSomething) continue;
 
-      // Check impact when paper descends to target height (z <= 12) or hits house facade
-      if (p.z <= 12 || p.x < 260) {
+      // Check impact when paper descends to target height (z <= 14) or reaches house yard/facade (x < 310)
+      if (p.z <= 14 || p.x < 310) {
         let resolved = false;
         for (const h of this.houses) {
           const hx = this._projectX(40, h.y);
           const mbX = hx + h.mailboxOffset.rx;
           const mbY = h.y + h.mailboxOffset.ry;
 
-          // 1. Direct Mailbox Hit!
-          if (!h.mailboxHit && Math.hypot(p.x - mbX, p.y - mbY) < 30) {
+          // 1. Window Smash Check! (Evaluated first so elevated papers shatter windows instead of being swallowed by porch)
+          for (const win of h.windows) {
+            const wx = hx + win.rx + win.w / 2;
+            const wy = h.y + win.ry + win.h / 2;
+            const paperScreenY = p.y - p.z;
+            const dy = Math.min(Math.abs(paperScreenY - wy), Math.abs(p.y - wy));
+            if (!win.broken && Math.abs(p.x - wx) < win.w * 1.15 && dy < win.h * 1.35) {
+              win.broken = true;
+              resolved = true;
+              this.audio.playExplosion(0.22, 2200);
+              this._spawnSparks(wx, wy, PALETTE.WHITE, 16);
+              this._spawnSparks(wx, wy, PALETTE.CYAN, 8);
+              if (h.isSubscriber) {
+                h.isSubscriber = false;
+                h.accent = PALETTE.RED;
+                this._addScore(-100, wx, wy - 10, 'SUBSCRIBER LOST!', PALETTE.RED);
+              } else {
+                this._addScore(150, wx, wy - 10, 'WINDOW SMASH +150!', PALETTE.PINK);
+              }
+              break;
+            }
+          }
+          if (resolved) break;
+
+          // 2. Direct Mailbox Hit! (Mailbox is along the sidewalk curb)
+          if (!h.mailboxHit && p.z <= 22 && Math.hypot(p.x - mbX, p.y - mbY) < 32) {
             h.mailboxHit = true;
             resolved = true;
             if (h.isSubscriber) {
@@ -25336,32 +25360,12 @@ class Paperboy {
             break;
           }
 
-          // 2. Window Smash Check!
-          for (const win of h.windows) {
-            const wx = hx + win.rx + win.w / 2;
-            const wy = h.y + win.ry + win.h / 2;
-            if (!win.broken && Math.abs(p.x - wx) < win.w * 0.7 && Math.abs(p.y - wy) < win.h * 0.85) {
-              win.broken = true;
-              resolved = true;
-              this.audio.playExplosion(0.22, 2200);
-              this._spawnSparks(wx, wy, PALETTE.WHITE, 14);
-              if (h.isSubscriber) {
-                h.isSubscriber = false;
-                h.accent = PALETTE.RED;
-                this._addScore(-100, wx, wy - 10, 'SUBSCRIBER LOST!', PALETTE.RED);
-              } else {
-                this._addScore(150, wx, wy - 10, 'WINDOW SMASH +150!', PALETTE.PINK);
-              }
-              break;
-            }
-          }
-          if (resolved) break;
-
-          // 3. Porch / Doormat Delivery Check (Subscriber lawn/porch area)
+          // 3. Porch / Doormat Delivery Check (Only when paper drops to ground height z <= 18)
           const porchX = hx + 245;
           const porchY = h.y + 8;
           if (
             !h.porchdelivered &&
+            p.z <= 18 &&
             Math.abs(p.x - porchX) < 58 &&
             Math.abs(p.y - porchY) < 46
           ) {
