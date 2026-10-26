@@ -40186,11 +40186,13 @@ const STAGE_BIOMES = [
       { x: 0, y: 340, w: 520, depth: 165, type: 'JUNGLE' },
       { x: 240, y: 245, w: 220, depth: 46, type: 'LEDGE' },
       { x: 530, y: 340, w: 260, depth: 24, type: 'BRIDGE', exploded: false, explodeProgress: 0 },
+      { x: 590, y: 430, w: 140, depth: 45, type: 'JUNGLE' },
       { x: 800, y: 390, w: 380, depth: 120, type: 'JUNGLE' },
       { x: 910, y: 280, w: 280, depth: 48, type: 'LEDGE' },
       { x: 1110, y: 190, w: 250, depth: 44, type: 'LEDGE' },
       { x: 1230, y: 350, w: 340, depth: 150, type: 'JUNGLE' },
       { x: 1580, y: 350, w: 260, depth: 24, type: 'BRIDGE', exploded: false, explodeProgress: 0 },
+      { x: 1640, y: 435, w: 140, depth: 45, type: 'JUNGLE' },
       { x: 1850, y: 410, w: 400, depth: 110, type: 'JUNGLE' },
       { x: 1950, y: 300, w: 260, depth: 46, type: 'LEDGE' },
       { x: 2140, y: 205, w: 260, depth: 44, type: 'LEDGE' },
@@ -40225,11 +40227,13 @@ const STAGE_BIOMES = [
       { x: 0, y: 360, w: 480, depth: 145, type: 'JUNGLE' },
       { x: 180, y: 250, w: 260, depth: 36, type: 'LEDGE' },
       { x: 490, y: 360, w: 240, depth: 24, type: 'BRIDGE', exploded: false, explodeProgress: 0 },
+      { x: 540, y: 440, w: 140, depth: 40, type: 'JUNGLE' },
       { x: 740, y: 310, w: 420, depth: 185, type: 'JUNGLE' },
       { x: 860, y: 200, w: 300, depth: 36, type: 'LEDGE' },
       { x: 1180, y: 380, w: 420, depth: 125, type: 'JUNGLE' },
       { x: 1300, y: 265, w: 280, depth: 36, type: 'LEDGE' },
       { x: 1610, y: 340, w: 250, depth: 24, type: 'BRIDGE', exploded: false, explodeProgress: 0 },
+      { x: 1660, y: 440, w: 140, depth: 40, type: 'JUNGLE' },
       { x: 1870, y: 340, w: 380, depth: 165, type: 'JUNGLE' },
       { x: 2020, y: 220, w: 280, depth: 36, type: 'LEDGE' },
       { x: 2270, y: 350, w: 360, depth: 155, type: 'JUNGLE' },
@@ -40269,6 +40273,7 @@ const STAGE_BIOMES = [
       { x: 1120, y: 270, w: 260, depth: 44, type: 'LEDGE' },
       { x: 1320, y: 175, w: 250, depth: 42, type: 'LEDGE' },
       { x: 1520, y: 350, w: 260, depth: 24, type: 'BRIDGE', exploded: false, explodeProgress: 0 },
+      { x: 1580, y: 435, w: 140, depth: 40, type: 'JUNGLE' },
       { x: 1800, y: 370, w: 360, depth: 135, type: 'JUNGLE' },
       { x: 1960, y: 260, w: 260, depth: 44, type: 'LEDGE' },
       { x: 2150, y: 170, w: 240, depth: 42, type: 'LEDGE' },
@@ -40303,6 +40308,7 @@ const STAGE_BIOMES = [
       { x: 0, y: 345, w: 540, depth: 160, type: 'JUNGLE' },
       { x: 260, y: 240, w: 250, depth: 44, type: 'LEDGE' },
       { x: 550, y: 345, w: 250, depth: 24, type: 'BRIDGE', exploded: false, explodeProgress: 0 },
+      { x: 600, y: 435, w: 140, depth: 40, type: 'JUNGLE' },
       { x: 810, y: 380, w: 420, depth: 125, type: 'JUNGLE' },
       { x: 940, y: 265, w: 280, depth: 44, type: 'LEDGE' },
       { x: 1250, y: 340, w: 380, depth: 165, type: 'JUNGLE' },
@@ -40404,7 +40410,24 @@ class Contra {
     this.capsuleTimer = 0;
     this.stageClearTimer = 0;
 
+    this._setupTouchLabels();
     this.reset();
+  }
+
+  _setupTouchLabels() {
+    if (typeof document === 'undefined') return;
+    const subA = document.querySelector('#touch-btn-a .btn-sub-label');
+    const subB = document.querySelector('#touch-btn-b .btn-sub-label');
+    if (subA) subA.textContent = 'FIRE (Z)';
+    if (subB) subB.textContent = 'JUMP (X)';
+  }
+
+  _restoreTouchLabels() {
+    if (typeof document === 'undefined') return;
+    const subA = document.querySelector('#touch-btn-a .btn-sub-label');
+    const subB = document.querySelector('#touch-btn-b .btn-sub-label');
+    if (subA) subA.textContent = 'ACT / DIG-L / JUMP';
+    if (subB) subB.textContent = 'ALT / DIG-R / SLAP';
   }
 
   reset() {
@@ -40424,6 +40447,7 @@ class Contra {
   }
 
   destroy() {
+    this._restoreTouchLabels();
     if (this.audio) {
       this.audio.stopSequence();
     }
@@ -40739,8 +40763,12 @@ class Contra {
     p.aimX = ax / len;
     p.aimY = ay / len;
 
-    // Action B: Jump or Drop Down Through Platform (Down + Action B)
-    if (this.input.isJustPressed('actionB')) {
+    // Action B (or KeyC): Jump or Drop Down Through Platform (Down + Action B)
+    const jumpPressed =
+      this.input.isJustPressed('actionB') ||
+      (this.input.rawKeysJustPressed && this.input.rawKeysJustPressed.has('KeyC'));
+
+    if (jumpPressed) {
       if (p.onGround && down && !left && !right) {
         p.dropTimer = 0.22;
         p.onGround = false;
@@ -40748,11 +40776,15 @@ class Contra {
         p.y += 6;
         this.audio.playMenuMove();
       } else if (p.onGround || p.inWater) {
-        p.vy = -490;
+        // High upward impulse out of water (-590) to easily clear 340px ledges & stepping stones
+        p.vy = p.inWater ? -590 : -520;
         p.onGround = false;
         p.inWater = false;
         p.isProne = false;
         this.audio.playJump();
+        if (p.inWater) {
+          this._spawnParticles(p.x + p.w / 2, this.waterY, PALETTE.CYAN, 10, 150);
+        }
       }
     }
 
@@ -40766,6 +40798,12 @@ class Contra {
     p.vy = Math.min(540, p.vy + 1150 * dt);
     p.x += p.vx * dt;
     p.y += p.vy * dt;
+
+    // Bottomless Pit Death Check
+    if (p.y > this.height + 25) {
+      this._damagePlayer();
+      return;
+    }
 
     if (!p.onGround && !p.inWater) {
       p.spinAngle += 17 * dt * p.facing;
@@ -40805,8 +40843,8 @@ class Contra {
       }
     }
 
-    // Water Trench Check
-    if (!p.onGround && p.y + p.h >= this.waterY && p.x < this.bossLockX) {
+    // Water Trench Check - only catch commando if falling downward (vy >= 0)
+    if (!p.onGround && p.vy >= 0 && p.y + p.h >= this.waterY && p.x < this.bossLockX) {
       if (!p.inWater) {
         this._spawnParticles(p.x + p.w / 2, this.waterY, PALETTE.CYAN, 12, 130);
       }
@@ -41174,8 +41212,27 @@ class Contra {
       this.audio.playGameOver();
       this.setState('GAMEOVER');
     } else {
-      const respawnX = Math.max(this.cameraX + 70, this.player.x - 60);
-      this._resetPlayer(respawnX, 140, 'RIFLE');
+      let bestX = Math.max(this.cameraX + 80, this.player.x - 60);
+      let bestY = 140;
+      if (this.platforms && this.platforms.length > 0) {
+        const visiblePlats = this.platforms.filter(
+          (plat) =>
+            !plat.exploded &&
+            plat.x + plat.w >= this.cameraX + 40 &&
+            plat.x <= this.cameraX + this.width - 60
+        );
+        if (visiblePlats.length > 0) {
+          visiblePlats.sort(
+            (a, b) =>
+              Math.abs(a.x + a.w / 2 - (this.cameraX + 130)) -
+              Math.abs(b.x + b.w / 2 - (this.cameraX + 130))
+          );
+          const target = visiblePlats[0];
+          bestX = Math.max(target.x + 16, Math.min(target.x + target.w - 24, this.cameraX + 120));
+          bestY = Math.max(70, target.y - 130);
+        }
+      }
+      this._resetPlayer(bestX, bestY, 'RIFLE');
     }
   }
 
@@ -42076,14 +42133,14 @@ class Contra {
       highScore: this.highScore,
       lives: this.lives,
       level: this.level,
-      extraLabel: `WPN: ${this.player.weapon === 'S' ? 'SPREAD (S)' : this.player.weapon}`,
+      extraLabel: `FIRE: Z | JUMP: X/SHIFT | WPN: ${this.player.weapon === 'S' ? 'SPREAD (S)' : this.player.weapon}`,
       accent: PALETTE.RED
     });
 
     this.renderer.drawStateOverlay(this.state, {
       title: this.title,
       subtitle: '1987 KONAMI RUN & GUN JUNGLE FORTRESS ASSAULT',
-      controls: 'ARROWS: 8-WAY AIM & PRONE  |  Z/SPACE: FIRE  |  X/SHIFT: JUMP (DOWN+X: DROP)',
+      controls: 'ARROWS: 8-WAY AIM & PRONE  |  Z/SPACE: FIRE  |  X/SHIFT/C: JUMP (DOWN+X: DROP)',
       score: this.score,
       highScore: this.highScore,
       accent: PALETTE.RED
