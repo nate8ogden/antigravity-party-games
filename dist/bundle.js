@@ -24927,6 +24927,15 @@ const ARENA_TOP = 40;
 // Street lane geometry (isometric diagonal slant where road shifts slightly with Y)
 const SLANT = -0.18; // x shifts left as y goes up
 const BASE_Y = 460;
+const DAYS_OF_WEEK = [
+  'MONDAY',
+  'TUESDAY',
+  'WEDNESDAY',
+  'THURSDAY',
+  'FRIDAY',
+  'SATURDAY',
+  'SUNDAY'
+];
 class Paperboy {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -25156,8 +25165,8 @@ class Paperboy {
       }
       return;
     }
-    if (this.state === 'GAMEOVER') {
-      if (this.input.isJustPressed('actionA') || this.input.pointer.justPressed) {
+    if (this.state === 'GAMEOVER' || this.state === 'VICTORY') {
+      if (this.input.isJustPressed('actionA') || this.input.isJustPressed('any') || this.input.pointer.justPressed) {
         this.audio.playMenuSelect();
         this.reset();
         this.state = 'PLAYING';
@@ -25406,14 +25415,25 @@ class Paperboy {
       if (pop.life <= 0) this.popups.splice(i, 1);
     }
 
-    // Check Route Completion (Day Complete -> Next Street Wave)
+    // Check Route Completion (Day Complete -> Next Street Wave or 7-Day Sunday Victory)
     if (this.housesDelivered >= this.subscriberGoal) {
+      if (this.level >= 7) {
+        // Grand 7-Day Week Completion & Retirement Victory!
+        this.state = 'VICTORY';
+        this.audio.playStageClear();
+        this._addScore(10000, this.width / 2, 160, '7-DAY SUNDAY COMPLETE! +10,000', PALETTE.GOLD);
+        this._spawnSparks(this.width / 2, 270, PALETTE.GOLD, 48);
+        this._spawnSparks(this.width / 2, 270, PALETTE.CYAN, 32);
+        return;
+      }
+      const prevDay = DAYS_OF_WEEK[(this.level - 1) % DAYS_OF_WEEK.length];
       this.housesDelivered = 0;
-      this.subscriberGoal += 2;
       this.level++;
-      this.papersLeft = Math.min(20, this.papersLeft + 10);
+      const nextDay = DAYS_OF_WEEK[(this.level - 1) % DAYS_OF_WEEK.length];
+      this.papersLeft = 20; // Full fresh supply for the new delivery day!
       this.audio.playStageClear();
-      this._addScore(1000, this.width / 2, 160, `ROUTE ${this.level - 1} COMPLETE! +1000`, PALETTE.GOLD);
+      this._addScore(1500, this.width / 2, 160, `${prevDay} COMPLETE! +1500 (${nextDay} NEXT)`, PALETTE.GOLD);
+      this._spawnSparks(this.width / 2, 180, PALETTE.GOLD, 24);
     }
   }
 
@@ -25871,26 +25891,143 @@ class Paperboy {
       });
     }
 
-    // Top HUD
+    // Top HUD with Day of the Week indicator
+    const dayName = DAYS_OF_WEEK[(this.level - 1) % DAYS_OF_WEEK.length];
     this.renderer.drawHUD({
       title: this.title,
       score: this.score,
       highScore: this.highScore,
       lives: this.lives,
       level: this.level,
-      extraLabel: `PAPERS: ${this.papersLeft} | GOAL: ${this.housesDelivered}/${this.subscriberGoal}`,
+      extraLabel: `${dayName} (${Math.min(7, this.level)}/7) | PAPERS: ${this.papersLeft} | GOAL: ${this.housesDelivered}/${this.subscriberGoal}`,
       accent: PALETTE.GOLD
     });
 
-    // State Overlay
-    this.renderer.drawStateOverlay(this.state, {
-      title: this.title,
-      subtitle: '1985 SUBURBAN NEWSPAPER DELIVERY RUN',
-      controls: 'ARROWS/WASD: STEER & SPEED  |  Z/SPACE: THROW PAPER  |  X/SHIFT: LONG THROW',
-      score: this.score,
-      highScore: this.highScore,
-      accent: PALETTE.GOLD
+    // State Overlay or Grand 7-Day Victory Newspaper
+    if (this.state === 'VICTORY') {
+      this._drawVictoryOverlay(ctx);
+    } else {
+      this.renderer.drawStateOverlay(this.state, {
+        title: this.title,
+        subtitle: `1985 SUBURBAN RUN — ${dayName} DELIVERY`,
+        controls: 'ARROWS/WASD: STEER & SPEED  |  Z/SPACE: THROW PAPER  |  X/SHIFT: LONG THROW',
+        score: this.score,
+        highScore: this.highScore,
+        accent: PALETTE.GOLD
+      });
+    }
+  }
+
+  _drawVictoryOverlay(ctx) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(5, 8, 16, 0.88)';
+    ctx.fillRect(0, 38, this.width, this.height - 38);
+
+    const pw = 680;
+    const ph = 380;
+    const px = (this.width - pw) / 2;
+    const py = (this.height - ph) / 2 + 10;
+
+    // Newsprint background (authentic parchment paper texture)
+    ctx.fillStyle = '#F8FAFC';
+    ctx.fillRect(px, py, pw, ph);
+    ctx.strokeStyle = '#0F172A';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(px, py, pw, ph);
+
+    // Inner newspaper borders
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(px + 8, py + 8, pw - 16, ph - 16);
+
+    // Newspaper Masthead Header
+    ctx.fillStyle = '#0F172A';
+    ctx.fillRect(px + 12, py + 12, pw - 24, 48);
+    this.renderer.drawText('THE DAILY SUN', this.width / 2, py + 44, {
+      font: FONTS.HEADER,
+      size: 26,
+      color: PALETTE.GOLD,
+      align: 'center',
+      glow: 6
     });
+
+    // Sub-banner
+    this.renderer.drawText(
+      'SPECIAL SUNDAY EDITION  •  7-DAY SUBURBAN DELIVERY MARATHON COMPLETE  •  FINAL VICTORY',
+      this.width / 2,
+      py + 76,
+      {
+        font: FONTS.HUD,
+        size: 9.5,
+        color: '#475569',
+        align: 'center'
+      }
+    );
+
+    // Main Victory Headline
+    this.renderer.drawText('★ PAPERBOY CONQUERS THE 7-DAY WEEK! ★', this.width / 2, py + 118, {
+      font: FONTS.HEADER,
+      size: 19,
+      color: '#0F172A',
+      align: 'center'
+    });
+
+    // Story columns
+    const story1 =
+      'After 7 grueling days braving speeding cars, attack dogs, runaway lawnmowers, and breakdancers, our courier delivered all Sunday editions!';
+    const story2 =
+      'Subscribers rejoice across suburbia! With a full pension secured and eternal fame in the Arcade Hall of Fame, the Paperboy retires in triumph!';
+
+    this.renderer.drawText(story1, this.width / 2, py + 152, {
+      font: FONTS.HUD,
+      size: 10.5,
+      color: '#334155',
+      align: 'center'
+    });
+    this.renderer.drawText(story2, this.width / 2, py + 178, {
+      font: FONTS.HUD,
+      size: 10.5,
+      color: '#334155',
+      align: 'center'
+    });
+
+    // Score & Retirement Bonus Box
+    ctx.fillStyle = '#0F172A';
+    ctx.fillRect(px + 100, py + 214, pw - 200, 68);
+    ctx.strokeStyle = PALETTE.GOLD;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(px + 100, py + 214, pw - 200, 68);
+
+    this.renderer.drawText(
+      `FINAL SCORE: ${String(Math.floor(this.score)).padStart(6, '0')}    HIGH SCORE: ${String(Math.floor(this.highScore)).padStart(6, '0')}`,
+      this.width / 2,
+      py + 238,
+      {
+        font: FONTS.HEADER,
+        size: 12.5,
+        color: PALETTE.GOLD,
+        align: 'center'
+      }
+    );
+    this.renderer.drawText('WEEK COMPLETION BONUS: +10,000 PTS  |  RANK: MASTER COURIER', this.width / 2, py + 264, {
+      font: FONTS.HUD,
+      size: 10.5,
+      color: PALETTE.CYAN,
+      align: 'center'
+    });
+
+    // Restart prompt
+    const pulse = 0.65 + 0.35 * Math.sin(performance.now() * 0.007);
+    ctx.globalAlpha = pulse;
+    this.renderer.drawText('PRESS [SPACE / Z / TAP] TO START A NEW 7-DAY ROUTE', this.width / 2, py + 330, {
+      font: FONTS.HEADER,
+      size: 11.5,
+      color: '#0F172A',
+      align: 'center'
+    });
+    ctx.globalAlpha = 1.0;
+
+    ctx.restore();
   }
 }
 
