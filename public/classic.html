@@ -38864,7 +38864,7 @@ class TrackAndField {
       this.audio.playJump();
     } else if (ev.id === 'JAVELIN') {
       this.phase = 'FLIGHT';
-      const vThrow = (15.5 + this.speed * 1.45) * optimalBoost;
+      const vThrow = (14.0 + this.speed * 1.55) * optimalBoost;
       this.javelin = {
         active: true,
         x: this.athleteX,
@@ -39058,23 +39058,28 @@ class TrackAndField {
       } else {
         // LONG JUMP, JAVELIN THROW, or HIGH JUMP (Takeoff Line at 36m)
         const foulLineX = 36.0;
+        const isThrowDown = this.input.isDown('actionB') || this.input.isDown('up');
+        const isThrowReleased = this.input.isJustReleased('actionB') || this.input.isJustReleased('up');
 
-        // Pressing Action B begins charging launch elevation angle (0°..65°)
-        if (this.input.isDown('actionB') && this.athleteX >= 18.0) {
-          this.chargingAngle = true;
-          this.launchAngle += 105 * dt;
+        // Pressing Action B or Up begins charging launch elevation angle (28°..65°)
+        if (isThrowDown && this.athleteX >= 15.0) {
+          if (!this.chargingAngle) {
+            this.chargingAngle = true;
+            this.launchAngle = 28.0;
+          }
+          this.launchAngle += 75 * dt;
           if (this.launchAngle >= 65) {
             this.launchAngle = 65;
             this._triggerJumpOrThrow();
             return;
           }
-        } else if (this.chargingAngle && this.input.isJustReleased('actionB')) {
+        } else if (this.chargingAngle && isThrowReleased) {
           this._triggerJumpOrThrow();
           return;
         }
 
         // Stepping past takeoff line without releasing triggers a FOUL
-        if (this.athleteX > foulLineX + 0.8) {
+        if (this.athleteX > foulLineX) {
           if (this.chargingAngle) {
             this._triggerJumpOrThrow();
           } else {
@@ -39123,7 +39128,7 @@ class TrackAndField {
         }
       } else if (ev.id === 'JAVELIN') {
         const jav = this.javelin;
-        const g = 9.81 * 0.35;
+        const g = 14.7;
         jav.x += jav.vx * dt;
         jav.y += jav.vy * dt;
         jav.vy -= g * dt;
@@ -39143,7 +39148,7 @@ class TrackAndField {
         if (jav.y <= 0) {
           jav.y = 0;
           jav.landed = true;
-          const throwDist = Math.max(10, (jav.x - foulLineX) * 1.05);
+          const throwDist = Math.max(0, jav.x - foulLineX);
           this.audio.playDig();
           this._finishEvent(throwDist, false);
         }
@@ -39367,7 +39372,7 @@ class TrackAndField {
     const camMeters = Math.max(0, focusM - 10);
 
     // Distance Meter Markers along Track
-    for (let m = 0; m <= 140; m += 5) {
+    for (let m = 0; m <= 160; m += 5) {
       const sx = 220 + (m - camMeters) * pxPerMeter;
       if (sx < -40 || sx > this.width + 40) continue;
       ctx.fillStyle = PALETTE.WHITE;
@@ -39435,12 +39440,24 @@ class TrackAndField {
 
       if (ev.id !== 'HIGHJUMP') {
         // Qualifying Flag Marker
-        const qualSx = 220 + (36 + qualify / (ev.id === 'LONGJUMP' ? 1.18 : 1.05) - camMeters) * pxPerMeter;
+        const qualDist = ev.id === 'LONGJUMP' ? qualify / 1.18 : qualify;
+        const qualSx = 220 + (36 + qualDist - camMeters) * pxPerMeter;
         this.renderer.drawGlowRect(qualSx, 335, 3, 45, PALETTE.GREEN, 8, true);
         this.renderer.drawText(`QUAL ${qualify.toFixed(2)}m`, qualSx, 330, {
           font: FONTS.HUD,
           size: 11,
           color: PALETTE.GREEN,
+          align: 'center'
+        });
+
+        // World Record Flag Marker
+        const wrDist = ev.id === 'LONGJUMP' ? ev.worldRecord / 1.18 : ev.worldRecord;
+        const wrSx = 220 + (36 + wrDist - camMeters) * pxPerMeter;
+        this.renderer.drawGlowRect(wrSx, 335, 3, 45, PALETTE.PINK, 8, true);
+        this.renderer.drawText(`WR ${ev.worldRecord.toFixed(2)}m`, wrSx, 315, {
+          font: FONTS.HUD,
+          size: 11,
+          color: PALETTE.PINK,
           align: 'center'
         });
       }
@@ -39558,12 +39575,25 @@ class TrackAndField {
     if (this.phase === 'READY') {
       bannerText = this.phaseTimer > 0.6 ? 'ON YOUR MARKS...' : 'GET SET...';
     } else if (this.phase === 'RUN') {
-      bannerText =
-        ev.id === 'DASH'
-          ? `TIME: ${this.elapsedTime.toFixed(2)}s  (TAP Z/SPACE OR LEFT/RIGHT RAPIDLY!)`
-          : ev.id === 'HURDLES'
-          ? `TIME: ${this.elapsedTime.toFixed(2)}s  (TAP Z/SPACE TO SPRINT, PRESS X/UP TO LEAP HURDLES!)`
-          : 'MASH Z/SPACE TO SPRINT! HOLD X/SHIFT AT LINE TO SET LAUNCH ANGLE!';
+      if (ev.id === 'DASH') {
+        bannerText = `TIME: ${this.elapsedTime.toFixed(2)}s  (MASH Z/SPACE OR LEFT/RIGHT RAPIDLY!)`;
+      } else if (ev.id === 'HURDLES') {
+        bannerText = `TIME: ${this.elapsedTime.toFixed(2)}s  (MASH SPRINT, PRESS X OR UP TO LEAP!)`;
+      } else if (this.chargingAngle) {
+        bannerText = `ELEVATION: ${Math.round(this.launchAngle)}° — RELEASE AT 42° SWEET SPOT!`;
+      } else if (this.athleteX < 16) {
+        bannerText = 'MASH Z/SPACE (OR LEFT/RIGHT) TO BUILD MAXIMUM SPRINT SPEED!';
+      } else {
+        bannerText = 'HOLD X/SHIFT OR UP TO ANGLE — RELEASE NEAR 42° BEFORE FOUL LINE!';
+      }
+    } else if (this.phase === 'FLIGHT') {
+      if (ev.id === 'JAVELIN') {
+        bannerText = `JAVELIN IN FLIGHT! (${Math.max(0, this.javelin.x - 36).toFixed(1)}m)`;
+      } else if (ev.id === 'LONGJUMP') {
+        bannerText = 'LONG JUMP IN FLIGHT!';
+      } else {
+        bannerText = 'OVER THE CROSSBAR!';
+      }
     } else if (this.phase === 'RESULT') {
       bannerText = this.isFoul
         ? 'FOUL! STEPPED OVER THE FOUL LINE!'
@@ -39610,7 +39640,7 @@ class TrackAndField {
     this.renderer.drawStateOverlay(this.state, {
       title: this.title,
       subtitle: '5-EVENT OLYMPIC DECATHLON: DASH • LONG JUMP • JAVELIN • HURDLES • HIGH JUMP',
-      controls: 'RAPID TAP Z/SPACE OR L/R: SPRINT  |  X/SHIFT: LEAP HURDLES / LAUNCH ANGLE',
+      controls: 'RAPID MASH Z/SPACE OR L/R: SPRINT  |  HOLD & RELEASE X/SHIFT OR UP: ANGLE (42°)',
       score: this.score,
       highScore: this.highScore,
       accent: PALETTE.GOLD
