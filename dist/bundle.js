@@ -27997,8 +27997,10 @@ class Rampage {
       width: 44,
       height: 52,
       dir: 1,
+      monster: 'george', // 'george' (King Kong Gorilla) | 'lizzie' (Godzilla Kaiju) | 'ralph' (Werewolf)
       climbingBuilding: null,
       climbSide: 'left', // 'left' | 'right'
+      standingOnBuilding: null,
       onGround: true,
       health: 100,
       maxHealth: 100,
@@ -28195,16 +28197,34 @@ class Rampage {
     if (p.punchTimer > 0) p.punchTimer = Math.max(0, p.punchTimer - dt);
     if (p.punchCooldown > 0) p.punchCooldown = Math.max(0, p.punchCooldown - dt);
 
+    // Toggle Monster Character: George (King Kong Gorilla) / Lizzie (Godzilla Kaiju) / Ralph (Werewolf)
+    if (this.input.isKeyJustPressed('KeyC')) {
+      const roster = ['george', 'lizzie', 'ralph'];
+      const nextIdx = (roster.indexOf(p.monster || 'george') + 1) % roster.length;
+      p.monster = roster[nextIdx];
+      const names = { george: 'GEORGE (APE)', lizzie: 'LIZZIE (KAIJU)', ralph: 'RALPH (WOLF)' };
+      this.audio.playPowerUp();
+      this.floatingTexts.push({
+        text: `${names[p.monster]}!`,
+        x: p.x,
+        y: p.y - 65,
+        vy: -35,
+        life: 1.1,
+        maxLife: 1.1,
+        color: PALETTE.GOLD
+      });
+    }
+
     const axis = this.input.getAxis();
 
-    // Climbing / Ground Movement Logic
+    // 1. CLIMBING BUILDING WALL
     if (p.climbingBuilding) {
       const b = p.climbingBuilding;
       if (b.collapsing || b.collapsed) {
         p.climbingBuilding = null;
         p.onGround = false;
       } else {
-        const climbSpeed = 145;
+        const climbSpeed = 155;
         p.vy = axis.y * climbSpeed;
         p.y += p.vy * dt;
 
@@ -28217,32 +28237,93 @@ class Rampage {
           p.dir = -1;
         }
 
-        // Reach ground
+        // Reached street ground
         if (p.y >= this.groundY) {
           p.y = this.groundY;
           p.climbingBuilding = null;
           p.onGround = true;
           p.vy = 0;
-        } else if (p.y < b.y + 18) {
-          // Roof limit
-          p.y = b.y + 18;
+        } else if (p.y <= b.y + 4) {
+          // CLIMBED TO TOP! Pull up onto the building rooftop!
+          p.y = b.y;
+          p.climbingBuilding = null;
+          p.standingOnBuilding = b;
+          p.onGround = true;
+          p.vy = 0;
+          p.x = p.climbSide === 'left' ? b.x + 18 : b.x + b.width - 18;
+          this.audio.playHop();
         }
 
-        // Switch sides or jump off
+        // Jump off wall with Action B
         if (this.input.isJustPressed('actionB')) {
           p.climbingBuilding = null;
           p.onGround = false;
-          p.vy = -280;
-          p.vx = axis.x !== 0 ? axis.x * 210 : -p.dir * 160;
+          p.vy = -340;
+          p.vx = axis.x !== 0 ? axis.x * 220 : (p.climbSide === 'left' ? 180 : -180);
           this.audio.playJump();
-        } else if (p.y >= this.groundY - 14 && Math.abs(axis.x) > 0.3) {
-          p.climbingBuilding = null;
-          p.onGround = true;
-          p.y = this.groundY;
         }
       }
+    } else if (p.standingOnBuilding) {
+      // 2. STANDING & WALKING ON BUILDING ROOFTOP
+      const b = p.standingOnBuilding;
+      if (b.collapsed) {
+        p.standingOnBuilding = null;
+        p.onGround = false;
+      } else if (b.collapsing) {
+        // Ride the crumbling building down into the rubble!
+        p.y = b.y;
+        p.onGround = true;
+        if (b.height <= 18) {
+          p.standingOnBuilding = null;
+          p.y = this.groundY;
+          p.onGround = true;
+        }
+      } else {
+        p.y = b.y;
+        p.onGround = true;
+      }
+
+      // Walk along rooftop
+      const moveSpeed = 190;
+      p.vx = axis.x * moveSpeed;
+      if (axis.x > 0.1) p.dir = 1;
+      else if (axis.x < -0.1) p.dir = -1;
+      p.x += p.vx * dt;
+
+      // Jump off roof with Action B
+      if (this.input.isJustPressed('actionB')) {
+        p.standingOnBuilding = null;
+        p.onGround = false;
+        p.vy = -360;
+        this.audio.playJump();
+      }
+
+      // Climb back down: Press DOWN near either roof edge to grab the wall!
+      if (axis.y > 0.3) {
+        if (Math.abs(p.x - b.x) < 28) {
+          p.standingOnBuilding = null;
+          p.climbingBuilding = b;
+          p.climbSide = 'left';
+          p.x = b.x - 6;
+          p.y = b.y + 14;
+          p.dir = 1;
+        } else if (Math.abs(p.x - (b.x + b.width)) < 28) {
+          p.standingOnBuilding = null;
+          p.climbingBuilding = b;
+          p.climbSide = 'right';
+          p.x = b.x + b.width + 6;
+          p.y = b.y + 14;
+          p.dir = -1;
+        }
+      }
+
+      // Walked off roof edge into the air
+      if (p.x < b.x - 14 || p.x > b.x + b.width + 14) {
+        p.standingOnBuilding = null;
+        p.onGround = false;
+      }
     } else {
-      // Ground or Airborne movement
+      // 3. GROUND OR AIRBORNE MOVEMENT
       const moveSpeed = 190;
       p.vx = axis.x * moveSpeed;
       if (axis.x > 0.1) p.dir = 1;
@@ -28252,14 +28333,15 @@ class Rampage {
       p.x = Math.max(36, Math.min(924, p.x));
 
       if (p.onGround) {
-        // Jump with Action B
+        p.y = this.groundY;
+        // High jump from ground to reach buildings!
         if (this.input.isJustPressed('actionB')) {
-          p.vy = -340;
+          p.vy = -380;
           p.onGround = false;
           this.audio.playJump();
         }
 
-        // Latch onto a building side when pressing UP near its left/right wall
+        // Latch onto wall when pressing UP or moving into wall
         if (axis.y < -0.3) {
           for (const b of this.buildings) {
             if (b.collapsed || b.collapsing) continue;
@@ -28285,12 +28367,33 @@ class Rampage {
           }
         }
       } else {
-        // Gravity while airborne
-        p.vy += 680 * dt;
+        // Airborne: gravity
+        p.vy += 700 * dt;
         p.y += p.vy * dt;
 
-        // Can grab building mid-air if holding UP
-        if (axis.y < -0.3) {
+        // Solid rooftop landing when falling downwards (vy > 0)!
+        if (p.vy > 0) {
+          for (const b of this.buildings) {
+            if (b.collapsed) continue;
+            if (
+              p.y >= b.y &&
+              p.y - p.vy * dt <= b.y + 16 &&
+              p.x >= b.x - 8 &&
+              p.x <= b.x + b.width + 8
+            ) {
+              p.y = b.y;
+              p.vy = 0;
+              p.standingOnBuilding = b;
+              p.onGround = true;
+              this.renderer.shake(3, 0.08);
+              this.audio.playShove();
+              break;
+            }
+          }
+        }
+
+        // Can grab building wall mid-air if holding UP
+        if (!p.standingOnBuilding && axis.y < -0.2) {
           for (const b of this.buildings) {
             if (b.collapsed || b.collapsing) continue;
             if (p.y > b.y + 15 && p.y < this.groundY) {
@@ -28311,6 +28414,7 @@ class Rampage {
           }
         }
 
+        // Landing on ground
         if (p.y >= this.groundY) {
           p.y = this.groundY;
           p.vy = 0;
@@ -28591,7 +28695,7 @@ class Rampage {
       if (
         punchX >= b.x - 18 &&
         punchX <= b.x + b.width + 18 &&
-        punchY >= b.y &&
+        punchY >= b.y - 32 &&
         punchY <= b.y + b.height
       ) {
         // Find nearest window cell
@@ -28879,13 +28983,32 @@ class Rampage {
     const p = this.player;
     if (p.invulnTimer <= 0 || Math.floor(p.invulnTimer * 16) % 2 === 0) {
       const sprite = p.punchTimer > 0 ? KAIJU_PUNCH : KAIJU_IDLE;
-      const palette = {
+      let palette = {
         G: PALETTE.GREEN,
         W: PALETTE.WHITE,
         K: '#0B0F19',
         R: PALETTE.PINK,
         Y: PALETTE.GOLD
       };
+      if (p.monster === 'george') {
+        // George the Giant Ape (King Kong parody)
+        palette = {
+          G: '#78350F', // Rich dark brown gorilla fur
+          W: PALETTE.WHITE,
+          K: '#0B0F19',
+          R: '#FED7AA', // Tan chest / muzzle
+          Y: '#FDE047'
+        };
+      } else if (p.monster === 'ralph') {
+        // Ralph the Giant Werewolf
+        palette = {
+          G: '#475569', // Slate wolf fur
+          W: PALETTE.WHITE,
+          K: '#020617',
+          R: '#E2E8F0', // Silver muzzle
+          Y: '#F87171'
+        };
+      }
       const scale = 4.5;
       const drawX = p.x - (sprite[0].length * scale) / 2;
       const drawY = p.y - sprite.length * scale;
@@ -28997,14 +29120,20 @@ class Rampage {
     }
     ctx.globalAlpha = 1;
 
-    // Kaiju Health Bar in Upper Left Arena
+    // Monster Health Bar in Upper Left Arena
     ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
     ctx.fillRect(16, 46, 184, 16);
     const hpRatio = Math.max(0, p.health / p.maxHealth);
     const hpColor = hpRatio > 0.5 ? PALETTE.GREEN : hpRatio > 0.25 ? PALETTE.GOLD : PALETTE.RED;
     this.renderer.drawGlowRect(18, 48, 180 * hpRatio, 12, hpColor, 6);
-    this.renderer.drawText(`KAIJU HP: ${Math.ceil(p.health)}%`, 208, 59, {
-      size: 12,
+    const monsterNames = {
+      george: 'GEORGE (APE)',
+      lizzie: 'LIZZIE (KAIJU)',
+      ralph: 'RALPH (WOLF)'
+    };
+    const mLabel = monsterNames[p.monster || 'george'];
+    this.renderer.drawText(`${mLabel} HP: ${Math.ceil(p.health)}%  [C: SWAP]`, 208, 59, {
+      size: 11,
       color: PALETTE.WHITE
     });
 
@@ -29016,15 +29145,15 @@ class Rampage {
       highScore: this.highScore,
       lives: this.lives,
       level: this.level,
-      extraLabel: `TOWERS:${standingCount}`,
+      extraLabel: `TOWERS:${standingCount} | ${mLabel}`,
       accent: PALETTE.GREEN
     });
 
     // State Overlay
     this.renderer.drawStateOverlay(this.state, {
       title: this.title,
-      subtitle: 'KAIJU SKYSCRAPER DEMOLITION',
-      controls: 'ARROWS: WALK/CLIMB  |  Z/SPACE: PUNCH  |  X/SHIFT: JUMP',
+      subtitle: 'KAIJU & GORILLA SKYSCRAPER DEMOLITION',
+      controls: 'ARROWS: WALK/CLIMB ROOFS  |  Z/SPACE: PUNCH  |  X/SHIFT: JUMP  |  C: SWAP MONSTER',
       score: this.score,
       highScore: this.highScore,
       accent: PALETTE.GREEN
