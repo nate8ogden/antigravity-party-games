@@ -249,12 +249,7 @@ export class CloudPersistenceManager {
 
     const copy = [...games];
     if (mode === 'saved') {
-      // If user has saved games, filter to saved games; if none saved yet, rank by community saveCount
-      const userSaved = copy.filter((g) => this.getRecord(g.id).saved);
-      if (userSaved.length > 0) {
-        return userSaved;
-      }
-      return copy.sort((a, b) => this.getRecord(b.id).saveCount - this.getRecord(a.id).saveCount);
+      return copy.filter((g) => this.getRecord(g.id).saved);
     }
 
     if (mode === 'rating') {

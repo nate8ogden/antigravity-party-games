@@ -2674,6 +2674,7 @@ export class GameManager {
   public playerTabHitboxes: { count: number; x: number; y: number; w: number; h: number }[] = [];
   public diffHitboxes: { id: 'bot_easy' | 'bot_normal' | 'bot_hard'; x: number; y: number; w: number; h: number }[] = [];
   public playerBadgeHitboxes: { pid: number; x: number; y: number; w: number; h: number }[] = [];
+  public galleryFavHitboxes: Array<{ gameId: string; x: number; y: number; w: number; h: number }> = [];
 
   // Search filter in lobby
   public searchQuery: string = '';
@@ -5500,7 +5501,7 @@ export class GameManager {
       }
     });
 
-    if (this.selectedCategory !== 'ALL') {
+    if (this.selectedCategory !== 'ALL' && this.catalogSortMode !== 'saved') {
       list = list.filter((g) => g.category.toUpperCase() === this.selectedCategory.toUpperCase());
     }
     if (this.searchQuery.trim().length > 0) {
@@ -8022,6 +8023,7 @@ export class GameManager {
       Puzzle: '#0284C7'
     };
 
+    this.galleryFavHitboxes = [];
     for (let idx = 0; idx < displayedGames.length; idx++) {
       const game = displayedGames[idx];
       const col = idx % cols;
@@ -8089,6 +8091,7 @@ export class GameManager {
       const ratingBadgeText = cloudStats.saved ? `❤️ ★ ${effRating.toFixed(1)}` : `★ ${effRating.toFixed(1)}`;
       const rBadgeW = cloudStats.saved ? 58 : 44;
       const rBadgeX = cardX + cardW - 12 - rBadgeW;
+      this.galleryFavHitboxes.push({ gameId: game.id, x: rBadgeX - 2, y: cardY + 10, w: rBadgeW + 4, h: 22 });
       this.drawRoundedRect(rBadgeX, cardY + 13.5, rBadgeW, 18, 5, 'rgba(15, 23, 42, 0.9)');
       this.drawRoundedRect(
         rBadgeX,
@@ -11861,6 +11864,23 @@ export class GameManager {
       const { galleryX, galleryY, galleryW, galleryH, cols, gap, cardW, cardH, startX } = this.getGalleryLayout(w, h);
 
       if (x >= galleryX && x <= galleryX + galleryW && y >= galleryY && y <= galleryY + galleryH) {
+        // First check floating favorite/rating badges
+        for (const fav of this.galleryFavHitboxes) {
+          if (x >= fav.x && x <= fav.x + fav.w && y >= fav.y && y <= fav.y + fav.h) {
+            const isNowSaved = this.toggleSaveGame(fav.gameId);
+            const curMeta = GAME_CATALOG.find((g) => g.id === fav.gameId);
+            const title = curMeta ? curMeta.title.toUpperCase() : fav.gameId.toUpperCase();
+            this.particles.showFloatingText(
+              isNowSaved ? `❤️ SAVED ${title}!` : `🤍 REMOVED ${title}`,
+              this.logicalWidth / 2,
+              galleryY + 30,
+              isNowSaved ? '#EC4899' : '#94A3B8',
+              22
+            );
+            return;
+          }
+        }
+
         const displayedGames = this.getFilteredCatalog();
 
         for (let idx = 0; idx < displayedGames.length; idx++) {

@@ -1551,6 +1551,16 @@ class CloudPersistenceManager {
     return r.communityRating;
   }
 
+  notifyListeners(rec) {
+    if (Array.isArray(this._updateListeners)) {
+      this._updateListeners.forEach((cb) => {
+        try {
+          cb(rec);
+        } catch (_) {}
+      });
+    }
+  }
+
   rateGame(gameId, stars) {
     const clamped = Math.max(1, Math.min(5, Math.round(Number(stars) || 5)));
     const rec = this.getRecord(gameId);
@@ -1560,6 +1570,7 @@ class CloudPersistenceManager {
     rec.userRating = clamped;
     this.saveToLocal();
     this.debouncedPush(rec);
+    this.notifyListeners(rec);
     return rec;
   }
 
@@ -1575,6 +1586,7 @@ class CloudPersistenceManager {
     rec.saveCount = Math.max(0, rec.saveCount + (rec.saved ? 1 : -1));
     this.saveToLocal();
     this.debouncedPush(rec);
+    this.notifyListeners(rec);
     return rec.saved;
   }
 
@@ -1609,9 +1621,7 @@ class CloudPersistenceManager {
     if (!mode || mode === 'default') return games;
     const copy = [...games];
     if (mode === 'saved') {
-      const userSaved = copy.filter((g) => this.getRecord(g.id).saved);
-      if (userSaved.length > 0) return userSaved;
-      return copy.sort((a, b) => this.getRecord(b.id).saveCount - this.getRecord(a.id).saveCount);
+      return copy.filter((g) => this.getRecord(g.id).saved);
     }
     if (mode === 'rating') {
       return copy.sort((a, b) => {
@@ -8346,13 +8356,14 @@ class MainMenu {
 
     cloudPersistence.initializeCatalog(GAME_CATALOG.map((g) => g.id));
 
-    this.activeTab = 'core'; // 'core' (8 flagship) | 'expanded' (20 classics)
+    this.activeTab = 'core'; // 'core' | 'expanded' | 'vault2' | 'favorites'
     this.sortModeIndex = 0;
     this.selectedIndex = 0;
     this.hoverIndex = -1;
     this.animTime = 0;
     this.cardRects = [];
     this.tabRects = [];
+    this.cardFavHitboxes = [];
     this.inspectorStarRects = [];
     this.inspectorFavRect = null;
   }
@@ -8369,8 +8380,23 @@ class MainMenu {
     return this.getSortMode();
   }
 
+  getSelectedGame() {
+    const list = this.getVisibleGames();
+    return list[this.selectedIndex] || list[0] || null;
+  }
+
   getVisibleGames() {
+    if (this.activeTab === 'favorites') {
+      const allSaved = GAME_CATALOG.filter((g) => cloudPersistence.getRecord(g.id).saved);
+      if (this.getSortMode().id === 'saved' || this.getSortMode().id === 'default') {
+        return allSaved;
+      }
+      return cloudPersistence.sortCatalog(allSaved, this.getSortMode().id);
+    }
     const base = GAME_CATALOG.filter((g) => g.category === this.activeTab);
+    if (this.getSortMode().id === 'saved') {
+      return base.filter((g) => cloudPersistence.getRecord(g.id).saved);
+    }
     return cloudPersistence.sortCatalog(base, this.getSortMode().id);
   }
 
@@ -8379,6 +8405,9 @@ class MainMenu {
       this.activeTab = tab;
       this.selectedIndex = 0;
       this.audio.playMenuMove();
+      if (typeof window !== 'undefined' && window.arcadeStudio) {
+        window.arcadeStudio._syncFavoriteButton();
+      }
     }
   }
 
@@ -9555,7 +9584,14 @@ class MainMenu {
   update(dt) {
     this.animTime += dt;
     const list = this.getVisibleGames();
-    const cols = this.activeTab === 'core' ? 4 : this.activeTab === 'vault2' ? 6 : 5;
+    const cols =
+      this.activeTab === 'core'
+        ? 4
+        : this.activeTab === 'vault2'
+        ? 6
+        : this.activeTab === 'favorites' && list.length <= 8
+        ? 4
+        : 5;
     const rows = Math.ceil(list.length / cols);
 
     if (this.selectedIndex >= list.length) {
@@ -9574,6 +9610,8 @@ class MainMenu {
           ? 'expanded'
           : this.activeTab === 'expanded'
           ? 'vault2'
+          : this.activeTab === 'vault2'
+          ? 'favorites'
           : 'core';
       this.setTab(nextTab);
     } else if (
@@ -9581,11 +9619,13 @@ class MainMenu {
       this.input.isGamepadPrevTabPressed()
     ) {
       const prevTab =
-        this.activeTab === 'vault2'
+        this.activeTab === 'favorites'
+          ? 'vault2'
+          : this.activeTab === 'vault2'
           ? 'expanded'
           : this.activeTab === 'expanded'
           ? 'core'
-          : 'vault2';
+          : 'favorites';
       this.setTab(prevTab);
     }
 
@@ -9710,6 +9750,30 @@ class MainMenu {
             'Synced to Firebase Cloud',
             PALETTE.PINK
           );
+          if (typeof window !== 'undefined' && window.arcadeStudio) {
+            window.arcadeStudio._syncHeaderStatus();
+          }
+          return;
+        }
+      }
+
+      // Check card heart icon clicks
+      for (const fav of this.cardFavHitboxes) {
+        if (px >= fav.x && px <= fav.x + fav.w && py >= fav.y && py <= fav.y + fav.h) {
+          const saved = cloudPersistence.toggleSaveGame(fav.gameId);
+          this.audio.playCoin();
+          achievementManager.unlock('arcade_critic', this.audio);
+          const meta = GAME_CATALOG.find((g) => g.id === fav.gameId);
+          achievementManager.pushToast(
+            saved
+              ? `♥ SAVED ${meta ? meta.title.toUpperCase() : fav.gameId.toUpperCase()}`
+              : `REMOVED ${meta ? meta.title.toUpperCase() : fav.gameId.toUpperCase()}`,
+            'Synced to Local & Firebase Cloud',
+            PALETTE.PINK
+          );
+          if (typeof window !== 'undefined' && window.arcadeStudio) {
+            window.arcadeStudio._syncHeaderStatus();
+          }
           return;
         }
       }
@@ -9718,6 +9782,10 @@ class MainMenu {
       for (let i = 0; i < this.cardRects.length; i++) {
         const r = this.cardRects[i];
         if (px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h) {
+          if (r.isBrowseBtn) {
+            this.setTab('core');
+            return;
+          }
           this.selectedIndex = i;
           const chosen = list[i];
           if (chosen && typeof this.onSelectGame === 'function') {
@@ -9806,30 +9874,39 @@ class MainMenu {
 
     // Category Tabs + Cloud Sort Pill
     const sortMode = this.getSortMode();
+    const savedCount = GAME_CATALOG.filter((g) => cloudPersistence.getRecord(g.id).saved).length;
     this.tabRects = [
-      { id: 'core', label: '🕹️ CORE 8 (FEATURED)', x: 20, y: 58, w: 215, h: 28 },
-      { id: 'expanded', label: '👾 VAULT I (20 CLASSICS)', x: 243, y: 58, w: 235, h: 28 },
-      { id: 'vault2', label: '🏆 VAULT II (22 CLASSICS)', x: 486, y: 58, w: 235, h: 28 },
-      { id: 'sort', label: sortMode.label, x: 729, y: 58, w: 211, h: 28 }
+      { id: 'core', label: '🕹️ CORE (8)', x: 18, y: 58, w: 165, h: 28 },
+      { id: 'expanded', label: '👾 VAULT I (20)', x: 189, y: 58, w: 185, h: 28 },
+      { id: 'vault2', label: '🏆 VAULT II (22)', x: 380, y: 58, w: 185, h: 28 },
+      { id: 'favorites', label: `♥ SAVED (${savedCount})`, x: 571, y: 58, w: 185, h: 28 },
+      { id: 'sort', label: sortMode.label, x: 762, y: 58, w: 180, h: 28 }
     ];
 
     for (const tab of this.tabRects) {
       const isSort = tab.id === 'sort';
+      const isFav = tab.id === 'favorites';
       const active = !isSort && this.activeTab === tab.id;
       ctx.save();
       ctx.fillStyle = isSort
         ? 'rgba(255, 215, 0, 0.14)'
+        : active && isFav
+        ? 'rgba(255, 0, 122, 0.22)'
         : active
         ? 'rgba(0, 240, 255, 0.18)'
+        : isFav && savedCount > 0
+        ? 'rgba(255, 0, 122, 0.08)'
         : 'rgba(19, 27, 46, 0.85)';
       ctx.strokeStyle = isSort
         ? PALETTE.GOLD
+        : isFav
+        ? PALETTE.PINK
         : active
         ? PALETTE.CYAN
         : 'rgba(148, 163, 184, 0.35)';
       ctx.lineWidth = active || isSort ? 2 : 1;
       if (active) {
-        ctx.shadowColor = PALETTE.CYAN;
+        ctx.shadowColor = isFav ? PALETTE.PINK : PALETTE.CYAN;
         ctx.shadowBlur = 10;
       }
       ctx.fillRect(tab.x, tab.y, tab.w, tab.h);
@@ -9839,15 +9916,76 @@ class MainMenu {
       this.renderer.drawText(tab.label, tab.x + tab.w / 2, tab.y + 19, {
         font: FONTS.HUD,
         size: 11,
-        color: isSort ? PALETTE.GOLD : active ? PALETTE.CYAN : PALETTE.MUTED,
+        color: isSort ? PALETTE.GOLD : isFav ? PALETTE.PINK : active ? PALETTE.CYAN : PALETTE.MUTED,
         align: 'center'
       });
     }
 
     const list = this.getVisibleGames();
     this.cardRects = [];
+    this.cardFavHitboxes = [];
 
-    if (this.activeTab === 'core') {
+    if (list.length === 0) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
+      ctx.strokeStyle = PALETTE.PINK;
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(160, 140, W - 320, 240);
+      ctx.strokeRect(160, 140, W - 320, 240);
+
+      this.renderer.drawText(
+        this.activeTab === 'favorites' ? '♡ NO SAVED FAVORITES YET' : 'NO MATCHING CABINETS FOUND',
+        W / 2,
+        190,
+        {
+          font: FONTS.HEADER,
+          size: 15,
+          color: PALETTE.WHITE,
+          align: 'center'
+        }
+      );
+
+      this.renderer.drawText(
+        'Press [F] or [Y] on any cabinet to bookmark your favorite games.',
+        W / 2,
+        225,
+        {
+          font: FONTS.BODY,
+          size: 11,
+          color: PALETTE.MUTED,
+          align: 'center'
+        }
+      );
+
+      this.renderer.drawText(
+        'You can also click the [♥ / ♡] badge directly on any arcade diorama card.',
+        W / 2,
+        250,
+        {
+          font: FONTS.BODY,
+          size: 11,
+          color: PALETTE.CYAN,
+          align: 'center'
+        }
+      );
+
+      const btnW = 240;
+      const btnH = 36;
+      const btnX = W / 2 - btnW / 2;
+      const btnY = 285;
+      this.cardRects.push({ x: btnX, y: btnY, w: btnW, h: btnH, isBrowseBtn: true });
+      ctx.fillStyle = 'rgba(0, 240, 255, 0.15)';
+      ctx.strokeStyle = PALETTE.CYAN;
+      ctx.fillRect(btnX, btnY, btnW, btnH);
+      ctx.strokeRect(btnX, btnY, btnW, btnH);
+      this.renderer.drawText('▶ BROWSE ALL 50 CABINETS', W / 2, btnY + 23, {
+        font: FONTS.HUD,
+        size: 11,
+        color: PALETTE.WHITE,
+        align: 'center'
+      });
+      ctx.restore();
+    } else if (this.activeTab === 'core' || (this.activeTab === 'favorites' && list.length <= 8)) {
       // 4x2 Featured Cabinet Cards with Live Miniature Arcade Screenshots
       const cols = 4;
       const cardW = 216;
@@ -9886,21 +10024,39 @@ class MainMenu {
         ctx.fillStyle = game.accent;
         ctx.fillRect(x, y, cardW, 4);
 
-        // Star Rating + Favorite Heart + Save State Badge + High Score
-        const favIcon = rec.saved ? '♥ ' : '';
+        // Interactive Heart / Favorite Button
+        const favX = x + 8;
+        const favY = y + 7;
+        const favW = 24;
+        const favH = 18;
+        this.cardFavHitboxes.push({ x: favX - 2, y: favY - 2, w: favW + 4, h: favH + 4, gameId: game.id });
+        ctx.save();
+        ctx.fillStyle = rec.saved ? 'rgba(255, 0, 122, 0.25)' : 'rgba(255, 255, 255, 0.06)';
+        ctx.strokeStyle = rec.saved ? PALETTE.PINK : 'rgba(255, 255, 255, 0.2)';
+        ctx.fillRect(favX, favY, favW, favH);
+        ctx.strokeRect(favX, favY, favW, favH);
+        ctx.restore();
+        this.renderer.drawText(rec.saved ? '♥' : '♡', favX + favW / 2, favY + 13, {
+          font: FONTS.HUD,
+          size: 12,
+          color: rec.saved ? PALETTE.PINK : PALETTE.WHITE,
+          align: 'center'
+        });
+
+        // Star Rating + Save State Badge + High Score
         const saveIcon = hasSave ? ' 💾' : '';
         this.renderer.drawText(
-          `${favIcon}★${rating.toFixed(1)}${saveIcon}`,
-          x + 8,
-          y + 18,
+          `★${rating.toFixed(1)}${saveIcon}`,
+          favX + favW + 6,
+          y + 19,
           {
             font: FONTS.HUD,
             size: 10.5,
-            color: rec.saved ? PALETTE.PINK : PALETTE.GOLD
+            color: PALETTE.GOLD
           }
         );
 
-        this.renderer.drawText(`HI: ${String(hi).padStart(6, '0')}`, x + cardW - 8, y + 18, {
+        this.renderer.drawText(`HI: ${String(hi).padStart(6, '0')}`, x + cardW - 8, y + 19, {
           font: FONTS.HUD,
           size: 10.5,
           color: PALETTE.GOLD,
@@ -10025,13 +10181,34 @@ class MainMenu {
           }
         );
 
+        // Top-Right: Star Rating & Heart Button
+        const favW = 16;
+        const favH = 14;
+        const favX = x + cardW - favW - 4;
+        const favY = y + 4;
+        this.cardFavHitboxes.push({ x: favX - 2, y: favY - 2, w: favW + 4, h: favH + 4, gameId: game.id });
+
+        ctx.save();
+        ctx.fillStyle = rec.saved ? 'rgba(255, 0, 122, 0.25)' : 'rgba(255, 255, 255, 0.06)';
+        ctx.strokeStyle = rec.saved ? PALETTE.PINK : 'rgba(255, 255, 255, 0.2)';
+        ctx.fillRect(favX, favY, favW, favH);
+        ctx.strokeRect(favX, favY, favW, favH);
+        ctx.restore();
+
+        this.renderer.drawText(rec.saved ? '♥' : '♡', favX + favW / 2, favY + 11, {
+          font: FONTS.HUD,
+          size: 9.5,
+          color: rec.saved ? PALETTE.PINK : PALETTE.WHITE,
+          align: 'center'
+        });
+
         this.renderer.drawText(
-          `${rec.saved ? '♥' : ''}★${rating.toFixed(1)}`,
-          x + cardW - 4,
+          `★${rating.toFixed(1)}`,
+          favX - 4,
           y + 15,
           {
             font: FONTS.HUD,
-            size: isVault2 ? 8.5 : 9.2,
+            size: isVault2 ? 8.2 : 8.8,
             color: PALETTE.GOLD,
             align: 'right'
           }
@@ -35166,12 +35343,14 @@ const SATELLITE_SPRITE = [
   'Y......YY......Y'
 ];
 
-// 10-Missile Pyramid Offset Coordinates inside each ABM Mound (Rows of 1, 2, 3, 4)
+// 16-Missile Pyramid Offset Coordinates inside each ABM Mound (Rows of 1, 2, 3, 4, 5, apex)
 const PYRAMID_SLOTS = [
-  { dx: 0, dy: -22 },
-  { dx: -6, dy: -15 }, { dx: 6, dy: -15 },
-  { dx: -12, dy: -8 }, { dx: 0, dy: -8 }, { dx: 12, dy: -8 },
-  { dx: -18, dy: -1 }, { dx: -6, dy: -1 }, { dx: 6, dy: -1 }, { dx: 18, dy: -1 }
+  { dx: 0, dy: -24 },
+  { dx: -5, dy: -18 }, { dx: 5, dy: -18 },
+  { dx: -10, dy: -12 }, { dx: 0, dy: -12 }, { dx: 10, dy: -12 },
+  { dx: -15, dy: -6 }, { dx: -5, dy: -6 }, { dx: 5, dy: -6 }, { dx: 15, dy: -6 },
+  { dx: -20, dy: 0 }, { dx: -10, dy: 0 }, { dx: 0, dy: 0 }, { dx: 10, dy: 0 }, { dx: 20, dy: 0 },
+  { dx: 0, dy: -29 }
 ];
 class MissileCommand {
   constructor(renderer, input, audio) {
@@ -35200,6 +35379,8 @@ class MissileCommand {
     this.highScore = HighScoreStore.get(this.id);
     this.level = 1;
     this.state = 'PLAYING';
+    this.nextBonusCityScore = 8000;
+    this.aimHoldTime = 0;
 
     // 6 Crystal Neon Cities positioned between the 3 ABM Batteries
     const cityXs = [185, 275, 365, 595, 685, 775];
@@ -35215,11 +35396,12 @@ class MissileCommand {
   }
 
   _initWave(level) {
-    // 3 ABM Defense Batteries: Alpha (Left), Beta (Center - Ultra Fast), Gamma (Right)
+    // 3 ABM Defense Batteries: Alpha (Left), Beta (Center - High Ammo/Speed), Gamma (Right)
+    // 36 total interceptors (10 Left, 16 Center, 10 Right) so players don't starve for ammo!
     this.batteries = [
-      { name: 'ALPHA', x: 85, y: this.groundY - 8, ammo: 10, maxAmmo: 10, speed: 560, alive: true },
-      { name: 'BETA', x: 480, y: this.groundY - 8, ammo: 10, maxAmmo: 10, speed: 780, alive: true },
-      { name: 'GAMMA', x: 875, y: this.groundY - 8, ammo: 10, maxAmmo: 10, speed: 560, alive: true }
+      { name: 'ALPHA', x: 85, y: this.groundY - 8, ammo: 10, maxAmmo: 10, speed: 720, alive: true },
+      { name: 'BETA', x: 480, y: this.groundY - 8, ammo: 16, maxAmmo: 16, speed: 960, alive: true },
+      { name: 'GAMMA', x: 875, y: this.groundY - 8, ammo: 10, maxAmmo: 10, speed: 720, alive: true }
     ];
 
     this.interceptors = [];
@@ -35228,9 +35410,11 @@ class MissileCommand {
     this.explosions = [];
     this.floatingTexts = [];
 
-    this.waveEnemiesRemaining = 10 + level * 4;
-    this.spawnTimer = 0.6;
-    this.bomberTimer = 4.5;
+    // Gradual progression: Wave 1 starts calm (8 missiles, no bombers, no MIRVs)
+    this.waveEnemiesRemaining = Math.min(30, 6 + level * 2);
+    this.spawnTimer = 1.2;
+    // Bombers only start appearing from Wave 2 onwards
+    this.bomberTimer = level >= 2 ? 6.5 : 9999;
     this.waveClearTimer = 0;
   }
 
@@ -35250,6 +35434,27 @@ class MissileCommand {
       this.highScore = this.score;
       HighScoreStore.submit(this.id, this.score);
     }
+
+    // Bonus City awarded at 8,000 points and every 10,000 thereafter
+    if (this.score >= this.nextBonusCityScore) {
+      this.nextBonusCityScore += 10000;
+      const deadCity = this.cities.find((c) => !c.alive);
+      if (deadCity) {
+        deadCity.alive = true;
+        this.lives = this.cities.filter((c) => c.alive).length;
+        this.audio.playPowerUp();
+        this.floatingTexts.push({
+          text: '★ BONUS CITY REBUILT! ★',
+          x: deadCity.x,
+          y: deadCity.y - 45,
+          vy: -35,
+          life: 2.4,
+          maxLife: 2.4,
+          color: PALETTE.GREEN
+        });
+      }
+    }
+
     if (x !== undefined && y !== undefined) {
       this.floatingTexts.push({
         text: `+${pts}`,
@@ -35263,19 +35468,28 @@ class MissileCommand {
     }
   }
 
-  _launchInterceptor(targetX, targetY) {
+  _launchInterceptor(targetX, targetY, preferredBatteryIndex = -1) {
     const clampedY = Math.max(52, Math.min(this.groundY - 24, targetY));
     const clampedX = Math.max(20, Math.min(940, targetX));
 
-    // Find nearest operational ABM Battery with remaining ammo
     let bestBattery = null;
-    let bestDist = Infinity;
-    for (const bat of this.batteries) {
-      if (bat.alive && bat.ammo > 0) {
-        const d = Math.hypot(bat.x - clampedX, bat.y - clampedY);
-        if (d < bestDist) {
-          bestDist = d;
-          bestBattery = bat;
+    if (
+      preferredBatteryIndex >= 0 &&
+      preferredBatteryIndex < this.batteries.length &&
+      this.batteries[preferredBatteryIndex].alive &&
+      this.batteries[preferredBatteryIndex].ammo > 0
+    ) {
+      bestBattery = this.batteries[preferredBatteryIndex];
+    } else {
+      // Find nearest operational ABM Battery with remaining ammo
+      let bestDist = Infinity;
+      for (const bat of this.batteries) {
+        if (bat.alive && bat.ammo > 0) {
+          const d = Math.hypot(bat.x - clampedX, bat.y - clampedY);
+          if (d < bestDist) {
+            bestDist = d;
+            bestBattery = bat;
+          }
         }
       }
     }
@@ -35304,18 +35518,18 @@ class MissileCommand {
     this.audio.playLaser(980, 260, 0.11);
   }
 
-  _spawnExplosion(x, y, maxRadius = 44, isPlayerExplosion = true) {
+  _spawnExplosion(x, y, maxRadius = 64, isPlayerExplosion = true) {
     this.explosions.push({
       x,
       y,
-      radius: 2,
+      radius: 4,
       maxRadius,
       phase: 'EXPANDING', // 'EXPANDING' | 'HOLD' | 'CONTRACTING'
-      holdTimer: 0.18,
+      holdTimer: isPlayerExplosion ? 0.48 : 0.28,
       isPlayerExplosion,
       colorCycle: 0
     });
-    this.audio.playExplosion(0.32, isPlayerExplosion ? 1100 : 600);
+    this.audio.playExplosion(0.35, isPlayerExplosion ? 1100 : 650);
   }
 
   _spawnEnemyICBM(startX = null, startY = 42, canSplit = true) {
@@ -35329,8 +35543,12 @@ class MissileCommand {
     const tgt = targets[Math.floor(Math.random() * targets.length)];
     const sx = startX !== null ? startX : 40 + Math.random() * 880;
     const sy = startY;
-    const speed = 58 + this.level * 12 + Math.random() * 20;
+    // Base speed scaled smoothly: 40 at level 1, +6 per level
+    const speed = 40 + Math.min(10, this.level) * 6 + Math.random() * 10;
     const dir = new Vector2(tgt.x - sx, tgt.y - sy).normalize();
+
+    // No MIRVs in Wave 1! Wave 2 gets ~12% chance, scaling gently
+    const mirvChance = this.level <= 1 ? 0 : Math.min(0.32, 0.08 + this.level * 0.04);
 
     this.enemyMissiles.push({
       startX: sx,
@@ -35341,8 +35559,8 @@ class MissileCommand {
       targetY: tgt.y,
       vx: dir.x * speed,
       vy: dir.y * speed,
-      canSplit: canSplit && Math.random() < 0.28 + this.level * 0.05,
-      splitY: 140 + Math.random() * 110
+      canSplit: canSplit && Math.random() < mirvChance,
+      splitY: 160 + Math.random() * 100
     });
   }
 
@@ -35384,7 +35602,8 @@ class MissileCommand {
 
     const axis = this.input.getAxis();
     if (Math.hypot(axis.x, axis.y) > 0.05) {
-      const aimSpeed = 410;
+      this.aimHoldTime = (this.aimHoldTime || 0) + dt;
+      const aimSpeed = Math.min(880, 520 + this.aimHoldTime * 360);
       this.crosshair.x = Math.max(
         20,
         Math.min(940, this.crosshair.x + axis.x * aimSpeed * dt)
@@ -35393,16 +35612,33 @@ class MissileCommand {
         48,
         Math.min(this.groundY - 20, this.crosshair.y + axis.y * aimSpeed * dt)
       );
+    } else {
+      this.aimHoldTime = 0;
     }
 
-    // Fire ABM Interceptor
+    // Dedicated Battery Fire with Keyboard / Gamepad shortcuts
+    let firedBatteryIdx = -1;
+    if (this.input.isKeyJustPressed('KeyA') || this.input.isKeyJustPressed('Digit1')) {
+      firedBatteryIdx = 0;
+    } else if (this.input.isKeyJustPressed('KeyS') || this.input.isKeyJustPressed('Digit2')) {
+      firedBatteryIdx = 1;
+    } else if (
+      this.input.isKeyJustPressed('KeyD') ||
+      this.input.isKeyJustPressed('Digit3') ||
+      this.input.isKeyJustPressed('KeyC')
+    ) {
+      firedBatteryIdx = 2;
+    }
+
     if (ptr.justPressed) {
-      this._launchInterceptor(ptr.x, ptr.y);
+      this._launchInterceptor(ptr.x, ptr.y, -1);
+    } else if (firedBatteryIdx >= 0) {
+      this._launchInterceptor(this.crosshair.x, this.crosshair.y, firedBatteryIdx);
     } else if (
       this.input.isJustPressed('actionA') ||
       this.input.isJustPressed('actionB')
     ) {
-      this._launchInterceptor(this.crosshair.x, this.crosshair.y);
+      this._launchInterceptor(this.crosshair.x, this.crosshair.y, -1);
     }
 
     // Wave Clear Transition
@@ -35449,7 +35685,7 @@ class MissileCommand {
       const remDist = Math.hypot(ic.targetX - ic.x, ic.targetY - ic.y);
 
       if (remDist <= Math.hypot(stepX, stepY)) {
-        this._spawnExplosion(ic.targetX, ic.targetY, 46, true);
+        this._spawnExplosion(ic.targetX, ic.targetY, 64, true);
         this.interceptors.splice(i, 1);
       } else {
         ic.x += stepX;
@@ -35522,7 +35758,7 @@ class MissileCommand {
       ex.colorCycle += dt * 18;
 
       if (ex.phase === 'EXPANDING') {
-        ex.radius += 115 * dt;
+        ex.radius += 140 * dt;
         if (ex.radius >= ex.maxRadius) {
           ex.radius = ex.maxRadius;
           ex.phase = 'HOLD';
@@ -35533,7 +35769,7 @@ class MissileCommand {
           ex.phase = 'CONTRACTING';
         }
       } else {
-        ex.radius -= 85 * dt;
+        ex.radius -= 75 * dt;
         if (ex.radius <= 0) {
           this.explosions.splice(i, 1);
           continue;
@@ -35543,11 +35779,11 @@ class MissileCommand {
       // Chain-Destroy Incoming Enemy Missiles inside the Blast Radius!
       for (let j = this.enemyMissiles.length - 1; j >= 0; j--) {
         const em = this.enemyMissiles[j];
-        if (Math.hypot(em.x - ex.x, em.y - ex.y) <= ex.radius + 4) {
+        if (Math.hypot(em.x - ex.x, em.y - ex.y) <= ex.radius + 10) {
           const pts = 25 * Math.min(6, this.level);
           this._addScore(pts, em.x, em.y, PALETTE.CYAN);
           // Chain-reaction blast!
-          this._spawnExplosion(em.x, em.y, 38, true);
+          this._spawnExplosion(em.x, em.y, 52, true);
           this.enemyMissiles.splice(j, 1);
         }
       }
@@ -35555,10 +35791,10 @@ class MissileCommand {
       // Destroy Smart Bombers inside Blast Radius!
       for (let j = this.bombers.length - 1; j >= 0; j--) {
         const bm = this.bombers[j];
-        if (Math.hypot(bm.x - ex.x, bm.y - ex.y) <= ex.radius + 14) {
+        if (Math.hypot(bm.x - ex.x, bm.y - ex.y) <= ex.radius + 18) {
           const pts = 100 * Math.min(6, this.level);
           this._addScore(pts, bm.x, bm.y, PALETTE.GOLD);
-          this._spawnExplosion(bm.x, bm.y, 44, true);
+          this._spawnExplosion(bm.x, bm.y, 56, true);
           this.bombers.splice(j, 1);
         }
       }
@@ -35582,7 +35818,19 @@ class MissileCommand {
     ) {
       const remainingAmmo = this.batteries.reduce((acc, b) => acc + b.ammo, 0);
       const survivingCities = this.cities.filter((c) => c.alive).length;
-      const bonus = (remainingAmmo * 15 + survivingCities * 150) * this.level;
+      let bonus = (remainingAmmo * 20 + survivingCities * 150) * this.level;
+      if (survivingCities === 6) {
+        bonus += 500 * this.level;
+        this.floatingTexts.push({
+          text: '★ PERFECT WAVE! ALL 6 CITIES SAVED (+500) ★',
+          x: 480,
+          y: 200,
+          vy: -25,
+          life: 2.2,
+          maxLife: 2.2,
+          color: PALETTE.GOLD
+        });
+      }
       this._addScore(bonus, 480, 240, PALETTE.GREEN);
       this.audio.playStageClear();
       this.waveClearTimer = 2.0;
@@ -35841,7 +36089,7 @@ class MissileCommand {
     this.renderer.drawStateOverlay(this.state, {
       title: this.title,
       subtitle: 'THERMONUCLEAR ABM SKYLINE DEFENSE',
-      controls: 'MOUSE/TAP OR ARROWS: AIM  |  CLICK/Z/SPACE/X: LAUNCH ABM INTERCEPTOR',
+      controls: 'AIM: MOUSE / TAP / D-PAD  |  FIRE: CLICK / [Z]: LEFT  [X/SPACE]: CENTER  [C]: RIGHT',
       score: this.score,
       highScore: this.highScore,
       accent: PALETTE.PINK
@@ -62903,6 +63151,10 @@ class RetroArcadeStudio {
       this.launchGame(gameId);
     });
 
+    CloudPersistence.onUpdate(() => {
+      this._syncFavoriteButton();
+    });
+
     this.activeGame = null;
     this.activeGameId = null;
     this.lastFrameTime = performance.now();
@@ -62981,10 +63233,30 @@ class RetroArcadeStudio {
   _syncFavoriteButton() {
     const btnFav = document.getElementById('btn-fav-game');
     if (!btnFav) return;
-    const targetId = this.activeGameId || (this.mainMenu && GAME_CATALOG[this.mainMenu.selectedIndex]?.id);
+    const targetId = this.activeGameId || (this.mainMenu && this.mainMenu.getSelectedGame()?.id);
     const isFav = targetId ? CloudPersistence.isFavorite(targetId) : false;
     btnFav.textContent = isFav ? '♥ SAVED' : '♡ FAV';
     btnFav.classList.toggle('active', isFav);
+  }
+
+  toggleCurrentFavorite() {
+    const targetId = this.activeGameId || (this.mainMenu && this.mainMenu.getSelectedGame()?.id);
+    if (!targetId) return false;
+    const isFav = CloudPersistence.toggleFavorite(targetId);
+    this._syncFavoriteButton();
+    if (this.audio) {
+      this.audio.init();
+      this.audio.playCoin();
+    }
+    const meta = GAME_CATALOG.find((g) => g.id === targetId);
+    this.renderer.pushToast({
+      icon: isFav ? '♥' : '♡',
+      title: isFav ? 'SAVED TO FAVORITES' : 'REMOVED FROM FAVORITES',
+      desc: meta ? meta.title : targetId.toUpperCase(),
+      color: '#FF007A',
+      timer: 2.1
+    });
+    return isFav;
   }
 
   _applyQueryParams() {
@@ -63033,7 +63305,7 @@ class RetroArcadeStudio {
   }
 
   loadCurrentState() {
-    const targetId = this.activeGameId || (this.mainMenu && GAME_CATALOG[this.mainMenu.selectedIndex]?.id);
+    const targetId = this.activeGameId || (this.mainMenu && this.mainMenu.getSelectedGame()?.id);
     if (!targetId) return false;
     if (!SaveStateManager.hasSave(targetId)) {
       this.renderer.pushToast({
@@ -63316,21 +63588,7 @@ class RetroArcadeStudio {
     const btnFav = document.getElementById('btn-fav-game');
     if (btnFav) {
       btnFav.addEventListener('click', () => {
-        this.audio.init();
-        this.audio.playCoin();
-        const targetId = this.activeGameId || (this.mainMenu && GAME_CATALOG[this.mainMenu.selectedIndex]?.id);
-        if (targetId) {
-          const isFav = CloudPersistence.toggleFavorite(targetId);
-          this._syncFavoriteButton();
-          const meta = GAME_CATALOG.find((g) => g.id === targetId);
-          this.renderer.pushToast({
-            icon: isFav ? '♥' : '♡',
-            title: isFav ? `SAVED TO FAVORITES` : `REMOVED FROM FAVORITES`,
-            desc: meta ? meta.title : targetId.toUpperCase(),
-            color: '#FF007A',
-            timer: 2.1
-          });
-        }
+        this.toggleCurrentFavorite();
       });
     }
 
@@ -63542,6 +63800,8 @@ class RetroArcadeStudio {
       const isMatch = (!this.activeGameId && pid === 'lobby') || pid === this.activeGameId;
       pill.classList.toggle('active', isMatch);
     });
+
+    this._syncFavoriteButton();
   }
 
   changeStage(delta = 1) {
@@ -63624,6 +63884,13 @@ class RetroArcadeStudio {
     }
     if (this.input.isKeyJustPressed('KeyT') || this.input.isGamepadFastForwardPressed()) {
       this.cycleSpeed();
+    }
+    if (
+      this.input.isKeyJustPressed('KeyF') ||
+      (typeof this.input.isGamepadFavoritePressed === 'function' &&
+        this.input.isGamepadFavoritePressed())
+    ) {
+      this.toggleCurrentFavorite();
     }
     if (this.input.isKeyJustPressed('BracketLeft')) {
       this.changeStage(-1);
