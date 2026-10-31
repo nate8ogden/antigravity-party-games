@@ -278,8 +278,14 @@ export class Rampage {
     if (p.punchTimer > 0) p.punchTimer = Math.max(0, p.punchTimer - dt);
     if (p.punchCooldown > 0) p.punchCooldown = Math.max(0, p.punchCooldown - dt);
 
-    // Toggle Monster Character: George (King Kong Gorilla) / Lizzie (Godzilla Kaiju) / Ralph (Werewolf)
-    if (this.input.isKeyJustPressed('KeyC')) {
+    // Toggle Monster Character: George (King Kong Gorilla) / Lizzie (Godzilla Kaiju) / Ralph (Werewolf) via KeyC, Select, or L1/R1
+    if (
+      this.input.isKeyJustPressed('KeyC') ||
+      (typeof this.input.isGamepadSelectPressed === 'function' &&
+        this.input.isGamepadSelectPressed()) ||
+      (typeof this.input.isGamepadNextTabPressed === 'function' &&
+        this.input.isGamepadNextTabPressed())
+    ) {
       const roster = ['george', 'lizzie', 'ralph'];
       const nextIdx = (roster.indexOf(p.monster || 'george') + 1) % roster.length;
       p.monster = roster[nextIdx];

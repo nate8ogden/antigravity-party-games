@@ -314,8 +314,19 @@ export class Robotron {
       Math.min(this.arena.bottom - 16, p.y + axis.y * p.speed * dt)
     );
 
+    // Dual-analog stick aiming check (Twin-Stick Arcade Controller support)
+    const rightAxis =
+      typeof this.input.getRightAxis === 'function'
+        ? this.input.getRightAxis()
+        : { x: 0, y: 0 };
+    const hasRightStick = Math.hypot(rightAxis.x, rightAxis.y) > 0.25;
+
     // Update 8-way aim direction (unless holding Action B strafe-lock)
-    if (!lockAim && (Math.abs(axis.x) > 0.1 || Math.abs(axis.y) > 0.1)) {
+    if (hasRightStick) {
+      const len = Math.hypot(rightAxis.x, rightAxis.y);
+      p.aimX = rightAxis.x / len;
+      p.aimY = rightAxis.y / len;
+    } else if (!lockAim && (Math.abs(axis.x) > 0.1 || Math.abs(axis.y) > 0.1)) {
       const len = Math.hypot(axis.x, axis.y);
       p.aimX = axis.x / len;
       p.aimY = axis.y / len;
@@ -347,10 +358,11 @@ export class Robotron {
       }
     }
 
-    // Fire rapid 8-way laser stream (Action A or pointer hold)
+    // Fire rapid 8-way laser stream (Action A, Right Analog Stick deflection, or pointer hold)
     const wantsFire =
       this.input.isDown('actionA') ||
       this.input.isJustPressed('actionA') ||
+      hasRightStick ||
       this.input.pointer.down;
 
     if (wantsFire && p.fireCooldown <= 0) {

@@ -573,8 +573,15 @@ export class TetrisRetro {
       return;
     }
 
-    // Mode Toggle via Tab / KeyC or clicking the left-panel Cabinet Mode Tabs
-    if (this.input.isKeyJustPressed('Tab') || this.input.isKeyJustPressed('KeyC')) {
+    // Mode Toggle via Tab / KeyC, Gamepad Bumpers (L1/R1), or clicking the left-panel Cabinet Mode Tabs
+    if (
+      this.input.isKeyJustPressed('Tab') ||
+      this.input.isKeyJustPressed('KeyC') ||
+      (typeof this.input.isGamepadNextTabPressed === 'function' &&
+        this.input.isGamepadNextTabPressed()) ||
+      (typeof this.input.isGamepadPrevTabPressed === 'function' &&
+        this.input.isGamepadPrevTabPressed())
+    ) {
       this.switchCabinetMode(this.cabinetMode === 'TETRIS' ? 'COLUMNS' : 'TETRIS');
     }
     if (this.input.pointer.justPressed) {

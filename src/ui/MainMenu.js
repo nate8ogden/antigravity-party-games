@@ -1854,8 +1854,12 @@ export class MainMenu {
     }
     const activeGame = list[this.selectedIndex] || list[0];
 
-    // Tab toggle with Action B (X / Shift)
-    if (this.input.isJustPressed('actionB')) {
+    // Tab toggle with Action B (X / Shift) or Gamepad L1 / R1
+    if (
+      this.input.isJustPressed('actionB') ||
+      (typeof this.input.isGamepadNextTabPressed === 'function' &&
+        this.input.isGamepadNextTabPressed())
+    ) {
       const nextTab =
         this.activeTab === 'core'
           ? 'expanded'
@@ -1863,10 +1867,26 @@ export class MainMenu {
           ? 'vault2'
           : 'core';
       this.setTab(nextTab);
+    } else if (
+      typeof this.input.isGamepadPrevTabPressed === 'function' &&
+      this.input.isGamepadPrevTabPressed()
+    ) {
+      const prevTab =
+        this.activeTab === 'vault2'
+          ? 'expanded'
+          : this.activeTab === 'expanded'
+          ? 'core'
+          : 'vault2';
+      this.setTab(prevTab);
     }
 
-    // Favorite / Bookmark toggle with KeyF
-    if (this.input.isKeyJustPressed('KeyF') && activeGame) {
+    // Favorite / Bookmark toggle with KeyF or Gamepad Favorite
+    const favPressed =
+      this.input.isKeyJustPressed('KeyF') ||
+      (typeof this.input.isGamepadFavoritePressed === 'function' &&
+        this.input.isGamepadFavoritePressed());
+
+    if (favPressed && activeGame) {
       const saved = cloudPersistence.toggleSaveGame(activeGame.id);
       this.audio.playCoin();
       achievementManager.unlock('arcade_critic', this.audio);
@@ -2054,14 +2074,23 @@ export class MainMenu {
         ? 'FIREBASE CLOUD: SYNCED'
         : 'FIREBASE CLOUD: LOCAL+CACHE';
 
+    const hasGamepad =
+      this.input &&
+      typeof this.input.isGamepadConnected === 'function' &&
+      this.input.isGamepadConnected();
+    const padName = hasGamepad ? this.input.getGamepadName().slice(0, 20).toUpperCase() : '';
+    const bannerSubtitle = hasGamepad
+      ? `🎮 ${padName} CONNECTED  •  [A]: PLAY  •  [L1/R1]: TABS  •  [HOLD L2]: REWIND  •  [SELECT+START]: EXIT`
+      : `CRT SHADER PIPELINE  •  ${cloudStatus}  •  SAVE STATES [F5/F8]  •  REWIND [R]`;
+
     this.renderer.drawText(
-      `CRT SHADER PIPELINE  •  ${cloudStatus}  •  SAVE STATES [F5/F8]  •  REWIND [R]`,
+      bannerSubtitle,
       W / 2,
       49,
       {
         font: FONTS.HUD,
         size: 10.5,
-        color: PALETTE.GOLD,
+        color: hasGamepad ? PALETTE.CYAN : PALETTE.GOLD,
         align: 'center'
       }
     );
@@ -2217,7 +2246,11 @@ export class MainMenu {
         ctx.restore();
 
         this.renderer.drawText(
-          selected ? '▶ INSERT COIN [Z / CLICK]' : '▶ PLAY CABINET',
+          selected
+            ? hasGamepad
+              ? '▶ PRESS [A] TO PLAY'
+              : '▶ INSERT COIN [Z / CLICK]'
+            : '▶ PLAY CABINET',
           x + cardW / 2,
           y + 151,
           {
@@ -2327,7 +2360,11 @@ export class MainMenu {
         });
 
         this.renderer.drawText(
-          selected ? '▶ CLICK / Z TO PLAY' : game.genre.toUpperCase(),
+          selected
+            ? hasGamepad
+              ? '▶ PRESS [A] TO PLAY'
+              : '▶ CLICK / Z TO PLAY'
+            : game.genre.toUpperCase(),
           x + textXOffset,
           y + 73,
           {
@@ -2401,12 +2438,23 @@ export class MainMenu {
       ctx.fillRect(favX, favY, 82, 19);
       ctx.strokeRect(favX, favY, 82, 19);
       ctx.restore();
-      this.renderer.drawText(rec.saved ? '♥ SAVED [F]' : '♡ SAVE [F]', favX + 41, 470, {
-        font: FONTS.HUD,
-        size: 10,
-        color: rec.saved ? PALETTE.PINK : PALETTE.WHITE,
-        align: 'center'
-      });
+      this.renderer.drawText(
+        rec.saved
+          ? hasGamepad
+            ? '♥ SAVED [F/Y]'
+            : '♥ SAVED [F]'
+          : hasGamepad
+          ? '♡ SAVE [F/Y]'
+          : '♡ SAVE [F]',
+        favX + 41,
+        470,
+        {
+          font: FONTS.HUD,
+          size: 10,
+          color: rec.saved ? PALETTE.PINK : PALETTE.WHITE,
+          align: 'center'
+        }
+      );
 
       // Clear Gameplay Description & Controls in Inspector
       this.renderer.drawText(`GAMEPLAY: ${activeGame.mechanics}`, textLeft, 494, {

@@ -2143,6 +2143,9 @@ class InputManager {
     };
 
     this.gamepadState = {
+      connected: false,
+      count: 0,
+      name: '',
       up: false,
       down: false,
       left: false,
@@ -2151,9 +2154,37 @@ class InputManager {
       actionB: false,
       pause: false,
       menu: false,
+      select: false,
+      start: false,
+      l1: false,
+      r1: false,
+      l2: false,
+      r2: false,
+      l3: false,
+      r3: false,
       axisX: 0,
-      axisY: 0
+      axisY: 0,
+      rightAxisX: 0,
+      rightAxisY: 0,
+      rewindHeld: false,
+      saveState: false,
+      loadState: false,
+      fastForward: false,
+      favorite: false,
+      nextTab: false,
+      prevTab: false
     };
+
+    this._gamepadSaveLatched = false;
+    this._gamepadLoadLatched = false;
+    this._gamepadFastForwardLatched = false;
+    this._gamepadFavoriteLatched = false;
+    this._gamepadNextTabLatched = false;
+    this._gamepadPrevTabLatched = false;
+    this._gamepadSelectLatched = false;
+    this._gamepadStartLatched = false;
+    this.onGamepadConnected = null;
+    this.onGamepadDisconnected = null;
 
     this.attractState = {
       active: false,
@@ -2211,6 +2242,7 @@ class InputManager {
     this.logicalHeight = 540;
 
     this.initKeyboard();
+    this.initGamepad();
     this.initTouchOverlay();
     if (this.canvas) {
       this.bindCanvasPointer(this.canvas);
@@ -2302,6 +2334,25 @@ class InputManager {
 
     this._onBlur = () => {
       this.resetState();
+    };
+  }
+
+  initGamepad() {
+    this._onGamepadConnected = (e) => {
+      this._notifyInteraction();
+      this.pollGamepads();
+      if (typeof this.onGamepadConnected === 'function') {
+        const pad = e.gamepad || (e.detail && e.detail.gamepad);
+        this.onGamepadConnected(pad);
+      }
+    };
+
+    this._onGamepadDisconnected = (e) => {
+      this.pollGamepads();
+      if (typeof this.onGamepadDisconnected === 'function') {
+        const pad = e.gamepad || (e.detail && e.detail.gamepad);
+        this.onGamepadDisconnected(pad);
+      }
     };
   }
 
@@ -2425,6 +2476,12 @@ class InputManager {
       this._addManagedListener(window, 'blur', this._onBlur);
       if (this._onWindowMouseUp) {
         this._addManagedListener(window, 'mouseup', this._onWindowMouseUp);
+      }
+      if (this._onGamepadConnected) {
+        this._addManagedListener(window, 'gamepadconnected', this._onGamepadConnected);
+      }
+      if (this._onGamepadDisconnected) {
+        this._addManagedListener(window, 'gamepaddisconnected', this._onGamepadDisconnected);
       }
     }
 
@@ -2614,37 +2671,148 @@ class InputManager {
     let actionB = false;
     let pause = false;
     let menu = false;
+    let select = false;
+    let start = false;
+    let l1 = false;
+    let r1 = false;
+    let l2 = false;
+    let r2 = false;
+    let l3 = false;
+    let r3 = false;
+    let saveState = false;
+    let loadState = false;
+    let fastForward = false;
+    let favorite = false;
+    let nextTab = false;
+    let prevTab = false;
+    let rewindHeld = false;
     let axisX = 0;
     let axisY = 0;
+    let rightAxisX = 0;
+    let rightAxisY = 0;
+    let connectedCount = 0;
+    let primaryName = '';
 
     for (let i = 0; i < pads.length; i++) {
       const gp = pads[i];
       if (!gp || !gp.connected) continue;
+      connectedCount++;
+      if (!primaryName && gp.id) primaryName = gp.id;
+
       const b = gp.buttons || [];
       const ax = gp.axes || [];
-      const lx = ax[0] || 0;
-      const ly = ax[1] || 0;
-      if (Math.abs(lx) > 0.25) axisX = lx;
-      if (Math.abs(ly) > 0.25) axisY = ly;
 
-      if (ly < -0.35 || (b[12] && b[12].pressed)) up = true;
-      if (ly > 0.35 || (b[13] && b[13].pressed)) down = true;
-      if (lx < -0.35 || (b[14] && b[14].pressed)) left = true;
-      if (lx > 0.35 || (b[15] && b[15].pressed)) right = true;
+      // Primary Left Stick / Joystick axes
+      const lx = ax[0] ?? 0;
+      const ly = ax[1] ?? 0;
+      // Secondary Right Stick / Aiming axes
+      const rx = ax[2] ?? 0;
+      const ry = ax[3] ?? 0;
 
-      if ((b[0] && b[0].pressed) || (b[2] && b[2].pressed)) actionA = true;
-      if ((b[1] && b[1].pressed) || (b[3] && b[3].pressed)) actionB = true;
+      // Linux / Raspberry Pi / USB Arcade Encoder Hat Switch fallback:
+      const hatX =
+        ax.length > 4 && Math.abs(ax[4]) > 0.35
+          ? ax[4]
+          : ax.length > 6 && Math.abs(ax[6]) > 0.35
+          ? ax[6]
+          : 0;
+      const hatY =
+        ax.length > 5 && Math.abs(ax[5]) > 0.35
+          ? ax[5]
+          : ax.length > 7 && Math.abs(ax[7]) > 0.35
+          ? ax[7]
+          : 0;
 
-      const selectDown = !!(b[8] && b[8].pressed);
-      const startDown = !!(b[9] && b[9].pressed);
-      if (selectDown && startDown) {
+      if (Math.abs(lx) > 0.20) axisX = lx;
+      else if (Math.abs(hatX) > 0.20) axisX = hatX;
+
+      if (Math.abs(ly) > 0.20) axisY = ly;
+      else if (Math.abs(hatY) > 0.20) axisY = hatY;
+
+      if (Math.abs(rx) > 0.20) rightAxisX = rx;
+      if (Math.abs(ry) > 0.20) rightAxisY = ry;
+
+      // D-Pad Directional Checks (Stick, Hat Switch, or D-Pad buttons 12-15)
+      if (ly < -0.35 || hatY < -0.35 || (b[12] && b[12].pressed)) up = true;
+      if (ly > 0.35 || hatY > 0.35 || (b[13] && b[13].pressed)) down = true;
+      if (lx < -0.35 || hatX < -0.35 || (b[14] && b[14].pressed)) left = true;
+      if (lx > 0.35 || hatX > 0.35 || (b[15] && b[15].pressed)) right = true;
+
+      // Digital button reads
+      const b0 = !!(b[0] && b[0].pressed); // Face Bottom (A/Cross)
+      const b1 = !!(b[1] && b[1].pressed); // Face Right (B/Circle)
+      const b2 = !!(b[2] && b[2].pressed); // Face Left (X/Square)
+      const b3 = !!(b[3] && b[3].pressed); // Face Top (Y/Triangle)
+      const b4 = !!(b[4] && b[4].pressed); // L1 / LB
+      const b5 = !!(b[5] && b[5].pressed); // R1 / RB
+      const b6 = !!(b[6] && (b[6].pressed || (typeof b[6].value === 'number' && b[6].value > 0.4))); // L2 / LT
+      const b7 = !!(b[7] && (b[7].pressed || (typeof b[7].value === 'number' && b[7].value > 0.4))); // R2 / RT
+      const b8 = !!(b[8] && b[8].pressed); // Select / Back / Share / Coin
+      const b9 = !!(b[9] && b[9].pressed); // Start / Options
+      const b10 = !!(b[10] && b[10].pressed); // L3
+      const b11 = !!(b[11] && b[11].pressed); // R3
+      const b16 = !!(b[16] && b[16].pressed); // Guide / Home / PS button
+
+      if (b4) l1 = true;
+      if (b5) r1 = true;
+      if (b6) l2 = true;
+      if (b7) r2 = true;
+      if (b10) l3 = true;
+      if (b11) r3 = true;
+
+      // RetroPie & Console Hotkey combos
+      // 1. SELECT + START (or Guide button): Universal Return to Arcade Lobby
+      if ((b8 && b9) || b16) {
         menu = true;
-      } else if (startDown) {
+      } else if (b9 && !b8) {
+        // START alone: Pause / Start Game
         pause = true;
+        start = true;
+      }
+
+      // 2. SELECT + L1: Quick Save State (RetroPie standard)
+      if (b8 && b4) {
+        saveState = true;
+      }
+      // 3. SELECT + R1: Quick Load State (RetroPie standard)
+      if (b8 && b5) {
+        loadState = true;
+      }
+      // 4. SELECT + (b2 or b3): Toggle Favorite / Bookmark
+      if (b8 && (b2 || b3)) {
+        favorite = true;
+      }
+      // 5. SELECT alone: Coin / Select / Tab
+      if (b8 && !b9 && !b4 && !b5 && !b2 && !b3) {
+        select = true;
+      }
+
+      // 6. Fast Forward (Speed toggle): R3 stick click or SELECT + R2
+      if (b11 || (b8 && b7)) {
+        fastForward = true;
+      }
+
+      // 7. Rewind time: Hold L2 / LT or L3
+      if (b6 || b10) {
+        rewindHeld = true;
+      }
+
+      // 8. Menu Tab navigation via shoulder bumpers (when Select not held):
+      if (b4 && !b8) prevTab = true;
+      if (b5 && !b8) nextTab = true;
+
+      // 9. Action A (Primary): Face Bottom (b0), Face Left (b2), Shoulder L1 (b4), Trigger L2 (b6), or SELECT on title screen
+      if (b0 || b2 || (b4 && !b8) || b6 || (b8 && !b9 && !b4 && !b5)) {
+        actionA = true;
+      }
+
+      // 10. Action B (Secondary): Face Right (b1), Face Top (b3), Shoulder R1 (b5), Trigger R2 (b7)
+      if (b1 || b3 || (b5 && !b8) || b7) {
+        actionB = true;
       }
     }
 
-    if (up || down || left || right || actionA || actionB) {
+    if (up || down || left || right || actionA || actionB || select || start) {
       this._notifyInteraction();
     }
 
@@ -2663,6 +2831,18 @@ class InputManager {
       if (typeof this.onMenuCallback === 'function') this.onMenuCallback();
     }
 
+    if (saveState && !this.gamepadState.saveState) this._gamepadSaveLatched = true;
+    if (loadState && !this.gamepadState.loadState) this._gamepadLoadLatched = true;
+    if (fastForward && !this.gamepadState.fastForward) this._gamepadFastForwardLatched = true;
+    if (favorite && !this.gamepadState.favorite) this._gamepadFavoriteLatched = true;
+    if (nextTab && !this.gamepadState.nextTab) this._gamepadNextTabLatched = true;
+    if (prevTab && !this.gamepadState.prevTab) this._gamepadPrevTabLatched = true;
+    if (select && !this.gamepadState.select) this._gamepadSelectLatched = true;
+    if (start && !this.gamepadState.start) this._gamepadStartLatched = true;
+
+    this.gamepadState.connected = connectedCount > 0;
+    this.gamepadState.count = connectedCount;
+    this.gamepadState.name = primaryName || (connectedCount > 0 ? 'Gamepad' : '');
     this.gamepadState.up = up;
     this.gamepadState.down = down;
     this.gamepadState.left = left;
@@ -2671,9 +2851,78 @@ class InputManager {
     this.gamepadState.actionB = actionB;
     this.gamepadState.pause = pause;
     this.gamepadState.menu = menu;
+    this.gamepadState.select = select;
+    this.gamepadState.start = start;
+    this.gamepadState.l1 = l1;
+    this.gamepadState.r1 = r1;
+    this.gamepadState.l2 = l2;
+    this.gamepadState.r2 = r2;
+    this.gamepadState.l3 = l3;
+    this.gamepadState.r3 = r3;
+    this.gamepadState.rewindHeld = rewindHeld;
+    this.gamepadState.saveState = saveState;
+    this.gamepadState.loadState = loadState;
+    this.gamepadState.fastForward = fastForward;
+    this.gamepadState.favorite = favorite;
+    this.gamepadState.nextTab = nextTab;
+    this.gamepadState.prevTab = prevTab;
     this.gamepadState.axisX = axisX;
     this.gamepadState.axisY = axisY;
+    this.gamepadState.rightAxisX = rightAxisX;
+    this.gamepadState.rightAxisY = rightAxisY;
+
     this.syncVirtualState();
+  }
+
+  isGamepadConnected() {
+    return this.gamepadState.connected;
+  }
+
+  getGamepadName() {
+    return this.gamepadState.name || 'Gamepad';
+  }
+
+  getRightAxis() {
+    if (Math.hypot(this.gamepadState.rightAxisX, this.gamepadState.rightAxisY) > 0.15) {
+      return { x: this.gamepadState.rightAxisX, y: this.gamepadState.rightAxisY };
+    }
+    return { x: 0, y: 0 };
+  }
+
+  isGamepadRewindHeld() {
+    return !!this.gamepadState.rewindHeld;
+  }
+
+  isGamepadSaveStatePressed() {
+    return !!this._gamepadSaveLatched;
+  }
+
+  isGamepadLoadStatePressed() {
+    return !!this._gamepadLoadLatched;
+  }
+
+  isGamepadFastForwardPressed() {
+    return !!this._gamepadFastForwardLatched;
+  }
+
+  isGamepadFavoritePressed() {
+    return !!this._gamepadFavoriteLatched;
+  }
+
+  isGamepadNextTabPressed() {
+    return !!this._gamepadNextTabLatched;
+  }
+
+  isGamepadPrevTabPressed() {
+    return !!this._gamepadPrevTabLatched;
+  }
+
+  isGamepadSelectPressed() {
+    return !!this._gamepadSelectLatched;
+  }
+
+  isGamepadStartPressed() {
+    return !!this._gamepadStartLatched;
   }
 
   syncVirtualState() {
@@ -2790,6 +3039,14 @@ class InputManager {
     this.rawKeysJustPressed.clear();
     this.pointer.justPressed = false;
     this.pointer.justReleased = false;
+    this._gamepadSaveLatched = false;
+    this._gamepadLoadLatched = false;
+    this._gamepadFastForwardLatched = false;
+    this._gamepadFavoriteLatched = false;
+    this._gamepadNextTabLatched = false;
+    this._gamepadPrevTabLatched = false;
+    this._gamepadSelectLatched = false;
+    this._gamepadStartLatched = false;
   }
 
   resetState() {
@@ -2818,8 +3075,33 @@ class InputManager {
     this.gamepadState.actionB = false;
     this.gamepadState.pause = false;
     this.gamepadState.menu = false;
+    this.gamepadState.select = false;
+    this.gamepadState.start = false;
+    this.gamepadState.l1 = false;
+    this.gamepadState.r1 = false;
+    this.gamepadState.l2 = false;
+    this.gamepadState.r2 = false;
+    this.gamepadState.l3 = false;
+    this.gamepadState.r3 = false;
+    this.gamepadState.rewindHeld = false;
+    this.gamepadState.saveState = false;
+    this.gamepadState.loadState = false;
+    this.gamepadState.fastForward = false;
+    this.gamepadState.favorite = false;
+    this.gamepadState.nextTab = false;
+    this.gamepadState.prevTab = false;
     this.gamepadState.axisX = 0;
     this.gamepadState.axisY = 0;
+    this.gamepadState.rightAxisX = 0;
+    this.gamepadState.rightAxisY = 0;
+    this._gamepadSaveLatched = false;
+    this._gamepadLoadLatched = false;
+    this._gamepadFastForwardLatched = false;
+    this._gamepadFavoriteLatched = false;
+    this._gamepadNextTabLatched = false;
+    this._gamepadPrevTabLatched = false;
+    this._gamepadSelectLatched = false;
+    this._gamepadStartLatched = false;
     this.pointer.down = false;
     this.pointer.justPressed = false;
     this.pointer.justReleased = false;
@@ -8664,8 +8946,12 @@ class MainMenu {
     }
     const activeGame = list[this.selectedIndex] || list[0];
 
-    // Tab toggle with Action B (X / Shift)
-    if (this.input.isJustPressed('actionB')) {
+    // Tab toggle with Action B (X / Shift) or Gamepad L1 / R1
+    if (
+      this.input.isJustPressed('actionB') ||
+      (typeof this.input.isGamepadNextTabPressed === 'function' &&
+        this.input.isGamepadNextTabPressed())
+    ) {
       const nextTab =
         this.activeTab === 'core'
           ? 'expanded'
@@ -8673,10 +8959,26 @@ class MainMenu {
           ? 'vault2'
           : 'core';
       this.setTab(nextTab);
+    } else if (
+      typeof this.input.isGamepadPrevTabPressed === 'function' &&
+      this.input.isGamepadPrevTabPressed()
+    ) {
+      const prevTab =
+        this.activeTab === 'vault2'
+          ? 'expanded'
+          : this.activeTab === 'expanded'
+          ? 'core'
+          : 'vault2';
+      this.setTab(prevTab);
     }
 
-    // Favorite / Bookmark toggle with KeyF
-    if (this.input.isKeyJustPressed('KeyF') && activeGame) {
+    // Favorite / Bookmark toggle with KeyF or Gamepad Favorite
+    const favPressed =
+      this.input.isKeyJustPressed('KeyF') ||
+      (typeof this.input.isGamepadFavoritePressed === 'function' &&
+        this.input.isGamepadFavoritePressed());
+
+    if (favPressed && activeGame) {
       const saved = cloudPersistence.toggleSaveGame(activeGame.id);
       this.audio.playCoin();
       achievementManager.unlock('arcade_critic', this.audio);
@@ -8864,14 +9166,23 @@ class MainMenu {
         ? 'FIREBASE CLOUD: SYNCED'
         : 'FIREBASE CLOUD: LOCAL+CACHE';
 
+    const hasGamepad =
+      this.input &&
+      typeof this.input.isGamepadConnected === 'function' &&
+      this.input.isGamepadConnected();
+    const padName = hasGamepad ? this.input.getGamepadName().slice(0, 20).toUpperCase() : '';
+    const bannerSubtitle = hasGamepad
+      ? `🎮 ${padName} CONNECTED  •  [A]: PLAY  •  [L1/R1]: TABS  •  [HOLD L2]: REWIND  •  [SELECT+START]: EXIT`
+      : `CRT SHADER PIPELINE  •  ${cloudStatus}  •  SAVE STATES [F5/F8]  •  REWIND [R]`;
+
     this.renderer.drawText(
-      `CRT SHADER PIPELINE  •  ${cloudStatus}  •  SAVE STATES [F5/F8]  •  REWIND [R]`,
+      bannerSubtitle,
       W / 2,
       49,
       {
         font: FONTS.HUD,
         size: 10.5,
-        color: PALETTE.GOLD,
+        color: hasGamepad ? PALETTE.CYAN : PALETTE.GOLD,
         align: 'center'
       }
     );
@@ -9027,7 +9338,11 @@ class MainMenu {
         ctx.restore();
 
         this.renderer.drawText(
-          selected ? '▶ INSERT COIN [Z / CLICK]' : '▶ PLAY CABINET',
+          selected
+            ? hasGamepad
+              ? '▶ PRESS [A] TO PLAY'
+              : '▶ INSERT COIN [Z / CLICK]'
+            : '▶ PLAY CABINET',
           x + cardW / 2,
           y + 151,
           {
@@ -9137,7 +9452,11 @@ class MainMenu {
         });
 
         this.renderer.drawText(
-          selected ? '▶ CLICK / Z TO PLAY' : game.genre.toUpperCase(),
+          selected
+            ? hasGamepad
+              ? '▶ PRESS [A] TO PLAY'
+              : '▶ CLICK / Z TO PLAY'
+            : game.genre.toUpperCase(),
           x + textXOffset,
           y + 73,
           {
@@ -9211,12 +9530,23 @@ class MainMenu {
       ctx.fillRect(favX, favY, 82, 19);
       ctx.strokeRect(favX, favY, 82, 19);
       ctx.restore();
-      this.renderer.drawText(rec.saved ? '♥ SAVED [F]' : '♡ SAVE [F]', favX + 41, 470, {
-        font: FONTS.HUD,
-        size: 10,
-        color: rec.saved ? PALETTE.PINK : PALETTE.WHITE,
-        align: 'center'
-      });
+      this.renderer.drawText(
+        rec.saved
+          ? hasGamepad
+            ? '♥ SAVED [F/Y]'
+            : '♥ SAVED [F]'
+          : hasGamepad
+          ? '♡ SAVE [F/Y]'
+          : '♡ SAVE [F]',
+        favX + 41,
+        470,
+        {
+          font: FONTS.HUD,
+          size: 10,
+          color: rec.saved ? PALETTE.PINK : PALETTE.WHITE,
+          align: 'center'
+        }
+      );
 
       // Clear Gameplay Description & Controls in Inspector
       this.renderer.drawText(`GAMEPLAY: ${activeGame.mechanics}`, textLeft, 494, {
@@ -28197,8 +28527,14 @@ class Rampage {
     if (p.punchTimer > 0) p.punchTimer = Math.max(0, p.punchTimer - dt);
     if (p.punchCooldown > 0) p.punchCooldown = Math.max(0, p.punchCooldown - dt);
 
-    // Toggle Monster Character: George (King Kong Gorilla) / Lizzie (Godzilla Kaiju) / Ralph (Werewolf)
-    if (this.input.isKeyJustPressed('KeyC')) {
+    // Toggle Monster Character: George (King Kong Gorilla) / Lizzie (Godzilla Kaiju) / Ralph (Werewolf) via KeyC, Select, or L1/R1
+    if (
+      this.input.isKeyJustPressed('KeyC') ||
+      (typeof this.input.isGamepadSelectPressed === 'function' &&
+        this.input.isGamepadSelectPressed()) ||
+      (typeof this.input.isGamepadNextTabPressed === 'function' &&
+        this.input.isGamepadNextTabPressed())
+    ) {
       const roster = ['george', 'lizzie', 'ralph'];
       const nextIdx = (roster.indexOf(p.monster || 'george') + 1) % roster.length;
       p.monster = roster[nextIdx];
@@ -47693,8 +48029,19 @@ class Robotron {
       Math.min(this.arena.bottom - 16, p.y + axis.y * p.speed * dt)
     );
 
+    // Dual-analog stick aiming check (Twin-Stick Arcade Controller support)
+    const rightAxis =
+      typeof this.input.getRightAxis === 'function'
+        ? this.input.getRightAxis()
+        : { x: 0, y: 0 };
+    const hasRightStick = Math.hypot(rightAxis.x, rightAxis.y) > 0.25;
+
     // Update 8-way aim direction (unless holding Action B strafe-lock)
-    if (!lockAim && (Math.abs(axis.x) > 0.1 || Math.abs(axis.y) > 0.1)) {
+    if (hasRightStick) {
+      const len = Math.hypot(rightAxis.x, rightAxis.y);
+      p.aimX = rightAxis.x / len;
+      p.aimY = rightAxis.y / len;
+    } else if (!lockAim && (Math.abs(axis.x) > 0.1 || Math.abs(axis.y) > 0.1)) {
       const len = Math.hypot(axis.x, axis.y);
       p.aimX = axis.x / len;
       p.aimY = axis.y / len;
@@ -47726,10 +48073,11 @@ class Robotron {
       }
     }
 
-    // Fire rapid 8-way laser stream (Action A or pointer hold)
+    // Fire rapid 8-way laser stream (Action A, Right Analog Stick deflection, or pointer hold)
     const wantsFire =
       this.input.isDown('actionA') ||
       this.input.isJustPressed('actionA') ||
+      hasRightStick ||
       this.input.pointer.down;
 
     if (wantsFire && p.fireCooldown <= 0) {
@@ -60681,8 +61029,15 @@ class TetrisRetro {
       return;
     }
 
-    // Mode Toggle via Tab / KeyC or clicking the left-panel Cabinet Mode Tabs
-    if (this.input.isKeyJustPressed('Tab') || this.input.isKeyJustPressed('KeyC')) {
+    // Mode Toggle via Tab / KeyC, Gamepad Bumpers (L1/R1), or clicking the left-panel Cabinet Mode Tabs
+    if (
+      this.input.isKeyJustPressed('Tab') ||
+      this.input.isKeyJustPressed('KeyC') ||
+      (typeof this.input.isGamepadNextTabPressed === 'function' &&
+        this.input.isGamepadNextTabPressed()) ||
+      (typeof this.input.isGamepadPrevTabPressed === 'function' &&
+        this.input.isGamepadPrevTabPressed())
+    ) {
       this.switchCabinetMode(this.cabinetMode === 'TETRIS' ? 'COLUMNS' : 'TETRIS');
     }
     if (this.input.pointer.justPressed) {
@@ -61308,6 +61663,24 @@ class RetroArcadeStudio {
       this.returnToLobby();
     };
 
+    this.input.onGamepadConnected = (pad) => {
+      achievementManager.pushToast(
+        '🎮 CONTROLLER CONNECTED',
+        pad && pad.id ? pad.id.slice(0, 36) : 'USB / Bluetooth Gamepad',
+        PALETTE.CYAN
+      );
+      this._syncHeaderStatus();
+    };
+
+    this.input.onGamepadDisconnected = () => {
+      achievementManager.pushToast(
+        '🎮 CONTROLLER DISCONNECTED',
+        'Reverted to keyboard / touch mode',
+        PALETTE.PINK
+      );
+      this._syncHeaderStatus();
+    };
+
     this.mainMenu = new MainMenu(this.renderer, this.input, this.audio, (gameId) => {
       this.launchGame(gameId);
     });
@@ -61930,13 +62303,19 @@ class RetroArcadeStudio {
   _syncHeaderStatus() {
     const statusEl = document.getElementById('studio-active-title');
     if (statusEl) {
+      const padPrefix =
+        this.input && this.input.isGamepadConnected()
+          ? `[🎮 ${this.input.getGamepadName().slice(0, 16).toUpperCase()}] `
+          : '';
       if (this.activeGame) {
         const meta = GAME_CATALOG.find((g) => g.id === this.activeGameId);
         statusEl.textContent = meta
-          ? `${meta.title.toUpperCase()} — ${meta.controls}`
-          : this.activeGame.title.toUpperCase();
+          ? `${padPrefix}${meta.title.toUpperCase()} — ${meta.controls}`
+          : `${padPrefix}${this.activeGame.title.toUpperCase()}`;
       } else {
-        statusEl.textContent = 'SELECT ANY ARCADE CABINET (50 CLASSIC COIN-OP GAMES)';
+        statusEl.textContent = padPrefix
+          ? `${padPrefix}SELECT ANY ARCADE CABINET (D-PAD / [A] TO PLAY)`
+          : 'SELECT ANY ARCADE CABINET (50 CLASSIC COIN-OP GAMES)';
       }
     }
 
@@ -62018,12 +62397,15 @@ class RetroArcadeStudio {
   }
 
   _handleEmulatorHotkeys() {
-    // [F5] Save State / [F8] Load State / [ and ] Stage Select
-    if (this.input.isKeyJustPressed('F5')) {
+    // [F5] Save State / [F8] Load State / [ and ] Stage Select (or Gamepad Select+L1 / Select+R1)
+    if (this.input.isKeyJustPressed('F5') || this.input.isGamepadSaveStatePressed()) {
       this.saveCurrentState();
     }
-    if (this.input.isKeyJustPressed('F8')) {
+    if (this.input.isKeyJustPressed('F8') || this.input.isGamepadLoadStatePressed()) {
       this.loadCurrentState();
+    }
+    if (this.input.isKeyJustPressed('KeyT') || this.input.isGamepadFastForwardPressed()) {
+      this.cycleSpeed();
     }
     if (this.input.isKeyJustPressed('BracketLeft')) {
       this.changeStage(-1);
@@ -62092,7 +62474,9 @@ class RetroArcadeStudio {
         }
 
         const isRewinding =
-          (this.input.isKeyDown('KeyR') || this._rewindButtonHeld) &&
+          (this.input.isKeyDown('KeyR') ||
+            this._rewindButtonHeld ||
+            this.input.isGamepadRewindHeld()) &&
           this._rewindBuffer.length > 0;
 
         if (isRewinding) {

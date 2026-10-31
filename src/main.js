@@ -165,6 +165,24 @@ export class RetroArcadeStudio {
       this.returnToLobby();
     };
 
+    this.input.onGamepadConnected = (pad) => {
+      achievementManager.pushToast(
+        '🎮 CONTROLLER CONNECTED',
+        pad && pad.id ? pad.id.slice(0, 36) : 'USB / Bluetooth Gamepad',
+        PALETTE.CYAN
+      );
+      this._syncHeaderStatus();
+    };
+
+    this.input.onGamepadDisconnected = () => {
+      achievementManager.pushToast(
+        '🎮 CONTROLLER DISCONNECTED',
+        'Reverted to keyboard / touch mode',
+        PALETTE.PINK
+      );
+      this._syncHeaderStatus();
+    };
+
     this.mainMenu = new MainMenu(this.renderer, this.input, this.audio, (gameId) => {
       this.launchGame(gameId);
     });
@@ -787,13 +805,19 @@ export class RetroArcadeStudio {
   _syncHeaderStatus() {
     const statusEl = document.getElementById('studio-active-title');
     if (statusEl) {
+      const padPrefix =
+        this.input && this.input.isGamepadConnected()
+          ? `[🎮 ${this.input.getGamepadName().slice(0, 16).toUpperCase()}] `
+          : '';
       if (this.activeGame) {
         const meta = GAME_CATALOG.find((g) => g.id === this.activeGameId);
         statusEl.textContent = meta
-          ? `${meta.title.toUpperCase()} — ${meta.controls}`
-          : this.activeGame.title.toUpperCase();
+          ? `${padPrefix}${meta.title.toUpperCase()} — ${meta.controls}`
+          : `${padPrefix}${this.activeGame.title.toUpperCase()}`;
       } else {
-        statusEl.textContent = 'SELECT ANY ARCADE CABINET (50 CLASSIC COIN-OP GAMES)';
+        statusEl.textContent = padPrefix
+          ? `${padPrefix}SELECT ANY ARCADE CABINET (D-PAD / [A] TO PLAY)`
+          : 'SELECT ANY ARCADE CABINET (50 CLASSIC COIN-OP GAMES)';
       }
     }
 
@@ -875,12 +899,15 @@ export class RetroArcadeStudio {
   }
 
   _handleEmulatorHotkeys() {
-    // [F5] Save State / [F8] Load State / [ and ] Stage Select
-    if (this.input.isKeyJustPressed('F5')) {
+    // [F5] Save State / [F8] Load State / [ and ] Stage Select (or Gamepad Select+L1 / Select+R1)
+    if (this.input.isKeyJustPressed('F5') || this.input.isGamepadSaveStatePressed()) {
       this.saveCurrentState();
     }
-    if (this.input.isKeyJustPressed('F8')) {
+    if (this.input.isKeyJustPressed('F8') || this.input.isGamepadLoadStatePressed()) {
       this.loadCurrentState();
+    }
+    if (this.input.isKeyJustPressed('KeyT') || this.input.isGamepadFastForwardPressed()) {
+      this.cycleSpeed();
     }
     if (this.input.isKeyJustPressed('BracketLeft')) {
       this.changeStage(-1);
@@ -949,7 +976,9 @@ export class RetroArcadeStudio {
         }
 
         const isRewinding =
-          (this.input.isKeyDown('KeyR') || this._rewindButtonHeld) &&
+          (this.input.isKeyDown('KeyR') ||
+            this._rewindButtonHeld ||
+            this.input.isGamepadRewindHeld()) &&
           this._rewindBuffer.length > 0;
 
         if (isRewinding) {

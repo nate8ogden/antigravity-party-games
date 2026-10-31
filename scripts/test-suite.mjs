@@ -491,6 +491,116 @@ try {
   failures++;
 }
 
+// Check 8: Raspberry Pi & Gamepad Controller Integration Verification
+try {
+  const { InputManager } = await import('../src/engine/Input.js');
+  const padInput = new InputManager(createMockEl());
+
+  // Test 1: Mock Gamepad with D-pad & standard face buttons
+  let mockGamepad = {
+    id: 'DragonRise Inc. Generic USB Joystick (Raspberry Pi Arcade Encoder)',
+    connected: true,
+    buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })),
+    axes: [0, 0, 0, 0, 0, 0, 0, 0]
+  };
+
+  globalThis.navigator.getGamepads = () => [mockGamepad];
+  padInput.pollGamepads();
+
+  if (!padInput.isGamepadConnected()) {
+    throw new Error('Gamepad connection not detected');
+  }
+  if (!padInput.getGamepadName().includes('DragonRise')) {
+    throw new Error(`Gamepad name mismatch: ${padInput.getGamepadName()}`);
+  }
+
+  // Test 2: Directional D-Pad & Analog Sticks (including Linux POV hat on axes 4/5)
+  mockGamepad.axes[0] = -0.75; // Left
+  mockGamepad.axes[1] = 0.85; // Down
+  padInput.pollGamepads();
+  if (!padInput.isDown('left') || !padInput.isDown('down')) {
+    throw new Error('Analog stick direction left/down not registered in virtualState');
+  }
+
+  // Test POV Hat switch (axes 4 & 5)
+  mockGamepad.axes[0] = 0;
+  mockGamepad.axes[1] = 0;
+  mockGamepad.axes[4] = 0.9; // Hat Right
+  mockGamepad.axes[5] = -0.9; // Hat Up
+  padInput.pollGamepads();
+  if (!padInput.isDown('right') || !padInput.isDown('up')) {
+    throw new Error('Raspberry Pi POV hat switch direction right/up not registered');
+  }
+
+  // Test 3: Action Buttons (Bottom button A, Right button B, Shoulder L1/R1)
+  mockGamepad.axes[4] = 0;
+  mockGamepad.axes[5] = 0;
+  mockGamepad.buttons[0].pressed = true; // Button A
+  mockGamepad.buttons[1].pressed = true; // Button B
+  padInput.pollGamepads();
+  if (!padInput.isDown('actionA') || !padInput.isDown('actionB')) {
+    throw new Error('Gamepad face buttons A and B not registered');
+  }
+
+  // Test 4: RetroPie Hotkeys
+  // Select + Start -> Menu (Return to lobby)
+  mockGamepad.buttons[0].pressed = false;
+  mockGamepad.buttons[1].pressed = false;
+  mockGamepad.buttons[8].pressed = true; // Select
+  mockGamepad.buttons[9].pressed = true; // Start
+  let menuTriggered = false;
+  padInput.onMenuCallback = () => {
+    menuTriggered = true;
+  };
+  padInput.pollGamepads();
+  if (!menuTriggered) {
+    throw new Error('RetroPie hotkey Select+Start did not trigger menu callback');
+  }
+
+  // Select + L1 -> Quick Save State
+  mockGamepad.buttons[9].pressed = false;
+  mockGamepad.buttons[4].pressed = true; // L1
+  padInput.pollGamepads();
+  if (!padInput.isGamepadSaveStatePressed()) {
+    throw new Error('RetroPie hotkey Select+L1 did not trigger Quick Save');
+  }
+
+  // Select + R1 -> Quick Load State
+  mockGamepad.buttons[4].pressed = false;
+  mockGamepad.buttons[5].pressed = true; // R1
+  padInput.pollGamepads();
+  if (!padInput.isGamepadLoadStatePressed()) {
+    throw new Error('RetroPie hotkey Select+R1 did not trigger Quick Load');
+  }
+
+  // L2 -> Rewind Held
+  mockGamepad.buttons[8].pressed = false;
+  mockGamepad.buttons[5].pressed = false;
+  mockGamepad.buttons[6].pressed = true; // L2
+  padInput.pollGamepads();
+  if (!padInput.isGamepadRewindHeld()) {
+    throw new Error('L2 trigger did not trigger rewindHeld');
+  }
+
+  // Dual-Stick Right Analog Aiming (Robotron)
+  mockGamepad.buttons[6].pressed = false;
+  mockGamepad.axes[2] = 0.8;
+  mockGamepad.axes[3] = -0.6;
+  padInput.pollGamepads();
+  const rAxis = padInput.getRightAxis();
+  if (Math.abs(rAxis.x - 0.8) > 0.01 || Math.abs(rAxis.y - -0.6) > 0.01) {
+    throw new Error(`Right stick axis mismatch: ${JSON.stringify(rAxis)}`);
+  }
+
+  padInput.destroy();
+  console.log(
+    '✅ Raspberry Pi Gamepad & Hotkey Integration Verified (USB/Bluetooth, POV Hat, Face/Shoulder Triggers, Select+Start, Save/Load, Rewind, Dual-Stick Aiming).'
+  );
+} catch (err) {
+  console.error('❌ Gamepad controller check failed:', err);
+  failures++;
+}
+
 console.log('===================================================================');
 
 if (failures > 0) {
