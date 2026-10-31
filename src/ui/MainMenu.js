@@ -637,13 +637,14 @@ export class MainMenu {
 
     cloudPersistence.initializeCatalog(GAME_CATALOG.map((g) => g.id));
 
-    this.activeTab = 'core'; // 'core' (8 flagship) | 'expanded' (20 classics)
+    this.activeTab = 'core'; // 'core' | 'expanded' | 'vault2' | 'favorites'
     this.sortModeIndex = 0;
     this.selectedIndex = 0;
     this.hoverIndex = -1;
     this.animTime = 0;
     this.cardRects = [];
     this.tabRects = [];
+    this.cardFavHitboxes = [];
     this.inspectorStarRects = [];
     this.inspectorFavRect = null;
   }
@@ -660,8 +661,23 @@ export class MainMenu {
     return this.getSortMode();
   }
 
+  getSelectedGame() {
+    const list = this.getVisibleGames();
+    return list[this.selectedIndex] || list[0] || null;
+  }
+
   getVisibleGames() {
+    if (this.activeTab === 'favorites') {
+      const allSaved = GAME_CATALOG.filter((g) => cloudPersistence.getRecord(g.id).saved);
+      if (this.getSortMode().id === 'saved' || this.getSortMode().id === 'default') {
+        return allSaved;
+      }
+      return cloudPersistence.sortCatalog(allSaved, this.getSortMode().id);
+    }
     const base = GAME_CATALOG.filter((g) => g.category === this.activeTab);
+    if (this.getSortMode().id === 'saved') {
+      return base.filter((g) => cloudPersistence.getRecord(g.id).saved);
+    }
     return cloudPersistence.sortCatalog(base, this.getSortMode().id);
   }
 
@@ -670,6 +686,9 @@ export class MainMenu {
       this.activeTab = tab;
       this.selectedIndex = 0;
       this.audio.playMenuMove();
+      if (typeof window !== 'undefined' && window.arcadeStudio) {
+        window.arcadeStudio._syncFavoriteButton();
+      }
     }
   }
 
@@ -1846,7 +1865,14 @@ export class MainMenu {
   update(dt) {
     this.animTime += dt;
     const list = this.getVisibleGames();
-    const cols = this.activeTab === 'core' ? 4 : this.activeTab === 'vault2' ? 6 : 5;
+    const cols =
+      this.activeTab === 'core'
+        ? 4
+        : this.activeTab === 'vault2'
+        ? 6
+        : this.activeTab === 'favorites' && list.length <= 8
+        ? 4
+        : 5;
     const rows = Math.ceil(list.length / cols);
 
     if (this.selectedIndex >= list.length) {
@@ -1865,6 +1891,8 @@ export class MainMenu {
           ? 'expanded'
           : this.activeTab === 'expanded'
           ? 'vault2'
+          : this.activeTab === 'vault2'
+          ? 'favorites'
           : 'core';
       this.setTab(nextTab);
     } else if (
@@ -1872,11 +1900,13 @@ export class MainMenu {
       this.input.isGamepadPrevTabPressed()
     ) {
       const prevTab =
-        this.activeTab === 'vault2'
+        this.activeTab === 'favorites'
+          ? 'vault2'
+          : this.activeTab === 'vault2'
           ? 'expanded'
           : this.activeTab === 'expanded'
           ? 'core'
-          : 'vault2';
+          : 'favorites';
       this.setTab(prevTab);
     }
 
@@ -2001,6 +2031,30 @@ export class MainMenu {
             'Synced to Firebase Cloud',
             PALETTE.PINK
           );
+          if (typeof window !== 'undefined' && window.arcadeStudio) {
+            window.arcadeStudio._syncHeaderStatus();
+          }
+          return;
+        }
+      }
+
+      // Check card heart icon clicks
+      for (const fav of this.cardFavHitboxes) {
+        if (px >= fav.x && px <= fav.x + fav.w && py >= fav.y && py <= fav.y + fav.h) {
+          const saved = cloudPersistence.toggleSaveGame(fav.gameId);
+          this.audio.playCoin();
+          achievementManager.unlock('arcade_critic', this.audio);
+          const meta = GAME_CATALOG.find((g) => g.id === fav.gameId);
+          achievementManager.pushToast(
+            saved
+              ? `♥ SAVED ${meta ? meta.title.toUpperCase() : fav.gameId.toUpperCase()}`
+              : `REMOVED ${meta ? meta.title.toUpperCase() : fav.gameId.toUpperCase()}`,
+            'Synced to Local & Firebase Cloud',
+            PALETTE.PINK
+          );
+          if (typeof window !== 'undefined' && window.arcadeStudio) {
+            window.arcadeStudio._syncHeaderStatus();
+          }
           return;
         }
       }
@@ -2009,6 +2063,10 @@ export class MainMenu {
       for (let i = 0; i < this.cardRects.length; i++) {
         const r = this.cardRects[i];
         if (px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h) {
+          if (r.isBrowseBtn) {
+            this.setTab('core');
+            return;
+          }
           this.selectedIndex = i;
           const chosen = list[i];
           if (chosen && typeof this.onSelectGame === 'function') {
@@ -2097,30 +2155,39 @@ export class MainMenu {
 
     // Category Tabs + Cloud Sort Pill
     const sortMode = this.getSortMode();
+    const savedCount = GAME_CATALOG.filter((g) => cloudPersistence.getRecord(g.id).saved).length;
     this.tabRects = [
-      { id: 'core', label: '🕹️ CORE 8 (FEATURED)', x: 20, y: 58, w: 215, h: 28 },
-      { id: 'expanded', label: '👾 VAULT I (20 CLASSICS)', x: 243, y: 58, w: 235, h: 28 },
-      { id: 'vault2', label: '🏆 VAULT II (22 CLASSICS)', x: 486, y: 58, w: 235, h: 28 },
-      { id: 'sort', label: sortMode.label, x: 729, y: 58, w: 211, h: 28 }
+      { id: 'core', label: '🕹️ CORE (8)', x: 18, y: 58, w: 165, h: 28 },
+      { id: 'expanded', label: '👾 VAULT I (20)', x: 189, y: 58, w: 185, h: 28 },
+      { id: 'vault2', label: '🏆 VAULT II (22)', x: 380, y: 58, w: 185, h: 28 },
+      { id: 'favorites', label: `♥ SAVED (${savedCount})`, x: 571, y: 58, w: 185, h: 28 },
+      { id: 'sort', label: sortMode.label, x: 762, y: 58, w: 180, h: 28 }
     ];
 
     for (const tab of this.tabRects) {
       const isSort = tab.id === 'sort';
+      const isFav = tab.id === 'favorites';
       const active = !isSort && this.activeTab === tab.id;
       ctx.save();
       ctx.fillStyle = isSort
         ? 'rgba(255, 215, 0, 0.14)'
+        : active && isFav
+        ? 'rgba(255, 0, 122, 0.22)'
         : active
         ? 'rgba(0, 240, 255, 0.18)'
+        : isFav && savedCount > 0
+        ? 'rgba(255, 0, 122, 0.08)'
         : 'rgba(19, 27, 46, 0.85)';
       ctx.strokeStyle = isSort
         ? PALETTE.GOLD
+        : isFav
+        ? PALETTE.PINK
         : active
         ? PALETTE.CYAN
         : 'rgba(148, 163, 184, 0.35)';
       ctx.lineWidth = active || isSort ? 2 : 1;
       if (active) {
-        ctx.shadowColor = PALETTE.CYAN;
+        ctx.shadowColor = isFav ? PALETTE.PINK : PALETTE.CYAN;
         ctx.shadowBlur = 10;
       }
       ctx.fillRect(tab.x, tab.y, tab.w, tab.h);
@@ -2130,15 +2197,76 @@ export class MainMenu {
       this.renderer.drawText(tab.label, tab.x + tab.w / 2, tab.y + 19, {
         font: FONTS.HUD,
         size: 11,
-        color: isSort ? PALETTE.GOLD : active ? PALETTE.CYAN : PALETTE.MUTED,
+        color: isSort ? PALETTE.GOLD : isFav ? PALETTE.PINK : active ? PALETTE.CYAN : PALETTE.MUTED,
         align: 'center'
       });
     }
 
     const list = this.getVisibleGames();
     this.cardRects = [];
+    this.cardFavHitboxes = [];
 
-    if (this.activeTab === 'core') {
+    if (list.length === 0) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
+      ctx.strokeStyle = PALETTE.PINK;
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(160, 140, W - 320, 240);
+      ctx.strokeRect(160, 140, W - 320, 240);
+
+      this.renderer.drawText(
+        this.activeTab === 'favorites' ? '♡ NO SAVED FAVORITES YET' : 'NO MATCHING CABINETS FOUND',
+        W / 2,
+        190,
+        {
+          font: FONTS.HEADER,
+          size: 15,
+          color: PALETTE.WHITE,
+          align: 'center'
+        }
+      );
+
+      this.renderer.drawText(
+        'Press [F] or [Y] on any cabinet to bookmark your favorite games.',
+        W / 2,
+        225,
+        {
+          font: FONTS.BODY,
+          size: 11,
+          color: PALETTE.MUTED,
+          align: 'center'
+        }
+      );
+
+      this.renderer.drawText(
+        'You can also click the [♥ / ♡] badge directly on any arcade diorama card.',
+        W / 2,
+        250,
+        {
+          font: FONTS.BODY,
+          size: 11,
+          color: PALETTE.CYAN,
+          align: 'center'
+        }
+      );
+
+      const btnW = 240;
+      const btnH = 36;
+      const btnX = W / 2 - btnW / 2;
+      const btnY = 285;
+      this.cardRects.push({ x: btnX, y: btnY, w: btnW, h: btnH, isBrowseBtn: true });
+      ctx.fillStyle = 'rgba(0, 240, 255, 0.15)';
+      ctx.strokeStyle = PALETTE.CYAN;
+      ctx.fillRect(btnX, btnY, btnW, btnH);
+      ctx.strokeRect(btnX, btnY, btnW, btnH);
+      this.renderer.drawText('▶ BROWSE ALL 50 CABINETS', W / 2, btnY + 23, {
+        font: FONTS.HUD,
+        size: 11,
+        color: PALETTE.WHITE,
+        align: 'center'
+      });
+      ctx.restore();
+    } else if (this.activeTab === 'core' || (this.activeTab === 'favorites' && list.length <= 8)) {
       // 4x2 Featured Cabinet Cards with Live Miniature Arcade Screenshots
       const cols = 4;
       const cardW = 216;
@@ -2177,21 +2305,39 @@ export class MainMenu {
         ctx.fillStyle = game.accent;
         ctx.fillRect(x, y, cardW, 4);
 
-        // Star Rating + Favorite Heart + Save State Badge + High Score
-        const favIcon = rec.saved ? '♥ ' : '';
+        // Interactive Heart / Favorite Button
+        const favX = x + 8;
+        const favY = y + 7;
+        const favW = 24;
+        const favH = 18;
+        this.cardFavHitboxes.push({ x: favX - 2, y: favY - 2, w: favW + 4, h: favH + 4, gameId: game.id });
+        ctx.save();
+        ctx.fillStyle = rec.saved ? 'rgba(255, 0, 122, 0.25)' : 'rgba(255, 255, 255, 0.06)';
+        ctx.strokeStyle = rec.saved ? PALETTE.PINK : 'rgba(255, 255, 255, 0.2)';
+        ctx.fillRect(favX, favY, favW, favH);
+        ctx.strokeRect(favX, favY, favW, favH);
+        ctx.restore();
+        this.renderer.drawText(rec.saved ? '♥' : '♡', favX + favW / 2, favY + 13, {
+          font: FONTS.HUD,
+          size: 12,
+          color: rec.saved ? PALETTE.PINK : PALETTE.WHITE,
+          align: 'center'
+        });
+
+        // Star Rating + Save State Badge + High Score
         const saveIcon = hasSave ? ' 💾' : '';
         this.renderer.drawText(
-          `${favIcon}★${rating.toFixed(1)}${saveIcon}`,
-          x + 8,
-          y + 18,
+          `★${rating.toFixed(1)}${saveIcon}`,
+          favX + favW + 6,
+          y + 19,
           {
             font: FONTS.HUD,
             size: 10.5,
-            color: rec.saved ? PALETTE.PINK : PALETTE.GOLD
+            color: PALETTE.GOLD
           }
         );
 
-        this.renderer.drawText(`HI: ${String(hi).padStart(6, '0')}`, x + cardW - 8, y + 18, {
+        this.renderer.drawText(`HI: ${String(hi).padStart(6, '0')}`, x + cardW - 8, y + 19, {
           font: FONTS.HUD,
           size: 10.5,
           color: PALETTE.GOLD,
@@ -2316,13 +2462,34 @@ export class MainMenu {
           }
         );
 
+        // Top-Right: Star Rating & Heart Button
+        const favW = 16;
+        const favH = 14;
+        const favX = x + cardW - favW - 4;
+        const favY = y + 4;
+        this.cardFavHitboxes.push({ x: favX - 2, y: favY - 2, w: favW + 4, h: favH + 4, gameId: game.id });
+
+        ctx.save();
+        ctx.fillStyle = rec.saved ? 'rgba(255, 0, 122, 0.25)' : 'rgba(255, 255, 255, 0.06)';
+        ctx.strokeStyle = rec.saved ? PALETTE.PINK : 'rgba(255, 255, 255, 0.2)';
+        ctx.fillRect(favX, favY, favW, favH);
+        ctx.strokeRect(favX, favY, favW, favH);
+        ctx.restore();
+
+        this.renderer.drawText(rec.saved ? '♥' : '♡', favX + favW / 2, favY + 11, {
+          font: FONTS.HUD,
+          size: 9.5,
+          color: rec.saved ? PALETTE.PINK : PALETTE.WHITE,
+          align: 'center'
+        });
+
         this.renderer.drawText(
-          `${rec.saved ? '♥' : ''}★${rating.toFixed(1)}`,
-          x + cardW - 4,
+          `★${rating.toFixed(1)}`,
+          favX - 4,
           y + 15,
           {
             font: FONTS.HUD,
-            size: isVault2 ? 8.5 : 9.2,
+            size: isVault2 ? 8.2 : 8.8,
             color: PALETTE.GOLD,
             align: 'right'
           }

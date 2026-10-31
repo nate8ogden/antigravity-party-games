@@ -137,6 +137,16 @@ export class CloudPersistenceManager {
     return r.communityRating;
   }
 
+  notifyListeners(rec) {
+    if (Array.isArray(this._updateListeners)) {
+      this._updateListeners.forEach((cb) => {
+        try {
+          cb(rec);
+        } catch (_) {}
+      });
+    }
+  }
+
   rateGame(gameId, stars) {
     const clamped = Math.max(1, Math.min(5, Math.round(Number(stars) || 5)));
     const rec = this.getRecord(gameId);
@@ -146,6 +156,7 @@ export class CloudPersistenceManager {
     rec.userRating = clamped;
     this.saveToLocal();
     this.debouncedPush(rec);
+    this.notifyListeners(rec);
     return rec;
   }
 
@@ -161,6 +172,7 @@ export class CloudPersistenceManager {
     rec.saveCount = Math.max(0, rec.saveCount + (rec.saved ? 1 : -1));
     this.saveToLocal();
     this.debouncedPush(rec);
+    this.notifyListeners(rec);
     return rec.saved;
   }
 
@@ -195,9 +207,7 @@ export class CloudPersistenceManager {
     if (!mode || mode === 'default') return games;
     const copy = [...games];
     if (mode === 'saved') {
-      const userSaved = copy.filter((g) => this.getRecord(g.id).saved);
-      if (userSaved.length > 0) return userSaved;
-      return copy.sort((a, b) => this.getRecord(b.id).saveCount - this.getRecord(a.id).saveCount);
+      return copy.filter((g) => this.getRecord(g.id).saved);
     }
     if (mode === 'rating') {
       return copy.sort((a, b) => {

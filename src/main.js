@@ -187,6 +187,10 @@ export class RetroArcadeStudio {
       this.launchGame(gameId);
     });
 
+    CloudPersistence.onUpdate(() => {
+      this._syncFavoriteButton();
+    });
+
     this.activeGame = null;
     this.activeGameId = null;
     this.lastFrameTime = performance.now();
@@ -265,10 +269,30 @@ export class RetroArcadeStudio {
   _syncFavoriteButton() {
     const btnFav = document.getElementById('btn-fav-game');
     if (!btnFav) return;
-    const targetId = this.activeGameId || (this.mainMenu && GAME_CATALOG[this.mainMenu.selectedIndex]?.id);
+    const targetId = this.activeGameId || (this.mainMenu && this.mainMenu.getSelectedGame()?.id);
     const isFav = targetId ? CloudPersistence.isFavorite(targetId) : false;
     btnFav.textContent = isFav ? '♥ SAVED' : '♡ FAV';
     btnFav.classList.toggle('active', isFav);
+  }
+
+  toggleCurrentFavorite() {
+    const targetId = this.activeGameId || (this.mainMenu && this.mainMenu.getSelectedGame()?.id);
+    if (!targetId) return false;
+    const isFav = CloudPersistence.toggleFavorite(targetId);
+    this._syncFavoriteButton();
+    if (this.audio) {
+      this.audio.init();
+      this.audio.playCoin();
+    }
+    const meta = GAME_CATALOG.find((g) => g.id === targetId);
+    this.renderer.pushToast({
+      icon: isFav ? '♥' : '♡',
+      title: isFav ? 'SAVED TO FAVORITES' : 'REMOVED FROM FAVORITES',
+      desc: meta ? meta.title : targetId.toUpperCase(),
+      color: '#FF007A',
+      timer: 2.1
+    });
+    return isFav;
   }
 
   _applyQueryParams() {
@@ -317,7 +341,7 @@ export class RetroArcadeStudio {
   }
 
   loadCurrentState() {
-    const targetId = this.activeGameId || (this.mainMenu && GAME_CATALOG[this.mainMenu.selectedIndex]?.id);
+    const targetId = this.activeGameId || (this.mainMenu && this.mainMenu.getSelectedGame()?.id);
     if (!targetId) return false;
     if (!SaveStateManager.hasSave(targetId)) {
       this.renderer.pushToast({
@@ -600,21 +624,7 @@ export class RetroArcadeStudio {
     const btnFav = document.getElementById('btn-fav-game');
     if (btnFav) {
       btnFav.addEventListener('click', () => {
-        this.audio.init();
-        this.audio.playCoin();
-        const targetId = this.activeGameId || (this.mainMenu && GAME_CATALOG[this.mainMenu.selectedIndex]?.id);
-        if (targetId) {
-          const isFav = CloudPersistence.toggleFavorite(targetId);
-          this._syncFavoriteButton();
-          const meta = GAME_CATALOG.find((g) => g.id === targetId);
-          this.renderer.pushToast({
-            icon: isFav ? '♥' : '♡',
-            title: isFav ? `SAVED TO FAVORITES` : `REMOVED FROM FAVORITES`,
-            desc: meta ? meta.title : targetId.toUpperCase(),
-            color: '#FF007A',
-            timer: 2.1
-          });
-        }
+        this.toggleCurrentFavorite();
       });
     }
 
@@ -826,6 +836,8 @@ export class RetroArcadeStudio {
       const isMatch = (!this.activeGameId && pid === 'lobby') || pid === this.activeGameId;
       pill.classList.toggle('active', isMatch);
     });
+
+    this._syncFavoriteButton();
   }
 
   changeStage(delta = 1) {
@@ -908,6 +920,13 @@ export class RetroArcadeStudio {
     }
     if (this.input.isKeyJustPressed('KeyT') || this.input.isGamepadFastForwardPressed()) {
       this.cycleSpeed();
+    }
+    if (
+      this.input.isKeyJustPressed('KeyF') ||
+      (typeof this.input.isGamepadFavoritePressed === 'function' &&
+        this.input.isGamepadFavoritePressed())
+    ) {
+      this.toggleCurrentFavorite();
     }
     if (this.input.isKeyJustPressed('BracketLeft')) {
       this.changeStage(-1);

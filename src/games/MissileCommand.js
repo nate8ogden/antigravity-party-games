@@ -28,12 +28,14 @@ const SATELLITE_SPRITE = [
   'Y......YY......Y'
 ];
 
-// 10-Missile Pyramid Offset Coordinates inside each ABM Mound (Rows of 1, 2, 3, 4)
+// 16-Missile Pyramid Offset Coordinates inside each ABM Mound (Rows of 1, 2, 3, 4, 5, apex)
 const PYRAMID_SLOTS = [
-  { dx: 0, dy: -22 },
-  { dx: -6, dy: -15 }, { dx: 6, dy: -15 },
-  { dx: -12, dy: -8 }, { dx: 0, dy: -8 }, { dx: 12, dy: -8 },
-  { dx: -18, dy: -1 }, { dx: -6, dy: -1 }, { dx: 6, dy: -1 }, { dx: 18, dy: -1 }
+  { dx: 0, dy: -24 },
+  { dx: -5, dy: -18 }, { dx: 5, dy: -18 },
+  { dx: -10, dy: -12 }, { dx: 0, dy: -12 }, { dx: 10, dy: -12 },
+  { dx: -15, dy: -6 }, { dx: -5, dy: -6 }, { dx: 5, dy: -6 }, { dx: 15, dy: -6 },
+  { dx: -20, dy: 0 }, { dx: -10, dy: 0 }, { dx: 0, dy: 0 }, { dx: 10, dy: 0 }, { dx: 20, dy: 0 },
+  { dx: 0, dy: -29 }
 ];
 
 export class MissileCommand {
@@ -63,6 +65,8 @@ export class MissileCommand {
     this.highScore = HighScoreStore.get(this.id);
     this.level = 1;
     this.state = 'PLAYING';
+    this.nextBonusCityScore = 8000;
+    this.aimHoldTime = 0;
 
     // 6 Crystal Neon Cities positioned between the 3 ABM Batteries
     const cityXs = [185, 275, 365, 595, 685, 775];
@@ -78,11 +82,12 @@ export class MissileCommand {
   }
 
   _initWave(level) {
-    // 3 ABM Defense Batteries: Alpha (Left), Beta (Center - Ultra Fast), Gamma (Right)
+    // 3 ABM Defense Batteries: Alpha (Left), Beta (Center - High Ammo/Speed), Gamma (Right)
+    // 36 total interceptors (10 Left, 16 Center, 10 Right) so players don't starve for ammo!
     this.batteries = [
-      { name: 'ALPHA', x: 85, y: this.groundY - 8, ammo: 10, maxAmmo: 10, speed: 560, alive: true },
-      { name: 'BETA', x: 480, y: this.groundY - 8, ammo: 10, maxAmmo: 10, speed: 780, alive: true },
-      { name: 'GAMMA', x: 875, y: this.groundY - 8, ammo: 10, maxAmmo: 10, speed: 560, alive: true }
+      { name: 'ALPHA', x: 85, y: this.groundY - 8, ammo: 10, maxAmmo: 10, speed: 720, alive: true },
+      { name: 'BETA', x: 480, y: this.groundY - 8, ammo: 16, maxAmmo: 16, speed: 960, alive: true },
+      { name: 'GAMMA', x: 875, y: this.groundY - 8, ammo: 10, maxAmmo: 10, speed: 720, alive: true }
     ];
 
     this.interceptors = [];
@@ -91,9 +96,11 @@ export class MissileCommand {
     this.explosions = [];
     this.floatingTexts = [];
 
-    this.waveEnemiesRemaining = 10 + level * 4;
-    this.spawnTimer = 0.6;
-    this.bomberTimer = 4.5;
+    // Gradual progression: Wave 1 starts calm (8 missiles, no bombers, no MIRVs)
+    this.waveEnemiesRemaining = Math.min(30, 6 + level * 2);
+    this.spawnTimer = 1.2;
+    // Bombers only start appearing from Wave 2 onwards
+    this.bomberTimer = level >= 2 ? 6.5 : 9999;
     this.waveClearTimer = 0;
   }
 
@@ -113,6 +120,27 @@ export class MissileCommand {
       this.highScore = this.score;
       HighScoreStore.submit(this.id, this.score);
     }
+
+    // Bonus City awarded at 8,000 points and every 10,000 thereafter
+    if (this.score >= this.nextBonusCityScore) {
+      this.nextBonusCityScore += 10000;
+      const deadCity = this.cities.find((c) => !c.alive);
+      if (deadCity) {
+        deadCity.alive = true;
+        this.lives = this.cities.filter((c) => c.alive).length;
+        this.audio.playPowerUp();
+        this.floatingTexts.push({
+          text: '★ BONUS CITY REBUILT! ★',
+          x: deadCity.x,
+          y: deadCity.y - 45,
+          vy: -35,
+          life: 2.4,
+          maxLife: 2.4,
+          color: PALETTE.GREEN
+        });
+      }
+    }
+
     if (x !== undefined && y !== undefined) {
       this.floatingTexts.push({
         text: `+${pts}`,
@@ -126,19 +154,28 @@ export class MissileCommand {
     }
   }
 
-  _launchInterceptor(targetX, targetY) {
+  _launchInterceptor(targetX, targetY, preferredBatteryIndex = -1) {
     const clampedY = Math.max(52, Math.min(this.groundY - 24, targetY));
     const clampedX = Math.max(20, Math.min(940, targetX));
 
-    // Find nearest operational ABM Battery with remaining ammo
     let bestBattery = null;
-    let bestDist = Infinity;
-    for (const bat of this.batteries) {
-      if (bat.alive && bat.ammo > 0) {
-        const d = Math.hypot(bat.x - clampedX, bat.y - clampedY);
-        if (d < bestDist) {
-          bestDist = d;
-          bestBattery = bat;
+    if (
+      preferredBatteryIndex >= 0 &&
+      preferredBatteryIndex < this.batteries.length &&
+      this.batteries[preferredBatteryIndex].alive &&
+      this.batteries[preferredBatteryIndex].ammo > 0
+    ) {
+      bestBattery = this.batteries[preferredBatteryIndex];
+    } else {
+      // Find nearest operational ABM Battery with remaining ammo
+      let bestDist = Infinity;
+      for (const bat of this.batteries) {
+        if (bat.alive && bat.ammo > 0) {
+          const d = Math.hypot(bat.x - clampedX, bat.y - clampedY);
+          if (d < bestDist) {
+            bestDist = d;
+            bestBattery = bat;
+          }
         }
       }
     }
@@ -167,18 +204,18 @@ export class MissileCommand {
     this.audio.playLaser(980, 260, 0.11);
   }
 
-  _spawnExplosion(x, y, maxRadius = 44, isPlayerExplosion = true) {
+  _spawnExplosion(x, y, maxRadius = 64, isPlayerExplosion = true) {
     this.explosions.push({
       x,
       y,
-      radius: 2,
+      radius: 4,
       maxRadius,
       phase: 'EXPANDING', // 'EXPANDING' | 'HOLD' | 'CONTRACTING'
-      holdTimer: 0.18,
+      holdTimer: isPlayerExplosion ? 0.48 : 0.28,
       isPlayerExplosion,
       colorCycle: 0
     });
-    this.audio.playExplosion(0.32, isPlayerExplosion ? 1100 : 600);
+    this.audio.playExplosion(0.35, isPlayerExplosion ? 1100 : 650);
   }
 
   _spawnEnemyICBM(startX = null, startY = 42, canSplit = true) {
@@ -192,8 +229,12 @@ export class MissileCommand {
     const tgt = targets[Math.floor(Math.random() * targets.length)];
     const sx = startX !== null ? startX : 40 + Math.random() * 880;
     const sy = startY;
-    const speed = 58 + this.level * 12 + Math.random() * 20;
+    // Base speed scaled smoothly: 40 at level 1, +6 per level
+    const speed = 40 + Math.min(10, this.level) * 6 + Math.random() * 10;
     const dir = new Vector2(tgt.x - sx, tgt.y - sy).normalize();
+
+    // No MIRVs in Wave 1! Wave 2 gets ~12% chance, scaling gently
+    const mirvChance = this.level <= 1 ? 0 : Math.min(0.32, 0.08 + this.level * 0.04);
 
     this.enemyMissiles.push({
       startX: sx,
@@ -204,8 +245,8 @@ export class MissileCommand {
       targetY: tgt.y,
       vx: dir.x * speed,
       vy: dir.y * speed,
-      canSplit: canSplit && Math.random() < 0.28 + this.level * 0.05,
-      splitY: 140 + Math.random() * 110
+      canSplit: canSplit && Math.random() < mirvChance,
+      splitY: 160 + Math.random() * 100
     });
   }
 
@@ -247,7 +288,8 @@ export class MissileCommand {
 
     const axis = this.input.getAxis();
     if (Math.hypot(axis.x, axis.y) > 0.05) {
-      const aimSpeed = 410;
+      this.aimHoldTime = (this.aimHoldTime || 0) + dt;
+      const aimSpeed = Math.min(880, 520 + this.aimHoldTime * 360);
       this.crosshair.x = Math.max(
         20,
         Math.min(940, this.crosshair.x + axis.x * aimSpeed * dt)
@@ -256,16 +298,33 @@ export class MissileCommand {
         48,
         Math.min(this.groundY - 20, this.crosshair.y + axis.y * aimSpeed * dt)
       );
+    } else {
+      this.aimHoldTime = 0;
     }
 
-    // Fire ABM Interceptor
+    // Dedicated Battery Fire with Keyboard / Gamepad shortcuts
+    let firedBatteryIdx = -1;
+    if (this.input.isKeyJustPressed('KeyA') || this.input.isKeyJustPressed('Digit1')) {
+      firedBatteryIdx = 0;
+    } else if (this.input.isKeyJustPressed('KeyS') || this.input.isKeyJustPressed('Digit2')) {
+      firedBatteryIdx = 1;
+    } else if (
+      this.input.isKeyJustPressed('KeyD') ||
+      this.input.isKeyJustPressed('Digit3') ||
+      this.input.isKeyJustPressed('KeyC')
+    ) {
+      firedBatteryIdx = 2;
+    }
+
     if (ptr.justPressed) {
-      this._launchInterceptor(ptr.x, ptr.y);
+      this._launchInterceptor(ptr.x, ptr.y, -1);
+    } else if (firedBatteryIdx >= 0) {
+      this._launchInterceptor(this.crosshair.x, this.crosshair.y, firedBatteryIdx);
     } else if (
       this.input.isJustPressed('actionA') ||
       this.input.isJustPressed('actionB')
     ) {
-      this._launchInterceptor(this.crosshair.x, this.crosshair.y);
+      this._launchInterceptor(this.crosshair.x, this.crosshair.y, -1);
     }
 
     // Wave Clear Transition
@@ -312,7 +371,7 @@ export class MissileCommand {
       const remDist = Math.hypot(ic.targetX - ic.x, ic.targetY - ic.y);
 
       if (remDist <= Math.hypot(stepX, stepY)) {
-        this._spawnExplosion(ic.targetX, ic.targetY, 46, true);
+        this._spawnExplosion(ic.targetX, ic.targetY, 64, true);
         this.interceptors.splice(i, 1);
       } else {
         ic.x += stepX;
@@ -385,7 +444,7 @@ export class MissileCommand {
       ex.colorCycle += dt * 18;
 
       if (ex.phase === 'EXPANDING') {
-        ex.radius += 115 * dt;
+        ex.radius += 140 * dt;
         if (ex.radius >= ex.maxRadius) {
           ex.radius = ex.maxRadius;
           ex.phase = 'HOLD';
@@ -396,7 +455,7 @@ export class MissileCommand {
           ex.phase = 'CONTRACTING';
         }
       } else {
-        ex.radius -= 85 * dt;
+        ex.radius -= 75 * dt;
         if (ex.radius <= 0) {
           this.explosions.splice(i, 1);
           continue;
@@ -406,11 +465,11 @@ export class MissileCommand {
       // Chain-Destroy Incoming Enemy Missiles inside the Blast Radius!
       for (let j = this.enemyMissiles.length - 1; j >= 0; j--) {
         const em = this.enemyMissiles[j];
-        if (Math.hypot(em.x - ex.x, em.y - ex.y) <= ex.radius + 4) {
+        if (Math.hypot(em.x - ex.x, em.y - ex.y) <= ex.radius + 10) {
           const pts = 25 * Math.min(6, this.level);
           this._addScore(pts, em.x, em.y, PALETTE.CYAN);
           // Chain-reaction blast!
-          this._spawnExplosion(em.x, em.y, 38, true);
+          this._spawnExplosion(em.x, em.y, 52, true);
           this.enemyMissiles.splice(j, 1);
         }
       }
@@ -418,10 +477,10 @@ export class MissileCommand {
       // Destroy Smart Bombers inside Blast Radius!
       for (let j = this.bombers.length - 1; j >= 0; j--) {
         const bm = this.bombers[j];
-        if (Math.hypot(bm.x - ex.x, bm.y - ex.y) <= ex.radius + 14) {
+        if (Math.hypot(bm.x - ex.x, bm.y - ex.y) <= ex.radius + 18) {
           const pts = 100 * Math.min(6, this.level);
           this._addScore(pts, bm.x, bm.y, PALETTE.GOLD);
-          this._spawnExplosion(bm.x, bm.y, 44, true);
+          this._spawnExplosion(bm.x, bm.y, 56, true);
           this.bombers.splice(j, 1);
         }
       }
@@ -445,7 +504,19 @@ export class MissileCommand {
     ) {
       const remainingAmmo = this.batteries.reduce((acc, b) => acc + b.ammo, 0);
       const survivingCities = this.cities.filter((c) => c.alive).length;
-      const bonus = (remainingAmmo * 15 + survivingCities * 150) * this.level;
+      let bonus = (remainingAmmo * 20 + survivingCities * 150) * this.level;
+      if (survivingCities === 6) {
+        bonus += 500 * this.level;
+        this.floatingTexts.push({
+          text: '★ PERFECT WAVE! ALL 6 CITIES SAVED (+500) ★',
+          x: 480,
+          y: 200,
+          vy: -25,
+          life: 2.2,
+          maxLife: 2.2,
+          color: PALETTE.GOLD
+        });
+      }
       this._addScore(bonus, 480, 240, PALETTE.GREEN);
       this.audio.playStageClear();
       this.waveClearTimer = 2.0;
@@ -704,7 +775,7 @@ export class MissileCommand {
     this.renderer.drawStateOverlay(this.state, {
       title: this.title,
       subtitle: 'THERMONUCLEAR ABM SKYLINE DEFENSE',
-      controls: 'MOUSE/TAP OR ARROWS: AIM  |  CLICK/Z/SPACE/X: LAUNCH ABM INTERCEPTOR',
+      controls: 'AIM: MOUSE / TAP / D-PAD  |  FIRE: CLICK / [Z]: LEFT  [X/SPACE]: CENTER  [C]: RIGHT',
       score: this.score,
       highScore: this.highScore,
       accent: PALETTE.PINK
