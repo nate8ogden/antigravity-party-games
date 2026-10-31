@@ -33,6 +33,45 @@ const KAIJU_PUNCH = [
   '.KK....KK...'
 ];
 
+// Bally Midway 1986 Defeated Monster Human Alter-Ego Scurry Animation
+const HUMAN_SCURRY_1 = [
+  '..YYY...',
+  '..FFF...',
+  '.FFFFF..',
+  '..FFF...',
+  '.FFFFF..',
+  '.F.F.F..',
+  '...F....',
+  '..F.F...',
+  '..F.F...'
+];
+
+const HUMAN_SCURRY_2 = [
+  '..YYY...',
+  '..FFF...',
+  '.FFFFF..',
+  '..FFF...',
+  '.FFFFF..',
+  '..FFF...',
+  '...F....',
+  '..F.....',
+  '...F....'
+];
+
+// Authentic Bally Midway 1986 American City Tour
+const CITIES = [
+  { name: 'PEORIA, IL (DAY 1)', skyTop: '#0F172A', skyBottom: '#7C2D12', skylineColor: '#18181B' },
+  { name: 'CHICAGO, IL (DAY 2)', skyTop: '#020617', skyBottom: '#1E293B', skylineColor: '#0F172A' },
+  { name: 'DETROIT, MI (DAY 3)', skyTop: '#18181B', skyBottom: '#52525B', skylineColor: '#27272A' },
+  { name: 'ST. LOUIS, MO (DAY 4)', skyTop: '#1C1917', skyBottom: '#854D0E', skylineColor: '#292524' },
+  { name: 'NEW YORK, NY (DAY 5)', skyTop: '#0B0F19', skyBottom: '#312E81', skylineColor: '#111827' },
+  { name: 'SAN FRANCISCO, CA (DAY 6)', skyTop: '#082F49', skyBottom: '#0284C7', skylineColor: '#0C4A6E' },
+  { name: 'PHILADELPHIA, PA (DAY 7)', skyTop: '#1E1B4B', skyBottom: '#581C87', skylineColor: '#2E1065' },
+  { name: 'DALLAS, TX (DAY 8)', skyTop: '#3B0764', skyBottom: '#9D174D', skylineColor: '#4A044E' },
+  { name: 'LOS ANGELES, CA (DAY 9)', skyTop: '#172554', skyBottom: '#C2410C', skylineColor: '#1E3A8A' },
+  { name: 'WASHINGTON, D.C. (DAY 10)', skyTop: '#090D16', skyBottom: '#1D4ED8', skylineColor: '#0F172A' }
+];
+
 export class Rampage {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -93,28 +132,42 @@ export class Rampage {
   }
 
   _buildCity(level) {
+    this.city = CITIES[(level - 1) % CITIES.length];
     this.buildings = [];
     this.enemies = [];
     this.projectiles = [];
     this.dynamites = [];
+    this.humanScurry = null;
     this.enemySpawnTimer = 1.8;
     this.dynamiteTimer = 4.5;
     this.levelClearTimer = 0;
 
-    const numBuildings = 4;
-    const marginX = 95;
-    const spacing = 195;
-    const colors = ['#1E293B', '#334155', '#27272A', '#1E1B4B', '#31102F'];
-    const trimColors = [PALETTE.CYAN, PALETTE.ORANGE, PALETTE.GOLD, PALETTE.PURPLE, PALETTE.PINK];
+    const numBuildings = (level % 4 === 0) ? 5 : 4;
+    const buildingTemplates = [
+      { cols: 3, floors: 5, color: '#334155', trim: PALETTE.CYAN, prop: 'waterTower' },
+      { cols: 4, floors: 7, color: '#1E293B', trim: PALETTE.ORANGE, prop: 'neonSign', signText: 'HOTEL' },
+      { cols: 2, floors: 8, color: '#475569', trim: PALETTE.GOLD, prop: 'waterTower' },
+      { cols: 3, floors: 6, color: '#1E1B4B', trim: PALETTE.PINK, prop: 'neonSign', signText: 'BAR' },
+      { cols: 3, floors: 5, color: '#31102F', trim: PALETTE.PURPLE, prop: 'waterTower' }
+    ];
 
+    const cellW = 42;
+    const cellH = 38;
+    let totalBWidth = 0;
     for (let i = 0; i < numBuildings; i++) {
-      const cols = 3;
-      const floors = Math.min(8, 5 + Math.floor((level + i) / 2));
-      const cellW = 42;
-      const cellH = 38;
+      totalBWidth += buildingTemplates[i].cols * cellW + 16;
+    }
+    const gap = Math.max(20, Math.floor((960 - totalBWidth) / (numBuildings + 1)));
+
+    let curX = gap;
+    for (let i = 0; i < numBuildings; i++) {
+      const tmpl = buildingTemplates[i];
+      const cols = tmpl.cols;
+      const floors = Math.min(9, tmpl.floors + Math.floor((level - 1) / 3));
       const bWidth = cols * cellW + 16;
       const bHeight = floors * cellH + 14;
-      const bx = marginX + i * spacing;
+      const bx = curX;
+      curX += bWidth + gap;
       const by = this.groundY - bHeight;
 
       const windows = [];
@@ -126,7 +179,8 @@ export class Rampage {
           if (roll < 0.22) item = 'food';
           else if (roll < 0.36) item = 'civilian';
           else if (roll < 0.44) item = 'gold';
-          else if (roll < 0.50) item = 'hazard';
+          else if (roll < 0.52) item = 'hazard';
+          else if (roll < 0.60) item = 'sniper';
 
           row.push({
             row: r,
@@ -136,7 +190,8 @@ export class Rampage {
             lit: Math.random() < 0.65,
             item,
             itemRevealed: false,
-            itemTimer: 0
+            itemTimer: 0,
+            sniperCooldown: 1.5 + Math.random() * 2.0
           });
         }
         windows.push(row);
@@ -154,15 +209,17 @@ export class Rampage {
         floors,
         cellW,
         cellH,
-        color: colors[(i + level) % colors.length],
-        trimColor: trimColors[(i + level) % trimColors.length],
+        color: tmpl.color,
+        trimColor: tmpl.trim,
         windows,
         damage: 0,
         maxDamage: maxStructuralHp,
         collapsing: false,
         collapsed: false,
         collapseSpeed: 0,
-        shakeOffset: 0
+        shakeOffset: 0,
+        waterTower: tmpl.prop === 'waterTower' ? { smashed: false } : null,
+        neonSign: tmpl.prop === 'neonSign' ? { text: tmpl.signText, smashed: false } : null
       });
     }
   }
@@ -215,8 +272,10 @@ export class Rampage {
   }
 
   _damagePlayer(amount) {
-    if (this.player.invulnTimer > 0) return;
-    this.player.health -= amount;
+    if (this.player.invulnTimer > 0 || this.humanScurry) return;
+    // Lizzie has armored dinosaur scales that reduce incoming bullet/shell damage by 28%
+    const mult = this.player.monster === 'lizzie' ? 0.72 : 1.0;
+    this.player.health -= amount * mult;
     this.player.invulnTimer = 0.65;
     this.renderer.shake(6, 0.18);
     this.audio.playHit();
@@ -225,27 +284,21 @@ export class Rampage {
     if (this.player.health <= 0) {
       this.lives--;
       this.audio.playExplosion(0.5, 700);
-      if (this.lives <= 0) {
-        HighScoreStore.submit(this.id, this.score);
-        this.audio.playGameOver();
-        this.setState('GAMEOVER');
-      } else {
-        this.player.health = this.player.maxHealth;
-        this.player.climbingBuilding = null;
-        this.player.onGround = true;
-        this.player.y = this.groundY;
-        this.player.vy = 0;
-        this.player.invulnTimer = 2.0;
-        this.floatingTexts.push({
-          text: 'KAIJU ENRAGED!',
-          x: this.player.x,
-          y: this.player.y - 60,
-          vy: -30,
-          life: 1.2,
-          maxLife: 1.2,
-          color: PALETTE.PINK
-        });
-      }
+      this._spawnParticles(this.player.x, this.player.y - 25, 24, '#E2E8F0', 160, 200);
+
+      // Authentic Bally Midway 1986 defeat: giant monster shrinks into a naked human scuttling away!
+      this.humanScurry = {
+        x: this.player.x,
+        y: this.groundY,
+        dir: this.player.x < 480 ? -1 : 1,
+        timer: 1.8,
+        animTime: 0
+      };
+      this.player.climbingBuilding = null;
+      this.player.standingOnBuilding = null;
+      this.player.onGround = true;
+      this.player.y = this.groundY;
+      this.player.vy = 0;
     }
   }
 
@@ -271,6 +324,41 @@ export class Rampage {
     }
 
     if (this.state !== 'PLAYING') return;
+
+    // Handle Human Alter-Ego Scurrying on Defeat
+    if (this.humanScurry) {
+      const hs = this.humanScurry;
+      hs.timer -= dt;
+      hs.animTime += dt * 9;
+      hs.x += hs.dir * 135 * dt;
+      if (Math.random() < 0.3) {
+        this._spawnParticles(hs.x, this.groundY - 10, 1, '#CBD5E1', 30, -30);
+      }
+      if (hs.timer <= 0) {
+        this.humanScurry = null;
+        if (this.lives <= 0) {
+          HighScoreStore.submit(this.id, this.score);
+          this.audio.playGameOver();
+          this.setState('GAMEOVER');
+        } else {
+          this.player.health = this.player.maxHealth;
+          this.player.x = 180;
+          this.player.y = this.groundY;
+          this.player.vy = 0;
+          this.player.invulnTimer = 2.0;
+          this.floatingTexts.push({
+            text: 'MONSTER REBORN!',
+            x: this.player.x,
+            y: this.player.y - 60,
+            vy: -35,
+            life: 1.2,
+            maxLife: 1.2,
+            color: PALETTE.GOLD
+          });
+        }
+      }
+      return;
+    }
 
     const p = this.player;
     p.animTime += dt;
@@ -303,6 +391,10 @@ export class Rampage {
     }
 
     const axis = this.input.getAxis();
+    // Unique Monster Attributes
+    const climbSpeed = p.monster === 'george' ? 185 : 155;
+    const moveSpeed = p.monster === 'ralph' ? 225 : 190;
+    const jumpPower = p.monster === 'ralph' ? -415 : -375;
 
     // 1. CLIMBING BUILDING WALL
     if (p.climbingBuilding) {
@@ -311,7 +403,6 @@ export class Rampage {
         p.climbingBuilding = null;
         p.onGround = false;
       } else {
-        const climbSpeed = 155;
         p.vy = axis.y * climbSpeed;
         p.y += p.vy * dt;
 
@@ -345,7 +436,7 @@ export class Rampage {
         if (this.input.isJustPressed('actionB')) {
           p.climbingBuilding = null;
           p.onGround = false;
-          p.vy = -340;
+          p.vy = jumpPower;
           p.vx = axis.x !== 0 ? axis.x * 220 : (p.climbSide === 'left' ? 180 : -180);
           this.audio.playJump();
         }
@@ -371,7 +462,6 @@ export class Rampage {
       }
 
       // Walk along rooftop
-      const moveSpeed = 190;
       p.vx = axis.x * moveSpeed;
       if (axis.x > 0.1) p.dir = 1;
       else if (axis.x < -0.1) p.dir = -1;
@@ -381,7 +471,7 @@ export class Rampage {
       if (this.input.isJustPressed('actionB')) {
         p.standingOnBuilding = null;
         p.onGround = false;
-        p.vy = -360;
+        p.vy = jumpPower;
         this.audio.playJump();
       }
 
@@ -411,7 +501,6 @@ export class Rampage {
       }
     } else {
       // 3. GROUND OR AIRBORNE MOVEMENT
-      const moveSpeed = 190;
       p.vx = axis.x * moveSpeed;
       if (axis.x > 0.1) p.dir = 1;
       else if (axis.x < -0.1) p.dir = -1;
@@ -423,7 +512,7 @@ export class Rampage {
         p.y = this.groundY;
         // High jump from ground to reach buildings!
         if (this.input.isJustPressed('actionB')) {
-          p.vy = -380;
+          p.vy = jumpPower;
           p.onGround = false;
           this.audio.playJump();
         }
@@ -464,7 +553,7 @@ export class Rampage {
             if (b.collapsed) continue;
             if (
               p.y >= b.y &&
-              p.y - p.vy * dt <= b.y + 16 &&
+              p.y - p.vy * dt <= b.y + 18 &&
               p.x >= b.x - 8 &&
               p.x <= b.x + b.width + 8
             ) {
@@ -472,8 +561,12 @@ export class Rampage {
               p.vy = 0;
               p.standingOnBuilding = b;
               p.onGround = true;
-              this.renderer.shake(3, 0.08);
+              // Downward roof stomp damage!
+              const stompDmg = p.monster === 'lizzie' ? 2.0 : 1.0;
+              b.damage += stompDmg;
+              this.renderer.shake(4, 0.1);
               this.audio.playShove();
+              this._spawnParticles(p.x, b.y, 8, '#94A3B8', 90);
               break;
             }
           }
@@ -528,7 +621,7 @@ export class Rampage {
       if (b.collapsed) continue;
       activeBuildings++;
 
-      // Update revealed window bonuses
+      // Update revealed window bonuses & snipers
       for (let r = 0; r < b.floors; r++) {
         for (let c = 0; c < b.cols; c++) {
           const w = b.windows[r][c];
@@ -537,6 +630,27 @@ export class Rampage {
             if (w.itemTimer <= 0) {
               w.item = null;
               w.itemRevealed = false;
+            } else if (w.item === 'sniper') {
+              // Active window sniper aiming and shooting at monster!
+              w.sniperCooldown = (w.sniperCooldown || 1.8) - dt;
+              if (w.sniperCooldown <= 0) {
+                w.sniperCooldown = 2.0 + Math.random() * 1.5;
+                const wx = b.x + 8 + c * b.cellW + b.cellW / 2;
+                const wy = b.y + 10 + r * b.cellH + b.cellH / 2;
+                const dx = p.x - wx;
+                const dy = (p.y - 25) - wy;
+                const dist = Math.hypot(dx, dy) || 1;
+                this.projectiles.push({
+                  x: wx,
+                  y: wy,
+                  vx: (dx / dist) * 240,
+                  vy: (dy / dist) * 240,
+                  color: PALETTE.GOLD,
+                  damage: 7,
+                  radius: 3.5
+                });
+                this.audio.playLaser(620, 200, 0.08);
+              }
             }
           }
         }
@@ -586,14 +700,15 @@ export class Rampage {
       }
     }
 
-    // Spawn Military Helicopters & Tanks
+    // Spawn Military Helicopters, Tanks & Police Squad Cars
     this.enemySpawnTimer -= dt;
     if (this.enemySpawnTimer <= 0 && activeBuildings > 0) {
-      this.enemySpawnTimer = Math.max(1.4, 3.4 - this.level * 0.25);
+      this.enemySpawnTimer = Math.max(1.3, 3.2 - this.level * 0.25);
       if (this.enemies.length < 4 + this.level) {
         const fromLeft = Math.random() < 0.5;
-        const isHeli = Math.random() < 0.58;
-        if (isHeli) {
+        const roll = Math.random();
+        if (roll < 0.45) {
+          // Attack Helicopter
           this.enemies.push({
             type: 'heli',
             x: fromLeft ? -30 : 990,
@@ -604,7 +719,8 @@ export class Rampage {
             fireTimer: 1.2 + Math.random() * 1.2,
             rotorPhase: 0
           });
-        } else {
+        } else if (roll < 0.75) {
+          // National Guard Armored Tank
           this.enemies.push({
             type: 'tank',
             x: fromLeft ? -35 : 995,
@@ -612,6 +728,17 @@ export class Rampage {
             vx: (fromLeft ? 1 : -1) * (55 + this.level * 8),
             dir: fromLeft ? 1 : -1,
             fireTimer: 1.5 + Math.random() * 1.2
+          });
+        } else {
+          // Police Squad Car with flashing beacon
+          this.enemies.push({
+            type: 'policeCar',
+            x: fromLeft ? -35 : 995,
+            y: this.groundY,
+            vx: (fromLeft ? 1 : -1) * (110 + this.level * 10),
+            dir: fromLeft ? 1 : -1,
+            fireTimer: 1.3 + Math.random() * 1.0,
+            sirenPhase: 0
           });
         }
       }
@@ -654,13 +781,15 @@ export class Rampage {
       }
     }
 
-    // Update Enemies (Helicopters & Tanks)
+    // Update Enemies (Helicopters, Tanks & Police Cars)
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const e = this.enemies[i];
       e.x += e.vx * dt;
       if (e.type === 'heli') {
         e.rotorPhase += dt * 25;
         e.y += Math.sin(e.rotorPhase * 0.15) * 18 * dt;
+      } else if (e.type === 'policeCar') {
+        e.sirenPhase += dt * 16;
       }
 
       e.fireTimer -= dt;
@@ -670,14 +799,14 @@ export class Rampage {
         const dy = p.y - 26 - e.y;
         const dist = Math.hypot(dx, dy) || 1;
         if (dist < 460) {
-          const spd = e.type === 'tank' ? 250 : 220;
+          const spd = e.type === 'tank' ? 250 : e.type === 'policeCar' ? 240 : 220;
           this.projectiles.push({
             x: e.x,
-            y: e.type === 'tank' ? e.y - 14 : e.y + 6,
+            y: e.type === 'tank' ? e.y - 14 : e.type === 'policeCar' ? e.y - 10 : e.y + 6,
             vx: (dx / dist) * spd,
             vy: (dy / dist) * spd,
-            color: e.type === 'tank' ? PALETTE.ORANGE : PALETTE.PINK,
-            damage: e.type === 'tank' ? 12 : 8,
+            color: e.type === 'tank' ? PALETTE.ORANGE : e.type === 'policeCar' ? PALETTE.CYAN : PALETTE.PINK,
+            damage: e.type === 'tank' ? 12 : e.type === 'policeCar' ? 8 : 8,
             radius: e.type === 'tank' ? 5 : 3.5
           });
           this.audio.playLaser(550, 180, 0.09);
@@ -750,14 +879,14 @@ export class Rampage {
     this.renderer.shake(4, 0.1);
     this.audio.playShove();
 
-    // 1. Check punching enemies (Helicopters / Tanks)
+    // 1. Check punching enemies (Helicopters / Tanks / Police Cars)
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const e = this.enemies[i];
-      const ey = e.type === 'tank' ? e.y - 12 : e.y;
+      const ey = e.type === 'tank' || e.type === 'policeCar' ? e.y - 12 : e.y;
       if (Math.hypot(punchX - e.x, punchY - ey) < 46) {
         this.audio.playExplosion(0.35, 900);
         this._spawnParticles(e.x, ey, 18, PALETTE.ORANGE, 160);
-        const pts = e.type === 'heli' ? 400 : 350;
+        const pts = e.type === 'heli' ? 400 : e.type === 'policeCar' ? 450 : 350;
         this._addScore(pts, e.x, ey - 10, PALETTE.GOLD);
         this.enemies.splice(i, 1);
         return;
@@ -776,9 +905,51 @@ export class Rampage {
       }
     }
 
-    // 3. Check punching Building Windows / Structural Blocks
+    // 3. Check punching Rooftop Props (Water Towers & Neon Signs)
     for (const b of this.buildings) {
       if (b.collapsed || b.collapsing) continue;
+
+      if (b.waterTower && !b.waterTower.smashed) {
+        if (Math.abs(punchY - b.y) < 36 && Math.abs(punchX - (b.x + b.width / 2)) < b.width / 2) {
+          b.waterTower.smashed = true;
+          b.damage += 4;
+          this.audio.playExplosion(0.45, 600);
+          this._spawnParticles(b.x + b.width / 2, b.y - 12, 28, PALETTE.CYAN, 180, 200);
+          this._addScore(600, b.x + b.width / 2, b.y - 30, PALETTE.CYAN);
+          this.floatingTexts.push({
+            text: 'WATER TOWER SMASHED!',
+            x: b.x + b.width / 2,
+            y: b.y - 40,
+            vy: -35,
+            life: 1.1,
+            maxLife: 1.1,
+            color: PALETTE.CYAN
+          });
+          return;
+        }
+      }
+
+      if (b.neonSign && !b.neonSign.smashed) {
+        if (Math.abs(punchY - b.y) < 36 && Math.abs(punchX - (b.x + b.width / 2)) < b.width / 2) {
+          b.neonSign.smashed = true;
+          b.damage += 3;
+          this.audio.playCoin();
+          this._spawnParticles(b.x + b.width / 2, b.y - 12, 24, PALETTE.GOLD, 160, 160);
+          this._addScore(500, b.x + b.width / 2, b.y - 30, PALETTE.GOLD);
+          this.floatingTexts.push({
+            text: 'NEON SHATTERED!',
+            x: b.x + b.width / 2,
+            y: b.y - 40,
+            vy: -35,
+            life: 1.0,
+            maxLife: 1.0,
+            color: PALETTE.GOLD
+          });
+          return;
+        }
+      }
+
+      // Check punching Building Windows / Structural Blocks
       if (
         punchX >= b.x - 18 &&
         punchX <= b.x + b.width + 18 &&
@@ -792,7 +963,6 @@ export class Rampage {
         let c = 0;
         if (p.climbingBuilding === b) {
           c = p.climbSide === 'left' ? 0 : b.cols - 1;
-          // If edge window already broken, reach into middle column
           if (b.windows[r][c].hp <= 0 && b.cols > 1) {
             c = 1;
           }
@@ -805,10 +975,10 @@ export class Rampage {
         const wx = b.x + 8 + c * b.cellW + b.cellW / 2;
         const wy = b.y + 10 + r * b.cellH + b.cellH / 2;
 
-        // If item is revealed, eat/grab it!
+        // If item is revealed, eat/grab/disarm it!
         if (win.itemRevealed && win.item) {
           if (win.item === 'food' || win.item === 'civilian') {
-            const heal = win.item === 'food' ? 14 : 20;
+            const heal = win.item === 'food' ? 18 : 22;
             p.health = Math.min(p.maxHealth, p.health + heal);
             this.audio.playPowerUp();
             this._addScore(250, wx, wy, PALETTE.GREEN);
@@ -820,6 +990,18 @@ export class Rampage {
               life: 0.9,
               maxLife: 0.9,
               color: PALETTE.GREEN
+            });
+          } else if (win.item === 'sniper') {
+            this.audio.playHit();
+            this._addScore(350, wx, wy, PALETTE.GOLD);
+            this.floatingTexts.push({
+              text: 'SNIPER DISARMED!',
+              x: wx,
+              y: wy - 16,
+              vy: -40,
+              life: 0.9,
+              maxLife: 0.9,
+              color: PALETTE.GOLD
             });
           } else if (win.item === 'gold') {
             this.audio.playCoin();
@@ -842,18 +1024,19 @@ export class Rampage {
         }
 
         // Otherwise smash the window/block
+        const punchBonus = p.monster === 'george' ? 1.5 : 1.0;
         if (win.hp > 0) {
           win.hp--;
-          b.damage++;
+          b.damage += punchBonus;
           this._spawnParticles(wx, wy, 10, PALETTE.CYAN, 130);
           this._addScore(75, wx, wy, PALETTE.WHITE);
           if (win.hp === 1 && win.item) {
             win.itemRevealed = true;
-            win.itemTimer = 4.5;
+            win.itemTimer = 5.0;
           }
         } else {
           // Punching exposed structural girder deals structural damage
-          b.damage += 0.75;
+          b.damage += 0.85 * punchBonus;
           this._spawnParticles(wx, wy, 7, '#94A3B8', 100);
           this._addScore(50, wx, wy, PALETTE.ORANGE);
         }
@@ -863,9 +1046,24 @@ export class Rampage {
   }
 
   render(ctx = this.renderer.ctx) {
-    // Night Metropolis Backdrop
-    ctx.fillStyle = PALETTE.BG;
+    const p = this.player;
+    const city = this.city || CITIES[0];
+
+    // Dynamic Atmospheric Sky Gradient for Current Tour City
+    const grad = ctx.createLinearGradient(0, 38, 0, this.groundY);
+    grad.addColorStop(0, city.skyTop);
+    grad.addColorStop(1, city.skyBottom);
+    ctx.fillStyle = grad;
     ctx.fillRect(0, 38, this.renderer.width, this.renderer.height - 38);
+
+    // City Name Headline Banner
+    this.renderer.drawText(city.name, 480, 58, {
+      font: FONTS.HEADER,
+      size: 12,
+      color: PALETTE.GOLD,
+      align: 'center',
+      glow: 6
+    });
 
     // Classic 1986 Bally Midway City Skyline Silhouettes in the Background
     ctx.save();
@@ -873,7 +1071,7 @@ export class Rampage {
       const sx = i * 70 - 6;
       const sh = 95 + ((i * 53) % 145);
       const sy = this.groundY - sh;
-      ctx.fillStyle = i % 2 === 0 ? '#111827' : '#0F172A';
+      ctx.fillStyle = i % 2 === 0 ? city.skylineColor : '#090D16';
       ctx.fillRect(sx, sy, 66, sh);
 
       // Stepped Art Deco crown & radio spire on select towers
@@ -887,7 +1085,7 @@ export class Rampage {
         }
       }
       // Distant lit skyline windows
-      ctx.fillStyle = 'rgba(253, 224, 71, 0.25)';
+      ctx.fillStyle = 'rgba(253, 224, 71, 0.22)';
       for (let wy = sy + 12; wy < this.groundY - 16; wy += 16) {
         for (let wx = sx + 10; wx < sx + 54; wx += 14) {
           if ((wx + wy + i * 7) % 3 === 0) {
@@ -928,6 +1126,69 @@ export class Rampage {
       ctx.strokeStyle = b.trimColor;
       ctx.lineWidth = 2;
       ctx.strokeRect(bx, b.y, b.width, b.height);
+
+      // Rooftop Water Tower Prop
+      if (b.waterTower) {
+        const wtx = bx + b.width / 2;
+        const wty = b.y - 2;
+        if (!b.waterTower.smashed) {
+          // Wooden support stilts
+          ctx.strokeStyle = '#451A03';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(wtx - 14, wty); ctx.lineTo(wtx - 9, wty - 16);
+          ctx.moveTo(wtx + 14, wty); ctx.lineTo(wtx + 9, wty - 16);
+          ctx.moveTo(wtx - 5, wty); ctx.lineTo(wtx - 5, wty - 16);
+          ctx.moveTo(wtx + 5, wty); ctx.lineTo(wtx + 5, wty - 16);
+          ctx.stroke();
+          // Cedar tank vat & hoops
+          ctx.fillStyle = '#78350F';
+          ctx.fillRect(wtx - 15, wty - 34, 30, 18);
+          ctx.fillStyle = '#94A3B8';
+          ctx.fillRect(wtx - 15, wty - 30, 30, 2);
+          ctx.fillRect(wtx - 15, wty - 22, 30, 2);
+          // Conical roof cap
+          ctx.fillStyle = '#B45309';
+          ctx.beginPath();
+          ctx.moveTo(wtx - 18, wty - 34);
+          ctx.lineTo(wtx, wty - 44);
+          ctx.lineTo(wtx + 18, wty - 34);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          // Smashed cedar debris & dripping water
+          ctx.fillStyle = '#78350F';
+          ctx.fillRect(wtx - 12, wty - 6, 24, 6);
+          ctx.fillStyle = PALETTE.CYAN;
+          ctx.fillRect(wtx - 6, wty - 4, 12, 4);
+        }
+      }
+
+      // Rooftop Neon Sign Prop
+      if (b.neonSign) {
+        const nsx = bx + b.width / 2;
+        const nsy = b.y - 2;
+        if (!b.neonSign.smashed) {
+          ctx.strokeStyle = '#64748B';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(nsx - 22, nsy - 22, 44, 22);
+          const glowColor = b.neonSign.text === 'HOTEL' ? PALETTE.PINK : PALETTE.CYAN;
+          this.renderer.drawText(b.neonSign.text, nsx, nsy - 7, {
+            size: 11,
+            color: glowColor,
+            align: 'center',
+            glow: 8
+          });
+        } else {
+          ctx.strokeStyle = '#475569';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(nsx - 18, nsy);
+          ctx.lineTo(nsx, nsy - 10);
+          ctx.lineTo(nsx + 18, nsy);
+          ctx.stroke();
+        }
+      }
 
       // Structural Integrity Bar on Roof
       const integrity = Math.max(0, 1 - b.damage / b.maxDamage);
@@ -972,7 +1233,7 @@ export class Rampage {
             ctx.strokeRect(wx, wy + wh / 2 - 2, ww, 4);
           }
 
-          // Revealed Item inside window (Roast Chicken, Waving Civilian, Gold Bullion, Toaster Hazard)
+          // Revealed Item inside window (Roast Chicken, Waving Civilian, Gold Bullion, Toaster, Sniper)
           if (w.itemRevealed && w.item) {
             const cx = wx + ww / 2;
             const cy = wy + wh / 2;
@@ -997,6 +1258,22 @@ export class Rampage {
               this.renderer.drawGlowCircle(cx, cy - 5, 4, '#FDBA74', 6, true);
               ctx.fillStyle = PALETTE.PINK;
               ctx.fillRect(cx - 4, cy - 1, 8, 9);
+            } else if (w.item === 'sniper') {
+              // Leaning Armed Resident / Sniper
+              const aimAngle = Math.atan2((p.y - 25) - cy, p.x - cx);
+              ctx.save();
+              ctx.translate(cx, cy);
+              ctx.fillStyle = '#15803D';
+              ctx.fillRect(-4, -7, 8, 6);
+              ctx.fillStyle = '#FDBA74';
+              ctx.fillRect(-3, -3, 6, 4);
+              ctx.strokeStyle = '#0F172A';
+              ctx.lineWidth = 2.4;
+              ctx.beginPath();
+              ctx.moveTo(0, 0);
+              ctx.lineTo(Math.cos(aimAngle) * 13, Math.sin(aimAngle) * 13);
+              ctx.stroke();
+              ctx.restore();
             } else if (w.item === 'gold') {
               // Stacked Gold Bullion Bars
               this.renderer.drawGlowRect(cx - 8, cy + 1, 16, 6, PALETTE.GOLD, 10, true);
@@ -1066,9 +1343,28 @@ export class Rampage {
       });
     }
 
+    // Draw Human Alter-Ego Scurry on Defeat
+    if (this.humanScurry) {
+      const hs = this.humanScurry;
+      const sprite = Math.floor(hs.animTime) % 2 === 0 ? HUMAN_SCURRY_1 : HUMAN_SCURRY_2;
+      const palette = {
+        Y: PALETTE.GOLD,
+        F: '#FDBA74'
+      };
+      const scale = 3.2;
+      const drawX = hs.x - (sprite[0].length * scale) / 2;
+      const drawY = hs.y - sprite.length * scale;
+      this.renderer.drawPixelSprite(sprite, drawX, drawY, scale, palette, hs.dir < 0, false);
+      this.renderer.drawText('EEK!', hs.x, hs.y - 34, {
+        size: 11,
+        color: PALETTE.WHITE,
+        align: 'center',
+        glow: 6
+      });
+    }
+
     // Draw Player Kaiju
-    const p = this.player;
-    if (p.invulnTimer <= 0 || Math.floor(p.invulnTimer * 16) % 2 === 0) {
+    if (!this.humanScurry && (p.invulnTimer <= 0 || Math.floor(p.invulnTimer * 16) % 2 === 0)) {
       const sprite = p.punchTimer > 0 ? KAIJU_PUNCH : KAIJU_IDLE;
       let palette = {
         G: PALETTE.GREEN,
@@ -1115,7 +1411,7 @@ export class Rampage {
       }
     }
 
-    // Draw Enemies (Detailed Police/Military Helicopters & Armored Tanks)
+    // Draw Enemies (Helicopters, Tanks & Police Cars)
     for (const e of this.enemies) {
       if (e.type === 'heli') {
         ctx.save();
@@ -1156,6 +1452,26 @@ export class Rampage {
         ctx.moveTo(-bladeW, -12);
         ctx.lineTo(bladeW, -12);
         ctx.stroke();
+        ctx.restore();
+      } else if (e.type === 'policeCar') {
+        // Police Squad Car on street
+        ctx.save();
+        ctx.translate(e.x, e.y);
+        ctx.scale(e.dir, 1);
+        ctx.fillStyle = '#090D16';
+        ctx.fillRect(-14, -5, 7, 5);
+        ctx.fillRect(8, -5, 7, 5);
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.fillRect(-18, -12, 36, 8);
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(-10, -18, 20, 7);
+        ctx.fillStyle = '#38BDF8';
+        ctx.fillRect(-8, -16, 7, 4);
+        ctx.fillRect(1, -16, 7, 4);
+        const sirenBlink = Math.floor(e.sirenPhase) % 2 === 0;
+        ctx.fillStyle = sirenBlink ? PALETTE.RED : PALETTE.CYAN;
+        ctx.fillRect(-3, -22, 6, 4);
+        this.renderer.drawGlowCircle(0, -20, 4, sirenBlink ? PALETTE.RED : PALETTE.CYAN, 8);
         ctx.restore();
       } else {
         // Armored Military Tank on street
@@ -1226,13 +1542,14 @@ export class Rampage {
 
     // Top HUD Bar
     const standingCount = this.buildings.filter((b) => !b.collapsed).length;
+    const cityName = city.name.split(' (')[0];
     this.renderer.drawHUD({
       title: this.title,
       score: this.score,
       highScore: this.highScore,
       lives: this.lives,
       level: this.level,
-      extraLabel: `TOWERS:${standingCount} | ${mLabel}`,
+      extraLabel: `${cityName} | TOWERS:${standingCount} | ${mLabel}`,
       accent: PALETTE.GREEN
     });
 

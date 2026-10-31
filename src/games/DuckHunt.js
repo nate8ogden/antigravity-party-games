@@ -131,15 +131,25 @@ export class DuckHunt {
     this._startRound();
   }
 
+  _getQuota() {
+    if (this.level <= 1) return 6;
+    if (this.level <= 3) return 7;
+    if (this.level <= 6) return 8;
+    if (this.level <= 10) return 9;
+    return 10;
+  }
+
   _startRound() {
     this.roundDuckResults = new Array(10).fill('pending'); // 'pending' | 'hit' | 'miss'
     this.duckCursor = 0;
+    this.roundHits = 0;
     this._spawnSubWave();
   }
 
   _spawnSubWave() {
     this.shells = 3;
-    this.waveTimer = Math.max(4.5, 7.2 - this.level * 0.35);
+    // Authentic NES Duck Hunt timing: fast ~3.4s - 4.8s window per wave
+    this.waveTimer = Math.max(3.3, 5.0 - this.level * 0.16);
     this.flyAway = false;
     this.ducks = [];
     this.dog = {
@@ -153,24 +163,31 @@ export class DuckHunt {
     const count = this.level >= 2 ? 2 : 1;
     for (let i = 0; i < count && this.duckCursor < 10; i++) {
       const idx = this.duckCursor++;
-      const isFast = Math.random() < 0.35 + this.level * 0.08;
-      const startX = 160 + Math.random() * 640;
-      const spd = (isFast ? 235 : 175) + this.level * 22;
-      const angle = -Math.PI * (0.22 + Math.random() * 0.56);
+      const roll = Math.random();
+      const isRed = roll < 0.18 + this.level * 0.04;
+      const isTeal = !isRed && roll < 0.48 + this.level * 0.05;
+      const species = isRed ? 'red' : isTeal ? 'teal' : 'mallard';
+
+      const baseSpeed = isRed ? 380 : isTeal ? 310 : 250;
+      const spd = baseSpeed + this.level * 24;
+      const startX = 180 + Math.random() * 600;
+      const angle = -Math.PI * (0.24 + Math.random() * 0.52);
 
       this.ducks.push({
         slotIndex: idx,
+        species,
         x: startX,
-        y: this.grassY - 10,
+        y: this.grassY - 12,
         vx: Math.cos(angle) * spd,
         vy: Math.sin(angle) * spd,
         speed: spd,
-        isFast,
+        isFast: isRed || isTeal,
         state: 'FLYING', // 'FLYING' | 'SHOT' | 'FALLING' | 'ESCAPED' | 'DONE'
         stateTimer: 0,
         flapTimer: 0,
-        bounceTimer: 0.9 + Math.random() * 0.8,
-        points: isFast ? 1000 : 500
+        bounceTimer: 0.28 + Math.random() * 0.45,
+        turnPhase: Math.random() * Math.PI * 2,
+        points: isRed ? 1500 : isTeal ? 800 : 500
       });
     }
 
@@ -217,19 +234,26 @@ export class DuckHunt {
     for (const d of this.ducks) {
       if (d.state === 'FLYING') {
         const dist = Math.hypot(d.x - targetX, d.y - targetY);
-        if (dist <= 44) {
+        // Tight, authentic arcade hitboxes (20-25px instead of trivial 44px)
+        const hitRadius = d.species === 'red' ? 20 : d.species === 'teal' ? 23 : 26;
+        if (dist <= hitRadius) {
           d.state = 'SHOT';
           d.stateTimer = 0.38;
           d.vx = 0;
           d.vy = 0;
           this.roundDuckResults[d.slotIndex] = 'hit';
+          this.roundHits++;
           const pts = d.points * this.level;
           this.score += pts;
           if (this.score > this.highScore) {
             this.highScore = this.score;
             HighScoreStore.submit(this.id, this.score);
           }
-          this._spawnFeathers(d.x, d.y, d.isFast ? PALETTE.PINK : PALETTE.GREEN);
+          this._spawnFeathers(
+            d.x,
+            d.y,
+            d.species === 'red' ? PALETTE.RED : d.species === 'teal' ? PALETTE.CYAN : PALETTE.GREEN
+          );
           this.floatingTexts.push({
             text: `+${pts}`,
             x: d.x,
@@ -323,8 +347,8 @@ export class DuckHunt {
           this.flyAway = true;
           this.audio.playSiren(0.2, true);
           for (const d of flyingDucks) {
-            d.vy = -280;
-            d.vx = (Math.random() - 0.5) * 140;
+            d.vy = -420;
+            d.vx = (Math.random() - 0.5) * 160;
           }
         }
       }
@@ -332,7 +356,7 @@ export class DuckHunt {
 
     // Update Ducks
     for (const d of this.ducks) {
-      d.flapTimer += dt * 12;
+      d.flapTimer += dt * 14;
 
       if (d.state === 'FLYING') {
         d.x += d.vx * dt;
@@ -355,16 +379,18 @@ export class DuckHunt {
             d.vy = -Math.abs(d.vy);
           }
 
-          // Dynamic erratic direction changes
+          // Dynamic erratic direction changes (sharp zigzags, vertical swoops, sudden bursts)
           d.bounceTimer -= dt;
           if (d.bounceTimer <= 0) {
-            d.bounceTimer = 0.75 + Math.random() * 0.85;
-            const ang = (Math.random() - 0.5) * 1.1;
-            const curAng = Math.atan2(d.vy, d.vx) + ang;
-            d.vx = Math.cos(curAng) * d.speed;
-            d.vy = Math.sin(curAng) * d.speed;
-            if (Math.abs(d.vy) < 45) {
-              d.vy = d.vy < 0 ? -75 : 75;
+            d.bounceTimer = 0.32 + Math.random() * 0.45;
+            const turnAngles = [-1.3, -0.9, 0.9, 1.3, Math.PI * 0.5, -Math.PI * 0.5];
+            const pickAng = turnAngles[Math.floor(Math.random() * turnAngles.length)];
+            const curAng = Math.atan2(d.vy, d.vx) + pickAng * (0.6 + Math.random() * 0.4);
+            const surge = (0.9 + Math.random() * 0.35) * d.speed;
+            d.vx = Math.cos(curAng) * surge;
+            d.vy = Math.sin(curAng) * surge;
+            if (Math.abs(d.vy) < 65) {
+              d.vy = d.vy < 0 ? -95 : 95;
             }
           }
         } else {
@@ -381,8 +407,8 @@ export class DuckHunt {
           this.audio.playLaser(780, 210, 0.35);
         }
       } else if (d.state === 'FALLING') {
-        d.y += 290 * dt;
-        d.x += Math.sin(d.flapTimer * 2) * 45 * dt;
+        d.y += 340 * dt;
+        d.x += Math.sin(d.flapTimer * 2) * 55 * dt;
         if (d.y >= this.grassY) {
           d.state = 'DONE';
           this.audio.playShove();
@@ -397,7 +423,6 @@ export class DuckHunt {
 
     if (allResolved && !this.dog.active) {
       const caught = this.ducks.filter((d) => d.state === 'DONE').length;
-      const escaped = this.ducks.filter((d) => d.state === 'ESCAPED').length;
 
       this.dog.active = true;
       this.dog.caughtCount = caught;
@@ -416,19 +441,6 @@ export class DuckHunt {
           { freq: 290, dur: 0.09, type: 'square' }
         ]);
       }
-
-      if (escaped > 0) {
-        const totalMisses = this.roundDuckResults.filter((r) => r === 'miss').length;
-        if (totalMisses >= 4 && escaped > 0) {
-          this.lives--;
-          if (this.lives <= 0) {
-            HighScoreStore.submit(this.id, this.score);
-            this.audio.playGameOver();
-            this.setState('GAMEOVER');
-            return;
-          }
-        }
-      }
     }
 
     // Update Hunting Dog Animation
@@ -446,12 +458,48 @@ export class DuckHunt {
       if (this.dog.timer <= 0) {
         this.dog.active = false;
         if (this.duckCursor >= 10) {
-          // Round Complete! Check quota bonus
+          // Round Complete! Check strict quota requirements
           const hits = this.roundDuckResults.filter((r) => r === 'hit').length;
-          if (hits === 10) {
-            this.score += 5000 * this.level;
+          const quota = this._getQuota();
+
+          if (hits < quota) {
+            // Failed Quota -> Dog laughs, lose life!
+            this.lives--;
+            this.dog.active = true;
+            this.dog.mode = 'laugh';
+            this.dog.caughtCount = 0;
+            this.dog.timer = 2.4;
+            this.dog.yOffset = 0;
             this.floatingTexts.push({
-              text: `PERFECT ROUND! +${5000 * this.level}`,
+              text: `MISSED QUOTA! ${hits}/${quota} DUCKS`,
+              x: 480,
+              y: 200,
+              vy: -25,
+              life: 2.2,
+              maxLife: 2.2,
+              color: PALETTE.RED
+            });
+            this.audio.playHit();
+            this.audio.playChiptune([
+              { freq: 380, dur: 0.12, type: 'square' },
+              { freq: 280, dur: 0.12, type: 'square' },
+              { freq: 380, dur: 0.12, type: 'square' },
+              { freq: 240, dur: 0.22, type: 'square' }
+            ]);
+            if (this.lives <= 0) {
+              HighScoreStore.submit(this.id, this.score);
+              this.audio.playGameOver();
+              this.setState('GAMEOVER');
+              return;
+            }
+            this._startRound();
+            return;
+          }
+
+          if (hits === 10) {
+            this.score += 10000 * this.level;
+            this.floatingTexts.push({
+              text: `PERFECT ROUND! +${10000 * this.level}`,
               x: 480,
               y: 220,
               vy: -30,
@@ -742,18 +790,39 @@ export class DuckHunt {
       }
     }
 
-    // 2. HIT 10-Duck Status Tracker
-    this.renderer.drawText('HIT QUOTA', 210, 492, {
+    // 2. HIT 10-Duck Status Tracker with Authentic Pass Quota Threshold
+    const quota = this._getQuota();
+    this.renderer.drawText(`HIT [PASS: ${quota}/10]`, 185, 492, {
       font: FONTS.HEADER,
-      size: 12,
+      size: 11,
       color: PALETTE.GREEN
     });
     for (let i = 0; i < 10; i++) {
       const st = this.roundDuckResults[i];
       const col =
-        st === 'hit' ? PALETTE.PINK : st === 'miss' ? PALETTE.MUTED : PALETTE.WHITE;
-      this.renderer.drawGlowRect(350 + i * 34, 476, 22, 22, col, st === 'hit' ? 8 : 0);
+        st === 'hit' ? PALETTE.RED : st === 'miss' ? PALETTE.MUTED : '#1E293B';
+      const slotX = 330 + i * 32;
+      this.renderer.drawGlowRect(slotX, 476, 20, 20, col, st === 'hit' ? 8 : 0);
+      if (st === 'hit') {
+        ctx.fillStyle = '#FEF08A';
+        ctx.fillRect(slotX + 5, 482, 10, 8);
+      }
     }
+
+    // Quota Pass threshold line indicator
+    const quotaLineX = 330 + quota * 32 - 6;
+    ctx.strokeStyle = PALETTE.GOLD;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(quotaLineX, 470);
+    ctx.lineTo(quotaLineX, 502);
+    ctx.stroke();
+    this.renderer.drawText('▲ PASS', quotaLineX, 514, {
+      font: FONTS.HUD,
+      size: 9,
+      color: PALETTE.GOLD,
+      align: 'center'
+    });
 
     this.renderer.drawText('CLICK/TAP OR Z/SPACE TO FIRE', 725, 490, {
       font: FONTS.HUD,

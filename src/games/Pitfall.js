@@ -62,6 +62,53 @@ const PITFALL_COBRA_SPRITE = [
   'KKKKKKKK..'
 ];
 
+// 255-Screen Authentic LFSR Sequence (David Crane 1982 Activision Pitfall Engine)
+const LFSR_SEQUENCE = [];
+{
+  let s = 0xA4;
+  for (let i = 0; i < 255; i++) {
+    LFSR_SEQUENCE.push(s);
+    const b = ((s >> 7) ^ (s >> 5) ^ (s >> 4) ^ (s >> 3)) & 1;
+    s = ((s << 1) & 0xFF) | b;
+  }
+}
+
+// 32 Authentic Treasures placed across the 255-screen world (Total max value = 112,000 pts + 2,000 start = 114,000 pts)
+const TREASURE_MAP = new Map([
+  [3, { name: 'MONEY BAG', pts: 2000, color: PALETTE.GREEN }],
+  [7, { name: 'SILVER BAR', pts: 3000, color: PALETTE.WHITE }],
+  [12, { name: 'GOLD BAR', pts: 4000, color: PALETTE.GOLD }],
+  [19, { name: 'DIAMOND RING', pts: 5000, color: PALETTE.CYAN }],
+  [26, { name: 'MONEY BAG', pts: 2000, color: PALETTE.GREEN }],
+  [34, { name: 'SILVER BAR', pts: 3000, color: PALETTE.WHITE }],
+  [41, { name: 'GOLD BAR', pts: 4000, color: PALETTE.GOLD }],
+  [48, { name: 'DIAMOND RING', pts: 5000, color: PALETTE.CYAN }],
+  [57, { name: 'MONEY BAG', pts: 2000, color: PALETTE.GREEN }],
+  [65, { name: 'SILVER BAR', pts: 3000, color: PALETTE.WHITE }],
+  [73, { name: 'GOLD BAR', pts: 4000, color: PALETTE.GOLD }],
+  [81, { name: 'DIAMOND RING', pts: 5000, color: PALETTE.CYAN }],
+  [89, { name: 'MONEY BAG', pts: 2000, color: PALETTE.GREEN }],
+  [98, { name: 'SILVER BAR', pts: 3000, color: PALETTE.WHITE }],
+  [106, { name: 'GOLD BAR', pts: 4000, color: PALETTE.GOLD }],
+  [114, { name: 'DIAMOND RING', pts: 5000, color: PALETTE.CYAN }],
+  [123, { name: 'MONEY BAG', pts: 2000, color: PALETTE.GREEN }],
+  [131, { name: 'SILVER BAR', pts: 3000, color: PALETTE.WHITE }],
+  [139, { name: 'GOLD BAR', pts: 4000, color: PALETTE.GOLD }],
+  [148, { name: 'DIAMOND RING', pts: 5000, color: PALETTE.CYAN }],
+  [156, { name: 'MONEY BAG', pts: 2000, color: PALETTE.GREEN }],
+  [164, { name: 'SILVER BAR', pts: 3000, color: PALETTE.WHITE }],
+  [173, { name: 'GOLD BAR', pts: 4000, color: PALETTE.GOLD }],
+  [181, { name: 'DIAMOND RING', pts: 5000, color: PALETTE.CYAN }],
+  [189, { name: 'MONEY BAG', pts: 2000, color: PALETTE.GREEN }],
+  [198, { name: 'SILVER BAR', pts: 3000, color: PALETTE.WHITE }],
+  [206, { name: 'GOLD BAR', pts: 4000, color: PALETTE.GOLD }],
+  [214, { name: 'DIAMOND RING', pts: 5000, color: PALETTE.CYAN }],
+  [223, { name: 'MONEY BAG', pts: 2000, color: PALETTE.GREEN }],
+  [231, { name: 'SILVER BAR', pts: 3000, color: PALETTE.WHITE }],
+  [239, { name: 'GOLD BAR', pts: 4000, color: PALETTE.GOLD }],
+  [248, { name: 'DIAMOND RING', pts: 5000, color: PALETTE.CYAN }]
+]);
+
 export class Pitfall {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -116,53 +163,57 @@ export class Pitfall {
   }
 
   _loadScreen(index) {
-    // 12 Handcrafted OG Activision Pitfall! Jungle Screens before procedural fallback
-    const OG_SCREENS = [
-      { name: 'TAR PIT & SWINGING VINE', pit: 'tarPit', halfW: 125, vine: true, ladder: true, logs: 1, treasure: null },
-      { name: 'CROCODILE POND & VINE', pit: 'crocPond', halfW: 155, vine: true, ladder: false, logs: 0, treasure: 'GOLD BAR' },
-      { name: 'QUICKSAND & TWIN LOGS', pit: 'quicksand', halfW: 130, vine: true, ladder: true, logs: 2, treasure: 'DIAMOND RING' },
-      { name: 'SCORPION CAVERN LADDER', pit: 'tarPit', halfW: 110, vine: false, ladder: true, logs: 1, treasure: 'SILVER BAR' },
-      { name: 'THREE-CROCODILE CROSSING', pit: 'crocPond', halfW: 160, vine: false, ladder: false, logs: 0, treasure: 'RUBY CHALICE' },
-      { name: 'COBRA & CAMPFIRE TREASURY', pit: 'tarPit', halfW: 120, vine: true, ladder: false, logs: 1, treasure: 'MONEY BAG', cobra: true },
-      { name: 'DISAPPEARING TAR PIT', pit: 'quicksand', halfW: 145, vine: true, ladder: true, logs: 2, treasure: null },
-      { name: 'DIAMOND RING VAULT', pit: 'crocPond', halfW: 155, vine: true, ladder: false, logs: 1, treasure: 'DIAMOND RING' },
-      { name: 'TWIN ROLLING LOGS PASS', pit: 'tarPit', halfW: 125, vine: true, ladder: true, logs: 2, treasure: 'GOLD BAR' },
-      { name: 'QUICKSAND VINE CHASM', pit: 'quicksand', halfW: 150, vine: true, ladder: false, logs: 1, treasure: 'RUBY CHALICE', cobra: true },
-      { name: 'CROCODILE KING LAGOON', pit: 'crocPond', halfW: 165, vine: false, ladder: true, logs: 1, treasure: 'SILVER BAR' },
-      { name: 'GOLDEN IDOL SANCTUARY', pit: 'tarPit', halfW: 135, vine: true, ladder: true, logs: 2, treasure: 'DIAMOND RING', cobra: true }
-    ];
-
     const normalizedIdx = ((index % 255) + 255) % 255;
-    let spec;
-    if (normalizedIdx < OG_SCREENS.length) {
-      spec = OG_SCREENS[normalizedIdx];
-    } else {
-      // Procedural fallback for screens beyond the 12 handcrafted screens
-      const mod = normalizedIdx % 5;
-      spec = {
-        name: `JUNGLE SECTOR ${normalizedIdx + 1}`,
-        pit: mod === 1 || mod === 3 ? 'crocPond' : mod === 2 ? 'quicksand' : 'tarPit',
-        halfW: mod === 1 || mod === 3 ? 155 : 125,
-        vine: mod !== 1,
-        ladder: mod % 2 === 0,
-        logs: mod === 4 ? 2 : mod === 1 ? 0 : 1,
-        treasure: mod === 0 ? null : ['GOLD BAR', 'DIAMOND RING', 'RUBY CHALICE'][normalizedIdx % 3],
-        cobra: mod === 3
-      };
+    this.screenIndex = normalizedIdx;
+    const byte = LFSR_SEQUENCE[normalizedIdx];
+
+    // Screen Titles: Authentic landmark names for iconic screens
+    const LANDMARK_NAMES = {
+      0: 'ACTIVISION JUNGLE ENTRANCE',
+      1: 'CROCODILE POND & VINE',
+      2: 'QUICKSAND & TWIN ROLLING LOGS',
+      3: 'MONEY BAG TREASURE VAULT',
+      4: 'TRIPLE CROCODILE CROSSING',
+      5: 'DISAPPEARING QUICKSAND CHASM',
+      6: 'COBRA & CAMPFIRE PASS',
+      7: 'SILVER BAR CANOPY',
+      8: 'TWIN ROLLING LOGS GAUNTLET',
+      9: 'SUBTERRANEAN BRICK MAZE',
+      10: 'TREE STUMP CLEARING',
+      11: 'TAR PIT PENDULUM VINE',
+      12: 'GOLD BAR SANCTUARY'
+    };
+    this.screenName = LANDMARK_NAMES[normalizedIdx] || `JUNGLE SECTOR ${String(normalizedIdx + 1).padStart(3, '0')} / 255`;
+
+    // Pit type derived from LFSR byte
+    const pitVal = byte & 0x07;
+    let pitType = 'none';
+    let halfW = 0;
+    if (pitVal === 2 || pitVal === 3) {
+      pitType = 'tarPit';
+      halfW = 125;
+    } else if (pitVal === 4 || pitVal === 5) {
+      pitType = 'quicksand';
+      halfW = 135;
+    } else if (pitVal >= 6) {
+      pitType = 'crocPond';
+      halfW = 155;
     }
 
-    this.screenName = spec.name;
-    const hasCrocPond = spec.pit === 'crocPond';
-
     this.pit = {
-      type: spec.pit,
+      type: pitType,
       cx: 480,
-      baseHalfW: spec.halfW,
-      halfW: spec.halfW,
-      expandPhase: 0
+      baseHalfW: halfW,
+      halfW: halfW,
+      expandPhase: 0,
+      state: 'open', // 'open' | 'warning' | 'closed'
+      timer: 3.2,
+      isOpen: pitType !== 'none'
     };
 
-    this.vine = spec.vine
+    // Vine: tar pits and croc ponds feature swinging vine
+    const hasVine = pitType !== 'none' && ((byte & 0x08) !== 0 || pitType === 'crocPond' || normalizedIdx % 3 === 0);
+    this.vine = hasVine
       ? {
           anchorX: 480,
           anchorY: 72,
@@ -174,8 +225,9 @@ export class Pitfall {
         }
       : null;
 
+    // Crocodiles in pond
     this.crocodiles = [];
-    if (hasCrocPond) {
+    if (pitType === 'crocPond') {
       const xs = [395, 480, 565];
       xs.forEach((cx, i) => {
         this.crocodiles.push({
@@ -183,14 +235,16 @@ export class Pitfall {
           y: this.upperGroundY,
           width: 48,
           mouthOpen: false,
-          timer: 1.2 + i * 0.45,
+          timer: 1.1 + i * 0.42,
           cycleOpen: 1.15,
           cycleClosed: 2.1
         });
       });
     }
 
-    this.ladder = spec.ladder
+    // Ladder connecting jungle floor to underground tunnel
+    const hasLadder = (byte & 0x10) !== 0 || normalizedIdx % 2 === 0;
+    this.ladder = hasLadder
       ? {
           x: 740,
           topY: this.upperGroundY,
@@ -198,46 +252,66 @@ export class Pitfall {
         }
       : null;
 
+    // Ground Obstacles: Rolling Logs, Stationary Stumps, Campfires, Cobras
     this.logs = [];
-    for (let i = 0; i < spec.logs; i++) {
-      this.logs.push({
-        x: 860 - i * 220,
-        y: this.upperGroundY - 12,
-        vx: -(150 + this.level * 18),
-        radius: 12,
-        rot: 0,
-        jumped: false
-      });
+    this.stumps = [];
+    this.campfire = null;
+    this.cobra = null;
+
+    const obstVal = (byte >> 5) & 0x07;
+    if (obstVal === 1 || obstVal === 2 || obstVal === 3) {
+      // 1, 2, or 3 Rolling Logs
+      const count = obstVal;
+      for (let i = 0; i < count; i++) {
+        this.logs.push({
+          x: 880 - i * 220,
+          y: this.upperGroundY - 12,
+          vx: -(145 + this.level * 16),
+          radius: 12,
+          rot: 0,
+          jumped: false
+        });
+      }
+    } else if (obstVal === 4) {
+      // Single stationary tree stump
+      this.stumps.push({ x: 640, y: this.upperGroundY - 14, width: 22, height: 16, jumped: false });
+    } else if (obstVal === 5) {
+      // Twin stationary tree stumps
+      this.stumps.push({ x: 330, y: this.upperGroundY - 14, width: 22, height: 16, jumped: false });
+      this.stumps.push({ x: 670, y: this.upperGroundY - 14, width: 22, height: 16, jumped: false });
+    } else if (obstVal === 6) {
+      // Crackling Campfire hazard
+      this.campfire = { x: 680, y: this.upperGroundY, phase: 0 };
+    } else if (obstVal === 7) {
+      // Rattling Cobra hazard
+      this.cobra = { x: 685, y: this.upperGroundY, phase: 0 };
     }
 
-    // Optional rattling Cobra / Campfire hazard guarding the right bank
-    this.cobra = spec.cobra
-      ? {
-          x: 685,
-          y: this.upperGroundY,
-          phase: 0
-        }
-      : null;
+    // Underground Red Brick Dead-End Walls: Create David Crane's authentic labyrinth!
+    this.brickWallLeft = (byte & 0x48) === 0x48;
+    this.brickWallRight = (byte & 0x84) === 0x84;
+    if (this.brickWallLeft && this.brickWallRight) {
+      // Don't close both walls on the same screen so ladder shaft remains accessible
+      this.brickWallLeft = false;
+    }
 
+    // Underground Scorpion patrolling floor
+    const minScorpX = this.brickWallLeft ? 280 : 70;
+    const maxScorpX = this.brickWallRight ? 680 : 890;
     this.scorpion = {
-      x: 480,
+      x: (minScorpX + maxScorpX) / 2,
+      minX: minScorpX,
+      maxX: maxScorpX,
       y: this.lowerGroundY,
       vx: 95 + this.level * 12,
       dir: 1,
       anim: 0
     };
 
-    // Treasure on right bank if not already collected on this screen
+    // Authentic 32-Treasure Catalog Lookup
     this.treasure = null;
-    if (!this.collectedTreasures.has(index) && spec.treasure) {
-      const catalog = {
-        'GOLD BAR': { name: 'GOLD BAR', pts: 2000, color: PALETTE.GOLD },
-        'DIAMOND RING': { name: 'DIAMOND RING', pts: 3000, color: PALETTE.CYAN },
-        'RUBY CHALICE': { name: 'RUBY CHALICE', pts: 2500, color: PALETTE.PINK },
-        'SILVER BAR': { name: 'SILVER BAR', pts: 2000, color: PALETTE.WHITE },
-        'MONEY BAG': { name: 'MONEY BAG', pts: 2500, color: PALETTE.GREEN }
-      };
-      const t = catalog[spec.treasure] || catalog['GOLD BAR'];
+    if (!this.collectedTreasures.has(normalizedIdx) && TREASURE_MAP.has(normalizedIdx)) {
+      const t = TREASURE_MAP.get(normalizedIdx);
       this.treasure = {
         x: 815,
         y: this.upperGroundY - 16,
@@ -370,10 +444,27 @@ export class Pitfall {
       this.vine.tipY = this.vine.anchorY + Math.cos(this.vine.angle) * this.vine.length;
     }
 
-    // Update Expanding Quicksand / Tar Pit
+    // Update Disappearing Quicksand / Tar Pit
     if (this.pit.type === 'quicksand') {
+      this.pit.timer -= dt;
+      if (this.pit.timer <= 0) {
+        if (this.pit.state === 'open') {
+          this.pit.state = 'warning';
+          this.pit.timer = 0.85;
+        } else if (this.pit.state === 'warning') {
+          this.pit.state = 'closed';
+          this.pit.timer = 2.0;
+          this.pit.isOpen = false;
+        } else {
+          this.pit.state = 'open';
+          this.pit.timer = 3.4;
+          this.pit.isOpen = true;
+        }
+      }
       this.pit.expandPhase += dt * 1.4;
-      this.pit.halfW = this.pit.baseHalfW * (0.65 + 0.35 * Math.sin(this.pit.expandPhase));
+      this.pit.halfW = this.pit.isOpen
+        ? this.pit.baseHalfW * (0.75 + 0.25 * Math.sin(this.pit.expandPhase))
+        : this.pit.baseHalfW * 0.35;
     } else if (this.pit.type === 'tarPit') {
       this.pit.expandPhase += dt * 0.9;
       this.pit.halfW = this.pit.baseHalfW * (0.85 + 0.15 * Math.sin(this.pit.expandPhase));
@@ -485,11 +576,35 @@ export class Pitfall {
         }
       }
 
+      // Underground Red Brick Dead-End Wall Collision
+      if (p.floor === 'lower') {
+        if (this.brickWallLeft) {
+          if (p.x < 262 && p.x > 220) {
+            p.x = 262;
+            p.vx = 0;
+          } else if (p.x > 218 && p.x < 245) {
+            p.x = 218;
+            p.vx = 0;
+          }
+        }
+        if (this.brickWallRight) {
+          if (p.x > 698 && p.x < 735) {
+            p.x = 698;
+            p.vx = 0;
+          } else if (p.x < 742 && p.x > 715) {
+            p.x = 742;
+            p.vx = 0;
+          }
+        }
+      }
+
       // Check Pit / Crocodile / Ladder Shaft Hazards when on Upper Ground
       if (p.floor === 'upper' && p.onGround && !p.onVine) {
         const inPitRange = Math.abs(p.x - this.pit.cx) < this.pit.halfW - 8;
         if (inPitRange) {
-          if (this.pit.type === 'crocPond') {
+          if (this.pit.type === 'quicksand' && !this.pit.isOpen) {
+            // Quicksand currently closed - safe to sprint across!
+          } else if (this.pit.type === 'crocPond') {
             // Check if standing on a closed-mouth crocodile
             let safeOnCroc = false;
             let bittenByCroc = false;
@@ -517,19 +632,18 @@ export class Pitfall {
       }
     }
 
-    // Screen Transitions (Left/Right edge scrolling)
+    // Screen Transitions (Left/Right edge scrolling across David Crane's 255 screens)
     if (p.x > 948) {
       p.x = 20;
       const step = p.floor === 'lower' ? 3 : 1; // Underground passage moves 3x screens!
-      this.screenIndex += step;
-      if (this.screenIndex > 0 && this.screenIndex % 4 === 0) {
-        this.level++;
-      }
+      this.screenIndex = (this.screenIndex + step) % 255;
+      this.level = 1 + Math.floor(this.treasuresFound / 4);
       this._loadScreen(this.screenIndex);
     } else if (p.x < 12) {
       p.x = 940;
       const step = p.floor === 'lower' ? 3 : 1;
-      this.screenIndex -= step;
+      this.screenIndex = ((this.screenIndex - step) % 255 + 255) % 255;
+      this.level = 1 + Math.floor(this.treasuresFound / 4);
       this._loadScreen(this.screenIndex);
     }
 
@@ -583,19 +697,57 @@ export class Pitfall {
       }
     }
 
-    // Update Underground Scorpion
+    // Update Stationary Tree Stumps
+    for (const stump of this.stumps) {
+      if (p.floor === 'upper' && !p.onVine) {
+        const dx = Math.abs(p.x - stump.x);
+        if (dx < 18) {
+          if (p.y > this.upperGroundY - 14) {
+            if (p.invulnTimer <= 0) {
+              this.score = Math.max(0, this.score - 100);
+              this.audio.playHit();
+              this.renderer.shake(4, 0.12);
+              p.invulnTimer = 0.6;
+              p.vy = -160;
+              p.onGround = false;
+              this.floatingTexts.push({
+                text: '-100 STUMP TRIP!',
+                x: p.x,
+                y: p.y - 36,
+                vy: -35,
+                life: 0.7,
+                maxLife: 0.7,
+                color: PALETTE.ORANGE
+              });
+            }
+          } else if (!stump.jumped && p.vy < 0) {
+            stump.jumped = true;
+            this.score += 100;
+            this.audio.playHop();
+            this.floatingTexts.push({
+              text: '+100 HURDLE!',
+              x: stump.x,
+              y: stump.y - 20,
+              vy: -35,
+              life: 0.7,
+              maxLife: 0.7,
+              color: PALETTE.CYAN
+            });
+          }
+        }
+      }
+    }
+
+    // Update Underground Scorpion bounded by dead-end walls
     if (this.scorpion) {
       const s = this.scorpion;
       s.anim += dt * 10;
-      if (p.floor === 'lower') {
-        s.dir = p.x > s.x ? 1 : -1;
-      }
       s.x += s.dir * s.vx * dt;
-      if (s.x > 890) {
-        s.x = 890;
+      if (s.x > s.maxX) {
+        s.x = s.maxX;
         s.dir = -1;
-      } else if (s.x < 70) {
-        s.x = 70;
+      } else if (s.x < s.minX) {
+        s.x = s.minX;
         s.dir = 1;
       }
 
@@ -608,7 +760,20 @@ export class Pitfall {
       }
     }
 
-    // Update Cobra / Campfire Hazard on right bank
+    // Update Crackling Campfire Hazard
+    if (this.campfire) {
+      this.campfire.phase += dt * 10;
+      if (
+        p.floor === 'upper' &&
+        !p.onVine &&
+        Math.abs(p.x - this.campfire.x) < 20 &&
+        p.y > this.upperGroundY - 18
+      ) {
+        this._loseLife('BURNED BY CAMPFIRE!');
+      }
+    }
+
+    // Update Rattling Cobra Hazard on right bank
     if (this.cobra) {
       this.cobra.phase += dt * 9;
       if (
@@ -745,6 +910,21 @@ export class Pitfall {
     drawBrickPanel(18, 48, 0.92);
     drawBrickPanel(894, 48, 0.92);
 
+    // Render David Crane's blocking dead-end red brick labyrinth walls in underground tunnel
+    if (this.brickWallLeft) {
+      drawBrickPanel(228, 34, 1.0);
+      // Sturdy stone header & footer caps
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(224, tunnelTop, 42, 6);
+      ctx.fillRect(224, this.lowerGroundY - 6, 42, 6);
+    }
+    if (this.brickWallRight) {
+      drawBrickPanel(698, 34, 1.0);
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(694, tunnelTop, 42, 6);
+      ctx.fillRect(694, this.lowerGroundY - 6, 42, 6);
+    }
+
     // Underground Tunnel Floor
     ctx.fillStyle = '#7F1D1D';
     ctx.fillRect(0, this.lowerGroundY, this.renderer.width, 540 - this.lowerGroundY);
@@ -752,28 +932,38 @@ export class Pitfall {
     ctx.fillRect(0, this.lowerGroundY, this.renderer.width, 5);
 
     // Draw Pit (Tar Pit / Quicksand / Crocodile Pond)
-    if (this.pit.halfW > 4) {
-      const pitColor =
-        this.pit.type === 'crocPond'
-          ? '#0284C7'
-          : this.pit.type === 'quicksand'
-          ? '#38BDF8'
-          : '#0B0F19';
-      ctx.fillStyle = pitColor;
-      ctx.fillRect(
-        this.pit.cx - this.pit.halfW,
-        this.upperGroundY - 2,
-        this.pit.halfW * 2,
-        18
-      );
-      ctx.strokeStyle = this.pit.type === 'tarPit' ? PALETTE.PURPLE : PALETTE.CYAN;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(
-        this.pit.cx - this.pit.halfW,
-        this.upperGroundY - 2,
-        this.pit.halfW * 2,
-        18
-      );
+    if (this.pit.halfW > 4 && this.pit.type !== 'none') {
+      if (this.pit.type === 'quicksand' && !this.pit.isOpen) {
+        // Disappearing quicksand currently closed: solid dirt path with faint sand grains
+        ctx.fillStyle = '#B45309';
+        ctx.fillRect(this.pit.cx - this.pit.baseHalfW, this.upperGroundY, this.pit.baseHalfW * 2, 28);
+        ctx.fillStyle = '#FDE68A';
+        for (let gx = this.pit.cx - this.pit.baseHalfW + 10; gx < this.pit.cx + this.pit.baseHalfW; gx += 16) {
+          ctx.fillRect(gx, this.upperGroundY + 8, 3, 3);
+        }
+      } else {
+        const pitColor =
+          this.pit.type === 'crocPond'
+            ? '#0284C7'
+            : this.pit.type === 'quicksand'
+            ? (this.pit.state === 'warning' && Math.floor(performance.now() * 0.008) % 2 === 0 ? '#FDE047' : '#38BDF8')
+            : '#0B0F19';
+        ctx.fillStyle = pitColor;
+        ctx.fillRect(
+          this.pit.cx - this.pit.halfW,
+          this.upperGroundY - 2,
+          this.pit.halfW * 2,
+          18
+        );
+        ctx.strokeStyle = this.pit.type === 'tarPit' ? PALETTE.PURPLE : PALETTE.CYAN;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(
+          this.pit.cx - this.pit.halfW,
+          this.upperGroundY - 2,
+          this.pit.halfW * 2,
+          18
+        );
+      }
     }
 
     // Draw Pixel-Art Crocodile Heads in Pond
@@ -879,6 +1069,25 @@ export class Pitfall {
       ctx.restore();
     }
 
+    // Draw Stationary Tree Stumps
+    for (const stump of this.stumps) {
+      ctx.save();
+      ctx.translate(stump.x, stump.y);
+      // Main wooden stump body
+      ctx.fillStyle = '#78350F';
+      ctx.fillRect(-stump.width / 2, 0, stump.width, stump.height);
+      // Dark vertical bark lines
+      ctx.fillStyle = '#451A03';
+      ctx.fillRect(-stump.width / 2 + 4, 2, 3, stump.height - 2);
+      ctx.fillRect(stump.width / 2 - 7, 2, 3, stump.height - 2);
+      // Growth rings on top cut surface
+      ctx.fillStyle = '#B45309';
+      ctx.fillRect(-stump.width / 2 - 2, -3, stump.width + 4, 4);
+      ctx.fillStyle = '#FDE68A';
+      ctx.fillRect(-stump.width / 2 + 2, -3, stump.width - 4, 2);
+      ctx.restore();
+    }
+
     // Draw Underground Scorpion (Detailed Pixel-Art Sprite)
     if (this.scorpion) {
       const s = this.scorpion;
@@ -899,7 +1108,28 @@ export class Pitfall {
       );
     }
 
-    // Draw Cobra & Campfire Hazard if present on screen
+    // Draw Standalone Campfire Hazard if present
+    if (this.campfire) {
+      const fx = this.campfire.x;
+      const cy = this.campfire.y;
+      const flicker = Math.floor(this.campfire.phase * 2) % 2 === 0;
+      ctx.save();
+      // Crossed firewood logs
+      ctx.fillStyle = '#78350F';
+      ctx.fillRect(fx - 10, cy - 5, 20, 5);
+      ctx.fillStyle = '#92400E';
+      ctx.fillRect(fx - 7, cy - 8, 14, 4);
+      // Multi-layered flickering pixel flames
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(fx - 8, cy - 16, 16, 8);
+      ctx.fillStyle = PALETTE.ORANGE;
+      ctx.fillRect(fx - 6, cy - (flicker ? 22 : 19), 12, 10);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(fx - 3, cy - (flicker ? 25 : 21), 6, 9);
+      ctx.restore();
+    }
+
+    // Draw Cobra Hazard if present on screen
     if (this.cobra) {
       const cx = this.cobra.x;
       const cy = this.cobra.y;
@@ -920,23 +1150,6 @@ export class Pitfall {
         flicker,
         false
       );
-
-      // Flickering Pixel-Art Campfire beside the Cobra
-      const fx = cx + 22;
-      ctx.save();
-      // Crossed firewood logs
-      ctx.fillStyle = '#78350F';
-      ctx.fillRect(fx - 10, cy - 5, 20, 5);
-      ctx.fillStyle = '#92400E';
-      ctx.fillRect(fx - 7, cy - 8, 14, 4);
-      // Multi-layered flickering pixel flames
-      ctx.fillStyle = PALETTE.RED;
-      ctx.fillRect(fx - 8, cy - 16, 16, 8);
-      ctx.fillStyle = PALETTE.ORANGE;
-      ctx.fillRect(fx - 6, cy - (flicker ? 22 : 19), 12, 10);
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(fx - 3, cy - (flicker ? 25 : 21), 6, 9);
-      ctx.restore();
     }
 
     if (this.screenName) {
@@ -1004,10 +1217,12 @@ export class Pitfall {
     }
     ctx.globalAlpha = 1;
 
-    // Screen & Timer status
+    // Screen & Timer status (Authentic David Crane LFSR HUD)
     const mins = Math.floor(this.timeLeft / 60);
     const secs = Math.floor(this.timeLeft % 60);
     const timeStr = `${mins}:${String(secs).padStart(2, '0')}`;
+    const scnStr = `${String(this.screenIndex + 1).padStart(3, '0')}/255`;
+    const treasStr = `${String(this.treasuresFound).padStart(2, '0')}/32`;
 
     this.renderer.drawHUD({
       title: this.title,
@@ -1015,7 +1230,7 @@ export class Pitfall {
       highScore: this.highScore,
       lives: this.lives,
       level: this.level,
-      extraLabel: `TIME ${timeStr}`,
+      extraLabel: `TIME ${timeStr} | SCN ${scnStr} | TREASURES ${treasStr}`,
       accent: PALETTE.GOLD
     });
 

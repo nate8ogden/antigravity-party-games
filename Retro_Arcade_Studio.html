@@ -28899,6 +28899,45 @@ const KAIJU_PUNCH = [
   '.GGG..GGG...',
   '.KK....KK...'
 ];
+
+// Bally Midway 1986 Defeated Monster Human Alter-Ego Scurry Animation
+const HUMAN_SCURRY_1 = [
+  '..YYY...',
+  '..FFF...',
+  '.FFFFF..',
+  '..FFF...',
+  '.FFFFF..',
+  '.F.F.F..',
+  '...F....',
+  '..F.F...',
+  '..F.F...'
+];
+
+const HUMAN_SCURRY_2 = [
+  '..YYY...',
+  '..FFF...',
+  '.FFFFF..',
+  '..FFF...',
+  '.FFFFF..',
+  '..FFF...',
+  '...F....',
+  '..F.....',
+  '...F....'
+];
+
+// Authentic Bally Midway 1986 American City Tour
+const CITIES = [
+  { name: 'PEORIA, IL (DAY 1)', skyTop: '#0F172A', skyBottom: '#7C2D12', skylineColor: '#18181B' },
+  { name: 'CHICAGO, IL (DAY 2)', skyTop: '#020617', skyBottom: '#1E293B', skylineColor: '#0F172A' },
+  { name: 'DETROIT, MI (DAY 3)', skyTop: '#18181B', skyBottom: '#52525B', skylineColor: '#27272A' },
+  { name: 'ST. LOUIS, MO (DAY 4)', skyTop: '#1C1917', skyBottom: '#854D0E', skylineColor: '#292524' },
+  { name: 'NEW YORK, NY (DAY 5)', skyTop: '#0B0F19', skyBottom: '#312E81', skylineColor: '#111827' },
+  { name: 'SAN FRANCISCO, CA (DAY 6)', skyTop: '#082F49', skyBottom: '#0284C7', skylineColor: '#0C4A6E' },
+  { name: 'PHILADELPHIA, PA (DAY 7)', skyTop: '#1E1B4B', skyBottom: '#581C87', skylineColor: '#2E1065' },
+  { name: 'DALLAS, TX (DAY 8)', skyTop: '#3B0764', skyBottom: '#9D174D', skylineColor: '#4A044E' },
+  { name: 'LOS ANGELES, CA (DAY 9)', skyTop: '#172554', skyBottom: '#C2410C', skylineColor: '#1E3A8A' },
+  { name: 'WASHINGTON, D.C. (DAY 10)', skyTop: '#090D16', skyBottom: '#1D4ED8', skylineColor: '#0F172A' }
+];
 class Rampage {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -28959,28 +28998,42 @@ class Rampage {
   }
 
   _buildCity(level) {
+    this.city = CITIES[(level - 1) % CITIES.length];
     this.buildings = [];
     this.enemies = [];
     this.projectiles = [];
     this.dynamites = [];
+    this.humanScurry = null;
     this.enemySpawnTimer = 1.8;
     this.dynamiteTimer = 4.5;
     this.levelClearTimer = 0;
 
-    const numBuildings = 4;
-    const marginX = 95;
-    const spacing = 195;
-    const colors = ['#1E293B', '#334155', '#27272A', '#1E1B4B', '#31102F'];
-    const trimColors = [PALETTE.CYAN, PALETTE.ORANGE, PALETTE.GOLD, PALETTE.PURPLE, PALETTE.PINK];
+    const numBuildings = (level % 4 === 0) ? 5 : 4;
+    const buildingTemplates = [
+      { cols: 3, floors: 5, color: '#334155', trim: PALETTE.CYAN, prop: 'waterTower' },
+      { cols: 4, floors: 7, color: '#1E293B', trim: PALETTE.ORANGE, prop: 'neonSign', signText: 'HOTEL' },
+      { cols: 2, floors: 8, color: '#475569', trim: PALETTE.GOLD, prop: 'waterTower' },
+      { cols: 3, floors: 6, color: '#1E1B4B', trim: PALETTE.PINK, prop: 'neonSign', signText: 'BAR' },
+      { cols: 3, floors: 5, color: '#31102F', trim: PALETTE.PURPLE, prop: 'waterTower' }
+    ];
 
+    const cellW = 42;
+    const cellH = 38;
+    let totalBWidth = 0;
     for (let i = 0; i < numBuildings; i++) {
-      const cols = 3;
-      const floors = Math.min(8, 5 + Math.floor((level + i) / 2));
-      const cellW = 42;
-      const cellH = 38;
+      totalBWidth += buildingTemplates[i].cols * cellW + 16;
+    }
+    const gap = Math.max(20, Math.floor((960 - totalBWidth) / (numBuildings + 1)));
+
+    let curX = gap;
+    for (let i = 0; i < numBuildings; i++) {
+      const tmpl = buildingTemplates[i];
+      const cols = tmpl.cols;
+      const floors = Math.min(9, tmpl.floors + Math.floor((level - 1) / 3));
       const bWidth = cols * cellW + 16;
       const bHeight = floors * cellH + 14;
-      const bx = marginX + i * spacing;
+      const bx = curX;
+      curX += bWidth + gap;
       const by = this.groundY - bHeight;
 
       const windows = [];
@@ -28992,7 +29045,8 @@ class Rampage {
           if (roll < 0.22) item = 'food';
           else if (roll < 0.36) item = 'civilian';
           else if (roll < 0.44) item = 'gold';
-          else if (roll < 0.50) item = 'hazard';
+          else if (roll < 0.52) item = 'hazard';
+          else if (roll < 0.60) item = 'sniper';
 
           row.push({
             row: r,
@@ -29002,7 +29056,8 @@ class Rampage {
             lit: Math.random() < 0.65,
             item,
             itemRevealed: false,
-            itemTimer: 0
+            itemTimer: 0,
+            sniperCooldown: 1.5 + Math.random() * 2.0
           });
         }
         windows.push(row);
@@ -29020,15 +29075,17 @@ class Rampage {
         floors,
         cellW,
         cellH,
-        color: colors[(i + level) % colors.length],
-        trimColor: trimColors[(i + level) % trimColors.length],
+        color: tmpl.color,
+        trimColor: tmpl.trim,
         windows,
         damage: 0,
         maxDamage: maxStructuralHp,
         collapsing: false,
         collapsed: false,
         collapseSpeed: 0,
-        shakeOffset: 0
+        shakeOffset: 0,
+        waterTower: tmpl.prop === 'waterTower' ? { smashed: false } : null,
+        neonSign: tmpl.prop === 'neonSign' ? { text: tmpl.signText, smashed: false } : null
       });
     }
   }
@@ -29081,8 +29138,10 @@ class Rampage {
   }
 
   _damagePlayer(amount) {
-    if (this.player.invulnTimer > 0) return;
-    this.player.health -= amount;
+    if (this.player.invulnTimer > 0 || this.humanScurry) return;
+    // Lizzie has armored dinosaur scales that reduce incoming bullet/shell damage by 28%
+    const mult = this.player.monster === 'lizzie' ? 0.72 : 1.0;
+    this.player.health -= amount * mult;
     this.player.invulnTimer = 0.65;
     this.renderer.shake(6, 0.18);
     this.audio.playHit();
@@ -29091,27 +29150,21 @@ class Rampage {
     if (this.player.health <= 0) {
       this.lives--;
       this.audio.playExplosion(0.5, 700);
-      if (this.lives <= 0) {
-        HighScoreStore.submit(this.id, this.score);
-        this.audio.playGameOver();
-        this.setState('GAMEOVER');
-      } else {
-        this.player.health = this.player.maxHealth;
-        this.player.climbingBuilding = null;
-        this.player.onGround = true;
-        this.player.y = this.groundY;
-        this.player.vy = 0;
-        this.player.invulnTimer = 2.0;
-        this.floatingTexts.push({
-          text: 'KAIJU ENRAGED!',
-          x: this.player.x,
-          y: this.player.y - 60,
-          vy: -30,
-          life: 1.2,
-          maxLife: 1.2,
-          color: PALETTE.PINK
-        });
-      }
+      this._spawnParticles(this.player.x, this.player.y - 25, 24, '#E2E8F0', 160, 200);
+
+      // Authentic Bally Midway 1986 defeat: giant monster shrinks into a naked human scuttling away!
+      this.humanScurry = {
+        x: this.player.x,
+        y: this.groundY,
+        dir: this.player.x < 480 ? -1 : 1,
+        timer: 1.8,
+        animTime: 0
+      };
+      this.player.climbingBuilding = null;
+      this.player.standingOnBuilding = null;
+      this.player.onGround = true;
+      this.player.y = this.groundY;
+      this.player.vy = 0;
     }
   }
 
@@ -29137,6 +29190,41 @@ class Rampage {
     }
 
     if (this.state !== 'PLAYING') return;
+
+    // Handle Human Alter-Ego Scurrying on Defeat
+    if (this.humanScurry) {
+      const hs = this.humanScurry;
+      hs.timer -= dt;
+      hs.animTime += dt * 9;
+      hs.x += hs.dir * 135 * dt;
+      if (Math.random() < 0.3) {
+        this._spawnParticles(hs.x, this.groundY - 10, 1, '#CBD5E1', 30, -30);
+      }
+      if (hs.timer <= 0) {
+        this.humanScurry = null;
+        if (this.lives <= 0) {
+          HighScoreStore.submit(this.id, this.score);
+          this.audio.playGameOver();
+          this.setState('GAMEOVER');
+        } else {
+          this.player.health = this.player.maxHealth;
+          this.player.x = 180;
+          this.player.y = this.groundY;
+          this.player.vy = 0;
+          this.player.invulnTimer = 2.0;
+          this.floatingTexts.push({
+            text: 'MONSTER REBORN!',
+            x: this.player.x,
+            y: this.player.y - 60,
+            vy: -35,
+            life: 1.2,
+            maxLife: 1.2,
+            color: PALETTE.GOLD
+          });
+        }
+      }
+      return;
+    }
 
     const p = this.player;
     p.animTime += dt;
@@ -29169,6 +29257,10 @@ class Rampage {
     }
 
     const axis = this.input.getAxis();
+    // Unique Monster Attributes
+    const climbSpeed = p.monster === 'george' ? 185 : 155;
+    const moveSpeed = p.monster === 'ralph' ? 225 : 190;
+    const jumpPower = p.monster === 'ralph' ? -415 : -375;
 
     // 1. CLIMBING BUILDING WALL
     if (p.climbingBuilding) {
@@ -29177,7 +29269,6 @@ class Rampage {
         p.climbingBuilding = null;
         p.onGround = false;
       } else {
-        const climbSpeed = 155;
         p.vy = axis.y * climbSpeed;
         p.y += p.vy * dt;
 
@@ -29211,7 +29302,7 @@ class Rampage {
         if (this.input.isJustPressed('actionB')) {
           p.climbingBuilding = null;
           p.onGround = false;
-          p.vy = -340;
+          p.vy = jumpPower;
           p.vx = axis.x !== 0 ? axis.x * 220 : (p.climbSide === 'left' ? 180 : -180);
           this.audio.playJump();
         }
@@ -29237,7 +29328,6 @@ class Rampage {
       }
 
       // Walk along rooftop
-      const moveSpeed = 190;
       p.vx = axis.x * moveSpeed;
       if (axis.x > 0.1) p.dir = 1;
       else if (axis.x < -0.1) p.dir = -1;
@@ -29247,7 +29337,7 @@ class Rampage {
       if (this.input.isJustPressed('actionB')) {
         p.standingOnBuilding = null;
         p.onGround = false;
-        p.vy = -360;
+        p.vy = jumpPower;
         this.audio.playJump();
       }
 
@@ -29277,7 +29367,6 @@ class Rampage {
       }
     } else {
       // 3. GROUND OR AIRBORNE MOVEMENT
-      const moveSpeed = 190;
       p.vx = axis.x * moveSpeed;
       if (axis.x > 0.1) p.dir = 1;
       else if (axis.x < -0.1) p.dir = -1;
@@ -29289,7 +29378,7 @@ class Rampage {
         p.y = this.groundY;
         // High jump from ground to reach buildings!
         if (this.input.isJustPressed('actionB')) {
-          p.vy = -380;
+          p.vy = jumpPower;
           p.onGround = false;
           this.audio.playJump();
         }
@@ -29330,7 +29419,7 @@ class Rampage {
             if (b.collapsed) continue;
             if (
               p.y >= b.y &&
-              p.y - p.vy * dt <= b.y + 16 &&
+              p.y - p.vy * dt <= b.y + 18 &&
               p.x >= b.x - 8 &&
               p.x <= b.x + b.width + 8
             ) {
@@ -29338,8 +29427,12 @@ class Rampage {
               p.vy = 0;
               p.standingOnBuilding = b;
               p.onGround = true;
-              this.renderer.shake(3, 0.08);
+              // Downward roof stomp damage!
+              const stompDmg = p.monster === 'lizzie' ? 2.0 : 1.0;
+              b.damage += stompDmg;
+              this.renderer.shake(4, 0.1);
               this.audio.playShove();
+              this._spawnParticles(p.x, b.y, 8, '#94A3B8', 90);
               break;
             }
           }
@@ -29394,7 +29487,7 @@ class Rampage {
       if (b.collapsed) continue;
       activeBuildings++;
 
-      // Update revealed window bonuses
+      // Update revealed window bonuses & snipers
       for (let r = 0; r < b.floors; r++) {
         for (let c = 0; c < b.cols; c++) {
           const w = b.windows[r][c];
@@ -29403,6 +29496,27 @@ class Rampage {
             if (w.itemTimer <= 0) {
               w.item = null;
               w.itemRevealed = false;
+            } else if (w.item === 'sniper') {
+              // Active window sniper aiming and shooting at monster!
+              w.sniperCooldown = (w.sniperCooldown || 1.8) - dt;
+              if (w.sniperCooldown <= 0) {
+                w.sniperCooldown = 2.0 + Math.random() * 1.5;
+                const wx = b.x + 8 + c * b.cellW + b.cellW / 2;
+                const wy = b.y + 10 + r * b.cellH + b.cellH / 2;
+                const dx = p.x - wx;
+                const dy = (p.y - 25) - wy;
+                const dist = Math.hypot(dx, dy) || 1;
+                this.projectiles.push({
+                  x: wx,
+                  y: wy,
+                  vx: (dx / dist) * 240,
+                  vy: (dy / dist) * 240,
+                  color: PALETTE.GOLD,
+                  damage: 7,
+                  radius: 3.5
+                });
+                this.audio.playLaser(620, 200, 0.08);
+              }
             }
           }
         }
@@ -29452,14 +29566,15 @@ class Rampage {
       }
     }
 
-    // Spawn Military Helicopters & Tanks
+    // Spawn Military Helicopters, Tanks & Police Squad Cars
     this.enemySpawnTimer -= dt;
     if (this.enemySpawnTimer <= 0 && activeBuildings > 0) {
-      this.enemySpawnTimer = Math.max(1.4, 3.4 - this.level * 0.25);
+      this.enemySpawnTimer = Math.max(1.3, 3.2 - this.level * 0.25);
       if (this.enemies.length < 4 + this.level) {
         const fromLeft = Math.random() < 0.5;
-        const isHeli = Math.random() < 0.58;
-        if (isHeli) {
+        const roll = Math.random();
+        if (roll < 0.45) {
+          // Attack Helicopter
           this.enemies.push({
             type: 'heli',
             x: fromLeft ? -30 : 990,
@@ -29470,7 +29585,8 @@ class Rampage {
             fireTimer: 1.2 + Math.random() * 1.2,
             rotorPhase: 0
           });
-        } else {
+        } else if (roll < 0.75) {
+          // National Guard Armored Tank
           this.enemies.push({
             type: 'tank',
             x: fromLeft ? -35 : 995,
@@ -29478,6 +29594,17 @@ class Rampage {
             vx: (fromLeft ? 1 : -1) * (55 + this.level * 8),
             dir: fromLeft ? 1 : -1,
             fireTimer: 1.5 + Math.random() * 1.2
+          });
+        } else {
+          // Police Squad Car with flashing beacon
+          this.enemies.push({
+            type: 'policeCar',
+            x: fromLeft ? -35 : 995,
+            y: this.groundY,
+            vx: (fromLeft ? 1 : -1) * (110 + this.level * 10),
+            dir: fromLeft ? 1 : -1,
+            fireTimer: 1.3 + Math.random() * 1.0,
+            sirenPhase: 0
           });
         }
       }
@@ -29520,13 +29647,15 @@ class Rampage {
       }
     }
 
-    // Update Enemies (Helicopters & Tanks)
+    // Update Enemies (Helicopters, Tanks & Police Cars)
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const e = this.enemies[i];
       e.x += e.vx * dt;
       if (e.type === 'heli') {
         e.rotorPhase += dt * 25;
         e.y += Math.sin(e.rotorPhase * 0.15) * 18 * dt;
+      } else if (e.type === 'policeCar') {
+        e.sirenPhase += dt * 16;
       }
 
       e.fireTimer -= dt;
@@ -29536,14 +29665,14 @@ class Rampage {
         const dy = p.y - 26 - e.y;
         const dist = Math.hypot(dx, dy) || 1;
         if (dist < 460) {
-          const spd = e.type === 'tank' ? 250 : 220;
+          const spd = e.type === 'tank' ? 250 : e.type === 'policeCar' ? 240 : 220;
           this.projectiles.push({
             x: e.x,
-            y: e.type === 'tank' ? e.y - 14 : e.y + 6,
+            y: e.type === 'tank' ? e.y - 14 : e.type === 'policeCar' ? e.y - 10 : e.y + 6,
             vx: (dx / dist) * spd,
             vy: (dy / dist) * spd,
-            color: e.type === 'tank' ? PALETTE.ORANGE : PALETTE.PINK,
-            damage: e.type === 'tank' ? 12 : 8,
+            color: e.type === 'tank' ? PALETTE.ORANGE : e.type === 'policeCar' ? PALETTE.CYAN : PALETTE.PINK,
+            damage: e.type === 'tank' ? 12 : e.type === 'policeCar' ? 8 : 8,
             radius: e.type === 'tank' ? 5 : 3.5
           });
           this.audio.playLaser(550, 180, 0.09);
@@ -29616,14 +29745,14 @@ class Rampage {
     this.renderer.shake(4, 0.1);
     this.audio.playShove();
 
-    // 1. Check punching enemies (Helicopters / Tanks)
+    // 1. Check punching enemies (Helicopters / Tanks / Police Cars)
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const e = this.enemies[i];
-      const ey = e.type === 'tank' ? e.y - 12 : e.y;
+      const ey = e.type === 'tank' || e.type === 'policeCar' ? e.y - 12 : e.y;
       if (Math.hypot(punchX - e.x, punchY - ey) < 46) {
         this.audio.playExplosion(0.35, 900);
         this._spawnParticles(e.x, ey, 18, PALETTE.ORANGE, 160);
-        const pts = e.type === 'heli' ? 400 : 350;
+        const pts = e.type === 'heli' ? 400 : e.type === 'policeCar' ? 450 : 350;
         this._addScore(pts, e.x, ey - 10, PALETTE.GOLD);
         this.enemies.splice(i, 1);
         return;
@@ -29642,9 +29771,51 @@ class Rampage {
       }
     }
 
-    // 3. Check punching Building Windows / Structural Blocks
+    // 3. Check punching Rooftop Props (Water Towers & Neon Signs)
     for (const b of this.buildings) {
       if (b.collapsed || b.collapsing) continue;
+
+      if (b.waterTower && !b.waterTower.smashed) {
+        if (Math.abs(punchY - b.y) < 36 && Math.abs(punchX - (b.x + b.width / 2)) < b.width / 2) {
+          b.waterTower.smashed = true;
+          b.damage += 4;
+          this.audio.playExplosion(0.45, 600);
+          this._spawnParticles(b.x + b.width / 2, b.y - 12, 28, PALETTE.CYAN, 180, 200);
+          this._addScore(600, b.x + b.width / 2, b.y - 30, PALETTE.CYAN);
+          this.floatingTexts.push({
+            text: 'WATER TOWER SMASHED!',
+            x: b.x + b.width / 2,
+            y: b.y - 40,
+            vy: -35,
+            life: 1.1,
+            maxLife: 1.1,
+            color: PALETTE.CYAN
+          });
+          return;
+        }
+      }
+
+      if (b.neonSign && !b.neonSign.smashed) {
+        if (Math.abs(punchY - b.y) < 36 && Math.abs(punchX - (b.x + b.width / 2)) < b.width / 2) {
+          b.neonSign.smashed = true;
+          b.damage += 3;
+          this.audio.playCoin();
+          this._spawnParticles(b.x + b.width / 2, b.y - 12, 24, PALETTE.GOLD, 160, 160);
+          this._addScore(500, b.x + b.width / 2, b.y - 30, PALETTE.GOLD);
+          this.floatingTexts.push({
+            text: 'NEON SHATTERED!',
+            x: b.x + b.width / 2,
+            y: b.y - 40,
+            vy: -35,
+            life: 1.0,
+            maxLife: 1.0,
+            color: PALETTE.GOLD
+          });
+          return;
+        }
+      }
+
+      // Check punching Building Windows / Structural Blocks
       if (
         punchX >= b.x - 18 &&
         punchX <= b.x + b.width + 18 &&
@@ -29658,7 +29829,6 @@ class Rampage {
         let c = 0;
         if (p.climbingBuilding === b) {
           c = p.climbSide === 'left' ? 0 : b.cols - 1;
-          // If edge window already broken, reach into middle column
           if (b.windows[r][c].hp <= 0 && b.cols > 1) {
             c = 1;
           }
@@ -29671,10 +29841,10 @@ class Rampage {
         const wx = b.x + 8 + c * b.cellW + b.cellW / 2;
         const wy = b.y + 10 + r * b.cellH + b.cellH / 2;
 
-        // If item is revealed, eat/grab it!
+        // If item is revealed, eat/grab/disarm it!
         if (win.itemRevealed && win.item) {
           if (win.item === 'food' || win.item === 'civilian') {
-            const heal = win.item === 'food' ? 14 : 20;
+            const heal = win.item === 'food' ? 18 : 22;
             p.health = Math.min(p.maxHealth, p.health + heal);
             this.audio.playPowerUp();
             this._addScore(250, wx, wy, PALETTE.GREEN);
@@ -29686,6 +29856,18 @@ class Rampage {
               life: 0.9,
               maxLife: 0.9,
               color: PALETTE.GREEN
+            });
+          } else if (win.item === 'sniper') {
+            this.audio.playHit();
+            this._addScore(350, wx, wy, PALETTE.GOLD);
+            this.floatingTexts.push({
+              text: 'SNIPER DISARMED!',
+              x: wx,
+              y: wy - 16,
+              vy: -40,
+              life: 0.9,
+              maxLife: 0.9,
+              color: PALETTE.GOLD
             });
           } else if (win.item === 'gold') {
             this.audio.playCoin();
@@ -29708,18 +29890,19 @@ class Rampage {
         }
 
         // Otherwise smash the window/block
+        const punchBonus = p.monster === 'george' ? 1.5 : 1.0;
         if (win.hp > 0) {
           win.hp--;
-          b.damage++;
+          b.damage += punchBonus;
           this._spawnParticles(wx, wy, 10, PALETTE.CYAN, 130);
           this._addScore(75, wx, wy, PALETTE.WHITE);
           if (win.hp === 1 && win.item) {
             win.itemRevealed = true;
-            win.itemTimer = 4.5;
+            win.itemTimer = 5.0;
           }
         } else {
           // Punching exposed structural girder deals structural damage
-          b.damage += 0.75;
+          b.damage += 0.85 * punchBonus;
           this._spawnParticles(wx, wy, 7, '#94A3B8', 100);
           this._addScore(50, wx, wy, PALETTE.ORANGE);
         }
@@ -29729,9 +29912,24 @@ class Rampage {
   }
 
   render(ctx = this.renderer.ctx) {
-    // Night Metropolis Backdrop
-    ctx.fillStyle = PALETTE.BG;
+    const p = this.player;
+    const city = this.city || CITIES[0];
+
+    // Dynamic Atmospheric Sky Gradient for Current Tour City
+    const grad = ctx.createLinearGradient(0, 38, 0, this.groundY);
+    grad.addColorStop(0, city.skyTop);
+    grad.addColorStop(1, city.skyBottom);
+    ctx.fillStyle = grad;
     ctx.fillRect(0, 38, this.renderer.width, this.renderer.height - 38);
+
+    // City Name Headline Banner
+    this.renderer.drawText(city.name, 480, 58, {
+      font: FONTS.HEADER,
+      size: 12,
+      color: PALETTE.GOLD,
+      align: 'center',
+      glow: 6
+    });
 
     // Classic 1986 Bally Midway City Skyline Silhouettes in the Background
     ctx.save();
@@ -29739,7 +29937,7 @@ class Rampage {
       const sx = i * 70 - 6;
       const sh = 95 + ((i * 53) % 145);
       const sy = this.groundY - sh;
-      ctx.fillStyle = i % 2 === 0 ? '#111827' : '#0F172A';
+      ctx.fillStyle = i % 2 === 0 ? city.skylineColor : '#090D16';
       ctx.fillRect(sx, sy, 66, sh);
 
       // Stepped Art Deco crown & radio spire on select towers
@@ -29753,7 +29951,7 @@ class Rampage {
         }
       }
       // Distant lit skyline windows
-      ctx.fillStyle = 'rgba(253, 224, 71, 0.25)';
+      ctx.fillStyle = 'rgba(253, 224, 71, 0.22)';
       for (let wy = sy + 12; wy < this.groundY - 16; wy += 16) {
         for (let wx = sx + 10; wx < sx + 54; wx += 14) {
           if ((wx + wy + i * 7) % 3 === 0) {
@@ -29794,6 +29992,69 @@ class Rampage {
       ctx.strokeStyle = b.trimColor;
       ctx.lineWidth = 2;
       ctx.strokeRect(bx, b.y, b.width, b.height);
+
+      // Rooftop Water Tower Prop
+      if (b.waterTower) {
+        const wtx = bx + b.width / 2;
+        const wty = b.y - 2;
+        if (!b.waterTower.smashed) {
+          // Wooden support stilts
+          ctx.strokeStyle = '#451A03';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(wtx - 14, wty); ctx.lineTo(wtx - 9, wty - 16);
+          ctx.moveTo(wtx + 14, wty); ctx.lineTo(wtx + 9, wty - 16);
+          ctx.moveTo(wtx - 5, wty); ctx.lineTo(wtx - 5, wty - 16);
+          ctx.moveTo(wtx + 5, wty); ctx.lineTo(wtx + 5, wty - 16);
+          ctx.stroke();
+          // Cedar tank vat & hoops
+          ctx.fillStyle = '#78350F';
+          ctx.fillRect(wtx - 15, wty - 34, 30, 18);
+          ctx.fillStyle = '#94A3B8';
+          ctx.fillRect(wtx - 15, wty - 30, 30, 2);
+          ctx.fillRect(wtx - 15, wty - 22, 30, 2);
+          // Conical roof cap
+          ctx.fillStyle = '#B45309';
+          ctx.beginPath();
+          ctx.moveTo(wtx - 18, wty - 34);
+          ctx.lineTo(wtx, wty - 44);
+          ctx.lineTo(wtx + 18, wty - 34);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          // Smashed cedar debris & dripping water
+          ctx.fillStyle = '#78350F';
+          ctx.fillRect(wtx - 12, wty - 6, 24, 6);
+          ctx.fillStyle = PALETTE.CYAN;
+          ctx.fillRect(wtx - 6, wty - 4, 12, 4);
+        }
+      }
+
+      // Rooftop Neon Sign Prop
+      if (b.neonSign) {
+        const nsx = bx + b.width / 2;
+        const nsy = b.y - 2;
+        if (!b.neonSign.smashed) {
+          ctx.strokeStyle = '#64748B';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(nsx - 22, nsy - 22, 44, 22);
+          const glowColor = b.neonSign.text === 'HOTEL' ? PALETTE.PINK : PALETTE.CYAN;
+          this.renderer.drawText(b.neonSign.text, nsx, nsy - 7, {
+            size: 11,
+            color: glowColor,
+            align: 'center',
+            glow: 8
+          });
+        } else {
+          ctx.strokeStyle = '#475569';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(nsx - 18, nsy);
+          ctx.lineTo(nsx, nsy - 10);
+          ctx.lineTo(nsx + 18, nsy);
+          ctx.stroke();
+        }
+      }
 
       // Structural Integrity Bar on Roof
       const integrity = Math.max(0, 1 - b.damage / b.maxDamage);
@@ -29838,7 +30099,7 @@ class Rampage {
             ctx.strokeRect(wx, wy + wh / 2 - 2, ww, 4);
           }
 
-          // Revealed Item inside window (Roast Chicken, Waving Civilian, Gold Bullion, Toaster Hazard)
+          // Revealed Item inside window (Roast Chicken, Waving Civilian, Gold Bullion, Toaster, Sniper)
           if (w.itemRevealed && w.item) {
             const cx = wx + ww / 2;
             const cy = wy + wh / 2;
@@ -29863,6 +30124,22 @@ class Rampage {
               this.renderer.drawGlowCircle(cx, cy - 5, 4, '#FDBA74', 6, true);
               ctx.fillStyle = PALETTE.PINK;
               ctx.fillRect(cx - 4, cy - 1, 8, 9);
+            } else if (w.item === 'sniper') {
+              // Leaning Armed Resident / Sniper
+              const aimAngle = Math.atan2((p.y - 25) - cy, p.x - cx);
+              ctx.save();
+              ctx.translate(cx, cy);
+              ctx.fillStyle = '#15803D';
+              ctx.fillRect(-4, -7, 8, 6);
+              ctx.fillStyle = '#FDBA74';
+              ctx.fillRect(-3, -3, 6, 4);
+              ctx.strokeStyle = '#0F172A';
+              ctx.lineWidth = 2.4;
+              ctx.beginPath();
+              ctx.moveTo(0, 0);
+              ctx.lineTo(Math.cos(aimAngle) * 13, Math.sin(aimAngle) * 13);
+              ctx.stroke();
+              ctx.restore();
             } else if (w.item === 'gold') {
               // Stacked Gold Bullion Bars
               this.renderer.drawGlowRect(cx - 8, cy + 1, 16, 6, PALETTE.GOLD, 10, true);
@@ -29932,9 +30209,28 @@ class Rampage {
       });
     }
 
+    // Draw Human Alter-Ego Scurry on Defeat
+    if (this.humanScurry) {
+      const hs = this.humanScurry;
+      const sprite = Math.floor(hs.animTime) % 2 === 0 ? HUMAN_SCURRY_1 : HUMAN_SCURRY_2;
+      const palette = {
+        Y: PALETTE.GOLD,
+        F: '#FDBA74'
+      };
+      const scale = 3.2;
+      const drawX = hs.x - (sprite[0].length * scale) / 2;
+      const drawY = hs.y - sprite.length * scale;
+      this.renderer.drawPixelSprite(sprite, drawX, drawY, scale, palette, hs.dir < 0, false);
+      this.renderer.drawText('EEK!', hs.x, hs.y - 34, {
+        size: 11,
+        color: PALETTE.WHITE,
+        align: 'center',
+        glow: 6
+      });
+    }
+
     // Draw Player Kaiju
-    const p = this.player;
-    if (p.invulnTimer <= 0 || Math.floor(p.invulnTimer * 16) % 2 === 0) {
+    if (!this.humanScurry && (p.invulnTimer <= 0 || Math.floor(p.invulnTimer * 16) % 2 === 0)) {
       const sprite = p.punchTimer > 0 ? KAIJU_PUNCH : KAIJU_IDLE;
       let palette = {
         G: PALETTE.GREEN,
@@ -29981,7 +30277,7 @@ class Rampage {
       }
     }
 
-    // Draw Enemies (Detailed Police/Military Helicopters & Armored Tanks)
+    // Draw Enemies (Helicopters, Tanks & Police Cars)
     for (const e of this.enemies) {
       if (e.type === 'heli') {
         ctx.save();
@@ -30022,6 +30318,26 @@ class Rampage {
         ctx.moveTo(-bladeW, -12);
         ctx.lineTo(bladeW, -12);
         ctx.stroke();
+        ctx.restore();
+      } else if (e.type === 'policeCar') {
+        // Police Squad Car on street
+        ctx.save();
+        ctx.translate(e.x, e.y);
+        ctx.scale(e.dir, 1);
+        ctx.fillStyle = '#090D16';
+        ctx.fillRect(-14, -5, 7, 5);
+        ctx.fillRect(8, -5, 7, 5);
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.fillRect(-18, -12, 36, 8);
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(-10, -18, 20, 7);
+        ctx.fillStyle = '#38BDF8';
+        ctx.fillRect(-8, -16, 7, 4);
+        ctx.fillRect(1, -16, 7, 4);
+        const sirenBlink = Math.floor(e.sirenPhase) % 2 === 0;
+        ctx.fillStyle = sirenBlink ? PALETTE.RED : PALETTE.CYAN;
+        ctx.fillRect(-3, -22, 6, 4);
+        this.renderer.drawGlowCircle(0, -20, 4, sirenBlink ? PALETTE.RED : PALETTE.CYAN, 8);
         ctx.restore();
       } else {
         // Armored Military Tank on street
@@ -30092,13 +30408,14 @@ class Rampage {
 
     // Top HUD Bar
     const standingCount = this.buildings.filter((b) => !b.collapsed).length;
+    const cityName = city.name.split(' (')[0];
     this.renderer.drawHUD({
       title: this.title,
       score: this.score,
       highScore: this.highScore,
       lives: this.lives,
       level: this.level,
-      extraLabel: `TOWERS:${standingCount} | ${mLabel}`,
+      extraLabel: `${cityName} | TOWERS:${standingCount} | ${mLabel}`,
       accent: PALETTE.GREEN
     });
 
@@ -31754,6 +32071,53 @@ const PITFALL_COBRA_SPRITE = [
   '.KKKKKK...',
   'KKKKKKKK..'
 ];
+
+// 255-Screen Authentic LFSR Sequence (David Crane 1982 Activision Pitfall Engine)
+const LFSR_SEQUENCE = [];
+{
+  let s = 0xA4;
+  for (let i = 0; i < 255; i++) {
+    LFSR_SEQUENCE.push(s);
+    const b = ((s >> 7) ^ (s >> 5) ^ (s >> 4) ^ (s >> 3)) & 1;
+    s = ((s << 1) & 0xFF) | b;
+  }
+}
+
+// 32 Authentic Treasures placed across the 255-screen world (Total max value = 112,000 pts + 2,000 start = 114,000 pts)
+const TREASURE_MAP = new Map([
+  [3, { name: 'MONEY BAG', pts: 2000, color: PALETTE.GREEN }],
+  [7, { name: 'SILVER BAR', pts: 3000, color: PALETTE.WHITE }],
+  [12, { name: 'GOLD BAR', pts: 4000, color: PALETTE.GOLD }],
+  [19, { name: 'DIAMOND RING', pts: 5000, color: PALETTE.CYAN }],
+  [26, { name: 'MONEY BAG', pts: 2000, color: PALETTE.GREEN }],
+  [34, { name: 'SILVER BAR', pts: 3000, color: PALETTE.WHITE }],
+  [41, { name: 'GOLD BAR', pts: 4000, color: PALETTE.GOLD }],
+  [48, { name: 'DIAMOND RING', pts: 5000, color: PALETTE.CYAN }],
+  [57, { name: 'MONEY BAG', pts: 2000, color: PALETTE.GREEN }],
+  [65, { name: 'SILVER BAR', pts: 3000, color: PALETTE.WHITE }],
+  [73, { name: 'GOLD BAR', pts: 4000, color: PALETTE.GOLD }],
+  [81, { name: 'DIAMOND RING', pts: 5000, color: PALETTE.CYAN }],
+  [89, { name: 'MONEY BAG', pts: 2000, color: PALETTE.GREEN }],
+  [98, { name: 'SILVER BAR', pts: 3000, color: PALETTE.WHITE }],
+  [106, { name: 'GOLD BAR', pts: 4000, color: PALETTE.GOLD }],
+  [114, { name: 'DIAMOND RING', pts: 5000, color: PALETTE.CYAN }],
+  [123, { name: 'MONEY BAG', pts: 2000, color: PALETTE.GREEN }],
+  [131, { name: 'SILVER BAR', pts: 3000, color: PALETTE.WHITE }],
+  [139, { name: 'GOLD BAR', pts: 4000, color: PALETTE.GOLD }],
+  [148, { name: 'DIAMOND RING', pts: 5000, color: PALETTE.CYAN }],
+  [156, { name: 'MONEY BAG', pts: 2000, color: PALETTE.GREEN }],
+  [164, { name: 'SILVER BAR', pts: 3000, color: PALETTE.WHITE }],
+  [173, { name: 'GOLD BAR', pts: 4000, color: PALETTE.GOLD }],
+  [181, { name: 'DIAMOND RING', pts: 5000, color: PALETTE.CYAN }],
+  [189, { name: 'MONEY BAG', pts: 2000, color: PALETTE.GREEN }],
+  [198, { name: 'SILVER BAR', pts: 3000, color: PALETTE.WHITE }],
+  [206, { name: 'GOLD BAR', pts: 4000, color: PALETTE.GOLD }],
+  [214, { name: 'DIAMOND RING', pts: 5000, color: PALETTE.CYAN }],
+  [223, { name: 'MONEY BAG', pts: 2000, color: PALETTE.GREEN }],
+  [231, { name: 'SILVER BAR', pts: 3000, color: PALETTE.WHITE }],
+  [239, { name: 'GOLD BAR', pts: 4000, color: PALETTE.GOLD }],
+  [248, { name: 'DIAMOND RING', pts: 5000, color: PALETTE.CYAN }]
+]);
 class Pitfall {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
@@ -31808,53 +32172,57 @@ class Pitfall {
   }
 
   _loadScreen(index) {
-    // 12 Handcrafted OG Activision Pitfall! Jungle Screens before procedural fallback
-    const OG_SCREENS = [
-      { name: 'TAR PIT & SWINGING VINE', pit: 'tarPit', halfW: 125, vine: true, ladder: true, logs: 1, treasure: null },
-      { name: 'CROCODILE POND & VINE', pit: 'crocPond', halfW: 155, vine: true, ladder: false, logs: 0, treasure: 'GOLD BAR' },
-      { name: 'QUICKSAND & TWIN LOGS', pit: 'quicksand', halfW: 130, vine: true, ladder: true, logs: 2, treasure: 'DIAMOND RING' },
-      { name: 'SCORPION CAVERN LADDER', pit: 'tarPit', halfW: 110, vine: false, ladder: true, logs: 1, treasure: 'SILVER BAR' },
-      { name: 'THREE-CROCODILE CROSSING', pit: 'crocPond', halfW: 160, vine: false, ladder: false, logs: 0, treasure: 'RUBY CHALICE' },
-      { name: 'COBRA & CAMPFIRE TREASURY', pit: 'tarPit', halfW: 120, vine: true, ladder: false, logs: 1, treasure: 'MONEY BAG', cobra: true },
-      { name: 'DISAPPEARING TAR PIT', pit: 'quicksand', halfW: 145, vine: true, ladder: true, logs: 2, treasure: null },
-      { name: 'DIAMOND RING VAULT', pit: 'crocPond', halfW: 155, vine: true, ladder: false, logs: 1, treasure: 'DIAMOND RING' },
-      { name: 'TWIN ROLLING LOGS PASS', pit: 'tarPit', halfW: 125, vine: true, ladder: true, logs: 2, treasure: 'GOLD BAR' },
-      { name: 'QUICKSAND VINE CHASM', pit: 'quicksand', halfW: 150, vine: true, ladder: false, logs: 1, treasure: 'RUBY CHALICE', cobra: true },
-      { name: 'CROCODILE KING LAGOON', pit: 'crocPond', halfW: 165, vine: false, ladder: true, logs: 1, treasure: 'SILVER BAR' },
-      { name: 'GOLDEN IDOL SANCTUARY', pit: 'tarPit', halfW: 135, vine: true, ladder: true, logs: 2, treasure: 'DIAMOND RING', cobra: true }
-    ];
-
     const normalizedIdx = ((index % 255) + 255) % 255;
-    let spec;
-    if (normalizedIdx < OG_SCREENS.length) {
-      spec = OG_SCREENS[normalizedIdx];
-    } else {
-      // Procedural fallback for screens beyond the 12 handcrafted screens
-      const mod = normalizedIdx % 5;
-      spec = {
-        name: `JUNGLE SECTOR ${normalizedIdx + 1}`,
-        pit: mod === 1 || mod === 3 ? 'crocPond' : mod === 2 ? 'quicksand' : 'tarPit',
-        halfW: mod === 1 || mod === 3 ? 155 : 125,
-        vine: mod !== 1,
-        ladder: mod % 2 === 0,
-        logs: mod === 4 ? 2 : mod === 1 ? 0 : 1,
-        treasure: mod === 0 ? null : ['GOLD BAR', 'DIAMOND RING', 'RUBY CHALICE'][normalizedIdx % 3],
-        cobra: mod === 3
-      };
+    this.screenIndex = normalizedIdx;
+    const byte = LFSR_SEQUENCE[normalizedIdx];
+
+    // Screen Titles: Authentic landmark names for iconic screens
+    const LANDMARK_NAMES = {
+      0: 'ACTIVISION JUNGLE ENTRANCE',
+      1: 'CROCODILE POND & VINE',
+      2: 'QUICKSAND & TWIN ROLLING LOGS',
+      3: 'MONEY BAG TREASURE VAULT',
+      4: 'TRIPLE CROCODILE CROSSING',
+      5: 'DISAPPEARING QUICKSAND CHASM',
+      6: 'COBRA & CAMPFIRE PASS',
+      7: 'SILVER BAR CANOPY',
+      8: 'TWIN ROLLING LOGS GAUNTLET',
+      9: 'SUBTERRANEAN BRICK MAZE',
+      10: 'TREE STUMP CLEARING',
+      11: 'TAR PIT PENDULUM VINE',
+      12: 'GOLD BAR SANCTUARY'
+    };
+    this.screenName = LANDMARK_NAMES[normalizedIdx] || `JUNGLE SECTOR ${String(normalizedIdx + 1).padStart(3, '0')} / 255`;
+
+    // Pit type derived from LFSR byte
+    const pitVal = byte & 0x07;
+    let pitType = 'none';
+    let halfW = 0;
+    if (pitVal === 2 || pitVal === 3) {
+      pitType = 'tarPit';
+      halfW = 125;
+    } else if (pitVal === 4 || pitVal === 5) {
+      pitType = 'quicksand';
+      halfW = 135;
+    } else if (pitVal >= 6) {
+      pitType = 'crocPond';
+      halfW = 155;
     }
 
-    this.screenName = spec.name;
-    const hasCrocPond = spec.pit === 'crocPond';
-
     this.pit = {
-      type: spec.pit,
+      type: pitType,
       cx: 480,
-      baseHalfW: spec.halfW,
-      halfW: spec.halfW,
-      expandPhase: 0
+      baseHalfW: halfW,
+      halfW: halfW,
+      expandPhase: 0,
+      state: 'open', // 'open' | 'warning' | 'closed'
+      timer: 3.2,
+      isOpen: pitType !== 'none'
     };
 
-    this.vine = spec.vine
+    // Vine: tar pits and croc ponds feature swinging vine
+    const hasVine = pitType !== 'none' && ((byte & 0x08) !== 0 || pitType === 'crocPond' || normalizedIdx % 3 === 0);
+    this.vine = hasVine
       ? {
           anchorX: 480,
           anchorY: 72,
@@ -31866,8 +32234,9 @@ class Pitfall {
         }
       : null;
 
+    // Crocodiles in pond
     this.crocodiles = [];
-    if (hasCrocPond) {
+    if (pitType === 'crocPond') {
       const xs = [395, 480, 565];
       xs.forEach((cx, i) => {
         this.crocodiles.push({
@@ -31875,14 +32244,16 @@ class Pitfall {
           y: this.upperGroundY,
           width: 48,
           mouthOpen: false,
-          timer: 1.2 + i * 0.45,
+          timer: 1.1 + i * 0.42,
           cycleOpen: 1.15,
           cycleClosed: 2.1
         });
       });
     }
 
-    this.ladder = spec.ladder
+    // Ladder connecting jungle floor to underground tunnel
+    const hasLadder = (byte & 0x10) !== 0 || normalizedIdx % 2 === 0;
+    this.ladder = hasLadder
       ? {
           x: 740,
           topY: this.upperGroundY,
@@ -31890,46 +32261,66 @@ class Pitfall {
         }
       : null;
 
+    // Ground Obstacles: Rolling Logs, Stationary Stumps, Campfires, Cobras
     this.logs = [];
-    for (let i = 0; i < spec.logs; i++) {
-      this.logs.push({
-        x: 860 - i * 220,
-        y: this.upperGroundY - 12,
-        vx: -(150 + this.level * 18),
-        radius: 12,
-        rot: 0,
-        jumped: false
-      });
+    this.stumps = [];
+    this.campfire = null;
+    this.cobra = null;
+
+    const obstVal = (byte >> 5) & 0x07;
+    if (obstVal === 1 || obstVal === 2 || obstVal === 3) {
+      // 1, 2, or 3 Rolling Logs
+      const count = obstVal;
+      for (let i = 0; i < count; i++) {
+        this.logs.push({
+          x: 880 - i * 220,
+          y: this.upperGroundY - 12,
+          vx: -(145 + this.level * 16),
+          radius: 12,
+          rot: 0,
+          jumped: false
+        });
+      }
+    } else if (obstVal === 4) {
+      // Single stationary tree stump
+      this.stumps.push({ x: 640, y: this.upperGroundY - 14, width: 22, height: 16, jumped: false });
+    } else if (obstVal === 5) {
+      // Twin stationary tree stumps
+      this.stumps.push({ x: 330, y: this.upperGroundY - 14, width: 22, height: 16, jumped: false });
+      this.stumps.push({ x: 670, y: this.upperGroundY - 14, width: 22, height: 16, jumped: false });
+    } else if (obstVal === 6) {
+      // Crackling Campfire hazard
+      this.campfire = { x: 680, y: this.upperGroundY, phase: 0 };
+    } else if (obstVal === 7) {
+      // Rattling Cobra hazard
+      this.cobra = { x: 685, y: this.upperGroundY, phase: 0 };
     }
 
-    // Optional rattling Cobra / Campfire hazard guarding the right bank
-    this.cobra = spec.cobra
-      ? {
-          x: 685,
-          y: this.upperGroundY,
-          phase: 0
-        }
-      : null;
+    // Underground Red Brick Dead-End Walls: Create David Crane's authentic labyrinth!
+    this.brickWallLeft = (byte & 0x48) === 0x48;
+    this.brickWallRight = (byte & 0x84) === 0x84;
+    if (this.brickWallLeft && this.brickWallRight) {
+      // Don't close both walls on the same screen so ladder shaft remains accessible
+      this.brickWallLeft = false;
+    }
 
+    // Underground Scorpion patrolling floor
+    const minScorpX = this.brickWallLeft ? 280 : 70;
+    const maxScorpX = this.brickWallRight ? 680 : 890;
     this.scorpion = {
-      x: 480,
+      x: (minScorpX + maxScorpX) / 2,
+      minX: minScorpX,
+      maxX: maxScorpX,
       y: this.lowerGroundY,
       vx: 95 + this.level * 12,
       dir: 1,
       anim: 0
     };
 
-    // Treasure on right bank if not already collected on this screen
+    // Authentic 32-Treasure Catalog Lookup
     this.treasure = null;
-    if (!this.collectedTreasures.has(index) && spec.treasure) {
-      const catalog = {
-        'GOLD BAR': { name: 'GOLD BAR', pts: 2000, color: PALETTE.GOLD },
-        'DIAMOND RING': { name: 'DIAMOND RING', pts: 3000, color: PALETTE.CYAN },
-        'RUBY CHALICE': { name: 'RUBY CHALICE', pts: 2500, color: PALETTE.PINK },
-        'SILVER BAR': { name: 'SILVER BAR', pts: 2000, color: PALETTE.WHITE },
-        'MONEY BAG': { name: 'MONEY BAG', pts: 2500, color: PALETTE.GREEN }
-      };
-      const t = catalog[spec.treasure] || catalog['GOLD BAR'];
+    if (!this.collectedTreasures.has(normalizedIdx) && TREASURE_MAP.has(normalizedIdx)) {
+      const t = TREASURE_MAP.get(normalizedIdx);
       this.treasure = {
         x: 815,
         y: this.upperGroundY - 16,
@@ -32062,10 +32453,27 @@ class Pitfall {
       this.vine.tipY = this.vine.anchorY + Math.cos(this.vine.angle) * this.vine.length;
     }
 
-    // Update Expanding Quicksand / Tar Pit
+    // Update Disappearing Quicksand / Tar Pit
     if (this.pit.type === 'quicksand') {
+      this.pit.timer -= dt;
+      if (this.pit.timer <= 0) {
+        if (this.pit.state === 'open') {
+          this.pit.state = 'warning';
+          this.pit.timer = 0.85;
+        } else if (this.pit.state === 'warning') {
+          this.pit.state = 'closed';
+          this.pit.timer = 2.0;
+          this.pit.isOpen = false;
+        } else {
+          this.pit.state = 'open';
+          this.pit.timer = 3.4;
+          this.pit.isOpen = true;
+        }
+      }
       this.pit.expandPhase += dt * 1.4;
-      this.pit.halfW = this.pit.baseHalfW * (0.65 + 0.35 * Math.sin(this.pit.expandPhase));
+      this.pit.halfW = this.pit.isOpen
+        ? this.pit.baseHalfW * (0.75 + 0.25 * Math.sin(this.pit.expandPhase))
+        : this.pit.baseHalfW * 0.35;
     } else if (this.pit.type === 'tarPit') {
       this.pit.expandPhase += dt * 0.9;
       this.pit.halfW = this.pit.baseHalfW * (0.85 + 0.15 * Math.sin(this.pit.expandPhase));
@@ -32177,11 +32585,35 @@ class Pitfall {
         }
       }
 
+      // Underground Red Brick Dead-End Wall Collision
+      if (p.floor === 'lower') {
+        if (this.brickWallLeft) {
+          if (p.x < 262 && p.x > 220) {
+            p.x = 262;
+            p.vx = 0;
+          } else if (p.x > 218 && p.x < 245) {
+            p.x = 218;
+            p.vx = 0;
+          }
+        }
+        if (this.brickWallRight) {
+          if (p.x > 698 && p.x < 735) {
+            p.x = 698;
+            p.vx = 0;
+          } else if (p.x < 742 && p.x > 715) {
+            p.x = 742;
+            p.vx = 0;
+          }
+        }
+      }
+
       // Check Pit / Crocodile / Ladder Shaft Hazards when on Upper Ground
       if (p.floor === 'upper' && p.onGround && !p.onVine) {
         const inPitRange = Math.abs(p.x - this.pit.cx) < this.pit.halfW - 8;
         if (inPitRange) {
-          if (this.pit.type === 'crocPond') {
+          if (this.pit.type === 'quicksand' && !this.pit.isOpen) {
+            // Quicksand currently closed - safe to sprint across!
+          } else if (this.pit.type === 'crocPond') {
             // Check if standing on a closed-mouth crocodile
             let safeOnCroc = false;
             let bittenByCroc = false;
@@ -32209,19 +32641,18 @@ class Pitfall {
       }
     }
 
-    // Screen Transitions (Left/Right edge scrolling)
+    // Screen Transitions (Left/Right edge scrolling across David Crane's 255 screens)
     if (p.x > 948) {
       p.x = 20;
       const step = p.floor === 'lower' ? 3 : 1; // Underground passage moves 3x screens!
-      this.screenIndex += step;
-      if (this.screenIndex > 0 && this.screenIndex % 4 === 0) {
-        this.level++;
-      }
+      this.screenIndex = (this.screenIndex + step) % 255;
+      this.level = 1 + Math.floor(this.treasuresFound / 4);
       this._loadScreen(this.screenIndex);
     } else if (p.x < 12) {
       p.x = 940;
       const step = p.floor === 'lower' ? 3 : 1;
-      this.screenIndex -= step;
+      this.screenIndex = ((this.screenIndex - step) % 255 + 255) % 255;
+      this.level = 1 + Math.floor(this.treasuresFound / 4);
       this._loadScreen(this.screenIndex);
     }
 
@@ -32275,19 +32706,57 @@ class Pitfall {
       }
     }
 
-    // Update Underground Scorpion
+    // Update Stationary Tree Stumps
+    for (const stump of this.stumps) {
+      if (p.floor === 'upper' && !p.onVine) {
+        const dx = Math.abs(p.x - stump.x);
+        if (dx < 18) {
+          if (p.y > this.upperGroundY - 14) {
+            if (p.invulnTimer <= 0) {
+              this.score = Math.max(0, this.score - 100);
+              this.audio.playHit();
+              this.renderer.shake(4, 0.12);
+              p.invulnTimer = 0.6;
+              p.vy = -160;
+              p.onGround = false;
+              this.floatingTexts.push({
+                text: '-100 STUMP TRIP!',
+                x: p.x,
+                y: p.y - 36,
+                vy: -35,
+                life: 0.7,
+                maxLife: 0.7,
+                color: PALETTE.ORANGE
+              });
+            }
+          } else if (!stump.jumped && p.vy < 0) {
+            stump.jumped = true;
+            this.score += 100;
+            this.audio.playHop();
+            this.floatingTexts.push({
+              text: '+100 HURDLE!',
+              x: stump.x,
+              y: stump.y - 20,
+              vy: -35,
+              life: 0.7,
+              maxLife: 0.7,
+              color: PALETTE.CYAN
+            });
+          }
+        }
+      }
+    }
+
+    // Update Underground Scorpion bounded by dead-end walls
     if (this.scorpion) {
       const s = this.scorpion;
       s.anim += dt * 10;
-      if (p.floor === 'lower') {
-        s.dir = p.x > s.x ? 1 : -1;
-      }
       s.x += s.dir * s.vx * dt;
-      if (s.x > 890) {
-        s.x = 890;
+      if (s.x > s.maxX) {
+        s.x = s.maxX;
         s.dir = -1;
-      } else if (s.x < 70) {
-        s.x = 70;
+      } else if (s.x < s.minX) {
+        s.x = s.minX;
         s.dir = 1;
       }
 
@@ -32300,7 +32769,20 @@ class Pitfall {
       }
     }
 
-    // Update Cobra / Campfire Hazard on right bank
+    // Update Crackling Campfire Hazard
+    if (this.campfire) {
+      this.campfire.phase += dt * 10;
+      if (
+        p.floor === 'upper' &&
+        !p.onVine &&
+        Math.abs(p.x - this.campfire.x) < 20 &&
+        p.y > this.upperGroundY - 18
+      ) {
+        this._loseLife('BURNED BY CAMPFIRE!');
+      }
+    }
+
+    // Update Rattling Cobra Hazard on right bank
     if (this.cobra) {
       this.cobra.phase += dt * 9;
       if (
@@ -32437,6 +32919,21 @@ class Pitfall {
     drawBrickPanel(18, 48, 0.92);
     drawBrickPanel(894, 48, 0.92);
 
+    // Render David Crane's blocking dead-end red brick labyrinth walls in underground tunnel
+    if (this.brickWallLeft) {
+      drawBrickPanel(228, 34, 1.0);
+      // Sturdy stone header & footer caps
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(224, tunnelTop, 42, 6);
+      ctx.fillRect(224, this.lowerGroundY - 6, 42, 6);
+    }
+    if (this.brickWallRight) {
+      drawBrickPanel(698, 34, 1.0);
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(694, tunnelTop, 42, 6);
+      ctx.fillRect(694, this.lowerGroundY - 6, 42, 6);
+    }
+
     // Underground Tunnel Floor
     ctx.fillStyle = '#7F1D1D';
     ctx.fillRect(0, this.lowerGroundY, this.renderer.width, 540 - this.lowerGroundY);
@@ -32444,28 +32941,38 @@ class Pitfall {
     ctx.fillRect(0, this.lowerGroundY, this.renderer.width, 5);
 
     // Draw Pit (Tar Pit / Quicksand / Crocodile Pond)
-    if (this.pit.halfW > 4) {
-      const pitColor =
-        this.pit.type === 'crocPond'
-          ? '#0284C7'
-          : this.pit.type === 'quicksand'
-          ? '#38BDF8'
-          : '#0B0F19';
-      ctx.fillStyle = pitColor;
-      ctx.fillRect(
-        this.pit.cx - this.pit.halfW,
-        this.upperGroundY - 2,
-        this.pit.halfW * 2,
-        18
-      );
-      ctx.strokeStyle = this.pit.type === 'tarPit' ? PALETTE.PURPLE : PALETTE.CYAN;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(
-        this.pit.cx - this.pit.halfW,
-        this.upperGroundY - 2,
-        this.pit.halfW * 2,
-        18
-      );
+    if (this.pit.halfW > 4 && this.pit.type !== 'none') {
+      if (this.pit.type === 'quicksand' && !this.pit.isOpen) {
+        // Disappearing quicksand currently closed: solid dirt path with faint sand grains
+        ctx.fillStyle = '#B45309';
+        ctx.fillRect(this.pit.cx - this.pit.baseHalfW, this.upperGroundY, this.pit.baseHalfW * 2, 28);
+        ctx.fillStyle = '#FDE68A';
+        for (let gx = this.pit.cx - this.pit.baseHalfW + 10; gx < this.pit.cx + this.pit.baseHalfW; gx += 16) {
+          ctx.fillRect(gx, this.upperGroundY + 8, 3, 3);
+        }
+      } else {
+        const pitColor =
+          this.pit.type === 'crocPond'
+            ? '#0284C7'
+            : this.pit.type === 'quicksand'
+            ? (this.pit.state === 'warning' && Math.floor(performance.now() * 0.008) % 2 === 0 ? '#FDE047' : '#38BDF8')
+            : '#0B0F19';
+        ctx.fillStyle = pitColor;
+        ctx.fillRect(
+          this.pit.cx - this.pit.halfW,
+          this.upperGroundY - 2,
+          this.pit.halfW * 2,
+          18
+        );
+        ctx.strokeStyle = this.pit.type === 'tarPit' ? PALETTE.PURPLE : PALETTE.CYAN;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(
+          this.pit.cx - this.pit.halfW,
+          this.upperGroundY - 2,
+          this.pit.halfW * 2,
+          18
+        );
+      }
     }
 
     // Draw Pixel-Art Crocodile Heads in Pond
@@ -32571,6 +33078,25 @@ class Pitfall {
       ctx.restore();
     }
 
+    // Draw Stationary Tree Stumps
+    for (const stump of this.stumps) {
+      ctx.save();
+      ctx.translate(stump.x, stump.y);
+      // Main wooden stump body
+      ctx.fillStyle = '#78350F';
+      ctx.fillRect(-stump.width / 2, 0, stump.width, stump.height);
+      // Dark vertical bark lines
+      ctx.fillStyle = '#451A03';
+      ctx.fillRect(-stump.width / 2 + 4, 2, 3, stump.height - 2);
+      ctx.fillRect(stump.width / 2 - 7, 2, 3, stump.height - 2);
+      // Growth rings on top cut surface
+      ctx.fillStyle = '#B45309';
+      ctx.fillRect(-stump.width / 2 - 2, -3, stump.width + 4, 4);
+      ctx.fillStyle = '#FDE68A';
+      ctx.fillRect(-stump.width / 2 + 2, -3, stump.width - 4, 2);
+      ctx.restore();
+    }
+
     // Draw Underground Scorpion (Detailed Pixel-Art Sprite)
     if (this.scorpion) {
       const s = this.scorpion;
@@ -32591,7 +33117,28 @@ class Pitfall {
       );
     }
 
-    // Draw Cobra & Campfire Hazard if present on screen
+    // Draw Standalone Campfire Hazard if present
+    if (this.campfire) {
+      const fx = this.campfire.x;
+      const cy = this.campfire.y;
+      const flicker = Math.floor(this.campfire.phase * 2) % 2 === 0;
+      ctx.save();
+      // Crossed firewood logs
+      ctx.fillStyle = '#78350F';
+      ctx.fillRect(fx - 10, cy - 5, 20, 5);
+      ctx.fillStyle = '#92400E';
+      ctx.fillRect(fx - 7, cy - 8, 14, 4);
+      // Multi-layered flickering pixel flames
+      ctx.fillStyle = PALETTE.RED;
+      ctx.fillRect(fx - 8, cy - 16, 16, 8);
+      ctx.fillStyle = PALETTE.ORANGE;
+      ctx.fillRect(fx - 6, cy - (flicker ? 22 : 19), 12, 10);
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(fx - 3, cy - (flicker ? 25 : 21), 6, 9);
+      ctx.restore();
+    }
+
+    // Draw Cobra Hazard if present on screen
     if (this.cobra) {
       const cx = this.cobra.x;
       const cy = this.cobra.y;
@@ -32612,23 +33159,6 @@ class Pitfall {
         flicker,
         false
       );
-
-      // Flickering Pixel-Art Campfire beside the Cobra
-      const fx = cx + 22;
-      ctx.save();
-      // Crossed firewood logs
-      ctx.fillStyle = '#78350F';
-      ctx.fillRect(fx - 10, cy - 5, 20, 5);
-      ctx.fillStyle = '#92400E';
-      ctx.fillRect(fx - 7, cy - 8, 14, 4);
-      // Multi-layered flickering pixel flames
-      ctx.fillStyle = PALETTE.RED;
-      ctx.fillRect(fx - 8, cy - 16, 16, 8);
-      ctx.fillStyle = PALETTE.ORANGE;
-      ctx.fillRect(fx - 6, cy - (flicker ? 22 : 19), 12, 10);
-      ctx.fillStyle = PALETTE.GOLD;
-      ctx.fillRect(fx - 3, cy - (flicker ? 25 : 21), 6, 9);
-      ctx.restore();
     }
 
     if (this.screenName) {
@@ -32696,10 +33226,12 @@ class Pitfall {
     }
     ctx.globalAlpha = 1;
 
-    // Screen & Timer status
+    // Screen & Timer status (Authentic David Crane LFSR HUD)
     const mins = Math.floor(this.timeLeft / 60);
     const secs = Math.floor(this.timeLeft % 60);
     const timeStr = `${mins}:${String(secs).padStart(2, '0')}`;
+    const scnStr = `${String(this.screenIndex + 1).padStart(3, '0')}/255`;
+    const treasStr = `${String(this.treasuresFound).padStart(2, '0')}/32`;
 
     this.renderer.drawHUD({
       title: this.title,
@@ -32707,7 +33239,7 @@ class Pitfall {
       highScore: this.highScore,
       lives: this.lives,
       level: this.level,
-      extraLabel: `TIME ${timeStr}`,
+      extraLabel: `TIME ${timeStr} | SCN ${scnStr} | TREASURES ${treasStr}`,
       accent: PALETTE.GOLD
     });
 
@@ -32859,15 +33391,25 @@ class DuckHunt {
     this._startRound();
   }
 
+  _getQuota() {
+    if (this.level <= 1) return 6;
+    if (this.level <= 3) return 7;
+    if (this.level <= 6) return 8;
+    if (this.level <= 10) return 9;
+    return 10;
+  }
+
   _startRound() {
     this.roundDuckResults = new Array(10).fill('pending'); // 'pending' | 'hit' | 'miss'
     this.duckCursor = 0;
+    this.roundHits = 0;
     this._spawnSubWave();
   }
 
   _spawnSubWave() {
     this.shells = 3;
-    this.waveTimer = Math.max(4.5, 7.2 - this.level * 0.35);
+    // Authentic NES Duck Hunt timing: fast ~3.4s - 4.8s window per wave
+    this.waveTimer = Math.max(3.3, 5.0 - this.level * 0.16);
     this.flyAway = false;
     this.ducks = [];
     this.dog = {
@@ -32881,24 +33423,31 @@ class DuckHunt {
     const count = this.level >= 2 ? 2 : 1;
     for (let i = 0; i < count && this.duckCursor < 10; i++) {
       const idx = this.duckCursor++;
-      const isFast = Math.random() < 0.35 + this.level * 0.08;
-      const startX = 160 + Math.random() * 640;
-      const spd = (isFast ? 235 : 175) + this.level * 22;
-      const angle = -Math.PI * (0.22 + Math.random() * 0.56);
+      const roll = Math.random();
+      const isRed = roll < 0.18 + this.level * 0.04;
+      const isTeal = !isRed && roll < 0.48 + this.level * 0.05;
+      const species = isRed ? 'red' : isTeal ? 'teal' : 'mallard';
+
+      const baseSpeed = isRed ? 380 : isTeal ? 310 : 250;
+      const spd = baseSpeed + this.level * 24;
+      const startX = 180 + Math.random() * 600;
+      const angle = -Math.PI * (0.24 + Math.random() * 0.52);
 
       this.ducks.push({
         slotIndex: idx,
+        species,
         x: startX,
-        y: this.grassY - 10,
+        y: this.grassY - 12,
         vx: Math.cos(angle) * spd,
         vy: Math.sin(angle) * spd,
         speed: spd,
-        isFast,
+        isFast: isRed || isTeal,
         state: 'FLYING', // 'FLYING' | 'SHOT' | 'FALLING' | 'ESCAPED' | 'DONE'
         stateTimer: 0,
         flapTimer: 0,
-        bounceTimer: 0.9 + Math.random() * 0.8,
-        points: isFast ? 1000 : 500
+        bounceTimer: 0.28 + Math.random() * 0.45,
+        turnPhase: Math.random() * Math.PI * 2,
+        points: isRed ? 1500 : isTeal ? 800 : 500
       });
     }
 
@@ -32945,19 +33494,26 @@ class DuckHunt {
     for (const d of this.ducks) {
       if (d.state === 'FLYING') {
         const dist = Math.hypot(d.x - targetX, d.y - targetY);
-        if (dist <= 44) {
+        // Tight, authentic arcade hitboxes (20-25px instead of trivial 44px)
+        const hitRadius = d.species === 'red' ? 20 : d.species === 'teal' ? 23 : 26;
+        if (dist <= hitRadius) {
           d.state = 'SHOT';
           d.stateTimer = 0.38;
           d.vx = 0;
           d.vy = 0;
           this.roundDuckResults[d.slotIndex] = 'hit';
+          this.roundHits++;
           const pts = d.points * this.level;
           this.score += pts;
           if (this.score > this.highScore) {
             this.highScore = this.score;
             HighScoreStore.submit(this.id, this.score);
           }
-          this._spawnFeathers(d.x, d.y, d.isFast ? PALETTE.PINK : PALETTE.GREEN);
+          this._spawnFeathers(
+            d.x,
+            d.y,
+            d.species === 'red' ? PALETTE.RED : d.species === 'teal' ? PALETTE.CYAN : PALETTE.GREEN
+          );
           this.floatingTexts.push({
             text: `+${pts}`,
             x: d.x,
@@ -33051,8 +33607,8 @@ class DuckHunt {
           this.flyAway = true;
           this.audio.playSiren(0.2, true);
           for (const d of flyingDucks) {
-            d.vy = -280;
-            d.vx = (Math.random() - 0.5) * 140;
+            d.vy = -420;
+            d.vx = (Math.random() - 0.5) * 160;
           }
         }
       }
@@ -33060,7 +33616,7 @@ class DuckHunt {
 
     // Update Ducks
     for (const d of this.ducks) {
-      d.flapTimer += dt * 12;
+      d.flapTimer += dt * 14;
 
       if (d.state === 'FLYING') {
         d.x += d.vx * dt;
@@ -33083,16 +33639,18 @@ class DuckHunt {
             d.vy = -Math.abs(d.vy);
           }
 
-          // Dynamic erratic direction changes
+          // Dynamic erratic direction changes (sharp zigzags, vertical swoops, sudden bursts)
           d.bounceTimer -= dt;
           if (d.bounceTimer <= 0) {
-            d.bounceTimer = 0.75 + Math.random() * 0.85;
-            const ang = (Math.random() - 0.5) * 1.1;
-            const curAng = Math.atan2(d.vy, d.vx) + ang;
-            d.vx = Math.cos(curAng) * d.speed;
-            d.vy = Math.sin(curAng) * d.speed;
-            if (Math.abs(d.vy) < 45) {
-              d.vy = d.vy < 0 ? -75 : 75;
+            d.bounceTimer = 0.32 + Math.random() * 0.45;
+            const turnAngles = [-1.3, -0.9, 0.9, 1.3, Math.PI * 0.5, -Math.PI * 0.5];
+            const pickAng = turnAngles[Math.floor(Math.random() * turnAngles.length)];
+            const curAng = Math.atan2(d.vy, d.vx) + pickAng * (0.6 + Math.random() * 0.4);
+            const surge = (0.9 + Math.random() * 0.35) * d.speed;
+            d.vx = Math.cos(curAng) * surge;
+            d.vy = Math.sin(curAng) * surge;
+            if (Math.abs(d.vy) < 65) {
+              d.vy = d.vy < 0 ? -95 : 95;
             }
           }
         } else {
@@ -33109,8 +33667,8 @@ class DuckHunt {
           this.audio.playLaser(780, 210, 0.35);
         }
       } else if (d.state === 'FALLING') {
-        d.y += 290 * dt;
-        d.x += Math.sin(d.flapTimer * 2) * 45 * dt;
+        d.y += 340 * dt;
+        d.x += Math.sin(d.flapTimer * 2) * 55 * dt;
         if (d.y >= this.grassY) {
           d.state = 'DONE';
           this.audio.playShove();
@@ -33125,7 +33683,6 @@ class DuckHunt {
 
     if (allResolved && !this.dog.active) {
       const caught = this.ducks.filter((d) => d.state === 'DONE').length;
-      const escaped = this.ducks.filter((d) => d.state === 'ESCAPED').length;
 
       this.dog.active = true;
       this.dog.caughtCount = caught;
@@ -33144,19 +33701,6 @@ class DuckHunt {
           { freq: 290, dur: 0.09, type: 'square' }
         ]);
       }
-
-      if (escaped > 0) {
-        const totalMisses = this.roundDuckResults.filter((r) => r === 'miss').length;
-        if (totalMisses >= 4 && escaped > 0) {
-          this.lives--;
-          if (this.lives <= 0) {
-            HighScoreStore.submit(this.id, this.score);
-            this.audio.playGameOver();
-            this.setState('GAMEOVER');
-            return;
-          }
-        }
-      }
     }
 
     // Update Hunting Dog Animation
@@ -33174,12 +33718,48 @@ class DuckHunt {
       if (this.dog.timer <= 0) {
         this.dog.active = false;
         if (this.duckCursor >= 10) {
-          // Round Complete! Check quota bonus
+          // Round Complete! Check strict quota requirements
           const hits = this.roundDuckResults.filter((r) => r === 'hit').length;
-          if (hits === 10) {
-            this.score += 5000 * this.level;
+          const quota = this._getQuota();
+
+          if (hits < quota) {
+            // Failed Quota -> Dog laughs, lose life!
+            this.lives--;
+            this.dog.active = true;
+            this.dog.mode = 'laugh';
+            this.dog.caughtCount = 0;
+            this.dog.timer = 2.4;
+            this.dog.yOffset = 0;
             this.floatingTexts.push({
-              text: `PERFECT ROUND! +${5000 * this.level}`,
+              text: `MISSED QUOTA! ${hits}/${quota} DUCKS`,
+              x: 480,
+              y: 200,
+              vy: -25,
+              life: 2.2,
+              maxLife: 2.2,
+              color: PALETTE.RED
+            });
+            this.audio.playHit();
+            this.audio.playChiptune([
+              { freq: 380, dur: 0.12, type: 'square' },
+              { freq: 280, dur: 0.12, type: 'square' },
+              { freq: 380, dur: 0.12, type: 'square' },
+              { freq: 240, dur: 0.22, type: 'square' }
+            ]);
+            if (this.lives <= 0) {
+              HighScoreStore.submit(this.id, this.score);
+              this.audio.playGameOver();
+              this.setState('GAMEOVER');
+              return;
+            }
+            this._startRound();
+            return;
+          }
+
+          if (hits === 10) {
+            this.score += 10000 * this.level;
+            this.floatingTexts.push({
+              text: `PERFECT ROUND! +${10000 * this.level}`,
               x: 480,
               y: 220,
               vy: -30,
@@ -33470,18 +34050,39 @@ class DuckHunt {
       }
     }
 
-    // 2. HIT 10-Duck Status Tracker
-    this.renderer.drawText('HIT QUOTA', 210, 492, {
+    // 2. HIT 10-Duck Status Tracker with Authentic Pass Quota Threshold
+    const quota = this._getQuota();
+    this.renderer.drawText(`HIT [PASS: ${quota}/10]`, 185, 492, {
       font: FONTS.HEADER,
-      size: 12,
+      size: 11,
       color: PALETTE.GREEN
     });
     for (let i = 0; i < 10; i++) {
       const st = this.roundDuckResults[i];
       const col =
-        st === 'hit' ? PALETTE.PINK : st === 'miss' ? PALETTE.MUTED : PALETTE.WHITE;
-      this.renderer.drawGlowRect(350 + i * 34, 476, 22, 22, col, st === 'hit' ? 8 : 0);
+        st === 'hit' ? PALETTE.RED : st === 'miss' ? PALETTE.MUTED : '#1E293B';
+      const slotX = 330 + i * 32;
+      this.renderer.drawGlowRect(slotX, 476, 20, 20, col, st === 'hit' ? 8 : 0);
+      if (st === 'hit') {
+        ctx.fillStyle = '#FEF08A';
+        ctx.fillRect(slotX + 5, 482, 10, 8);
+      }
     }
+
+    // Quota Pass threshold line indicator
+    const quotaLineX = 330 + quota * 32 - 6;
+    ctx.strokeStyle = PALETTE.GOLD;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(quotaLineX, 470);
+    ctx.lineTo(quotaLineX, 502);
+    ctx.stroke();
+    this.renderer.drawText('▲ PASS', quotaLineX, 514, {
+      font: FONTS.HUD,
+      size: 9,
+      color: PALETTE.GOLD,
+      align: 'center'
+    });
 
     this.renderer.drawText('CLICK/TAP OR Z/SPACE TO FIRE', 725, 490, {
       font: FONTS.HUD,
