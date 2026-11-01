@@ -618,18 +618,6 @@ export const GAME_CATALOG = [
     mechanics: 'Clear 4-line Tetrominoes or match 3-gem jewel chains in a dual-mode puzzle cabinet',
     controls: 'Move/Drop + Rotate/Cycle Gems(Z/Up) + Switch Mode(X)',
     enhancements: '2-in-1 Tetris + Columns modes, ghost piece, combos & neon bursts'
-  },
-  {
-    id: 'goldenaxe',
-    icon: '🪓',
-    title: 'Golden Axe',
-    classicRef: '1989 Sega Arcade',
-    category: 'vault2',
-    genre: 'Fantasy Beat Em Up',
-    accent: PALETTE.GOLD,
-    mechanics: 'Choose from 3 iconic heroes (Ax Battler, Tyris Flare, Gilius), ride Bizarrians & cast screen-filling magic',
-    controls: '2.5D Move + Attack/Combo(Z) + Jump(X) + Cast Magic(C/Enter)',
-    enhancements: 'Tohru Nakabayashi Wilderness OST, 3 Heroes, Chicken Leg & Dragon mounts, Potions & Death Adder'
   }
 ];
 
@@ -2005,32 +1993,6 @@ export class MainMenu {
         break;
       }
 
-      case 'goldenaxe': {
-        // Stone fantasy ruins + glowing Golden Battle Axe + Barbarian silhouette
-        ctx.fillStyle = '#451A03';
-        ctx.fillRect(x + 4, y + h - 14, w - 8, 10);
-        // Golden Battle Axe in center
-        ctx.fillStyle = '#F59E0B';
-        ctx.fillRect(cx - 2, y + 8, 4, 30);
-        ctx.beginPath();
-        ctx.arc(cx, y + 14, 10, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#FEF08A';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        // Barbarian warrior
-        ctx.fillStyle = '#2563EB';
-        ctx.fillRect(cx - 18, y + h - 28, 8, 14);
-        ctx.fillStyle = '#FCD34D';
-        ctx.fillRect(cx - 17, y + h - 34, 6, 6);
-        // Sword slash
-        ctx.strokeStyle = '#00F0FF';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(cx - 14, y + h - 22, 12, -Math.PI * 0.3, Math.PI * 0.2);
-        ctx.stroke();
-        break;
-      }
     }
 
     // Subtle CRT scanline & inner bezel border on preview screen

@@ -603,16 +603,27 @@ export class SaveStateManager {
     if (!game || !game.id) return null;
     const snap = SaveStateManager.captureSnapshot(game);
     if (!snap) return null;
-    const storageKey = `${SAVE_STATE_PREFIX}${game.id}_slot_${slot}`;
+    const keyLower = String(game.id || '').toLowerCase();
+    const storageKey = `${SAVE_STATE_PREFIX}${keyLower}_slot_${slot}`;
     try {
       localStorage.setItem(storageKey, JSON.stringify(snap));
     } catch (_) {}
+    if (!SaveStateManager._slotMetaCache) {
+      SaveStateManager._slotMetaCache = new Map();
+    }
+    SaveStateManager._slotMetaCache.set(storageKey, {
+      slot,
+      score: snap.score || 0,
+      level: snap.level || 1,
+      lives: snap.lives || 3,
+      timestamp: snap.timestamp || 0
+    });
     return snap;
   }
 
   static loadFromSlot(game, slot = 1) {
     if (!game || !game.id) return null;
-    const storageKey = `${SAVE_STATE_PREFIX}${game.id}_slot_${slot}`;
+    const storageKey = `${SAVE_STATE_PREFIX}${String(game.id || '').toLowerCase()}_slot_${slot}`;
     try {
       const raw = localStorage.getItem(storageKey);
       if (!raw) return null;
@@ -626,18 +637,30 @@ export class SaveStateManager {
 
   static getSlotMeta(gameId, slot = 1) {
     const storageKey = `${SAVE_STATE_PREFIX}${String(gameId || '').toLowerCase()}_slot_${slot}`;
+    if (!SaveStateManager._slotMetaCache) {
+      SaveStateManager._slotMetaCache = new Map();
+    }
+    if (SaveStateManager._slotMetaCache.has(storageKey)) {
+      return SaveStateManager._slotMetaCache.get(storageKey);
+    }
     try {
       const raw = localStorage.getItem(storageKey);
-      if (!raw) return null;
+      if (!raw) {
+        SaveStateManager._slotMetaCache.set(storageKey, null);
+        return null;
+      }
       const snap = JSON.parse(raw);
-      return {
+      const meta = {
         slot,
         score: snap.score || 0,
         level: snap.level || 1,
         lives: snap.lives || 3,
         timestamp: snap.timestamp || 0
       };
+      SaveStateManager._slotMetaCache.set(storageKey, meta);
+      return meta;
     } catch (_) {
+      SaveStateManager._slotMetaCache.set(storageKey, null);
       return null;
     }
   }
@@ -655,17 +678,26 @@ const DEFAULT_DIP = {
 
 export class DipSwitchStore {
   static get() {
+    if (DipSwitchStore._cachedDip) {
+      return DipSwitchStore._cachedDip;
+    }
     try {
       const raw = localStorage.getItem(DIP_STORAGE_KEY);
-      if (!raw) return { ...DEFAULT_DIP };
-      return { ...DEFAULT_DIP, ...JSON.parse(raw) };
+      if (!raw) {
+        DipSwitchStore._cachedDip = { ...DEFAULT_DIP };
+      } else {
+        DipSwitchStore._cachedDip = { ...DEFAULT_DIP, ...JSON.parse(raw) };
+      }
     } catch (_) {
-      return { ...DEFAULT_DIP };
+      DipSwitchStore._cachedDip = { ...DEFAULT_DIP };
     }
+    return DipSwitchStore._cachedDip;
   }
 
   static save(next) {
     const merged = { ...DipSwitchStore.get(), ...next };
+    DipSwitchStore._cachedDip = merged;
+    DipSwitchStore._cachedPreset = null;
     try {
       localStorage.setItem(DIP_STORAGE_KEY, JSON.stringify(merged));
     } catch (_) {}
@@ -680,6 +712,9 @@ export class DipSwitchStore {
   }
 
   static getPreset() {
+    if (DipSwitchStore._cachedPreset) {
+      return DipSwitchStore._cachedPreset;
+    }
     const cur = DipSwitchStore.get();
     const label =
       cur.difficulty === 'EASY'
@@ -687,12 +722,13 @@ export class DipSwitchStore {
         : cur.difficulty === 'HARD'
         ? 'HARD 2-LIVES'
         : `${cur.startingLives} LIVES STD`;
-    return {
+    DipSwitchStore._cachedPreset = {
       label,
       lives: cur.startingLives,
       difficultyName: cur.difficulty,
       speedScale: DipSwitchStore.getDifficultyScale()
     };
+    return DipSwitchStore._cachedPreset;
   }
 
   static cyclePreset() {
@@ -715,11 +751,15 @@ export class DipSwitchStore {
  */
 export class InitialsStore {
   static getLastInitials() {
-    try {
-      return localStorage.getItem(INITIALS_STORAGE_KEY) || 'ACE';
-    } catch (_) {
-      return 'ACE';
+    if (InitialsStore._cachedInitials) {
+      return InitialsStore._cachedInitials;
     }
+    try {
+      InitialsStore._cachedInitials = localStorage.getItem(INITIALS_STORAGE_KEY) || 'ACE';
+    } catch (_) {
+      InitialsStore._cachedInitials = 'ACE';
+    }
+    return InitialsStore._cachedInitials;
   }
 
   static setLastInitials(initials) {
@@ -728,6 +768,7 @@ export class InitialsStore {
       .replace(/[^A-Z0-9]/g, 'A')
       .padEnd(3, 'A')
       .slice(0, 3);
+    InitialsStore._cachedInitials = clean;
     try {
       localStorage.setItem(INITIALS_STORAGE_KEY, clean);
     } catch (_) {}

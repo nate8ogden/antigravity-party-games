@@ -92,6 +92,9 @@ const DEFAULT_HIGHSCORES = {
 
 export class HighScoreStore {
   static loadAll() {
+    if (HighScoreStore._scoresCache) {
+      return HighScoreStore._scoresCache;
+    }
     try {
       const raw = localStorage.getItem(HIGHSCORE_STORAGE_KEY);
       let scores;
@@ -111,9 +114,11 @@ export class HighScoreStore {
           cloudRec.highScore = scores[id];
         }
       }
+      HighScoreStore._scoresCache = scores;
       return scores;
     } catch (_) {
-      return { ...DEFAULT_HIGHSCORES };
+      HighScoreStore._scoresCache = { ...DEFAULT_HIGHSCORES };
+      return HighScoreStore._scoresCache;
     }
   }
 
@@ -126,13 +131,17 @@ export class HighScoreStore {
 
   static getHolder(gameId) {
     const key = String(gameId || '').toLowerCase();
-    try {
-      const raw = localStorage.getItem(HOLDERS_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed && parsed[key]) return parsed[key];
+    if (!HighScoreStore._holdersCache) {
+      try {
+        const raw = localStorage.getItem(HOLDERS_STORAGE_KEY);
+        HighScoreStore._holdersCache = raw ? JSON.parse(raw) || {} : {};
+      } catch (_) {
+        HighScoreStore._holdersCache = {};
       }
-    } catch (_) {}
+    }
+    if (HighScoreStore._holdersCache[key]) {
+      return HighScoreStore._holdersCache[key];
+    }
     const cloudRec = cloudPersistence.getRecord(key);
     return cloudRec.holder || 'ACE';
   }
@@ -140,11 +149,12 @@ export class HighScoreStore {
   static setHolder(gameId, initials) {
     const key = String(gameId || '').toLowerCase();
     const clean = InitialsStore.setLastInitials(initials);
+    if (!HighScoreStore._holdersCache) {
+      HighScoreStore.getHolder(key);
+    }
+    HighScoreStore._holdersCache[key] = clean;
     try {
-      const raw = localStorage.getItem(HOLDERS_STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : {};
-      parsed[key] = clean;
-      localStorage.setItem(HOLDERS_STORAGE_KEY, JSON.stringify(parsed));
+      localStorage.setItem(HOLDERS_STORAGE_KEY, JSON.stringify(HighScoreStore._holdersCache));
     } catch (_) {}
     const cloudRec = cloudPersistence.getRecord(key);
     cloudRec.holder = clean;
@@ -165,12 +175,6 @@ export class HighScoreStore {
         localStorage.setItem(HIGHSCORE_STORAGE_KEY, JSON.stringify(all));
       } catch (_) {}
       HighScoreStore.setHolder(key, initials);
-    } else {
-      try {
-        if (!localStorage.getItem(HIGHSCORE_STORAGE_KEY)) {
-          localStorage.setItem(HIGHSCORE_STORAGE_KEY, JSON.stringify(all));
-        }
-      } catch (_) {}
     }
     // Sync to Firebase Cloud Persistence
     cloudPersistence.recordScore(key, Math.max(prev, numeric), isNew ? initials : null);
@@ -282,7 +286,8 @@ export class Renderer {
   }
 
   beginFrame(dt = 0.016) {
-    if (this.viewportContainer) {
+    this._frameTick = ((this._frameTick || 0) + 1) % 30;
+    if (this._frameTick === 0 && this.viewportContainer) {
       const cw = this.viewportContainer.clientWidth || 0;
       const ch = this.viewportContainer.clientHeight || 0;
       if (cw > 40 && ch > 40 && (Math.abs(cw - (this._lastVpW || 0)) > 4 || Math.abs(ch - (this._lastVpH || 0)) > 4)) {
@@ -407,11 +412,8 @@ export class Renderer {
     this.ctx.fillRect(0, 0, this.width, this.height);
   }
 
-  drawGlowRect(x, y, w, h, color, blur = 10, fill = true, lineWidth = 2) {
+  drawGlowRect(x, y, w, h, color, _blur = 10, fill = true, lineWidth = 2) {
     const ctx = this.ctx;
-    ctx.save();
-    ctx.shadowColor = color;
-    ctx.shadowBlur = blur;
     if (fill) {
       ctx.fillStyle = color;
       ctx.fillRect(x, y, w, h);
@@ -420,14 +422,10 @@ export class Renderer {
       ctx.lineWidth = lineWidth;
       ctx.strokeRect(x, y, w, h);
     }
-    ctx.restore();
   }
 
-  drawGlowCircle(x, y, r, color, blur = 10, fill = true, lineWidth = 2) {
+  drawGlowCircle(x, y, r, color, _blur = 10, fill = true, lineWidth = 2) {
     const ctx = this.ctx;
-    ctx.save();
-    ctx.shadowColor = color;
-    ctx.shadowBlur = blur;
     ctx.beginPath();
     ctx.arc(x, y, Math.max(0.5, r), 0, Math.PI * 2);
     if (fill) {
@@ -438,7 +436,6 @@ export class Renderer {
       ctx.lineWidth = lineWidth;
       ctx.stroke();
     }
-    ctx.restore();
   }
 
   drawText(
@@ -451,23 +448,15 @@ export class Renderer {
       color = PALETTE.WHITE,
       align = 'left',
       baseline = 'alphabetic',
-      glow = 0,
-      glowColor = null,
       bold = true
     } = {}
   ) {
     const ctx = this.ctx;
-    ctx.save();
     ctx.font = `${bold ? '700 ' : ''}${size}px ${font}`;
     ctx.fillStyle = color;
     ctx.textAlign = align;
     ctx.textBaseline = baseline;
-    if (glow > 0) {
-      ctx.shadowColor = glowColor || color;
-      ctx.shadowBlur = glow;
-    }
     ctx.fillText(String(text), x, y);
-    ctx.restore();
   }
 
   /**

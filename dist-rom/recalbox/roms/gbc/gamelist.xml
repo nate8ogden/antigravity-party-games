@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<gameList>
+	<game source="Recalbox" timestamp="0">
+		<path>./Pokemon - Yellow Version (USA) (GBC Color).gbc</path>
+		<name>Pokemon Yellow Version (Full GBC Color)</name>
+		<desc>Special Pikachu Edition in full Game Boy Color! Travel across Kanto with Pikachu following behind you and collect all 150 Kanto Pokemon.</desc>
+		<developer>Game Freak</developer>
+		<publisher>Nintendo</publisher>
+		<genre>RPG</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Pokemon - Gold Version (USA).gbc</path>
+		<name>Pokemon Gold Version</name>
+		<desc>Journey across the Johto and Kanto regions with Chikorita, Cyndaquil, or Totodile, discover 100 new Gen II Pokemon, and encounter the legendary Ho-Oh!</desc>
+		<developer>Game Freak</developer>
+		<publisher>Nintendo</publisher>
+		<genre>RPG</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Pokemon - Silver Version (USA).gbc</path>
+		<name>Pokemon Silver Version</name>
+		<desc>Explore Johto and Kanto with day/night real-time clock events, earn 16 Gym Badges, and awaken the legendary guardian of the seas, Lugia!</desc>
+		<developer>Game Freak</developer>
+		<publisher>Nintendo</publisher>
+		<genre>RPG</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Pokemon - Crystal Version (USA).gbc</path>
+		<name>Pokemon Crystal Version</name>
+		<desc>The definitive Generation II Pokemon adventure featuring animated Pokemon battle sprites, the Battle Tower, and the quest for the legendary Suicune!</desc>
+		<developer>Game Freak</developer>
+		<publisher>Nintendo</publisher>
+		<genre>RPG</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+</gameList>

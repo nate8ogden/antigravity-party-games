@@ -185,7 +185,7 @@ const mockInput = {
 const audio = new AudioSynth();
 
 console.log('===================================================================');
-console.log('🧪 RETRO ARCADE STUDIO — 51-GAME AUTOMATED VERIFICATION SUITE');
+console.log('🧪 RETRO ARCADE STUDIO — 50-GAME AUTOMATED VERIFICATION SUITE');
 console.log('===================================================================');
 
 let failures = 0;
@@ -195,8 +195,8 @@ const catalogIds = GAME_CATALOG.map((g) => g.id);
 const registryIds = Object.keys(GAME_REGISTRY);
 console.log(`Catalog Games : ${catalogIds.length} | Registry Games : ${registryIds.length}`);
 
-if (catalogIds.length !== 51 || registryIds.length !== 51) {
-  console.error(`❌ Expected 51 games, got Catalog=${catalogIds.length}, Registry=${registryIds.length}`);
+if (catalogIds.length !== 50 || registryIds.length !== 50) {
+  console.error(`❌ Expected 50 games, got Catalog=${catalogIds.length}, Registry=${registryIds.length}`);
   failures++;
 }
 

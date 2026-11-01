@@ -73,7 +73,6 @@ import { KungFuMaster } from './games/KungFuMaster.js';
 import { WildGunman } from './games/WildGunman.js';
 import { Exerion } from './games/Exerion.js';
 import { TetrisRetro } from './games/TetrisRetro.js';
-import { GoldenAxe } from './games/GoldenAxe.js';
 
 export const GAME_REGISTRY = {
   loderunner: LodeRunner,
@@ -125,8 +124,7 @@ export const GAME_REGISTRY = {
   kungfumaster: KungFuMaster,
   wildgunman: WildGunman,
   exerion: Exerion,
-  tetrisretro: TetrisRetro,
-  goldenaxe: GoldenAxe
+  tetrisretro: TetrisRetro
 };
 
 export class RetroArcadeStudio {
@@ -1076,26 +1074,28 @@ export class RetroArcadeStudio {
             this.activeGame.update(scaledDt);
           }
 
-          // Sample rewind snapshot at 20Hz while PLAYING
+          // Sample rewind snapshot at 4Hz while PLAYING (cuts GC/clone overhead by 80%)
           if (this.activeGame.state === 'PLAYING') {
             this._rewindSampleAccum += baseDt;
-            if (this._rewindSampleAccum >= 0.05) {
+            if (this._rewindSampleAccum >= 0.25) {
               this._rewindSampleAccum = 0;
               const snap = SaveStateManager.createSnapshot(this.activeGame);
               if (snap) {
                 this._rewindBuffer.push(snap);
-                if (this._rewindBuffer.length > this._rewindMaxFrames) {
+                if (this._rewindBuffer.length > 40) {
                   this._rewindBuffer.shift();
                 }
               }
             }
           }
 
-          // Check score & level achievements
-          if ((this.activeGame.score || 0) >= 10000) {
+          // Check score & level achievements once
+          if (!this._ach10kChecked && (this.activeGame.score || 0) >= 10000) {
+            this._ach10kChecked = true;
             this._tryUnlockAchievement('HIGH_ROLLER_10K');
           }
-          if ((this.activeGame.level || this.activeGame.stage || 1) >= 2) {
+          if (!this._achStage2Checked && (this.activeGame.level || this.activeGame.stage || 1) >= 2) {
+            this._achStage2Checked = true;
             this._tryUnlockAchievement('STAGE_CONQUEROR');
           }
         }

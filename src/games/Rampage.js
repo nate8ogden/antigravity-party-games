@@ -254,6 +254,9 @@ export class Rampage {
   }
 
   _spawnParticles(x, y, count, color, speed = 120, gravity = 260) {
+    if (this.particles.length > 60) {
+      this.particles.splice(0, this.particles.length - 45);
+    }
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
       const mag = (0.3 + Math.random() * 0.7) * speed;
@@ -1049,11 +1052,15 @@ export class Rampage {
     const p = this.player;
     const city = this.city || CITIES[0];
 
-    // Dynamic Atmospheric Sky Gradient for Current Tour City
-    const grad = ctx.createLinearGradient(0, 38, 0, this.groundY);
-    grad.addColorStop(0, city.skyTop);
-    grad.addColorStop(1, city.skyBottom);
-    ctx.fillStyle = grad;
+    // Dynamic Atmospheric Sky Gradient for Current Tour City (Cached per city)
+    if (this._cachedSkyKey !== city.name || !this._cachedSkyGrad) {
+      const grad = ctx.createLinearGradient(0, 38, 0, this.groundY);
+      grad.addColorStop(0, city.skyTop);
+      grad.addColorStop(1, city.skyBottom);
+      this._cachedSkyGrad = grad;
+      this._cachedSkyKey = city.name;
+    }
+    ctx.fillStyle = this._cachedSkyGrad;
     ctx.fillRect(0, 38, this.renderer.width, this.renderer.height - 38);
 
     // City Name Headline Banner

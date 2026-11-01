@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<gameList>
+	<game source="Recalbox" timestamp="0">
+		<path>./Pokemon - Red Version (USA).gb</path>
+		<name>Pokemon Red Version</name>
+		<desc>Begin your journey in Pallet Town with Charmander, Squirtle, or Bulbasaur, battle the 8 Kanto Gym Leaders, defeat Team Rocket, and become the Indigo Plateau Pokemon League Champion!</desc>
+		<developer>Game Freak</developer>
+		<publisher>Nintendo</publisher>
+		<genre>RPG</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Pokemon - Blue Version (USA).gb</path>
+		<name>Pokemon Blue Version</name>
+		<desc>Explore the Kanto region, catch and train 151 original Pokemon, challenge Rival Blue and the Elite Four, and complete Professor Oak's Pokedex!</desc>
+		<developer>Game Freak</developer>
+		<publisher>Nintendo</publisher>
+		<genre>RPG</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Pokemon - Yellow Version - Special Pikachu Edition (USA).gb</path>
+		<name>Pokemon Yellow Version: Special Pikachu Edition</name>
+		<desc>Partner with Pikachu walking right behind you across Kanto, earn all three starter Pokemon (Bulbasaur, Charmander, Squirtle), and battle Jessie & James of Team Rocket!</desc>
+		<developer>Game Freak</developer>
+		<publisher>Nintendo</publisher>
+		<genre>RPG</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+</gameList>

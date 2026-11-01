@@ -307,14 +307,30 @@ export class CRTOverlay {
 
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.texture);
-      gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        this.sourceCanvas
-      );
+      const sw = this.sourceCanvas.width;
+      const sh = this.sourceCanvas.height;
+      if (this._texW !== sw || this._texH !== sh) {
+        gl.texImage2D(
+          gl.TEXTURE_2D,
+          0,
+          gl.RGBA,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          this.sourceCanvas
+        );
+        this._texW = sw;
+        this._texH = sh;
+      } else {
+        gl.texSubImage2D(
+          gl.TEXTURE_2D,
+          0,
+          0,
+          0,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          this.sourceCanvas
+        );
+      }
 
       gl.uniform1i(this.uniforms.uTexture, 0);
       gl.uniform2f(

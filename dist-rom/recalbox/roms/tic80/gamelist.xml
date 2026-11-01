@@ -1,0 +1,543 @@
+<?xml version="1.0"?>
+<gameList>
+	<game source="Recalbox" timestamp="0">
+		<path>./Lode Runner.tic</path>
+		<name>Lode Runner (Custom JS Port)</name>
+		<desc>Dig bricks to trap guards &amp; collect all gold chests to reveal the escape ladder (1983 Irem / Brøderbund) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Dig Dug.tic</path>
+		<name>Dig Dug (Custom JS Port)</name>
+		<desc>Carve dirt tunnels, inflate Pookas &amp; Fygars with your air pump &amp; drop boulders (1982 Namco Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Donkey Kong.tic</path>
+		<name>Donkey Kong (Custom JS Port)</name>
+		<desc>Climb slanted steel girders, jump rolling barrels &amp; grab hammers across 8 stages (1981 Nintendo Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Sumo Arcade.tic</path>
+		<name>Sumo Arcade (Custom JS Port)</name>
+		<desc>Push, slap-stun &amp; sidestep your rival sumo wrestler out of the circular Dohyo ring (1984 Technōs / Data East) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Pac-Man _ Ms. Pac.tic</path>
+		<name>Pac-Man / Ms. Pac (Custom JS Port)</name>
+		<desc>Eat all maze dots &amp; power pellets to chomp Blinky, Pinky, Inky &amp; Clyde for 1600 pts (1980 Namco / Midway) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Frogger.tic</path>
+		<name>Frogger (Custom JS Port)</name>
+		<desc>Hop your frog across 5 lanes of speeding cars &amp; ride floating river logs to home bays (1981 Konami / Sega) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Galaga.tic</path>
+		<name>Galaga (Custom JS Port)</name>
+		<desc>Blast diving alien bug formations &amp; rescue your captured fighter for Dual-Ship guns (1981 Namco Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Space Invaders.tic</path>
+		<name>Space Invaders (Custom JS Port)</name>
+		<desc>Defend Earth behind 4 destructible bunkers against 55 marching alien invaders &amp; UFOs (1978 Taito Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Asteroids.tic</path>
+		<name>Asteroids (Custom JS Port)</name>
+		<desc>Rotate &amp; thrust your vector ship to shatter splitting boulders &amp; UFO saucers (1979 Atari Vector) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Centipede.tic</path>
+		<name>Centipede (Custom JS Port)</name>
+		<desc>Shoot the winding multi-segment centipede &amp; spiders through a mushroom field (1980 Atari Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Defender.tic</path>
+		<name>Defender (Custom JS Port)</name>
+		<desc>Fly across a wrap-around alien planet with radar scanner to save humanoids (1981 Williams Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Arkanoid.tic</path>
+		<name>Arkanoid (Custom JS Port)</name>
+		<desc>Bounce the energy ball off your Vaus paddle to smash 12 brick fortresses &amp; capsules (1986 Taito Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Paperboy.tic</path>
+		<name>Paperboy (Custom JS Port)</name>
+		<desc>Steer your bike up the street, toss newspapers into mailboxes &amp; dodge hazards (1985 Atari System 2) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Joust.tic</path>
+		<name>Joust (Custom JS Port)</name>
+		<desc>Flap your flying ostrich above lava &amp; defeat buzzard riders by striking from higher up (1982 Williams Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Q_bert.tic</path>
+		<name>Q*bert (Custom JS Port)</name>
+		<desc>Hop diagonally across a 3D cube pyramid to flip every tile color while dodging Coily (1982 Gottlieb Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Rampage.tic</path>
+		<name>Rampage (Custom JS Port)</name>
+		<desc>Climb skyscrapers as a giant monster &amp; punch windows until the buildings collapse (1986 Bally Midway) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Marble Madness.tic</path>
+		<name>Marble Madness (Custom JS Port)</name>
+		<desc>Roll your marble down 10 steep 3D isometric ramp courses before the timer expires (1984 Atari System 1) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Pitfall!.tic</path>
+		<name>Pitfall! (Custom JS Port)</name>
+		<desc>Swing on vines over tar pits, hop across crocodile jaws &amp; grab jungle treasures (1982 Activision Classic) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Duck Hunt.tic</path>
+		<name>Duck Hunt (Custom JS Port)</name>
+		<desc>Click/tap or aim the crosshair to shoot fast-flying ducks with 3 shells per wave (1984 Nintendo Vs./NES) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Excitebike.tic</path>
+		<name>Excitebike (Custom JS Port)</name>
+		<desc>Race your dirt bike over huge stunt ramps, pitch mid-air &amp; manage turbo engine heat (1984 Nintendo Vs. System) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Missile Command.tic</path>
+		<name>Missile Command (Custom JS Port)</name>
+		<desc>Launch counter-missiles from 3 batteries to detonate incoming warheads above 6 cities (1980 Atari Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./BurgerTime.tic</path>
+		<name>BurgerTime (Custom JS Port)</name>
+		<desc>Walk across giant buns, patties &amp; lettuce on kitchen scaffolds to drop burgers onto trays (1982 Data East Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Bubble Bobble.tic</path>
+		<name>Bubble Bobble (Custom JS Port)</name>
+		<desc>Blow bubbles to trap cave monsters, pop them in chains &amp; collect giant bonus fruit (1986 Taito Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Spy Hunter.tic</path>
+		<name>Spy Hunter (Custom JS Port)</name>
+		<desc>Drive the G-6155 Interceptor at high speed, firing machine guns &amp; dropping oil slicks (1983 Bally Midway) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Tron.tic</path>
+		<name>Tron (Custom JS Port)</name>
+		<desc>Steer your neon light cycle at 90° angles to trap rival AI cycles behind light walls (1982 Bally Midway) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Track & Field.tic</path>
+		<name>Track &amp; Field (Custom JS Port)</name>
+		<desc>Mash sprint buttons to build speed &amp; time your launch angle across 5 Olympic events (1983 Konami Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./OutRun.tic</path>
+		<name>OutRun (Custom JS Port)</name>
+		<desc>Drift your red convertible at 290 km/h down branching palm-lined sunset highways (1986 Sega Super Scaler) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Contra.tic</path>
+		<name>Contra (Custom JS Port)</name>
+		<desc>Run-and-gun across jungle bridges with 8-way aiming &amp; 5-way Spread Shot powerups (1987 Konami Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Galaxian.tic</path>
+		<name>Galaxian (Custom JS Port)</name>
+		<desc>Shoot convecting alien insect squadrons &amp; Flagships diving in escort formations (1979 Namco Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Dig Dug II.tic</path>
+		<name>Dig Dug II (Custom JS Port)</name>
+		<desc>Inflate monsters with your pump or hammer fault-line pegs to sink island chunks (1985 Namco Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Elevator Action.tic</path>
+		<name>Elevator Action (Custom JS Port)</name>
+		<desc>Ride elevators down a spy tower, steal secret files behind red doors &amp; shoot agents (1983 Taito Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Tapper.tic</path>
+		<name>Tapper (Custom JS Port)</name>
+		<desc>Slide frosty root beer mugs down 4 saloon bars to thirsty patrons &amp; catch empties (1983 Bally Midway) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Lunar Lander.tic</path>
+		<name>Lunar Lander (Custom JS Port)</name>
+		<desc>Rotate thrusters &amp; feather your rocket burn to land gently on 2X-5X moon pads (1979 Atari Vector) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Tempest.tic</path>
+		<name>Tempest (Custom JS Port)</name>
+		<desc>Spin your yellow claw blaster around 3D neon wireframe tubes to blast Flippers (1981 Atari Color Vector) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Robotron_ 2084.tic</path>
+		<name>Robotron: 2084 (Custom JS Port)</name>
+		<desc>Blast relentless robot swarms in 8 directions while rescuing the last human family (1982 Williams Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Sinistar.tic</path>
+		<name>Sinistar (Custom JS Port)</name>
+		<desc>Mine Sinibomb crystals from planetoids before worker drones build the giant skull boss (1982 Williams Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Crystal Castles.tic</path>
+		<name>Crystal Castles (Custom JS Port)</name>
+		<desc>Guide Bentley Bear across 3D isometric castle ramps &amp; elevators to scoop up every gem (1983 Atari Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Zaxxon.tic</path>
+		<name>Zaxxon (Custom JS Port)</name>
+		<desc>Fly diagonally through an isometric space fortress using your altitude gauge &amp; shadow (1982 Sega Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Moon Patrol.tic</path>
+		<name>Moon Patrol (Custom JS Port)</name>
+		<desc>Drive a 6-wheel lunar buggy jumping craters while firing forward &amp; upward lasers (1982 Irem / Williams) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Pengo.tic</path>
+		<name>Pengo (Custom JS Port)</name>
+		<desc>Push sliding ice blocks across a frozen maze to crush Sno-Bees &amp; align 3 diamonds (1982 Sega Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Rally-X.tic</path>
+		<name>Rally-X (Custom JS Port)</name>
+		<desc>Race through scrolling mazes using the radar to grab 10 flags &amp; smoke-spin rival cars (1980 Namco Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Road Fighter.tic</path>
+		<name>Road Fighter (Custom JS Port)</name>
+		<desc>Weave through traffic at 400 km/h, counter-steer skids &amp; touch rainbow fuel cars (1984 Konami Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Flicky.tic</path>
+		<name>Flicky (Custom JS Port)</name>
+		<desc>Lead a trailing chain of rescued yellow Piopio chicks to the exit door while dodging cats (1984 Sega Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Mappy.tic</path>
+		<name>Mappy (Custom JS Port)</name>
+		<desc>Bounce on color-changing trampolines to grab stolen loot &amp; blast cats with sonic doors (1983 Namco Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Circus Charlie.tic</path>
+		<name>Circus Charlie (Custom JS Port)</name>
+		<desc>Jump a lion through flaming rings, walk tightropes over monkeys &amp; hop circus balls (1984 Konami Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Battle City.tic</path>
+		<name>Battle City (Custom JS Port)</name>
+		<desc>Command your golden tank through brick walls to defend the Phoenix base from enemy armor (1985 Namco Classic) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Kung-Fu Master.tic</path>
+		<name>Kung-Fu Master (Custom JS Port)</name>
+		<desc>Battle across 5 temple floors with jump-kicks &amp; crouch-punches to defeat dojo bosses (1984 Irem / Data East) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Wild Gunman.tic</path>
+		<name>Wild Gunman (Custom JS Port)</name>
+		<desc>Wait for the outlaw’s eyes to flash "FIRE!!" then draw &amp; shoot in milliseconds (1984 Nintendo Zapper) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Exerion.tic</path>
+		<name>Exerion (Custom JS Port)</name>
+		<desc>Master gliding momentum over 3D alien terrain with Dual Slow &amp; Single Fast cannons (1983 Jaleco Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Tetris & Columns.tic</path>
+		<name>Tetris &amp; Columns (Custom JS Port)</name>
+		<desc>Clear 4-line Tetrominoes or match 3-gem jewel chains in a dual-mode puzzle cabinet (1988 Atari / 1990 Sega) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Golden Axe.tic</path>
+		<name>Golden Axe (Custom JS Port)</name>
+		<desc>Choose from 3 iconic heroes (Ax Battler, Tyris Flare, Gilius), ride Bizarrians &amp; cast screen-filling magic (1989 Sega Arcade) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Pac-Man.tic</path>
+		<name>Pac-Man (Custom JS Port)</name>
+		<desc>Navigate the neon maze, gobble dots and energizers, and chase down Blinky, Pinky, Inky, and Clyde!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Pokemon Kanto Adventure.tic</path>
+		<name>Pokemon Kanto Adventure (Custom JS Port)</name>
+		<desc>Explore Pallet Town and Route 1 with Pikachu, Charmander, Squirtle, or Bulbasaur, battle wild Pokemon, and catch em all!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+	<game source="Recalbox" timestamp="0">
+		<path>./Retro Arcade Studio.tic</path>
+		<name>Retro Arcade Studio (Custom JS Hub)</name>
+		<desc>Play your flagship custom JS Lode Runner &amp; Retro Arcade Studio hub natively on Recalbox!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>Arcade</genre>
+		<players>1-2</players>
+		<rating>0.98</rating>
+	</game>
+</gameList>

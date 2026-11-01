@@ -33,13 +33,14 @@ GAME_ID="${gameId}"
 GAME_TITLE="${gameTitle}"
 SHARE="/recalbox/share"
 DATA_DIR="$SHARE/system/retro_arcade_data"
+TIC_ROM="$SHARE/roms/tic80/${gameTitle}.tic"
 PORT=8088
 
-# 1. Start background micro-server if not already running
+# 1. Start background micro-server at low CPU priority if not already running
 if [ -d "$DATA_DIR" ]; then
   if ! pgrep -f "python3 -m http.server $PORT" >/dev/null 2>&1; then
     cd "$DATA_DIR"
-    nohup python3 -m http.server $PORT > /tmp/retro_arcade_server.log 2>&1 &
+    nohup nice -n 19 python3 -m http.server $PORT > /tmp/retro_arcade_server.log 2>&1 &
   fi
 fi
 
@@ -58,7 +59,17 @@ for browser in chromium-browser chromium epiphany-browser cog wpe; do
   fi
 done
 
-# 3. Lean Pi Zero W build: Display on-screen TV guide with direct network URL
+# 3. Launch Native TIC-80 JS Cartridge on TV via RetroArch if available
+if [ -f "$TIC_ROM" ] && command -v retroarch >/dev/null 2>&1; then
+  for core in /usr/lib/libretro/tic80_libretro.so /recalbox/share/cores/tic80_libretro.so; do
+    if [ -f "$core" ]; then
+      exec retroarch -L "$core" "$TIC_ROM"
+      exit 0
+    fi
+  done
+fi
+
+# 4. Lean Pi Zero W fallback: Display on-screen TV guide with direct network URL
 URL="http://$IP_ADDR:$PORT/?game=$GAME_ID"
 [ -z "$GAME_ID" ] && URL="http://$IP_ADDR:$PORT"
 
@@ -87,5 +98,15 @@ fi
 }
 
 // Write the gamelist.xml
+if (!gamelistXml.includes('Pokemon Kanto Adventure.sh')) {
+  const pokeEntry = `\t<game>\n\t\t<path>./Pokemon Kanto Adventure.sh</path>\n\t\t<name>Pokemon Kanto Adventure (Custom JS Port)</name>\n\t\t<desc>Explore Pallet Town and Route 1 with Pikachu, Charmander, Squirtle, or Bulbasaur, battle wild Pokemon, and catch em all!</desc>\n\t\t<developer>Antigravity</developer>\n\t\t<publisher>Antigravity</publisher>\n\t\t<genre>RPG</genre>\n\t\t<players>1</players>\n\t\t<rating>0.99</rating>\n\t</game>\n</gameList>`;
+  gamelistXml = gamelistXml.replace('</gameList>', pokeEntry);
+}
+const pokeScriptPath = path.join(recalboxPortsDir, 'Pokemon Kanto Adventure.sh');
+const pokeScript = fs.readFileSync(path.join(recalboxPortsDir, 'Lode Runner.sh'), 'utf8')
+  .replace(/Lode Runner/g, 'Pokemon Kanto Adventure')
+  .replace(/loderunner/g, 'pokemon');
+fs.writeFileSync(pokeScriptPath, pokeScript, { mode: 0o755 });
+
 fs.writeFileSync(path.join(recalboxPortsDir, 'gamelist.xml'), gamelistXml, 'utf8');
-console.log(`Generated ${files.filter(f => f.endsWith('.sh')).length} Recalbox port scripts in ${recalboxPortsDir}`);
+console.log(`Generated ${fs.readdirSync(recalboxPortsDir).filter(f => f.endsWith('.sh')).length} Recalbox port scripts in ${recalboxPortsDir}`);

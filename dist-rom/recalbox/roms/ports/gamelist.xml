@@ -561,15 +561,14 @@
     <genre>Arcade Puzzle</genre>
     <players>1-2</players>
   </game>
-  <game>
-    <path>./Golden Axe.sh</path>
-    <name>Golden Axe (1989 Sega Arcade)</name>
-    <desc>Choose from 3 iconic heroes (Ax Battler, Tyris Flare, Gilius), ride Bizarrians & cast screen-filling magic. Enhancements: Tohru Nakabayashi Wilderness OST, 3 Heroes, Chicken Leg & Dragon mounts, Potions & Death Adder. Controls: 2.5D Move + Attack/Combo(Z) + Jump(X) + Cast Magic(C/Enter)</desc>
-    <rating>0.95</rating>
-    <releasedate>20261019T000000</releasedate>
-    <developer>1989 Sega Arcade</developer>
-    <publisher>Antigravity</publisher>
-    <genre>Fantasy Beat Em Up</genre>
-    <players>1-2</players>
-  </game>
+	<game>
+		<path>./Pokemon Kanto Adventure.sh</path>
+		<name>Pokemon Kanto Adventure (Custom JS Port)</name>
+		<desc>Explore Pallet Town and Route 1 with Pikachu, Charmander, Squirtle, or Bulbasaur, battle wild Pokemon, and catch em all!</desc>
+		<developer>Antigravity</developer>
+		<publisher>Antigravity</publisher>
+		<genre>RPG</genre>
+		<players>1</players>
+		<rating>0.99</rating>
+	</game>
 </gameList>
