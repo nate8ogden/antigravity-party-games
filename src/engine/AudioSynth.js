@@ -39,19 +39,159 @@ function noteToFreq(note) {
   return 440 * Math.pow(2, (midi - 69) / 12);
 }
 
+export const LOBBY_SOUND_THEMES = [
+  {
+    id: 'cello',
+    name: 'CELLO',
+    label: '🎻 CELLO SUITE',
+    title: 'Bach Cello Suite No. 1 — Baroque Allegro',
+    desc: 'Solo acoustic cello with body resonance & bow vibrato'
+  },
+  {
+    id: 'synth',
+    name: 'SYNTH',
+    label: '🎹 NEON SYNTH',
+    title: 'Neon Arcade Synthwave',
+    desc: 'Breezy 80s arcade electronic synth & punchy drums'
+  },
+  {
+    id: 'chill',
+    name: 'CHILL',
+    label: '☕ LO-FI RHODES',
+    title: 'Sunset Lo-Fi Rhodes & Upright Bass',
+    desc: 'Warm electric piano jazz chords with mellow bass'
+  },
+  {
+    id: 'chip',
+    name: '8-BIT',
+    label: '🕹️ 8-BIT CHIP',
+    title: 'Famicom 1983 Chiptune',
+    desc: 'Authentic 2A03 pulse wave retro melodies'
+  }
+];
+
+const CELLO_LOBBY_TRACK = {
+  title: 'Bach Cello Suite No. 1 in G — Baroque Allegro',
+  stepDur: 0.118,
+  leadWave: 'cello',
+  bassWave: 'cello',
+  harmWave: 'cello',
+  leadGain: 0.28,
+  bassGain: 0.24,
+  harmGain: 0.14,
+  lead: [
+    ['G2', 1], ['D3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['D3', 1], ['B3', 1], ['D3', 1],
+    ['G2', 1], ['D3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['D3', 1], ['B3', 1], ['D3', 1],
+    ['G2', 1], ['E3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['E3', 1], ['C4', 1], ['E3', 1],
+    ['G2', 1], ['E3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['E3', 1], ['C4', 1], ['E3', 1],
+    ['G2', 1], ['F#3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['F#3', 1], ['C4', 1], ['F#3', 1],
+    ['G2', 1], ['F#3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['F#3', 1], ['C4', 1], ['F#3', 1],
+    ['G2', 1], ['G3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['G3', 1], ['B3', 1], ['G3', 1],
+    ['G2', 1], ['G3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['G3', 1], ['B3', 1], ['G3', 1],
+    ['G2', 1], ['E3', 1], ['G3', 1], ['F#3', 1], ['G3', 1], ['E3', 1], ['G3', 1], ['E3', 1],
+    ['G2', 1], ['E3', 1], ['G3', 1], ['F#3', 1], ['G3', 1], ['E3', 1], ['G3', 1], ['E3', 1],
+    ['C#3', 1], ['G3', 1], ['A3', 1], ['G3', 1], ['A3', 1], ['G3', 1], ['A3', 1], ['G3', 1],
+    ['C#3', 1], ['G3', 1], ['A3', 1], ['G3', 1], ['A3', 1], ['G3', 1], ['A3', 1], ['G3', 1],
+    ['D3', 1], ['F#3', 1], ['A3', 1], ['G3', 1], ['A3', 1], ['F#3', 1], ['A3', 1], ['F#3', 1],
+    ['D3', 1], ['F#3', 1], ['A3', 1], ['G3', 1], ['A3', 1], ['F#3', 1], ['A3', 1], ['F#3', 1],
+    ['D3', 1], ['F#3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['F#3', 1], ['C4', 1], ['F#3', 1],
+    ['D3', 1], ['F#3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['F#3', 1], ['C4', 1], ['F#3', 1],
+    ['G2', 1], ['G3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['G3', 1], ['B3', 1], ['G3', 1],
+    ['G2', 1], ['G3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['G3', 1], ['B3', 1], ['G3', 1],
+    ['E2', 1], ['G3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['G3', 1], ['B3', 1], ['G3', 1],
+    ['E2', 1], ['G3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['G3', 1], ['B3', 1], ['G3', 1],
+    ['C2', 1], ['E3', 1], ['G3', 1], ['F#3', 1], ['G3', 1], ['E3', 1], ['G3', 1], ['E3', 1],
+    ['C2', 1], ['E3', 1], ['G3', 1], ['F#3', 1], ['G3', 1], ['E3', 1], ['G3', 1], ['E3', 1],
+    ['A2', 1], ['F#3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['F#3', 1], ['C4', 1], ['F#3', 1],
+    ['A2', 1], ['F#3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['F#3', 1], ['C4', 1], ['F#3', 1],
+    ['D2', 1], ['F#3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['F#3', 1], ['C4', 1], ['F#3', 1],
+    ['D2', 1], ['F#3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['F#3', 1], ['C4', 1], ['F#3', 1],
+    ['G2', 1], ['D3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['G3', 1], ['B3', 1], ['D3', 1],
+    ['G2', 1], ['D3', 1], ['G3', 1], ['B3', 1], ['D4', 1], ['B3', 1], ['G3', 1], ['D3', 1],
+    ['C3', 1], ['E3', 1], ['G3', 1], ['C4', 1], ['E4', 1], ['C4', 1], ['G3', 1], ['E3', 1],
+    ['D3', 1], ['F#3', 1], ['A3', 1], ['D4', 1], ['F#4', 1], ['D4', 1], ['A3', 1], ['F#3', 1],
+    ['G2', 2], ['D3', 2], ['B3', 2], ['G3', 2], ['D4', 2], ['B3', 2], ['G4', 4]
+  ],
+  bass: [
+    ['G2', 16], ['G2', 16], ['G2', 16], ['G2', 16],
+    ['E2', 16], ['C#2', 16], ['D2', 16], ['D2', 16],
+    ['G2', 16], ['E2', 16], ['C2', 16], ['A1', 16],
+    ['D2', 16], ['G2', 16], ['C2', 16], ['G1', 16]
+  ],
+  harm: [
+    ['B3', 16], ['C4', 16], ['C4', 16], ['B3', 16],
+    ['G3', 16], ['A3', 16], ['F#3', 16], ['C4', 16],
+    ['B3', 16], ['B3', 16], ['G3', 16], ['C4', 16],
+    ['C4', 16], ['B3', 16], ['G3', 16], ['B3', 16]
+  ]
+};
+
+const CHILL_LOBBY_TRACK = {
+  title: 'Sunset Lo-Fi Rhodes & Upright Bass',
+  stepDur: 0.16,
+  leadWave: 'rhodes',
+  bassWave: 'triangle',
+  harmWave: 'sine',
+  leadGain: 0.22,
+  bassGain: 0.25,
+  harmGain: 0.10,
+  lead: [
+    ['F4', 4], ['A4', 4], ['C5', 4], ['E5', 4],
+    ['E4', 4], ['G4', 4], ['B4', 4], ['D5', 4],
+    ['D4', 4], ['F4', 4], ['A4', 4], ['C5', 4],
+    ['C4', 4], ['E4', 4], ['G4', 4], ['B4', 4],
+    ['D5', 2], ['C5', 2], ['A4', 4], ['G4', 8],
+    ['F4', 2], ['G4', 2], ['A4', 4], ['E4', 8]
+  ],
+  bass: [
+    ['F2', 8], ['C3', 8], ['E2', 8], ['B2', 8],
+    ['D2', 8], ['A2', 8], ['C2', 8], ['G2', 8]
+  ],
+  harm: [
+    ['A3', 16], ['G3', 16], ['F3', 16], ['E3', 16]
+  ],
+  drums: 'K...H...S...H...'
+};
+
+const CHIP_LOBBY_TRACK = {
+  title: 'Famicom 1983 Chiptune',
+  stepDur: 0.13,
+  leadWave: 'square',
+  bassWave: 'triangle',
+  harmWave: 'square',
+  leadGain: 0.18,
+  bassGain: 0.22,
+  harmGain: 0.08,
+  lead: [
+    ['C5', 2], ['E5', 2], ['G5', 2], ['C6', 2],
+    ['B5', 2], ['G5', 2], ['A5', 4],
+    ['F5', 2], ['A5', 2], ['C6', 2], ['F6', 2],
+    ['E6', 2], ['C6', 2], ['D6', 4],
+    ['G5', 2], ['B5', 2], ['D6', 2], ['F6', 2],
+    ['E6', 4], ['C6', 4]
+  ],
+  bass: [
+    ['C3', 4], ['G3', 4], ['C3', 4], ['G3', 4],
+    ['F2', 4], ['C3', 4], ['F2', 4], ['C3', 4],
+    ['G2', 4], ['D3', 4], ['G2', 4], ['D3', 4],
+    ['C3', 8], ['G2', 8]
+  ],
+  harm: [
+    ['E4', 8], ['C4', 8], ['A4', 8], ['F4', 8],
+    ['B4', 8], ['G4', 8], ['C5', 16]
+  ],
+  drums: 'K.H.S.H.K.K.S.H.'
+};
+
 /**
- * 29 Distinct Multi-Voice Chiptune Soundtracks (Selection Lobby + 28 Classic Games).
- * Each track defines:
- * - bpm: Tempo in beats per minute (1 step = 1 sixteenth or eighth note depending on stepBeats)
- * - stepDur: Duration of each step in seconds
- * - leadWave, bassWave, harmWave: Oscillator waveforms
- * - lead: Array of [note, steps] tuples (or single note strings for 1-step notes)
- * - bass: Array of [note, steps] tuples (loops independently)
- * - harm: Optional array of [note, steps] tuples for harmony/arpeggio
- * - drums: Optional string pattern ('K' = Kick, 'S' = Snare, 'H' = Hat, '.' = Rest)
+ * Multi-Voice Chiptune & Cello Soundtracks (Selection Lobby + Classic Games).
  */
 export const SOUNDTRACKS = {
-  "lobby": {
+  "lobby": CELLO_LOBBY_TRACK,
+  "lobby_cello": CELLO_LOBBY_TRACK,
+  "lobby_chill": CHILL_LOBBY_TRACK,
+  "lobby_8bit": CHIP_LOBBY_TRACK,
+  "lobby_synth": {
     "title": "Neon Arcade Lobby",
     "stepDur": 0.14,
     "leadWave": "square",
@@ -36301,16 +36441,67 @@ export class AudioSynth {
     this._sequenceTimer = null;
 
     // Background Music Sequencer State
-    this.currentTrackId = 'lobby';
+    let initialLobbySound = 'cello';
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem('retro_lobby_sound');
+        if (stored) initialLobbySound = stored;
+      }
+    } catch (_) {}
+    this.lobbySoundTheme = initialLobbySound;
+    this._pizziIndex = 0;
+    this.currentTrackId = this.getLobbyTrackId();
     this._musicTimer = null;
     this._musicStep = 0;
     this._nextStepTime = 0;
     this._compiledTracks = {};
   }
 
+  getLobbyTrackId() {
+    if (this.lobbySoundTheme === 'synth') return 'lobby_synth';
+    if (this.lobbySoundTheme === 'chill') return 'lobby_chill';
+    if (this.lobbySoundTheme === '8bit' || this.lobbySoundTheme === 'chip') return 'lobby_8bit';
+    return 'lobby_cello';
+  }
+
+  getLobbySoundTheme() {
+    return this.lobbySoundTheme || 'cello';
+  }
+
+  setLobbySoundTheme(themeId) {
+    const valid = LOBBY_SOUND_THEMES.find((t) => t.id === themeId);
+    this.lobbySoundTheme = valid ? valid.id : 'cello';
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('retro_lobby_sound', this.lobbySoundTheme);
+      }
+    } catch (_) {}
+    if (this.currentTrackId && this.currentTrackId.startsWith('lobby')) {
+      const target = this.getLobbyTrackId();
+      this.playMusic(target, true);
+    }
+    // Preview the sound theme
+    if (this.lobbySoundTheme === 'cello') {
+      this.playCelloPizzicato();
+    } else if (this.lobbySoundTheme === 'chill') {
+      this.playNote(440, 0.08, 'sine', 0.22, 0);
+    } else {
+      this.playNote(520, 0.04, 'square', 0.2, 0);
+    }
+    return this.lobbySoundTheme;
+  }
+
+  cycleLobbySoundTheme() {
+    const idx = LOBBY_SOUND_THEMES.findIndex((t) => t.id === this.lobbySoundTheme);
+    const nextIdx = (idx + 1) % LOBBY_SOUND_THEMES.length;
+    return this.setLobbySoundTheme(LOBBY_SOUND_THEMES[nextIdx].id);
+  }
+
   init() {
     if (!this.ctx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const AudioCtx =
+        (typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext)) ||
+        (typeof globalThis !== 'undefined' && (globalThis.AudioContext || globalThis.webkitAudioContext));
       if (!AudioCtx) return false;
       this.ctx = new AudioCtx();
       this.masterGain = this.ctx.createGain();
@@ -36373,12 +36564,21 @@ export class AudioSynth {
   }
 
   getCurrentTrackTitle() {
-    const spec = SOUNDTRACKS[this.currentTrackId] || SOUNDTRACKS.lobby;
+    let key = this.currentTrackId;
+    if (key === 'lobby' || (key && key.startsWith('lobby'))) {
+      key = this.getLobbyTrackId();
+    }
+    const spec = SOUNDTRACKS[key] || SOUNDTRACKS.lobby;
     return spec ? spec.title : 'Arcade Synth';
   }
 
   _getCompiledTrack(trackId) {
-    const key = SOUNDTRACKS[trackId] ? trackId : 'lobby';
+    let key = SOUNDTRACKS[trackId] ? trackId : 'lobby';
+    if (key === 'lobby') {
+      key = this.getLobbyTrackId();
+    }
+    if (!SOUNDTRACKS[key]) key = 'lobby';
+
     if (!this._compiledTracks[key]) {
       const raw = SOUNDTRACKS[key];
       this._compiledTracks[key] = {
@@ -36396,7 +36596,10 @@ export class AudioSynth {
    * Starts or switches the active background soundtrack ('lobby' or any of the 28 game IDs)
    */
   playMusic(trackId = 'lobby', forceRestart = false) {
-    const normalized = String(trackId || 'lobby').toLowerCase();
+    let normalized = String(trackId || 'lobby').toLowerCase();
+    if (normalized === 'lobby') {
+      normalized = this.getLobbyTrackId();
+    }
     const targetId = SOUNDTRACKS[normalized] ? normalized : 'lobby';
 
     if (this.currentTrackId === targetId && this._musicTimer && !forceRestart) {
@@ -36463,7 +36666,7 @@ export class AudioSynth {
     if (track.leadEvents.length > 0) {
       const ev = track.leadEvents[stepIndex % track.leadEvents.length];
       if (ev && ev.trigger && ev.freq > 0) {
-        const noteDur = Math.max(0.04, ev.steps * stepDur * 0.86);
+        const noteDur = Math.max(0.04, ev.steps * stepDur * 0.88);
         this._scheduleVoice(
           ev.freq,
           startTime,
@@ -36480,7 +36683,7 @@ export class AudioSynth {
     if (track.harmEvents.length > 0) {
       const ev = track.harmEvents[stepIndex % track.harmEvents.length];
       if (ev && ev.trigger && ev.freq > 0) {
-        const noteDur = Math.max(0.04, ev.steps * stepDur * 0.85);
+        const noteDur = Math.max(0.04, ev.steps * stepDur * 0.86);
         this._scheduleVoice(
           ev.freq,
           startTime,
@@ -36497,7 +36700,7 @@ export class AudioSynth {
     if (track.bassEvents.length > 0) {
       const ev = track.bassEvents[stepIndex % track.bassEvents.length];
       if (ev && ev.trigger && ev.freq > 0) {
-        const noteDur = Math.max(0.04, ev.steps * stepDur * 0.78);
+        const noteDur = Math.max(0.04, ev.steps * stepDur * 0.82);
         this._scheduleVoice(
           ev.freq,
           startTime,
@@ -36524,10 +36727,24 @@ export class AudioSynth {
   }
 
   _scheduleVoice(freq, startTime, duration, type, peakGain, dest, vibrato = false) {
+    if (type === 'cello') {
+      return this._scheduleCelloVoice(freq, startTime, duration, peakGain, dest, vibrato);
+    }
+    if (type === 'rhodes') {
+      return this._scheduleRhodesVoice(freq, startTime, duration, peakGain, dest);
+    }
+
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+
     osc.type = type;
     osc.frequency.setValueAtTime(freq, startTime);
+
+    // Warm analog low-pass filter: eliminates harsh 12kHz digital aliasing
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(Math.min(9200, Math.max(850, freq * 5.2 + 1200)), startTime);
+    filter.Q.setValueAtTime(1.15, startTime);
 
     // Subtle arcade pitch shimmer on sustained lead notes
     if (vibrato && duration > 0.24) {
@@ -36536,16 +36753,20 @@ export class AudioSynth {
       osc.frequency.linearRampToValueAtTime(freq, startTime + duration * 0.95);
     }
 
-    gain.gain.setValueAtTime(0.001, startTime);
-    gain.gain.linearRampToValueAtTime(peakGain, startTime + 0.01);
+    // Anti-click smooth envelope
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.linearRampToValueAtTime(peakGain, startTime + 0.006);
     gain.gain.setValueAtTime(peakGain * 0.82, startTime + Math.max(0.015, duration * 0.35));
-    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
 
-    osc.connect(gain);
+    osc.connect(filter);
+    filter.connect(gain);
     gain.connect(dest);
+
     osc.onended = () => {
       try {
         osc.disconnect();
+        filter.disconnect();
         gain.disconnect();
       } catch (_) {}
     };
@@ -36553,24 +36774,185 @@ export class AudioSynth {
     osc.stop(startTime + duration + 0.015);
   }
 
+  /**
+   * Physically modeled acoustic cello synthesis:
+   * - Dual detuned sawtooth string oscillators (+4 cents detune) for organic string chorus
+   * - Low-frequency triangle body resonance layer
+   * - Formant body filter (lowpass with resonance Q=2.2) tracking pitch
+   * - Bowed friction attack with initial 35ms bow bite
+   * - Delayed human-rate vibrato (5.2 Hz LFO blossoming after note onset)
+   */
+  _scheduleCelloVoice(freq, startTime, duration, peakGain, dest, isLead = true) {
+    if (!this.ctx) return;
+    const now = startTime;
+
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    const subOsc = this.ctx.createOscillator();
+
+    osc1.type = 'sawtooth';
+    osc2.type = 'sawtooth';
+    subOsc.type = 'triangle';
+
+    osc1.frequency.setValueAtTime(freq, now);
+    osc2.frequency.setValueAtTime(freq * 1.0024, now); // +4 cents detune for rich string phasing
+    subOsc.frequency.setValueAtTime(freq < 160 ? freq : freq * 0.5, now);
+
+    // Expressive delayed cello vibrato (5.2 Hz LFO)
+    if (duration > 0.16) {
+      try {
+        const lfo = this.ctx.createOscillator();
+        const lfoGain = this.ctx.createGain();
+        lfo.type = 'sine';
+        lfo.frequency.setValueAtTime(5.2, now);
+        const vibOnset = now + Math.min(0.12, duration * 0.32);
+        lfoGain.gain.setValueAtTime(0, now);
+        lfoGain.gain.setValueAtTime(0, vibOnset);
+        lfoGain.gain.linearRampToValueAtTime(freq * 0.0085, vibOnset + Math.min(0.16, duration * 0.45));
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc1.frequency);
+        lfoGain.connect(osc2.frequency);
+        lfo.start(now);
+        lfo.stop(now + duration + 0.06);
+      } catch (_) {}
+    }
+
+    // Wooden cello body resonant filter
+    const bodyFilter = this.ctx.createBiquadFilter();
+    bodyFilter.type = 'lowpass';
+    const cutoff = Math.min(3400, Math.max(480, freq * 2.6 + 240));
+    bodyFilter.frequency.setValueAtTime(cutoff + 600, now);
+    bodyFilter.frequency.linearRampToValueAtTime(cutoff, now + 0.035);
+    bodyFilter.Q.setValueAtTime(2.2, now);
+
+    const gain1 = this.ctx.createGain();
+    const gain2 = this.ctx.createGain();
+    const subGain = this.ctx.createGain();
+    const masterVoiceGain = this.ctx.createGain();
+
+    gain1.gain.value = 0.58;
+    gain2.gain.value = 0.42;
+    subGain.gain.value = 0.28;
+
+    osc1.connect(gain1);
+    osc2.connect(gain2);
+    subOsc.connect(subGain);
+
+    gain1.connect(bodyFilter);
+    gain2.connect(bodyFilter);
+    subGain.connect(bodyFilter);
+    bodyFilter.connect(masterVoiceGain);
+
+    // Natural bowed swell
+    const attackDur = Math.min(0.046, duration * 0.25);
+    masterVoiceGain.gain.setValueAtTime(0.0001, now);
+    masterVoiceGain.gain.linearRampToValueAtTime(peakGain, now + attackDur);
+    masterVoiceGain.gain.setValueAtTime(peakGain * 0.88, now + Math.max(attackDur + 0.01, duration * 0.4));
+    masterVoiceGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    masterVoiceGain.connect(dest);
+
+    osc1.onended = () => {
+      try {
+        osc1.disconnect();
+        osc2.disconnect();
+        subOsc.disconnect();
+        gain1.disconnect();
+        gain2.disconnect();
+        subGain.disconnect();
+        bodyFilter.disconnect();
+        masterVoiceGain.disconnect();
+      } catch (_) {}
+    };
+
+    osc1.start(now);
+    osc2.start(now);
+    subOsc.start(now);
+
+    const stopTime = now + duration + 0.02;
+    osc1.stop(stopTime);
+    osc2.stop(stopTime);
+    subOsc.stop(stopTime);
+  }
+
+  _scheduleRhodesVoice(freq, startTime, duration, peakGain, dest) {
+    if (!this.ctx) return;
+    const now = startTime;
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    osc1.type = 'sine';
+    osc2.type = 'triangle';
+    osc1.frequency.setValueAtTime(freq, now);
+    osc2.frequency.setValueAtTime(freq * 2, now);
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(Math.min(3200, freq * 3.5 + 400), now);
+
+    const gain1 = this.ctx.createGain();
+    const gain2 = this.ctx.createGain();
+    const masterGain = this.ctx.createGain();
+
+    gain1.gain.value = 0.75;
+    gain2.gain.value = 0.25;
+
+    osc1.connect(gain1);
+    osc2.connect(gain2);
+    gain1.connect(filter);
+    gain2.connect(filter);
+    filter.connect(masterGain);
+
+    masterGain.gain.setValueAtTime(0.0001, now);
+    masterGain.gain.linearRampToValueAtTime(peakGain, now + 0.012);
+    masterGain.gain.exponentialRampToValueAtTime(peakGain * 0.35, now + Math.min(0.2, duration * 0.4));
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    masterGain.connect(dest);
+
+    osc1.onended = () => {
+      try {
+        osc1.disconnect();
+        osc2.disconnect();
+        gain1.disconnect();
+        gain2.disconnect();
+        filter.disconnect();
+        masterGain.disconnect();
+      } catch (_) {}
+    };
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + duration + 0.02);
+    osc2.stop(now + duration + 0.02);
+  }
+
   _scheduleDrumKick(startTime, dest) {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(125, startTime);
-    osc.frequency.exponentialRampToValueAtTime(36, startTime + 0.085);
-    gain.gain.setValueAtTime(0.22, startTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.09);
-    osc.connect(gain);
+    osc.frequency.setValueAtTime(145, startTime);
+    osc.frequency.exponentialRampToValueAtTime(34, startTime + 0.09);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(450, startTime);
+
+    gain.gain.setValueAtTime(0.26, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.095);
+
+    osc.connect(filter);
+    filter.connect(gain);
     gain.connect(dest);
+
     osc.onended = () => {
       try {
         osc.disconnect();
+        filter.disconnect();
         gain.disconnect();
       } catch (_) {}
     };
     osc.start(startTime);
-    osc.stop(startTime + 0.095);
+    osc.stop(startTime + 0.1);
   }
 
   _scheduleDrumSnare(startTime, dest) {
@@ -36578,17 +36960,32 @@ export class AudioSynth {
     const source = this.ctx.createBufferSource();
     source.buffer = this._noiseBuffer;
 
+    // Body tone for punchy snare pop
+    const bodyOsc = this.ctx.createOscillator();
+    const bodyGain = this.ctx.createGain();
+    bodyOsc.type = 'triangle';
+    bodyOsc.frequency.setValueAtTime(185, startTime);
+    bodyOsc.frequency.exponentialRampToValueAtTime(80, startTime + 0.05);
+    bodyGain.gain.setValueAtTime(0.14, startTime);
+    bodyGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.055);
+    bodyOsc.connect(bodyGain);
+    bodyGain.connect(dest);
+    bodyOsc.start(startTime);
+    bodyOsc.stop(startTime + 0.06);
+
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(1400, startTime);
+    filter.frequency.setValueAtTime(1600, startTime);
+    filter.Q.setValueAtTime(1.8, startTime);
 
     const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0.12, startTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.08);
+    gain.gain.setValueAtTime(0.14, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.085);
 
     source.connect(filter);
     filter.connect(gain);
     gain.connect(dest);
+
     source.onended = () => {
       try {
         source.disconnect();
@@ -36597,7 +36994,7 @@ export class AudioSynth {
       } catch (_) {}
     };
     source.start(startTime);
-    source.stop(startTime + 0.085);
+    source.stop(startTime + 0.09);
   }
 
   _scheduleDrumHat(startTime, dest) {
@@ -36607,11 +37004,11 @@ export class AudioSynth {
 
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'highpass';
-    filter.frequency.setValueAtTime(5200, startTime);
+    filter.frequency.setValueAtTime(6500, startTime);
 
     const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0.045, startTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.035);
+    gain.gain.setValueAtTime(0.048, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.038);
 
     source.connect(filter);
     filter.connect(gain);
@@ -36624,7 +37021,7 @@ export class AudioSynth {
       } catch (_) {}
     };
     source.start(startTime);
-    source.stop(startTime + 0.04);
+    source.stop(startTime + 0.042);
   }
 
   /**
@@ -37235,18 +37632,91 @@ export class AudioSynth {
   }
 
   /**
-   * UI Menu Move / Blip
+   * UI Menu Move / Navigation Blip or Cello Pizzicato Pluck
    */
   playMenuMove() {
-    this.playNote(520, 0.035, 'square', 0.16, 0);
+    if (this.lobbySoundTheme === 'cello') {
+      this.playCelloPizzicato();
+    } else if (this.lobbySoundTheme === 'chill') {
+      this.playNote(440, 0.045, 'sine', 0.16, 0);
+    } else {
+      this.playNote(520, 0.035, 'square', 0.16, 0);
+    }
   }
 
   /**
-   * UI Menu Select
+   * UI Menu Select / Cabinet Launch or Cello Bowed Chord
    */
   playMenuSelect() {
-    this.playNote(523.25, 0.05, 'square', 0.24, 0);
-    this.playNote(783.99, 0.09, 'square', 0.24, 0.05);
+    if (this.lobbySoundTheme === 'cello') {
+      this.playCelloBowedChord();
+    } else if (this.lobbySoundTheme === 'chill') {
+      this.playNote(523.25, 0.08, 'sine', 0.22, 0);
+      this.playNote(783.99, 0.14, 'sine', 0.22, 0.06);
+    } else {
+      this.playNote(523.25, 0.05, 'square', 0.24, 0);
+      this.playNote(783.99, 0.09, 'square', 0.24, 0.05);
+    }
+  }
+
+  /**
+   * Resonant Acoustic Cello Pizzicato Note (C3, G3, D3, A3 open cello string plucks)
+   */
+  playCelloPizzicato(note = null) {
+    if (!this._ensureReady()) return;
+    const notes = [130.81, 196.00, 146.83, 220.00]; // C3, G3, D3, A3 (Open Cello Strings)
+    if (typeof this._pizziIndex !== 'number') this._pizziIndex = 0;
+    const freq = note ? (typeof note === 'number' ? note : noteToFreq(note)) : notes[this._pizziIndex % notes.length];
+    this._pizziIndex++;
+
+    const now = this.ctx.currentTime;
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    const filter = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+
+    osc1.type = 'sawtooth';
+    osc2.type = 'triangle';
+    osc1.frequency.setValueAtTime(freq, now);
+    osc2.frequency.setValueAtTime(freq, now);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1900, now);
+    filter.frequency.exponentialRampToValueAtTime(340, now + 0.16);
+    filter.Q.setValueAtTime(3.0, now); // Wooden soundboard thump
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.24, now + 0.004); // Fast snap pluck
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+    osc1.connect(filter);
+    osc2.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc1.onended = () => {
+      try {
+        osc1.disconnect();
+        osc2.disconnect();
+        filter.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.24);
+    osc2.stop(now + 0.24);
+  }
+
+  /**
+   * Rich Bowed Cello Double-Stop Chord (C3 + G3 swelling into C4)
+   */
+  playCelloBowedChord() {
+    if (!this._ensureReady()) return;
+    const now = this.ctx.currentTime;
+    this._scheduleCelloVoice(130.81, now, 0.38, 0.22, this.masterGain, true); // C3
+    this._scheduleCelloVoice(196.00, now + 0.035, 0.36, 0.20, this.masterGain, true); // G3
+    this._scheduleCelloVoice(261.63, now + 0.11, 0.44, 0.24, this.masterGain, true); // C4
   }
 
   /**

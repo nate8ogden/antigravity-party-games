@@ -11,6 +11,7 @@ import {
   SaveStateManager,
   achievementManager
 } from '../engine/CloudPersistence.js';
+import { LOBBY_SOUND_THEMES } from '../engine/AudioSynth.js';
 
 export const GAME_CATALOG = [
   // === 8 CORE ARCHETYPES ===
@@ -652,6 +653,45 @@ const SORT_MODES = [
   { id: 'most_played', label: 'SORT: 🔥 MOST PLAYED' }
 ];
 
+export const LOBBY_BACKGROUND_THEMES = [
+  {
+    id: 'sunset',
+    name: 'SUNSET',
+    label: '🌅 NEON SUNSET',
+    desc: 'OutRun Synthwave Twilight & Scanline Sun'
+  },
+  {
+    id: 'grid',
+    name: 'GRID',
+    label: '🌐 CYBER GRID',
+    desc: 'Classic Perspective Cyan Vector Floor & Horizon'
+  },
+  {
+    id: 'matrix',
+    name: 'MATRIX',
+    label: '🟢 MATRIX RAIN',
+    desc: 'Falling Green Phosphor Digital Rain & Glyphs'
+  },
+  {
+    id: 'nebula',
+    name: 'NEBULA',
+    label: '🌌 COSMIC NEBULA',
+    desc: 'Deep Violet Cosmic Dust, Starfield & Comets'
+  },
+  {
+    id: 'arcade',
+    name: 'CARPET',
+    label: '🕹️ ARCADE CARPET',
+    desc: 'Nostalgic 80s Geometric Neon Carpet Pattern'
+  },
+  {
+    id: 'minimal',
+    name: 'CARBON',
+    label: '⬛ DARK CARBON',
+    desc: 'Sleek Modern Carbon Weave & Indigo Vignette'
+  }
+];
+
 export class MainMenu {
   constructor(renderer, input, audio, onSelectGame) {
     this.renderer = renderer;
@@ -671,6 +711,105 @@ export class MainMenu {
     this.cardFavHitboxes = [];
     this.inspectorStarRects = [];
     this.inspectorFavRect = null;
+
+    // Lobby Background & Sound Customization State
+    let initialBg = 'sunset';
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem('retro_lobby_bg');
+        if (stored) initialBg = stored;
+      }
+    } catch (_) {}
+    this.backgroundTheme = initialBg;
+
+    // Interactive header button hitboxes
+    this.bgButtonRect = { x: 20, y: 16, w: 145, h: 22 };
+    this.soundButtonRect = { x: 795, y: 16, w: 145, h: 22 };
+
+    // Background particle & animation states
+    this.matrixDrops = Array.from({ length: 42 }, () => ({
+      x: Math.random() * 960,
+      y: Math.random() * 540,
+      speed: 160 + Math.random() * 220,
+      chars: Array.from({ length: 8 }, () => String.fromCharCode(0x30a0 + Math.floor(Math.random() * 96)))
+    }));
+
+    this.nebulaStars = Array.from({ length: 75 }, () => ({
+      x: Math.random() * 960,
+      y: Math.random() * 540,
+      size: 0.8 + Math.random() * 2.2,
+      twinkleSpeed: 1.5 + Math.random() * 3.5,
+      phase: Math.random() * Math.PI * 2,
+      color: Math.random() < 0.35 ? '#00F0FF' : Math.random() < 0.6 ? '#FFD700' : '#FFFFFF'
+    }));
+    this.comet = { active: false, x: 0, y: 0, vx: 0, vy: 0, life: 0, timer: 3.5 };
+
+    this.carpetShapes = Array.from({ length: 36 }, () => ({
+      x: Math.random() * 960,
+      y: Math.random() * 540,
+      type: Math.floor(Math.random() * 3), // 0: triangle, 1: zigzag, 2: diamond
+      color: ['#FF007A', '#00F0FF', '#FFD700', '#10B981'][Math.floor(Math.random() * 4)],
+      size: 14 + Math.random() * 18,
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.8
+    }));
+  }
+
+  setBackgroundTheme(themeId) {
+    const valid = LOBBY_BACKGROUND_THEMES.find((t) => t.id === themeId);
+    this.backgroundTheme = valid ? valid.id : 'sunset';
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('retro_lobby_bg', this.backgroundTheme);
+      }
+    } catch (_) {}
+    if (
+      typeof window !== 'undefined' &&
+      window.arcadeStudio &&
+      typeof window.arcadeStudio._syncLobbyCustomizationButtons === 'function'
+    ) {
+      window.arcadeStudio._syncLobbyCustomizationButtons();
+    }
+    return this.backgroundTheme;
+  }
+
+  cycleBackgroundTheme() {
+    const curIdx = LOBBY_BACKGROUND_THEMES.findIndex((t) => t.id === this.backgroundTheme);
+    const nextIdx = (curIdx + 1) % LOBBY_BACKGROUND_THEMES.length;
+    const nextTheme = LOBBY_BACKGROUND_THEMES[nextIdx];
+    this.setBackgroundTheme(nextTheme.id);
+    this.audio.playCoin();
+    achievementManager.pushToast(
+      `🎨 LOBBY THEME: ${nextTheme.name}`,
+      nextTheme.desc,
+      PALETTE.CYAN
+    );
+    return nextTheme.id;
+  }
+
+  setSoundTheme(themeId) {
+    if (!this.audio || typeof this.audio.setLobbySoundTheme !== 'function') return 'cello';
+    const active = this.audio.setLobbySoundTheme(themeId);
+    if (
+      typeof window !== 'undefined' &&
+      window.arcadeStudio &&
+      typeof window.arcadeStudio._syncLobbyCustomizationButtons === 'function'
+    ) {
+      window.arcadeStudio._syncLobbyCustomizationButtons();
+    }
+    return active;
+  }
+
+  cycleSoundTheme() {
+    if (!this.audio || typeof this.audio.cycleLobbySoundTheme !== 'function') return 'cello';
+    const active = this.audio.cycleLobbySoundTheme();
+    const info = LOBBY_SOUND_THEMES.find((t) => t.id === active) || LOBBY_SOUND_THEMES[0];
+    achievementManager.pushToast(
+      `🎵 SOUND THEME: ${info.name}`,
+      info.desc,
+      PALETTE.GOLD
+    );
+    return active;
   }
 
   getSortMode() {
@@ -1947,6 +2086,14 @@ export class MainMenu {
     }
     const activeGame = list[this.selectedIndex] || list[0];
 
+    // Hotkey shortcuts for Lobby Customization (B: Background, M: Sound/Music):
+    if (this.input.isKeyJustPressed('KeyB')) {
+      this.cycleBackgroundTheme();
+    }
+    if (this.input.isKeyJustPressed('KeyM')) {
+      this.cycleSoundTheme();
+    }
+
     // Tab toggle with Action B (X / Shift) or Gamepad L1 / R1
     if (
       this.input.isJustPressed('actionB') ||
@@ -2056,6 +2203,28 @@ export class MainMenu {
     const py = this.input.pointer.y;
 
     if (this.input.pointer.justPressed) {
+      // Check Lobby Background Pill click
+      if (
+        px >= this.bgButtonRect.x &&
+        px <= this.bgButtonRect.x + this.bgButtonRect.w &&
+        py >= this.bgButtonRect.y &&
+        py <= this.bgButtonRect.y + this.bgButtonRect.h
+      ) {
+        this.cycleBackgroundTheme();
+        return;
+      }
+
+      // Check Lobby Sound Pill click
+      if (
+        px >= this.soundButtonRect.x &&
+        px <= this.soundButtonRect.x + this.soundButtonRect.w &&
+        py >= this.soundButtonRect.y &&
+        py <= this.soundButtonRect.y + this.soundButtonRect.h
+      ) {
+        this.cycleSoundTheme();
+        return;
+      }
+
       // Check tab & sort button clicks
       for (const tab of this.tabRects) {
         if (px >= tab.x && px <= tab.x + tab.w && py >= tab.y && py <= tab.y + tab.h) {
@@ -2158,32 +2327,384 @@ export class MainMenu {
     }
   }
 
+  _drawLobbyBackground(ctx, W, H) {
+    const t = this.animTime;
+    const theme = this.backgroundTheme;
+
+    if (theme === 'sunset') {
+      // 1. NEON SUNSET BOULEVARD
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, 240);
+      skyGrad.addColorStop(0, '#0B0726');
+      skyGrad.addColorStop(0.55, '#3B0764');
+      skyGrad.addColorStop(0.85, '#FF007A');
+      skyGrad.addColorStop(1, '#FF8800');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, W, 240);
+
+      // Radiant OutRun Sun with scanline grooves
+      const sunX = W / 2;
+      const sunY = 175;
+      const sunR = 52;
+      ctx.save();
+      ctx.shadowColor = '#FF007A';
+      ctx.shadowBlur = 24;
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath();
+      ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = '#0B0726';
+      for (let s = 0; s < 5; s++) {
+        ctx.fillRect(sunX - sunR - 8, sunY - 14 + s * 13, (sunR + 8) * 2, 3 + s * 1.5);
+      }
+
+      // Parallax Vector Mountain Ridges
+      ctx.strokeStyle = 'rgba(184, 41, 255, 0.45)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, 240);
+      for (let x = 0; x <= W; x += 32) {
+        const my = 205 + Math.sin(x * 0.015 + 1.2) * 26 + Math.cos(x * 0.038) * 14;
+        ctx.lineTo(x, my);
+      }
+      ctx.lineTo(W, 240);
+      ctx.stroke();
+
+      // Lower ground floor with synthwave perspective grid
+      ctx.fillStyle = '#090514';
+      ctx.fillRect(0, 240, W, H - 240);
+
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 0, 122, 0.22)';
+      ctx.lineWidth = 1;
+      const horizonY = 240;
+      // Vanishing perspective lines
+      for (let x = -W; x <= W * 2; x += 64) {
+        ctx.beginPath();
+        ctx.moveTo(W / 2, horizonY);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+      }
+      // Horizontal scrolling grid lines
+      const floorSpeed = (t * 42) % 36;
+      for (let y = horizonY + floorSpeed; y <= H; y += 28) {
+        const p = (y - horizonY) / (H - horizonY);
+        ctx.strokeStyle = `rgba(0, 240, 255, ${0.08 + p * 0.25})`;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+
+      // Swaying palm silhouettes on edges
+      const palmSway = Math.sin(t * 1.6) * 6;
+      ctx.fillStyle = 'rgba(11, 7, 38, 0.85)';
+      // Left Palm Trunk
+      ctx.beginPath();
+      ctx.moveTo(12, H);
+      ctx.quadraticCurveTo(24, 180, 48 + palmSway, 120);
+      ctx.lineTo(54 + palmSway, 120);
+      ctx.quadraticCurveTo(30, 180, 18, H);
+      ctx.fill();
+      // Left Palm Fronds
+      for (let a = -1.2; a <= 1.2; a += 0.5) {
+        ctx.beginPath();
+        ctx.moveTo(50 + palmSway, 120);
+        ctx.quadraticCurveTo(
+          50 + palmSway + Math.cos(a) * 45,
+          120 + Math.sin(a) * 35,
+          50 + palmSway + Math.cos(a) * 75,
+          135 + Math.sin(a) * 55
+        );
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = 'rgba(11, 7, 38, 0.9)';
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    } else if (theme === 'matrix') {
+      // 2. MATRIX DIGITAL RAIN
+      ctx.fillStyle = '#020C06';
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.save();
+      ctx.font = '11px monospace';
+      for (const drop of this.matrixDrops) {
+        drop.y += drop.speed * (1 / 60);
+        if (drop.y > H + 120) {
+          drop.y = -80;
+          drop.x = Math.random() * W;
+        }
+        for (let i = 0; i < drop.chars.length; i++) {
+          const charY = drop.y - i * 14;
+          if (charY < -10 || charY > H) continue;
+          if (i === 0) {
+            ctx.fillStyle = '#E6FFFA';
+            ctx.shadowColor = '#00FF66';
+            ctx.shadowBlur = 8;
+          } else {
+            const alpha = Math.max(0.1, 1 - i / drop.chars.length);
+            ctx.fillStyle = `rgba(0, 255, 102, ${alpha * 0.75})`;
+            ctx.shadowBlur = 0;
+          }
+          ctx.fillText(drop.chars[i], drop.x, charY);
+        }
+      }
+      ctx.restore();
+    } else if (theme === 'nebula') {
+      // 3. COSMIC NEBULA & STARS
+      ctx.fillStyle = '#040412';
+      ctx.fillRect(0, 0, W, H);
+
+      // Glowing radial nebulae
+      const nebulae = [
+        { x: W * 0.25, y: H * 0.35, r: 240, color: 'rgba(147, 51, 234, 0.14)' },
+        { x: W * 0.75, y: H * 0.65, r: 280, color: 'rgba(59, 130, 246, 0.12)' },
+        { x: W * 0.5, y: H * 0.45, r: 210, color: 'rgba(236, 72, 153, 0.10)' }
+      ];
+      for (const n of nebulae) {
+        const pulse = 1 + Math.sin(t * 0.8 + n.x) * 0.08;
+        const grad = ctx.createRadialGradient(n.x, n.y, 10, n.x, n.y, n.r * pulse);
+        grad.addColorStop(0, n.color);
+        grad.addColorStop(1, 'rgba(4, 4, 18, 0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      // Twinkling multi-colored stars
+      ctx.save();
+      for (const s of this.nebulaStars) {
+        const tw = 0.4 + 0.6 * Math.sin(t * s.twinkleSpeed + s.phase);
+        ctx.fillStyle = s.color;
+        ctx.globalAlpha = tw;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size * (0.8 + tw * 0.4), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1.0;
+
+      // Shooting Comet
+      this.comet.timer -= 1 / 60;
+      if (this.comet.timer <= 0 && !this.comet.active) {
+        this.comet.active = true;
+        this.comet.x = Math.random() * W * 0.7;
+        this.comet.y = Math.random() * (H * 0.4);
+        this.comet.vx = 480 + Math.random() * 220;
+        this.comet.vy = 280 + Math.random() * 140;
+        this.comet.life = 0.85;
+      }
+      if (this.comet.active) {
+        this.comet.life -= 1 / 60;
+        this.comet.x += this.comet.vx * (1 / 60);
+        this.comet.y += this.comet.vy * (1 / 60);
+
+        ctx.strokeStyle = `rgba(0, 240, 255, ${this.comet.life})`;
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#00F0FF';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.moveTo(this.comet.x, this.comet.y);
+        ctx.lineTo(this.comet.x - this.comet.vx * 0.08, this.comet.y - this.comet.vy * 0.08);
+        ctx.stroke();
+
+        if (this.comet.life <= 0 || this.comet.x > W || this.comet.y > H) {
+          this.comet.active = false;
+          this.comet.timer = 4.0 + Math.random() * 5.0;
+        }
+      }
+      ctx.restore();
+    } else if (theme === 'arcade') {
+      // 4. RETRO 80s ARCADE CARPET
+      ctx.fillStyle = '#0B0D1B';
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.save();
+      // Floating neon geometric carpet shapes
+      for (const sh of this.carpetShapes) {
+        sh.rot += sh.rotSpeed * (1 / 60);
+        ctx.save();
+        ctx.translate(sh.x, sh.y);
+        ctx.rotate(sh.rot);
+        ctx.strokeStyle = sh.color;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = sh.color;
+        ctx.shadowBlur = 6;
+
+        if (sh.type === 0) {
+          // Neon Triangle
+          ctx.beginPath();
+          ctx.moveTo(0, -sh.size);
+          ctx.lineTo(sh.size * 0.86, sh.size * 0.5);
+          ctx.lineTo(-sh.size * 0.86, sh.size * 0.5);
+          ctx.closePath();
+          ctx.stroke();
+        } else if (sh.type === 1) {
+          // Neon Zigzag squiggle
+          ctx.beginPath();
+          ctx.moveTo(-sh.size * 0.7, -sh.size * 0.4);
+          ctx.lineTo(-sh.size * 0.2, sh.size * 0.4);
+          ctx.lineTo(sh.size * 0.2, -sh.size * 0.4);
+          ctx.lineTo(sh.size * 0.7, sh.size * 0.4);
+          ctx.stroke();
+        } else {
+          // Neon Diamond
+          ctx.beginPath();
+          ctx.moveTo(0, -sh.size * 0.7);
+          ctx.lineTo(sh.size * 0.7, 0);
+          ctx.lineTo(0, sh.size * 0.7);
+          ctx.lineTo(-sh.size * 0.7, 0);
+          ctx.closePath();
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+      ctx.restore();
+    } else if (theme === 'minimal') {
+      // 5. DARK CARBON MATRIX
+      ctx.fillStyle = '#0A0C14';
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
+      ctx.lineWidth = 1;
+      for (let d = -H; d < W + H; d += 12) {
+        ctx.beginPath();
+        ctx.moveTo(d, 0);
+        ctx.lineTo(d + H, H);
+        ctx.stroke();
+      }
+      for (let d = 0; d < W + H * 2; d += 12) {
+        ctx.beginPath();
+        ctx.moveTo(d, 0);
+        ctx.lineTo(d - H, H);
+        ctx.stroke();
+      }
+      // Radial vignette
+      const vign = ctx.createRadialGradient(W / 2, H / 2, W * 0.2, W / 2, H / 2, W * 0.7);
+      vign.addColorStop(0, 'rgba(10, 12, 20, 0)');
+      vign.addColorStop(1, 'rgba(3, 4, 8, 0.82)');
+      ctx.fillStyle = vign;
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    } else {
+      // 6. DEFAULT CYBER SYNTH GRID
+      ctx.fillStyle = PALETTE.BG;
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.08)';
+      ctx.lineWidth = 1;
+      const gridOffset = (t * 24) % 40;
+      for (let x = 0; x <= W; x += 48) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+      }
+      for (let y = gridOffset; y <= H; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
   render(ctx = this.renderer.ctx) {
     const W = this.renderer.width;
     const H = this.renderer.height;
     const scores = HighScoreStore.loadAll();
 
-    // Deep space background with perspective synth grid
-    ctx.fillStyle = PALETTE.BG;
-    ctx.fillRect(0, 0, W, H);
+    // 1. Draw Customizable Animated Background
+    this._drawLobbyBackground(ctx, W, H);
+
+    // 2. Customization Pills (Header Top Left & Right)
+    const px = this.input.pointer.x;
+    const py = this.input.pointer.y;
+
+    // Background Pill (Top Left)
+    const bgInfo =
+      LOBBY_BACKGROUND_THEMES.find((b) => b.id === this.backgroundTheme) ||
+      LOBBY_BACKGROUND_THEMES[0];
+    const bgHover =
+      px >= this.bgButtonRect.x &&
+      px <= this.bgButtonRect.x + this.bgButtonRect.w &&
+      py >= this.bgButtonRect.y &&
+      py <= this.bgButtonRect.y + this.bgButtonRect.h;
 
     ctx.save();
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.08)';
-    ctx.lineWidth = 1;
-    const gridOffset = (this.animTime * 24) % 40;
-    for (let x = 0; x <= W; x += 48) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, H);
-      ctx.stroke();
+    ctx.fillStyle = bgHover ? 'rgba(0, 240, 255, 0.22)' : 'rgba(19, 27, 46, 0.88)';
+    ctx.strokeStyle = bgHover ? PALETTE.CYAN : 'rgba(0, 240, 255, 0.40)';
+    ctx.lineWidth = bgHover ? 2 : 1;
+    if (bgHover) {
+      ctx.shadowColor = PALETTE.CYAN;
+      ctx.shadowBlur = 10;
     }
-    for (let y = gridOffset; y <= H; y += 40) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(W, y);
-      ctx.stroke();
-    }
+    ctx.fillRect(this.bgButtonRect.x, this.bgButtonRect.y, this.bgButtonRect.w, this.bgButtonRect.h);
+    ctx.strokeRect(this.bgButtonRect.x, this.bgButtonRect.y, this.bgButtonRect.w, this.bgButtonRect.h);
     ctx.restore();
+
+    this.renderer.drawText(
+      `🎨 BG: ${bgInfo.name} [B]`,
+      this.bgButtonRect.x + this.bgButtonRect.w / 2,
+      this.bgButtonRect.y + 15,
+      {
+        font: FONTS.HUD,
+        size: 9.8,
+        color: bgHover ? PALETTE.CYAN : PALETTE.WHITE,
+        align: 'center'
+      }
+    );
+
+    // Sound Pill (Top Right)
+    const activeSoundId = this.audio
+      ? typeof this.audio.getLobbySoundTheme === 'function'
+        ? this.audio.getLobbySoundTheme()
+        : 'cello'
+      : 'cello';
+    const sndInfo =
+      LOBBY_SOUND_THEMES.find((s) => s.id === activeSoundId) || LOBBY_SOUND_THEMES[0];
+    const sndHover =
+      px >= this.soundButtonRect.x &&
+      px <= this.soundButtonRect.x + this.soundButtonRect.w &&
+      py >= this.soundButtonRect.y &&
+      py <= this.soundButtonRect.y + this.soundButtonRect.h;
+
+    ctx.save();
+    ctx.fillStyle = sndHover ? 'rgba(255, 215, 0, 0.22)' : 'rgba(19, 27, 46, 0.88)';
+    ctx.strokeStyle = sndHover ? PALETTE.GOLD : 'rgba(255, 215, 0, 0.40)';
+    ctx.lineWidth = sndHover ? 2 : 1;
+    if (sndHover) {
+      ctx.shadowColor = PALETTE.GOLD;
+      ctx.shadowBlur = 10;
+    }
+    ctx.fillRect(
+      this.soundButtonRect.x,
+      this.soundButtonRect.y,
+      this.soundButtonRect.w,
+      this.soundButtonRect.h
+    );
+    ctx.strokeRect(
+      this.soundButtonRect.x,
+      this.soundButtonRect.y,
+      this.soundButtonRect.w,
+      this.soundButtonRect.h
+    );
+    ctx.restore();
+
+    this.renderer.drawText(
+      `${sndInfo.label} [M]`,
+      this.soundButtonRect.x + this.soundButtonRect.w / 2,
+      this.soundButtonRect.y + 15,
+      {
+        font: FONTS.HUD,
+        size: 9.8,
+        color: sndHover ? PALETTE.GOLD : PALETTE.WHITE,
+        align: 'center'
+      }
+    );
 
     // Header Banner
     this.renderer.drawText('RETRO ARCADE STUDIO', W / 2, 30, {

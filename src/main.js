@@ -625,6 +625,28 @@ export class RetroArcadeStudio {
       });
     }
 
+    const btnLobbyBg = document.getElementById('btn-lobby-bg');
+    if (btnLobbyBg) {
+      btnLobbyBg.addEventListener('click', () => {
+        this.audio.init();
+        if (this.mainMenu && typeof this.mainMenu.cycleBackgroundTheme === 'function') {
+          this.mainMenu.cycleBackgroundTheme();
+          this._syncLobbyCustomizationButtons();
+        }
+      });
+    }
+
+    const btnLobbySound = document.getElementById('btn-lobby-sound');
+    if (btnLobbySound) {
+      btnLobbySound.addEventListener('click', () => {
+        this.audio.init();
+        if (this.mainMenu && typeof this.mainMenu.cycleSoundTheme === 'function') {
+          this.mainMenu.cycleSoundTheme();
+          this._syncLobbyCustomizationButtons();
+        }
+      });
+    }
+
     const btnFav = document.getElementById('btn-fav-game');
     if (btnFav) {
       btnFav.addEventListener('click', () => {
@@ -734,6 +756,21 @@ export class RetroArcadeStudio {
     }
 
     this._syncFavoriteButton();
+    this._syncLobbyCustomizationButtons();
+  }
+
+  _syncLobbyCustomizationButtons() {
+    const btnLobbyBg = document.getElementById('btn-lobby-bg');
+    if (btnLobbyBg && this.mainMenu) {
+      const bg = this.mainMenu.backgroundTheme || 'sunset';
+      btnLobbyBg.textContent = `🎨 BG: ${bg.toUpperCase()}`;
+    }
+    const btnLobbySound = document.getElementById('btn-lobby-sound');
+    if (btnLobbySound && this.audio) {
+      const snd = typeof this.audio.getLobbySoundTheme === 'function' ? this.audio.getLobbySoundTheme() : 'cello';
+      btnLobbySound.textContent = `🎻 SOUND: ${snd.toUpperCase()}`;
+      btnLobbySound.classList.toggle('active', true);
+    }
   }
 
   /**
@@ -798,6 +835,7 @@ export class RetroArcadeStudio {
     this.audio.playMusic('lobby', true);
     this._syncHeaderStatus();
     this._syncFavoriteButton();
+    this._syncLobbyCustomizationButtons();
   }
 
   _cleanupCurrentGame() {

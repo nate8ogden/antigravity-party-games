@@ -588,6 +588,8 @@
       <button type="button" class="deck-btn" id="btn-speed" title="Cycle Emulator Clock Speed (0.5x / 1x / 1.5x / 2x) or [.] Frame-Step">⚡ 1x</button>
       <button type="button" class="deck-btn" id="btn-turbo" title="Toggle 15Hz Rapid-Fire Turbo on Action A">🔥 TURBO: OFF</button>
       <button type="button" class="deck-btn" id="btn-dip" title="Arcade Operator DIP Switches (Lives & Difficulty)">⚙ DIP: STD</button>
+      <button type="button" class="deck-btn" id="btn-lobby-bg" title="Customize Lobby Background (Grid / Sunset / Matrix / Nebula / Carpet / Carbon) [B]">🎨 BG: SUNSET</button>
+      <button type="button" class="deck-btn active" id="btn-lobby-sound" title="Customize Lobby Sound & Music (Cello Suite / Synth / Chill / 8-Bit) [M]">🎻 SOUND: CELLO</button>
       <button type="button" class="deck-btn fav-btn" id="btn-fav-game" title="Bookmark / Favorite Current Cabinet (Synced to Cloud)">♥ FAV</button>
       <button type="button" class="deck-btn" id="btn-snap" title="Capture Arcade Cabinet Screenshot PNG">📸 SNAP</button>
       <button type="button" class="deck-btn" id="btn-attract" title="Toggle Arcade Attract-Mode Demo Cycler">🎬 ATTRACT</button>
@@ -3795,20 +3797,159 @@ function noteToFreq(note) {
   const midi = (oct + 1) * 12 + semi;
   return 440 * Math.pow(2, (midi - 69) / 12);
 }
+const LOBBY_SOUND_THEMES = [
+  {
+    id: 'cello',
+    name: 'CELLO',
+    label: '🎻 CELLO SUITE',
+    title: 'Bach Cello Suite No. 1 — Baroque Allegro',
+    desc: 'Solo acoustic cello with body resonance & bow vibrato'
+  },
+  {
+    id: 'synth',
+    name: 'SYNTH',
+    label: '🎹 NEON SYNTH',
+    title: 'Neon Arcade Synthwave',
+    desc: 'Breezy 80s arcade electronic synth & punchy drums'
+  },
+  {
+    id: 'chill',
+    name: 'CHILL',
+    label: '☕ LO-FI RHODES',
+    title: 'Sunset Lo-Fi Rhodes & Upright Bass',
+    desc: 'Warm electric piano jazz chords with mellow bass'
+  },
+  {
+    id: 'chip',
+    name: '8-BIT',
+    label: '🕹️ 8-BIT CHIP',
+    title: 'Famicom 1983 Chiptune',
+    desc: 'Authentic 2A03 pulse wave retro melodies'
+  }
+];
+
+const CELLO_LOBBY_TRACK = {
+  title: 'Bach Cello Suite No. 1 in G — Baroque Allegro',
+  stepDur: 0.118,
+  leadWave: 'cello',
+  bassWave: 'cello',
+  harmWave: 'cello',
+  leadGain: 0.28,
+  bassGain: 0.24,
+  harmGain: 0.14,
+  lead: [
+    ['G2', 1], ['D3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['D3', 1], ['B3', 1], ['D3', 1],
+    ['G2', 1], ['D3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['D3', 1], ['B3', 1], ['D3', 1],
+    ['G2', 1], ['E3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['E3', 1], ['C4', 1], ['E3', 1],
+    ['G2', 1], ['E3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['E3', 1], ['C4', 1], ['E3', 1],
+    ['G2', 1], ['F#3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['F#3', 1], ['C4', 1], ['F#3', 1],
+    ['G2', 1], ['F#3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['F#3', 1], ['C4', 1], ['F#3', 1],
+    ['G2', 1], ['G3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['G3', 1], ['B3', 1], ['G3', 1],
+    ['G2', 1], ['G3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['G3', 1], ['B3', 1], ['G3', 1],
+    ['G2', 1], ['E3', 1], ['G3', 1], ['F#3', 1], ['G3', 1], ['E3', 1], ['G3', 1], ['E3', 1],
+    ['G2', 1], ['E3', 1], ['G3', 1], ['F#3', 1], ['G3', 1], ['E3', 1], ['G3', 1], ['E3', 1],
+    ['C#3', 1], ['G3', 1], ['A3', 1], ['G3', 1], ['A3', 1], ['G3', 1], ['A3', 1], ['G3', 1],
+    ['C#3', 1], ['G3', 1], ['A3', 1], ['G3', 1], ['A3', 1], ['G3', 1], ['A3', 1], ['G3', 1],
+    ['D3', 1], ['F#3', 1], ['A3', 1], ['G3', 1], ['A3', 1], ['F#3', 1], ['A3', 1], ['F#3', 1],
+    ['D3', 1], ['F#3', 1], ['A3', 1], ['G3', 1], ['A3', 1], ['F#3', 1], ['A3', 1], ['F#3', 1],
+    ['D3', 1], ['F#3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['F#3', 1], ['C4', 1], ['F#3', 1],
+    ['D3', 1], ['F#3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['F#3', 1], ['C4', 1], ['F#3', 1],
+    ['G2', 1], ['G3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['G3', 1], ['B3', 1], ['G3', 1],
+    ['G2', 1], ['G3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['G3', 1], ['B3', 1], ['G3', 1],
+    ['E2', 1], ['G3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['G3', 1], ['B3', 1], ['G3', 1],
+    ['E2', 1], ['G3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['G3', 1], ['B3', 1], ['G3', 1],
+    ['C2', 1], ['E3', 1], ['G3', 1], ['F#3', 1], ['G3', 1], ['E3', 1], ['G3', 1], ['E3', 1],
+    ['C2', 1], ['E3', 1], ['G3', 1], ['F#3', 1], ['G3', 1], ['E3', 1], ['G3', 1], ['E3', 1],
+    ['A2', 1], ['F#3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['F#3', 1], ['C4', 1], ['F#3', 1],
+    ['A2', 1], ['F#3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['F#3', 1], ['C4', 1], ['F#3', 1],
+    ['D2', 1], ['F#3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['F#3', 1], ['C4', 1], ['F#3', 1],
+    ['D2', 1], ['F#3', 1], ['C4', 1], ['B3', 1], ['C4', 1], ['F#3', 1], ['C4', 1], ['F#3', 1],
+    ['G2', 1], ['D3', 1], ['B3', 1], ['A3', 1], ['B3', 1], ['G3', 1], ['B3', 1], ['D3', 1],
+    ['G2', 1], ['D3', 1], ['G3', 1], ['B3', 1], ['D4', 1], ['B3', 1], ['G3', 1], ['D3', 1],
+    ['C3', 1], ['E3', 1], ['G3', 1], ['C4', 1], ['E4', 1], ['C4', 1], ['G3', 1], ['E3', 1],
+    ['D3', 1], ['F#3', 1], ['A3', 1], ['D4', 1], ['F#4', 1], ['D4', 1], ['A3', 1], ['F#3', 1],
+    ['G2', 2], ['D3', 2], ['B3', 2], ['G3', 2], ['D4', 2], ['B3', 2], ['G4', 4]
+  ],
+  bass: [
+    ['G2', 16], ['G2', 16], ['G2', 16], ['G2', 16],
+    ['E2', 16], ['C#2', 16], ['D2', 16], ['D2', 16],
+    ['G2', 16], ['E2', 16], ['C2', 16], ['A1', 16],
+    ['D2', 16], ['G2', 16], ['C2', 16], ['G1', 16]
+  ],
+  harm: [
+    ['B3', 16], ['C4', 16], ['C4', 16], ['B3', 16],
+    ['G3', 16], ['A3', 16], ['F#3', 16], ['C4', 16],
+    ['B3', 16], ['B3', 16], ['G3', 16], ['C4', 16],
+    ['C4', 16], ['B3', 16], ['G3', 16], ['B3', 16]
+  ]
+};
+
+const CHILL_LOBBY_TRACK = {
+  title: 'Sunset Lo-Fi Rhodes & Upright Bass',
+  stepDur: 0.16,
+  leadWave: 'rhodes',
+  bassWave: 'triangle',
+  harmWave: 'sine',
+  leadGain: 0.22,
+  bassGain: 0.25,
+  harmGain: 0.10,
+  lead: [
+    ['F4', 4], ['A4', 4], ['C5', 4], ['E5', 4],
+    ['E4', 4], ['G4', 4], ['B4', 4], ['D5', 4],
+    ['D4', 4], ['F4', 4], ['A4', 4], ['C5', 4],
+    ['C4', 4], ['E4', 4], ['G4', 4], ['B4', 4],
+    ['D5', 2], ['C5', 2], ['A4', 4], ['G4', 8],
+    ['F4', 2], ['G4', 2], ['A4', 4], ['E4', 8]
+  ],
+  bass: [
+    ['F2', 8], ['C3', 8], ['E2', 8], ['B2', 8],
+    ['D2', 8], ['A2', 8], ['C2', 8], ['G2', 8]
+  ],
+  harm: [
+    ['A3', 16], ['G3', 16], ['F3', 16], ['E3', 16]
+  ],
+  drums: 'K...H...S...H...'
+};
+
+const CHIP_LOBBY_TRACK = {
+  title: 'Famicom 1983 Chiptune',
+  stepDur: 0.13,
+  leadWave: 'square',
+  bassWave: 'triangle',
+  harmWave: 'square',
+  leadGain: 0.18,
+  bassGain: 0.22,
+  harmGain: 0.08,
+  lead: [
+    ['C5', 2], ['E5', 2], ['G5', 2], ['C6', 2],
+    ['B5', 2], ['G5', 2], ['A5', 4],
+    ['F5', 2], ['A5', 2], ['C6', 2], ['F6', 2],
+    ['E6', 2], ['C6', 2], ['D6', 4],
+    ['G5', 2], ['B5', 2], ['D6', 2], ['F6', 2],
+    ['E6', 4], ['C6', 4]
+  ],
+  bass: [
+    ['C3', 4], ['G3', 4], ['C3', 4], ['G3', 4],
+    ['F2', 4], ['C3', 4], ['F2', 4], ['C3', 4],
+    ['G2', 4], ['D3', 4], ['G2', 4], ['D3', 4],
+    ['C3', 8], ['G2', 8]
+  ],
+  harm: [
+    ['E4', 8], ['C4', 8], ['A4', 8], ['F4', 8],
+    ['B4', 8], ['G4', 8], ['C5', 16]
+  ],
+  drums: 'K.H.S.H.K.K.S.H.'
+};
 
 /**
- * 29 Distinct Multi-Voice Chiptune Soundtracks (Selection Lobby + 28 Classic Games).
- * Each track defines:
- * - bpm: Tempo in beats per minute (1 step = 1 sixteenth or eighth note depending on stepBeats)
- * - stepDur: Duration of each step in seconds
- * - leadWave, bassWave, harmWave: Oscillator waveforms
- * - lead: Array of [note, steps] tuples (or single note strings for 1-step notes)
- * - bass: Array of [note, steps] tuples (loops independently)
- * - harm: Optional array of [note, steps] tuples for harmony/arpeggio
- * - drums: Optional string pattern ('K' = Kick, 'S' = Snare, 'H' = Hat, '.' = Rest)
+ * Multi-Voice Chiptune & Cello Soundtracks (Selection Lobby + Classic Games).
  */
 const SOUNDTRACKS = {
-  "lobby": {
+  "lobby": CELLO_LOBBY_TRACK,
+  "lobby_cello": CELLO_LOBBY_TRACK,
+  "lobby_chill": CHILL_LOBBY_TRACK,
+  "lobby_8bit": CHIP_LOBBY_TRACK,
+  "lobby_synth": {
     "title": "Neon Arcade Lobby",
     "stepDur": 0.14,
     "leadWave": "square",
@@ -40057,16 +40198,67 @@ class AudioSynth {
     this._sequenceTimer = null;
 
     // Background Music Sequencer State
-    this.currentTrackId = 'lobby';
+    let initialLobbySound = 'cello';
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem('retro_lobby_sound');
+        if (stored) initialLobbySound = stored;
+      }
+    } catch (_) {}
+    this.lobbySoundTheme = initialLobbySound;
+    this._pizziIndex = 0;
+    this.currentTrackId = this.getLobbyTrackId();
     this._musicTimer = null;
     this._musicStep = 0;
     this._nextStepTime = 0;
     this._compiledTracks = {};
   }
 
+  getLobbyTrackId() {
+    if (this.lobbySoundTheme === 'synth') return 'lobby_synth';
+    if (this.lobbySoundTheme === 'chill') return 'lobby_chill';
+    if (this.lobbySoundTheme === '8bit' || this.lobbySoundTheme === 'chip') return 'lobby_8bit';
+    return 'lobby_cello';
+  }
+
+  getLobbySoundTheme() {
+    return this.lobbySoundTheme || 'cello';
+  }
+
+  setLobbySoundTheme(themeId) {
+    const valid = LOBBY_SOUND_THEMES.find((t) => t.id === themeId);
+    this.lobbySoundTheme = valid ? valid.id : 'cello';
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('retro_lobby_sound', this.lobbySoundTheme);
+      }
+    } catch (_) {}
+    if (this.currentTrackId && this.currentTrackId.startsWith('lobby')) {
+      const target = this.getLobbyTrackId();
+      this.playMusic(target, true);
+    }
+    // Preview the sound theme
+    if (this.lobbySoundTheme === 'cello') {
+      this.playCelloPizzicato();
+    } else if (this.lobbySoundTheme === 'chill') {
+      this.playNote(440, 0.08, 'sine', 0.22, 0);
+    } else {
+      this.playNote(520, 0.04, 'square', 0.2, 0);
+    }
+    return this.lobbySoundTheme;
+  }
+
+  cycleLobbySoundTheme() {
+    const idx = LOBBY_SOUND_THEMES.findIndex((t) => t.id === this.lobbySoundTheme);
+    const nextIdx = (idx + 1) % LOBBY_SOUND_THEMES.length;
+    return this.setLobbySoundTheme(LOBBY_SOUND_THEMES[nextIdx].id);
+  }
+
   init() {
     if (!this.ctx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const AudioCtx =
+        (typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext)) ||
+        (typeof globalThis !== 'undefined' && (globalThis.AudioContext || globalThis.webkitAudioContext));
       if (!AudioCtx) return false;
       this.ctx = new AudioCtx();
       this.masterGain = this.ctx.createGain();
@@ -40129,12 +40321,21 @@ class AudioSynth {
   }
 
   getCurrentTrackTitle() {
-    const spec = SOUNDTRACKS[this.currentTrackId] || SOUNDTRACKS.lobby;
+    let key = this.currentTrackId;
+    if (key === 'lobby' || (key && key.startsWith('lobby'))) {
+      key = this.getLobbyTrackId();
+    }
+    const spec = SOUNDTRACKS[key] || SOUNDTRACKS.lobby;
     return spec ? spec.title : 'Arcade Synth';
   }
 
   _getCompiledTrack(trackId) {
-    const key = SOUNDTRACKS[trackId] ? trackId : 'lobby';
+    let key = SOUNDTRACKS[trackId] ? trackId : 'lobby';
+    if (key === 'lobby') {
+      key = this.getLobbyTrackId();
+    }
+    if (!SOUNDTRACKS[key]) key = 'lobby';
+
     if (!this._compiledTracks[key]) {
       const raw = SOUNDTRACKS[key];
       this._compiledTracks[key] = {
@@ -40152,7 +40353,10 @@ class AudioSynth {
    * Starts or switches the active background soundtrack ('lobby' or any of the 28 game IDs)
    */
   playMusic(trackId = 'lobby', forceRestart = false) {
-    const normalized = String(trackId || 'lobby').toLowerCase();
+    let normalized = String(trackId || 'lobby').toLowerCase();
+    if (normalized === 'lobby') {
+      normalized = this.getLobbyTrackId();
+    }
     const targetId = SOUNDTRACKS[normalized] ? normalized : 'lobby';
 
     if (this.currentTrackId === targetId && this._musicTimer && !forceRestart) {
@@ -40219,7 +40423,7 @@ class AudioSynth {
     if (track.leadEvents.length > 0) {
       const ev = track.leadEvents[stepIndex % track.leadEvents.length];
       if (ev && ev.trigger && ev.freq > 0) {
-        const noteDur = Math.max(0.04, ev.steps * stepDur * 0.86);
+        const noteDur = Math.max(0.04, ev.steps * stepDur * 0.88);
         this._scheduleVoice(
           ev.freq,
           startTime,
@@ -40236,7 +40440,7 @@ class AudioSynth {
     if (track.harmEvents.length > 0) {
       const ev = track.harmEvents[stepIndex % track.harmEvents.length];
       if (ev && ev.trigger && ev.freq > 0) {
-        const noteDur = Math.max(0.04, ev.steps * stepDur * 0.85);
+        const noteDur = Math.max(0.04, ev.steps * stepDur * 0.86);
         this._scheduleVoice(
           ev.freq,
           startTime,
@@ -40253,7 +40457,7 @@ class AudioSynth {
     if (track.bassEvents.length > 0) {
       const ev = track.bassEvents[stepIndex % track.bassEvents.length];
       if (ev && ev.trigger && ev.freq > 0) {
-        const noteDur = Math.max(0.04, ev.steps * stepDur * 0.78);
+        const noteDur = Math.max(0.04, ev.steps * stepDur * 0.82);
         this._scheduleVoice(
           ev.freq,
           startTime,
@@ -40280,10 +40484,24 @@ class AudioSynth {
   }
 
   _scheduleVoice(freq, startTime, duration, type, peakGain, dest, vibrato = false) {
+    if (type === 'cello') {
+      return this._scheduleCelloVoice(freq, startTime, duration, peakGain, dest, vibrato);
+    }
+    if (type === 'rhodes') {
+      return this._scheduleRhodesVoice(freq, startTime, duration, peakGain, dest);
+    }
+
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+
     osc.type = type;
     osc.frequency.setValueAtTime(freq, startTime);
+
+    // Warm analog low-pass filter: eliminates harsh 12kHz digital aliasing
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(Math.min(9200, Math.max(850, freq * 5.2 + 1200)), startTime);
+    filter.Q.setValueAtTime(1.15, startTime);
 
     // Subtle arcade pitch shimmer on sustained lead notes
     if (vibrato && duration > 0.24) {
@@ -40292,16 +40510,20 @@ class AudioSynth {
       osc.frequency.linearRampToValueAtTime(freq, startTime + duration * 0.95);
     }
 
-    gain.gain.setValueAtTime(0.001, startTime);
-    gain.gain.linearRampToValueAtTime(peakGain, startTime + 0.01);
+    // Anti-click smooth envelope
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.linearRampToValueAtTime(peakGain, startTime + 0.006);
     gain.gain.setValueAtTime(peakGain * 0.82, startTime + Math.max(0.015, duration * 0.35));
-    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
 
-    osc.connect(gain);
+    osc.connect(filter);
+    filter.connect(gain);
     gain.connect(dest);
+
     osc.onended = () => {
       try {
         osc.disconnect();
+        filter.disconnect();
         gain.disconnect();
       } catch (_) {}
     };
@@ -40309,24 +40531,185 @@ class AudioSynth {
     osc.stop(startTime + duration + 0.015);
   }
 
+  /**
+   * Physically modeled acoustic cello synthesis:
+   * - Dual detuned sawtooth string oscillators (+4 cents detune) for organic string chorus
+   * - Low-frequency triangle body resonance layer
+   * - Formant body filter (lowpass with resonance Q=2.2) tracking pitch
+   * - Bowed friction attack with initial 35ms bow bite
+   * - Delayed human-rate vibrato (5.2 Hz LFO blossoming after note onset)
+   */
+  _scheduleCelloVoice(freq, startTime, duration, peakGain, dest, isLead = true) {
+    if (!this.ctx) return;
+    const now = startTime;
+
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    const subOsc = this.ctx.createOscillator();
+
+    osc1.type = 'sawtooth';
+    osc2.type = 'sawtooth';
+    subOsc.type = 'triangle';
+
+    osc1.frequency.setValueAtTime(freq, now);
+    osc2.frequency.setValueAtTime(freq * 1.0024, now); // +4 cents detune for rich string phasing
+    subOsc.frequency.setValueAtTime(freq < 160 ? freq : freq * 0.5, now);
+
+    // Expressive delayed cello vibrato (5.2 Hz LFO)
+    if (duration > 0.16) {
+      try {
+        const lfo = this.ctx.createOscillator();
+        const lfoGain = this.ctx.createGain();
+        lfo.type = 'sine';
+        lfo.frequency.setValueAtTime(5.2, now);
+        const vibOnset = now + Math.min(0.12, duration * 0.32);
+        lfoGain.gain.setValueAtTime(0, now);
+        lfoGain.gain.setValueAtTime(0, vibOnset);
+        lfoGain.gain.linearRampToValueAtTime(freq * 0.0085, vibOnset + Math.min(0.16, duration * 0.45));
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc1.frequency);
+        lfoGain.connect(osc2.frequency);
+        lfo.start(now);
+        lfo.stop(now + duration + 0.06);
+      } catch (_) {}
+    }
+
+    // Wooden cello body resonant filter
+    const bodyFilter = this.ctx.createBiquadFilter();
+    bodyFilter.type = 'lowpass';
+    const cutoff = Math.min(3400, Math.max(480, freq * 2.6 + 240));
+    bodyFilter.frequency.setValueAtTime(cutoff + 600, now);
+    bodyFilter.frequency.linearRampToValueAtTime(cutoff, now + 0.035);
+    bodyFilter.Q.setValueAtTime(2.2, now);
+
+    const gain1 = this.ctx.createGain();
+    const gain2 = this.ctx.createGain();
+    const subGain = this.ctx.createGain();
+    const masterVoiceGain = this.ctx.createGain();
+
+    gain1.gain.value = 0.58;
+    gain2.gain.value = 0.42;
+    subGain.gain.value = 0.28;
+
+    osc1.connect(gain1);
+    osc2.connect(gain2);
+    subOsc.connect(subGain);
+
+    gain1.connect(bodyFilter);
+    gain2.connect(bodyFilter);
+    subGain.connect(bodyFilter);
+    bodyFilter.connect(masterVoiceGain);
+
+    // Natural bowed swell
+    const attackDur = Math.min(0.046, duration * 0.25);
+    masterVoiceGain.gain.setValueAtTime(0.0001, now);
+    masterVoiceGain.gain.linearRampToValueAtTime(peakGain, now + attackDur);
+    masterVoiceGain.gain.setValueAtTime(peakGain * 0.88, now + Math.max(attackDur + 0.01, duration * 0.4));
+    masterVoiceGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    masterVoiceGain.connect(dest);
+
+    osc1.onended = () => {
+      try {
+        osc1.disconnect();
+        osc2.disconnect();
+        subOsc.disconnect();
+        gain1.disconnect();
+        gain2.disconnect();
+        subGain.disconnect();
+        bodyFilter.disconnect();
+        masterVoiceGain.disconnect();
+      } catch (_) {}
+    };
+
+    osc1.start(now);
+    osc2.start(now);
+    subOsc.start(now);
+
+    const stopTime = now + duration + 0.02;
+    osc1.stop(stopTime);
+    osc2.stop(stopTime);
+    subOsc.stop(stopTime);
+  }
+
+  _scheduleRhodesVoice(freq, startTime, duration, peakGain, dest) {
+    if (!this.ctx) return;
+    const now = startTime;
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    osc1.type = 'sine';
+    osc2.type = 'triangle';
+    osc1.frequency.setValueAtTime(freq, now);
+    osc2.frequency.setValueAtTime(freq * 2, now);
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(Math.min(3200, freq * 3.5 + 400), now);
+
+    const gain1 = this.ctx.createGain();
+    const gain2 = this.ctx.createGain();
+    const masterGain = this.ctx.createGain();
+
+    gain1.gain.value = 0.75;
+    gain2.gain.value = 0.25;
+
+    osc1.connect(gain1);
+    osc2.connect(gain2);
+    gain1.connect(filter);
+    gain2.connect(filter);
+    filter.connect(masterGain);
+
+    masterGain.gain.setValueAtTime(0.0001, now);
+    masterGain.gain.linearRampToValueAtTime(peakGain, now + 0.012);
+    masterGain.gain.exponentialRampToValueAtTime(peakGain * 0.35, now + Math.min(0.2, duration * 0.4));
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    masterGain.connect(dest);
+
+    osc1.onended = () => {
+      try {
+        osc1.disconnect();
+        osc2.disconnect();
+        gain1.disconnect();
+        gain2.disconnect();
+        filter.disconnect();
+        masterGain.disconnect();
+      } catch (_) {}
+    };
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + duration + 0.02);
+    osc2.stop(now + duration + 0.02);
+  }
+
   _scheduleDrumKick(startTime, dest) {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(125, startTime);
-    osc.frequency.exponentialRampToValueAtTime(36, startTime + 0.085);
-    gain.gain.setValueAtTime(0.22, startTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.09);
-    osc.connect(gain);
+    osc.frequency.setValueAtTime(145, startTime);
+    osc.frequency.exponentialRampToValueAtTime(34, startTime + 0.09);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(450, startTime);
+
+    gain.gain.setValueAtTime(0.26, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.095);
+
+    osc.connect(filter);
+    filter.connect(gain);
     gain.connect(dest);
+
     osc.onended = () => {
       try {
         osc.disconnect();
+        filter.disconnect();
         gain.disconnect();
       } catch (_) {}
     };
     osc.start(startTime);
-    osc.stop(startTime + 0.095);
+    osc.stop(startTime + 0.1);
   }
 
   _scheduleDrumSnare(startTime, dest) {
@@ -40334,17 +40717,32 @@ class AudioSynth {
     const source = this.ctx.createBufferSource();
     source.buffer = this._noiseBuffer;
 
+    // Body tone for punchy snare pop
+    const bodyOsc = this.ctx.createOscillator();
+    const bodyGain = this.ctx.createGain();
+    bodyOsc.type = 'triangle';
+    bodyOsc.frequency.setValueAtTime(185, startTime);
+    bodyOsc.frequency.exponentialRampToValueAtTime(80, startTime + 0.05);
+    bodyGain.gain.setValueAtTime(0.14, startTime);
+    bodyGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.055);
+    bodyOsc.connect(bodyGain);
+    bodyGain.connect(dest);
+    bodyOsc.start(startTime);
+    bodyOsc.stop(startTime + 0.06);
+
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(1400, startTime);
+    filter.frequency.setValueAtTime(1600, startTime);
+    filter.Q.setValueAtTime(1.8, startTime);
 
     const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0.12, startTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.08);
+    gain.gain.setValueAtTime(0.14, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.085);
 
     source.connect(filter);
     filter.connect(gain);
     gain.connect(dest);
+
     source.onended = () => {
       try {
         source.disconnect();
@@ -40353,7 +40751,7 @@ class AudioSynth {
       } catch (_) {}
     };
     source.start(startTime);
-    source.stop(startTime + 0.085);
+    source.stop(startTime + 0.09);
   }
 
   _scheduleDrumHat(startTime, dest) {
@@ -40363,11 +40761,11 @@ class AudioSynth {
 
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'highpass';
-    filter.frequency.setValueAtTime(5200, startTime);
+    filter.frequency.setValueAtTime(6500, startTime);
 
     const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0.045, startTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.035);
+    gain.gain.setValueAtTime(0.048, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.038);
 
     source.connect(filter);
     filter.connect(gain);
@@ -40380,7 +40778,7 @@ class AudioSynth {
       } catch (_) {}
     };
     source.start(startTime);
-    source.stop(startTime + 0.04);
+    source.stop(startTime + 0.042);
   }
 
   /**
@@ -40991,18 +41389,91 @@ class AudioSynth {
   }
 
   /**
-   * UI Menu Move / Blip
+   * UI Menu Move / Navigation Blip or Cello Pizzicato Pluck
    */
   playMenuMove() {
-    this.playNote(520, 0.035, 'square', 0.16, 0);
+    if (this.lobbySoundTheme === 'cello') {
+      this.playCelloPizzicato();
+    } else if (this.lobbySoundTheme === 'chill') {
+      this.playNote(440, 0.045, 'sine', 0.16, 0);
+    } else {
+      this.playNote(520, 0.035, 'square', 0.16, 0);
+    }
   }
 
   /**
-   * UI Menu Select
+   * UI Menu Select / Cabinet Launch or Cello Bowed Chord
    */
   playMenuSelect() {
-    this.playNote(523.25, 0.05, 'square', 0.24, 0);
-    this.playNote(783.99, 0.09, 'square', 0.24, 0.05);
+    if (this.lobbySoundTheme === 'cello') {
+      this.playCelloBowedChord();
+    } else if (this.lobbySoundTheme === 'chill') {
+      this.playNote(523.25, 0.08, 'sine', 0.22, 0);
+      this.playNote(783.99, 0.14, 'sine', 0.22, 0.06);
+    } else {
+      this.playNote(523.25, 0.05, 'square', 0.24, 0);
+      this.playNote(783.99, 0.09, 'square', 0.24, 0.05);
+    }
+  }
+
+  /**
+   * Resonant Acoustic Cello Pizzicato Note (C3, G3, D3, A3 open cello string plucks)
+   */
+  playCelloPizzicato(note = null) {
+    if (!this._ensureReady()) return;
+    const notes = [130.81, 196.00, 146.83, 220.00]; // C3, G3, D3, A3 (Open Cello Strings)
+    if (typeof this._pizziIndex !== 'number') this._pizziIndex = 0;
+    const freq = note ? (typeof note === 'number' ? note : noteToFreq(note)) : notes[this._pizziIndex % notes.length];
+    this._pizziIndex++;
+
+    const now = this.ctx.currentTime;
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    const filter = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+
+    osc1.type = 'sawtooth';
+    osc2.type = 'triangle';
+    osc1.frequency.setValueAtTime(freq, now);
+    osc2.frequency.setValueAtTime(freq, now);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1900, now);
+    filter.frequency.exponentialRampToValueAtTime(340, now + 0.16);
+    filter.Q.setValueAtTime(3.0, now); // Wooden soundboard thump
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.24, now + 0.004); // Fast snap pluck
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+    osc1.connect(filter);
+    osc2.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc1.onended = () => {
+      try {
+        osc1.disconnect();
+        osc2.disconnect();
+        filter.disconnect();
+        gain.disconnect();
+      } catch (_) {}
+    };
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.24);
+    osc2.stop(now + 0.24);
+  }
+
+  /**
+   * Rich Bowed Cello Double-Stop Chord (C3 + G3 swelling into C4)
+   */
+  playCelloBowedChord() {
+    if (!this._ensureReady()) return;
+    const now = this.ctx.currentTime;
+    this._scheduleCelloVoice(130.81, now, 0.38, 0.22, this.masterGain, true); // C3
+    this._scheduleCelloVoice(196.00, now + 0.035, 0.36, 0.20, this.masterGain, true); // G3
+    this._scheduleCelloVoice(261.63, now + 0.11, 0.44, 0.24, this.masterGain, true); // C4
   }
 
   /**
@@ -43111,6 +43582,44 @@ const SORT_MODES = [
   { id: 'saved', label: 'SORT: ♥ SAVED' },
   { id: 'most_played', label: 'SORT: 🔥 MOST PLAYED' }
 ];
+const LOBBY_BACKGROUND_THEMES = [
+  {
+    id: 'sunset',
+    name: 'SUNSET',
+    label: '🌅 NEON SUNSET',
+    desc: 'OutRun Synthwave Twilight & Scanline Sun'
+  },
+  {
+    id: 'grid',
+    name: 'GRID',
+    label: '🌐 CYBER GRID',
+    desc: 'Classic Perspective Cyan Vector Floor & Horizon'
+  },
+  {
+    id: 'matrix',
+    name: 'MATRIX',
+    label: '🟢 MATRIX RAIN',
+    desc: 'Falling Green Phosphor Digital Rain & Glyphs'
+  },
+  {
+    id: 'nebula',
+    name: 'NEBULA',
+    label: '🌌 COSMIC NEBULA',
+    desc: 'Deep Violet Cosmic Dust, Starfield & Comets'
+  },
+  {
+    id: 'arcade',
+    name: 'CARPET',
+    label: '🕹️ ARCADE CARPET',
+    desc: 'Nostalgic 80s Geometric Neon Carpet Pattern'
+  },
+  {
+    id: 'minimal',
+    name: 'CARBON',
+    label: '⬛ DARK CARBON',
+    desc: 'Sleek Modern Carbon Weave & Indigo Vignette'
+  }
+];
 class MainMenu {
   constructor(renderer, input, audio, onSelectGame) {
     this.renderer = renderer;
@@ -43130,6 +43639,105 @@ class MainMenu {
     this.cardFavHitboxes = [];
     this.inspectorStarRects = [];
     this.inspectorFavRect = null;
+
+    // Lobby Background & Sound Customization State
+    let initialBg = 'sunset';
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem('retro_lobby_bg');
+        if (stored) initialBg = stored;
+      }
+    } catch (_) {}
+    this.backgroundTheme = initialBg;
+
+    // Interactive header button hitboxes
+    this.bgButtonRect = { x: 20, y: 16, w: 145, h: 22 };
+    this.soundButtonRect = { x: 795, y: 16, w: 145, h: 22 };
+
+    // Background particle & animation states
+    this.matrixDrops = Array.from({ length: 42 }, () => ({
+      x: Math.random() * 960,
+      y: Math.random() * 540,
+      speed: 160 + Math.random() * 220,
+      chars: Array.from({ length: 8 }, () => String.fromCharCode(0x30a0 + Math.floor(Math.random() * 96)))
+    }));
+
+    this.nebulaStars = Array.from({ length: 75 }, () => ({
+      x: Math.random() * 960,
+      y: Math.random() * 540,
+      size: 0.8 + Math.random() * 2.2,
+      twinkleSpeed: 1.5 + Math.random() * 3.5,
+      phase: Math.random() * Math.PI * 2,
+      color: Math.random() < 0.35 ? '#00F0FF' : Math.random() < 0.6 ? '#FFD700' : '#FFFFFF'
+    }));
+    this.comet = { active: false, x: 0, y: 0, vx: 0, vy: 0, life: 0, timer: 3.5 };
+
+    this.carpetShapes = Array.from({ length: 36 }, () => ({
+      x: Math.random() * 960,
+      y: Math.random() * 540,
+      type: Math.floor(Math.random() * 3), // 0: triangle, 1: zigzag, 2: diamond
+      color: ['#FF007A', '#00F0FF', '#FFD700', '#10B981'][Math.floor(Math.random() * 4)],
+      size: 14 + Math.random() * 18,
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.8
+    }));
+  }
+
+  setBackgroundTheme(themeId) {
+    const valid = LOBBY_BACKGROUND_THEMES.find((t) => t.id === themeId);
+    this.backgroundTheme = valid ? valid.id : 'sunset';
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('retro_lobby_bg', this.backgroundTheme);
+      }
+    } catch (_) {}
+    if (
+      typeof window !== 'undefined' &&
+      window.arcadeStudio &&
+      typeof window.arcadeStudio._syncLobbyCustomizationButtons === 'function'
+    ) {
+      window.arcadeStudio._syncLobbyCustomizationButtons();
+    }
+    return this.backgroundTheme;
+  }
+
+  cycleBackgroundTheme() {
+    const curIdx = LOBBY_BACKGROUND_THEMES.findIndex((t) => t.id === this.backgroundTheme);
+    const nextIdx = (curIdx + 1) % LOBBY_BACKGROUND_THEMES.length;
+    const nextTheme = LOBBY_BACKGROUND_THEMES[nextIdx];
+    this.setBackgroundTheme(nextTheme.id);
+    this.audio.playCoin();
+    achievementManager.pushToast(
+      `🎨 LOBBY THEME: ${nextTheme.name}`,
+      nextTheme.desc,
+      PALETTE.CYAN
+    );
+    return nextTheme.id;
+  }
+
+  setSoundTheme(themeId) {
+    if (!this.audio || typeof this.audio.setLobbySoundTheme !== 'function') return 'cello';
+    const active = this.audio.setLobbySoundTheme(themeId);
+    if (
+      typeof window !== 'undefined' &&
+      window.arcadeStudio &&
+      typeof window.arcadeStudio._syncLobbyCustomizationButtons === 'function'
+    ) {
+      window.arcadeStudio._syncLobbyCustomizationButtons();
+    }
+    return active;
+  }
+
+  cycleSoundTheme() {
+    if (!this.audio || typeof this.audio.cycleLobbySoundTheme !== 'function') return 'cello';
+    const active = this.audio.cycleLobbySoundTheme();
+    const info = LOBBY_SOUND_THEMES.find((t) => t.id === active) || LOBBY_SOUND_THEMES[0];
+    achievementManager.pushToast(
+      `🎵 SOUND THEME: ${info.name}`,
+      info.desc,
+      PALETTE.GOLD
+    );
+    return active;
   }
 
   getSortMode() {
@@ -44406,6 +45014,14 @@ class MainMenu {
     }
     const activeGame = list[this.selectedIndex] || list[0];
 
+    // Hotkey shortcuts for Lobby Customization (B: Background, M: Sound/Music):
+    if (this.input.isKeyJustPressed('KeyB')) {
+      this.cycleBackgroundTheme();
+    }
+    if (this.input.isKeyJustPressed('KeyM')) {
+      this.cycleSoundTheme();
+    }
+
     // Tab toggle with Action B (X / Shift) or Gamepad L1 / R1
     if (
       this.input.isJustPressed('actionB') ||
@@ -44515,6 +45131,28 @@ class MainMenu {
     const py = this.input.pointer.y;
 
     if (this.input.pointer.justPressed) {
+      // Check Lobby Background Pill click
+      if (
+        px >= this.bgButtonRect.x &&
+        px <= this.bgButtonRect.x + this.bgButtonRect.w &&
+        py >= this.bgButtonRect.y &&
+        py <= this.bgButtonRect.y + this.bgButtonRect.h
+      ) {
+        this.cycleBackgroundTheme();
+        return;
+      }
+
+      // Check Lobby Sound Pill click
+      if (
+        px >= this.soundButtonRect.x &&
+        px <= this.soundButtonRect.x + this.soundButtonRect.w &&
+        py >= this.soundButtonRect.y &&
+        py <= this.soundButtonRect.y + this.soundButtonRect.h
+      ) {
+        this.cycleSoundTheme();
+        return;
+      }
+
       // Check tab & sort button clicks
       for (const tab of this.tabRects) {
         if (px >= tab.x && px <= tab.x + tab.w && py >= tab.y && py <= tab.y + tab.h) {
@@ -44617,32 +45255,384 @@ class MainMenu {
     }
   }
 
+  _drawLobbyBackground(ctx, W, H) {
+    const t = this.animTime;
+    const theme = this.backgroundTheme;
+
+    if (theme === 'sunset') {
+      // 1. NEON SUNSET BOULEVARD
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, 240);
+      skyGrad.addColorStop(0, '#0B0726');
+      skyGrad.addColorStop(0.55, '#3B0764');
+      skyGrad.addColorStop(0.85, '#FF007A');
+      skyGrad.addColorStop(1, '#FF8800');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, W, 240);
+
+      // Radiant OutRun Sun with scanline grooves
+      const sunX = W / 2;
+      const sunY = 175;
+      const sunR = 52;
+      ctx.save();
+      ctx.shadowColor = '#FF007A';
+      ctx.shadowBlur = 24;
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath();
+      ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = '#0B0726';
+      for (let s = 0; s < 5; s++) {
+        ctx.fillRect(sunX - sunR - 8, sunY - 14 + s * 13, (sunR + 8) * 2, 3 + s * 1.5);
+      }
+
+      // Parallax Vector Mountain Ridges
+      ctx.strokeStyle = 'rgba(184, 41, 255, 0.45)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, 240);
+      for (let x = 0; x <= W; x += 32) {
+        const my = 205 + Math.sin(x * 0.015 + 1.2) * 26 + Math.cos(x * 0.038) * 14;
+        ctx.lineTo(x, my);
+      }
+      ctx.lineTo(W, 240);
+      ctx.stroke();
+
+      // Lower ground floor with synthwave perspective grid
+      ctx.fillStyle = '#090514';
+      ctx.fillRect(0, 240, W, H - 240);
+
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 0, 122, 0.22)';
+      ctx.lineWidth = 1;
+      const horizonY = 240;
+      // Vanishing perspective lines
+      for (let x = -W; x <= W * 2; x += 64) {
+        ctx.beginPath();
+        ctx.moveTo(W / 2, horizonY);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+      }
+      // Horizontal scrolling grid lines
+      const floorSpeed = (t * 42) % 36;
+      for (let y = horizonY + floorSpeed; y <= H; y += 28) {
+        const p = (y - horizonY) / (H - horizonY);
+        ctx.strokeStyle = `rgba(0, 240, 255, ${0.08 + p * 0.25})`;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+
+      // Swaying palm silhouettes on edges
+      const palmSway = Math.sin(t * 1.6) * 6;
+      ctx.fillStyle = 'rgba(11, 7, 38, 0.85)';
+      // Left Palm Trunk
+      ctx.beginPath();
+      ctx.moveTo(12, H);
+      ctx.quadraticCurveTo(24, 180, 48 + palmSway, 120);
+      ctx.lineTo(54 + palmSway, 120);
+      ctx.quadraticCurveTo(30, 180, 18, H);
+      ctx.fill();
+      // Left Palm Fronds
+      for (let a = -1.2; a <= 1.2; a += 0.5) {
+        ctx.beginPath();
+        ctx.moveTo(50 + palmSway, 120);
+        ctx.quadraticCurveTo(
+          50 + palmSway + Math.cos(a) * 45,
+          120 + Math.sin(a) * 35,
+          50 + palmSway + Math.cos(a) * 75,
+          135 + Math.sin(a) * 55
+        );
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = 'rgba(11, 7, 38, 0.9)';
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    } else if (theme === 'matrix') {
+      // 2. MATRIX DIGITAL RAIN
+      ctx.fillStyle = '#020C06';
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.save();
+      ctx.font = '11px monospace';
+      for (const drop of this.matrixDrops) {
+        drop.y += drop.speed * (1 / 60);
+        if (drop.y > H + 120) {
+          drop.y = -80;
+          drop.x = Math.random() * W;
+        }
+        for (let i = 0; i < drop.chars.length; i++) {
+          const charY = drop.y - i * 14;
+          if (charY < -10 || charY > H) continue;
+          if (i === 0) {
+            ctx.fillStyle = '#E6FFFA';
+            ctx.shadowColor = '#00FF66';
+            ctx.shadowBlur = 8;
+          } else {
+            const alpha = Math.max(0.1, 1 - i / drop.chars.length);
+            ctx.fillStyle = `rgba(0, 255, 102, ${alpha * 0.75})`;
+            ctx.shadowBlur = 0;
+          }
+          ctx.fillText(drop.chars[i], drop.x, charY);
+        }
+      }
+      ctx.restore();
+    } else if (theme === 'nebula') {
+      // 3. COSMIC NEBULA & STARS
+      ctx.fillStyle = '#040412';
+      ctx.fillRect(0, 0, W, H);
+
+      // Glowing radial nebulae
+      const nebulae = [
+        { x: W * 0.25, y: H * 0.35, r: 240, color: 'rgba(147, 51, 234, 0.14)' },
+        { x: W * 0.75, y: H * 0.65, r: 280, color: 'rgba(59, 130, 246, 0.12)' },
+        { x: W * 0.5, y: H * 0.45, r: 210, color: 'rgba(236, 72, 153, 0.10)' }
+      ];
+      for (const n of nebulae) {
+        const pulse = 1 + Math.sin(t * 0.8 + n.x) * 0.08;
+        const grad = ctx.createRadialGradient(n.x, n.y, 10, n.x, n.y, n.r * pulse);
+        grad.addColorStop(0, n.color);
+        grad.addColorStop(1, 'rgba(4, 4, 18, 0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      // Twinkling multi-colored stars
+      ctx.save();
+      for (const s of this.nebulaStars) {
+        const tw = 0.4 + 0.6 * Math.sin(t * s.twinkleSpeed + s.phase);
+        ctx.fillStyle = s.color;
+        ctx.globalAlpha = tw;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size * (0.8 + tw * 0.4), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1.0;
+
+      // Shooting Comet
+      this.comet.timer -= 1 / 60;
+      if (this.comet.timer <= 0 && !this.comet.active) {
+        this.comet.active = true;
+        this.comet.x = Math.random() * W * 0.7;
+        this.comet.y = Math.random() * (H * 0.4);
+        this.comet.vx = 480 + Math.random() * 220;
+        this.comet.vy = 280 + Math.random() * 140;
+        this.comet.life = 0.85;
+      }
+      if (this.comet.active) {
+        this.comet.life -= 1 / 60;
+        this.comet.x += this.comet.vx * (1 / 60);
+        this.comet.y += this.comet.vy * (1 / 60);
+
+        ctx.strokeStyle = `rgba(0, 240, 255, ${this.comet.life})`;
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#00F0FF';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.moveTo(this.comet.x, this.comet.y);
+        ctx.lineTo(this.comet.x - this.comet.vx * 0.08, this.comet.y - this.comet.vy * 0.08);
+        ctx.stroke();
+
+        if (this.comet.life <= 0 || this.comet.x > W || this.comet.y > H) {
+          this.comet.active = false;
+          this.comet.timer = 4.0 + Math.random() * 5.0;
+        }
+      }
+      ctx.restore();
+    } else if (theme === 'arcade') {
+      // 4. RETRO 80s ARCADE CARPET
+      ctx.fillStyle = '#0B0D1B';
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.save();
+      // Floating neon geometric carpet shapes
+      for (const sh of this.carpetShapes) {
+        sh.rot += sh.rotSpeed * (1 / 60);
+        ctx.save();
+        ctx.translate(sh.x, sh.y);
+        ctx.rotate(sh.rot);
+        ctx.strokeStyle = sh.color;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = sh.color;
+        ctx.shadowBlur = 6;
+
+        if (sh.type === 0) {
+          // Neon Triangle
+          ctx.beginPath();
+          ctx.moveTo(0, -sh.size);
+          ctx.lineTo(sh.size * 0.86, sh.size * 0.5);
+          ctx.lineTo(-sh.size * 0.86, sh.size * 0.5);
+          ctx.closePath();
+          ctx.stroke();
+        } else if (sh.type === 1) {
+          // Neon Zigzag squiggle
+          ctx.beginPath();
+          ctx.moveTo(-sh.size * 0.7, -sh.size * 0.4);
+          ctx.lineTo(-sh.size * 0.2, sh.size * 0.4);
+          ctx.lineTo(sh.size * 0.2, -sh.size * 0.4);
+          ctx.lineTo(sh.size * 0.7, sh.size * 0.4);
+          ctx.stroke();
+        } else {
+          // Neon Diamond
+          ctx.beginPath();
+          ctx.moveTo(0, -sh.size * 0.7);
+          ctx.lineTo(sh.size * 0.7, 0);
+          ctx.lineTo(0, sh.size * 0.7);
+          ctx.lineTo(-sh.size * 0.7, 0);
+          ctx.closePath();
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+      ctx.restore();
+    } else if (theme === 'minimal') {
+      // 5. DARK CARBON MATRIX
+      ctx.fillStyle = '#0A0C14';
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
+      ctx.lineWidth = 1;
+      for (let d = -H; d < W + H; d += 12) {
+        ctx.beginPath();
+        ctx.moveTo(d, 0);
+        ctx.lineTo(d + H, H);
+        ctx.stroke();
+      }
+      for (let d = 0; d < W + H * 2; d += 12) {
+        ctx.beginPath();
+        ctx.moveTo(d, 0);
+        ctx.lineTo(d - H, H);
+        ctx.stroke();
+      }
+      // Radial vignette
+      const vign = ctx.createRadialGradient(W / 2, H / 2, W * 0.2, W / 2, H / 2, W * 0.7);
+      vign.addColorStop(0, 'rgba(10, 12, 20, 0)');
+      vign.addColorStop(1, 'rgba(3, 4, 8, 0.82)');
+      ctx.fillStyle = vign;
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    } else {
+      // 6. DEFAULT CYBER SYNTH GRID
+      ctx.fillStyle = PALETTE.BG;
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.08)';
+      ctx.lineWidth = 1;
+      const gridOffset = (t * 24) % 40;
+      for (let x = 0; x <= W; x += 48) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+      }
+      for (let y = gridOffset; y <= H; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
   render(ctx = this.renderer.ctx) {
     const W = this.renderer.width;
     const H = this.renderer.height;
     const scores = HighScoreStore.loadAll();
 
-    // Deep space background with perspective synth grid
-    ctx.fillStyle = PALETTE.BG;
-    ctx.fillRect(0, 0, W, H);
+    // 1. Draw Customizable Animated Background
+    this._drawLobbyBackground(ctx, W, H);
+
+    // 2. Customization Pills (Header Top Left & Right)
+    const px = this.input.pointer.x;
+    const py = this.input.pointer.y;
+
+    // Background Pill (Top Left)
+    const bgInfo =
+      LOBBY_BACKGROUND_THEMES.find((b) => b.id === this.backgroundTheme) ||
+      LOBBY_BACKGROUND_THEMES[0];
+    const bgHover =
+      px >= this.bgButtonRect.x &&
+      px <= this.bgButtonRect.x + this.bgButtonRect.w &&
+      py >= this.bgButtonRect.y &&
+      py <= this.bgButtonRect.y + this.bgButtonRect.h;
 
     ctx.save();
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.08)';
-    ctx.lineWidth = 1;
-    const gridOffset = (this.animTime * 24) % 40;
-    for (let x = 0; x <= W; x += 48) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, H);
-      ctx.stroke();
+    ctx.fillStyle = bgHover ? 'rgba(0, 240, 255, 0.22)' : 'rgba(19, 27, 46, 0.88)';
+    ctx.strokeStyle = bgHover ? PALETTE.CYAN : 'rgba(0, 240, 255, 0.40)';
+    ctx.lineWidth = bgHover ? 2 : 1;
+    if (bgHover) {
+      ctx.shadowColor = PALETTE.CYAN;
+      ctx.shadowBlur = 10;
     }
-    for (let y = gridOffset; y <= H; y += 40) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(W, y);
-      ctx.stroke();
-    }
+    ctx.fillRect(this.bgButtonRect.x, this.bgButtonRect.y, this.bgButtonRect.w, this.bgButtonRect.h);
+    ctx.strokeRect(this.bgButtonRect.x, this.bgButtonRect.y, this.bgButtonRect.w, this.bgButtonRect.h);
     ctx.restore();
+
+    this.renderer.drawText(
+      `🎨 BG: ${bgInfo.name} [B]`,
+      this.bgButtonRect.x + this.bgButtonRect.w / 2,
+      this.bgButtonRect.y + 15,
+      {
+        font: FONTS.HUD,
+        size: 9.8,
+        color: bgHover ? PALETTE.CYAN : PALETTE.WHITE,
+        align: 'center'
+      }
+    );
+
+    // Sound Pill (Top Right)
+    const activeSoundId = this.audio
+      ? typeof this.audio.getLobbySoundTheme === 'function'
+        ? this.audio.getLobbySoundTheme()
+        : 'cello'
+      : 'cello';
+    const sndInfo =
+      LOBBY_SOUND_THEMES.find((s) => s.id === activeSoundId) || LOBBY_SOUND_THEMES[0];
+    const sndHover =
+      px >= this.soundButtonRect.x &&
+      px <= this.soundButtonRect.x + this.soundButtonRect.w &&
+      py >= this.soundButtonRect.y &&
+      py <= this.soundButtonRect.y + this.soundButtonRect.h;
+
+    ctx.save();
+    ctx.fillStyle = sndHover ? 'rgba(255, 215, 0, 0.22)' : 'rgba(19, 27, 46, 0.88)';
+    ctx.strokeStyle = sndHover ? PALETTE.GOLD : 'rgba(255, 215, 0, 0.40)';
+    ctx.lineWidth = sndHover ? 2 : 1;
+    if (sndHover) {
+      ctx.shadowColor = PALETTE.GOLD;
+      ctx.shadowBlur = 10;
+    }
+    ctx.fillRect(
+      this.soundButtonRect.x,
+      this.soundButtonRect.y,
+      this.soundButtonRect.w,
+      this.soundButtonRect.h
+    );
+    ctx.strokeRect(
+      this.soundButtonRect.x,
+      this.soundButtonRect.y,
+      this.soundButtonRect.w,
+      this.soundButtonRect.h
+    );
+    ctx.restore();
+
+    this.renderer.drawText(
+      `${sndInfo.label} [M]`,
+      this.soundButtonRect.x + this.soundButtonRect.w / 2,
+      this.soundButtonRect.y + 15,
+      {
+        font: FONTS.HUD,
+        size: 9.8,
+        color: sndHover ? PALETTE.GOLD : PALETTE.WHITE,
+        align: 'center'
+      }
+    );
 
     // Header Banner
     this.renderer.drawText('RETRO ARCADE STUDIO', W / 2, 30, {
@@ -103187,6 +104177,28 @@ class RetroArcadeStudio {
       });
     }
 
+    const btnLobbyBg = document.getElementById('btn-lobby-bg');
+    if (btnLobbyBg) {
+      btnLobbyBg.addEventListener('click', () => {
+        this.audio.init();
+        if (this.mainMenu && typeof this.mainMenu.cycleBackgroundTheme === 'function') {
+          this.mainMenu.cycleBackgroundTheme();
+          this._syncLobbyCustomizationButtons();
+        }
+      });
+    }
+
+    const btnLobbySound = document.getElementById('btn-lobby-sound');
+    if (btnLobbySound) {
+      btnLobbySound.addEventListener('click', () => {
+        this.audio.init();
+        if (this.mainMenu && typeof this.mainMenu.cycleSoundTheme === 'function') {
+          this.mainMenu.cycleSoundTheme();
+          this._syncLobbyCustomizationButtons();
+        }
+      });
+    }
+
     const btnFav = document.getElementById('btn-fav-game');
     if (btnFav) {
       btnFav.addEventListener('click', () => {
@@ -103296,6 +104308,21 @@ class RetroArcadeStudio {
     }
 
     this._syncFavoriteButton();
+    this._syncLobbyCustomizationButtons();
+  }
+
+  _syncLobbyCustomizationButtons() {
+    const btnLobbyBg = document.getElementById('btn-lobby-bg');
+    if (btnLobbyBg && this.mainMenu) {
+      const bg = this.mainMenu.backgroundTheme || 'sunset';
+      btnLobbyBg.textContent = `🎨 BG: ${bg.toUpperCase()}`;
+    }
+    const btnLobbySound = document.getElementById('btn-lobby-sound');
+    if (btnLobbySound && this.audio) {
+      const snd = typeof this.audio.getLobbySoundTheme === 'function' ? this.audio.getLobbySoundTheme() : 'cello';
+      btnLobbySound.textContent = `🎻 SOUND: ${snd.toUpperCase()}`;
+      btnLobbySound.classList.toggle('active', true);
+    }
   }
 
   /**
@@ -103360,6 +104387,7 @@ class RetroArcadeStudio {
     this.audio.playMusic('lobby', true);
     this._syncHeaderStatus();
     this._syncFavoriteButton();
+    this._syncLobbyCustomizationButtons();
   }
 
   _cleanupCurrentGame() {
