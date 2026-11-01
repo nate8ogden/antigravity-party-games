@@ -561,4 +561,15 @@
     <genre>Arcade Puzzle</genre>
     <players>1-2</players>
   </game>
+  <game>
+    <path>./Rolling Thunder.sh</path>
+    <name>Rolling Thunder (1986 Namco / Atari Games)</name>
+    <desc>Leap between multi-tiered catwalks, duck into doorways for cover, and rescue Leila Blitz. Enhancements: Junko Ozawa YM2151 OST, Masker Syndicate, Bullets/Arms doors & SMG rapid fire. Controls: Walk/Jump(X) + Crouch/Cover(Down) + Door/High Jump(Up) + Shoot(Z)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1986 Namco / Atari Games</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Espionage Action</genre>
+    <players>1-2</players>
+  </game>
 </gameList>

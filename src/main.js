@@ -73,6 +73,7 @@ import { KungFuMaster } from './games/KungFuMaster.js';
 import { WildGunman } from './games/WildGunman.js';
 import { Exerion } from './games/Exerion.js';
 import { TetrisRetro } from './games/TetrisRetro.js';
+import { RollingThunder } from './games/RollingThunder.js';
 
 export const GAME_REGISTRY = {
   loderunner: LodeRunner,
@@ -124,7 +125,8 @@ export const GAME_REGISTRY = {
   kungfumaster: KungFuMaster,
   wildgunman: WildGunman,
   exerion: Exerion,
-  tetrisretro: TetrisRetro
+  tetrisretro: TetrisRetro,
+  rollingthunder: RollingThunder
 };
 
 export class RetroArcadeStudio {

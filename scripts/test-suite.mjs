@@ -185,7 +185,7 @@ const mockInput = {
 const audio = new AudioSynth();
 
 console.log('===================================================================');
-console.log('🧪 RETRO ARCADE STUDIO — 50-GAME AUTOMATED VERIFICATION SUITE');
+console.log('🧪 RETRO ARCADE STUDIO — 51-GAME AUTOMATED VERIFICATION SUITE');
 console.log('===================================================================');
 
 let failures = 0;
@@ -195,8 +195,8 @@ const catalogIds = GAME_CATALOG.map((g) => g.id);
 const registryIds = Object.keys(GAME_REGISTRY);
 console.log(`Catalog Games : ${catalogIds.length} | Registry Games : ${registryIds.length}`);
 
-if (catalogIds.length !== 50 || registryIds.length !== 50) {
-  console.error(`❌ Expected 50 games, got Catalog=${catalogIds.length}, Registry=${registryIds.length}`);
+if (catalogIds.length !== 51 || registryIds.length !== 51) {
+  console.error(`❌ Expected 51 games, got Catalog=${catalogIds.length}, Registry=${registryIds.length}`);
   failures++;
 }
 
@@ -220,13 +220,13 @@ try {
   for (const g of GAME_CATALOG) {
     menu.drawGamePreview(ctx, g.id, 10, 10, 120, 64, 1.25);
   }
-  console.log('✅ Verified MainMenu 3-tab rendering & all 50 live miniature arcade screenshots.');
+  console.log(`✅ Verified MainMenu 3-tab rendering & all ${catalogIds.length} live miniature arcade screenshots.`);
 } catch (err) {
   console.error('❌ MainMenu test failed:', err);
   failures++;
 }
 
-// Check 4: Boot, Simulate, Frame-Rate Analysis, Snapshot/Restore, State-Transition & Destroy all 50 Games
+// Check 4: Boot, Simulate, Frame-Rate Analysis, Snapshot/Restore, State-Transition & Destroy all games
 let passedGames = 0;
 const frameStats = [];
 const heapBeforeAll = process.memoryUsage().heapUsed;
@@ -360,15 +360,15 @@ for (const id of catalogIds) {
   }
 }
 
-console.log(`✅ Passed full lifecycle, simulation & save-state verification: ${passedGames}/50 games`);
+console.log(`✅ Passed full lifecycle, simulation & save-state verification: ${passedGames}/${catalogIds.length} games`);
 
-// Check 5: Frame-Rate & Memory Leak Analysis across all 50 games + Touch/Keyboard Listener Unmount Verification
+// Check 5: Frame-Rate & Memory Leak Analysis across all games + Touch/Keyboard Listener Unmount Verification
 try {
   const overallAvgMs =
     frameStats.reduce((sum, s) => sum + s.avgFrameMs, 0) / Math.max(1, frameStats.length);
   const slowest = [...frameStats].sort((a, b) => b.avgFrameMs - a.avgFrameMs)[0];
   console.log(
-    `✅ 50-Game Frame-Time Analysis: Mean=${overallAvgMs.toFixed(3)}ms/frame (60 FPS budget=16.67ms) | Peak Game=${slowest.id} (${slowest.avgFrameMs.toFixed(3)}ms/frame)`
+    `✅ ${catalogIds.length}-Game Frame-Time Analysis: Mean=${overallAvgMs.toFixed(3)}ms/frame (60 FPS budget=16.67ms) | Peak Game=${slowest.id} (${slowest.avgFrameMs.toFixed(3)}ms/frame)`
   );
 
   // Verify InputManager + TouchControls mount / unmount lifecycle across 100 game switches
@@ -607,5 +607,5 @@ if (failures > 0) {
   console.error(`❌ Test suite completed with ${failures} failure(s).`);
   process.exit(1);
 } else {
-  console.log('🏆 ALL 50 GAMES & STUDIO SYSTEMS PASSED WITH ZERO ERRORS!');
+  console.log('🏆 ALL 51 GAMES & STUDIO SYSTEMS PASSED WITH ZERO ERRORS!');
 }

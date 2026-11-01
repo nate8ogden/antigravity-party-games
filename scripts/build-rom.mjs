@@ -937,7 +937,7 @@ cp -f "\$SRC_DIR/roms/ports/gamelist.xml" "\$RETROPIE_ROOT/roms/ports/"
 cp -f "\$SRC_DIR/roms/ports/retro_arcade_data/index.html" "\$RETROPIE_ROOT/roms/ports/retro_arcade_data/"
 chmod +x "\$RETROPIE_ROOT/roms/ports/"*.sh
 
-echo "✅ Installed 9 NES ROMs, 1 SNES LoROM, 51 Arcade ROMs, and 51 RetroPie Ports!"
+echo "✅ Installed 9 NES ROMs, 1 SNES LoROM, ${ALL_50_GAMES.length + 1} Arcade ROMs, and ${ALL_50_GAMES.length + 1} RetroPie Ports!"
 echo "Restart EmulationStation to play!"
 `;
   const retropieInstallerPath = path.join(RETROPIE_DIR, 'install-retropie.sh');

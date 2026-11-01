@@ -617,6 +617,18 @@ export const GAME_CATALOG = [
     mechanics: 'Clear 4-line Tetrominoes or match 3-gem jewel chains in a dual-mode puzzle cabinet',
     controls: 'Move/Drop + Rotate/Cycle Gems(Z/Up) + Switch Mode(X)',
     enhancements: '2-in-1 Tetris + Columns modes, ghost piece, combos & neon bursts'
+  },
+  {
+    id: 'rollingthunder',
+    icon: '🕵️',
+    title: 'Rolling Thunder',
+    classicRef: '1986 Namco / Atari Games',
+    category: 'vault2',
+    genre: 'Espionage Action',
+    accent: PALETTE.GOLD,
+    mechanics: 'Leap between multi-tiered catwalks, duck into doorways for cover, and rescue Leila Blitz',
+    controls: 'Walk/Jump(X) + Crouch/Cover(Down) + Door/High Jump(Up) + Shoot(Z)',
+    enhancements: 'Junko Ozawa YM2151 OST, Masker Syndicate, Bullets/Arms doors & SMG rapid fire'
   }
 ];
 
