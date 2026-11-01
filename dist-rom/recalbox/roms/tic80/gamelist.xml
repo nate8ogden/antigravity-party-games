@@ -431,9 +431,9 @@
 		<rating>0.98</rating>
 	</game>
 	<game source="Recalbox" timestamp="0">
-		<path>./Mappy.tic</path>
-		<name>Mappy (Custom JS Port)</name>
-		<desc>Bounce on color-changing trampolines to grab stolen loot &amp; blast cats with sonic doors (1983 Namco Coin-Op) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
+		<path>./1942.tic</path>
+		<name>1942 (Custom JS Port)</name>
+		<desc>Pilot the P-38 Lightning over Pacific battlegrounds, execute 360° Loop rolls, and blast enemy squadrons (1984 Capcom Arcade) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
 		<developer>Antigravity</developer>
 		<publisher>Antigravity</publisher>
 		<genre>Arcade</genre>
@@ -494,16 +494,6 @@
 		<path>./Tetris & Columns.tic</path>
 		<name>Tetris &amp; Columns (Custom JS Port)</name>
 		<desc>Clear 4-line Tetrominoes or match 3-gem jewel chains in a dual-mode puzzle cabinet (1988 Atari / 1990 Sega) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
-		<developer>Antigravity</developer>
-		<publisher>Antigravity</publisher>
-		<genre>Arcade</genre>
-		<players>1-2</players>
-		<rating>0.98</rating>
-	</game>
-	<game source="Recalbox" timestamp="0">
-		<path>./Golden Axe.tic</path>
-		<name>Golden Axe (Custom JS Port)</name>
-		<desc>Choose from 3 iconic heroes (Ax Battler, Tyris Flare, Gilius), ride Bizarrians &amp; cast screen-filling magic (1989 Sega Arcade) — Ported from your GitHub JS codebase to run natively at 60 FPS on Recalbox!</desc>
 		<developer>Antigravity</developer>
 		<publisher>Antigravity</publisher>
 		<genre>Arcade</genre>

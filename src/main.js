@@ -66,7 +66,7 @@ import { Pengo } from './games/Pengo.js';
 import { RallyX } from './games/RallyX.js';
 import { RoadFighter } from './games/RoadFighter.js';
 import { Flicky } from './games/Flicky.js';
-import { Mappy } from './games/Mappy.js';
+import { Game1942 } from './games/Game1942.js';
 import { CircusCharlie } from './games/CircusCharlie.js';
 import { BattleCity } from './games/BattleCity.js';
 import { KungFuMaster } from './games/KungFuMaster.js';
@@ -118,7 +118,7 @@ export const GAME_REGISTRY = {
   rallyx: RallyX,
   roadfighter: RoadFighter,
   flicky: Flicky,
-  mappy: Mappy,
+  game1942: Game1942,
   circuscharlie: CircusCharlie,
   battlecity: BattleCity,
   kungfumaster: KungFuMaster,

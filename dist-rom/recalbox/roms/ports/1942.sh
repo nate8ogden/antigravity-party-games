@@ -1,12 +1,12 @@
 #!/bin/bash
 # =============================================================================
-# Retro Arcade Studio — Mappy Port Launcher
+# Retro Arcade Studio — 1942 Port Launcher
 # =============================================================================
-GAME_ID="mappy"
-GAME_TITLE="Mappy"
+GAME_ID="game1942"
+GAME_TITLE="1942"
 SHARE="/recalbox/share"
 DATA_DIR="$SHARE/system/retro_arcade_data"
-TIC_ROM="$SHARE/roms/tic80/Mappy.tic"
+TIC_ROM="$SHARE/roms/tic80/1942.tic"
 PORT=8088
 
 # 1. Start background micro-server at low CPU priority if not already running

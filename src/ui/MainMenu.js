@@ -536,16 +536,16 @@ export const GAME_CATALOG = [
     enhancements: 'Chain-rescue score multipliers & throwable flowerpots vs Tiger Cats'
   },
   {
-    id: 'mappy',
-    icon: '🐭',
-    title: 'Mappy',
-    classicRef: '1983 Namco Coin-Op',
+    id: 'game1942',
+    icon: '🛩️',
+    title: '1942',
+    classicRef: '1984 Capcom Arcade',
     category: 'vault2',
-    genre: 'Mansion Platform',
+    genre: 'Vertical Air Combat',
     accent: PALETTE.CYAN,
-    mechanics: 'Bounce on color-changing trampolines to grab stolen loot & blast cats with sonic doors',
-    controls: 'Left/Right Floor Entry + Open/Sonic Door(Z/X)',
-    enhancements: '4-bounce trampoline color tension & microwave wave doors'
+    mechanics: 'Pilot the P-38 Lightning over Pacific battlegrounds, execute 360° Loop rolls, and blast enemy squadrons',
+    controls: 'Move(Arrows/WASD) + Twin Machine Guns(Z/Space) + Loop Roll(X)',
+    enhancements: 'Evasive 360° loops, Twin Escort wingmen powerup, squadron bonus stars & Ayako super-bomber battles'
   },
   {
     id: 'circuscharlie',
@@ -1848,27 +1848,39 @@ export class MainMenu {
         break;
       }
 
-      case 'mappy': {
-        // Mansion floors + central green vertical trampoline + bouncing mouse Mappy + pink cat
-        ctx.fillStyle = '#92400E';
-        ctx.fillRect(x + 4, y + h * 0.35, w * 0.34, 4);
-        ctx.fillRect(x + w * 0.62, y + h * 0.35, w * 0.34, 4);
-        ctx.fillRect(x + 4, y + h * 0.72, w * 0.34, 4);
-        ctx.fillRect(x + w * 0.62, y + h * 0.72, w * 0.34, 4);
-        // Green elastic trampoline at bottom center
-        ctx.strokeStyle = '#00FF66';
-        ctx.lineWidth = 2.5;
+      case 'game1942':
+      case '1942': {
+        // Pacific ocean + green atoll island + P-38 Lightning fighter with dual booms & twin escorts
+        ctx.fillStyle = '#0C4A6E';
+        ctx.fillRect(x, y, w, h);
+        // Sandy atoll island
+        ctx.fillStyle = '#F59E0B';
         ctx.beginPath();
-        ctx.moveTo(x + w * 0.38, y + h - 6);
-        ctx.lineTo(x + w * 0.62, y + h - 6);
-        ctx.stroke();
-        // Bouncing Blue Mouse Mappy in center shaft
-        const my = y + 12 + Math.abs(Math.sin(t * 4.5)) * (h - 28);
+        ctx.ellipse(cx + 18, cy - 8, 22, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#10B981';
+        ctx.beginPath();
+        ctx.ellipse(cx + 18, cy - 8, 16, 9, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Silver P-38 Lightning center plane
+        ctx.fillStyle = '#94A3B8';
+        ctx.fillRect(cx - 16, cy - 2, 32, 4); // Wings
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(cx - 8, cy - 8, 3, 16); // Left boom
+        ctx.fillRect(cx + 5, cy - 8, 3, 16); // Right boom
+        ctx.fillRect(cx - 2, cy - 7, 4, 12); // Center pod
+        // Yellow spinning props
+        ctx.fillStyle = '#FACC15';
+        ctx.fillRect(cx - 10, cy - 9, 7, 2);
+        ctx.fillRect(cx + 3, cy - 9, 7, 2);
+        // Twin Escort mini-fighters
         ctx.fillStyle = '#38BDF8';
-        ctx.fillRect(cx - 4, my, 8, 8);
-        // Pink Meowky cat on floor
-        ctx.fillStyle = '#FF007A';
-        ctx.fillRect(x + 12, y + h * 0.22, 7, 7);
+        ctx.fillRect(cx - 22, cy + 2, 8, 2);
+        ctx.fillRect(cx + 14, cy + 2, 8, 2);
+        // Red enemy formation plane
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(cx - 12, y + 6, 12, 3);
+        ctx.fillRect(cx - 7, y + 3, 2, 8);
         break;
       }
 

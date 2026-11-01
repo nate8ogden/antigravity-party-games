@@ -81,7 +81,7 @@ const DEFAULT_HIGHSCORES = {
   rallyx: 13800,
   roadfighter: 16400,
   flicky: 14900,
-  mappy: 15600,
+  game1942: 19420,
   circuscharlie: 13400,
   battlecity: 18200,
   kungfumaster: 19800,

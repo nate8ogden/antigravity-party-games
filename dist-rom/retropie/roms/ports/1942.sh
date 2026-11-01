@@ -23,7 +23,7 @@ fi
 
 exec "$BROWSER" \
   --kiosk \
-  --app="file://$GAME_HTML?game=mappy&cabinet=1" \
+  --app="file://$GAME_HTML?game=game1942&cabinet=1" \
   --enable-gpu-rasterization \
   --enable-zero-copy \
   --ignore-gpu-blocklist \

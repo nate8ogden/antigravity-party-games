@@ -485,14 +485,14 @@
     <players>1-2</players>
   </game>
   <game>
-    <path>./Mappy.rom</path>
-    <name>Mappy (1983 Namco Coin-Op)</name>
-    <desc>Bounce on color-changing trampolines to grab stolen loot & blast cats with sonic doors. Enhancements: 4-bounce trampoline color tension & microwave wave doors</desc>
+    <path>./1942.rom</path>
+    <name>1942 (1984 Capcom Arcade)</name>
+    <desc>Pilot the P-38 Lightning over Pacific battlegrounds, execute 360° Loop rolls, and blast enemy squadrons. Enhancements: Evasive 360° loops, Twin Escort wingmen powerup, squadron bonus stars & Ayako super-bomber battles</desc>
     <rating>0.95</rating>
     <releasedate>20261019T000000</releasedate>
-    <developer>1983 Namco Coin-Op</developer>
+    <developer>1984 Capcom Arcade</developer>
     <publisher>Antigravity</publisher>
-    <genre>Mansion Platform</genre>
+    <genre>Vertical Air Combat</genre>
     <players>1-2</players>
   </game>
   <game>

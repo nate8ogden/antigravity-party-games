@@ -33752,538 +33752,75 @@ const SOUNDTRACKS = {
     ],
     "drums": "K.H.S.H.K.H.S.H."
   },
-  "mappy": {
-    "title": "Mansion Trampoline Rag",
+  "game1942": {
+    "title": "Main Theme & Sortie March (1942)",
     "stepDur": 0.12,
     "leadWave": "square",
-    "bassWave": "triangle",
-    "leadGain": 0.17,
-    "bassGain": 0.23,
+    "bassWave": "sawtooth",
+    "harmWave": "triangle",
+    "leadGain": 0.16,
+    "bassGain": 0.22,
+    "harmGain": 0.12,
     "lead": [
-      [
-        "C5",
-        1
-      ],
-      [
-        "D5",
-        1
-      ],
-      [
-        "Eb5",
-        1
-      ],
-      [
-        "E5",
-        2
-      ],
-      [
-        "G5",
-        1
-      ],
-      [
-        "A5",
-        2
-      ],
-      [
-        "G5",
-        2
-      ],
-      [
-        "E5",
-        2
-      ],
-      [
-        "C5",
-        4
-      ],
-      [
-        "F5",
-        1
-      ],
-      [
-        "G5",
-        1
-      ],
-      [
-        "Ab5",
-        1
-      ],
-      [
-        "A5",
-        2
-      ],
-      [
-        "C6",
-        1
-      ],
-      [
-        "D6",
-        2
-      ],
-      [
-        "B5",
-        2
-      ],
-      [
-        "G5",
-        2
-      ],
-      [
-        "C6",
-        4
-      ],
-      [
-        "E6",
-        2
-      ],
-      [
-        "C6",
-        2
-      ],
-      [
-        "G5",
-        2
-      ],
-      [
-        "C6",
-        2
-      ],
-      [
-        "D6",
-        2
-      ],
-      [
-        "B5",
-        2
-      ],
-      [
-        "G5",
-        2
-      ],
-      [
-        "B5",
-        2
-      ],
-      [
-        "C6",
-        2
-      ],
-      [
-        "A5",
-        2
-      ],
-      [
-        "F5",
-        2
-      ],
-      [
-        "A5",
-        2
-      ],
-      [
-        "G5",
-        4
-      ],
-      [
-        "E5",
-        4
-      ],
-      [
-        "F5",
-        1
-      ],
-      [
-        "A5",
-        1
-      ],
-      [
-        "C6",
-        2
-      ],
-      [
-        "E5",
-        1
-      ],
-      [
-        "G5",
-        1
-      ],
-      [
-        "C6",
-        2
-      ],
-      [
-        "D5",
-        1
-      ],
-      [
-        "F5",
-        1
-      ],
-      [
-        "B5",
-        2
-      ],
-      [
-        "C6",
-        4
-      ],
-      [
-        "G5",
-        2
-      ],
-      [
-        "C6",
-        4
-      ],
-      [
-        "E6",
-        2
-      ],
-      [
-        "C6",
-        2
-      ],
-      [
-        "G5",
-        2
-      ],
-      [
-        "C6",
-        2
-      ],
-      [
-        "D6",
-        2
-      ],
-      [
-        "B5",
-        2
-      ],
-      [
-        "G5",
-        2
-      ],
-      [
-        "B5",
-        2
-      ],
-      [
-        "C6",
-        2
-      ],
-      [
-        "A5",
-        2
-      ],
-      [
-        "F5",
-        2
-      ],
-      [
-        "A5",
-        2
-      ],
-      [
-        "G5",
-        4
-      ],
-      [
-        "E5",
-        4
-      ],
-      [
-        "F5",
-        1
-      ],
-      [
-        "A5",
-        1
-      ],
-      [
-        "C6",
-        2
-      ],
-      [
-        "E5",
-        1
-      ],
-      [
-        "G5",
-        1
-      ],
-      [
-        "C6",
-        2
-      ],
-      [
-        "D5",
-        1
-      ],
-      [
-        "F5",
-        1
-      ],
-      [
-        "B5",
-        2
-      ],
-      [
-        "C6",
-        4
-      ],
-      [
-        "G5",
-        2
-      ],
-      [
-        "C6",
-        4
-      ]
+      ["C5", 2], ["E5", 2], ["G5", 2], ["G5", 2], ["A5", 2], ["G5", 2], ["E5", 2], ["C5", 2],
+      ["D5", 2], ["F5", 2], ["A5", 4], ["G5", 2], ["E5", 2], ["C5", 4],
+      ["C5", 2], ["D5", 2], ["E5", 2], ["F5", 2], ["G5", 4], ["C6", 4],
+      ["B5", 2], ["A5", 2], ["G5", 2], ["F5", 2], ["E5", 4], ["D5", 4],
+      ["C5", 4], ["E5", 4], ["G5", 4], ["C6", 4],
+      ["E6", 2], ["D6", 2], ["C6", 2], ["A5", 2], ["G5", 4], ["E5", 4],
+      ["F5", 2], ["A5", 2], ["C6", 2], ["D6", 2], ["E6", 4], ["D6", 4],
+      ["C6", 6], ["R", 2]
     ],
     "bass": [
-      [
-        "C2",
-        2
-      ],
-      [
-        "E2",
-        2
-      ],
-      [
-        "G2",
-        2
-      ],
-      [
-        "A2",
-        2
-      ],
-      [
-        "F2",
-        2
-      ],
-      [
-        "A2",
-        2
-      ],
-      [
-        "G2",
-        2
-      ],
-      [
-        "D2",
-        2
-      ],
-      [
-        "C3",
-        2
-      ],
-      [
-        "G2",
-        2
-      ],
-      [
-        "E2",
-        2
-      ],
-      [
-        "C2",
-        2
-      ],
-      [
-        "G2",
-        2
-      ],
-      [
-        "D3",
-        2
-      ],
-      [
-        "B2",
-        2
-      ],
-      [
-        "G2",
-        2
-      ],
-      [
-        "F2",
-        2
-      ],
-      [
-        "C3",
-        2
-      ],
-      [
-        "A2",
-        2
-      ],
-      [
-        "F2",
-        2
-      ],
-      [
-        "C3",
-        2
-      ],
-      [
-        "G2",
-        2
-      ],
-      [
-        "C3",
-        4
-      ],
-      [
-        "F2",
-        2
-      ],
-      [
-        "A2",
-        2
-      ],
-      [
-        "C3",
-        2
-      ],
-      [
-        "E2",
-        2
-      ],
-      [
-        "G2",
-        2
-      ],
-      [
-        "D3",
-        2
-      ],
-      [
-        "C3",
-        2
-      ],
-      [
-        "G2",
-        2
-      ],
-      [
-        "C3",
-        2
-      ],
-      [
-        "G2",
-        2
-      ],
-      [
-        "C2",
-        4
-      ],
-      [
-        "C3",
-        2
-      ],
-      [
-        "G2",
-        2
-      ],
-      [
-        "E2",
-        2
-      ],
-      [
-        "C2",
-        2
-      ],
-      [
-        "G2",
-        2
-      ],
-      [
-        "D3",
-        2
-      ],
-      [
-        "B2",
-        2
-      ],
-      [
-        "G2",
-        2
-      ],
-      [
-        "F2",
-        2
-      ],
-      [
-        "C3",
-        2
-      ],
-      [
-        "A2",
-        2
-      ],
-      [
-        "F2",
-        2
-      ],
-      [
-        "C3",
-        2
-      ],
-      [
-        "G2",
-        2
-      ],
-      [
-        "C3",
-        4
-      ],
-      [
-        "F2",
-        2
-      ],
-      [
-        "A2",
-        2
-      ],
-      [
-        "C3",
-        2
-      ],
-      [
-        "E2",
-        2
-      ],
-      [
-        "G2",
-        2
-      ],
-      [
-        "D3",
-        2
-      ],
-      [
-        "C3",
-        2
-      ],
-      [
-        "G2",
-        2
-      ],
-      [
-        "C3",
-        2
-      ],
-      [
-        "G2",
-        2
-      ],
-      [
-        "C2",
-        4
-      ]
+      ["C2", 1], ["C2", 1], ["C3", 1], ["C2", 1], ["C2", 1], ["C3", 1], ["C2", 1], ["C2", 1],
+      ["F2", 1], ["F2", 1], ["F3", 1], ["F2", 1], ["G2", 1], ["G2", 1], ["G3", 1], ["G2", 1],
+      ["C2", 1], ["C2", 1], ["C3", 1], ["C2", 1], ["E2", 1], ["G2", 1], ["C3", 2],
+      ["G1", 1], ["G1", 1], ["G2", 1], ["G1", 1], ["B1", 1], ["D2", 1], ["G2", 2],
+      ["C2", 2], ["E2", 2], ["G2", 2], ["C3", 2],
+      ["A1", 2], ["C2", 2], ["E2", 2], ["A2", 2],
+      ["F1", 2], ["A1", 2], ["C2", 2], ["F2", 2],
+      ["G1", 2], ["B1", 2], ["D2", 2], ["G2", 2]
     ],
-    "drums": "K.H.S.H.K.S.H.S."
+    "harm": [
+      ["E4", 8], ["G4", 8], ["A4", 8], ["G4", 8],
+      ["E4", 8], ["C5", 8], ["B4", 8], ["G4", 8]
+    ],
+    "drums": "K.S.S.K.S.S.H.S.K.S.S.K.S.H.S."
+  },
+  "1942": {
+    "title": "Main Theme & Sortie March (1942)",
+    "stepDur": 0.12,
+    "leadWave": "square",
+    "bassWave": "sawtooth",
+    "harmWave": "triangle",
+    "leadGain": 0.16,
+    "bassGain": 0.22,
+    "harmGain": 0.12,
+    "lead": [
+      ["C5", 2], ["E5", 2], ["G5", 2], ["G5", 2], ["A5", 2], ["G5", 2], ["E5", 2], ["C5", 2],
+      ["D5", 2], ["F5", 2], ["A5", 4], ["G5", 2], ["E5", 2], ["C5", 4],
+      ["C5", 2], ["D5", 2], ["E5", 2], ["F5", 2], ["G5", 4], ["C6", 4],
+      ["B5", 2], ["A5", 2], ["G5", 2], ["F5", 2], ["E5", 4], ["D5", 4],
+      ["C5", 4], ["E5", 4], ["G5", 4], ["C6", 4],
+      ["E6", 2], ["D6", 2], ["C6", 2], ["A5", 2], ["G5", 4], ["E5", 4],
+      ["F5", 2], ["A5", 2], ["C6", 2], ["D6", 2], ["E6", 4], ["D6", 4],
+      ["C6", 6], ["R", 2]
+    ],
+    "bass": [
+      ["C2", 1], ["C2", 1], ["C3", 1], ["C2", 1], ["C2", 1], ["C3", 1], ["C2", 1], ["C2", 1],
+      ["F2", 1], ["F2", 1], ["F3", 1], ["F2", 1], ["G2", 1], ["G2", 1], ["G3", 1], ["G2", 1],
+      ["C2", 1], ["C2", 1], ["C3", 1], ["C2", 1], ["E2", 1], ["G2", 1], ["C3", 2],
+      ["G1", 1], ["G1", 1], ["G2", 1], ["G1", 1], ["B1", 1], ["D2", 1], ["G2", 2],
+      ["C2", 2], ["E2", 2], ["G2", 2], ["C3", 2],
+      ["A1", 2], ["C2", 2], ["E2", 2], ["A2", 2],
+      ["F1", 2], ["A1", 2], ["C2", 2], ["F2", 2],
+      ["G1", 2], ["B1", 2], ["D2", 2], ["G2", 2]
+    ],
+    "harm": [
+      ["E4", 8], ["G4", 8], ["A4", 8], ["G4", 8],
+      ["E4", 8], ["C5", 8], ["B4", 8], ["G4", 8]
+    ],
+    "drums": "K.S.S.K.S.S.H.S.K.S.S.K.S.H.S."
   },
   "circuscharlie": {
     "title": "Big Top Calliope March",
@@ -39633,7 +39170,7 @@ const DEFAULT_HIGHSCORES = {
   rallyx: 13800,
   roadfighter: 16400,
   flicky: 14900,
-  mappy: 15600,
+  game1942: 19420,
   circuscharlie: 13400,
   battlecity: 18200,
   kungfumaster: 19800,
@@ -41110,16 +40647,16 @@ const GAME_CATALOG = [
     enhancements: 'Chain-rescue score multipliers & throwable flowerpots vs Tiger Cats'
   },
   {
-    id: 'mappy',
-    icon: '🐭',
-    title: 'Mappy',
-    classicRef: '1983 Namco Coin-Op',
+    id: 'game1942',
+    icon: '🛩️',
+    title: '1942',
+    classicRef: '1984 Capcom Arcade',
     category: 'vault2',
-    genre: 'Mansion Platform',
+    genre: 'Vertical Air Combat',
     accent: PALETTE.CYAN,
-    mechanics: 'Bounce on color-changing trampolines to grab stolen loot & blast cats with sonic doors',
-    controls: 'Left/Right Floor Entry + Open/Sonic Door(Z/X)',
-    enhancements: '4-bounce trampoline color tension & microwave wave doors'
+    mechanics: 'Pilot the P-38 Lightning over Pacific battlegrounds, execute 360° Loop rolls, and blast enemy squadrons',
+    controls: 'Move(Arrows/WASD) + Twin Machine Guns(Z/Space) + Loop Roll(X)',
+    enhancements: 'Evasive 360° loops, Twin Escort wingmen powerup, squadron bonus stars & Ayako super-bomber battles'
   },
   {
     id: 'circuscharlie',
@@ -42420,27 +41957,39 @@ class MainMenu {
         break;
       }
 
-      case 'mappy': {
-        // Mansion floors + central green vertical trampoline + bouncing mouse Mappy + pink cat
-        ctx.fillStyle = '#92400E';
-        ctx.fillRect(x + 4, y + h * 0.35, w * 0.34, 4);
-        ctx.fillRect(x + w * 0.62, y + h * 0.35, w * 0.34, 4);
-        ctx.fillRect(x + 4, y + h * 0.72, w * 0.34, 4);
-        ctx.fillRect(x + w * 0.62, y + h * 0.72, w * 0.34, 4);
-        // Green elastic trampoline at bottom center
-        ctx.strokeStyle = '#00FF66';
-        ctx.lineWidth = 2.5;
+      case 'game1942':
+      case '1942': {
+        // Pacific ocean + green atoll island + P-38 Lightning fighter with dual booms & twin escorts
+        ctx.fillStyle = '#0C4A6E';
+        ctx.fillRect(x, y, w, h);
+        // Sandy atoll island
+        ctx.fillStyle = '#F59E0B';
         ctx.beginPath();
-        ctx.moveTo(x + w * 0.38, y + h - 6);
-        ctx.lineTo(x + w * 0.62, y + h - 6);
-        ctx.stroke();
-        // Bouncing Blue Mouse Mappy in center shaft
-        const my = y + 12 + Math.abs(Math.sin(t * 4.5)) * (h - 28);
+        ctx.ellipse(cx + 18, cy - 8, 22, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#10B981';
+        ctx.beginPath();
+        ctx.ellipse(cx + 18, cy - 8, 16, 9, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Silver P-38 Lightning center plane
+        ctx.fillStyle = '#94A3B8';
+        ctx.fillRect(cx - 16, cy - 2, 32, 4); // Wings
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(cx - 8, cy - 8, 3, 16); // Left boom
+        ctx.fillRect(cx + 5, cy - 8, 3, 16); // Right boom
+        ctx.fillRect(cx - 2, cy - 7, 4, 12); // Center pod
+        // Yellow spinning props
+        ctx.fillStyle = '#FACC15';
+        ctx.fillRect(cx - 10, cy - 9, 7, 2);
+        ctx.fillRect(cx + 3, cy - 9, 7, 2);
+        // Twin Escort mini-fighters
         ctx.fillStyle = '#38BDF8';
-        ctx.fillRect(cx - 4, my, 8, 8);
-        // Pink Meowky cat on floor
-        ctx.fillStyle = '#FF007A';
-        ctx.fillRect(x + 12, y + h * 0.22, 7, 7);
+        ctx.fillRect(cx - 22, cy + 2, 8, 2);
+        ctx.fillRect(cx + 14, cy + 2, 8, 2);
+        // Red enemy formation plane
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(cx - 12, y + 6, 12, 3);
+        ctx.fillRect(cx - 7, y + 3, 2, 8);
         break;
       }
 
@@ -92126,142 +91675,212 @@ class Flicky {
 return Flicky;
 })();
 
-// === src/games/Mappy.js ===
-const Mappy = (function() {
+// === src/games/Game1942.js ===
+const Game1942 = (function() {
 /**
- * Mappy.js
- * Classic 1983 Namco Trampoline Police Mouse Arcade Game ("Trampoline Cop").
- * Features a 6-floor mansion cross-section connected by elastic vertical trampolines
- * (Green -> Blue -> Yellow -> Red -> SNAP on 4th consecutive bounce!), pair-multiplier
- * stolen loot recovery (Radios, TVs, Computers, Paintings, Safes), regular & Microwave
- * Sonic Doors that sweep Meowkies and Boss Goro off screen, and mid-air trampoline immunity.
+ * Game1942.js
+ * Classic 1984 Capcom Vertical Air-Combat Arcade Shmup ("1942").
+ * Features the legendary P-38 Lightning fighter flying over the Pacific Theater,
+ * high-altitude 360° Loop-the-Loop evasive barrel rolls, Twin Escort Fighter wingmen,
+ * swooping Red Zero formations with [POW] icon drops, Ki-48 twin-engine bombers,
+ * and the massive multi-turreted Ayako Heavy Super-Bomber flagship battle!
  */
 
-const TRAMPOLINE_COLORS = [
-  '#00FF66', // 0 bounces: Vivid Green
-  '#38BDF8', // 1 bounce: Electric Blue
-  '#FFD700', // 2 bounces: Warning Yellow
-  '#FF2A55'  // 3 bounces: Critical Red (snaps on 4th bounce!)
+const STAGE_CONFIGS = [
+  { stageNum: 32, name: 'MIDWAY ATOLL', seaColor: '#0C4A6E', islandColor: '#059669', sandColor: '#FBBF24', targetEnemies: 35 },
+  { stageNum: 28, name: 'MARSHALL ISLANDS', seaColor: '#075985', islandColor: '#10B981', sandColor: '#FDE68A', targetEnemies: 42 },
+  { stageNum: 24, name: 'WAKE ISLAND', seaColor: '#0369A1', islandColor: '#047857', sandColor: '#F59E0B', targetEnemies: 48 },
+  { stageNum: 20, name: 'GUADALCANAL', seaColor: '#1E40AF', islandColor: '#15803D', sandColor: '#FBBF24', targetEnemies: 54 },
+  { stageNum: 16, name: 'NEW GUINEA', seaColor: '#1D4ED8', islandColor: '#166534', sandColor: '#FDE047', targetEnemies: 60 },
+  { stageNum: 12, name: 'PHILIPPINE SEA', seaColor: '#1E3A8A', islandColor: '#065F46', sandColor: '#F59E0B', targetEnemies: 66 },
+  { stageNum: 8, name: 'OKINAWA', seaColor: '#172554', islandColor: '#14532D', sandColor: '#FBBF24', targetEnemies: 72 },
+  { stageNum: 4, name: 'TOKYO BAY', seaColor: '#0F172A', islandColor: '#1F2937', sandColor: '#D97706', targetEnemies: 80 }
 ];
-
-const LOOT_TYPES = [
-  { id: 'radio', name: 'BOOMBOX', basePts: 100, color: '#FF2A55', accent: '#F8FAFC' },
-  { id: 'tv', name: 'RETRO TV', basePts: 200, color: '#38BDF8', accent: '#FFD700' },
-  { id: 'pc', name: 'MICRO PC', basePts: 300, color: '#00FF66', accent: '#0B0F19' },
-  { id: 'art', name: 'MONA LISA', basePts: 400, color: '#FFD700', accent: '#B829FF' },
-  { id: 'safe', name: 'GOLD SAFE', basePts: 500, color: '#F97316', accent: '#FDE047' }
-];
-
-const MAPPY_SPRITE = [
-  '..BBBBBB..',
-  '.BWWWWWWB.',
-  'BWKWWWWKWB',
-  'BWWPPPPWWB',
-  '.BBBBBBBB.',
-  '..BYYYYB..',
-  '.BBBBBBBB.',
-  'BB.BBBB.BB',
-  '...B..B...',
-  '..WW..WW..'
-];
-
-const MEOWKY_SPRITE = [
-  '.P......P.',
-  'PPP....PPP',
-  'PPPPPPPPPP',
-  'PWKPPPPKWP',
-  'PPPPWWPPPP',
-  '.PPPPPPPP.',
-  '..PPPPPP..',
-  '.P.PPPP.P.',
-  'P..P..P..P',
-  '..WW..WW..'
-];
-
-const GORO_SPRITE = [
-  '.R......R.',
-  'RRR....RRR',
-  'RRRRRRRRRR',
-  'RYKRRRRKYR',
-  'RRRRWWRRRR',
-  'RYYYYYYYYR',
-  'RRRRRRRRRR',
-  'RYYYYYYYYR',
-  '.R.RRRR.R.',
-  '..WW..WW..'
-];
-class Mappy {
+class Game1942 {
   constructor(renderer, input, audio) {
     this.renderer = renderer;
     this.input = input;
     this.audio = audio;
 
-    this.id = 'mappy';
-    this.title = 'Mappy';
+    this.id = 'game1942';
+    this.title = '1942';
 
     this.state = 'PLAYING';
     this.score = 0;
     this.highScore = HighScoreStore.get(this.id);
     this.lives = 3;
     this.level = 1;
+    this.stage = 1;
 
-    // 6 Mansion Floors (index 0 = top attic floor, index 5 = bottom ground floor)
-    this.floorYs = [132, 198, 264, 330, 396, 462];
-    this.trampolineY = 514;
+    // Viewport dimensions
+    this.width = 960;
+    this.height = 540;
 
-    // Vertical shaft centers and widths
-    this.shafts = [
-      { x: 108, w: 46 },
-      { x: 356, w: 46 },
-      { x: 604, w: 46 },
-      { x: 852, w: 46 }
-    ];
+    // Ocean & island scenery
+    this.scrollSpeed = 90;
+    this.scrollY = 0;
+    this.islands = [];
+    this.clouds = [];
+    this.ships = [];
 
-    // Walkable floor segments between shafts
-    this.floorSegments = [
-      { x1: 36, x2: 85 },
-      { x1: 131, x2: 333 },
-      { x1: 379, x2: 581 },
-      { x1: 627, x2: 829 },
-      { x1: 875, x2: 924 }
-    ];
-
-    this.trampolines = [];
-    this.doors = [];
-    this.sonicWaves = [];
-    this.loots = [];
-    this.cats = [];
+    // Entities
+    this.player = null;
+    this.playerBullets = [];
+    this.enemyBullets = [];
+    this.enemies = [];
+    this.powerups = [];
     this.particles = [];
     this.popups = [];
 
-    this.lastCollectedType = null;
-    this.pairMultiplier = 1;
-    this.hurryTimer = 45;
-    this.hurryTriggered = false;
+    // Formation tracker for 100% squad wipe bonuses
+    this.formations = new Map();
+    this.formationCounter = 0;
+
+    // Spawning timers
+    this.spawnTimer = 0;
+    this.nextSpawnDelay = 1.2;
+    this.stageEnemiesSpawned = 0;
+    this.stageKills = 0;
+    this.boss = null;
+    this.bossSpawned = false;
+
+    // Transition / clear timers
     this.stageClearTimer = 0;
     this.deathTimer = 0;
-    this.animTime = 0;
 
-    this.player = null;
+    this._initScenery();
+    this._setupTouchLabels();
     this.reset();
+  }
+
+  _setupTouchLabels() {
+    if (typeof document === 'undefined') return;
+    const subA = document.querySelector('#touch-btn-a .btn-sub-label');
+    const subB = document.querySelector('#touch-btn-b .btn-sub-label');
+    if (subA) subA.textContent = 'FIRE (Z)';
+    if (subB) subB.textContent = 'LOOP (X)';
+  }
+
+  _restoreTouchLabels() {
+    if (typeof document === 'undefined') return;
+    const subA = document.querySelector('#touch-btn-a .btn-sub-label');
+    const subB = document.querySelector('#touch-btn-b .btn-sub-label');
+    if (subA) subA.textContent = 'ACT / DIG-L / JUMP';
+    if (subB) subB.textContent = 'ALT / DIG-R / SLAP';
+  }
+
+  _initScenery() {
+    this.islands = [];
+    for (let i = 0; i < 7; i++) {
+      this.islands.push({
+        x: 80 + Math.random() * 800,
+        y: Math.random() * 900 - 300,
+        w: 90 + Math.random() * 140,
+        h: 60 + Math.random() * 90,
+        palms: Math.floor(3 + Math.random() * 5)
+      });
+    }
+
+    this.clouds = [];
+    for (let i = 0; i < 9; i++) {
+      this.clouds.push({
+        x: Math.random() * this.width,
+        y: Math.random() * this.height,
+        r: 30 + Math.random() * 45,
+        speed: 40 + Math.random() * 30,
+        alpha: 0.15 + Math.random() * 0.2
+      });
+    }
+
+    this.ships = [];
+    for (let i = 0; i < 3; i++) {
+      this.ships.push({
+        x: 120 + i * 280,
+        y: -100 - i * 350,
+        type: i % 2 === 0 ? 'carrier' : 'destroyer',
+        w: i % 2 === 0 ? 54 : 32,
+        h: i % 2 === 0 ? 150 : 80,
+        speed: 35
+      });
+    }
   }
 
   reset() {
     this.score = 0;
     this.lives = 3;
     this.level = 1;
+    this.stage = 1;
     this.highScore = HighScoreStore.get(this.id);
     this.state = 'PLAYING';
     this.initStage(this.level);
   }
 
-  setState(state) {
-    this.state = state;
+  initStage(lvl) {
+    this.level = lvl;
+    this.stage = lvl;
+    this.stageConfig = STAGE_CONFIGS[(lvl - 1) % STAGE_CONFIGS.length];
+
+    this.stageEnemiesSpawned = 0;
+    this.stageKills = 0;
+    this.boss = null;
+    this.bossSpawned = false;
+    this.stageClearTimer = 0;
+    this.deathTimer = 0;
+
+    this.playerBullets = [];
+    this.enemyBullets = [];
+    this.enemies = [];
+    this.powerups = [];
+    this.formations.clear();
+
+    this._initPlayer();
+
+    if (this.audio) {
+      this.audio.playMusic('game1942', true);
+    }
+
+    this.popups.push({
+      text: `STAGE ${this.stageConfig.stageNum} — ${this.stageConfig.name}`,
+      x: this.width / 2,
+      y: 220,
+      color: PALETTE.GOLD,
+      size: 18,
+      life: 2.5
+    });
   }
 
-  destroy() {
-    if (this.audio && typeof this.audio.stopSequence === 'function') {
-      this.audio.stopSequence();
+  _initLevel(lvl) {
+    this.initStage(lvl);
+  }
+
+  loadLevel(lvl) {
+    this.initStage(lvl);
+  }
+
+  _initPlayer() {
+    this.player = {
+      x: this.width / 2,
+      y: 440,
+      vx: 0,
+      vy: 0,
+      speed: 310,
+      tilt: 0, // Bank angle (-1 to 1)
+      fireCooldown: 0,
+      hasWingmen: false, // Twin Escort Fighter wingmen powerup
+      wingmenHp: 2,
+      loopsLeft: 3, // 360-degree loop roll charges
+      isLooping: false,
+      loopTimer: 0,
+      loopDuration: 0.85,
+      invulnerableTimer: 2.0,
+      propellerAngle: 0
+    };
+  }
+
+  setState(state) {
+    this.state = state;
+    if (state === 'GAMEOVER') {
+      HighScoreStore.submit(this.id, this.score);
     }
   }
 
@@ -92276,1129 +91895,1239 @@ class Mappy {
         text: label ? `${label} +${pts}` : `+${pts}`,
         x,
         y,
-        vy: -38,
-        life: 1.05,
-        maxLife: 1.05,
-        color
+        color,
+        size: label ? 14 : 12,
+        life: 1.2
       });
     }
   }
 
-  initStage(level) {
-    this.particles = [];
-    this.popups = [];
-    this.sonicWaves = [];
-    this.lastCollectedType = null;
-    this.pairMultiplier = 1;
-    this.hurryTimer = Math.max(28, 46 - level * 2);
-    this.hurryTriggered = false;
-    this.stageClearTimer = 0;
-    this.deathTimer = 0;
+  triggerLoopRoll() {
+    if (!this.player || this.player.isLooping || this.player.loopsLeft <= 0 || this.state !== 'PLAYING') return;
+    this.player.isLooping = true;
+    this.player.loopTimer = 0;
+    this.player.loopsLeft--;
 
-    // 4 Bottom & Mid-shaft Trampolines (each shaft has a primary bottom trampoline)
-    this.trampolines = this.shafts.map((s, idx) => ({
-      id: idx,
-      shaftIndex: idx,
-      x: s.x,
-      y: this.trampolineY,
-      w: s.w + 8,
-      bounces: 0, // 0=Green, 1=Blue, 2=Yellow, 3=Red, 4=Snapped
-      broken: false,
-      deflect: 0
-    }));
-
-    const MANSION_CONFIGS = [
-      {
-        name: 'RED ROOF MANOR',
-        roof: '#B91C1C',
-        roofTrim: '#FCA5A5',
-        wall: '#151E32',
-        floorBar: '#F59E0B',
-        doors: [
-          { floor: 0, x: 230, facing: -1, microwave: false },
-          { floor: 0, x: 725, facing: 1, microwave: true },
-          { floor: 1, x: 205, facing: 1, microwave: true },
-          { floor: 1, x: 480, facing: -1, microwave: false },
-          { floor: 2, x: 480, facing: 1, microwave: true },
-          { floor: 2, x: 740, facing: -1, microwave: false },
-          { floor: 3, x: 230, facing: -1, microwave: false },
-          { floor: 3, x: 720, facing: 1, microwave: true },
-          { floor: 4, x: 215, facing: 1, microwave: false },
-          { floor: 4, x: 480, facing: -1, microwave: true },
-          { floor: 5, x: 480, facing: 1, microwave: false }
-        ],
-        loots: [
-          { floor: 0, x: 170 }, { floor: 0, x: 520 },
-          { floor: 1, x: 285 }, { floor: 1, x: 780 },
-          { floor: 2, x: 185 }, { floor: 2, x: 675 },
-          { floor: 3, x: 440 }, { floor: 3, x: 790 },
-          { floor: 4, x: 295 }, { floor: 4, x: 695 }
-        ]
-      },
-      {
-        name: 'SAPPHIRE PENTHOUSE',
-        roof: '#1D4ED8',
-        roofTrim: '#93C5FD',
-        wall: '#0F172A',
-        floorBar: '#38BDF8',
-        doors: [
-          { floor: 0, x: 210, facing: 1, microwave: true },
-          { floor: 0, x: 480, facing: -1, microwave: false },
-          { floor: 1, x: 250, facing: -1, microwave: false },
-          { floor: 1, x: 730, facing: 1, microwave: true },
-          { floor: 2, x: 215, facing: 1, microwave: true },
-          { floor: 2, x: 490, facing: -1, microwave: false },
-          { floor: 3, x: 470, facing: 1, microwave: true },
-          { floor: 3, x: 735, facing: -1, microwave: false },
-          { floor: 4, x: 235, facing: -1, microwave: false },
-          { floor: 4, x: 720, facing: 1, microwave: true },
-          { floor: 5, x: 230, facing: 1, microwave: false }
-        ],
-        loots: [
-          { floor: 0, x: 290 }, { floor: 0, x: 760 },
-          { floor: 1, x: 175 }, { floor: 1, x: 530 },
-          { floor: 2, x: 295 }, { floor: 2, x: 775 },
-          { floor: 3, x: 185 }, { floor: 3, x: 535 },
-          { floor: 4, x: 430 }, { floor: 4, x: 790 }
-        ]
-      },
-      {
-        name: 'EMERALD GALLERY',
-        roof: '#047857',
-        roofTrim: '#6EE7B7',
-        wall: '#091E1A',
-        floorBar: '#10B981',
-        doors: [
-          { floor: 0, x: 480, facing: 1, microwave: true },
-          { floor: 0, x: 730, facing: -1, microwave: false },
-          { floor: 1, x: 220, facing: -1, microwave: false },
-          { floor: 1, x: 475, facing: 1, microwave: true },
-          { floor: 2, x: 235, facing: 1, microwave: false },
-          { floor: 2, x: 715, facing: -1, microwave: true },
-          { floor: 3, x: 210, facing: -1, microwave: true },
-          { floor: 3, x: 480, facing: 1, microwave: false },
-          { floor: 4, x: 485, facing: -1, microwave: false },
-          { floor: 4, x: 735, facing: 1, microwave: true },
-          { floor: 5, x: 720, facing: -1, microwave: false }
-        ],
-        loots: [
-          { floor: 0, x: 195 }, { floor: 0, x: 660 },
-          { floor: 1, x: 300 }, { floor: 1, x: 750 },
-          { floor: 2, x: 435 }, { floor: 2, x: 785 },
-          { floor: 3, x: 285 }, { floor: 3, x: 685 },
-          { floor: 4, x: 180 }, { floor: 4, x: 540 }
-        ]
-      },
-      {
-        name: 'VIOLET CHATEAU',
-        roof: '#7E22CE',
-        roofTrim: '#D8B4FE',
-        wall: '#1B102E',
-        floorBar: '#F472B6',
-        doors: [
-          { floor: 0, x: 225, facing: -1, microwave: true },
-          { floor: 1, x: 480, facing: 1, microwave: false },
-          { floor: 1, x: 725, facing: -1, microwave: true },
-          { floor: 2, x: 215, facing: 1, microwave: false },
-          { floor: 2, x: 480, facing: -1, microwave: true },
-          { floor: 3, x: 240, facing: 1, microwave: true },
-          { floor: 3, x: 715, facing: -1, microwave: false },
-          { floor: 4, x: 210, facing: -1, microwave: true },
-          { floor: 4, x: 735, facing: 1, microwave: false },
-          { floor: 5, x: 235, facing: 1, microwave: false },
-          { floor: 5, x: 725, facing: -1, microwave: false }
-        ],
-        loots: [
-          { floor: 0, x: 295 }, { floor: 0, x: 480 },
-          { floor: 1, x: 180 }, { floor: 1, x: 660 },
-          { floor: 2, x: 295 }, { floor: 2, x: 760 },
-          { floor: 3, x: 480 }, { floor: 3, x: 785 },
-          { floor: 4, x: 285 }, { floor: 4, x: 525 }
-        ]
-      },
-      {
-        name: 'GOLDEN BULLION VAULT',
-        roof: '#B45309',
-        roofTrim: '#FDE047',
-        wall: '#1F160B',
-        floorBar: '#FBBF24',
-        doors: [
-          { floor: 0, x: 240, facing: 1, microwave: false },
-          { floor: 0, x: 715, facing: -1, microwave: true },
-          { floor: 1, x: 215, facing: -1, microwave: true },
-          { floor: 1, x: 735, facing: 1, microwave: false },
-          { floor: 2, x: 475, facing: 1, microwave: true },
-          { floor: 3, x: 220, facing: 1, microwave: false },
-          { floor: 3, x: 485, facing: -1, microwave: true },
-          { floor: 4, x: 230, facing: -1, microwave: false },
-          { floor: 4, x: 480, facing: 1, microwave: true },
-          { floor: 5, x: 480, facing: -1, microwave: false }
-        ],
-        loots: [
-          { floor: 0, x: 170 }, { floor: 0, x: 790 },
-          { floor: 1, x: 430 }, { floor: 1, x: 530 },
-          { floor: 2, x: 190 }, { floor: 2, x: 760 },
-          { floor: 3, x: 295 }, { floor: 3, x: 735 },
-          { floor: 4, x: 665 }, { floor: 4, x: 790 }
-        ]
-      },
-      {
-        name: 'GORO GRAND FORTRESS',
-        roof: '#BE123C',
-        roofTrim: '#FDA4AF',
-        wall: '#1E1122',
-        floorBar: '#FB923C',
-        doors: [
-          { floor: 0, x: 220, facing: 1, microwave: true },
-          { floor: 0, x: 480, facing: -1, microwave: false },
-          { floor: 0, x: 735, facing: -1, microwave: true },
-          { floor: 1, x: 235, facing: -1, microwave: false },
-          { floor: 1, x: 720, facing: 1, microwave: false },
-          { floor: 2, x: 215, facing: 1, microwave: true },
-          { floor: 2, x: 735, facing: -1, microwave: true },
-          { floor: 3, x: 480, facing: 1, microwave: false },
-          { floor: 4, x: 225, facing: -1, microwave: true },
-          { floor: 4, x: 725, facing: 1, microwave: false },
-          { floor: 5, x: 230, facing: 1, microwave: false },
-          { floor: 5, x: 730, facing: -1, microwave: false }
-        ],
-        loots: [
-          { floor: 0, x: 295 }, { floor: 0, x: 665 },
-          { floor: 1, x: 170 }, { floor: 1, x: 480 },
-          { floor: 2, x: 430 }, { floor: 2, x: 530 },
-          { floor: 3, x: 195 }, { floor: 3, x: 765 },
-          { floor: 4, x: 300 }, { floor: 4, x: 665 }
-        ]
-      }
-    ];
-
-    const cfg = MANSION_CONFIGS[(level - 1) % MANSION_CONFIGS.length];
-    this.mansionTheme = cfg;
-
-    // Create Doors across the 6 floors (both Standard Doors and Microwave Sonic Doors)
-    this.doors = [];
-    cfg.doors.forEach((dp, i) => {
-      this.doors.push({
-        id: i,
-        floor: dp.floor,
-        x: dp.x,
-        y: this.floorYs[dp.floor],
-        facing: dp.facing, // direction sonic wave travels when opened
-        isOpen: false,
-        isMicrowave: dp.microwave,
-        charges: dp.microwave ? 1 : 0,
-        rechargeTimer: 0
-      });
-    });
-
-    // Place 10 Stolen Loot items (2 of each of the 5 LOOT_TYPES)
-    const lootSpots = cfg.loots;
-
-    this.loots = lootSpots.map((spot, idx) => {
-      const t = LOOT_TYPES[Math.floor(idx / 2) % LOOT_TYPES.length];
-      return {
-        id: idx,
-        typeId: t.id,
-        name: t.name,
-        basePts: t.basePts,
-        color: t.color,
-        accent: t.accent,
-        floor: spot.floor,
-        x: spot.x,
-        y: this.floorYs[spot.floor] - 18,
-        collected: false,
-        goroHiding: false
-      };
-    });
-
-    this.spawnEntities(level);
-  }
-
-  spawnEntities(level) {
-    this.player = {
-      x: 480,
-      y: this.floorYs[5],
-      vx: 0,
-      vy: 0,
-      floor: 5,
-      mode: 'FLOOR', // 'FLOOR' | 'TRAMPOLINE' | 'FALLING_DEAD'
-      shaftIndex: -1,
-      facing: 1,
-      speed: 175,
-      targetPeakFloor: 0,
-      stunTimer: 0,
-      animFrame: 0
-    };
-
-    // Spawn Boss Goro + Meowkies
-    this.cats = [];
-    // Boss Goro (Nyamco)
-    this.cats.push({
-      id: 0,
-      isGoro: true,
-      x: 480,
-      y: this.floorYs[0],
-      floor: 0,
-      mode: 'FLOOR',
-      shaftIndex: -1,
-      vy: 140,
-      dir: 1,
-      speed: 112 + level * 6,
-      stunTimer: 0,
-      hideTimer: 0,
-      hidingLoot: null,
-      swept: false
-    });
-
-    const meowkyCount = Math.min(6, 3 + Math.floor((level + 1) / 2));
-    for (let i = 0; i < meowkyCount; i++) {
-      const fl = i % 5;
-      const sx = i % 2 === 0 ? 190 + i * 30 : 750 - i * 35;
-      this.cats.push({
-        id: i + 1,
-        isGoro: false,
-        x: sx,
-        y: this.floorYs[fl],
-        floor: fl,
-        mode: 'FLOOR',
-        shaftIndex: -1,
-        vy: 150,
-        dir: i % 2 === 0 ? 1 : -1,
-        speed: 122 + level * 7 + (i % 2) * 8,
-        stunTimer: 0,
-        swept: false
-      });
-    }
-  }
-
-  getShaftAtX(x, tolerance = 18) {
-    for (let i = 0; i < this.shafts.length; i++) {
-      if (Math.abs(x - this.shafts[i].x) <= tolerance) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  isOverShaftGap(x) {
-    for (let i = 0; i < this.shafts.length; i++) {
-      const half = this.shafts[i].w * 0.5 - 4;
-      if (Math.abs(x - this.shafts[i].x) < half) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  canLandOnFloorSide(shaftIdx, floorIdx, sideDir) {
-    const sx = this.shafts[shaftIdx].x;
-    const testX = sx + sideDir * (this.shafts[shaftIdx].w * 0.5 + 14);
-    if (testX < 42 || testX > 918) return false;
-    // Check closed door blocking entry right at shaft edge
-    for (const d of this.doors) {
-      if (d.floor === floorIdx && !d.isOpen && Math.abs(d.x - testX) < 16) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  triggerDoorAction() {
-    const p = this.player;
-    if (p.mode !== 'FLOOR') return;
-
-    let bestDoor = null;
-    let bestDist = 48;
-    for (const d of this.doors) {
-      if (d.floor === p.floor) {
-        const dist = Math.abs(d.x - p.x);
-        if (dist < bestDist) {
-          bestDist = dist;
-          bestDoor = d;
-        }
-      }
+    if (this.audio) {
+      this.audio.playNote(180, 0.12, 'sawtooth', 0.22, 0);
+      this.audio.playNote(360, 0.25, 'sine', 0.3, 0.08);
+      this.audio.playNote(540, 0.22, 'triangle', 0.25, 0.25);
     }
 
-    if (!bestDoor) return;
-
-    if (bestDoor.isMicrowave && bestDoor.charges > 0 && !bestDoor.isOpen) {
-      // Fire Microwave Sonic Wave!
-      bestDoor.isOpen = true;
-      bestDoor.charges = 0;
-      bestDoor.rechargeTimer = 11.0;
-      const dir = p.x <= bestDoor.x ? 1 : -1;
-      this.sonicWaves.push({
-        x: bestDoor.x + dir * 12,
-        y: bestDoor.y - 18,
-        floor: bestDoor.floor,
-        dir,
-        speed: 380,
-        width: 44,
-        caughtCats: []
-      });
-      this.audio.playPowerUp();
-      this.renderer.shake(5, 0.18);
-    } else {
-      bestDoor.isOpen = !bestDoor.isOpen;
-      this.audio.playHop();
-      // Slamming a door stuns nearby cats
-      for (const c of this.cats) {
-        if (c.mode === 'FLOOR' && c.floor === bestDoor.floor && Math.abs(c.x - bestDoor.x) < 42) {
-          c.stunTimer = 2.4;
-          c.dir = c.x < bestDoor.x ? -1 : 1;
-          this.addScore(50, c.x, c.y - 20, PALETTE.CYAN, 'SLAM');
-        }
-      }
-    }
-  }
-
-  killPlayer(reason = 'CAUGHT!') {
-    if (this.deathTimer > 0 || this.stageClearTimer > 0) return;
-    this.lives--;
-    this.audio.playHit();
-    this.renderer.shake(9, 0.3);
     this.popups.push({
-      text: reason,
+      text: '360° LOOP ROLL!',
       x: this.player.x,
-      y: this.player.y - 24,
-      vy: -30,
-      life: 1.1,
-      maxLife: 1.1,
-      color: PALETTE.RED
+      y: this.player.y - 40,
+      color: PALETTE.CYAN,
+      size: 15,
+      life: 0.9
     });
+  }
 
-    for (let i = 0; i < 24; i++) {
-      const a = (Math.PI * 2 * i) / 24;
-      const spd = 60 + Math.random() * 140;
-      this.particles.push({
-        x: this.player.x,
-        y: this.player.y - 12,
-        vx: Math.cos(a) * spd,
-        vy: Math.sin(a) * spd,
-        gravity: 260,
-        size: 3.5,
-        life: 0.55,
-        maxLife: 0.55,
-        color: i % 2 === 0 ? PALETTE.BLUE : PALETTE.WHITE
-      });
+  triggerMegaBomb() {
+    if (this.audio) {
+      this.audio.playExplosion(0.6, 600);
+      this.audio.playPowerUp();
     }
+    // Turn all enemy bullets into floating +100 bonus stars
+    for (const b of this.enemyBullets) {
+      this.addScore(100, b.x, b.y, PALETTE.GOLD);
+      this._spawnSparks(b.x, b.y, PALETTE.GOLD, 6);
+    }
+    this.enemyBullets = [];
 
-    if (this.lives <= 0) {
-      HighScoreStore.submit(this.id, this.score);
-      this.audio.playGameOver();
-      this.state = 'GAMEOVER';
-    } else {
-      this.deathTimer = 1.25;
+    // Damage or kill all active minor enemies
+    for (const e of this.enemies) {
+      if (e.isBoss) {
+        e.hp -= 20;
+      } else {
+        e.hp = 0;
+        this.addScore(e.points, e.x, e.y, PALETTE.GOLD);
+        this._spawnExplosion(e.x, e.y, 22);
+      }
     }
+    this.popups.push({
+      text: '💥 MEGA BOMB BLAST!',
+      x: this.width / 2,
+      y: 200,
+      color: PALETTE.ORANGE,
+      size: 20,
+      life: 1.5
+    });
   }
 
   update(dt) {
-    this.animTime += dt;
-
-    if (this.input.isJustPressed('pause')) {
-      this.state = this.state === 'PLAYING' ? 'PAUSED' : 'PLAYING';
-      return;
-    }
-
-    if (this.state === 'MENU' || this.state === 'GAMEOVER') {
-      if (this.input.isJustPressed('actionA') || this.input.pointer.justPressed) {
-        this.audio.playMenuSelect();
-        this.reset();
+    if (this.state !== 'PLAYING') {
+      if (this.state === 'GAMEOVER') {
+        if (this.input.isJustPressed('actionA') || this.input.isJustPressed('actionB') || this.input.isKeyJustPressed('KeyZ') || this.input.isKeyJustPressed('KeyX') || this.input.isKeyJustPressed('Space')) {
+          this.reset();
+        }
       }
       return;
     }
 
-    if (this.state === 'PAUSED') {
-      if (this.input.isJustPressed('actionA')) this.state = 'PLAYING';
-      return;
-    }
-
-    this.updateEffects(dt);
-
-    if (this.stageClearTimer > 0) {
-      this.stageClearTimer -= dt;
-      if (this.stageClearTimer <= 0) {
-        this.level++;
-        this.initStage(this.level);
-      }
-      return;
-    }
+    this._updateScenery(dt);
+    this._updatePlayer(dt);
+    this._updateBullets(dt);
+    this._updateEnemies(dt);
+    this._updatePowerups(dt);
+    this._updateParticles(dt);
+    this._updatePopups(dt);
 
     if (this.deathTimer > 0) {
       this.deathTimer -= dt;
       if (this.deathTimer <= 0) {
-        // Restore unbroken trampolines and respawn positions
-        this.trampolines.forEach((t) => {
-          t.bounces = 0;
-          t.broken = false;
-        });
-        this.spawnEntities(this.level);
-      }
-      return;
-    }
-
-    // Hurry timer
-    this.hurryTimer -= dt;
-    if (this.hurryTimer <= 0 && !this.hurryTriggered) {
-      this.hurryTriggered = true;
-      this.popups.push({
-        text: 'HURRY UP!!',
-        x: 480,
-        y: 90,
-        vy: -15,
-        life: 1.5,
-        maxLife: 1.5,
-        color: PALETTE.RED
-      });
-      this.cats.forEach((c) => {
-        c.speed *= 1.28;
-      });
-    }
-
-    // Recharge microwave doors over time
-    for (const d of this.doors) {
-      if (d.isMicrowave && d.charges === 0 && d.rechargeTimer > 0) {
-        d.rechargeTimer -= dt;
-        if (d.rechargeTimer <= 0) {
-          d.charges = 1;
-          d.isOpen = false;
+        if (this.lives > 0) {
+          this._initPlayer();
+        } else {
+          this.state = 'GAMEOVER';
+          HighScoreStore.submit(this.id, this.score);
+          if (this.audio) this.audio.playGameOver();
         }
       }
     }
 
-    this.updatePlayer(dt);
-    this.updateSonicWaves(dt);
-    this.updateCats(dt);
-    this.checkLootCollection();
+    // Stage Clear Progression
+    if (this.stageClearTimer > 0) {
+      this.stageClearTimer -= dt;
+      if (this.stageClearTimer <= 0) {
+        this.initStage(this.level + 1);
+      }
+    } else if (
+      this.stageEnemiesSpawned >= this.stageConfig.targetEnemies &&
+      this.enemies.length === 0 &&
+      !this.bossSpawned
+    ) {
+      // Spawn Flagship Ayako Boss
+      this._spawnAyakoBoss();
+    }
   }
 
-  updateEffects(dt) {
-    for (let i = this.particles.length - 1; i >= 0; i--) {
-      const pt = this.particles[i];
-      pt.x += pt.vx * dt;
-      pt.y += pt.vy * dt;
-      pt.vy += (pt.gravity || 0) * dt;
-      pt.life -= dt;
-      if (pt.life <= 0) this.particles.splice(i, 1);
+  _updateScenery(dt) {
+    this.scrollY += this.scrollSpeed * dt;
+
+    // Scroll Islands
+    for (const island of this.islands) {
+      island.y += this.scrollSpeed * dt;
+      if (island.y > this.height + 150) {
+        island.y = -150 - Math.random() * 200;
+        island.x = 80 + Math.random() * 800;
+      }
     }
+
+    // Scroll Ships
+    for (const ship of this.ships) {
+      ship.y += (this.scrollSpeed - ship.speed) * dt;
+      if (ship.y > this.height + 200) {
+        ship.y = -200 - Math.random() * 300;
+        ship.x = 100 + Math.random() * 760;
+      }
+    }
+
+    // Scroll Clouds
+    for (const cloud of this.clouds) {
+      cloud.y += cloud.speed * dt;
+      if (cloud.y > this.height + cloud.r) {
+        cloud.y = -cloud.r;
+        cloud.x = Math.random() * this.width;
+      }
+    }
+  }
+
+  _updatePlayer(dt) {
+    if (!this.player) return;
+
+    if (this.player.invulnerableTimer > 0) {
+      this.player.invulnerableTimer -= dt;
+    }
+
+    // Loop Roll update
+    if (this.player.isLooping) {
+      this.player.loopTimer += dt;
+      this.player.propellerAngle += dt * 45;
+      if (this.player.loopTimer >= this.player.loopDuration) {
+        this.player.isLooping = false;
+        this.player.loopTimer = 0;
+      }
+      return; // Player cannot move or shoot during 360 loop
+    }
+
+    // Controls: Directional Input
+    let dx = 0;
+    let dy = 0;
+    const axis = this.input.getAxis ? this.input.getAxis() : { x: 0, y: 0 };
+    dx += axis.x;
+    dy += axis.y;
+
+    if (this.input.isDown('left') || this.input.isKeyDown('ArrowLeft') || this.input.isKeyDown('KeyA')) dx -= 1;
+    if (this.input.isDown('right') || this.input.isKeyDown('ArrowRight') || this.input.isKeyDown('KeyD')) dx += 1;
+    if (this.input.isDown('up') || this.input.isKeyDown('ArrowUp') || this.input.isKeyDown('KeyW')) dy -= 1;
+    if (this.input.isDown('down') || this.input.isKeyDown('ArrowDown') || this.input.isKeyDown('KeyS')) dy += 1;
+
+    // Pointer / Touch Drag
+    const ptr = this.input.pointer;
+    if (ptr && ptr.down && ptr.y > 60 && ptr.y < this.height - 40) {
+      const pDx = ptr.x - this.player.x;
+      const pDy = ptr.y - this.player.y;
+      const dist = Math.hypot(pDx, pDy);
+      if (dist > 15) {
+        dx = pDx / dist;
+        dy = pDy / dist;
+      }
+    }
+
+    // Normalize
+    const len = Math.hypot(dx, dy);
+    if (len > 1) {
+      dx /= len;
+      dy /= len;
+    }
+
+    this.player.x += dx * this.player.speed * dt;
+    this.player.y += dy * this.player.speed * dt;
+
+    // Screen Bounds
+    this.player.x = Math.max(30, Math.min(this.width - 30, this.player.x));
+    this.player.y = Math.max(50, Math.min(this.height - 40, this.player.y));
+
+    // Bank angle tilt
+    const targetTilt = dx * 0.8;
+    this.player.tilt += (targetTilt - this.player.tilt) * 12 * dt;
+    this.player.propellerAngle += dt * 30;
+
+    // Actions: Fire (Z / Space / Touch A)
+    if (this.player.fireCooldown > 0) {
+      this.player.fireCooldown -= dt;
+    }
+
+    const firePressed =
+      this.input.isDown('actionA') ||
+      this.input.isKeyDown('KeyZ') ||
+      this.input.isKeyDown('Space') ||
+      (ptr && ptr.down && ptr.x > this.width * 0.7 && ptr.y > this.height * 0.65);
+
+    if (firePressed && this.player.fireCooldown <= 0) {
+      this._firePlayerMachineGuns();
+      this.player.fireCooldown = 0.11; // High cadence twin machine guns
+    }
+
+    // Actions: Loop Roll (X / Touch B)
+    if (
+      this.input.isJustPressed('actionB') ||
+      this.input.isKeyJustPressed('KeyX') ||
+      this.input.isKeyJustPressed('KeyC') ||
+      this.input.isKeyJustPressed('Enter')
+    ) {
+      this.triggerLoopRoll();
+    }
+  }
+
+  _firePlayerMachineGuns() {
+    if (!this.player) return;
+
+    if (this.audio) {
+      this.audio.playLaser(980, 240, 0.05);
+    }
+
+    // Main P-38 Twin Guns
+    this.playerBullets.push(
+      { x: this.player.x - 7, y: this.player.y - 18, vx: 0, vy: -780 },
+      { x: this.player.x + 7, y: this.player.y - 18, vx: 0, vy: -780 }
+    );
+
+    // Twin Escort Wingmen Guns
+    if (this.player.hasWingmen) {
+      // Left Escort Fighter
+      this.playerBullets.push(
+        { x: this.player.x - 38, y: this.player.y - 4, vx: -30, vy: -780 },
+        { x: this.player.x - 30, y: this.player.y - 4, vx: 0, vy: -780 }
+      );
+      // Right Escort Fighter
+      this.playerBullets.push(
+        { x: this.player.x + 30, y: this.player.y - 4, vx: 0, vy: -780 },
+        { x: this.player.x + 38, y: this.player.y - 4, vx: 30, vy: -780 }
+      );
+    }
+  }
+
+  _updateBullets(dt) {
+    // Player Bullets
+    for (let i = this.playerBullets.length - 1; i >= 0; i--) {
+      const b = this.playerBullets[i];
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+
+      if (b.y < -20 || b.x < -20 || b.x > this.width + 20) {
+        this.playerBullets.splice(i, 1);
+        continue;
+      }
+
+      // Check collision against Enemies
+      let bulletHit = false;
+      for (const e of this.enemies) {
+        if (Math.abs(b.x - e.x) < e.hitRadius && Math.abs(b.y - e.y) < e.hitRadius) {
+          e.hp--;
+          bulletHit = true;
+          this._spawnSparks(b.x, b.y, PALETTE.GOLD, 3);
+
+          if (this.audio) {
+            this.audio.playHit();
+          }
+
+          if (e.hp <= 0) {
+            this._destroyEnemy(e);
+          }
+          break;
+        }
+      }
+
+      if (bulletHit) {
+        this.playerBullets.splice(i, 1);
+      }
+    }
+
+    // Enemy Bullets
+    for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
+      const b = this.enemyBullets[i];
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+
+      if (b.y > this.height + 20 || b.y < -30 || b.x < -30 || b.x > this.width + 30) {
+        this.enemyBullets.splice(i, 1);
+        continue;
+      }
+
+      // Check collision against Player
+      if (
+        this.player &&
+        !this.player.isLooping &&
+        this.player.invulnerableTimer <= 0 &&
+        this.deathTimer <= 0
+      ) {
+        // First check wingmen protection
+        if (this.player.hasWingmen) {
+          const distLeft = Math.hypot(b.x - (this.player.x - 34), b.y - (this.player.y + 6));
+          const distRight = Math.hypot(b.x - (this.player.x + 34), b.y - (this.player.y + 6));
+          if (distLeft < 14 || distRight < 14) {
+            this.player.wingmenHp--;
+            this._spawnExplosion(b.x, b.y, 16);
+            if (this.player.wingmenHp <= 0) {
+              this.player.hasWingmen = false;
+              this.popups.push({
+                text: 'WINGMAN LOST!',
+                x: this.player.x,
+                y: this.player.y - 30,
+                color: PALETTE.RED,
+                size: 13,
+                life: 1.0
+              });
+            }
+            this.enemyBullets.splice(i, 1);
+            continue;
+          }
+        }
+
+        // Main plane hit
+        const pDist = Math.hypot(b.x - this.player.x, b.y - this.player.y);
+        if (pDist < 16) {
+          this.enemyBullets.splice(i, 1);
+          this._killPlayer();
+          break;
+        }
+      }
+    }
+  }
+
+  _destroyEnemy(e) {
+    const idx = this.enemies.indexOf(e);
+    if (idx !== -1) {
+      this.enemies.splice(idx, 1);
+    }
+
+    this._spawnExplosion(e.x, e.y, e.isBoss ? 45 : e.isBomber ? 28 : 18);
+    this.addScore(e.points, e.x, e.y, PALETTE.GOLD);
+    this.stageKills++;
+
+    if (this.audio) {
+      this.audio.playExplosion(e.isBoss ? 0.8 : 0.35, e.isBoss ? 450 : 850);
+    }
+
+    // Formation tracking for 100% squad wipe
+    if (e.formationId) {
+      const f = this.formations.get(e.formationId);
+      if (f) {
+        f.destroyedCount++;
+        if (f.destroyedCount >= f.totalPlanes) {
+          // 100% SQUADRON DEFEATED!
+          this.addScore(1000, e.x, e.y - 25, PALETTE.CYAN, '100% SQUAD!');
+          this._spawnPowerup(e.x, e.y);
+          if (this.audio) this.audio.playCoin();
+          this.formations.delete(e.formationId);
+        }
+      }
+    }
+
+    // Boss Defeat
+    if (e.isBoss) {
+      this.boss = null;
+      this.stageClearTimer = 2.5;
+      this.popups.push({
+        text: '🏆 AYAKO DOWN! STAGE COMPLETE!',
+        x: this.width / 2,
+        y: 240,
+        color: PALETTE.GOLD,
+        size: 20,
+        life: 2.5
+      });
+      if (this.audio) this.audio.playStageClear();
+    }
+  }
+
+  _killPlayer() {
+    this._spawnExplosion(this.player.x, this.player.y, 35);
+    this.lives--;
+    this.deathTimer = 1.6;
+    this.player = null;
+
+    if (this.audio) {
+      this.audio.playExplosion(0.7, 500);
+    }
+  }
+
+  _updateEnemies(dt) {
+    // Spawning waves
+    if (this.stageEnemiesSpawned < this.stageConfig.targetEnemies && !this.bossSpawned) {
+      this.spawnTimer += dt;
+      if (this.spawnTimer >= this.nextSpawnDelay) {
+        this.spawnTimer = 0;
+        this.nextSpawnDelay = 1.0 + Math.random() * 1.5;
+        this._spawnEnemyWave();
+      }
+    }
+
+    for (let i = this.enemies.length - 1; i >= 0; i--) {
+      const e = this.enemies[i];
+      e.t += dt;
+
+      // Update movement pattern
+      if (e.type === 'green_zero') {
+        // Swooping curve
+        e.y += e.speed * dt;
+        e.x += Math.sin(e.t * 3.5 + e.phase) * 160 * dt;
+      } else if (e.type === 'red_squadron') {
+        // Coordinated dive & peel
+        e.y += e.speed * dt;
+        e.x += e.vx * dt;
+        if (e.t > 0.8 && !e.peeled) {
+          e.peeled = true;
+          e.vx = (e.slot % 2 === 0 ? 1 : -1) * (140 + Math.random() * 60);
+        }
+      } else if (e.type === 'ki48_bomber') {
+        // Heavy slow descent with slight horizontal wander
+        e.y += e.speed * dt;
+        e.x += Math.sin(e.t * 1.2) * 50 * dt;
+      } else if (e.type === 'ayako_boss') {
+        // Heavy Flagship hovering and pacing
+        e.y = Math.min(130, e.y + 45 * dt);
+        e.x += Math.sin(e.t * 0.8) * 140 * dt;
+      }
+
+      // Firing Logic
+      e.fireTimer += dt;
+      if (e.fireTimer >= e.fireInterval) {
+        e.fireTimer = 0;
+        this._enemyShoot(e);
+      }
+
+      // Offscreen removal
+      if (e.y > this.height + 60 || e.x < -80 || e.x > this.width + 80) {
+        this.enemies.splice(i, 1);
+      }
+    }
+  }
+
+  _spawnEnemyWave() {
+    const waveType = Math.random();
+    this.formationCounter++;
+    const formId = `form_${this.formationCounter}`;
+
+    if (waveType < 0.45) {
+      // 5-Plane Red Squadron (Drops POW if all eliminated)
+      const count = 5;
+      const startX = 140 + Math.random() * (this.width - 280);
+      this.formations.set(formId, { totalPlanes: count, destroyedCount: 0 });
+
+      for (let i = 0; i < count; i++) {
+        this.enemies.push({
+          type: 'red_squadron',
+          formationId: formId,
+          slot: i,
+          x: startX + (i - 2) * 32,
+          y: -40 - i * 36,
+          vx: 0,
+          speed: 210,
+          hp: 1,
+          hitRadius: 15,
+          points: 150,
+          t: 0,
+          phase: 0,
+          peeled: false,
+          fireTimer: Math.random() * 0.5,
+          fireInterval: 1.6 + Math.random() * 0.8
+        });
+      }
+      this.stageEnemiesSpawned += count;
+    } else if (waveType < 0.8) {
+      // 4-Plane Green Zero V-Formation
+      const count = 4;
+      const startX = 180 + Math.random() * (this.width - 360);
+      for (let i = 0; i < count; i++) {
+        this.enemies.push({
+          type: 'green_zero',
+          x: startX + (i % 2 === 0 ? -1 : 1) * Math.ceil(i / 2) * 44,
+          y: -40 - i * 30,
+          speed: 180,
+          hp: 1,
+          hitRadius: 14,
+          points: 100,
+          t: 0,
+          phase: i * 0.4,
+          fireTimer: Math.random() * 0.6,
+          fireInterval: 1.8 + Math.random() * 1.0
+        });
+      }
+      this.stageEnemiesSpawned += count;
+    } else {
+      // Heavy Ki-48 Twin-Engine Bomber
+      this.enemies.push({
+        type: 'ki48_bomber',
+        isBomber: true,
+        x: 150 + Math.random() * (this.width - 300),
+        y: -70,
+        speed: 95,
+        hp: 9,
+        hitRadius: 26,
+        points: 600,
+        t: 0,
+        fireTimer: 0.8,
+        fireInterval: 1.2
+      });
+      this.stageEnemiesSpawned += 2;
+    }
+  }
+
+  _spawnAyakoBoss() {
+    this.bossSpawned = true;
+    const boss = {
+      type: 'ayako_boss',
+      isBoss: true,
+      x: this.width / 2,
+      y: -140,
+      hp: 65,
+      maxHp: 65,
+      hitRadius: 65,
+      points: 5000,
+      t: 0,
+      fireTimer: 0.5,
+      fireInterval: 0.9
+    };
+    this.boss = boss;
+    this.enemies.push(boss);
+
+    this.popups.push({
+      text: '⚠️ WARNING: DAIHISHYO AYAKO SUPER-BOMBER!',
+      x: this.width / 2,
+      y: 200,
+      color: PALETTE.RED,
+      size: 18,
+      life: 2.2
+    });
+    if (this.audio) this.audio.playExplosion(0.8, 300);
+  }
+
+  _enemyShoot(e) {
+    if (!this.player || this.state !== 'PLAYING') return;
+
+    const angle = Math.atan2(this.player.y - e.y, this.player.x - e.x);
+    const speed = 240;
+
+    if (e.type === 'ayako_boss') {
+      // 5-Way Flak Spread
+      for (let offset = -2; offset <= 2; offset++) {
+        const a = angle + offset * 0.22;
+        this.enemyBullets.push({
+          x: e.x + offset * 25,
+          y: e.y + 30,
+          vx: Math.cos(a) * speed,
+          vy: Math.sin(a) * speed
+        });
+      }
+    } else if (e.type === 'ki48_bomber') {
+      // 3-Way Spread
+      for (let offset = -1; offset <= 1; offset++) {
+        const a = angle + offset * 0.26;
+        this.enemyBullets.push({
+          x: e.x,
+          y: e.y + 18,
+          vx: Math.cos(a) * speed,
+          vy: Math.sin(a) * speed
+        });
+      }
+    } else {
+      // Aimed Single Bullet
+      this.enemyBullets.push({
+        x: e.x,
+        y: e.y + 12,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed
+      });
+    }
+  }
+
+  _spawnPowerup(x, y) {
+    const types = ['wingmen', 'megabomb', 'loop', 'points'];
+    const pType = types[Math.floor(Math.random() * types.length)];
+    this.powerups.push({
+      x,
+      y,
+      type: pType,
+      vx: (Math.random() - 0.5) * 40,
+      vy: 85,
+      t: 0
+    });
+  }
+
+  _updatePowerups(dt) {
+    for (let i = this.powerups.length - 1; i >= 0; i--) {
+      const p = this.powerups[i];
+      p.t += dt;
+      p.y += p.vy * dt;
+      p.x += Math.sin(p.t * 3.5) * 60 * dt;
+
+      if (p.y > this.height + 30) {
+        this.powerups.splice(i, 1);
+        continue;
+      }
+
+      // Check collision with Player
+      if (this.player && Math.hypot(p.x - this.player.x, p.y - this.player.y) < 28) {
+        this._collectPowerup(p);
+        this.powerups.splice(i, 1);
+      }
+    }
+  }
+
+  _collectPowerup(p) {
+    if (this.audio) this.audio.playPowerUp();
+
+    if (p.type === 'wingmen') {
+      this.player.hasWingmen = true;
+      this.player.wingmenHp = 2;
+      this.addScore(1000, p.x, p.y, PALETTE.CYAN, 'TWIN WINGMEN!');
+    } else if (p.type === 'megabomb') {
+      this.triggerMegaBomb();
+    } else if (p.type === 'loop') {
+      this.player.loopsLeft = Math.min(5, this.player.loopsLeft + 1);
+      this.addScore(500, p.x, p.y, PALETTE.GOLD, '+1 LOOP ROLL!');
+    } else {
+      this.addScore(2000, p.x, p.y, PALETTE.GOLD, 'SUPER BONUS!');
+    }
+  }
+
+  _spawnExplosion(x, y, radius = 20) {
+    for (let i = 0; i < 22; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const spd = 40 + Math.random() * 160;
+      this.particles.push({
+        x,
+        y,
+        vx: Math.cos(a) * spd,
+        vy: Math.sin(a) * spd,
+        life: 0.3 + Math.random() * 0.45,
+        maxLife: 0.6,
+        color: i % 3 === 0 ? PALETTE.GOLD : i % 3 === 1 ? PALETTE.ORANGE : PALETTE.RED,
+        r: 2 + Math.random() * (radius * 0.22)
+      });
+    }
+  }
+
+  _spawnSparks(x, y, color = PALETTE.GOLD, count = 4) {
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const spd = 30 + Math.random() * 90;
+      this.particles.push({
+        x,
+        y,
+        vx: Math.cos(a) * spd,
+        vy: Math.sin(a) * spd,
+        life: 0.15 + Math.random() * 0.2,
+        maxLife: 0.35,
+        color,
+        r: 1.5 + Math.random() * 2
+      });
+    }
+  }
+
+  _updateParticles(dt) {
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.life -= dt;
+      if (p.life <= 0) {
+        this.particles.splice(i, 1);
+        continue;
+      }
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+    }
+  }
+
+  _updatePopups(dt) {
     for (let i = this.popups.length - 1; i >= 0; i--) {
       const pop = this.popups[i];
-      pop.y += pop.vy * dt;
       pop.life -= dt;
-      if (pop.life <= 0) this.popups.splice(i, 1);
-    }
-    for (const t of this.trampolines) {
-      if (t.deflect > 0) {
-        t.deflect = Math.max(0, t.deflect - dt * 45);
+      pop.y -= 25 * dt;
+      if (pop.life <= 0) {
+        this.popups.splice(i, 1);
       }
-    }
-  }
-
-  updatePlayer(dt) {
-    const p = this.player;
-
-    if (
-      this.input.isJustPressed('actionA') ||
-      this.input.isJustPressed('actionB') ||
-      this.input.pointer.justPressed
-    ) {
-      this.triggerDoorAction();
-    }
-
-    if (p.mode === 'FLOOR') {
-      let moveX = 0;
-      if (this.input.isDown('left')) {
-        moveX = -1;
-        p.facing = -1;
-      } else if (this.input.isDown('right')) {
-        moveX = 1;
-        p.facing = 1;
-      }
-
-      if (moveX !== 0) {
-        const nextX = Math.max(44, Math.min(916, p.x + moveX * p.speed * dt));
-        // Check closed doors blocking floor movement
-        let blocked = false;
-        for (const d of this.doors) {
-          if (d.floor === p.floor && !d.isOpen) {
-            if ((p.x < d.x && nextX >= d.x - 10) || (p.x > d.x && nextX <= d.x + 10)) {
-              blocked = true;
-              break;
-            }
-          }
-        }
-        if (!blocked) {
-          p.x = nextX;
-          p.animFrame += dt * 14;
-        }
-      }
-
-      // Check if Mappy stepped into a vertical trampoline shaft gap
-      const shaftIdx = this.isOverShaftGap(p.x);
-      if (shaftIdx !== -1) {
-        p.mode = 'TRAMPOLINE';
-        p.shaftIndex = shaftIdx;
-        p.x = this.shafts[shaftIdx].x;
-        p.vy = 95;
-        p.targetPeakFloor = Math.max(0, p.floor - 1);
-      }
-    } else if (p.mode === 'TRAMPOLINE') {
-      const shaft = this.shafts[p.shaftIndex];
-      const tramp = this.trampolines[p.shaftIndex];
-      p.x = shaft.x;
-
-      // Gravity and vertical velocity inside trampoline shaft
-      const prevY = p.y;
-      p.vy += 690 * dt;
-      p.y += p.vy * dt;
-
-      // Allow steering onto a floor when near a floor height!
-      const wantLeft = this.input.isDown('left');
-      const wantRight = this.input.isDown('right');
-      if (wantLeft || wantRight) {
-        const sideDir = wantLeft ? -1 : 1;
-        for (let f = 0; f < this.floorYs.length; f++) {
-          const fy = this.floorYs[f];
-          // Can step onto floor f if within vertical landing window
-          if (Math.abs(p.y - fy) <= 18 && this.canLandOnFloorSide(p.shaftIndex, f, sideDir)) {
-            p.mode = 'FLOOR';
-            p.floor = f;
-            p.y = fy;
-            p.vy = 0;
-            p.facing = sideDir;
-            p.x = shaft.x + sideDir * (shaft.w * 0.5 + 14);
-            // Stepping onto a floor resets that shaft's trampoline back to Green (0)!
-            if (!tramp.broken) {
-              tramp.bounces = 0;
-            }
-            this.audio.playHop();
-            return;
-          }
-        }
-      }
-
-      // Check roof ceiling bounce
-      if (p.y < 88 && p.vy < 0) {
-        p.y = 88;
-        p.vy = Math.abs(p.vy) * 0.55;
-      }
-
-      // Check bottom trampoline collision
-      if (prevY <= tramp.y && p.y >= tramp.y && p.vy > 0) {
-        if (tramp.broken) {
-          this.killPlayer('TRAMPOLINE SNAPPED!');
-          return;
-        }
-
-        tramp.bounces++;
-        tramp.deflect = 10;
-
-        if (tramp.bounces >= 4) {
-          // 4th consecutive bounce without touching a floor snaps the trampoline!
-          tramp.broken = true;
-          this.audio.playExplosion(0.35, 700);
-          this.killPlayer('4TH BOUNCE SNAP!');
-          return;
-        }
-
-        // Elastic bounce upward! Holding UP bounces to top floor; otherwise bounces high enough to reach any floor
-        p.y = tramp.y;
-        const boost = this.input.isDown('up') ? -545 : this.input.isDown('down') ? -385 : -495;
-        p.vy = boost;
-        this.audio.playNote(280 + tramp.bounces * 110, 0.11, 'triangle', 0.28);
-      }
-    }
-  }
-
-  updateSonicWaves(dt) {
-    for (let i = this.sonicWaves.length - 1; i >= 0; i--) {
-      const w = this.sonicWaves[i];
-      w.x += w.dir * w.speed * dt;
-
-      // Sweep any cat on the same floor
-      for (const c of this.cats) {
-        if (!c.swept && c.floor === w.floor && Math.abs(c.x - w.x) < 30 && Math.abs(c.y - (w.y + 18)) < 36) {
-          c.swept = true;
-          c.hidingLoot = null;
-          w.caughtCats.push(c);
-          this.audio.playCoin();
-        }
-      }
-
-      // Move caught cats with the sonic wave
-      for (const c of w.caughtCats) {
-        c.x = w.x;
-        c.y = this.floorYs[w.floor];
-      }
-
-      // When wave exits screen edge, award combo points and respawn swept cats after stun
-      if (w.x < 20 || w.x > 940) {
-        if (w.caughtCats.length > 0) {
-          let totalPts = 0;
-          w.caughtCats.forEach((c, idx) => {
-            totalPts += c.isGoro ? 1000 : 400 * (idx + 1);
-            c.swept = false;
-            c.mode = 'FLOOR';
-            c.floor = 0;
-            c.x = 480;
-            c.y = this.floorYs[0];
-            c.stunTimer = 3.2;
-          });
-          this.addScore(
-            totalPts,
-            Math.max(80, Math.min(880, w.x)),
-            this.floorYs[w.floor] - 24,
-            PALETTE.PINK,
-            `SONIC x${w.caughtCats.length}`
-          );
-        }
-        this.sonicWaves.splice(i, 1);
-      }
-    }
-  }
-
-  updateCats(dt) {
-    const p = this.player;
-
-    for (const c of this.cats) {
-      if (c.swept) continue;
-
-      if (c.stunTimer > 0) {
-        c.stunTimer -= dt;
-        continue;
-      }
-
-      // Boss Goro hiding behind loot logic
-      if (c.isGoro && c.hideTimer > 0) {
-        c.hideTimer -= dt;
-        if (c.hideTimer <= 0 || !c.hidingLoot || c.hidingLoot.collected) {
-          if (c.hidingLoot) c.hidingLoot.goroHiding = false;
-          c.hidingLoot = null;
-          c.hideTimer = 0;
-        }
-        continue;
-      }
-
-      if (c.mode === 'FLOOR') {
-        const nextX = c.x + c.dir * c.speed * dt;
-
-        // Check closed doors
-        let hitDoor = false;
-        for (const d of this.doors) {
-          if (d.floor === c.floor && !d.isOpen) {
-            if ((c.x < d.x && nextX >= d.x - 10) || (c.x > d.x && nextX <= d.x + 10)) {
-              hitDoor = true;
-              break;
-            }
-          }
-        }
-
-        if (hitDoor || nextX < 46 || nextX > 914) {
-          c.dir *= -1;
-        } else {
-          c.x = nextX;
-        }
-
-        // Boss Goro can hide behind an uncollected loot item on his floor
-        if (c.isGoro && Math.random() < 0.008) {
-          for (const l of this.loots) {
-            if (!l.collected && l.floor === c.floor && Math.abs(l.x - c.x) < 18) {
-              c.hidingLoot = l;
-              l.goroHiding = true;
-              c.hideTimer = 3.5;
-              break;
-            }
-          }
-        }
-
-        // Decide at shaft whether to jump into shaft or step across toward player's floor
-        const shaftIdx = this.isOverShaftGap(c.x);
-        if (shaftIdx !== -1) {
-          if (p.floor !== c.floor || Math.random() < 0.35) {
-            c.mode = 'TRAMPOLINE';
-            c.shaftIndex = shaftIdx;
-            c.x = this.shafts[shaftIdx].x;
-            c.vy = p.floor > c.floor ? 160 : -320;
-          } else {
-            // Hop across shaft onto next floor segment
-            c.x = this.shafts[shaftIdx].x + c.dir * (this.shafts[shaftIdx].w * 0.5 + 10);
-          }
-        }
-      } else if (c.mode === 'TRAMPOLINE') {
-        const shaft = this.shafts[c.shaftIndex];
-        c.x = shaft.x;
-        c.vy += 580 * dt;
-        c.y += c.vy * dt;
-
-        if (c.y < 90 && c.vy < 0) {
-          c.y = 90;
-          c.vy = Math.abs(c.vy) * 0.6;
-        }
-
-        if (c.y >= this.trampolineY && c.vy > 0) {
-          c.y = this.trampolineY;
-          c.vy = -465;
-        }
-
-        // Exit shaft onto target floor
-        const targetFl = p.floor;
-        const fy = this.floorYs[targetFl];
-        if (Math.abs(c.y - fy) < 14) {
-          const exitDir = p.x >= c.x ? 1 : -1;
-          if (this.canLandOnFloorSide(c.shaftIndex, targetFl, exitDir)) {
-            c.mode = 'FLOOR';
-            c.floor = targetFl;
-            c.y = fy;
-            c.dir = exitDir;
-            c.x = shaft.x + exitDir * (shaft.w * 0.5 + 12);
-          }
-        }
-      }
-
-      // Collision check with Mappy:
-      // Mappy is SAFE against cats while bouncing mid-air on trampolines!
-      if (p.mode === 'FLOOR' && c.mode === 'FLOOR' && p.floor === c.floor) {
-        if (Math.abs(p.x - c.x) < 22) {
-          this.killPlayer(c.isGoro ? 'CAUGHT BY GORO!' : 'MEOWKY CAUGHT YOU!');
-          return;
-        }
-      }
-    }
-  }
-
-  checkLootCollection() {
-    const p = this.player;
-    for (const l of this.loots) {
-      if (l.collected) continue;
-      if (Math.abs(p.x - l.x) < 24 && Math.abs((p.y - 16) - l.y) < 24) {
-        l.collected = true;
-        this.audio.playCoin();
-
-        // Check consecutive pair multiplier!
-        if (this.lastCollectedType === l.typeId) {
-          this.pairMultiplier = Math.min(6, this.pairMultiplier + 1);
-          const pts = l.basePts * this.pairMultiplier;
-          this.addScore(pts, l.x, l.y, PALETTE.GOLD, `PAIR x${this.pairMultiplier}`);
-          this.lastCollectedType = null;
-        } else {
-          this.lastCollectedType = l.typeId;
-          this.addScore(l.basePts, l.x, l.y, PALETTE.CYAN);
-        }
-
-        // Check if Boss Goro was hiding behind this loot item (+1000 bonus!)
-        if (l.goroHiding) {
-          l.goroHiding = false;
-          this.addScore(1000, l.x, l.y - 18, PALETTE.PINK, 'GORO BONUS');
-          for (const c of this.cats) {
-            if (c.isGoro) {
-              c.hidingLoot = null;
-              c.hideTimer = 0;
-              c.stunTimer = 2.5;
-            }
-          }
-        }
-      }
-    }
-
-    // Check if all 10 stolen loot items are recovered
-    if (this.loots.every((l) => l.collected) && this.stageClearTimer <= 0) {
-      const timeBonus = Math.max(0, Math.floor(this.hurryTimer) * 50);
-      this.addScore(1000 + timeBonus, 480, 250, PALETTE.GREEN, 'MANSION CLEARED');
-      this.audio.playStageClear();
-      this.stageClearTimer = 1.6;
     }
   }
 
   render(ctx = this.renderer.ctx) {
-    this.renderer.clear('#090D18');
+    ctx.save();
 
-    this.drawMansion(ctx);
-    this.drawTrampolines(ctx);
-    this.drawLoots(ctx);
-    this.drawDoors(ctx);
-    this.drawSonicWaves(ctx);
-    this.drawCats(ctx);
-    this.drawPlayer(ctx);
-    this.drawEffects(ctx);
+    // 1. Ocean Background
+    const seaColor = this.stageConfig ? this.stageConfig.seaColor : '#0C4A6E';
+    ctx.fillStyle = seaColor;
+    ctx.fillRect(0, 0, this.width, this.height);
 
-    const remainingLoot = this.loots.filter((l) => !l.collected).length;
-    this.renderer.drawHUD({
-      title: this.title,
+    // Dynamic wave ripples
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1.5;
+    const waveOffset = (this.scrollY * 0.6) % 30;
+    for (let y = waveOffset - 30; y < this.height; y += 30) {
+      ctx.beginPath();
+      for (let x = 0; x < this.width; x += 60) {
+        ctx.moveTo(x, y);
+        ctx.quadraticCurveTo(x + 15, y - 4, x + 30, y);
+      }
+      ctx.stroke();
+    }
+
+    // 2. Islands & Atolls
+    this._renderIslands(ctx);
+
+    // 3. Warships
+    this._renderShips(ctx);
+
+    // 4. Powerups
+    this._renderPowerups(ctx);
+
+    // 5. Enemies
+    this._renderEnemies(ctx);
+
+    // 6. Player P-38 Lightning & Escorts
+    this._renderPlayer(ctx);
+
+    // 7. Bullets
+    this._renderBullets(ctx);
+
+    // 8. Particles
+    this._renderParticles(ctx);
+
+    // 9. Clouds
+    this._renderClouds(ctx);
+
+    // 10. HUD Overlay
+    this._renderHUD(ctx);
+
+    // 11. Popups
+    this._renderPopups(ctx);
+
+    // 12. Game Over Overlay
+    if (this.state === 'GAMEOVER') {
+      this._renderGameOver(ctx);
+    }
+
+    ctx.restore();
+  }
+
+  _renderIslands(ctx) {
+    const sandCol = this.stageConfig ? this.stageConfig.sandColor : '#FBBF24';
+    const isleCol = this.stageConfig ? this.stageConfig.islandColor : '#059669';
+
+    for (const isl of this.islands) {
+      if (isl.y + isl.h < 0 || isl.y - isl.h > this.height) continue;
+
+      // Sand shoreline
+      ctx.fillStyle = sandCol;
+      ctx.beginPath();
+      ctx.ellipse(isl.x, isl.y, isl.w / 2 + 10, isl.h / 2 + 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Green interior jungle
+      ctx.fillStyle = isleCol;
+      ctx.beginPath();
+      ctx.ellipse(isl.x, isl.y, isl.w / 2, isl.h / 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Palm foliage dots
+      ctx.fillStyle = '#064E3B';
+      for (let p = 0; p < isl.palms; p++) {
+        const px = isl.x + Math.sin(p * 2.3) * (isl.w * 0.28);
+        const py = isl.y + Math.cos(p * 1.7) * (isl.h * 0.26);
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  _renderShips(ctx) {
+    for (const ship of this.ships) {
+      if (ship.y + ship.h < 0 || ship.y - ship.h > this.height) continue;
+
+      ctx.save();
+      ctx.translate(ship.x, ship.y);
+
+      // Foam wake behind ship
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.beginPath();
+      ctx.moveTo(-ship.w * 0.6, ship.h * 0.5);
+      ctx.lineTo(-ship.w * 1.2, ship.h * 0.9);
+      ctx.lineTo(ship.w * 1.2, ship.h * 0.9);
+      ctx.lineTo(ship.w * 0.6, ship.h * 0.5);
+      ctx.fill();
+
+      // Steel Hull
+      ctx.fillStyle = '#334155';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, ship.w * 0.5, ship.h * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (ship.type === 'carrier') {
+        // Flight deck runway
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(-ship.w * 0.38, -ship.h * 0.44, ship.w * 0.76, ship.h * 0.88);
+
+        // Deck stripe
+        ctx.strokeStyle = '#FACC15';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 8]);
+        ctx.beginPath();
+        ctx.moveTo(0, -ship.h * 0.4);
+        ctx.lineTo(0, ship.h * 0.4);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      } else {
+        // Destroyer Gun Turrets
+        ctx.fillStyle = '#64748B';
+        ctx.beginPath();
+        ctx.arc(0, -ship.h * 0.25, 7, 0, Math.PI * 2);
+        ctx.arc(0, ship.h * 0.25, 7, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+  }
+
+  _renderPowerups(ctx) {
+    for (const p of this.powerups) {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+
+      // Glowing badge disc
+      ctx.fillStyle = '#F59E0B';
+      ctx.beginPath();
+      ctx.arc(0, 0, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = '#FEF08A';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Inner POW text
+      ctx.fillStyle = '#1E1B4B';
+      ctx.font = 'bold 11px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('POW', 0, 1);
+
+      ctx.restore();
+    }
+  }
+
+  _renderEnemies(ctx) {
+    for (const e of this.enemies) {
+      ctx.save();
+      ctx.translate(e.x, e.y);
+
+      if (e.type === 'green_zero') {
+        // Mitsubishi A6M Green Zero
+        ctx.fillStyle = '#15803D';
+        // Wings
+        ctx.fillRect(-18, -3, 36, 6);
+        // Fuselage
+        ctx.fillStyle = '#166534';
+        ctx.fillRect(-4, -14, 8, 28);
+        // Hinomaru Red Roundels
+        ctx.fillStyle = '#DC2626';
+        ctx.beginPath();
+        ctx.arc(-11, 0, 3, 0, Math.PI * 2);
+        ctx.arc(11, 0, 3, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (e.type === 'red_squadron') {
+        // Red Ace Fighter
+        ctx.fillStyle = '#DC2626';
+        // Wings
+        ctx.fillRect(-18, -3, 36, 6);
+        // Fuselage
+        ctx.fillStyle = '#991B1B';
+        ctx.fillRect(-4, -14, 8, 28);
+        // Gold accents
+        ctx.fillStyle = '#FBBF24';
+        ctx.fillRect(-2, -12, 4, 6);
+      } else if (e.type === 'ki48_bomber') {
+        // Ki-48 Heavy Twin Bomber
+        ctx.fillStyle = '#3F3F46';
+        // Main Swept Wings
+        ctx.fillRect(-44, -5, 88, 12);
+        // Fuselage
+        ctx.fillStyle = '#27272A';
+        ctx.fillRect(-8, -26, 16, 56);
+        // Twin Engines
+        ctx.fillStyle = '#71717A';
+        ctx.fillRect(-24, -14, 10, 24);
+        ctx.fillRect(14, -14, 10, 24);
+        // Red Roundels
+        ctx.fillStyle = '#EF4444';
+        ctx.beginPath();
+        ctx.arc(-32, 1, 4.5, 0, Math.PI * 2);
+        ctx.arc(32, 1, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Health Bar for Bomber
+        if (e.hp < 9) {
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.fillRect(-22, -34, 44, 4);
+          ctx.fillStyle = '#22C55E';
+          ctx.fillRect(-22, -34, 44 * (e.hp / 9), 4);
+        }
+      } else if (e.type === 'ayako_boss') {
+        // Massive Ayako Super-Bomber Flagship
+        // Giant wings
+        ctx.fillStyle = '#1E293B';
+        ctx.fillRect(-120, -10, 240, 24);
+        // Fuselage
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(-24, -40, 48, 85);
+        // 4 Wing Engines
+        ctx.fillStyle = '#475569';
+        for (const ex of [-85, -45, 45, 85]) {
+          ctx.fillRect(ex - 7, -20, 14, 38);
+          // Spinning yellow prop discs
+          ctx.fillStyle = '#FACC15';
+          ctx.beginPath();
+          ctx.ellipse(ex, -22, 12, 3, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#475569';
+        }
+
+        // Turret Domes
+        ctx.fillStyle = '#DC2626';
+        ctx.beginPath();
+        ctx.arc(0, -15, 9, 0, Math.PI * 2);
+        ctx.arc(-65, 2, 7, 0, Math.PI * 2);
+        ctx.arc(65, 2, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Boss Health Bar
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(-90, -55, 180, 8);
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(-90, -55, 180 * (e.hp / e.maxHp), 8);
+        ctx.strokeStyle = '#FEF08A';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(-90, -55, 180, 8);
+      }
+
+      ctx.restore();
+    }
+  }
+
+  _renderPlayer(ctx) {
+    if (!this.player) return;
+
+    ctx.save();
+    ctx.translate(this.player.x, this.player.y);
+
+    // Loop Roll 3D Transformation
+    if (this.player.isLooping) {
+      const progress = this.player.loopTimer / this.player.loopDuration;
+      // Loop Scale: grows up to 2.2x scale in center of loop
+      const scale = 1.0 + Math.sin(progress * Math.PI) * 1.25;
+      const angle = progress * Math.PI * 2;
+
+      ctx.scale(scale, scale);
+      ctx.rotate(angle);
+
+      // Inverted drop shadow
+      ctx.shadowColor = 'rgba(0,0,0,0.6)';
+      ctx.shadowBlur = 15;
+      ctx.shadowOffsetY = 25 * scale;
+    } else {
+      // Normal bank tilt
+      ctx.rotate(this.player.tilt * 0.28);
+
+      // Invulnerability flash
+      if (this.player.invulnerableTimer > 0 && Math.floor(Date.now() / 80) % 2 === 0) {
+        ctx.globalAlpha = 0.45;
+      }
+    }
+
+    // P-38 Lightning Drawing
+    this._drawP38(ctx, 0, 0);
+
+    // Twin Escort Wingmen
+    if (this.player.hasWingmen && !this.player.isLooping) {
+      this._drawEscortFighter(ctx, -34, 10);
+      this._drawEscortFighter(ctx, 34, 10);
+    }
+
+    ctx.restore();
+  }
+
+  _drawP38(ctx, x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Main Silver Wings
+    ctx.fillStyle = '#94A3B8';
+    ctx.fillRect(-34, -4, 68, 8);
+
+    // Twin Booms (P-38 trademark twin-tail design)
+    ctx.fillStyle = '#64748B';
+    ctx.fillRect(-17, -18, 7, 36);
+    ctx.fillRect(10, -18, 7, 36);
+
+    // Center Cockpit Pod
+    ctx.fillStyle = '#475569';
+    ctx.fillRect(-5, -16, 10, 26);
+    // Glass Canopy
+    ctx.fillStyle = '#38BDF8';
+    ctx.fillRect(-3, -12, 6, 12);
+
+    // Horizontal Stabilizer & Twin Rudders connecting booms
+    ctx.fillStyle = '#64748B';
+    ctx.fillRect(-18, 14, 36, 4);
+
+    // Spinning Propellers (Twin engines)
+    ctx.fillStyle = '#FACC15';
+    ctx.beginPath();
+    ctx.ellipse(-13.5, -20, 11, 2.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(13.5, -20, 11, 2.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // USAAF Star insignia on wings
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(-26, 0, 3, 0, Math.PI * 2);
+    ctx.arc(26, 0, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  _drawEscortFighter(ctx, x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Miniature Escort Pursuit Plane
+    ctx.fillStyle = '#38BDF8';
+    ctx.fillRect(-12, -2, 24, 4);
+    ctx.fillStyle = '#0284C7';
+    ctx.fillRect(-3, -8, 6, 16);
+
+    // Mini yellow prop
+    ctx.fillStyle = '#FACC15';
+    ctx.beginPath();
+    ctx.ellipse(0, -9, 6, 1.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  _renderBullets(ctx) {
+    // Player Bullets: Brilliant Gold Tracers
+    ctx.fillStyle = '#FEF08A';
+    ctx.shadowColor = PALETTE.GOLD;
+    ctx.shadowBlur = 6;
+    for (const b of this.playerBullets) {
+      ctx.fillRect(b.x - 1.5, b.y - 6, 3, 12);
+    }
+    ctx.shadowBlur = 0;
+
+    // Enemy Bullets: Red glowing orbs
+    ctx.fillStyle = '#EF4444';
+    ctx.strokeStyle = '#FCA5A5';
+    ctx.lineWidth = 1;
+    for (const b of this.enemyBullets) {
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+  }
+
+  _renderParticles(ctx) {
+    for (const p of this.particles) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  _renderClouds(ctx) {
+    ctx.fillStyle = '#FFFFFF';
+    for (const c of this.clouds) {
+      ctx.save();
+      ctx.globalAlpha = c.alpha;
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+      ctx.arc(c.x + c.r * 0.5, c.y - c.r * 0.2, c.r * 0.7, 0, Math.PI * 2);
+      ctx.arc(c.x - c.r * 0.5, c.y + c.r * 0.1, c.r * 0.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  _renderHUD(ctx) {
+    ctx.save();
+    // Top Bar Background
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+    ctx.fillRect(0, 0, this.width, 36);
+
+    ctx.fillStyle = PALETTE.CYAN;
+    ctx.font = FONTS.HUD;
+    ctx.textAlign = 'left';
+    ctx.fillText(`1UP: ${this.score.toString().padStart(6, '0')}`, 20, 24);
+
+    ctx.fillStyle = PALETTE.GOLD;
+    ctx.textAlign = 'center';
+    ctx.fillText(`HIGH: ${this.highScore.toString().padStart(6, '0')}`, this.width / 2, 24);
+
+    // Stage & Lives
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#38BDF8';
+    ctx.fillText(
+      `STAGE ${this.stageConfig ? this.stageConfig.stageNum : 32}`,
+      this.width - 150,
+      24
+    );
+
+    // Lives icons (Mini P-38s)
+    ctx.fillStyle = '#E2E8F0';
+    ctx.fillText('LIVES:', this.width - 80, 24);
+    for (let i = 0; i < this.lives; i++) {
+      ctx.fillStyle = PALETTE.GOLD;
+      ctx.fillRect(this.width - 25 + i * 8, 14, 5, 12);
+    }
+
+    // Bottom Loops Indicator
+    if (this.player) {
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+      ctx.fillRect(15, this.height - 35, 140, 26);
+      ctx.strokeStyle = PALETTE.CYAN;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(15, this.height - 35, 140, 26);
+
+      ctx.fillStyle = PALETTE.CYAN;
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`LOOPS [X]: ${this.player.loopsLeft}`, 24, this.height - 18);
+    }
+
+    ctx.restore();
+  }
+
+  _renderPopups(ctx) {
+    for (const pop of this.popups) {
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, pop.life * 1.5);
+      ctx.fillStyle = pop.color;
+      ctx.font = `bold ${pop.size}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillText(pop.text, pop.x, pop.y);
+      ctx.restore();
+    }
+  }
+
+  _renderGameOver(ctx) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.78)';
+    ctx.fillRect(0, 0, this.width, this.height);
+
+    ctx.fillStyle = PALETTE.RED;
+    ctx.font = 'bold 36px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('GAME OVER', this.width / 2, 230);
+
+    ctx.fillStyle = PALETTE.GOLD;
+    ctx.font = '18px monospace';
+    ctx.fillText(`FINAL SCORE: ${this.score}`, this.width / 2, 280);
+
+    ctx.fillStyle = PALETTE.CYAN;
+    ctx.font = '14px monospace';
+    ctx.fillText('PRESS FIRE OR TAP SCREEN TO SORTIE AGAIN', this.width / 2, 330);
+
+    ctx.restore();
+  }
+
+  captureState() {
+    return {
       score: this.score,
       highScore: this.highScore,
       lives: this.lives,
       level: this.level,
-      extraLabel: `LOOT:${remainingLoot}  PAIR:x${this.pairMultiplier}`,
-      accent: PALETTE.CYAN
-    });
-
-    this.renderer.drawStateOverlay(this.state, {
-      title: this.title,
-      subtitle: '1983 NAMCO TRAMPOLINE MANSION EDITION',
-      controls: 'LEFT/RIGHT: FLOOR & EXIT SHAFT  |  Z/X/SPACE: OPEN & SONIC DOOR',
-      score: this.score,
-      highScore: this.highScore,
-      accent: PALETTE.CYAN
-    });
-  }
-
-  drawMansion(ctx) {
-    ctx.save();
-    const theme = this.mansionTheme || {
-      name: 'RED ROOF MANOR',
-      roof: '#B91C1C',
-      roofTrim: '#FCA5A5',
-      wall: '#151E32',
-      floorBar: '#F59E0B'
+      stage: this.stage,
+      state: this.state,
+      stageKills: this.stageKills,
+      hasWingmen: this.player ? this.player.hasWingmen : false,
+      loopsLeft: this.player ? this.player.loopsLeft : 3
     };
-
-    // Mansion Wallpaper interior
-    ctx.fillStyle = theme.wall;
-    ctx.fillRect(36, 76, 888, 448);
-
-    // Classic Victorian/Namco Tiled Roof
-    ctx.fillStyle = theme.roof;
-    ctx.beginPath();
-    ctx.moveTo(20, 78);
-    ctx.lineTo(110, 42);
-    ctx.lineTo(850, 42);
-    ctx.lineTo(940, 78);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = theme.roofTrim;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    this.renderer.drawText(theme.name, 480, 64, {
-      font: FONTS.HEADER,
-      size: 9,
-      color: theme.roofTrim,
-      align: 'center'
-    });
-
-    // Vertical trampoline shaft columns (dark backing)
-    for (const s of this.shafts) {
-      ctx.fillStyle = '#0B0F19';
-      ctx.fillRect(s.x - s.w * 0.5, 78, s.w, 444);
-    }
-
-    // Draw 6 Mansion Floors across non-shaft segments
-    for (let f = 0; f < this.floorYs.length; f++) {
-      const y = this.floorYs[f];
-      for (const seg of this.floorSegments) {
-        ctx.fillStyle = theme.floorBar;
-        ctx.fillRect(seg.x1, y, seg.x2 - seg.x1, 7);
-        ctx.fillStyle = '#FEF08A';
-        ctx.fillRect(seg.x1, y, seg.x2 - seg.x1, 2);
-      }
-    }
-
-    // Outer mansion walls
-    ctx.fillStyle = '#334155';
-    ctx.fillRect(28, 76, 10, 452);
-    ctx.fillRect(922, 76, 10, 452);
-    ctx.restore();
   }
 
-  drawTrampolines(ctx) {
-    ctx.save();
-    for (const t of this.trampolines) {
-      if (t.broken) {
-        // Snapped trampoline strands
-        ctx.strokeStyle = PALETTE.RED;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(t.x - t.w * 0.5, t.y);
-        ctx.lineTo(t.x - 8, t.y + 12);
-        ctx.moveTo(t.x + t.w * 0.5, t.y);
-        ctx.lineTo(t.x + 8, t.y + 12);
-        ctx.stroke();
-        continue;
-      }
+  restoreState(state) {
+    if (!state) return;
+    this.score = state.score || 0;
+    this.highScore = state.highScore || 0;
+    this.lives = state.lives !== undefined ? state.lives : 3;
+    const tgtStage = state.stage !== undefined ? state.stage : (state.level || 1);
+    this.level = state.level !== undefined ? state.level : tgtStage;
+    this.state = state.state || 'PLAYING';
+    this.stageKills = state.stageKills || 0;
 
-      const color = TRAMPOLINE_COLORS[Math.min(3, t.bounces)];
-      ctx.strokeStyle = color;
-      ctx.shadowColor = color;
-      ctx.shadowBlur = 10;
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(t.x - t.w * 0.5, t.y);
-      ctx.quadraticCurveTo(t.x, t.y + t.deflect, t.x + t.w * 0.5, t.y);
-      ctx.stroke();
-
-      // Side springs
-      ctx.fillStyle = '#E2E8F0';
-      ctx.fillRect(t.x - t.w * 0.5 - 3, t.y - 3, 5, 6);
-      ctx.fillRect(t.x + t.w * 0.5 - 2, t.y - 3, 5, 6);
-    }
-    ctx.restore();
-  }
-
-  drawLoots(ctx) {
-    ctx.save();
-    for (const l of this.loots) {
-      if (l.collected) continue;
-      const bob = Math.sin(this.animTime * 5 + l.id) * 1.5;
-      const lx = l.x - 12;
-      const ly = l.y - 10 + bob;
-
-      // If Boss Goro is hiding behind this loot, draw peeking ears!
-      if (l.goroHiding) {
-        ctx.fillStyle = PALETTE.RED;
-        ctx.fillRect(lx - 4, ly - 6, 8, 8);
-        ctx.fillRect(lx + 20, ly - 6, 8, 8);
-      }
-
-      ctx.fillStyle = l.color;
-      ctx.shadowColor = l.color;
-      ctx.shadowBlur = 8;
-      ctx.fillRect(lx, ly, 24, 18);
-      ctx.fillStyle = l.accent;
-      ctx.fillRect(lx + 4, ly + 4, 16, 10);
-
-      // Highlight if matches lastCollectedType for x2..x6 multiplier
-      if (this.lastCollectedType === l.typeId) {
-        ctx.strokeStyle = PALETTE.GOLD;
-        ctx.lineWidth = 2;
-        ctx.strokeRect(lx - 3, ly - 3, 30, 24);
-      }
-    }
-    ctx.restore();
-  }
-
-  drawDoors(ctx) {
-    ctx.save();
-    const pulse = 0.6 + 0.4 * Math.sin(this.animTime * 10);
-    for (const d of this.doors) {
-      const topY = d.y - 46;
-      if (d.isOpen) {
-        // Open door leaf folded flat
-        ctx.fillStyle = '#64748B';
-        ctx.fillRect(d.x - 12, d.y - 6, 24, 6);
-      } else if (d.isMicrowave && d.charges > 0) {
-        // Flashing rainbow Microwave Sonic Door
-        const color = pulse > 0.8 ? PALETTE.PINK : PALETTE.CYAN;
-        ctx.fillStyle = color;
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 12;
-        ctx.fillRect(d.x - 5, topY, 10, 46);
-        // Sonic wave emitter knob
-        ctx.fillStyle = PALETTE.GOLD;
-        ctx.fillRect(d.x + d.facing * 5 - 2, topY + 20, 4, 8);
-      } else {
-        // Standard closed door
-        ctx.fillStyle = '#F59E0B';
-        ctx.shadowBlur = 0;
-        ctx.fillRect(d.x - 4, topY, 8, 46);
-        ctx.fillStyle = '#FEF08A';
-        ctx.fillRect(d.x + d.facing * 4 - 2, topY + 22, 4, 5);
-      }
-    }
-    ctx.restore();
-  }
-
-  drawSonicWaves(ctx) {
-    ctx.save();
-    const colors = [PALETTE.PINK, PALETTE.CYAN, PALETTE.GOLD, PALETTE.GREEN];
-    for (const w of this.sonicWaves) {
-      for (let r = 0; r < 4; r++) {
-        const rx = w.x - r * w.dir * 9;
-        ctx.strokeStyle = colors[(r + Math.floor(this.animTime * 20)) % colors.length];
-        ctx.lineWidth = 3;
-        ctx.shadowColor = ctx.strokeStyle;
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.arc(rx, w.y, 18, -Math.PI * 0.42, Math.PI * 0.42, w.dir < 0);
-        ctx.stroke();
-      }
-    }
-    ctx.restore();
-  }
-
-  drawCats(ctx) {
-    for (const c of this.cats) {
-      if (c.hideTimer > 0) continue;
-      const sx = c.x - 10;
-      const sy = c.y - 22;
-      if (c.stunTimer > 0 && Math.floor(this.animTime * 16) % 2 === 0) continue;
-
-      if (c.isGoro) {
-        this.renderer.drawPixelSprite(
-          GORO_SPRITE,
-          sx,
-          sy - 4,
-          2.4,
-          {
-            R: '#EF4444',
-            Y: '#FFD700',
-            W: '#F8FAFC',
-            K: '#0B0F19'
-          },
-          c.dir < 0
-        );
-      } else {
-        this.renderer.drawPixelSprite(
-          MEOWKY_SPRITE,
-          sx,
-          sy,
-          2.1,
-          {
-            P: '#FF007A',
-            W: '#F8FAFC',
-            K: '#0B0F19'
-          },
-          c.dir < 0
-        );
-      }
+    this.initStage(tgtStage);
+    this.stage = tgtStage;
+    if (this.player) {
+      this.player.hasWingmen = !!state.hasWingmen;
+      this.player.loopsLeft = state.loopsLeft !== undefined ? state.loopsLeft : 3;
     }
   }
 
-  drawPlayer(ctx) {
-    if (this.deathTimer > 0) return;
-    const p = this.player;
-    const sx = p.x - 11;
-    const sy = p.y - 22;
-
-    // Halo when mid-air on trampoline to show cat-pass immunity
-    if (p.mode === 'TRAMPOLINE') {
-      this.renderer.drawGlowCircle(p.x, p.y - 11, 16, 'rgba(0, 240, 255, 0.35)', 10, false, 1.5);
-    }
-
-    this.renderer.drawPixelSprite(
-      MAPPY_SPRITE,
-      sx,
-      sy,
-      2.2,
-      {
-        B: '#38BDF8',
-        W: '#F8FAFC',
-        P: '#FB7185',
-        Y: '#FFD700',
-        K: '#0B0F19'
-      },
-      p.facing < 0
-    );
-  }
-
-  drawEffects(ctx) {
-    for (const pt of this.particles) {
-      ctx.fillStyle = pt.color;
-      ctx.fillRect(pt.x - pt.size * 0.5, pt.y - pt.size * 0.5, pt.size, pt.size);
-    }
-    for (const pop of this.popups) {
-      this.renderer.drawText(pop.text, pop.x, pop.y, {
-        font: FONTS.HEADER,
-        size: 10,
-        color: pop.color,
-        align: 'center',
-        glow: 6
-      });
+  destroy() {
+    this._restoreTouchLabels();
+    if (this.audio) {
+      this.audio.stopSequence();
     }
   }
 }
 
-
-return Mappy;
+return Game1942;
 })();
 
 // === src/games/CircusCharlie.js ===
@@ -99011,7 +98740,7 @@ const GAME_REGISTRY = {
   rallyx: RallyX,
   roadfighter: RoadFighter,
   flicky: Flicky,
-  mappy: Mappy,
+  game1942: Game1942,
   circuscharlie: CircusCharlie,
   battlecity: BattleCity,
   kungfumaster: KungFuMaster,
