@@ -65502,6 +65502,56 @@ const COURSE_CATALOG = [
     stroke: '#38BDF8',
     skirtL: '#090D16',
     skirtR: '#1E293B'
+  },
+  {
+    name: 'THE SILLY RACE',
+    subtitle: 'CARNIVAL FUNHOUSE & WAVY SLIDES',
+    timeLimit: 58,
+    flatA: '#831843',
+    flatB: '#500724',
+    stroke: '#F43F5E',
+    skirtL: '#37071F',
+    skirtR: '#700A38'
+  },
+  {
+    name: 'COSMIC PULSAR HIGHWAY',
+    subtitle: 'STARLIGHT VOID & ACCELERATION LANES',
+    timeLimit: 60,
+    flatA: '#0F172A',
+    flatB: '#020617',
+    stroke: '#00F0FF',
+    skirtL: '#0B0F19',
+    skirtR: '#1E293B'
+  },
+  {
+    name: 'VOLCANO CALDERA CRAGS',
+    subtitle: 'MOLTEN MAGMA CHUTES & BASALT PILLARS',
+    timeLimit: 62,
+    flatA: '#1C1917',
+    flatB: '#0C0A09',
+    stroke: '#EA580C',
+    skirtL: '#292524',
+    skirtR: '#44403C'
+  },
+  {
+    name: 'THE QUANTUM ACCELERATOR',
+    subtitle: 'SUPERSONIC TURBO CHICANES & DUAL HAZARDS',
+    timeLimit: 64,
+    flatA: '#1E3A8A',
+    flatB: '#0F2557',
+    stroke: '#10B981',
+    skirtL: '#0B1A40',
+    skirtR: '#1D4ED8'
+  },
+  {
+    name: 'INFINITY OLYMPUS',
+    subtitle: 'CELESTIAL CITADEL & PANTHEON FINALE',
+    timeLimit: 68,
+    flatA: '#312E81',
+    flatB: '#1E1B4B',
+    stroke: '#EAB308',
+    skirtL: '#18103C',
+    skirtR: '#4338CA'
   }
 ];
 class MarbleMadness {
@@ -66094,7 +66144,7 @@ class MarbleMadness {
       }
       fillRectTiles(24, 3, 28, 8, cz, 'flat');
       fillRectTiles(25, 4, 27, 7, cz, 'goal');
-    } else {
+    } else if (courseIndex === 10) {
       // =========================================================================
       // COURSE 10: ULTIMATE MARBLE CITADEL (Final Atari Championship Finale)
       // =========================================================================
@@ -66168,6 +66218,313 @@ class MarbleMadness {
         speed: 3.4 + loopTier * 0.4
       });
       fillRectTiles(29, 13, 31, 17, cz, 'goal');
+    } else if (courseIndex === 11) {
+      // =========================================================================
+      // COURSE 11: THE SILLY RACE (Carnival Funhouse & Wavy Slides)
+      // =========================================================================
+      let cz = 20;
+      startZ = cz;
+      fillRectTiles(-1, -1, 2, 2, cz, 'flat');
+
+      // 1. Wavy Funhouse Slide Eastward (x: 3..10, y: -1..2)
+      for (let x = 3; x <= 10; x++) {
+        cz -= 0.55;
+        for (let y = -1; y <= 2; y++) {
+          const isBoost = (x % 3 === 0);
+          setTile(x, y, cz, isBoost ? 'boost' : x % 2 === 0 ? 'slopeRight' : 'ice');
+        }
+      }
+
+      // 2. Rubber Bumper Funhouse Maze (x: 11..19, y: -2..6)
+      fillRectTiles(11, -2, 19, 6, cz, 'flat');
+      const sillyHoles = [
+        [13, -1], [17, -1], [14, 2], [16, 2], [13, 5], [17, 5]
+      ];
+      for (const [hx, hy] of sillyHoles) {
+        setTile(hx, hy, cz - 3, 'chasm');
+      }
+      const sillyBumpers = [
+        [12.5, 0.5], [17.5, 0.5], [15, 0.5], [12.5, 3.5], [17.5, 3.5], [15, 3.5]
+      ];
+      for (const [bx, by] of sillyBumpers) {
+        this.bumpers.push({ gx: bx, gy: by, z: cz, r: 0.44, pulse: 0 });
+      }
+      this.hazards.push({
+        gx: 15,
+        gy: 2,
+        z: cz,
+        baseX: 15,
+        baseY: 2,
+        ampX: 2.8,
+        ampY: 1.8,
+        phase: 0.2,
+        speed: 3.2 + loopTier * 0.4
+      });
+
+      // 3. Southward Wavy Slide (x: 14..17, y: 7..14)
+      for (let y = 7; y <= 14; y++) {
+        cz -= 0.6;
+        fillRectTiles(14, y, 17, y, cz, y % 2 === 0 ? 'ice' : 'slopeLeft');
+      }
+
+      // 4. Carnival Goal Sanctuary (x: 13..21, y: 15..20)
+      fillRectTiles(13, 15, 21, 20, cz, 'flat');
+      fillRectTiles(16, 16, 18, 19, cz, 'goal');
+    } else if (courseIndex === 12) {
+      // =========================================================================
+      // COURSE 12: COSMIC PULSAR HIGHWAY (Starlight Void & Acceleration Lanes)
+      // =========================================================================
+      let cz = 22;
+      startZ = cz;
+      fillRectTiles(-1, -1, 2, 2, cz, 'flat');
+
+      // 1. Twin Pulsar Acceleration Lanes Eastward (x: 3..11)
+      for (let x = 3; x <= 11; x++) {
+        cz -= 0.5;
+        // North Lane (Turbo Boost Track)
+        setTile(x, -2, cz, 'boost');
+        setTile(x, -1, cz, 'slopeRight');
+        // Central Chasm Divide
+        setTile(x, 0, cz - 4, 'chasm');
+        // South Lane (Ice Track)
+        setTile(x, 1, cz, 'ice');
+        setTile(x, 2, cz, 'slopeRight');
+      }
+
+      // 2. Pulsar Diamond Plaza (x: 12..20, y: -3..4)
+      fillRectTiles(12, -3, 20, 4, cz, 'flat');
+      fillRectTiles(15, -1, 17, 1, cz - 3, 'chasm');
+      const pulsarBumpers = [
+        [13.5, -1.5], [18.5, -1.5], [13.5, 2.5], [18.5, 2.5], [16, 0]
+      ];
+      for (const [bx, by] of pulsarBumpers) {
+        this.bumpers.push({ gx: bx, gy: by, z: cz, r: 0.44, pulse: 0 });
+      }
+      this.hazards.push({
+        gx: 16,
+        gy: -1.5,
+        z: cz,
+        baseX: 16,
+        baseY: -1.5,
+        ampX: 2.5,
+        ampY: 0.8,
+        phase: 0,
+        speed: 3.5 + loopTier * 0.4
+      });
+      this.hazards.push({
+        gx: 16,
+        gy: 2.5,
+        z: cz,
+        baseX: 16,
+        baseY: 2.5,
+        ampX: 2.5,
+        ampY: 0.8,
+        phase: Math.PI,
+        speed: 3.5 + loopTier * 0.4
+      });
+
+      // 3. Starlight Catwalk Eastward (x: 21..28, y: -1..2)
+      for (let x = 21; x <= 28; x++) {
+        cz -= 0.45;
+        for (let y = -1; y <= 2; y++) {
+          setTile(x, y, cz, (x === 23 || x === 26) ? 'boost' : 'slopeRight');
+        }
+      }
+
+      // 4. Cosmic Goal Platform (x: 29..36, y: -2..3)
+      fillRectTiles(29, -2, 36, 3, cz, 'flat');
+      fillRectTiles(31, -1, 34, 2, cz, 'goal');
+    } else if (courseIndex === 13) {
+      // =========================================================================
+      // COURSE 13: VOLCANO CALDERA CRAGS (Molten Magma Chutes & Basalt Pillars)
+      // =========================================================================
+      let cz = 24;
+      startZ = cz;
+      fillRectTiles(-1, -1, 2, 2, cz, 'flat');
+
+      // 1. Steep Magma Descent Chute (x: 3..9, y: -1..2)
+      for (let x = 3; x <= 9; x++) {
+        cz -= 0.75;
+        fillRectTiles(x, -1, x, 2, cz, x === 6 ? 'boost' : 'slopeRight');
+      }
+
+      // 2. Basalt Stepping Stone Pillars across Magma Chasms
+      fillRectTiles(10, -1, 12, 1, cz, 'flat');
+      this.bumpers.push({ gx: 11, gy: 0, z: cz, r: 0.4, pulse: 0 });
+
+      cz -= 0.8;
+      fillRectTiles(14, 0, 16, 2, cz, 'flat');
+      this.bumpers.push({ gx: 15, gy: 1, z: cz, r: 0.4, pulse: 0 });
+
+      cz -= 0.8;
+      fillRectTiles(18, 1, 20, 3, cz, 'flat');
+      this.bumpers.push({ gx: 19, gy: 2, z: cz, r: 0.4, pulse: 0 });
+
+      // 3. Southward Molten Rapids (x: 19..22, y: 4..12)
+      for (let y = 4; y <= 12; y++) {
+        cz -= 0.65;
+        fillRectTiles(19, y, 22, y, cz, y % 2 === 0 ? 'slopeDown' : 'slopeLeft');
+      }
+
+      // 4. Caldera Heart Goal Sanctuary (x: 18..26, y: 13..19)
+      fillRectTiles(18, 13, 26, 19, cz, 'flat');
+      this.hazards.push({
+        gx: 22,
+        gy: 14.5,
+        z: cz,
+        baseX: 22,
+        baseY: 14.5,
+        ampX: 2.4,
+        ampY: 1.2,
+        phase: 0.5,
+        speed: 3.3 + loopTier * 0.4
+      });
+      this.hazards.push({
+        gx: 22,
+        gy: 17.5,
+        z: cz,
+        baseX: 22,
+        baseY: 17.5,
+        ampX: 2.4,
+        ampY: 1.2,
+        phase: 2.0,
+        speed: 3.3 + loopTier * 0.4
+      });
+      fillRectTiles(21, 15, 24, 18, cz, 'goal');
+    } else if (courseIndex === 14) {
+      // =========================================================================
+      // COURSE 14: THE QUANTUM ACCELERATOR (Supersonic Turbo Chicanes & Dual Hazards)
+      // =========================================================================
+      let cz = 22;
+      startZ = cz;
+      fillRectTiles(-1, -1, 2, 2, cz, 'flat');
+
+      // 1. Accelerator Turbo Runway Eastward (x: 3..12, y: -1..2)
+      for (let x = 3; x <= 12; x++) {
+        cz -= 0.5;
+        for (let y = -1; y <= 2; y++) {
+          const isBoost = (x % 2 === 0) && (y === 0 || y === 1);
+          setTile(x, y, cz, isBoost ? 'boost' : 'slopeRight');
+        }
+      }
+
+      // 2. Chicane Chasm Slalom (x: 13..21, y: -3..5)
+      fillRectTiles(13, -3, 21, 5, cz, 'flat');
+      fillRectTiles(15, -2, 16, 0, cz - 3, 'chasm');
+      fillRectTiles(18, 1, 19, 3, cz - 3, 'chasm');
+      const colliderBumpers = [
+        [14, -1], [17, -1], [14, 2], [17, 2], [20, 0]
+      ];
+      for (const [bx, by] of colliderBumpers) {
+        this.bumpers.push({ gx: bx, gy: by, z: cz, r: 0.42, pulse: 0 });
+      }
+      this.hazards.push({
+        gx: 17,
+        gy: -1,
+        z: cz,
+        baseX: 17,
+        baseY: -1,
+        ampX: 2.2,
+        ampY: 1.8,
+        phase: 0,
+        speed: 3.6 + loopTier * 0.4
+      });
+      this.hazards.push({
+        gx: 17,
+        gy: 3,
+        z: cz,
+        baseX: 17,
+        baseY: 3,
+        ampX: 2.2,
+        ampY: 1.8,
+        phase: Math.PI,
+        speed: 3.6 + loopTier * 0.4
+      });
+
+      // 3. Southward Overdrive Run (x: 18..21, y: 6..14)
+      for (let y = 6; y <= 14; y++) {
+        cz -= 0.6;
+        for (let x = 18; x <= 21; x++) {
+          setTile(x, y, cz, (y % 3 === 0) ? 'boost' : 'slopeDown');
+        }
+      }
+
+      // 4. Quantum Core Goal (x: 17..25, y: 15..21)
+      fillRectTiles(17, 15, 25, 21, cz, 'flat');
+      fillRectTiles(20, 17, 23, 20, cz, 'goal');
+    } else {
+      // =========================================================================
+      // COURSE 15: INFINITY OLYMPUS (Celestial Citadel & Pantheon Finale)
+      // =========================================================================
+      let cz = 26;
+      startZ = cz;
+      fillRectTiles(-1, -1, 2, 2, cz, 'flat');
+
+      // 1. Cascading Steps of Olympus Eastward (x: 3..14)
+      for (let x = 3; x <= 14; x++) {
+        if (x % 3 === 0) cz -= 0.9;
+        for (let y = -2; y <= 3; y++) {
+          const isBoost = (x === 6 || x === 11) && (y === 0 || y === 1);
+          const isIce = (x === 8 || x === 13);
+          setTile(x, y, cz, isBoost ? 'boost' : isIce ? 'ice' : 'slopeRight');
+        }
+      }
+
+      // 2. Pantheon Columnade Plaza (x: 15..23, y: -3..5)
+      fillRectTiles(15, -3, 23, 5, cz, 'flat');
+      fillRectTiles(18, -1, 20, 2, cz - 3, 'chasm');
+      const olympusBumpers = [
+        [16.5, -1.5], [21.5, -1.5], [16.5, 3.5], [21.5, 3.5], [19, -2], [19, 4]
+      ];
+      for (const [bx, by] of olympusBumpers) {
+        this.bumpers.push({ gx: bx, gy: by, z: cz, r: 0.46, pulse: 0 });
+      }
+      this.hazards.push({
+        gx: 19,
+        gy: 1,
+        z: cz,
+        baseX: 19,
+        baseY: 1,
+        ampX: 2.8,
+        ampY: 2.4,
+        phase: 0.6,
+        speed: 3.6 + loopTier * 0.4
+      });
+
+      // 3. Razor-Thin Sky Bridge (x: 24..30, y: 0..2)
+      for (let x = 24; x <= 30; x++) {
+        cz -= 0.4;
+        setTile(x, 0, cz, 'ice');
+        setTile(x, 1, cz, x === 27 ? 'boost' : 'slopeRight');
+        setTile(x, 2, cz, 'ice');
+      }
+
+      // 4. Grand S-Curve Descent Southward (x: 29..32, y: 3..11)
+      for (let y = 3; y <= 11; y++) {
+        cz -= 0.65;
+        fillRectTiles(29, y, 32, y, cz, y % 2 === 0 ? 'slopeDown' : 'slopeLeft');
+      }
+
+      // 5. Ultimate Pantheon Victory Arch & Grand Goal (x: 27..37, y: 12..20)
+      fillRectTiles(27, 12, 37, 20, cz, 'flat');
+      this.bumpers.push({ gx: 28.5, gy: 13.5, z: cz, r: 0.48, pulse: 0 });
+      this.bumpers.push({ gx: 35.5, gy: 13.5, z: cz, r: 0.48, pulse: 0 });
+      this.bumpers.push({ gx: 28.5, gy: 18.5, z: cz, r: 0.48, pulse: 0 });
+      this.bumpers.push({ gx: 35.5, gy: 18.5, z: cz, r: 0.48, pulse: 0 });
+
+      this.hazards.push({
+        gx: 32,
+        gy: 16,
+        z: cz,
+        baseX: 32,
+        baseY: 16,
+        ampX: 2.0,
+        ampY: 2.2,
+        phase: 1.2,
+        speed: 3.8 + loopTier * 0.4
+      });
+
+      fillRectTiles(30, 14, 34, 18, cz, 'goal');
     }
 
     // Sort tiles back-to-front by (gx + gy) for painter's algorithm rendering
