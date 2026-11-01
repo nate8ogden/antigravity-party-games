@@ -60250,8 +60250,17 @@ class WildGunman {
   handlePlayerShot(shotX, shotY, isKeyboardQuickDraw = false) {
     if (this.roundTransitionTimer > 0) return;
     if (this.ammo <= 0) {
-      this.audio.playDig();
-      return;
+      if (this.mode === 'SALOON_GANG') {
+        // Revolver quick-spin auto reload in Saloon Shootout
+        this.ammo = 6;
+        this.audio.playCoin();
+        this.bannerText = 'RELOADED!';
+        this.bannerColor = PALETTE.GOLD;
+        this.bannerTimer = 0.6;
+      } else {
+        this.audio.playDig();
+        return;
+      }
     }
 
     this.ammo--;
@@ -60259,17 +60268,26 @@ class WildGunman {
     this.renderer.shake(5, 0.12);
     this.audio.playExplosion(0.18, 1800);
 
-    // If keyboard quick-draw, automatically snap aim to an outlaw in 'FIRE' phase (or closest active outlaw)
+    // If keyboard quick-draw, check crosshair aim first, then fallback to auto-snap
     let targetOutlaw = null;
     if (isKeyboardQuickDraw) {
-      targetOutlaw =
-        this.outlaws.find((o) => o.phase === 'FIRE') ||
-        this.outlaws.find((o) => o.phase === 'STANDOFF' || o.phase === 'WALKING');
-      if (targetOutlaw) {
-        shotX = targetOutlaw.x;
-        shotY = targetOutlaw.y - 48;
-        this.crosshair.x = shotX;
-        this.crosshair.y = shotY;
+      for (const o of this.outlaws) {
+        if (o.phase === 'DEFEATED') continue;
+        if (Math.abs(shotX - o.x) <= 56 && shotY >= o.y - 115 && shotY <= o.y + 15) {
+          targetOutlaw = o;
+          break;
+        }
+      }
+      if (!targetOutlaw) {
+        targetOutlaw =
+          this.outlaws.find((o) => o.phase === 'FIRE') ||
+          this.outlaws.find((o) => o.phase === 'STANDOFF' || o.phase === 'WALKING');
+        if (targetOutlaw) {
+          shotX = targetOutlaw.x;
+          shotY = targetOutlaw.y - 48;
+          this.crosshair.x = shotX;
+          this.crosshair.y = shotY;
+        }
       }
     } else {
       // Find outlaw under pointer/crosshair
@@ -60293,7 +60311,7 @@ class WildGunman {
     }
 
     if (targetOutlaw) {
-      if (targetOutlaw.phase !== 'FIRE') {
+      if (this.mode !== 'SALOON_GANG' && targetOutlaw.phase !== 'FIRE') {
         this.penalizePlayer('FOUL!! WAIT FOR "FIRE!!"');
         return;
       }
