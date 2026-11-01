@@ -80752,13 +80752,64 @@ class ElevatorAction {
     });
   }
 
-  _isShaftAtX(x) {
+  _getClosestFloor(y) {
+    const f = Math.round((y - 110 - this.floorHeight) / this.floorHeight);
+    return Math.max(0, Math.min(this.numFloors - 1, f));
+  }
+
+  _getAlignedFloor(y, tolerance = 14) {
+    for (let f = 0; f < this.numFloors; f++) {
+      if (Math.abs(y - this._floorY(f)) <= tolerance) {
+        return f;
+      }
+    }
+    return -1;
+  }
+
+  _getShaftAt(x, y = null) {
     for (const s of this.shafts) {
-      if (Math.abs(x - s.x) < s.w / 2 - 4) {
-        return s;
+      if (Math.abs(x - s.x) < s.w / 2 - 2) {
+        if (y === null) return s;
+        const topY = this._floorY(s.minFloor) - this.floorHeight;
+        const botY = this._floorY(s.maxFloor) + 8;
+        if (y >= topY - 10 && y <= botY + 10) {
+          return s;
+        }
       }
     }
     return null;
+  }
+
+  _isShaftAtX(x, y = null) {
+    return this._getShaftAt(x, y);
+  }
+
+  _isShaftOnFloor(x, floorIdx) {
+    if (floorIdx < 0 || floorIdx >= this.numFloors) return null;
+    for (const s of this.shafts) {
+      if (floorIdx >= s.minFloor && floorIdx <= s.maxFloor) {
+        if (Math.abs(x - s.x) < s.w / 2 - 2) {
+          return s;
+        }
+      }
+    }
+    return null;
+  }
+
+  _isFloorSolidAt(x, floorIdx) {
+    if (floorIdx < 0 || floorIdx >= this.numFloors) return false;
+    // Basement foundation floor is solid across the entire building width
+    if (floorIdx === this.numFloors - 1) {
+      return x >= this.buildingLeft && x <= this.buildingRight;
+    }
+    for (const s of this.shafts) {
+      if (floorIdx >= s.minFloor && floorIdx <= s.maxFloor) {
+        if (Math.abs(x - s.x) < s.w / 2) {
+          return false; // Open shaft gap in the floor slab
+        }
+      }
+    }
+    return x >= this.buildingLeft && x <= this.buildingRight;
   }
 
   _remainingRedDoors() {
@@ -80868,6 +80919,16 @@ class ElevatorAction {
         p.y = s.carY;
       } else if (inX && onRoof) {
         p.y = s.carY - this.floorHeight + 8;
+        if (s.carY <= minY + 2) {
+          this._hitPlayer();
+          p.y = s.carY;
+        }
+      } else if (inX && !p.jumping && !onFloor && !onRoof) {
+        // Player is under descending elevator car in shaft!
+        if (deltaY > 0 && p.y > prevCarY && p.y <= s.carY + 14) {
+          this._hitPlayer();
+          p.y = s.carY;
+        }
       }
 
       // Check if elevator car crushes any enemies in the shaft
@@ -80904,27 +80965,76 @@ class ElevatorAction {
     if (!p.crouching) {
       p.vx = axis.x * 185;
       if (axis.x !== 0) p.dir = Math.sign(axis.x);
-      const nextX = Math.max(
+      let nextX = Math.max(
         this.buildingLeft + 18,
         Math.min(this.buildingRight - 18, p.x + p.vx * dt)
       );
 
-      // Check if stepping into an open shaft without an elevator aligned
-      const shaft = this._isShaftAtX(nextX);
-      if (shaft && !p.jumping) {
-        const roofY = shaft.carY - this.floorHeight + 8;
-        const aligned =
-          Math.abs(p.y - shaft.carY) < 16 || Math.abs(p.y - roofY) < 16;
-        if (aligned) {
+      // Shaft and elevator wall collision constraints
+      if (p.ridingShaft && !p.jumping) {
+        const s = p.ridingShaft;
+        const isInsideCar = Math.abs(p.y - s.carY) < 14;
+        const isOnRoof = Math.abs(p.y - (s.carY - this.floorHeight + 8)) < 14;
+
+        if (isInsideCar) {
+          const alignedFloor = this._getAlignedFloor(s.carY, 14);
+          if (alignedFloor === -1) {
+            // Elevator is between floors: walls are solid shaft! Clamp inside car
+            const minX = s.x - (s.w / 2 - 12);
+            const maxX = s.x + (s.w / 2 - 12);
+            p.x = Math.max(minX, Math.min(maxX, nextX));
+          } else {
+            // Aligned with a floor: can exit into the corridor
+            p.x = nextX;
+            if (Math.abs(nextX - s.x) >= s.w / 2 - 4) {
+              p.ridingShaft = null;
+              p.y = this._floorY(alignedFloor);
+            }
+          }
+        } else if (isOnRoof) {
+          const roofFloor = this._getAlignedFloor(s.carY - this.floorHeight + 8, 14);
+          if (roofFloor === -1) {
+            const minX = s.x - (s.w / 2 - 10);
+            const maxX = s.x + (s.w / 2 - 10);
+            p.x = Math.max(minX, Math.min(maxX, nextX));
+          } else {
+            p.x = nextX;
+            if (Math.abs(nextX - s.x) >= s.w / 2 - 4) {
+              p.ridingShaft = null;
+              p.y = this._floorY(roofFloor);
+            }
+          }
+        } else {
           p.x = nextX;
-        } else if (Math.abs(axis.x) > 0.5) {
-          // Allow stepping into shaft to drop or jump across
-          p.x = nextX;
-          p.jumping = true;
-          p.vy = 20;
         }
       } else {
-        p.x = nextX;
+        // Player is walking on corridor or mid-air
+        const curFloor = this._getClosestFloor(p.y);
+        const shaft = this._isShaftOnFloor(nextX, curFloor);
+
+        if (shaft && !p.jumping) {
+          const roofY = shaft.carY - this.floorHeight + 8;
+          const alignedCar = Math.abs(p.y - shaft.carY) < 16;
+          const alignedRoof = Math.abs(p.y - roofY) < 16;
+
+          if (alignedCar) {
+            p.x = nextX;
+            p.y = shaft.carY;
+            p.ridingShaft = shaft;
+          } else if (alignedRoof) {
+            p.x = nextX;
+            p.y = roofY;
+            p.ridingShaft = shaft;
+          } else if (Math.abs(axis.x) > 0.5) {
+            // Stepping into open shaft -> begin falling
+            p.x = nextX;
+            p.jumping = true;
+            p.vy = 20;
+            p.ridingShaft = null;
+          }
+        } else {
+          p.x = nextX;
+        }
       }
     } else {
       p.vx = 0;
@@ -80982,11 +81092,21 @@ class ElevatorAction {
 
     // Vertical gravity & landing
     if (p.jumping || !p.ridingShaft) {
-      const shaft = this._isShaftAtX(p.x);
-      if (shaft && !p.jumping) {
-        const roofY = shaft.carY - this.floorHeight + 8;
-        if (Math.abs(p.y - shaft.carY) >= 16 && Math.abs(p.y - roofY) >= 16) {
+      const curShaft = this._getShaftAt(p.x, p.y);
+      if (curShaft && !p.jumping) {
+        const roofY = curShaft.carY - this.floorHeight + 8;
+        if (Math.abs(p.y - curShaft.carY) >= 16 && Math.abs(p.y - roofY) >= 16) {
           p.jumping = true;
+        }
+      }
+
+      // Check if walking off floor ledge into open shaft space
+      if (!p.jumping && !p.ridingShaft) {
+        const curFloor = this._getClosestFloor(p.y);
+        const fy = this._floorY(curFloor);
+        if (Math.abs(p.y - fy) <= 6 && !this._isFloorSolidAt(p.x, curFloor)) {
+          p.jumping = true;
+          p.vy = 20;
         }
       }
 
@@ -80995,39 +81115,65 @@ class ElevatorAction {
         p.vy += 760 * dt;
         p.y += p.vy * dt;
 
-        // Check landing on elevator car or roof if in shaft
-        if (shaft && p.vy > 0) {
-          const roofY = shaft.carY - this.floorHeight + 8;
-          if (prevY <= shaft.carY + 6 && p.y >= shaft.carY - 6) {
-            p.y = shaft.carY;
-            p.vy = 0;
-            p.jumping = false;
-          } else if (prevY <= roofY + 6 && p.y >= roofY - 6) {
-            p.y = roofY;
-            p.vy = 0;
-            p.jumping = false;
-          }
-        }
+        let landed = false;
 
-        // Check landing on building floor if not in open shaft
-        if (!shaft && p.vy > 0) {
-          for (let f = 0; f < this.numFloors; f++) {
-            const fy = this._floorY(f);
-            if (prevY <= fy + 8 && p.y >= fy - 4) {
-              p.y = fy;
-              p.vy = 0;
-              p.jumping = false;
-              break;
+        // 1. Check landing on elevator car or roof if in shaft column
+        for (const s of this.shafts) {
+          if (Math.abs(p.x - s.x) < s.w / 2 - 4) {
+            const carY = s.carY;
+            const roofY = s.carY - this.floorHeight + 8;
+
+            if (p.vy > 0) {
+              if (prevY <= carY + 8 && p.y >= carY - 6) {
+                p.y = carY;
+                p.vy = 0;
+                p.jumping = false;
+                p.ridingShaft = s;
+                landed = true;
+                break;
+              } else if (prevY <= roofY + 8 && p.y >= roofY - 6) {
+                p.y = roofY;
+                p.vy = 0;
+                p.jumping = false;
+                p.ridingShaft = s;
+                landed = true;
+                break;
+              }
             }
           }
         }
 
-        // Bottom basement floor safety catch
+        // 2. Check swept landing on solid building floor slabs
+        if (!landed && p.vy > 0) {
+          for (let f = 0; f < this.numFloors; f++) {
+            const fy = this._floorY(f);
+            if (prevY <= fy + 12 && p.y >= fy - 6) {
+              if (this._isFloorSolidAt(p.x, f)) {
+                p.y = fy;
+                p.vy = 0;
+                p.jumping = false;
+                p.ridingShaft = null;
+                landed = true;
+                break;
+              }
+            }
+          }
+        }
+
+        // 3. Absolute basement failsafe clamp (player NEVER falls through the map)
         const bottomY = this._floorY(this.numFloors - 1);
-        if (p.y > bottomY) {
+        if (p.y >= bottomY) {
           p.y = bottomY;
           p.vy = 0;
           p.jumping = false;
+          p.ridingShaft = null;
+        }
+
+        // Top floor roof ceiling clamp
+        const topY = this._floorY(0) - this.floorHeight;
+        if (p.y < topY + 20) {
+          p.y = topY + 20;
+          p.vy = Math.max(0, p.vy);
         }
 
         // Jump-kick enemies mid-air!
@@ -81140,7 +81286,7 @@ class ElevatorAction {
 
       if (!e.crouching) {
         const nx = e.x + e.dir * e.speed * dt;
-        const shaft = this._isShaftAtX(nx);
+        const shaft = this._isShaftOnFloor(nx, e.floor);
         const blockedByShaft = shaft && Math.abs(e.y - shaft.carY) > 12;
         if (nx > this.buildingLeft + 24 && nx < this.buildingRight - 24 && !blockedByShaft) {
           e.x = nx;

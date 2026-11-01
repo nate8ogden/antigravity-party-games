@@ -10,6 +10,7 @@
 #include "js_bindings.h"
 
 static uint32_t video_buffer[FB_W * FB_H];
+static uint16_t video_buffer_565[FB_W * FB_H];
 static int16_t silence[735 * 2];
 static retro_video_refresh_t video_cb;
 static retro_audio_sample_batch_t audio_batch_cb;
@@ -17,6 +18,7 @@ static retro_input_poll_t input_poll_cb;
 static retro_input_state_t input_state_cb;
 static retro_environment_t environ_cb;
 static retro_log_printf_t log_cb;
+static enum retro_pixel_format g_pixel_fmt = RETRO_PIXEL_FORMAT_XRGB8888;
 
 static JSRuntime *rt = NULL;
 static JSContext *ctx = NULL;
@@ -86,24 +88,61 @@ static void report_exception(const char *where) {
 }
 
 bool retro_load_game(const struct retro_game_info *game) {
-  enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
-  if (!environ_cb || !environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt)) return false;
-  if (!game || !game->data || game->size == 0) return false;
+  g_pixel_fmt = RETRO_PIXEL_FORMAT_XRGB8888;
+  if (!environ_cb || !environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &g_pixel_fmt)) {
+    g_pixel_fmt = RETRO_PIXEL_FORMAT_RGB565;
+    if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &g_pixel_fmt)) {
+      fprintf(stderr, "[RetroArcadeStudio] Failed to set pixel format (tried XRGB8888 & RGB565)\n");
+      return false;
+    }
+  }
+
+  const void *data = game ? game->data : NULL;
+  size_t size = game ? game->size : 0;
+  char *allocated = NULL;
+
+  if ((!data || size == 0) && game && game->path) {
+    FILE *f = fopen(game->path, "rb");
+    if (f) {
+      fseek(f, 0, SEEK_END);
+      size = ftell(f);
+      fseek(f, 0, SEEK_SET);
+      allocated = (char *)malloc(size + 1);
+      if (allocated) {
+        if (fread(allocated, 1, size, f) == size) {
+          allocated[size] = 0;
+          data = allocated;
+        } else {
+          free(allocated);
+          allocated = NULL;
+          size = 0;
+        }
+      }
+      fclose(f);
+    }
+  }
+
+  if (!data || size == 0) {
+    fprintf(stderr, "[RetroArcadeStudio] Failed to load game content from memory or disk\n");
+    return false;
+  }
 
   rt = JS_NewRuntime();
-  if (!rt) return false;
+  if (!rt) { if (allocated) free(allocated); return false; }
   JS_SetMemoryLimit(rt, 96u * 1024u * 1024u);
   JS_SetGCThreshold(rt, 8u * 1024u * 1024u);
   JS_SetMaxStackSize(rt, 1024u * 1024u);
   ctx = JS_NewContext(rt);
-  if (!ctx) return false;
+  if (!ctx) { if (allocated) free(allocated); return false; }
   init_js_native(ctx);
 
-  char *src = (char *)malloc(game->size + 1);
-  if (!src) return false;
-  memcpy(src, game->data, game->size);
-  src[game->size] = 0;
-  JSValue r = JS_Eval(ctx, src, game->size, "game.arcade", JS_EVAL_TYPE_GLOBAL);
+  char *src = (char *)malloc(size + 1);
+  if (!src) { if (allocated) free(allocated); return false; }
+  memcpy(src, data, size);
+  src[size] = 0;
+  if (allocated) free(allocated);
+
+  JSValue r = JS_Eval(ctx, src, size, "game.arcade", JS_EVAL_TYPE_GLOBAL);
   free(src);
   if (JS_IsException(r)) { report_exception("load"); return false; }
   JS_FreeValue(ctx, r);
@@ -139,7 +178,21 @@ void retro_run(void) {
   }
   frame_no++;
 
-  if (video_cb) video_cb(video_buffer, g_w, g_h, FB_W * sizeof(uint32_t));
+  if (video_cb) {
+    if (g_pixel_fmt == RETRO_PIXEL_FORMAT_RGB565) {
+      int total = g_w * g_h;
+      for (int i = 0; i < total; i++) {
+        uint32_t c = video_buffer[i];
+        uint16_t r = (c >> 19) & 0x1F;
+        uint16_t g = (c >> 10) & 0x3F;
+        uint16_t b = (c >> 3) & 0x1F;
+        video_buffer_565[i] = (r << 11) | (g << 5) | b;
+      }
+      video_cb(video_buffer_565, g_w, g_h, g_w * sizeof(uint16_t));
+    } else {
+      video_cb(video_buffer, g_w, g_h, FB_W * sizeof(uint32_t));
+    }
+  }
   if (audio_batch_cb) audio_batch_cb(silence, 735);
 }
 
