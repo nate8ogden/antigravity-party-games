@@ -1,8 +1,21 @@
 /**
  * SpyHunter.js
- * Classic 1983 Top-Down High-Speed Highway Combat Driving
- * Features scrolling curved road & bridges, dual Machine Guns, Oil Slick & Smoke Screen
- * rear hazards, enemy spin-outs, Civilian protection, and the Red Weapons Van docking ramp.
+ * Classic 1983 Top-Down High-Speed Highway Combat Driving — Retro Arcade Studio Edition.
+ * Features:
+ * - Infinite Endurance Highway with progressive distance tiers (curves, river bridges, speed scaling)
+ * - Strict Civilian Protection: Point deductions (-500 pts) and score freeze for hitting/destroying civilians
+ * - Weapons Van Docking & Center-Screen Auto-Align: Re-arms vehicle and smoothly centers player back to the middle of the road
+ * - Diverse Enemy Roster:
+ *     1. Mad Bomber Motorcyclist (agile weaving bike, flips and spins when hit)
+ *     2. Civilian Commuter Motorcyclist (scooter commuter to protect)
+ *     3. The Mad Bomber Helicopter (high-altitude chopper dropping road bombs, shootable with roof missiles)
+ *     4. The Barrel Dumper (armored half-track rolling explosive barrels onto the asphalt)
+ *     5. The Switchblade (orange coupe with extending tire slashers)
+ *     6. The Enforcer (purple limo with window gunner)
+ *     7. The Road Lord (bulletproof front rammer)
+ *     8. Civilian Sedan (blue commuter car)
+ *     9. Red Weapons Van (docking re-arming trailer)
+ * - Dual front Machine Guns, Rear Oil Slicks, Smoke Screens & Van Roof Missiles
  */
 import { PALETTE, FONTS, HighScoreStore } from '../engine/Renderer.js';
 
@@ -27,14 +40,15 @@ export class SpyHunter {
     this.trees = [];
     this.player = null;
     this.bullets = [];
-    this.hazards = []; // Oil slicks & smoke screens
-    this.vehicles = []; // Enemies, civilians, and Weapons Van
+    this.hazards = []; // Oil slicks, smoke screens, explosive barrels & bomb craters
+    this.vehicles = []; // Enemies, civilians, helicopter, and Weapons Van
     this.particles = [];
     this.popups = [];
 
     this.distance = 0;
     this.noPointsTimer = 0;
     this.vanSpawnTimer = 0;
+    this.copterSpawnTimer = 0;
     this.spawnTimer = 0;
     this.themeStep = 0;
     this.themeTimer = 0;
@@ -51,7 +65,8 @@ export class SpyHunter {
 
     this.distance = 0;
     this.noPointsTimer = 0;
-    this.vanSpawnTimer = 14;
+    this.vanSpawnTimer = 16;
+    this.copterSpawnTimer = 26;
     this.spawnTimer = 1.2;
 
     this.bullets = [];
@@ -78,19 +93,25 @@ export class SpyHunter {
   }
 
   _addScore(pts, x = null, y = null, color = PALETTE.GOLD, label = null) {
-    if (this.noPointsTimer > 0 && pts > 0) return;
-    this.score = Math.max(0, this.score + pts);
-    if (this.score > this.highScore) {
-      this.highScore = this.score;
-      HighScoreStore.submit(this.id, this.score);
+    // If penalty points are being deducted, always subtract regardless of noPointsTimer
+    if (pts < 0) {
+      this.score = Math.max(0, this.score + pts);
+    } else {
+      if (this.noPointsTimer > 0) return;
+      this.score = Math.max(0, this.score + pts);
+      if (this.score > this.highScore) {
+        this.highScore = this.score;
+        HighScoreStore.submit(this.id, this.score);
+      }
     }
+
     if (x !== null && y !== null) {
       this.popups.push({
         x,
         y,
         text: label || (pts >= 0 ? `+${pts}` : `${pts}`),
         color,
-        life: 1.0
+        life: 1.2
       });
     }
   }
@@ -167,27 +188,59 @@ export class SpyHunter {
 
   _spawnVehicle() {
     const topRoad = this._getRoadAtY(40);
-    const laneOffset = (Math.floor(Math.random() * 3) - 1) * 90;
+    const laneOffset = (Math.floor(Math.random() * 3) - 1) * 85;
     const x = topRoad.centerX + laneOffset;
 
     const roll = Math.random();
-    if (roll < 0.28) {
-      // Innocent Civilian
+    if (roll < 0.18) {
+      // Innocent Civilian Sedan
       this.vehicles.push({
         type: 'civilian',
         x,
-        y: -40,
+        y: -45,
         w: 26,
         h: 44,
         vx: 0,
-        speed: 220 + Math.random() * 50,
+        speed: 220 + Math.random() * 45,
         hp: 1,
         color: PALETTE.BLUE,
         spinning: false,
         spinAngle: 0
       });
-    } else if (roll < 0.56) {
-      // Switchblade (Tire Slasher - weaves aggressively toward player)
+    } else if (roll < 0.30) {
+      // Innocent Civilian Commuter Motorcycle / Scooter (Protect!)
+      this.vehicles.push({
+        type: 'civilian_cycle',
+        x,
+        y: -40,
+        w: 14,
+        h: 30,
+        vx: 0,
+        speed: 230 + Math.random() * 40,
+        hp: 1,
+        color: PALETTE.CYAN,
+        spinning: false,
+        spinAngle: 0
+      });
+    } else if (roll < 0.48) {
+      // Mad Bomber Motorcyclist (Agile, fast, weaving bike with leather rider)
+      this.vehicles.push({
+        type: 'motorcycle',
+        x,
+        y: -40,
+        w: 16,
+        h: 32,
+        vx: 0,
+        speed: 360 + this.level * 15,
+        hp: 1,
+        color: PALETTE.RED,
+        shootTimer: 2.0,
+        weaveTimer: Math.random() * Math.PI * 2,
+        spinning: false,
+        spinAngle: 0
+      });
+    } else if (roll < 0.65) {
+      // Switchblade (Tire Slasher - sharp blades extend from rims)
       this.vehicles.push({
         type: 'switchblade',
         x,
@@ -195,15 +248,15 @@ export class SpyHunter {
         w: 30,
         h: 46,
         vx: 0,
-        speed: 310 + this.level * 15,
+        speed: 310 + this.level * 14,
         hp: 3,
         color: PALETTE.ORANGE,
         spinning: false,
         spinAngle: 0,
         slasherOut: true
       });
-    } else if (roll < 0.82) {
-      // Enforcer (Pursuing Limo that spawns from behind or ahead and shoots)
+    } else if (roll < 0.80) {
+      // Enforcer (Pursuing Limo that spawns from behind or ahead and fires guns)
       const fromBehind = Math.random() < 0.45;
       const spawnY = fromBehind ? this.height + 40 : -40;
       const spawnRoad = this._getRoadAtY(fromBehind ? this.height - 20 : 40);
@@ -221,8 +274,8 @@ export class SpyHunter {
         spinning: false,
         spinAngle: 0
       });
-    } else {
-      // Road Lord (Bulletproof front armor - must be Oil Slicked, Smoked, or rammed off road!)
+    } else if (roll < 0.90) {
+      // Road Lord (Bulletproof front armor - ram off road or oil slick)
       this.vehicles.push({
         type: 'roadlord',
         x,
@@ -236,19 +289,64 @@ export class SpyHunter {
         spinning: false,
         spinAngle: 0
       });
+    } else {
+      // The Barrel Dumper (Armored truck rolling explosive fuel barrels onto the highway)
+      this.vehicles.push({
+        type: 'barreldumper',
+        x,
+        y: -50,
+        w: 32,
+        h: 54,
+        vx: 0,
+        speed: 300,
+        hp: 5,
+        color: '#15803D',
+        barrelTimer: 2.2,
+        spinning: false,
+        spinAngle: 0
+      });
     }
+  }
+
+  _spawnHelicopter() {
+    const topRoad = this._getRoadAtY(40);
+    this.vehicles.push({
+      type: 'helicopter',
+      x: topRoad.centerX,
+      y: -75,
+      w: 44,
+      h: 58,
+      vx: 0,
+      speed: 260,
+      hp: 4,
+      color: '#334155',
+      rotorAngle: 0,
+      bombTimer: 1.5,
+      spinning: false,
+      spinAngle: 0
+    });
+
+    this.popups.push({
+      x: this.width / 2,
+      y: 90,
+      text: 'WARNING: MAD BOMBER CHOPPER INCOMING!',
+      color: PALETTE.RED,
+      life: 2.4
+    });
+    this.audio.playLaser(300, 100, 0.25);
   }
 
   _spawnWeaponsVan() {
     const topRoad = this._getRoadAtY(40);
+    // Spawns slightly to the side with loading ramp extended
     this.vehicles.push({
       type: 'weaponsvan',
-      x: topRoad.centerX - 110,
-      y: -70,
+      x: topRoad.centerX - 80,
+      y: -75,
       w: 44,
       h: 82,
       vx: 0,
-      speed: 260,
+      speed: 270,
       hp: 999,
       color: PALETTE.RED,
       spinning: false,
@@ -260,7 +358,7 @@ export class SpyHunter {
       y: 95,
       text: 'WEAPONS VAN AHEAD! ENTER REAR RAMP!',
       color: PALETTE.GREEN,
-      life: 2.2
+      life: 2.4
     });
     this.audio.playPowerUp();
   }
@@ -270,7 +368,7 @@ export class SpyHunter {
       if (
         this.input.isJustPressed('actionA') ||
         this.input.isJustPressed('actionB') ||
-        this.input.pointer.justPressed
+        (this.input.pointer && this.input.pointer.justPressed)
       ) {
         this.audio.playMenuSelect();
         this.reset();
@@ -291,7 +389,7 @@ export class SpyHunter {
       if (
         this.input.isJustPressed('actionA') ||
         this.input.isJustPressed('actionB') ||
-        this.input.pointer.justPressed
+        (this.input.pointer && this.input.pointer.justPressed)
       ) {
         this.audio.playMenuSelect();
         this.reset();
@@ -312,7 +410,7 @@ export class SpyHunter {
     if (p.specialCooldown > 0) p.specialCooldown -= dt;
     if (this.noPointsTimer > 0) this.noPointsTimer -= dt;
 
-    // Synthesize iconic Peter Gunn style bassline pulse while driving
+    // Synthesize iconic Peter Gunn style driving bassline
     this.themeTimer -= dt;
     if (this.themeTimer <= 0) {
       const bassNotes = [110, 110, 123.47, 110, 130.81, 110, 146.83, 138.59];
@@ -321,12 +419,21 @@ export class SpyHunter {
       this.themeTimer = 0.22;
     }
 
-    // Speed & Steering Controls
+    // -------------------------------------------------------------
+    // WEAPONS VAN DOCKING & CENTER-OF-SCREEN TRANSITION
+    // When inside the van, both the van and the player are steered smoothly
+    // back to the CENTER OF THE ROAD/SCREEN so the player exits safely!
+    // -------------------------------------------------------------
     if (p.dockedVan) {
       p.dockTimer -= dt;
+      const vRoad = this._getRoadAtY(p.dockedVan.y);
+
+      // Smoothly steer the van and docked player toward the middle of the road
+      p.dockedVan.x += (vRoad.centerX - p.dockedVan.x) * 4.2 * dt;
       p.x = p.dockedVan.x;
       p.y = p.dockedVan.y + 18;
       p.speed = p.dockedVan.speed;
+
       if (p.dockTimer <= 0) {
         p.oilAmmo = 8;
         p.smokeAmmo = 8;
@@ -334,11 +441,22 @@ export class SpyHunter {
         p.invulnTimer = 2.5;
         p.dockedVan.used = true;
         p.dockedVan.speed = 180;
-        p.speed = 460;
+        p.speed = 480;
+
+        // Eject out of the van squarely down the CENTER of the road!
+        p.x = vRoad.centerX;
         p.y = p.dockedVan.y - 55;
         p.dockedVan = null;
+
         this.audio.playStageClear();
         this._addScore(1500, p.x, p.y, PALETTE.GREEN, 'SYSTEMS UPGRADED +1500');
+        this.popups.push({
+          x: this.width / 2,
+          y: 85,
+          text: 'CENTER LANE ACQUIRED — FULL POWER!',
+          color: PALETTE.CYAN,
+          life: 1.6
+        });
       }
     } else {
       if (this.input.isDown('up')) {
@@ -360,15 +478,15 @@ export class SpyHunter {
       p.x += p.vx * dt;
     }
 
-    // Advance Highway Distance & Score
+    // Advance Infinite Highway Distance & Escalating Level Milestones
     const deltaDist = p.speed * dt;
     this.distance += deltaDist;
-    this.level = 1 + Math.floor(this.distance / 9000);
+    this.level = 1 + Math.floor(this.distance / 8500);
     if (this.noPointsTimer <= 0) {
       this._addScore(deltaDist * 0.08);
     }
 
-    // Scroll Road Segments
+    // Scroll Road Segments with dynamic curves and river bridges
     for (const seg of this.roadSegments) {
       seg.y += deltaDist;
       if (seg.y > this.height + 40) {
@@ -376,10 +494,10 @@ export class SpyHunter {
         const curvePhase = this.distance * 0.00085;
         seg.centerX =
           this.width / 2 +
-          Math.sin(curvePhase) * 125 +
+          Math.sin(curvePhase) * (110 + Math.min(50, this.level * 6)) +
           Math.cos(curvePhase * 0.47) * 55;
         const bridgeWave = Math.sin(this.distance * 0.00035);
-        seg.isBridge = bridgeWave > 0.72;
+        seg.isBridge = bridgeWave > 0.70;
         seg.halfWidth = seg.isBridge ? 145 : 195;
       }
     }
@@ -395,16 +513,16 @@ export class SpyHunter {
       }
     }
 
-    // Check Player Road Bounds
+    // Check Player Road Bounds & Bridge Plunges
     const playerRoad = this._getRoadAtY(p.y);
     const distFromCenter = Math.abs(p.x - playerRoad.centerX);
     if (!p.dockedVan && distFromCenter > playerRoad.halfWidth - 8) {
       if (playerRoad.isBridge && distFromCenter > playerRoad.halfWidth + 8) {
-        // Plunged off bridge into river!
+        // Plunged off narrow bridge into river!
         this._destroyPlayer();
         return;
       }
-      // Off-road shoulder vibration & slowdown
+      // Off-road shoulder slowdown and vibration
       p.speed = Math.max(220, p.speed - 240 * dt);
       this.renderer.shake(3, 0.06);
       if (Math.random() < 0.4) {
@@ -416,7 +534,7 @@ export class SpyHunter {
       );
     }
 
-    // Action A: Dual Front Machine Guns (+ Missiles if upgraded)
+    // Action A: Dual Front Machine Guns (+ Van Roof Missiles if upgraded)
     if (!p.dockedVan && this.input.isDown('actionA') && p.gunCooldown <= 0) {
       p.gunCooldown = 0.095;
       this.audio.playLaser(880, 260, 0.06);
@@ -429,7 +547,7 @@ export class SpyHunter {
         this.bullets.push({
           x: p.x,
           y: p.y - 28,
-          vy: -640,
+          vy: -650,
           damage: 4,
           isMissile: true
         });
@@ -467,11 +585,11 @@ export class SpyHunter {
       }
     }
 
-    // Update Bullets
+    // Update Bullets & Missiles
     for (let i = this.bullets.length - 1; i >= 0; i--) {
       const b = this.bullets[i];
       b.y += b.vy * dt;
-      if (b.y < 38 || b.y > this.height) {
+      if (b.y < 35 || b.y > this.height) {
         this.bullets.splice(i, 1);
         continue;
       }
@@ -494,13 +612,14 @@ export class SpyHunter {
       for (let j = this.vehicles.length - 1; j >= 0; j--) {
         const v = this.vehicles[j];
         if (v.type === 'weaponsvan') continue;
+
         if (
           Math.abs(b.x - v.x) < v.w / 2 + 6 &&
           Math.abs(b.y - v.y) < v.h / 2 + 6
         ) {
           this.bullets.splice(i, 1);
           if (v.type === 'roadlord' && !b.isMissile) {
-            // Bulletproof armor sparks!
+            // Bulletproof Armor Sparks
             this.audio.playMenuMove();
             this._spawnParticles(b.x, b.y, PALETTE.CYAN, 4, 90);
           } else {
@@ -513,12 +632,28 @@ export class SpyHunter {
           break;
         }
       }
+
+      // Check Player Bullet vs Rolling Barrels
+      for (let k = this.hazards.length - 1; k >= 0; k--) {
+        const hz = this.hazards[k];
+        if (hz.type === 'BARREL') {
+          if (Math.hypot(b.x - hz.x, b.y - hz.y) < hz.r + 6) {
+            this.bullets.splice(i, 1);
+            this.audio.playExplosion(0.25, 900);
+            this._spawnParticles(hz.x, hz.y, PALETTE.GOLD, 14, 150);
+            this._addScore(150, hz.x, hz.y, PALETTE.GOLD, 'BARREL +150');
+            this.hazards.splice(k, 1);
+            break;
+          }
+        }
+      }
     }
 
-    // Update Rear Hazards (Oil Slicks & Smoke Screens)
+    // Update Rear Hazards (Oil Slicks, Smoke Screens, Barrels & Craters)
     for (let i = this.hazards.length - 1; i >= 0; i--) {
       const h = this.hazards[i];
       h.y += (p.speed * 0.55) * dt;
+
       if (h.type === 'SMOKE') {
         h.r = Math.min(54, h.r + 18 * dt);
       }
@@ -528,14 +663,30 @@ export class SpyHunter {
         continue;
       }
 
+      // Check Player Collision with Explosive Barrels or Craters
+      if (!p.dockedVan && p.invulnTimer <= 0) {
+        if (h.type === 'BARREL' || h.type === 'CRATER') {
+          if (Math.hypot(p.x - h.x, p.y - h.y) < h.r + 16) {
+            this.hazards.splice(i, 1);
+            this._destroyPlayer();
+            return;
+          }
+        }
+      }
+
       // Check Enemy Vehicles hitting Oil Slick or Smoke Screen!
       for (const v of this.vehicles) {
-        if (v.type === 'weaponsvan' || v.spinning) continue;
+        if (v.type === 'weaponsvan' || v.type === 'helicopter' || v.spinning) continue;
         if (Math.hypot(v.x - h.x, v.y - h.y) < h.r + 16) {
           v.spinning = true;
           v.vx = (v.x >= h.x ? 1 : -1) * 280;
           this.audio.playPop();
-          if (v.type !== 'civilian') {
+
+          if (v.type === 'civilian' || v.type === 'civilian_cycle') {
+            // Deduct points for spinning out innocent civilians!
+            this._addScore(-500, v.x, v.y, PALETTE.RED, 'CIVILIAN CASUALTY -500!');
+            this.noPointsTimer = 4.0;
+          } else {
             this._addScore(600, v.x, v.y, PALETTE.CYAN, 'SPIN-OUT +600!');
           }
         }
@@ -546,26 +697,35 @@ export class SpyHunter {
     this.spawnTimer -= dt;
     if (this.spawnTimer <= 0 && this.vehicles.length < 7) {
       this._spawnVehicle();
-      this.spawnTimer = Math.max(0.75, 1.65 - this.level * 0.1);
+      this.spawnTimer = Math.max(0.70, 1.55 - this.level * 0.08);
     }
 
-    // Spawn Red Weapons Van periodically
+    // Spawn Weapons Van periodically
     this.vanSpawnTimer -= dt;
     if (this.vanSpawnTimer <= 0) {
       this._spawnWeaponsVan();
       this.vanSpawnTimer = 22;
     }
 
-    // Update Vehicles
+    // Spawn Mad Bomber Helicopter periodically
+    this.copterSpawnTimer -= dt;
+    const hasCopter = this.vehicles.some((v) => v.type === 'helicopter');
+    if (this.copterSpawnTimer <= 0 && !hasCopter) {
+      this._spawnHelicopter();
+      this.copterSpawnTimer = 28;
+    }
+
+    // Update Vehicles & AI
     for (let i = this.vehicles.length - 1; i >= 0; i--) {
       const v = this.vehicles[i];
       const vRoad = this._getRoadAtY(v.y);
 
       if (v.spinning) {
-        v.spinAngle += 14 * dt;
+        v.spinAngle += 15 * dt;
         v.x += v.vx * dt;
         v.y += (p.speed - v.speed * 0.4) * dt;
-        if (Math.abs(v.x - vRoad.centerX) > vRoad.halfWidth + 14) {
+
+        if (Math.abs(v.x - vRoad.centerX) > vRoad.halfWidth + 16) {
           this._destroyVehicle(i);
           continue;
         }
@@ -575,19 +735,70 @@ export class SpyHunter {
         v.y += relVy * dt;
 
         // AI steering behavior
-        if (v.type === 'civilian' || v.type === 'weaponsvan') {
+        if (v.type === 'civilian' || v.type === 'civilian_cycle' || v.type === 'weaponsvan') {
           const targetX =
             v.type === 'weaponsvan' && !v.used
-              ? vRoad.centerX - 95
+              ? vRoad.centerX - 75
               : vRoad.centerX;
           v.x += (targetX - v.x) * 2.5 * dt;
+        } else if (v.type === 'motorcycle') {
+          // Agile motorcyclist weaving
+          v.weaveTimer += 4.5 * dt;
+          const targetLane = vRoad.centerX + Math.sin(v.weaveTimer) * 75;
+          v.x += (targetLane - v.x) * 3.5 * dt;
+
+          v.shootTimer -= dt;
+          if (v.shootTimer <= 0 && Math.abs(v.x - p.x) < 45) {
+            v.shootTimer = 2.2;
+            this.bullets.push({
+              x: v.x,
+              y: v.y + 20,
+              vy: 290,
+              enemyShot: true
+            });
+            this.audio.playLaser(550, 180, 0.08);
+          }
+        } else if (v.type === 'barreldumper') {
+          // Barrel dumper drives down center and rolls barrels
+          v.x += (vRoad.centerX - v.x) * 2.0 * dt;
+          v.barrelTimer -= dt;
+          if (v.barrelTimer <= 0) {
+            v.barrelTimer = 2.5;
+            this.hazards.push({
+              type: 'BARREL',
+              x: v.x,
+              y: v.y + 34,
+              r: 12,
+              life: 5.0
+            });
+            this.audio.playPop();
+          }
+        } else if (v.type === 'helicopter') {
+          // Mad Bomber Chopper flies overhead and drops bombs
+          v.rotorAngle += 35 * dt;
+          v.x += (p.x - v.x) * 1.8 * dt;
+
+          v.bombTimer -= dt;
+          if (v.bombTimer <= 0) {
+            v.bombTimer = 2.0;
+            // Drop explosive bomb on highway ahead
+            this.hazards.push({
+              type: 'CRATER',
+              x: v.x,
+              y: v.y + 60,
+              r: 22,
+              life: 4.0
+            });
+            this.audio.playExplosion(0.2, 500);
+            this._spawnParticles(v.x, v.y + 60, PALETTE.ORANGE, 12, 120);
+          }
         } else {
-          // Enemy pursues player lane
+          // Enemy chases player's lane
           const dx = p.x - v.x;
           v.vx = Math.sign(dx) * Math.min(165, Math.abs(dx) * 2.2);
           v.x += v.vx * dt;
 
-          // Enforcer fires at player
+          // Enforcer Limo Gunner
           if (v.type === 'enforcer') {
             v.shootTimer -= dt;
             if (v.shootTimer <= 0 && Math.abs(v.x - p.x) < 60) {
@@ -605,7 +816,7 @@ export class SpyHunter {
       }
 
       // Remove off-screen vehicles
-      if (v.y < -150 || v.y > this.height + 150) {
+      if (v.y < -160 || v.y > this.height + 160) {
         this.vehicles.splice(i, 1);
         continue;
       }
@@ -615,47 +826,62 @@ export class SpyHunter {
         const dx = Math.abs(p.x - v.x);
         const dy = Math.abs(p.y - v.y);
 
-        // Docking into Red Weapons Van Rear Ramp!
+        // Docking into Red Weapons Van Rear Ramp
         if (
           v.type === 'weaponsvan' &&
           !v.used &&
-          dx < 26 &&
+          dx < 28 &&
           p.y > v.y + 10 &&
-          p.y < v.y + 62
+          p.y < v.y + 66
         ) {
           p.dockedVan = v;
-          p.dockTimer = 1.2;
+          p.dockTimer = 1.4;
           this.audio.playPowerUp();
           this.popups.push({
-            x: v.x,
+            x: this.width / 2,
             y: v.y,
-            text: 'REARMING OIL & MISSILES...',
+            text: 'REARMING: RETURNING TO CENTER LANE...',
             color: PALETTE.GOLD,
-            life: 1.1
+            life: 1.2
           });
           continue;
         }
 
-        // Vehicle-to-Vehicle Ramming
-        if (dx < (p.w + v.w) * 0.48 && dy < (p.h + v.h) * 0.46) {
-          const pushDir = p.x < v.x ? -1 : 1;
-          p.x += pushDir * 18;
-          v.x -= pushDir * 28;
-          this.audio.playShove();
-          this.renderer.shake(6, 0.15);
-          this._spawnParticles((p.x + v.x) / 2, (p.y + v.y) / 2, PALETTE.GOLD, 8, 130);
+        // Vehicle-to-Vehicle Collision & Ramming
+        if (v.type !== 'helicopter') {
+          if (dx < (p.w + v.w) * 0.48 && dy < (p.h + v.h) * 0.46) {
+            const pushDir = p.x < v.x ? -1 : 1;
+            p.x += pushDir * 18;
+            v.x -= pushDir * 28;
+            this.audio.playShove();
+            this.renderer.shake(6, 0.15);
+            this._spawnParticles((p.x + v.x) / 2, (p.y + v.y) / 2, PALETTE.GOLD, 8, 130);
 
-          // Switchblade tire slasher damages player if side-swiped while vulnerable
-          if (v.type === 'switchblade' && p.invulnTimer <= 0 && dy < 22) {
-            this._destroyPlayer();
-            return;
-          }
+            // Civilian Collision Penalty: Subtract points for hitting innocents!
+            if (v.type === 'civilian' || v.type === 'civilian_cycle') {
+              this._addScore(-150, p.x, p.y - 18, PALETTE.RED, 'CIVILIAN HIT -150!');
+              this.audio.playHit();
+            }
 
-          // Check if enemy was sideswiped off the highway!
-          if (Math.abs(v.x - vRoad.centerX) > vRoad.halfWidth - 6) {
-            v.spinning = true;
-            v.vx = -pushDir * 260;
-            this._addScore(500, v.x, v.y, PALETTE.ORANGE, 'SIDESWIPE +500!');
+            // Switchblade tire slasher destroys player if side-swiped while vulnerable
+            if (v.type === 'switchblade' && p.invulnTimer <= 0 && dy < 22) {
+              this._destroyPlayer();
+              return;
+            }
+
+            // Check if vehicle was sideswiped off the road!
+            if (Math.abs(v.x - vRoad.centerX) > vRoad.halfWidth - 6) {
+              v.spinning = true;
+              v.vx = -pushDir * 260;
+
+              if (v.type === 'civilian' || v.type === 'civilian_cycle') {
+                this._addScore(-500, v.x, v.y, PALETTE.RED, 'CIVILIAN OFF-ROAD -500!');
+                this.noPointsTimer = 4.0;
+                this.audio.playHit();
+              } else {
+                this._addScore(500, v.x, v.y, PALETTE.ORANGE, 'SIDESWIPE +500!');
+              }
+            }
           }
         }
       }
@@ -684,17 +910,25 @@ export class SpyHunter {
     this._spawnParticles(v.x, v.y, PALETTE.ORANGE, 20, 200);
     this._spawnParticles(v.x, v.y, PALETTE.RED, 12, 140);
 
-    if (v.type === 'civilian') {
-      this.noPointsTimer = 3.0;
+    // Strict Civilian Protection Penalty: Deduct points & freeze scoring
+    if (v.type === 'civilian' || v.type === 'civilian_cycle') {
+      this._addScore(-500, v.x, v.y, PALETTE.RED, 'CIVILIAN DESTROYED -500!');
+      this.noPointsTimer = 4.0;
+      this.audio.playHit();
       this.popups.push({
-        x: v.x,
-        y: v.y,
-        text: 'NO POINTS! CIVILIAN HIT!',
+        x: this.width / 2,
+        y: 85,
+        text: 'CIVILIAN CASUALTY: -500 PTS (SCORE FROZEN)',
         color: PALETTE.RED,
-        life: 1.6
+        life: 2.0
       });
+    } else if (v.type === 'helicopter') {
+      this._addScore(1500, v.x, v.y, PALETTE.GOLD, 'CHOPPER DOWN! +1500');
+      this.audio.playStageClear();
+    } else if (v.type === 'motorcycle') {
+      this._addScore(500, v.x, v.y, PALETTE.GOLD, 'BIKER DOWN +500');
     } else {
-      const pts = v.type === 'roadlord' ? 800 : 400;
+      const pts = v.type === 'roadlord' ? 800 : v.type === 'barreldumper' ? 700 : 400;
       this._addScore(pts, v.x, v.y, PALETTE.GOLD);
     }
     this.vehicles.splice(index, 1);
@@ -743,7 +977,7 @@ export class SpyHunter {
       ctx.fillRect(seg.centerX - seg.halfWidth, seg.y, seg.halfWidth * 2, h);
 
       // Dashed Lane Dividers
-      if ((Math.floor((seg.y + this.distance) / 40) % 2) === 0) {
+      if (Math.floor((seg.y + this.distance) / 40) % 2 === 0) {
         ctx.fillStyle = 'rgba(248, 250, 252, 0.65)';
         ctx.fillRect(seg.centerX - seg.halfWidth * 0.34, seg.y, 4, 14);
         ctx.fillRect(seg.centerX + seg.halfWidth * 0.34, seg.y, 4, 14);
@@ -762,7 +996,7 @@ export class SpyHunter {
       ctx.fill();
     }
 
-    // Oil Slicks & Smoke Screens
+    // Oil Slicks, Smoke Screens, Barrels & Craters
     for (const h of this.hazards) {
       if (h.type === 'OIL') {
         ctx.fillStyle = '#09090B';
@@ -772,15 +1006,27 @@ export class SpyHunter {
         ctx.strokeStyle = PALETTE.PURPLE;
         ctx.lineWidth = 1.5;
         ctx.stroke();
-      } else {
+      } else if (h.type === 'SMOKE') {
         ctx.fillStyle = 'rgba(226, 232, 240, 0.55)';
         ctx.beginPath();
         ctx.arc(h.x, h.y, h.r, 0, Math.PI * 2);
         ctx.fill();
+      } else if (h.type === 'BARREL') {
+        // Rolling Yellow Hazard Fuel Barrel
+        this.renderer.drawGlowCircle(h.x, h.y, h.r, PALETTE.GOLD, 8, true);
+        ctx.fillStyle = '#09090B';
+        ctx.fillRect(h.x - 3, h.y - h.r, 6, h.r * 2);
+      } else if (h.type === 'CRATER') {
+        // Flaming Road Bomb Crater
+        ctx.fillStyle = '#1C1917';
+        ctx.beginPath();
+        ctx.ellipse(h.x, h.y, h.r, h.r * 0.65, 0, 0, Math.PI * 2);
+        ctx.fill();
+        this.renderer.drawGlowCircle(h.x, h.y, h.r * 0.5, PALETTE.ORANGE, 10, true);
       }
     }
 
-    // Vehicles (Enemies, Civilians, Red Weapons Van) — Detailed Top-Down Arcade Car Sprites
+    // Vehicles (Enemies, Civilians, Helicopter, Red Weapons Van)
     for (const v of this.vehicles) {
       ctx.save();
       ctx.translate(v.x, v.y);
@@ -789,9 +1035,8 @@ export class SpyHunter {
       }
 
       if (v.type === 'weaponsvan') {
-        // Iconic Red Weapons Van with Roof Stripes & Rear Loading Ramp
+        // Iconic Red Weapons Van with Rear Loading Ramp
         if (!v.used) {
-          // Extended metal loading ramp with chevron guide stripes
           ctx.fillStyle = '#64748B';
           ctx.fillRect(-17, v.h / 2 - 4, 34, 24);
           ctx.fillStyle = '#94A3B8';
@@ -800,24 +1045,86 @@ export class SpyHunter {
           ctx.fillRect(-15, v.h / 2 + 2, 3, 14);
           ctx.fillRect(12, v.h / 2 + 2, 3, 14);
         }
-        // Van Heavy Tires
+        // Van Tires
         ctx.fillStyle = '#09090B';
         ctx.fillRect(-v.w / 2 - 3, -v.h / 2 + 10, 4, 14);
         ctx.fillRect(v.w / 2 - 1, -v.h / 2 + 10, 4, 14);
         ctx.fillRect(-v.w / 2 - 3, v.h / 2 - 24, 4, 16);
         ctx.fillRect(v.w / 2 - 1, v.h / 2 - 24, 4, 16);
 
-        // Red Trailer Box & Cab Chassis
+        // Van Chassis & Trailer Body
         this.renderer.drawGlowRect(-v.w / 2, -v.h / 2, v.w, v.h, PALETTE.RED, 10, true);
-        // Cab Windshield
         ctx.fillStyle = '#0F172A';
         ctx.fillRect(-v.w / 2 + 5, -v.h / 2 + 6, v.w - 10, 10);
-        // Dual White Roof Stripes
         ctx.fillStyle = PALETTE.WHITE;
         ctx.fillRect(-9, -v.h / 2 + 20, 5, v.h - 26);
         ctx.fillRect(4, -v.h / 2 + 20, 5, v.h - 26);
+      } else if (v.type === 'helicopter') {
+        // Mad Bomber Helicopter: Fuselage, Tail Boom, Cockpit Glass & Spinning Rotors
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(0, 36, 18, 9, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fuselage Body
+        this.renderer.drawGlowRect(-v.w / 2 + 6, -v.h / 2 + 10, v.w - 12, 34, '#1E293B', 8, true);
+        // Tail Boom & Rotor
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(-3, 12, 6, 26);
+        ctx.fillRect(-8, 34, 16, 3);
+        // Cockpit Visor
+        ctx.fillStyle = PALETTE.CYAN;
+        ctx.fillRect(-9, -v.h / 2 + 12, 18, 8);
+
+        // Spinning Main Dual Rotor Blades
+        ctx.save();
+        ctx.rotate(v.rotorAngle || 0);
+        ctx.strokeStyle = PALETTE.WHITE;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-36, 0);
+        ctx.lineTo(36, 0);
+        ctx.stroke();
+        ctx.restore();
+      } else if (v.type === 'motorcycle') {
+        // Mad Bomber Motorcyclist: Dual Tires, Red Body, Leather Rider & Helmet
+        ctx.fillStyle = '#09090B';
+        ctx.fillRect(-3, -v.h / 2, 6, 9); // Front Tire
+        ctx.fillRect(-3, v.h / 2 - 9, 6, 9); // Rear Tire
+
+        // Red Bike Body & Fuel Tank
+        this.renderer.drawGlowRect(-5, -8, 10, 16, PALETTE.RED, 8, true);
+        // Rider Helmet & Torso
+        ctx.fillStyle = '#18181B'; // Black Leather
+        ctx.fillRect(-7, -4, 14, 12);
+        this.renderer.drawGlowCircle(0, -2, 5, PALETTE.GOLD, 6, true); // Helmet
+      } else if (v.type === 'civilian_cycle') {
+        // Civilian Commuter Scooter: Cyan/Yellow Body
+        ctx.fillStyle = '#09090B';
+        ctx.fillRect(-2.5, -v.h / 2, 5, 8);
+        ctx.fillRect(-2.5, v.h / 2 - 8, 5, 8);
+
+        this.renderer.drawGlowRect(-4, -6, 8, 14, PALETTE.CYAN, 6, true);
+        ctx.fillStyle = PALETTE.WHITE;
+        ctx.fillRect(-5, -3, 10, 10);
+        this.renderer.drawGlowCircle(0, -2, 4, PALETTE.WHITE, 6, true);
+      } else if (v.type === 'barreldumper') {
+        // Armored Half-Track Barrel Dumper
+        ctx.fillStyle = '#09090B';
+        ctx.fillRect(-v.w / 2 - 3, -18, 4, 14);
+        ctx.fillRect(v.w / 2 - 1, -18, 4, 14);
+        ctx.fillRect(-v.w / 2 - 3, 6, 4, 18); // Rear Treads
+        ctx.fillRect(v.w / 2 - 1, 6, 4, 18);
+
+        this.renderer.drawGlowRect(-v.w / 2, -v.h / 2, v.w, v.h, '#15803D', 8, true);
+        // Windshield
+        ctx.fillStyle = '#052E16';
+        ctx.fillRect(-v.w / 2 + 5, -v.h / 2 + 6, v.w - 10, 8);
+        // Yellow Barrels in Cargo Bed
+        this.renderer.drawGlowCircle(-6, 12, 5, PALETTE.GOLD, 6, true);
+        this.renderer.drawGlowCircle(6, 12, 5, PALETTE.GOLD, 6, true);
       } else if (v.type === 'roadlord') {
-        // Road Lord: Heavy Armored Blue Rammer with Steel Front Bullbar
+        // Road Lord: Armored Blue Rammer with Steel Bullbar
         ctx.fillStyle = '#09090B';
         ctx.fillRect(-v.w / 2 - 3, -18, 4, 12);
         ctx.fillRect(v.w / 2 - 1, -18, 4, 12);
@@ -825,15 +1132,13 @@ export class SpyHunter {
         ctx.fillRect(v.w / 2 - 1, 8, 4, 12);
 
         this.renderer.drawGlowRect(-v.w / 2, -v.h / 2, v.w, v.h, '#1D4ED8', 8, true);
-        // Heavy Steel Ramming Wedge & Armor Plates
         ctx.fillStyle = '#94A3B8';
         ctx.fillRect(-v.w / 2 - 2, -v.h / 2 - 3, v.w + 4, 7);
         ctx.fillRect(-v.w / 2 + 3, -4, v.w - 6, 22);
-        // Armored Slit Visor
         ctx.fillStyle = '#090D16';
         ctx.fillRect(-v.w / 2 + 5, -14, v.w - 10, 7);
       } else if (v.type === 'enforcer') {
-        // Enforcer: Sleek Black/Purple Limousine with Side Shooter
+        // Enforcer: Sleek Purple Limo with Window Gunner
         ctx.fillStyle = '#09090B';
         ctx.fillRect(-v.w / 2 - 2, -18, 3, 10);
         ctx.fillRect(v.w / 2 - 1, -18, 3, 10);
@@ -844,23 +1149,21 @@ export class SpyHunter {
         ctx.strokeStyle = PALETTE.PURPLE;
         ctx.lineWidth = 2;
         ctx.strokeRect(-v.w / 2 + 1, -v.h / 2 + 1, v.w - 2, v.h - 2);
-        // Limo Tinted Windshield & Rear Glass
         ctx.fillStyle = '#09090B';
         ctx.fillRect(-v.w / 2 + 4, -14, v.w - 8, 10);
         ctx.fillRect(-v.w / 2 + 5, 10, v.w - 10, 8);
-        // Side-window Gunner Barrel & Flash
         const sideDir = this.player.x >= v.x ? 1 : -1;
         ctx.fillStyle = '#E2E8F0';
         ctx.fillRect(sideDir > 0 ? v.w / 2 - 2 : -v.w / 2 - 6, -4, 8, 3);
       } else if (v.type === 'switchblade') {
-        // Switchblade: Red/Orange Coupe with Extending Silver Wheel-Slashers
+        // Switchblade: Red/Orange Coupe with Extending Slasher Blades
         ctx.fillStyle = '#09090B';
         ctx.fillRect(-v.w / 2 - 2, -16, 3, 10);
         ctx.fillRect(v.w / 2 - 1, -16, 3, 10);
         ctx.fillRect(-v.w / 2 - 2, 8, 3, 10);
         ctx.fillRect(v.w / 2 - 1, 8, 3, 10);
 
-        // Extending Silver Wheel-Slasher Blades
+        // Slasher Blades
         ctx.fillStyle = '#E2E8F0';
         ctx.fillRect(-v.w / 2 - 9, -13, 8, 4);
         ctx.fillRect(v.w / 2 + 1, -13, 8, 4);
@@ -914,18 +1217,17 @@ export class SpyHunter {
       ctx.fillRect(-p.w / 2 - 3, 7, 4, 12);
       ctx.fillRect(p.w / 2 - 1, 7, 4, 12);
 
-      // Sleek White G-6155 Sports Car Chassis & Sculpted Hood
+      // Sleek White G-6155 Sports Car Chassis
       this.renderer.drawGlowRect(-p.w / 2, -p.h / 2, p.w, p.h, PALETTE.WHITE, 12, true);
       ctx.fillStyle = '#E2E8F0';
       ctx.fillRect(-p.w / 2 + 3, -p.h / 2 + 2, p.w - 6, 12);
 
-      // Center Cyan Interceptor Stripe
+      // Center Cyan Stripe
       ctx.fillStyle = PALETTE.CYAN;
       ctx.fillRect(-3, -p.h / 2, 6, p.h);
 
-      // Dark Wrap-Around Cockpit Windshield
+      // Wrap-Around Cockpit Windshield
       ctx.fillStyle = '#0F172A';
-      ctx.fillPath ? null : null;
       ctx.beginPath();
       ctx.moveTo(-10, -9);
       ctx.lineTo(10, -9);
@@ -934,7 +1236,7 @@ export class SpyHunter {
       ctx.closePath();
       ctx.fill();
 
-      // Rear Engine Louvers & Twin Red Taillights
+      // Rear Louvers & Taillights
       ctx.fillStyle = '#334155';
       for (let ly = 7; ly <= 17; ly += 4) {
         ctx.fillRect(-8, ly, 16, 2);
@@ -967,11 +1269,11 @@ export class SpyHunter {
       });
     }
 
-    // Civilian Penalty Banner
+    // Civilian Casualty Penalty Banner
     if (this.noPointsTimer > 0) {
-      this.renderer.drawText('NO POINTS - CIVILIAN DESTROYED', this.width / 2, 65, {
+      this.renderer.drawText('CIVILIAN CASUALTY: -500 PTS (SCORE FROZEN)', this.width / 2, 65, {
         font: FONTS.HEADER,
-        size: 12,
+        size: 11.5,
         color: PALETTE.RED,
         align: 'center',
         glow: 10
