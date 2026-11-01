@@ -24,7 +24,7 @@ export const GAME_CATALOG = [
     genre: 'Puzzle Platformer',
     accent: PALETTE.GOLD,
     mechanics: 'Dig bricks to trap guards & collect all gold chests to reveal the escape ladder',
-    controls: '4-Way Move/Climb + Dig Left(Z) / Right(X)',
+    controls: '4-Way Move/Climb + Blast Left(Z/Q) + Blast Right(X/E)',
     enhancements: '8s brick regen, WASM A* guard AI & walking on trapped guards'
   },
   {

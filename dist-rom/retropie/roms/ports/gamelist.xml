@@ -14,7 +14,7 @@
   <game>
     <path>./Lode Runner.sh</path>
     <name>Lode Runner (1983 Irem / Brøderbund)</name>
-    <desc>Dig bricks to trap guards & collect all gold chests to reveal the escape ladder. Enhancements: 8s brick regen, WASM A* guard AI & walking on trapped guards. Controls: 4-Way Move/Climb + Dig Left(Z) / Right(X)</desc>
+    <desc>Dig bricks to trap guards & collect all gold chests to reveal the escape ladder. Enhancements: 8s brick regen, WASM A* guard AI & walking on trapped guards. Controls: 4-Way Move/Climb + Blast Left(Z/Q) + Blast Right(X/E)</desc>
     <rating>0.95</rating>
     <releasedate>20261019T000000</releasedate>
     <developer>1983 Irem / Brøderbund</developer>

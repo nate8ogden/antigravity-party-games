@@ -40135,7 +40135,7 @@ const GAME_CATALOG = [
     genre: 'Puzzle Platformer',
     accent: PALETTE.GOLD,
     mechanics: 'Dig bricks to trap guards & collect all gold chests to reveal the escape ladder',
-    controls: '4-Way Move/Climb + Dig Left(Z) / Right(X)',
+    controls: '4-Way Move/Climb + Blast Left(Z/Q) + Blast Right(X/E)',
     enhancements: '8s brick regen, WASM A* guard AI & walking on trapped guards'
   },
   {
@@ -43607,7 +43607,32 @@ class LodeRunner {
     this.deathTimer = 0;
     this.animTime = 0;
 
+    this._setupTouchLabels();
     this.reset();
+  }
+
+  _setupTouchLabels() {
+    if (typeof document === 'undefined') return;
+    const subA = document.querySelector('#touch-btn-a .btn-sub-label');
+    const subB = document.querySelector('#touch-btn-b .btn-sub-label');
+    const mainA = document.querySelector('#touch-btn-a .btn-main-label');
+    const mainB = document.querySelector('#touch-btn-b .btn-main-label');
+    if (subA) subA.textContent = 'BLAST L (Z)';
+    if (subB) subB.textContent = 'BLAST R (X)';
+    if (mainA) mainA.textContent = 'BL-L';
+    if (mainB) mainB.textContent = 'BL-R';
+  }
+
+  _restoreTouchLabels() {
+    if (typeof document === 'undefined') return;
+    const subA = document.querySelector('#touch-btn-a .btn-sub-label');
+    const subB = document.querySelector('#touch-btn-b .btn-sub-label');
+    const mainA = document.querySelector('#touch-btn-a .btn-main-label');
+    const mainB = document.querySelector('#touch-btn-b .btn-main-label');
+    if (subA) subA.textContent = 'ACT / DIG-L / JUMP';
+    if (subB) subB.textContent = 'ALT / DIG-R / SLAP';
+    if (mainA) mainA.textContent = 'A';
+    if (mainB) mainB.textContent = 'B';
   }
 
   reset() {
@@ -43624,6 +43649,7 @@ class LodeRunner {
   }
 
   destroy() {
+    this._restoreTouchLabels();
     if (this.audio && typeof this.audio.stopSequence === 'function') {
       this.audio.stopSequence();
     }
@@ -44407,14 +44433,42 @@ class LodeRunner {
       }
     } else {
       // Supported movement & digging
-      // Check Dig buttons: Action B = Right, Action A = Left (or Right if holding Right)
-      if (this.input.isJustPressed('actionB')) {
+      // Dedicated, Independent Left & Right Brick Blast Controls:
+      const blastLeft =
+        this.input.isKeyJustPressed('KeyZ') ||
+        this.input.isKeyJustPressed('KeyQ') ||
+        this.input.isKeyJustPressed('KeyJ') ||
+        this.input.isKeyJustPressed('KeyU') ||
+        (this.input.isJustPressed('actionA') &&
+          !this.input.isKeyJustPressed('KeyX') &&
+          !this.input.isKeyJustPressed('KeyE') &&
+          !this.input.isKeyJustPressed('KeyC') &&
+          !this.input.isKeyJustPressed('KeyK'));
+
+      const blastRight =
+        this.input.isKeyJustPressed('KeyX') ||
+        this.input.isKeyJustPressed('KeyE') ||
+        this.input.isKeyJustPressed('KeyC') ||
+        this.input.isKeyJustPressed('KeyK') ||
+        this.input.isKeyJustPressed('KeyO') ||
+        this.input.isKeyJustPressed('ShiftLeft') ||
+        this.input.isKeyJustPressed('ShiftRight') ||
+        this.input.isJustPressed('actionB');
+
+      if (blastLeft) {
+        this.tryDig(-1);
+      } else if (blastRight) {
         this.tryDig(1);
-      } else if (this.input.isJustPressed('actionA')) {
-        if (this.input.isDown('right') && !this.input.isDown('left')) {
-          this.tryDig(1);
-        } else {
-          this.tryDig(-1);
+      } else if (this.input.pointer && this.input.pointer.justPressed) {
+        // Pointer / Touch Screen Tap: click left of player to blast left, right of player to blast right
+        const ptr = this.input.pointer;
+        const playerCenterX = this.colToX(p.col) + this.tileW * 0.5;
+        if (ptr.y >= this.offsetY && ptr.y <= this.offsetY + this.rows * this.tileH) {
+          if (ptr.x < playerCenterX - 8) {
+            this.tryDig(-1);
+          } else if (ptr.x > playerCenterX + 8) {
+            this.tryDig(1);
+          }
         }
       }
 
@@ -44718,7 +44772,7 @@ class LodeRunner {
       highScore: this.highScore,
       lives: this.lives,
       level: this.level,
-      extraLabel: `GOLD:${this.goldCollected}/${this.totalGold} WASM:ON`,
+      extraLabel: `GOLD:${this.goldCollected}/${this.totalGold}  [Z:BLAST-L] [X:BLAST-R]`,
       accent: PALETTE.GOLD
     });
 
@@ -44739,7 +44793,7 @@ class LodeRunner {
     this.renderer.drawStateOverlay(this.state, {
       title: this.title,
       subtitle: '1983 CHAMPIONSHIP PUZZLE PLATFORMER  |  A* GUARD AI & BRICK TRAPS',
-      controls: 'ARROWS/WASD: MOVE & CLIMB  |  Z/SPACE: DIG LEFT  |  X/SHIFT: DIG RIGHT',
+      controls: 'MOVE/CLIMB: ARROWS/WASD  |  BLAST LEFT: [Z] or [Q]  |  BLAST RIGHT: [X] or [E]',
       score: this.score,
       highScore: this.highScore,
       accent: PALETTE.GOLD
