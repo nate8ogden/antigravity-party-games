@@ -572,4 +572,15 @@
     <genre>Espionage Action</genre>
     <players>1-2</players>
   </game>
+  <game>
+    <path>./Golden_Axe.rom</path>
+    <name>Golden Axe (1989 Sega Arcade)</name>
+    <desc>Choose from 3 iconic heroes (Ax Battler, Tyris Flare, Gilius), ride Bizarrians & cast screen-filling magic. Enhancements: Tohru Nakabayashi Wilderness OST, 3 Heroes, Chicken Leg & Dragon mounts, Potions & Death Adder</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1989 Sega Arcade</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Fantasy Beat Em Up</genre>
+    <players>1-2</players>
+  </game>
 </gameList>

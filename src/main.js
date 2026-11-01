@@ -74,6 +74,7 @@ import { WildGunman } from './games/WildGunman.js';
 import { Exerion } from './games/Exerion.js';
 import { TetrisRetro } from './games/TetrisRetro.js';
 import { RollingThunder } from './games/RollingThunder.js';
+import { GoldenAxe } from './games/GoldenAxe.js';
 
 export const GAME_REGISTRY = {
   loderunner: LodeRunner,
@@ -126,7 +127,8 @@ export const GAME_REGISTRY = {
   wildgunman: WildGunman,
   exerion: Exerion,
   tetrisretro: TetrisRetro,
-  rollingthunder: RollingThunder
+  rollingthunder: RollingThunder,
+  goldenaxe: GoldenAxe
 };
 
 export class RetroArcadeStudio {

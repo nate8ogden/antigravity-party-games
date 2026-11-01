@@ -629,6 +629,18 @@ export const GAME_CATALOG = [
     mechanics: 'Leap between multi-tiered catwalks, duck into doorways for cover, and rescue Leila Blitz',
     controls: 'Walk/Jump(X) + Crouch/Cover(Down) + Door/High Jump(Up) + Shoot(Z)',
     enhancements: 'Junko Ozawa YM2151 OST, Masker Syndicate, Bullets/Arms doors & SMG rapid fire'
+  },
+  {
+    id: 'goldenaxe',
+    icon: '🪓',
+    title: 'Golden Axe',
+    classicRef: '1989 Sega Arcade',
+    category: 'vault2',
+    genre: 'Fantasy Beat Em Up',
+    accent: PALETTE.GOLD,
+    mechanics: 'Choose from 3 iconic heroes (Ax Battler, Tyris Flare, Gilius), ride Bizarrians & cast screen-filling magic',
+    controls: '2.5D Move + Attack/Combo(Z) + Jump(X) + Cast Magic(C/Enter)',
+    enhancements: 'Tohru Nakabayashi Wilderness OST, 3 Heroes, Chicken Leg & Dragon mounts, Potions & Death Adder'
   }
 ];
 
@@ -1863,6 +1875,49 @@ export class MainMenu {
         ctx.fillStyle = '#00F0FF';
         ctx.fillRect(cx - 8, fy, 16, 5);
         ctx.fillRect(cx - 2.5, fy + 5, 5, 5);
+        break;
+      }
+
+      case 'rollingthunder': {
+        // Multi-tier catwalks + blue suited secret agent Albatross + door
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(x + 4, cy, w - 8, 3);
+        ctx.fillRect(x + 4, y + h - 10, w - 8, 3);
+        // Red Bullets door
+        ctx.fillStyle = '#DC2626';
+        ctx.fillRect(cx - 16, cy - 22, 12, 22);
+        // Agent Albatross
+        ctx.fillStyle = '#0284C7';
+        ctx.fillRect(cx + 6, cy - 20, 8, 20);
+        ctx.fillStyle = '#FBBF24';
+        ctx.fillRect(cx + 8, cy - 26, 6, 6);
+        break;
+      }
+
+      case 'goldenaxe': {
+        // Stone fantasy ruins + glowing Golden Battle Axe + Barbarian silhouette
+        ctx.fillStyle = '#451A03';
+        ctx.fillRect(x + 4, y + h - 14, w - 8, 10);
+        // Golden Battle Axe in center
+        ctx.fillStyle = '#F59E0B';
+        ctx.fillRect(cx - 2, y + 8, 4, 30);
+        ctx.beginPath();
+        ctx.arc(cx, y + 14, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#FEF08A';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        // Barbarian warrior
+        ctx.fillStyle = '#2563EB';
+        ctx.fillRect(cx - 18, y + h - 28, 8, 14);
+        ctx.fillStyle = '#FCD34D';
+        ctx.fillRect(cx - 17, y + h - 34, 6, 6);
+        // Sword slash
+        ctx.strokeStyle = '#00F0FF';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(cx - 14, y + h - 22, 12, -Math.PI * 0.3, Math.PI * 0.2);
+        ctx.stroke();
         break;
       }
     }
