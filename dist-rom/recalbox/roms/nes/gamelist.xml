@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<gameList>
+  <game>
+    <path>./Retro_Arcade_Studio.nes</path>
+    <name>Retro Arcade Studio (NES Master Multi-Cart)</name>
+    <desc>Genuine 8-Bit iNES 6502 Machine-Code Multi-Classic Cartridge featuring 8 authentic arcade conversions with NMI 60Hz loop, joypad polling, and APU audio.</desc>
+    <rating>0.98</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>Antigravity</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Arcade / Multi</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Lode_Runner.nes</path>
+    <name>Lode Runner (NES 6502 Coin-Op)</name>
+    <desc>Trap enemy guards with your blaster shovel across authentic 28x16 brick grid levels.</desc>
+    <genre>Platform / Puzzle</genre>
+  </game>
+  <game>
+    <path>./Dig_Dug.nes</path>
+    <name>Dig Dug (NES 6502 Coin-Op)</name>
+    <desc>Tunnel through 4-color soil strata and inflate Pookas and Fygars with your bicycle air pump.</desc>
+    <genre>Maze / Action</genre>
+  </game>
+  <game>
+    <path>./Donkey_Kong.nes</path>
+    <name>Donkey Kong (NES 6502 Coin-Op)</name>
+    <desc>Climb slanted steel girders, dodge rolling barrels, and rescue Lady Pauline from the great ape.</desc>
+    <genre>Platform</genre>
+  </game>
+  <game>
+    <path>./Sumo_Arcade.nes</path>
+    <name>Sumo Arcade (NES 6502 Coin-Op)</name>
+    <desc>Shove, thrust, and slap rival Rikishi outside the sacred 195px sand Dohyo circle.</desc>
+    <genre>Sports / Fighting</genre>
+  </game>
+  <game>
+    <path>./Pac_Man.nes</path>
+    <name>Pac-Man (NES 6502 Coin-Op)</name>
+    <desc>Chomp all 244 dots and power pellets through the iconic neon blue maze while evading 4 ghosts.</desc>
+    <genre>Maze</genre>
+  </game>
+  <game>
+    <path>./Frogger.nes</path>
+    <name>Frogger (NES 6502 Coin-Op)</name>
+    <desc>Hop across 5 lanes of heavy highway traffic and ride floating logs and turtles to safety.</desc>
+    <genre>Action</genre>
+  </game>
+  <game>
+    <path>./Galaga.nes</path>
+    <name>Galaga (NES 6502 Coin-Op)</name>
+    <desc>Defend space against 40-ship diving insect formations and rescue captured dual fighters.</desc>
+    <genre>Shooter</genre>
+  </game>
+  <game>
+    <path>./Space_Invaders.nes</path>
+    <name>Space Invaders (NES 6502 Coin-Op)</name>
+    <desc>Blast 5x11 descending alien armadas behind 4 destructible shields as the tempo accelerates.</desc>
+    <genre>Shooter</genre>
+  </game>
+</gameList>

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<systemList>
+  <system>
+    <fullname>Retro Arcade Studio (50 Modernized Classics)</fullname>
+    <name>arcade</name>
+    <path>/recalbox/share/roms/arcade</path>
+    <extension>.rom .zip</extension>
+    <theme>arcade</theme>
+  </system>
+</systemList>

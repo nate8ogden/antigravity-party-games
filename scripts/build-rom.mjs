@@ -33,12 +33,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { GAME_CATALOG } from '../src/ui/MainMenu.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '..');
 const OUT_DIR = path.join(ROOT_DIR, 'dist-rom');
 const RETROPIE_DIR = path.join(OUT_DIR, 'retropie');
+const RECALBOX_DIR = path.join(OUT_DIR, 'recalbox');
 
 // ---------------------------------------------------------------------------
 // STEP 0: Build Self-Contained Single-File HTML5+WASM Bundle (`dist/index.html`)
@@ -513,11 +515,29 @@ function buildRetroPiePackage(standaloneHtmlBuffer) {
   fs.writeFileSync(snesMainPath, snesBuf);
   fs.writeFileSync(snesRetropiePath, snesBuf);
 
-  // 3. Generate Master AGROM_V1 Cartridge (`dist-rom/Retro_Arcade_Studio.rom`) + 28 individual `.rom` files
+  // Recalbox 9.2 Directory Setup
+  fs.mkdirSync(path.join(RECALBOX_DIR, 'roms', 'nes'), { recursive: true });
+  fs.mkdirSync(path.join(RECALBOX_DIR, 'roms', 'snes'), { recursive: true });
+  fs.mkdirSync(path.join(RECALBOX_DIR, 'roms', 'arcade', 'retro_arcade_data'), { recursive: true });
+  fs.mkdirSync(path.join(RECALBOX_DIR, 'userscripts', 'manual'), { recursive: true });
+  fs.mkdirSync(path.join(RECALBOX_DIR, 'system', '.emulationstation'), { recursive: true });
+
+  const snesRecalboxPath = path.join(RECALBOX_DIR, 'roms', 'snes', 'Retro_Arcade_Studio.sfc');
+  fs.writeFileSync(snesRecalboxPath, snesBuf);
+
+  // Copy NES ROMs to Recalbox
+  for (const f of nesFiles) {
+    const base = path.basename(f);
+    fs.copyFileSync(f, path.join(RECALBOX_DIR, 'roms', 'nes', base));
+  }
+
+  const ALL_50_GAMES = GAME_CATALOG;
+
+  // 3. Generate Master AGROM_V1 Cartridge (`dist-rom/Retro_Arcade_Studio.rom`) + 50 individual `.rom` files
   const makeRomImage = (gameId, payloadBuf) => {
     const header = Buffer.alloc(64, 0);
     header.write('AGROM_V1', 0, 'ascii');
-    header.writeUInt32LE(28, 8);
+    header.writeUInt32LE(ALL_50_GAMES.length, 8);
     header.writeUInt32LE(payloadBuf.length, 12);
     const sha256 = crypto.createHash('sha256').update(payloadBuf).digest();
     sha256.copy(header, 16);
@@ -526,77 +546,32 @@ function buildRetroPiePackage(standaloneHtmlBuffer) {
   };
 
   const masterRomPath = path.join(OUT_DIR, 'Retro_Arcade_Studio.rom');
-  fs.writeFileSync(masterRomPath, makeRomImage('studio_all_28', standaloneHtmlBuffer));
+  const masterRomBuf = makeRomImage('studio_all_50', standaloneHtmlBuffer);
+  fs.writeFileSync(masterRomPath, masterRomBuf);
+  fs.writeFileSync(path.join(RETROPIE_DIR, 'roms', 'arcade', 'Retro_Arcade_Studio.rom'), masterRomBuf);
+  fs.writeFileSync(path.join(RECALBOX_DIR, 'roms', 'arcade', 'Retro_Arcade_Studio.rom'), masterRomBuf);
 
-  const ALL_28_GAMES = [
-    { id: 'loderunner', title: 'Lode Runner' },
-    { id: 'digdug', title: 'Dig Dug' },
-    { id: 'donkeykong', title: 'Donkey Kong' },
-    { id: 'sumo', title: 'Sumo Arcade' },
-    { id: 'pacman', title: 'Pac-Man' },
-    { id: 'frogger', title: 'Frogger' },
-    { id: 'galaga', title: 'Galaga' },
-    { id: 'spaceinvaders', title: 'Space Invaders' },
-    { id: 'asteroids', title: 'Asteroids' },
-    { id: 'centipede', title: 'Centipede' },
-    { id: 'defender', title: 'Defender' },
-    { id: 'arkanoid', title: 'Arkanoid' },
-    { id: 'paperboy', title: 'Paperboy' },
-    { id: 'joust', title: 'Joust' },
-    { id: 'qbert', title: 'Qbert' },
-    { id: 'rampage', title: 'Rampage' },
-    { id: 'marblemadness', title: 'Marble Madness' },
-    { id: 'pitfall', title: 'Pitfall' },
-    { id: 'duckhunt', title: 'Duck Hunt' },
-    { id: 'excitebike', title: 'Excitebike' },
-    { id: 'missilecommand', title: 'Missile Command' },
-    { id: 'burgertime', title: 'BurgerTime' },
-    { id: 'bubblebobble', title: 'Bubble Bobble' },
-    { id: 'spyhunter', title: 'Spy Hunter' },
-    { id: 'tron', title: 'Tron' },
-    { id: 'trackandfield', title: 'Track and Field' },
-    { id: 'outrun', title: 'OutRun' },
-    { id: 'contra', title: 'Contra' },
-    { id: 'galaxian', title: 'Galaxian' },
-    { id: 'digdug2', title: 'Dig Dug II' },
-    { id: 'elevatoraction', title: 'Elevator Action' },
-    { id: 'tapper', title: 'Tapper' },
-    { id: 'lunarlander', title: 'Lunar Lander' },
-    { id: 'tempest', title: 'Tempest' },
-    { id: 'robotron', title: 'Robotron 2084' },
-    { id: 'sinistar', title: 'Sinistar' },
-    { id: 'crystalcastles', title: 'Crystal Castles' },
-    { id: 'zaxxon', title: 'Zaxxon' },
-    { id: 'moonpatrol', title: 'Moon Patrol' },
-    { id: 'pengo', title: 'Pengo' },
-    { id: 'rallyx', title: 'Rally X' },
-    { id: 'roadfighter', title: 'Road Fighter' },
-    { id: 'flicky', title: 'Flicky' },
-    { id: 'mappy', title: 'Mappy' },
-    { id: 'circuscharlie', title: 'Circus Charlie' },
-    { id: 'battlecity', title: 'Battle City' },
-    { id: 'kungfumaster', title: 'Kung Fu Master' },
-    { id: 'wildgunman', title: 'Wild Gunman' },
-    { id: 'exerion', title: 'Exerion' },
-    { id: 'tetrisretro', title: 'Tetris and Columns' }
-  ];
-
-  for (const g of ALL_28_GAMES) {
+  for (const g of ALL_50_GAMES) {
     const slug = g.title.replace(/[^a-zA-Z0-9]+/g, '_');
-    const gameRomPath = path.join(RETROPIE_DIR, 'roms', 'arcade', `${slug}.rom`);
-    // Create a lightweight header+boot descriptor ROM or full cartridge for each game
+    const retropieGameRomPath = path.join(RETROPIE_DIR, 'roms', 'arcade', `${slug}.rom`);
+    const recalboxGameRomPath = path.join(RECALBOX_DIR, 'roms', 'arcade', `${slug}.rom`);
+    // Create a lightweight header+boot descriptor ROM for each of the 50 games
     const bootDescriptor = Buffer.from(
       `<!DOCTYPE html><meta http-equiv="refresh" content="0;url=../ports/retro_arcade_data/index.html?game=${g.id}&cabinet=1">`,
       'utf8'
     );
-    fs.writeFileSync(gameRomPath, makeRomImage(g.id, bootDescriptor));
+    const romImageBuf = makeRomImage(g.id, bootDescriptor);
+    fs.writeFileSync(retropieGameRomPath, romImageBuf);
+    fs.writeFileSync(recalboxGameRomPath, romImageBuf);
   }
 
-  // Copy standalone HTML5+WASM bundle into retropie/roms/ports/retro_arcade_data/index.html
-  const portHtmlPath = path.join(RETROPIE_DIR, 'roms', 'ports', 'retro_arcade_data', 'index.html');
-  fs.writeFileSync(portHtmlPath, standaloneHtmlBuffer);
+  // Copy standalone HTML5+WASM bundle into both packages
+  const retropiePortHtmlPath = path.join(RETROPIE_DIR, 'roms', 'ports', 'retro_arcade_data', 'index.html');
+  const recalboxPortHtmlPath = path.join(RECALBOX_DIR, 'roms', 'arcade', 'retro_arcade_data', 'index.html');
+  fs.writeFileSync(retropiePortHtmlPath, standaloneHtmlBuffer);
+  fs.writeFileSync(recalboxPortHtmlPath, standaloneHtmlBuffer);
 
-  // 4. Create RetroPie / Batocera Launcher Scripts (.sh)
+  // 4. Create RetroPie / Batocera Launcher Scripts (.sh) for All 50 Games
   const makeLauncherScript = (query = 'cabinet=1') => `#!/usr/bin/env bash
 # =============================================================================
 # Retro Arcade Studio — RetroPie / Batocera / RecalBox Native Port Launcher
@@ -637,56 +612,317 @@ exec "\$BROWSER" \\
   const mainLauncherPath = path.join(RETROPIE_DIR, 'roms', 'ports', 'Retro Arcade Studio.sh');
   fs.writeFileSync(mainLauncherPath, makeLauncherScript('cabinet=1'), { mode: 0o755 });
 
-  // Also create direct launchers for the 8 Core Games
-  for (const g of ALL_28_GAMES.slice(0, 8)) {
-    const p = path.join(RETROPIE_DIR, 'roms', 'ports', `${g.title}.sh`);
+  for (const g of ALL_50_GAMES) {
+    const safeTitle = g.title.replace(/[\/\\?%*:|"<>]/g, '_');
+    const p = path.join(RETROPIE_DIR, 'roms', 'ports', `${safeTitle}.sh`);
     fs.writeFileSync(p, makeLauncherScript(`game=${g.id}&cabinet=1`), { mode: 0o755 });
   }
 
-  // 5. Generate EmulationStation `gamelist.xml`
-  const gameEntriesXml = [
+  // 5. Generate EmulationStation `gamelist.xml` for RetroPie Ports
+  const retropieGameEntriesXml = [
     `  <game>
     <path>./Retro Arcade Studio.sh</path>
-    <name>Retro Arcade Studio (All 28 Classics + WASM + CRT)</name>
-    <desc>28 modernized classic coin-op arcade games with WebAssembly physics/pathfinding, WebGL CRT post-processing shaders, procedural Web Audio synthesis, and USB/GPIO arcade stick support.</desc>
-    <rating>0.98</rating>
+    <name>Retro Arcade Studio (50 Modernized Classics + WASM + CRT)</name>
+    <desc>50 modernized classic coin-op arcade games with WebAssembly pathfinding, WebGL CRT shaders, procedural Web Audio, and USB/GPIO arcade stick support.</desc>
+    <rating>0.99</rating>
     <releasedate>20261019T000000</releasedate>
     <developer>Antigravity Retro Arcade Studio</developer>
     <publisher>Antigravity</publisher>
-    <genre>Arcade / Classics</genre>
+    <genre>Arcade / Multi</genre>
     <players>1-2</players>
   </game>`,
-    ...ALL_28_GAMES.slice(0, 8).map(
-      (g) => `  <game>
-    <path>./${g.title}.sh</path>
-    <name>${g.title} (Modernized Coin-Op)</name>
-    <desc>Play ${g.title} with WebGL CRT shaders, WebAssembly acceleration, and procedural Web Audio synth.</desc>
+    ...ALL_50_GAMES.map((g) => {
+      const safeTitle = g.title.replace(/[\/\\?%*:|"<>]/g, '_');
+      return `  <game>
+    <path>./${safeTitle}.sh</path>
+    <name>${g.title} (${g.classicRef})</name>
+    <desc>${g.mechanics}. Enhancements: ${g.enhancements}. Controls: ${g.controls}</desc>
     <rating>0.95</rating>
     <releasedate>20261019T000000</releasedate>
-    <developer>Antigravity Retro Arcade Studio</developer>
+    <developer>${g.classicRef}</developer>
     <publisher>Antigravity</publisher>
-    <genre>Arcade</genre>
+    <genre>${g.genre}</genre>
     <players>1-2</players>
-  </game>`
-    )
+  </game>`;
+    })
   ].join('\n');
 
   fs.writeFileSync(
     path.join(RETROPIE_DIR, 'roms', 'ports', 'gamelist.xml'),
-    `<?xml version="1.0"?>\n<gameList>\n${gameEntriesXml}\n</gameList>\n`
+    `<?xml version="1.0"?>\n<gameList>\n${retropieGameEntriesXml}\n</gameList>\n`
   );
 
-  // 6. Create One-Step RetroPie Installer (`install-retropie.sh`)
-  const installerSh = `#!/usr/bin/env bash
+  // 6. Generate Recalbox Arcade `gamelist.xml`
+  const recalboxArcadeEntriesXml = [
+    `  <game>
+    <path>./Retro_Arcade_Studio.rom</path>
+    <name>Retro Arcade Studio (All 50 Coin-Op Classics)</name>
+    <desc>50 modernized arcade classics featuring Lode Runner, Dig Dug, Donkey Kong, Sumo, Pac-Man, Frogger, Galaga, Space Invaders, OutRun, Contra, Paperboy, Rampage, Pitfall!, Duck Hunt, Missile Command, and 35 more!</desc>
+    <rating>0.99</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>Antigravity</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Arcade / Compilation</genre>
+    <players>1-2</players>
+  </game>`,
+    ...ALL_50_GAMES.map((g) => {
+      const slug = g.title.replace(/[^a-zA-Z0-9]+/g, '_');
+      return `  <game>
+    <path>./${slug}.rom</path>
+    <name>${g.title} (${g.classicRef})</name>
+    <desc>${g.mechanics}. Enhancements: ${g.enhancements}</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>${g.classicRef}</developer>
+    <publisher>Antigravity</publisher>
+    <genre>${g.genre}</genre>
+    <players>1-2</players>
+  </game>`;
+    })
+  ].join('\n');
+
+  fs.writeFileSync(
+    path.join(RECALBOX_DIR, 'roms', 'arcade', 'gamelist.xml'),
+    `<?xml version="1.0"?>\n<gameList>\n${recalboxArcadeEntriesXml}\n</gameList>\n`
+  );
+
+  // 7. Generate Recalbox NES `gamelist.xml`
+  const recalboxNesXml = `<?xml version="1.0"?>
+<gameList>
+  <game>
+    <path>./Retro_Arcade_Studio.nes</path>
+    <name>Retro Arcade Studio (NES Master Multi-Cart)</name>
+    <desc>Genuine 8-Bit iNES 6502 Machine-Code Multi-Classic Cartridge featuring 8 authentic arcade conversions with NMI 60Hz loop, joypad polling, and APU audio.</desc>
+    <rating>0.98</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>Antigravity</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Arcade / Multi</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Lode_Runner.nes</path>
+    <name>Lode Runner (NES 6502 Coin-Op)</name>
+    <desc>Trap enemy guards with your blaster shovel across authentic 28x16 brick grid levels.</desc>
+    <genre>Platform / Puzzle</genre>
+  </game>
+  <game>
+    <path>./Dig_Dug.nes</path>
+    <name>Dig Dug (NES 6502 Coin-Op)</name>
+    <desc>Tunnel through 4-color soil strata and inflate Pookas and Fygars with your bicycle air pump.</desc>
+    <genre>Maze / Action</genre>
+  </game>
+  <game>
+    <path>./Donkey_Kong.nes</path>
+    <name>Donkey Kong (NES 6502 Coin-Op)</name>
+    <desc>Climb slanted steel girders, dodge rolling barrels, and rescue Lady Pauline from the great ape.</desc>
+    <genre>Platform</genre>
+  </game>
+  <game>
+    <path>./Sumo_Arcade.nes</path>
+    <name>Sumo Arcade (NES 6502 Coin-Op)</name>
+    <desc>Shove, thrust, and slap rival Rikishi outside the sacred 195px sand Dohyo circle.</desc>
+    <genre>Sports / Fighting</genre>
+  </game>
+  <game>
+    <path>./Pac_Man.nes</path>
+    <name>Pac-Man (NES 6502 Coin-Op)</name>
+    <desc>Chomp all 244 dots and power pellets through the iconic neon blue maze while evading 4 ghosts.</desc>
+    <genre>Maze</genre>
+  </game>
+  <game>
+    <path>./Frogger.nes</path>
+    <name>Frogger (NES 6502 Coin-Op)</name>
+    <desc>Hop across 5 lanes of heavy highway traffic and ride floating logs and turtles to safety.</desc>
+    <genre>Action</genre>
+  </game>
+  <game>
+    <path>./Galaga.nes</path>
+    <name>Galaga (NES 6502 Coin-Op)</name>
+    <desc>Defend space against 40-ship diving insect formations and rescue captured dual fighters.</desc>
+    <genre>Shooter</genre>
+  </game>
+  <game>
+    <path>./Space_Invaders.nes</path>
+    <name>Space Invaders (NES 6502 Coin-Op)</name>
+    <desc>Blast 5x11 descending alien armadas behind 4 destructible shields as the tempo accelerates.</desc>
+    <genre>Shooter</genre>
+  </game>
+</gameList>
+`;
+  fs.writeFileSync(path.join(RECALBOX_DIR, 'roms', 'nes', 'gamelist.xml'), recalboxNesXml);
+
+  // 8. Generate Recalbox SNES `gamelist.xml`
+  const recalboxSnesXml = `<?xml version="1.0"?>
+<gameList>
+  <game>
+    <path>./Retro_Arcade_Studio.sfc</path>
+    <name>Retro Arcade Studio (SNES 16-Bit LoROM)</name>
+    <desc>Genuine 16-Bit Super Nintendo LoROM 65C816 Cartridge with official Nintendo header ($007FC0), 15-bit BGR555 CGRAM palettes, Mode 1 tilemap, and 60Hz auto-joypad NMI polling.</desc>
+    <rating>0.98</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>Antigravity</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Arcade / Multi</genre>
+    <players>1-2</players>
+  </game>
+</gameList>
+`;
+  fs.writeFileSync(path.join(RECALBOX_DIR, 'roms', 'snes', 'gamelist.xml'), recalboxSnesXml);
+
+  // 9. Create Recalbox User Script: `RetroArcadeStudio(sync).sh`
+  const recalboxUserScript = `#!/bin/bash
 # =============================================================================
-# One-Step Installer for Raspberry Pi RetroPie / Batocera / RecalBox
+# Retro Arcade Studio — Recalbox 9.2 Native Kiosk Launcher & Micro Server
+# =============================================================================
+SHARE="/recalbox/share"
+DATA_DIR="$SHARE/roms/arcade/retro_arcade_data"
+HTML_FILE="$DATA_DIR/index.html"
+PORT=8080
+
+# Check for native web engines / browser candidates on Recalbox:
+BROWSER=""
+for candidate in chromium-browser chromium epiphany-browser cog wpe; do
+  if command -v "$candidate" >/dev/null 2>&1; then
+    BROWSER="$candidate"
+    break
+  fi
+done
+
+if [ -n "$BROWSER" ]; then
+  echo "Launching Retro Arcade Studio via $BROWSER..."
+  exec "$BROWSER" --kiosk "file://$HTML_FILE?cabinet=1"
+  exit 0
+fi
+
+# On standard Recalbox 9.2 (lean Buildroot without X11/Chromium):
+# Launch background Python micro-server so all 50 games are playable instantly
+# from any browser, phone, tablet, laptop, or smart TV on the home network!
+IP_ADDR=$(ip route get 1.1.1.1 2>/dev/null | awk '{print $7}')
+[ -z "$IP_ADDR" ] && IP_ADDR="recalbox.local"
+
+# Kill any existing server instance on port 8080
+pkill -f "python3 -m http.server $PORT" 2>/dev/null || true
+
+cd "$DATA_DIR"
+nohup python3 -m http.server $PORT > /tmp/retro_arcade_server.log 2>&1 &
+SERVER_PID=$!
+
+echo "================================================================="
+echo "🕹️  RETRO ARCADE STUDIO (50 GAMES) ACTIVE ON RECALBOX 9.2!"
+echo "================================================================="
+echo "Server running at PID: $SERVER_PID"
+echo ""
+echo "▶ Open this URL in any browser on your network:"
+echo "    http://$IP_ADDR:$PORT"
+echo "    http://recalbox.local:$PORT"
+echo ""
+echo "Features:"
+echo "  • 50 Modernized Coin-Op Arcade Classics"
+echo "  • WebGL CRT post-processing shaders & scanlines"
+echo "  • Procedural Web Audio chiptune synthesis"
+echo "  • USB / Bluetooth / GPIO Gamepad support"
+echo "  • Emulator Save States & Instant Rewind"
+echo "================================================================="
+`;
+  const recalboxUserScriptPath = path.join(RECALBOX_DIR, 'userscripts', 'manual', 'RetroArcadeStudio(sync).sh');
+  fs.writeFileSync(recalboxUserScriptPath, recalboxUserScript, { mode: 0o755 });
+
+  // 10. Create Recalbox EmulationStation custom system: `systemlist.xml`
+  const recalboxSystemlistXml = `<?xml version="1.0"?>
+<systemList>
+  <system>
+    <fullname>Retro Arcade Studio (50 Modernized Classics)</fullname>
+    <name>arcade</name>
+    <path>/recalbox/share/roms/arcade</path>
+    <extension>.rom .zip</extension>
+    <theme>arcade</theme>
+  </system>
+</systemList>
+`;
+  fs.writeFileSync(
+    path.join(RECALBOX_DIR, 'system', '.emulationstation', 'systemlist.xml'),
+    recalboxSystemlistXml
+  );
+
+  // 11. Create Recalbox 9.2 One-Step Auto-Installer (`install-recalbox.sh`)
+  const recalboxInstallerSh = `#!/usr/bin/env bash
+# =============================================================================
+# One-Step Installer for Recalbox 9.2 (Raspberry Pi & PC)
+# =============================================================================
+set -e
+
+RECALBOX_SHARE="\${1:-/recalbox/share}"
+SRC_DIR="$(cd "$(dirname "\$0")" && pwd)"
+
+echo "================================================================="
+echo "🕹️  INSTALLING RETRO ARCADE STUDIO (50 GAMES) TO RECALBOX 9.2"
+echo "    Target Share: \$RECALBOX_SHARE"
+echo "================================================================="
+
+if [ ! -d "\$RECALBOX_SHARE" ]; then
+  echo "⚠️ Warning: \$RECALBOX_SHARE directory structure will be created."
+fi
+
+mkdir -p "\$RECALBOX_SHARE/roms/nes"
+mkdir -p "\$RECALBOX_SHARE/roms/snes"
+mkdir -p "\$RECALBOX_SHARE/roms/arcade/retro_arcade_data"
+mkdir -p "\$RECALBOX_SHARE/userscripts/manual"
+
+echo "1. Installing NES 6502 cartridges & metadata..."
+cp -f "\$SRC_DIR/roms/nes/"*.nes "\$RECALBOX_SHARE/roms/nes/"
+[ -f "\$SRC_DIR/roms/nes/gamelist.xml" ] && cp -f "\$SRC_DIR/roms/nes/gamelist.xml" "\$RECALBOX_SHARE/roms/nes/"
+
+echo "2. Installing SNES LoROM cartridge & metadata..."
+cp -f "\$SRC_DIR/roms/snes/"*.sfc "\$RECALBOX_SHARE/roms/snes/"
+[ -f "\$SRC_DIR/roms/snes/gamelist.xml" ] && cp -f "\$SRC_DIR/roms/snes/gamelist.xml" "\$RECALBOX_SHARE/roms/snes/"
+
+echo "3. Installing Arcade 50-Game Studio & Cartridges..."
+cp -f "\$SRC_DIR/roms/arcade/"*.rom "\$RECALBOX_SHARE/roms/arcade/"
+cp -f "\$SRC_DIR/roms/arcade/gamelist.xml" "\$RECALBOX_SHARE/roms/arcade/"
+cp -f "\$SRC_DIR/roms/arcade/retro_arcade_data/index.html" "\$RECALBOX_SHARE/roms/arcade/retro_arcade_data/"
+
+echo "4. Installing Recalbox User Scripts..."
+cp -f "\$SRC_DIR/userscripts/manual/"*.sh "\$RECALBOX_SHARE/userscripts/manual/"
+chmod +x "\$RECALBOX_SHARE/userscripts/manual/"*.sh
+
+echo "5. Updating EmulationStation permissions..."
+chmod 644 "\$RECALBOX_SHARE/roms/nes/"*.nes
+chmod 644 "\$RECALBOX_SHARE/roms/snes/"*.sfc
+chmod 644 "\$RECALBOX_SHARE/roms/arcade/"*.rom
+
+echo ""
+echo "================================================================="
+echo "✅ RECALBOX 9.2 INSTALLATION COMPLETE!"
+echo "================================================================="
+echo "Installed Artifacts:"
+echo "  • 9x NES Cartridges in \$RECALBOX_SHARE/roms/nes/"
+echo "  • 1x SNES LoROM in \$RECALBOX_SHARE/roms/snes/"
+echo "  • 51x Arcade ROMs in \$RECALBOX_SHARE/roms/arcade/"
+echo "  • Recalbox User Script in \$RECALBOX_SHARE/userscripts/manual/"
+echo ""
+echo "To play on Recalbox:"
+echo "  1. In EmulationStation, press START > UI SETTINGS > UPDATE GAMELISTS"
+echo "     (or reboot via START > QUIT > RESTART RECALBOX)."
+echo "  2. Go to NES or Super Nintendo to play directly with your gamepad!"
+echo "  3. Go to START > ADVANCED SETTINGS > USER SCRIPTS > RetroArcadeStudio"
+echo "     to launch the full 50-game studio micro-server!"
+echo "================================================================="
+`;
+  const recalboxInstallerPath = path.join(RECALBOX_DIR, 'install-recalbox.sh');
+  fs.writeFileSync(recalboxInstallerPath, recalboxInstallerSh, { mode: 0o755 });
+
+  // 12. Update RetroPie Installer (`install-retropie.sh`) for all 50 games
+  const retropieInstallerSh = `#!/usr/bin/env bash
+# =============================================================================
+# One-Step Installer for Raspberry Pi RetroPie / Batocera
 # =============================================================================
 set -e
 
 RETROPIE_ROOT="\${1:-\$HOME/RetroPie}"
 SRC_DIR="$(cd "$(dirname "\$0")" && pwd)"
 
-echo "Installing Retro Arcade Studio ROMs & Ports to \$RETROPIE_ROOT..."
+echo "Installing Retro Arcade Studio (50 Games) to \$RETROPIE_ROOT..."
 
 mkdir -p "\$RETROPIE_ROOT/roms/nes"
 mkdir -p "\$RETROPIE_ROOT/roms/snes"
@@ -701,11 +937,11 @@ cp -f "\$SRC_DIR/roms/ports/gamelist.xml" "\$RETROPIE_ROOT/roms/ports/"
 cp -f "\$SRC_DIR/roms/ports/retro_arcade_data/index.html" "\$RETROPIE_ROOT/roms/ports/retro_arcade_data/"
 chmod +x "\$RETROPIE_ROOT/roms/ports/"*.sh
 
-echo "✅ Installed 9 NES ROMs, 1 SNES LoROM, 28 Arcade ROMs, and RetroPie Ports!"
+echo "✅ Installed 9 NES ROMs, 1 SNES LoROM, 51 Arcade ROMs, and 51 RetroPie Ports!"
 echo "Restart EmulationStation to play!"
 `;
-  const installerPath = path.join(RETROPIE_DIR, 'install-retropie.sh');
-  fs.writeFileSync(installerPath, installerSh, { mode: 0o755 });
+  const retropieInstallerPath = path.join(RETROPIE_DIR, 'install-retropie.sh');
+  fs.writeFileSync(retropieInstallerPath, retropieInstallerSh, { mode: 0o755 });
 
   return {
     nesCount: nesFiles.length,
@@ -714,7 +950,9 @@ echo "Restart EmulationStation to play!"
     masterRomPath,
     masterRomSize: fs.statSync(masterRomPath).size,
     mainLauncherPath,
-    installerPath
+    retropieInstallerPath,
+    recalboxInstallerPath,
+    totalGames: ALL_50_GAMES.length
   };
 }
 
@@ -722,12 +960,13 @@ const standaloneHtml = buildStandaloneHtmlBundle();
 const info = buildRetroPiePackage(standaloneHtml);
 
 console.log('===================================================================');
-console.log('🕹️  RETRO ARCADE STUDIO — RETROPIE & CONSOLE ROM BUILD COMPLETE');
+console.log('🕹️  RETRO ARCADE STUDIO — RETROPIE & RECALBOX 9.2 BUILD COMPLETE');
 console.log('===================================================================');
-console.log(`1. 8-Bit iNES 6502 ROMs  : ${info.nesCount} cartridges generated (40,976 bytes each)`);
-console.log(`   - Master + 8 Classics : Lode Runner, Dig Dug, Donkey Kong, Sumo, Pac-Man, Frogger, Galaga, Space Invaders`);
-console.log(`2. 16-Bit SNES LoROM     : ${info.snesMainPath} (${info.snesSize} bytes)`);
-console.log(`3. Full Studio Cartridge : ${info.masterRomPath} (${(info.masterRomSize / 1024).toFixed(1)} KB)`);
-console.log(`4. RetroPie Port Package : ${info.mainLauncherPath}`);
-console.log(`5. Raspberry Pi Installer: ${info.installerPath}`);
+console.log(`1. Total Arcade Games    : ${info.totalGames} Games Built`);
+console.log(`2. 8-Bit iNES 6502 ROMs  : ${info.nesCount} cartridges generated (40,976 bytes each)`);
+console.log(`3. 16-Bit SNES LoROM     : ${info.snesMainPath} (${info.snesSize} bytes)`);
+console.log(`4. Full Studio Cartridge : ${info.masterRomPath} (${(info.masterRomSize / 1024).toFixed(1)} KB)`);
+console.log(`5. RetroPie Port Package : ${info.mainLauncherPath}`);
+console.log(`6. RetroPie Installer    : ${info.retropieInstallerPath}`);
+console.log(`7. Recalbox 9.2 Installer: ${info.recalboxInstallerPath}`);
 console.log('===================================================================');

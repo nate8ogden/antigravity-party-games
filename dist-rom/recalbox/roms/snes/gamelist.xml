@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<gameList>
+  <game>
+    <path>./Retro_Arcade_Studio.sfc</path>
+    <name>Retro Arcade Studio (SNES 16-Bit LoROM)</name>
+    <desc>Genuine 16-Bit Super Nintendo LoROM 65C816 Cartridge with official Nintendo header ($007FC0), 15-bit BGR555 CGRAM palettes, Mode 1 tilemap, and 60Hz auto-joypad NMI polling.</desc>
+    <rating>0.98</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>Antigravity</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Arcade / Multi</genre>
+    <players>1-2</players>
+  </game>
+</gameList>

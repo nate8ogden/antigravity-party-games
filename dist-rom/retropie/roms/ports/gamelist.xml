@@ -2,101 +2,563 @@
 <gameList>
   <game>
     <path>./Retro Arcade Studio.sh</path>
-    <name>Retro Arcade Studio (All 28 Classics + WASM + CRT)</name>
-    <desc>28 modernized classic coin-op arcade games with WebAssembly physics/pathfinding, WebGL CRT post-processing shaders, procedural Web Audio synthesis, and USB/GPIO arcade stick support.</desc>
-    <rating>0.98</rating>
+    <name>Retro Arcade Studio (50 Modernized Classics + WASM + CRT)</name>
+    <desc>50 modernized classic coin-op arcade games with WebAssembly pathfinding, WebGL CRT shaders, procedural Web Audio, and USB/GPIO arcade stick support.</desc>
+    <rating>0.99</rating>
     <releasedate>20261019T000000</releasedate>
     <developer>Antigravity Retro Arcade Studio</developer>
     <publisher>Antigravity</publisher>
-    <genre>Arcade / Classics</genre>
+    <genre>Arcade / Multi</genre>
     <players>1-2</players>
   </game>
   <game>
     <path>./Lode Runner.sh</path>
-    <name>Lode Runner (Modernized Coin-Op)</name>
-    <desc>Play Lode Runner with WebGL CRT shaders, WebAssembly acceleration, and procedural Web Audio synth.</desc>
+    <name>Lode Runner (1983 Irem / Brøderbund)</name>
+    <desc>Dig bricks to trap guards & collect all gold chests to reveal the escape ladder. Enhancements: 8s brick regen, WASM A* guard AI & walking on trapped guards. Controls: 4-Way Move/Climb + Dig Left(Z) / Right(X)</desc>
     <rating>0.95</rating>
     <releasedate>20261019T000000</releasedate>
-    <developer>Antigravity Retro Arcade Studio</developer>
+    <developer>1983 Irem / Brøderbund</developer>
     <publisher>Antigravity</publisher>
-    <genre>Arcade</genre>
+    <genre>Puzzle Platformer</genre>
     <players>1-2</players>
   </game>
   <game>
     <path>./Dig Dug.sh</path>
-    <name>Dig Dug (Modernized Coin-Op)</name>
-    <desc>Play Dig Dug with WebGL CRT shaders, WebAssembly acceleration, and procedural Web Audio synth.</desc>
+    <name>Dig Dug (1982 Namco Coin-Op)</name>
+    <desc>Carve dirt tunnels, inflate Pookas & Fygars with your air pump & drop boulders. Enhancements: 4-color soil strata, 4-stage monster inflation & rock crushes. Controls: 4-Way Tunneling + Pump Harpoon (Z/Space)</desc>
     <rating>0.95</rating>
     <releasedate>20261019T000000</releasedate>
-    <developer>Antigravity Retro Arcade Studio</developer>
+    <developer>1982 Namco Coin-Op</developer>
     <publisher>Antigravity</publisher>
-    <genre>Arcade</genre>
+    <genre>Underground Action</genre>
     <players>1-2</players>
   </game>
   <game>
     <path>./Donkey Kong.sh</path>
-    <name>Donkey Kong (Modernized Coin-Op)</name>
-    <desc>Play Donkey Kong with WebGL CRT shaders, WebAssembly acceleration, and procedural Web Audio synth.</desc>
+    <name>Donkey Kong (1981 Nintendo Coin-Op)</name>
+    <desc>Climb slanted steel girders, jump rolling barrels & grab hammers across 8 stages. Enhancements: 25m Girders, 50m Conveyor, 75m Elevators & 100m Rivet Tower. Controls: Left/Right + Up/Down Ladders + Jump (Z/Space)</desc>
     <rating>0.95</rating>
     <releasedate>20261019T000000</releasedate>
-    <developer>Antigravity Retro Arcade Studio</developer>
+    <developer>1981 Nintendo Coin-Op</developer>
     <publisher>Antigravity</publisher>
-    <genre>Arcade</genre>
+    <genre>Arcade Platformer</genre>
     <players>1-2</players>
   </game>
   <game>
     <path>./Sumo Arcade.sh</path>
-    <name>Sumo Arcade (Modernized Coin-Op)</name>
-    <desc>Play Sumo Arcade with WebGL CRT shaders, WebAssembly acceleration, and procedural Web Audio synth.</desc>
+    <name>Sumo Arcade (1984 Technōs / Data East)</name>
+    <desc>Push, slap-stun & sidestep your rival sumo wrestler out of the circular Dohyo ring. Enhancements: Stamina friction physics & pulsing ring-edge danger tension. Controls: Move + Power Shove(Z) + Palm Slap/Sidestep(X)</desc>
     <rating>0.95</rating>
     <releasedate>20261019T000000</releasedate>
-    <developer>Antigravity Retro Arcade Studio</developer>
+    <developer>1984 Technōs / Data East</developer>
     <publisher>Antigravity</publisher>
-    <genre>Arcade</genre>
+    <genre>Ring Combat</genre>
     <players>1-2</players>
   </game>
   <game>
-    <path>./Pac-Man.sh</path>
-    <name>Pac-Man (Modernized Coin-Op)</name>
-    <desc>Play Pac-Man with WebGL CRT shaders, WebAssembly acceleration, and procedural Web Audio synth.</desc>
+    <path>./Pac-Man _ Ms. Pac.sh</path>
+    <name>Pac-Man / Ms. Pac (1980 Namco / Midway)</name>
+    <desc>Eat all maze dots & power pellets to chomp Blinky, Pinky, Inky & Clyde for 1600 pts. Enhancements: 4 distinct arcade mazes, 4 ghost AI personalities & bonus fruit. Controls: 4-Way D-Pad/Swipe + Toggle Ms. Pac-Man (X)</desc>
     <rating>0.95</rating>
     <releasedate>20261019T000000</releasedate>
-    <developer>Antigravity Retro Arcade Studio</developer>
+    <developer>1980 Namco / Midway</developer>
     <publisher>Antigravity</publisher>
-    <genre>Arcade</genre>
+    <genre>Maze Chase</genre>
     <players>1-2</players>
   </game>
   <game>
     <path>./Frogger.sh</path>
-    <name>Frogger (Modernized Coin-Op)</name>
-    <desc>Play Frogger with WebGL CRT shaders, WebAssembly acceleration, and procedural Web Audio synth.</desc>
+    <name>Frogger (1981 Konami / Sega)</name>
+    <desc>Hop your frog across 5 lanes of speeding cars & ride floating river logs to home bays. Enhancements: Diving turtles, crocodiles, bonus flies & strict 60s life timer. Controls: 4-Way Hop / Tap-to-Leap Direction</desc>
     <rating>0.95</rating>
     <releasedate>20261019T000000</releasedate>
-    <developer>Antigravity Retro Arcade Studio</developer>
+    <developer>1981 Konami / Sega</developer>
     <publisher>Antigravity</publisher>
-    <genre>Arcade</genre>
+    <genre>Road & River Hop</genre>
     <players>1-2</players>
   </game>
   <game>
     <path>./Galaga.sh</path>
-    <name>Galaga (Modernized Coin-Op)</name>
-    <desc>Play Galaga with WebGL CRT shaders, WebAssembly acceleration, and procedural Web Audio synth.</desc>
+    <name>Galaga (1981 Namco Coin-Op)</name>
+    <desc>Blast diving alien bug formations & rescue your captured fighter for Dual-Ship guns. Enhancements: Boss tractor-beam capture/rescue & 4-shot Dual Fighter mode. Controls: Left/Right Dodge + Fire Twin Lasers (Z/Space)</desc>
     <rating>0.95</rating>
     <releasedate>20261019T000000</releasedate>
-    <developer>Antigravity Retro Arcade Studio</developer>
+    <developer>1981 Namco Coin-Op</developer>
     <publisher>Antigravity</publisher>
-    <genre>Arcade</genre>
+    <genre>Space Shooter</genre>
     <players>1-2</players>
   </game>
   <game>
     <path>./Space Invaders.sh</path>
-    <name>Space Invaders (Modernized Coin-Op)</name>
-    <desc>Play Space Invaders with WebGL CRT shaders, WebAssembly acceleration, and procedural Web Audio synth.</desc>
+    <name>Space Invaders (1978 Taito Coin-Op)</name>
+    <desc>Defend Earth behind 4 destructible bunkers against 55 marching alien invaders & UFOs. Enhancements: Accelerating fleet march heartbeat & pixel-eroded shields. Controls: Left/Right Cannon + Fire Laser (Z/Space)</desc>
     <rating>0.95</rating>
     <releasedate>20261019T000000</releasedate>
-    <developer>Antigravity Retro Arcade Studio</developer>
+    <developer>1978 Taito Coin-Op</developer>
     <publisher>Antigravity</publisher>
-    <genre>Arcade</genre>
+    <genre>Fixed Shooter</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Asteroids.sh</path>
+    <name>Asteroids (1979 Atari Vector)</name>
+    <desc>Rotate & thrust your vector ship to shatter splitting boulders & UFO saucers. Enhancements: Glowing vector lines, wrap-around physics & 3-stage rock splits. Controls: Rotate + Thrust(Up) + Fire(Z) + Hyperspace(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1979 Atari Vector</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Vector Shooter</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Centipede.sh</path>
+    <name>Centipede (1980 Atari Coin-Op)</name>
+    <desc>Shoot the winding multi-segment centipede & spiders through a mushroom field. Enhancements: Splitting centipede chains, 4-hit mushrooms, Fleas & Scorpions. Controls: 4-Way Bottom Zone + Rapid Blaster (Z)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1980 Atari Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Bug Blaster</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Defender.sh</path>
+    <name>Defender (1981 Williams Coin-Op)</name>
+    <desc>Fly across a wrap-around alien planet with radar scanner to save humanoids. Enhancements: Live top radar minimap, mid-air human catches & Mutant AI. Controls: Thrust/Move + Laser(Z) + Smart Bomb(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1981 Williams Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Radar Shooter</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Arkanoid.sh</path>
+    <name>Arkanoid (1986 Taito Coin-Op)</name>
+    <desc>Bounce the energy ball off your Vaus paddle to smash 12 brick fortresses & capsules. Enhancements: [E] Expand, [M] 3-Ball Multiball, [L] Dual Lasers & [S] Slow. Controls: Left/Right Paddle + Launch/Fire Laser (Z)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1986 Taito Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Brick Breaker</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Paperboy.sh</path>
+    <name>Paperboy (1985 Atari System 2)</name>
+    <desc>Steer your bike up the street, toss newspapers into mailboxes & dodge hazards. Enhancements: Subscriber mailboxes, breakable non-subscriber windows & dogs. Controls: Steer/Speed + Throw Newspaper (Z)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1985 Atari System 2</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Street Action</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Joust.sh</path>
+    <name>Joust (1982 Williams Coin-Op)</name>
+    <desc>Flap your flying ostrich above lava & defeat buzzard riders by striking from higher up. Enhancements: Higher-lance wins, hatching eggs & grasping Lava Troll Hand. Controls: Left/Right + Flap Wings (Z / Up)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1982 Williams Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Flying Duel</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Q_bert.sh</path>
+    <name>Q*bert (1982 Gottlieb Coin-Op)</name>
+    <desc>Hop diagonally across a 3D cube pyramid to flip every tile color while dodging Coily. Enhancements: Coily snake chase AI & floating escape discs on pyramid sides. Controls: 4-Way Diagonal Pyramid Hops</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1982 Gottlieb Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Isometric Puzzle</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Rampage.sh</path>
+    <name>Rampage (1986 Bally Midway)</name>
+    <desc>Climb skyscrapers as a giant monster & punch windows until the buildings collapse. Enhancements: Collapsing multi-story towers, helicopters, tanks & snacks. Controls: Climb/Walk + Punch Building(Z) + Jump(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1986 Bally Midway</developer>
+    <publisher>Antigravity</publisher>
+    <genre>City Smash</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Marble Madness.sh</path>
+    <name>Marble Madness (1984 Atari System 1)</name>
+    <desc>Roll your marble down 10 steep 3D isometric ramp courses before the timer expires. Enhancements: 10 courses with 3D slopes, ice patches, bumpers & speed pads. Controls: 4-Way Roll Acceleration + Turbo Boost (Z)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1984 Atari System 1</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Isometric Race</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Pitfall!.sh</path>
+    <name>Pitfall! (1982 Activision Classic)</name>
+    <desc>Swing on vines over tar pits, hop across crocodile jaws & grab jungle treasures. Enhancements: Upper jungle canopy + underground scorpion cavern paths. Controls: Run/Climb Ladders + Jump/Grab Vine (Z)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1982 Activision Classic</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Jungle Adventure</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Duck Hunt.sh</path>
+    <name>Duck Hunt (1984 Nintendo Vs./NES)</name>
+    <desc>Click/tap or aim the crosshair to shoot fast-flying ducks with 3 shells per wave. Enhancements: 3-shell shotgun reload, bouncing duck flight & hunting dog. Controls: Click/Tap Duck or Aim Crosshair + Shoot(Z)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1984 Nintendo Vs./NES</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Light-Gun Shooter</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Excitebike.sh</path>
+    <name>Excitebike (1984 Nintendo Vs. System)</name>
+    <desc>Race your dirt bike over huge stunt ramps, pitch mid-air & manage turbo engine heat. Enhancements: Engine overheat gauge, track cooling arrows & rival bikers. Controls: Switch Lane/Pitch + Gas(Z) + Turbo Boost(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1984 Nintendo Vs. System</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Motocross Stunt</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Missile Command.sh</path>
+    <name>Missile Command (1980 Atari Coin-Op)</name>
+    <desc>Launch counter-missiles from 3 batteries to detonate incoming warheads above 6 cities. Enhancements: Expanding blast shockwaves that chain-destroy split warheads. Controls: Click/Tap Sky or Aim Crosshair + Fire ABM(Z)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1980 Atari Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>City Defense</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./BurgerTime.sh</path>
+    <name>BurgerTime (1982 Data East Coin-Op)</name>
+    <desc>Walk across giant buns, patties & lettuce on kitchen scaffolds to drop burgers onto trays. Enhancements: Cascading burger slices & multi-floor enemy crush bonuses. Controls: 4-Way Scaffold Climb + Throw Pepper Stun(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1982 Data East Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Kitchen Platform</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Bubble Bobble.sh</path>
+    <name>Bubble Bobble (1986 Taito Coin-Op)</name>
+    <desc>Blow bubbles to trap cave monsters, pop them in chains & collect giant bonus fruit. Enhancements: 12 cave layouts, air currents & chain-pop fruit multipliers. Controls: Move + Blow Bubble(Z) + Jump(X / Up)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1986 Taito Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Cave Platformer</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Spy Hunter.sh</path>
+    <name>Spy Hunter (1983 Bally Midway)</name>
+    <desc>Drive the G-6155 Interceptor at high speed, firing machine guns & dropping oil slicks. Enhancements: Dock inside the red Weapons Van for Oil & Smoke upgrades. Controls: Steer/Speed + Machine Gun(Z) + Oil/Smoke(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1983 Bally Midway</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Combat Driving</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Tron.sh</path>
+    <name>Tron (1982 Bally Midway)</name>
+    <desc>Steer your neon light cycle at 90° angles to trap rival AI cycles behind light walls. Enhancements: Predictive raycast AI cycles & high-speed trail boxing. Controls: 4-Way 90° Turns + Turbo Boost(Z) + Brake(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1982 Bally Midway</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Light Cycle Arena</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Track & Field.sh</path>
+    <name>Track & Field (1983 Konami Coin-Op)</name>
+    <desc>Mash sprint buttons to build speed & time your launch angle across 5 Olympic events. Enhancements: 100m Dash, Long Jump, Javelin, 110m Hurdles & High Jump. Controls: Mash Run(Z or L/R) + Jump/Throw Angle(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1983 Konami Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Olympic Sports</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./OutRun.sh</path>
+    <name>OutRun (1986 Sega Super Scaler)</name>
+    <desc>Drift your red convertible at 290 km/h down branching palm-lined sunset highways. Enhancements: 3D hills & curves, tire smoke drifts & Left/Right road forks. Controls: Steer + Accelerate(Z/Up) + Drift Brake(X/Down)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1986 Sega Super Scaler</developer>
+    <publisher>Antigravity</publisher>
+    <genre>3D Arcade Racer</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Contra.sh</path>
+    <name>Contra (1987 Konami Coin-Op)</name>
+    <desc>Run-and-gun across jungle bridges with 8-way aiming & 5-way Spread Shot powerups. Enhancements: Spread Shot [S], Rapid [R], Laser [L] & Fortress Wall Boss. Controls: 8-Way Aim/Move + Shoot(Z) + Jump(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1987 Konami Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Run & Gun</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Galaxian.sh</path>
+    <name>Galaxian (1979 Namco Coin-Op)</name>
+    <desc>Shoot convecting alien insect squadrons & Flagships diving in escort formations. Enhancements: Flagship + 2 Red Escort formation dives for 800-pt bonuses. Controls: Left/Right Dodge + Fire Nose Missile (Z)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1979 Namco Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Space Shooter</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Dig Dug II.sh</path>
+    <name>Dig Dug II (1985 Namco Coin-Op)</name>
+    <desc>Inflate monsters with your pump or hammer fault-line pegs to sink island chunks. Enhancements: Fracture coastal fault lines to drown multiple enemies at once. Controls: 4-Way Walk + Pump(Z) + Jackhammer Fault Peg(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1985 Namco Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Island Action</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Elevator Action.sh</path>
+    <name>Elevator Action (1983 Taito Coin-Op)</name>
+    <desc>Ride elevators down a spy tower, steal secret files behind red doors & shoot agents. Enhancements: Shoot ceiling lamps for blackout cover & crush spies with elevators. Controls: Move/Ride Elevator + Shoot(Z) + Jump Kick(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1983 Taito Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Spy Platformer</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Tapper.sh</path>
+    <name>Tapper (1983 Bally Midway)</name>
+    <desc>Slide frosty root beer mugs down 4 saloon bars to thirsty patrons & catch empties. Enhancements: 4 parallel counters, sliding empty glasses & tip bonuses. Controls: Up/Down Switch Bar + Pour/Slide Mug(Z) + Run(L/R)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1983 Bally Midway</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Bar Arcade</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Lunar Lander.sh</path>
+    <name>Lunar Lander (1979 Atari Vector)</name>
+    <desc>Rotate thrusters & feather your rocket burn to land gently on 2X-5X moon pads. Enhancements: Vector telemetry HUD, fuel conservation & 5X narrow crater pads. Controls: Rotate Left/Right + Variable Rocket Thrust (Z/Up)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1979 Atari Vector</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Vector Physics</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Tempest.sh</path>
+    <name>Tempest (1981 Atari Color Vector)</name>
+    <desc>Spin your yellow claw blaster around 3D neon wireframe tubes to blast Flippers. Enhancements: 12 Atari 3D vector tubes + screen-wiping Superzapper. Controls: Left/Right Rim Spin + Rapid Fire(Z) + Superzapper(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1981 Atari Color Vector</developer>
+    <publisher>Antigravity</publisher>
+    <genre>3D Tube Shooter</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Robotron_ 2084.sh</path>
+    <name>Robotron: 2084 (1982 Williams Coin-Op)</name>
+    <desc>Blast relentless robot swarms in 8 directions while rescuing the last human family. Enhancements: Grunts, indestructible Hulks, Spheroids, Brains & 5000-pt rescues. Controls: 8-Way Move & Fire(Z) + Lock Aim Strafe(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1982 Williams Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Arena Shooter</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Sinistar.sh</path>
+    <name>Sinistar (1982 Williams Coin-Op)</name>
+    <desc>Mine Sinibomb crystals from planetoids before worker drones build the giant skull boss. Enhancements: 13-piece boss construction, radar scanner & Sinibomb homing blasts. Controls: 8-Way Thrust + Laser(Z) + Fire Sinibomb(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1982 Williams Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Space Boss Hunt</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Crystal Castles.sh</path>
+    <name>Crystal Castles (1983 Atari Coin-Op)</name>
+    <desc>Guide Bentley Bear across 3D isometric castle ramps & elevators to scoop up every gem. Enhancements: Magic Hat invincibility, Honey Pots, Gem Eaters & Witch hazard. Controls: 4-Way Isometric Walk + Jump(Z)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1983 Atari Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Isometric 3D</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Zaxxon.sh</path>
+    <name>Zaxxon (1982 Sega Coin-Op)</name>
+    <desc>Fly diagonally through an isometric space fortress using your altitude gauge & shadow. Enhancements: Live altitude meter, ground shadow targeting, fuel tanks & Zaxxon Boss. Controls: Left/Right Bank + Up/Down Altitude + Laser(Z)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1982 Sega Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Isometric Shooter</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Moon Patrol.sh</path>
+    <name>Moon Patrol (1982 Irem / Williams)</name>
+    <desc>Drive a 6-wheel lunar buggy jumping craters while firing forward & upward lasers. Enhancements: Articulated 6-wheel suspension, bomb-dropping UFOs & checkpoints A-Z. Controls: Speed L/R + Dual Cannon/AA Laser(Z) + Jump(X/Up)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1982 Irem / Williams</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Lunar Runner</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Pengo.sh</path>
+    <name>Pengo (1982 Sega Coin-Op)</name>
+    <desc>Push sliding ice blocks across a frozen maze to crush Sno-Bees & align 3 diamonds. Enhancements: 10,000-pt 3-Diamond alignment jackpot & electric wall stun. Controls: 4-Way Move + Push/Shatter Ice Block or Stun Wall(Z)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1982 Sega Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Ice Maze Action</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Rally-X.sh</path>
+    <name>Rally-X (1980 Namco Coin-Op)</name>
+    <desc>Race through scrolling mazes using the radar to grab 10 flags & smoke-spin rival cars. Enhancements: Live right-side radar minimap, Special [S] flag multiplier & fuel gauge. Controls: 4-Way Steer + Deploy Smoke Screen Cloud(Z/X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1980 Namco Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Maze Racer</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Road Fighter.sh</path>
+    <name>Road Fighter (1984 Konami Coin-Op)</name>
+    <desc>Weave through traffic at 400 km/h, counter-steer skids & touch rainbow fuel cars. Enhancements: Narrowing bridges, oil slicks & counter-steer skid recovery physics. Controls: Steer/Counter-Steer + Low Gear(Z) + Turbo Gear(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1984 Konami Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>High-Speed Racer</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Flicky.sh</path>
+    <name>Flicky (1984 Sega Coin-Op)</name>
+    <desc>Lead a trailing chain of rescued yellow Piopio chicks to the exit door while dodging cats. Enhancements: Chain-rescue score multipliers & throwable flowerpots vs Tiger Cats. Controls: Left/Right Run + Jump/Flutter(Z) + Throw Item(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1984 Sega Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Platform Rescue</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Mappy.sh</path>
+    <name>Mappy (1983 Namco Coin-Op)</name>
+    <desc>Bounce on color-changing trampolines to grab stolen loot & blast cats with sonic doors. Enhancements: 4-bounce trampoline color tension & microwave wave doors. Controls: Left/Right Floor Entry + Open/Sonic Door(Z/X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1983 Namco Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Mansion Platform</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Circus Charlie.sh</path>
+    <name>Circus Charlie (1984 Konami Coin-Op)</name>
+    <desc>Jump a lion through flaming rings, walk tightropes over monkeys & hop circus balls. Enhancements: 5 classic Big Top events: Lion Rings, Tightrope, Balls, Horse & Trapeze. Controls: Left/Right Pace + Stunt Leap(Z/Up)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1984 Konami Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Circus Action</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Battle City.sh</path>
+    <name>Battle City (1985 Namco Classic)</name>
+    <desc>Command your golden tank through brick walls to defend the Phoenix base from enemy armor. Enhancements: Destructible brick/steel walls, Star upgrades, Base Shovel & Time Freeze. Controls: 4-Way Tank Tread + Fire Shell(Z)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1985 Namco Classic</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Tank Defense</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Kung-Fu Master.sh</path>
+    <name>Kung-Fu Master (1984 Irem / Data East)</name>
+    <desc>Battle across 5 temple floors with jump-kicks & crouch-punches to defeat dojo bosses. Enhancements: Grippers, Knife Throwers, Dragon Pots & 5 Floor Boss showdowns. Controls: Walk/Jump/Crouch + Punch(Z) + Kick(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1984 Irem / Data East</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Martial Arts</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Wild Gunman.sh</path>
+    <name>Wild Gunman (1984 Nintendo Zapper)</name>
+    <desc>Wait for the outlaw’s eyes to flash "FIRE!!" then draw & shoot in milliseconds. Enhancements: Millisecond reaction timer, early-draw FOUL detection & Saloon Gang mode. Controls: Click/Tap Outlaw or Press Draw(Z) on "FIRE!!"</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1984 Nintendo Zapper</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Quick-Draw Duel</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Exerion.sh</path>
+    <name>Exerion (1983 Jaleco Coin-Op)</name>
+    <desc>Master gliding momentum over 3D alien terrain with Dual Slow & Single Fast cannons. Enhancements: Authentic ship momentum physics & ammo-charging Fast Cannon. Controls: Inertia Steer + Fast Cannon(Z) + Dual Blaster(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1983 Jaleco Coin-Op</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Inertia Shooter</genre>
+    <players>1-2</players>
+  </game>
+  <game>
+    <path>./Tetris & Columns.sh</path>
+    <name>Tetris & Columns (1988 Atari / 1990 Sega)</name>
+    <desc>Clear 4-line Tetrominoes or match 3-gem jewel chains in a dual-mode puzzle cabinet. Enhancements: 2-in-1 Tetris + Columns modes, ghost piece, combos & neon bursts. Controls: Move/Drop + Rotate/Cycle Gems(Z/Up) + Switch Mode(X)</desc>
+    <rating>0.95</rating>
+    <releasedate>20261019T000000</releasedate>
+    <developer>1988 Atari / 1990 Sega</developer>
+    <publisher>Antigravity</publisher>
+    <genre>Arcade Puzzle</genre>
     <players>1-2</players>
   </game>
 </gameList>

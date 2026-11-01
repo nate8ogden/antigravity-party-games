@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # =============================================================================
-# One-Step Installer for Raspberry Pi RetroPie / Batocera / RecalBox
+# One-Step Installer for Raspberry Pi RetroPie / Batocera
 # =============================================================================
 set -e
 
 RETROPIE_ROOT="${1:-$HOME/RetroPie}"
 SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-echo "Installing Retro Arcade Studio ROMs & Ports to $RETROPIE_ROOT..."
+echo "Installing Retro Arcade Studio (50 Games) to $RETROPIE_ROOT..."
 
 mkdir -p "$RETROPIE_ROOT/roms/nes"
 mkdir -p "$RETROPIE_ROOT/roms/snes"
@@ -22,5 +22,5 @@ cp -f "$SRC_DIR/roms/ports/gamelist.xml" "$RETROPIE_ROOT/roms/ports/"
 cp -f "$SRC_DIR/roms/ports/retro_arcade_data/index.html" "$RETROPIE_ROOT/roms/ports/retro_arcade_data/"
 chmod +x "$RETROPIE_ROOT/roms/ports/"*.sh
 
-echo "✅ Installed 9 NES ROMs, 1 SNES LoROM, 28 Arcade ROMs, and RetroPie Ports!"
+echo "✅ Installed 9 NES ROMs, 1 SNES LoROM, 51 Arcade ROMs, and 51 RetroPie Ports!"
 echo "Restart EmulationStation to play!"
