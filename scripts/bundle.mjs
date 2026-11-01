@@ -69,7 +69,6 @@ const gameFiles = [
   { file: 'src/games/WildGunman.js', className: 'WildGunman' },
   { file: 'src/games/Exerion.js', className: 'Exerion' },
   { file: 'src/games/TetrisRetro.js', className: 'TetrisRetro' },
-  { file: 'src/games/RollingThunder.js', className: 'RollingThunder' },
   { file: 'src/games/GoldenAxe.js', className: 'GoldenAxe' }
 ];
 

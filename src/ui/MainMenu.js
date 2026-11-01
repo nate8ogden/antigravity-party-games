@@ -620,18 +620,6 @@ export const GAME_CATALOG = [
     enhancements: '2-in-1 Tetris + Columns modes, ghost piece, combos & neon bursts'
   },
   {
-    id: 'rollingthunder',
-    icon: '🕵️',
-    title: 'Rolling Thunder',
-    classicRef: '1986 Namco / Atari Games',
-    category: 'vault2',
-    genre: 'Espionage Action',
-    accent: PALETTE.GOLD,
-    mechanics: 'Leap between multi-tiered catwalks, duck into doorways for cover, and rescue Leila Blitz',
-    controls: 'Walk/Jump(X) + Crouch/Cover(Down) + Door/High Jump(Up) + Shoot(Z)',
-    enhancements: 'Junko Ozawa YM2151 OST, Masker Syndicate, Bullets/Arms doors & SMG rapid fire'
-  },
-  {
     id: 'goldenaxe',
     icon: '🪓',
     title: 'Golden Axe',
@@ -2017,22 +2005,6 @@ export class MainMenu {
         break;
       }
 
-      case 'rollingthunder': {
-        // Multi-tier catwalks + blue suited secret agent Albatross + door
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(x + 4, cy, w - 8, 3);
-        ctx.fillRect(x + 4, y + h - 10, w - 8, 3);
-        // Red Bullets door
-        ctx.fillStyle = '#DC2626';
-        ctx.fillRect(cx - 16, cy - 22, 12, 22);
-        // Agent Albatross
-        ctx.fillStyle = '#0284C7';
-        ctx.fillRect(cx + 6, cy - 20, 8, 20);
-        ctx.fillStyle = '#FBBF24';
-        ctx.fillRect(cx + 8, cy - 26, 6, 6);
-        break;
-      }
-
       case 'goldenaxe': {
         // Stone fantasy ruins + glowing Golden Battle Axe + Barbarian silhouette
         ctx.fillStyle = '#451A03';
@@ -2744,10 +2716,11 @@ export class MainMenu {
     // Category Tabs + Cloud Sort Pill
     const sortMode = this.getSortMode();
     const savedCount = GAME_CATALOG.filter((g) => cloudPersistence.getRecord(g.id).saved).length;
+    const vault2Count = GAME_CATALOG.filter((g) => g.category === 'vault2').length;
     this.tabRects = [
       { id: 'core', label: '🕹️ CORE (8)', x: 18, y: 58, w: 165, h: 28 },
       { id: 'expanded', label: '👾 VAULT I (20)', x: 189, y: 58, w: 185, h: 28 },
-      { id: 'vault2', label: '🏆 VAULT II (22)', x: 380, y: 58, w: 185, h: 28 },
+      { id: 'vault2', label: `🏆 VAULT II (${vault2Count})`, x: 380, y: 58, w: 185, h: 28 },
       { id: 'favorites', label: `♥ SAVED (${savedCount})`, x: 571, y: 58, w: 185, h: 28 },
       { id: 'sort', label: sortMode.label, x: 762, y: 58, w: 180, h: 28 }
     ];

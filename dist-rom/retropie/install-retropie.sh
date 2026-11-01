@@ -22,5 +22,5 @@ cp -f "$SRC_DIR/roms/ports/gamelist.xml" "$RETROPIE_ROOT/roms/ports/"
 cp -f "$SRC_DIR/roms/ports/retro_arcade_data/index.html" "$RETROPIE_ROOT/roms/ports/retro_arcade_data/"
 chmod +x "$RETROPIE_ROOT/roms/ports/"*.sh
 
-echo "✅ Installed 9 NES ROMs, 1 SNES LoROM, 53 Arcade ROMs, and 53 RetroPie Ports!"
+echo "✅ Installed 9 NES ROMs, 1 SNES LoROM, 52 Arcade ROMs, and 52 RetroPie Ports!"
 echo "Restart EmulationStation to play!"

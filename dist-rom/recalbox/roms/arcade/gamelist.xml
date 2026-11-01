@@ -562,17 +562,6 @@
     <players>1-2</players>
   </game>
   <game>
-    <path>./Rolling_Thunder.rom</path>
-    <name>Rolling Thunder (1986 Namco / Atari Games)</name>
-    <desc>Leap between multi-tiered catwalks, duck into doorways for cover, and rescue Leila Blitz. Enhancements: Junko Ozawa YM2151 OST, Masker Syndicate, Bullets/Arms doors & SMG rapid fire</desc>
-    <rating>0.95</rating>
-    <releasedate>20261019T000000</releasedate>
-    <developer>1986 Namco / Atari Games</developer>
-    <publisher>Antigravity</publisher>
-    <genre>Espionage Action</genre>
-    <players>1-2</players>
-  </game>
-  <game>
     <path>./Golden_Axe.rom</path>
     <name>Golden Axe (1989 Sega Arcade)</name>
     <desc>Choose from 3 iconic heroes (Ax Battler, Tyris Flare, Gilius), ride Bizarrians & cast screen-filling magic. Enhancements: Tohru Nakabayashi Wilderness OST, 3 Heroes, Chicken Leg & Dragon mounts, Potions & Death Adder</desc>
