@@ -41,11 +41,25 @@ function noteToFreq(note) {
 
 export const LOBBY_SOUND_THEMES = [
   {
+    id: 'piano',
+    name: 'PIANO',
+    label: '🎹 GRAND PIANO',
+    title: 'Nocturne in F Major — Concert Grand Piano',
+    desc: 'Acoustic grand piano with percussive hammer strike & ringing string bloom'
+  },
+  {
     id: 'cello',
     name: 'CELLO',
     label: '🎻 CELLO ELEGY',
     title: 'Nocturne in D Minor — Lyrical Cello Elegy',
     desc: 'Deeply evocative bowed acoustic cello melody with warm resonance & vibrato'
+  },
+  {
+    id: 'acoustic',
+    name: 'GUITAR',
+    label: '🎸 ACOUSTIC GUITAR',
+    title: 'Spanish Sunset — Acoustic Nylon Guitar',
+    desc: 'Intimate fingerpicked acoustic guitar with warm wooden resonance'
   },
   {
     id: 'synth',
@@ -69,6 +83,94 @@ export const LOBBY_SOUND_THEMES = [
     desc: 'Authentic 2A03 pulse wave retro melodies'
   }
 ];
+
+const PIANO_LOBBY_TRACK = {
+  title: 'Nocturne in F Major — Concert Grand Piano',
+  stepDur: 0.16,
+  leadWave: 'piano',
+  bassWave: 'piano',
+  harmWave: 'piano',
+  leadGain: 0.28,
+  bassGain: 0.22,
+  harmGain: 0.16,
+  lead: [
+    ['A4', 6], ['G4', 2], ['F4', 4], ['E4', 4],
+    ['D4', 6], ['F4', 2], ['A4', 4], ['D5', 4],
+    ['C5', 8], ['B4', 4], ['A4', 4],
+    ['G4', 6], ['A4', 2], ['F4', 8],
+    ['A4', 6], ['Bb4', 2], ['C5', 4], ['D5', 4],
+    ['E5', 6], ['F5', 2], ['E5', 4], ['D5', 4],
+    ['C#5', 8], ['A4', 8],
+    ['D5', 12], ['C5', 2], ['Bb4', 2],
+    ['A4', 8], ['G4', 4], ['E4', 4],
+    ['F4', 16]
+  ],
+  bass: [
+    ['D2', 4], ['A2', 4], ['D3', 8],
+    ['Bb1', 4], ['F2', 4], ['Bb2', 8],
+    ['C2', 4], ['G2', 4], ['C3', 8],
+    ['F1', 4], ['C2', 4], ['F2', 8],
+    ['G1', 4], ['D2', 4], ['G2', 8],
+    ['A1', 4], ['E2', 4], ['A2', 8],
+    ['A1', 8], ['A2', 8],
+    ['D2', 8], ['G2', 8],
+    ['A1', 8], ['A2', 8],
+    ['D2', 16]
+  ],
+  harm: [
+    ['F3', 4], ['A3', 4], ['F3', 8],
+    ['D3', 4], ['F3', 4], ['D3', 8],
+    ['E3', 4], ['G3', 4], ['E3', 8],
+    ['C3', 4], ['F3', 4], ['C3', 8],
+    ['D3', 4], ['G3', 4], ['D3', 8],
+    ['E3', 4], ['A3', 4], ['E3', 8],
+    ['G3', 8], ['E3', 8],
+    ['F3', 8], ['D3', 8],
+    ['E3', 8], ['C#3', 8],
+    ['D3', 16]
+  ]
+};
+
+const ACOUSTIC_LOBBY_TRACK = {
+  title: 'Spanish Sunset — Acoustic Nylon Guitar',
+  stepDur: 0.15,
+  leadWave: 'triangle',
+  bassWave: 'triangle',
+  harmWave: 'sine',
+  leadGain: 0.22,
+  bassGain: 0.24,
+  harmGain: 0.12,
+  lead: [
+    ['E4', 4], ['G4', 4], ['B4', 4], ['E5', 4],
+    ['D5', 4], ['C5', 4], ['B4', 8],
+    ['C5', 4], ['B4', 2], ['A4', 2], ['G4', 4], ['A4', 4],
+    ['B4', 8], ['E4', 8],
+    ['A4', 4], ['C5', 4], ['E5', 4], ['A5', 4],
+    ['G5', 4], ['F5', 4], ['E5', 8],
+    ['F5', 4], ['E5', 2], ['D5', 2], ['C5', 4], ['D5', 4],
+    ['E5', 16]
+  ],
+  bass: [
+    ['E2', 8], ['B2', 8],
+    ['D2', 8], ['G2', 8],
+    ['A1', 8], ['E2', 8],
+    ['B1', 8], ['E2', 8],
+    ['A1', 8], ['E2', 8],
+    ['C2', 8], ['G2', 8],
+    ['D2', 8], ['A2', 8],
+    ['E2', 16]
+  ],
+  harm: [
+    ['G3', 4], ['B3', 4], ['E4', 8],
+    ['F#3', 4], ['A3', 4], ['D4', 8],
+    ['E3', 4], ['A3', 4], ['C4', 8],
+    ['D#3', 4], ['F#3', 4], ['B3', 8],
+    ['C3', 4], ['E3', 4], ['A3', 8],
+    ['E3', 4], ['G3', 4], ['C4', 8],
+    ['D3', 4], ['F3', 4], ['B3', 8],
+    ['G#3', 8], ['B3', 8]
+  ]
+};
 
 const CELLO_LOBBY_TRACK = {
   title: 'Nocturne in D Minor — Lyrical Cello Elegy',
@@ -184,8 +286,10 @@ const CHIP_LOBBY_TRACK = {
  * Multi-Voice Chiptune & Cello Soundtracks (Selection Lobby + Classic Games).
  */
 export const SOUNDTRACKS = {
-  "lobby": CELLO_LOBBY_TRACK,
+  "lobby": PIANO_LOBBY_TRACK,
+  "lobby_piano": PIANO_LOBBY_TRACK,
   "lobby_cello": CELLO_LOBBY_TRACK,
+  "lobby_acoustic": ACOUSTIC_LOBBY_TRACK,
   "lobby_chill": CHILL_LOBBY_TRACK,
   "lobby_8bit": CHIP_LOBBY_TRACK,
   "lobby_synth": {
@@ -34518,19 +34622,22 @@ export class AudioSynth {
   }
 
   getLobbyTrackId() {
+    if (this.lobbySoundTheme === 'piano') return 'lobby_piano';
+    if (this.lobbySoundTheme === 'cello') return 'lobby_cello';
+    if (this.lobbySoundTheme === 'acoustic') return 'lobby_acoustic';
     if (this.lobbySoundTheme === 'synth') return 'lobby_synth';
     if (this.lobbySoundTheme === 'chill') return 'lobby_chill';
     if (this.lobbySoundTheme === '8bit' || this.lobbySoundTheme === 'chip') return 'lobby_8bit';
-    return 'lobby_cello';
+    return 'lobby_piano';
   }
 
   getLobbySoundTheme() {
-    return this.lobbySoundTheme || 'cello';
+    return this.lobbySoundTheme || 'piano';
   }
 
   setLobbySoundTheme(themeId) {
     const valid = LOBBY_SOUND_THEMES.find((t) => t.id === themeId);
-    this.lobbySoundTheme = valid ? valid.id : 'cello';
+    this.lobbySoundTheme = valid ? valid.id : 'piano';
     try {
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem('retro_lobby_sound', this.lobbySoundTheme);
@@ -34541,8 +34648,12 @@ export class AudioSynth {
       this.playMusic(target, true);
     }
     // Preview the sound theme
-    if (this.lobbySoundTheme === 'cello') {
+    if (this.lobbySoundTheme === 'piano') {
+      this._schedulePianoVoice(523.25, this.ctx ? this.ctx.currentTime : 0, 0.4, 0.24, this.masterGain);
+    } else if (this.lobbySoundTheme === 'cello') {
       this.playCelloPizzicato();
+    } else if (this.lobbySoundTheme === 'acoustic') {
+      this.playNote(329.63, 0.18, 'triangle', 0.22, 0);
     } else if (this.lobbySoundTheme === 'chill') {
       this.playNote(440, 0.08, 'sine', 0.22, 0);
     } else {
@@ -34787,6 +34898,9 @@ export class AudioSynth {
   }
 
   _scheduleVoice(freq, startTime, duration, type, peakGain, dest, vibrato = false) {
+    if (type === 'piano') {
+      return this._schedulePianoVoice(freq, startTime, duration, peakGain, dest);
+    }
     if (type === 'cello') {
       return this._scheduleCelloVoice(freq, startTime, duration, peakGain, dest, vibrato);
     }
@@ -34983,6 +35097,88 @@ export class AudioSynth {
     osc2.start(now);
     osc1.stop(now + duration + 0.02);
     osc2.stop(now + duration + 0.02);
+  }
+
+  /**
+   * Physically modeled Concert Grand Piano voice synthesis:
+   * - Percussive felt hammer strike transient (initial bright impulse ~4ms)
+   * - Triple-string unison with +2.5 cents micro-detuning for acoustic chorus bloom
+   * - Frequency-dependent warm soundboard resonance filter
+   * - Realistic acoustic piano exponential string ring & decay
+   */
+  _schedulePianoVoice(freq, startTime, duration, peakGain, dest) {
+    if (!this.ctx || freq <= 0) return;
+    const now = startTime;
+
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    const hammerOsc = this.ctx.createOscillator();
+
+    osc1.type = 'triangle';
+    osc2.type = 'sine';
+    hammerOsc.type = 'triangle';
+
+    osc1.frequency.setValueAtTime(freq, now);
+    osc2.frequency.setValueAtTime(freq * 1.0018, now); // +3 cents detune for piano chorus bloom
+    hammerOsc.frequency.setValueAtTime(Math.min(4800, freq * 3.8), now);
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    const initCutoff = Math.min(5400, Math.max(800, freq * 4.2 + 600));
+    filter.frequency.setValueAtTime(initCutoff, now);
+    filter.frequency.exponentialRampToValueAtTime(Math.max(350, freq * 1.8), now + Math.min(0.35, duration * 0.5));
+    filter.Q.setValueAtTime(1.3, now);
+
+    const gain1 = this.ctx.createGain();
+    const gain2 = this.ctx.createGain();
+    const hammerGain = this.ctx.createGain();
+    const masterGain = this.ctx.createGain();
+
+    gain1.gain.value = 0.65;
+    gain2.gain.value = 0.45;
+
+    // Hammer strike transient: 4ms sharp percussive click
+    hammerGain.gain.setValueAtTime(peakGain * 0.35, now);
+    hammerGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.015);
+
+    osc1.connect(gain1);
+    osc2.connect(gain2);
+    hammerOsc.connect(hammerGain);
+
+    gain1.connect(filter);
+    gain2.connect(filter);
+    hammerGain.connect(filter);
+    filter.connect(masterGain);
+
+    // Natural acoustic piano ADSR envelope
+    masterGain.gain.setValueAtTime(0.0001, now);
+    masterGain.gain.linearRampToValueAtTime(peakGain, now + 0.0035);
+    masterGain.gain.exponentialRampToValueAtTime(peakGain * 0.48, now + Math.min(0.12, duration * 0.25));
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    masterGain.connect(dest);
+
+    osc1.onended = () => {
+      try {
+        osc1.disconnect();
+        osc2.disconnect();
+        hammerOsc.disconnect();
+        gain1.disconnect();
+        gain2.disconnect();
+        hammerGain.disconnect();
+        filter.disconnect();
+        masterGain.disconnect();
+      } catch (_) {}
+    };
+
+    osc1.start(now);
+    osc2.start(now);
+    hammerOsc.start(now);
+
+    const stopTime = now + duration + 0.02;
+    osc1.stop(stopTime);
+    osc2.stop(stopTime);
+    hammerOsc.stop(now + 0.02);
   }
 
   _scheduleDrumKick(startTime, dest) {

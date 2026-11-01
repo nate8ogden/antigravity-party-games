@@ -4,29 +4,47 @@ import { MainMenu, LOBBY_BACKGROUND_THEMES, GAME_CATALOG } from '../src/ui/MainM
 
 console.log('🎻 Testing Lobby Music & Background Customization Suite...');
 
-// 1. Verify AudioSynth Lobby Themes & Cello Synthesis
+// 1. Verify AudioSynth Lobby Themes & Piano / Cello Synthesis
 const audio = new AudioSynth();
 assert.ok(Array.isArray(LOBBY_SOUND_THEMES), 'LOBBY_SOUND_THEMES must be exported array');
-assert.equal(LOBBY_SOUND_THEMES.length, 4, 'Must have 4 lobby sound themes (cello, synth, chill, 8bit)');
+assert.equal(LOBBY_SOUND_THEMES.length, 6, 'Must have 6 lobby sound themes (piano, cello, acoustic, synth, chill, 8bit)');
+
+const pianoTheme = LOBBY_SOUND_THEMES.find((t) => t.id === 'piano');
+assert.ok(pianoTheme, 'Piano theme must exist in LOBBY_SOUND_THEMES');
+assert.ok(pianoTheme.label.includes('PIANO'), 'Piano theme must be clearly labeled');
 
 const celloTheme = LOBBY_SOUND_THEMES.find((t) => t.id === 'cello');
 assert.ok(celloTheme, 'Cello theme must exist in LOBBY_SOUND_THEMES');
 assert.ok(celloTheme.label.includes('CELLO'), 'Cello theme must be clearly labeled');
 
+const acousticTheme = LOBBY_SOUND_THEMES.find((t) => t.id === 'acoustic');
+assert.ok(acousticTheme, 'Acoustic guitar theme must exist in LOBBY_SOUND_THEMES');
+
 // Verify SOUNDTRACKS entries
 assert.ok(SOUNDTRACKS.lobby, 'SOUNDTRACKS.lobby must exist');
+assert.ok(SOUNDTRACKS.lobby_piano, 'SOUNDTRACKS.lobby_piano must exist');
 assert.ok(SOUNDTRACKS.lobby_cello, 'SOUNDTRACKS.lobby_cello must exist');
+assert.ok(SOUNDTRACKS.lobby_acoustic, 'SOUNDTRACKS.lobby_acoustic must exist');
 assert.ok(SOUNDTRACKS.lobby_synth, 'SOUNDTRACKS.lobby_synth must exist');
 assert.ok(SOUNDTRACKS.lobby_chill, 'SOUNDTRACKS.lobby_chill must exist');
 assert.ok(SOUNDTRACKS.lobby_8bit, 'SOUNDTRACKS.lobby_8bit must exist');
+assert.equal(SOUNDTRACKS.lobby_piano.leadWave, 'piano', 'lobby_piano leadWave must be piano');
 assert.equal(SOUNDTRACKS.lobby_cello.leadWave, 'cello', 'lobby_cello leadWave must be cello');
 assert.ok(!SOUNDTRACKS.lobby_cello.title.includes('Bach Cello Suite'), 'Bach Cello Suite replaced with lyrical cello piece');
-console.log('✅ Lyrical Cello Elegy soundtrack verified in SOUNDTRACKS.');
+console.log('✅ Concert Grand Piano & Lyrical Cello soundtracks verified in SOUNDTRACKS.');
 
-// Verify audio theme cycling
-audio.setLobbySoundTheme('cello');
+// Verify audio theme cycling across all 6 themes
+audio.setLobbySoundTheme('piano');
+assert.equal(audio.getLobbySoundTheme(), 'piano');
+assert.equal(audio.getLobbyTrackId(), 'lobby_piano');
+
+audio.cycleLobbySoundTheme();
 assert.equal(audio.getLobbySoundTheme(), 'cello');
 assert.equal(audio.getLobbyTrackId(), 'lobby_cello');
+
+audio.cycleLobbySoundTheme();
+assert.equal(audio.getLobbySoundTheme(), 'acoustic');
+assert.equal(audio.getLobbyTrackId(), 'lobby_acoustic');
 
 audio.cycleLobbySoundTheme();
 assert.equal(audio.getLobbySoundTheme(), 'synth');
@@ -41,8 +59,8 @@ assert.equal(audio.getLobbySoundTheme(), 'chip');
 assert.equal(audio.getLobbyTrackId(), 'lobby_8bit');
 
 audio.cycleLobbySoundTheme();
-assert.equal(audio.getLobbySoundTheme(), 'cello');
-console.log('✅ Audio theme cycling across all 4 options verified.');
+assert.equal(audio.getLobbySoundTheme(), 'piano');
+console.log('✅ Audio theme cycling across all 6 sound options verified.');
 
 // 2. Verify MainMenu Background Themes & Customization
 class MockRenderer {
@@ -93,10 +111,10 @@ const input = new MockInput();
 const menu = new MainMenu(renderer, input, audio, () => {});
 
 assert.ok(Array.isArray(LOBBY_BACKGROUND_THEMES), 'LOBBY_BACKGROUND_THEMES must be exported array');
-assert.equal(LOBBY_BACKGROUND_THEMES.length, 8, 'Must have 8 background themes');
-assert.ok(LOBBY_BACKGROUND_THEMES.some((t) => t.id === 'cello'), 'Cello chamber hall background must exist');
-assert.ok(LOBBY_BACKGROUND_THEMES.some((t) => t.id === 'piano'), 'Grand piano background must exist');
-console.log('✅ 8 Lobby Background Themes (including Cello & Piano) verified.');
+assert.equal(LOBBY_BACKGROUND_THEMES.length, 6, 'Must have 6 clean background themes');
+assert.ok(!LOBBY_BACKGROUND_THEMES.some((t) => t.id === 'cello'), 'Cello background must be removed');
+assert.ok(!LOBBY_BACKGROUND_THEMES.some((t) => t.id === 'piano'), 'Piano background must be removed');
+console.log('✅ 6 Clean Lobby Background Themes verified (cello and piano backgrounds removed).');
 
 // Test background theme cycling
 const initialBg = menu.backgroundTheme;
@@ -104,7 +122,7 @@ menu.cycleBackgroundTheme();
 assert.notEqual(menu.backgroundTheme, initialBg, 'cycleBackgroundTheme must change background');
 console.log(`✅ Background cycled to ${menu.backgroundTheme}.`);
 
-// Test rendering each of the 8 background themes without errors
+// Test rendering each of the 6 background themes without errors
 for (const bg of LOBBY_BACKGROUND_THEMES) {
   menu.setBackgroundTheme(bg.id);
   assert.equal(menu.backgroundTheme, bg.id);
@@ -112,7 +130,7 @@ for (const bg of LOBBY_BACKGROUND_THEMES) {
     menu.render(mockCtx);
   }, `Rendering background theme '${bg.id}' must execute cleanly`);
 }
-console.log('✅ All 8 background themes render cleanly on Canvas.');
+console.log('✅ All 6 background themes render cleanly on Canvas.');
 
 // Test Hotkeys: KeyB for background, KeyM for sound
 input.keysJustPressed.add('KeyB');

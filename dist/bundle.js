@@ -3180,11 +3180,25 @@ function noteToFreq(note) {
 }
 const LOBBY_SOUND_THEMES = [
   {
+    id: 'piano',
+    name: 'PIANO',
+    label: '🎹 GRAND PIANO',
+    title: 'Nocturne in F Major — Concert Grand Piano',
+    desc: 'Acoustic grand piano with percussive hammer strike & ringing string bloom'
+  },
+  {
     id: 'cello',
     name: 'CELLO',
     label: '🎻 CELLO ELEGY',
     title: 'Nocturne in D Minor — Lyrical Cello Elegy',
     desc: 'Deeply evocative bowed acoustic cello melody with warm resonance & vibrato'
+  },
+  {
+    id: 'acoustic',
+    name: 'GUITAR',
+    label: '🎸 ACOUSTIC GUITAR',
+    title: 'Spanish Sunset — Acoustic Nylon Guitar',
+    desc: 'Intimate fingerpicked acoustic guitar with warm wooden resonance'
   },
   {
     id: 'synth',
@@ -3208,6 +3222,94 @@ const LOBBY_SOUND_THEMES = [
     desc: 'Authentic 2A03 pulse wave retro melodies'
   }
 ];
+
+const PIANO_LOBBY_TRACK = {
+  title: 'Nocturne in F Major — Concert Grand Piano',
+  stepDur: 0.16,
+  leadWave: 'piano',
+  bassWave: 'piano',
+  harmWave: 'piano',
+  leadGain: 0.28,
+  bassGain: 0.22,
+  harmGain: 0.16,
+  lead: [
+    ['A4', 6], ['G4', 2], ['F4', 4], ['E4', 4],
+    ['D4', 6], ['F4', 2], ['A4', 4], ['D5', 4],
+    ['C5', 8], ['B4', 4], ['A4', 4],
+    ['G4', 6], ['A4', 2], ['F4', 8],
+    ['A4', 6], ['Bb4', 2], ['C5', 4], ['D5', 4],
+    ['E5', 6], ['F5', 2], ['E5', 4], ['D5', 4],
+    ['C#5', 8], ['A4', 8],
+    ['D5', 12], ['C5', 2], ['Bb4', 2],
+    ['A4', 8], ['G4', 4], ['E4', 4],
+    ['F4', 16]
+  ],
+  bass: [
+    ['D2', 4], ['A2', 4], ['D3', 8],
+    ['Bb1', 4], ['F2', 4], ['Bb2', 8],
+    ['C2', 4], ['G2', 4], ['C3', 8],
+    ['F1', 4], ['C2', 4], ['F2', 8],
+    ['G1', 4], ['D2', 4], ['G2', 8],
+    ['A1', 4], ['E2', 4], ['A2', 8],
+    ['A1', 8], ['A2', 8],
+    ['D2', 8], ['G2', 8],
+    ['A1', 8], ['A2', 8],
+    ['D2', 16]
+  ],
+  harm: [
+    ['F3', 4], ['A3', 4], ['F3', 8],
+    ['D3', 4], ['F3', 4], ['D3', 8],
+    ['E3', 4], ['G3', 4], ['E3', 8],
+    ['C3', 4], ['F3', 4], ['C3', 8],
+    ['D3', 4], ['G3', 4], ['D3', 8],
+    ['E3', 4], ['A3', 4], ['E3', 8],
+    ['G3', 8], ['E3', 8],
+    ['F3', 8], ['D3', 8],
+    ['E3', 8], ['C#3', 8],
+    ['D3', 16]
+  ]
+};
+
+const ACOUSTIC_LOBBY_TRACK = {
+  title: 'Spanish Sunset — Acoustic Nylon Guitar',
+  stepDur: 0.15,
+  leadWave: 'triangle',
+  bassWave: 'triangle',
+  harmWave: 'sine',
+  leadGain: 0.22,
+  bassGain: 0.24,
+  harmGain: 0.12,
+  lead: [
+    ['E4', 4], ['G4', 4], ['B4', 4], ['E5', 4],
+    ['D5', 4], ['C5', 4], ['B4', 8],
+    ['C5', 4], ['B4', 2], ['A4', 2], ['G4', 4], ['A4', 4],
+    ['B4', 8], ['E4', 8],
+    ['A4', 4], ['C5', 4], ['E5', 4], ['A5', 4],
+    ['G5', 4], ['F5', 4], ['E5', 8],
+    ['F5', 4], ['E5', 2], ['D5', 2], ['C5', 4], ['D5', 4],
+    ['E5', 16]
+  ],
+  bass: [
+    ['E2', 8], ['B2', 8],
+    ['D2', 8], ['G2', 8],
+    ['A1', 8], ['E2', 8],
+    ['B1', 8], ['E2', 8],
+    ['A1', 8], ['E2', 8],
+    ['C2', 8], ['G2', 8],
+    ['D2', 8], ['A2', 8],
+    ['E2', 16]
+  ],
+  harm: [
+    ['G3', 4], ['B3', 4], ['E4', 8],
+    ['F#3', 4], ['A3', 4], ['D4', 8],
+    ['E3', 4], ['A3', 4], ['C4', 8],
+    ['D#3', 4], ['F#3', 4], ['B3', 8],
+    ['C3', 4], ['E3', 4], ['A3', 8],
+    ['E3', 4], ['G3', 4], ['C4', 8],
+    ['D3', 4], ['F3', 4], ['B3', 8],
+    ['G#3', 8], ['B3', 8]
+  ]
+};
 
 const CELLO_LOBBY_TRACK = {
   title: 'Nocturne in D Minor — Lyrical Cello Elegy',
@@ -3323,8 +3425,10 @@ const CHIP_LOBBY_TRACK = {
  * Multi-Voice Chiptune & Cello Soundtracks (Selection Lobby + Classic Games).
  */
 const SOUNDTRACKS = {
-  "lobby": CELLO_LOBBY_TRACK,
+  "lobby": PIANO_LOBBY_TRACK,
+  "lobby_piano": PIANO_LOBBY_TRACK,
   "lobby_cello": CELLO_LOBBY_TRACK,
+  "lobby_acoustic": ACOUSTIC_LOBBY_TRACK,
   "lobby_chill": CHILL_LOBBY_TRACK,
   "lobby_8bit": CHIP_LOBBY_TRACK,
   "lobby_synth": {
@@ -37656,19 +37760,22 @@ class AudioSynth {
   }
 
   getLobbyTrackId() {
+    if (this.lobbySoundTheme === 'piano') return 'lobby_piano';
+    if (this.lobbySoundTheme === 'cello') return 'lobby_cello';
+    if (this.lobbySoundTheme === 'acoustic') return 'lobby_acoustic';
     if (this.lobbySoundTheme === 'synth') return 'lobby_synth';
     if (this.lobbySoundTheme === 'chill') return 'lobby_chill';
     if (this.lobbySoundTheme === '8bit' || this.lobbySoundTheme === 'chip') return 'lobby_8bit';
-    return 'lobby_cello';
+    return 'lobby_piano';
   }
 
   getLobbySoundTheme() {
-    return this.lobbySoundTheme || 'cello';
+    return this.lobbySoundTheme || 'piano';
   }
 
   setLobbySoundTheme(themeId) {
     const valid = LOBBY_SOUND_THEMES.find((t) => t.id === themeId);
-    this.lobbySoundTheme = valid ? valid.id : 'cello';
+    this.lobbySoundTheme = valid ? valid.id : 'piano';
     try {
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem('retro_lobby_sound', this.lobbySoundTheme);
@@ -37679,8 +37786,12 @@ class AudioSynth {
       this.playMusic(target, true);
     }
     // Preview the sound theme
-    if (this.lobbySoundTheme === 'cello') {
+    if (this.lobbySoundTheme === 'piano') {
+      this._schedulePianoVoice(523.25, this.ctx ? this.ctx.currentTime : 0, 0.4, 0.24, this.masterGain);
+    } else if (this.lobbySoundTheme === 'cello') {
       this.playCelloPizzicato();
+    } else if (this.lobbySoundTheme === 'acoustic') {
+      this.playNote(329.63, 0.18, 'triangle', 0.22, 0);
     } else if (this.lobbySoundTheme === 'chill') {
       this.playNote(440, 0.08, 'sine', 0.22, 0);
     } else {
@@ -37925,6 +38036,9 @@ class AudioSynth {
   }
 
   _scheduleVoice(freq, startTime, duration, type, peakGain, dest, vibrato = false) {
+    if (type === 'piano') {
+      return this._schedulePianoVoice(freq, startTime, duration, peakGain, dest);
+    }
     if (type === 'cello') {
       return this._scheduleCelloVoice(freq, startTime, duration, peakGain, dest, vibrato);
     }
@@ -38121,6 +38235,88 @@ class AudioSynth {
     osc2.start(now);
     osc1.stop(now + duration + 0.02);
     osc2.stop(now + duration + 0.02);
+  }
+
+  /**
+   * Physically modeled Concert Grand Piano voice synthesis:
+   * - Percussive felt hammer strike transient (initial bright impulse ~4ms)
+   * - Triple-string unison with +2.5 cents micro-detuning for acoustic chorus bloom
+   * - Frequency-dependent warm soundboard resonance filter
+   * - Realistic acoustic piano exponential string ring & decay
+   */
+  _schedulePianoVoice(freq, startTime, duration, peakGain, dest) {
+    if (!this.ctx || freq <= 0) return;
+    const now = startTime;
+
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    const hammerOsc = this.ctx.createOscillator();
+
+    osc1.type = 'triangle';
+    osc2.type = 'sine';
+    hammerOsc.type = 'triangle';
+
+    osc1.frequency.setValueAtTime(freq, now);
+    osc2.frequency.setValueAtTime(freq * 1.0018, now); // +3 cents detune for piano chorus bloom
+    hammerOsc.frequency.setValueAtTime(Math.min(4800, freq * 3.8), now);
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    const initCutoff = Math.min(5400, Math.max(800, freq * 4.2 + 600));
+    filter.frequency.setValueAtTime(initCutoff, now);
+    filter.frequency.exponentialRampToValueAtTime(Math.max(350, freq * 1.8), now + Math.min(0.35, duration * 0.5));
+    filter.Q.setValueAtTime(1.3, now);
+
+    const gain1 = this.ctx.createGain();
+    const gain2 = this.ctx.createGain();
+    const hammerGain = this.ctx.createGain();
+    const masterGain = this.ctx.createGain();
+
+    gain1.gain.value = 0.65;
+    gain2.gain.value = 0.45;
+
+    // Hammer strike transient: 4ms sharp percussive click
+    hammerGain.gain.setValueAtTime(peakGain * 0.35, now);
+    hammerGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.015);
+
+    osc1.connect(gain1);
+    osc2.connect(gain2);
+    hammerOsc.connect(hammerGain);
+
+    gain1.connect(filter);
+    gain2.connect(filter);
+    hammerGain.connect(filter);
+    filter.connect(masterGain);
+
+    // Natural acoustic piano ADSR envelope
+    masterGain.gain.setValueAtTime(0.0001, now);
+    masterGain.gain.linearRampToValueAtTime(peakGain, now + 0.0035);
+    masterGain.gain.exponentialRampToValueAtTime(peakGain * 0.48, now + Math.min(0.12, duration * 0.25));
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    masterGain.connect(dest);
+
+    osc1.onended = () => {
+      try {
+        osc1.disconnect();
+        osc2.disconnect();
+        hammerOsc.disconnect();
+        gain1.disconnect();
+        gain2.disconnect();
+        hammerGain.disconnect();
+        filter.disconnect();
+        masterGain.disconnect();
+      } catch (_) {}
+    };
+
+    osc1.start(now);
+    osc2.start(now);
+    hammerOsc.start(now);
+
+    const stopTime = now + duration + 0.02;
+    osc1.stop(stopTime);
+    osc2.stop(stopTime);
+    hammerOsc.stop(now + 0.02);
   }
 
   _scheduleDrumKick(startTime, dest) {
@@ -41019,18 +41215,6 @@ const LOBBY_BACKGROUND_THEMES = [
     desc: 'OutRun Synthwave Twilight & Scanline Sun'
   },
   {
-    id: 'cello',
-    name: 'CELLO',
-    label: '🎻 CHAMBER HALL',
-    desc: 'Warm Amber Acoustic Chamber & Glowing Cello'
-  },
-  {
-    id: 'piano',
-    name: 'PIANO',
-    label: '🎹 GRAND PIANO',
-    desc: 'Concert Grand Stage with Cascading Ebony & Ivory Keys'
-  },
-  {
     id: 'grid',
     name: 'GRID',
     label: '🌐 CYBER GRID',
@@ -41121,27 +41305,6 @@ class MainMenu {
       size: 14 + Math.random() * 18,
       rot: Math.random() * Math.PI * 2,
       rotSpeed: (Math.random() - 0.5) * 0.8
-    }));
-
-    this.chamberMotes = Array.from({ length: 48 }, () => ({
-      x: Math.random() * 960,
-      y: Math.random() * 540,
-      r: 1 + Math.random() * 2.2,
-      speed: 14 + Math.random() * 22,
-      drift: (Math.random() - 0.5) * 16,
-      phase: Math.random() * Math.PI * 2,
-      alpha: 0.2 + Math.random() * 0.5
-    }));
-
-    this.pianoNotes = Array.from({ length: 32 }, () => ({
-      x: Math.random() * 960,
-      y: Math.random() * 540,
-      symbol: ['♪', '♫', '♩', '♬', '♭', '♮', '𝄞'][Math.floor(Math.random() * 7)],
-      size: 15 + Math.random() * 15,
-      speed: 18 + Math.random() * 28,
-      drift: (Math.random() - 0.5) * 20,
-      phase: Math.random() * Math.PI * 2,
-      alpha: 0.25 + Math.random() * 0.5
     }));
   }
 
@@ -42795,430 +42958,6 @@ class MainMenu {
         ctx.strokeStyle = 'rgba(11, 7, 38, 0.9)';
         ctx.stroke();
       }
-
-      ctx.restore();
-    } else if (theme === 'cello') {
-      // 2. WARM AMBER ACOUSTIC CONCERT CHAMBER & GLOWING CELLO
-      const hallGrad = ctx.createLinearGradient(0, 0, 0, H);
-      hallGrad.addColorStop(0, '#0E0502');
-      hallGrad.addColorStop(0.35, '#260B03');
-      hallGrad.addColorStop(0.65, '#451605');
-      hallGrad.addColorStop(0.85, '#2D0E03');
-      hallGrad.addColorStop(1, '#150601');
-      ctx.fillStyle = hallGrad;
-      ctx.fillRect(0, 0, W, H);
-
-      // Acoustic Stage Parquet Floor Perspective
-      ctx.save();
-      const stageHorizon = H * 0.62;
-      ctx.fillStyle = '#180702';
-      ctx.fillRect(0, stageHorizon, W, H - stageHorizon);
-
-      // Parquet floor wood planks
-      ctx.strokeStyle = 'rgba(217, 119, 6, 0.12)';
-      ctx.lineWidth = 1;
-      for (let x = -W * 0.5; x <= W * 1.5; x += 44) {
-        ctx.beginPath();
-        ctx.moveTo(W / 2, stageHorizon);
-        ctx.lineTo(x, H);
-        ctx.stroke();
-      }
-      for (let y = stageHorizon; y <= H; y += 22) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(W, y);
-        ctx.stroke();
-      }
-
-      // Overhead Golden Acoustic Spotlight Cone
-      const spotGrad = ctx.createRadialGradient(W / 2, 40, 30, W / 2, 280, 380);
-      spotGrad.addColorStop(0, 'rgba(251, 191, 36, 0.22)');
-      spotGrad.addColorStop(0.5, 'rgba(217, 119, 6, 0.08)');
-      spotGrad.addColorStop(1, 'rgba(24, 7, 2, 0)');
-      ctx.fillStyle = spotGrad;
-      ctx.beginPath();
-      ctx.moveTo(W / 2 - 120, 0);
-      ctx.lineTo(W / 2 + 120, 0);
-      ctx.lineTo(W / 2 + 360, H);
-      ctx.lineTo(W / 2 - 360, H);
-      ctx.closePath();
-      ctx.fill();
-
-      // Ambient Concert Velvet Drapery Framing (Left & Right)
-      const drapeSway = Math.sin(t * 0.9) * 4;
-      ctx.fillStyle = '#30080C';
-      // Left drape
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(90 + drapeSway, 0);
-      ctx.quadraticCurveTo(60 + drapeSway, H * 0.5, 110 + drapeSway, H);
-      ctx.lineTo(0, H);
-      ctx.closePath();
-      ctx.fill();
-      // Left drape gold trim
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Right drape
-      ctx.fillStyle = '#30080C';
-      ctx.beginPath();
-      ctx.moveTo(W, 0);
-      ctx.lineTo(W - 90 - drapeSway, 0);
-      ctx.quadraticCurveTo(W - 60 - drapeSway, H * 0.5, W - 110 - drapeSway, H);
-      ctx.lineTo(W, H);
-      ctx.closePath();
-      ctx.fill();
-      // Right drape gold trim
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Floating Acoustic Sound Waves radiating outward from center
-      const wavePhase = (t * 0.6) % 1;
-      for (let w = 0; w < 3; w++) {
-        const wp = (wavePhase + w * 0.33) % 1;
-        const rX = 70 + wp * 240;
-        const rY = 120 + wp * 160;
-        ctx.strokeStyle = `rgba(251, 191, 36, ${(1 - wp) * 0.16})`;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        if (ctx.ellipse) {
-          ctx.ellipse(W / 2, H * 0.45, rX, rY, 0, 0, Math.PI * 2);
-        } else {
-          ctx.arc(W / 2, H * 0.45, rX, 0, Math.PI * 2);
-        }
-        ctx.stroke();
-      }
-
-      // Elegant Glowing Cello Centerpiece
-      const cx = W / 2;
-      const cy = H * 0.44;
-      const celloScale = 0.88;
-
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.scale(celloScale, celloScale);
-
-      // Cello warm halo glow
-      const haloGrad = ctx.createRadialGradient(0, 20, 20, 0, 20, 160);
-      haloGrad.addColorStop(0, 'rgba(245, 158, 11, 0.28)');
-      haloGrad.addColorStop(0.7, 'rgba(180, 83, 9, 0.08)');
-      haloGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = haloGrad;
-      ctx.beginPath();
-      ctx.arc(0, 20, 160, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Acoustic Cello Body Silhouette (Hourglass with C-bouts)
-      ctx.fillStyle = 'rgba(69, 26, 3, 0.88)';
-      ctx.strokeStyle = '#F59E0B';
-      ctx.lineWidth = 2.5;
-      ctx.shadowColor = '#FBBF24';
-      ctx.shadowBlur = 14;
-
-      ctx.beginPath();
-      // Start at upper neck junction
-      ctx.moveTo(0, -90);
-      // Upper bout right
-      ctx.bezierCurveTo(45, -85, 62, -50, 50, -20);
-      // C-bout right (waist curve inward then sharp corner)
-      ctx.bezierCurveTo(42, -5, 32, 5, 48, 25);
-      // Lower bout right
-      ctx.bezierCurveTo(75, 55, 78, 110, 35, 135);
-      // Bottom curve to endpin
-      ctx.bezierCurveTo(15, 142, -15, 142, -35, 135);
-      // Lower bout left
-      ctx.bezierCurveTo(-78, 110, -75, 55, -48, 25);
-      // C-bout left
-      ctx.bezierCurveTo(-32, 5, -42, -5, -50, -20);
-      // Upper bout left
-      ctx.bezierCurveTo(-62, -50, -45, -85, 0, -90);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      // Cello Neck & Ebony Fingerboard
-      ctx.fillStyle = '#0F0906';
-      ctx.strokeStyle = '#78350F';
-      ctx.lineWidth = 1;
-      ctx.fillRect(-6, -170, 12, 190);
-      ctx.strokeRect(-6, -170, 12, 190);
-
-      // Cello Scroll & Pegbox (top)
-      ctx.fillStyle = '#78350F';
-      ctx.beginPath();
-      ctx.arc(0, -178, 9, 0, Math.PI * 2);
-      ctx.fill();
-      // Tuning pegs
-      ctx.strokeStyle = '#D97706';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(-16, -165); ctx.lineTo(16, -165);
-      ctx.moveTo(-16, -152); ctx.lineTo(16, -152);
-      ctx.stroke();
-
-      // Tailpiece & Endpin (bottom)
-      ctx.fillStyle = '#0B0502';
-      ctx.beginPath();
-      ctx.moveTo(-8, 95);
-      ctx.lineTo(8, 95);
-      ctx.lineTo(4, 142);
-      ctx.lineTo(-4, 142);
-      ctx.closePath();
-      ctx.fill();
-      // Steel endpin
-      ctx.strokeStyle = '#94A3B8';
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(0, 142);
-      ctx.lineTo(0, 190);
-      ctx.stroke();
-
-      // Wooden Bridge
-      ctx.fillStyle = '#D97706';
-      ctx.fillRect(-14, 52, 28, 6);
-
-      // Elegant F-Holes
-      ctx.fillStyle = '#0B0401';
-      ctx.strokeStyle = '#F59E0B';
-      ctx.lineWidth = 1.2;
-      // Right F-hole
-      ctx.beginPath();
-      ctx.arc(24, 15, 3.5, 0, Math.PI * 2);
-      ctx.bezierCurveTo(28, 35, 20, 60, 26, 75);
-      ctx.arc(26, 77, 3, 0, Math.PI * 2);
-      ctx.stroke();
-      // Left F-hole
-      ctx.beginPath();
-      ctx.arc(-24, 15, 3.5, 0, Math.PI * 2);
-      ctx.bezierCurveTo(-28, 35, -20, 60, -26, 75);
-      ctx.arc(-26, 77, 3, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // 4 Vibrating Gold Cello Strings (C, G, D, A)
-      const stringOffsets = [-4.5, -1.5, 1.5, 4.5];
-      for (let s = 0; s < 4; s++) {
-        const ox = stringOffsets[s];
-        const vib = Math.sin(t * 14 + s * 1.8) * 1.8;
-        ctx.strokeStyle = s === 3 ? '#FEF08A' : '#FBBF24';
-        ctx.lineWidth = 1.2 - s * 0.15;
-        ctx.shadowColor = '#FBBF24';
-        ctx.shadowBlur = 6;
-        ctx.beginPath();
-        ctx.moveTo(ox, -170);
-        ctx.quadraticCurveTo(ox + vib, -20, ox, 95);
-        ctx.stroke();
-      }
-
-      ctx.restore();
-
-      // Floating Amber Dust Motes / Chamber Bokeh
-      for (const mote of this.chamberMotes) {
-        mote.y -= mote.speed * (1 / 60);
-        if (mote.y < -20) {
-          mote.y = H + 20;
-          mote.x = Math.random() * W;
-        }
-        const sway = Math.sin(t * 1.2 + mote.phase) * mote.drift;
-        const pulse = 0.5 + 0.5 * Math.sin(t * 2 + mote.phase);
-        ctx.fillStyle = `rgba(251, 191, 36, ${mote.alpha * pulse})`;
-        ctx.shadowColor = '#F59E0B';
-        ctx.shadowBlur = 5;
-        ctx.beginPath();
-        ctx.arc(mote.x + sway, mote.y, mote.r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      ctx.restore();
-    } else if (theme === 'piano') {
-      // 3. CONCERT GRAND PIANO & FLOWING EBONY / IVORY KEYS
-      const stageGrad = ctx.createLinearGradient(0, 0, 0, H);
-      stageGrad.addColorStop(0, '#040711');
-      stageGrad.addColorStop(0.4, '#0A1224');
-      stageGrad.addColorStop(0.68, '#141E36');
-      stageGrad.addColorStop(0.72, '#1E2C4D');
-      stageGrad.addColorStop(1, '#060A14');
-      ctx.fillStyle = stageGrad;
-      ctx.fillRect(0, 0, W, H);
-
-      // Concert Hall Overhead Spotlight on the Keys
-      const spotGrad = ctx.createRadialGradient(W / 2, H * 0.72, 40, W / 2, H * 0.72, 360);
-      spotGrad.addColorStop(0, 'rgba(254, 240, 138, 0.24)');
-      spotGrad.addColorStop(0.45, 'rgba(96, 165, 250, 0.12)');
-      spotGrad.addColorStop(1, 'rgba(4, 7, 17, 0)');
-      ctx.fillStyle = spotGrad;
-      ctx.fillRect(0, 0, W, H);
-
-      ctx.save();
-
-      // Grand Piano Curved Rim & Lid Silhouette in upper background
-      ctx.fillStyle = '#080D1A';
-      ctx.strokeStyle = 'rgba(96, 165, 250, 0.35)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(80, H * 0.62);
-      ctx.bezierCurveTo(120, H * 0.22, W * 0.55, H * 0.15, W * 0.88, H * 0.5);
-      ctx.lineTo(W * 0.88, H * 0.62);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      // Polished Grand Piano Rim Gold Trim
-      ctx.strokeStyle = 'rgba(251, 191, 36, 0.45)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(90, H * 0.61);
-      ctx.bezierCurveTo(130, H * 0.24, W * 0.54, H * 0.17, W * 0.86, H * 0.5);
-      ctx.stroke();
-
-      // Flowing Musical Staff Lines crossing the sky
-      for (let s = 0; s < 5; s++) {
-        const staffBaseY = 110 + s * 9;
-        ctx.strokeStyle = 'rgba(147, 197, 253, 0.16)';
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        for (let x = 0; x <= W; x += 24) {
-          const sy = staffBaseY + Math.sin(x * 0.007 + t * 0.8 + s * 0.2) * 14;
-          if (x === 0) ctx.moveTo(x, sy);
-          else ctx.lineTo(x, sy);
-        }
-        ctx.stroke();
-      }
-
-      // Floating Musical Glyphs (♪ ♫ ♩ ♬ ♭ ♮ 𝄞)
-      ctx.font = 'bold 20px "Segoe UI Symbol", sans-serif';
-      for (const note of this.pianoNotes) {
-        note.y -= note.speed * (1 / 60);
-        if (note.y < -30) {
-          note.y = H * 0.7 + Math.random() * 40;
-          note.x = Math.random() * W;
-        }
-        const sway = Math.sin(t * 1.4 + note.phase) * note.drift;
-        const pulse = 0.6 + 0.4 * Math.sin(t * 2.2 + note.phase);
-        ctx.fillStyle = `rgba(254, 240, 138, ${note.alpha * pulse})`;
-        ctx.shadowColor = '#FBBF24';
-        ctx.shadowBlur = 8;
-        ctx.fillText(note.symbol, note.x + sway, note.y);
-      }
-      ctx.shadowBlur = 0;
-
-      // Concert Grand Lacquered Keyboard Deck & Keys
-      const kbY = H * 0.64;
-      const kbH = 96;
-      const numWhiteKeys = 28;
-      const keyW = W / numWhiteKeys;
-
-      // Piano Fallboard (Gloss Mahogany / Black Lacquer above keys)
-      const fallboardGrad = ctx.createLinearGradient(0, kbY - 26, 0, kbY);
-      fallboardGrad.addColorStop(0, '#060A14');
-      fallboardGrad.addColorStop(0.5, '#121A2D');
-      fallboardGrad.addColorStop(0.9, '#1F2B48');
-      fallboardGrad.addColorStop(1, '#B45309'); // Brass fallboard rail
-      ctx.fillStyle = fallboardGrad;
-      ctx.fillRect(0, kbY - 26, W, 26);
-
-      // Gold Maker's Inscription in center
-      ctx.fillStyle = 'rgba(251, 191, 36, 0.8)';
-      ctx.font = 'italic 10px serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('CONCERT GRAND — RETRO ARCADE STUDIO', W / 2, kbY - 10);
-      ctx.textAlign = 'start';
-
-      // 1. White Ivory Keys
-      for (let i = 0; i < numWhiteKeys; i++) {
-        const kx = i * keyW;
-        // Maestro touch ripple wave
-        const press = Math.sin(t * 3.2 + i * 0.45);
-        const isDepressed = press > 0.82;
-        const keyOffset = isDepressed ? 3.5 : 0;
-
-        const ivoryGrad = ctx.createLinearGradient(kx, kbY, kx, kbY + kbH);
-        if (isDepressed) {
-          ivoryGrad.addColorStop(0, '#FEF08A');
-          ivoryGrad.addColorStop(0.7, '#FDE047');
-          ivoryGrad.addColorStop(1, '#CA8A04');
-        } else {
-          ivoryGrad.addColorStop(0, '#FFFFFF');
-          ivoryGrad.addColorStop(0.85, '#F1F5F9');
-          ivoryGrad.addColorStop(1, '#CBD5E1');
-        }
-        ctx.fillStyle = ivoryGrad;
-        ctx.fillRect(kx + 1, kbY + keyOffset, keyW - 2, kbH - keyOffset);
-
-        // Key side shadow / bevel
-        ctx.strokeStyle = '#94A3B8';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(kx + 1, kbY + keyOffset, keyW - 2, kbH - keyOffset);
-
-        // Keypress golden glow flare
-        if (isDepressed) {
-          ctx.save();
-          ctx.fillStyle = 'rgba(251, 191, 36, 0.35)';
-          ctx.shadowColor = '#FBBF24';
-          ctx.shadowBlur = 12;
-          ctx.fillRect(kx + 2, kbY + kbH - 12, keyW - 4, 10);
-          ctx.restore();
-        }
-      }
-
-      // 2. Black Ebony Keys (Pattern: 2-3-2-3 per octave: C#, D#, [gap], F#, G#, A#, [gap])
-      const blackPattern = [1, 1, 0, 1, 1, 1, 0]; // 1 = has black key on right border
-      const blackKeyH = kbH * 0.62;
-      const blackKeyW = keyW * 0.64;
-
-      for (let i = 0; i < numWhiteKeys - 1; i++) {
-        if (blackPattern[i % 7] === 1) {
-          const bx = (i + 1) * keyW - blackKeyW / 2;
-          const press = Math.sin(t * 3.2 + (i + 0.5) * 0.45);
-          const isDepressed = press > 0.82;
-          const bOffset = isDepressed ? 2.5 : 0;
-
-          const ebonyGrad = ctx.createLinearGradient(bx, kbY, bx, kbY + blackKeyH);
-          if (isDepressed) {
-            ebonyGrad.addColorStop(0, '#38BDF8');
-            ebonyGrad.addColorStop(0.6, '#0284C7');
-            ebonyGrad.addColorStop(1, '#0369A1');
-          } else {
-            ebonyGrad.addColorStop(0, '#1E293B');
-            ebonyGrad.addColorStop(0.7, '#0F172A');
-            ebonyGrad.addColorStop(1, '#020617');
-          }
-          ctx.fillStyle = ebonyGrad;
-          ctx.fillRect(bx, kbY + bOffset, blackKeyW, blackKeyH - bOffset);
-
-          // Top gloss specular highlight
-          ctx.fillStyle = isDepressed ? '#BAE6FD' : 'rgba(255, 255, 255, 0.28)';
-          ctx.fillRect(bx + 1.5, kbY + bOffset + 2, blackKeyW - 3, 4);
-
-          // Subtle black key edge
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 1;
-          ctx.strokeRect(bx, kbY + bOffset, blackKeyW, blackKeyH - bOffset);
-        }
-      }
-
-      // 3. Mirror Reflection on High-Gloss Lacquer Stage Floor below Keys
-      const reflY = kbY + kbH;
-      const reflH = H - reflY;
-      const floorGrad = ctx.createLinearGradient(0, reflY, 0, H);
-      floorGrad.addColorStop(0, 'rgba(15, 23, 42, 0.7)');
-      floorGrad.addColorStop(1, '#030712');
-      ctx.fillStyle = floorGrad;
-      ctx.fillRect(0, reflY, W, reflH);
-
-      // Faded inverted reflection ripples
-      ctx.save();
-      ctx.globalAlpha = 0.22;
-      ctx.strokeStyle = 'rgba(254, 240, 138, 0.3)';
-      for (let i = 0; i < numWhiteKeys; i += 2) {
-        const kx = i * keyW;
-        ctx.beginPath();
-        ctx.moveTo(kx, reflY);
-        ctx.lineTo(kx + (i - numWhiteKeys / 2) * 2, reflY + 45);
-        ctx.stroke();
-      }
-      ctx.restore();
 
       ctx.restore();
     } else if (theme === 'matrix') {
