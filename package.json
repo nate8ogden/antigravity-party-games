@@ -7,6 +7,8 @@
   "scripts": {
     "test": "node scripts/test-suite.mjs",
     "bundle": "node scripts/bundle.mjs",
-    "build:rom": "node scripts/bundle.mjs && node scripts/build-rom.mjs"
+    "build:rom": "node scripts/bundle.mjs && node scripts/build-rom.mjs",
+    "sync": "node scripts/sync-pi.mjs",
+    "watch": "node scripts/watch-sync.mjs"
   }
 }
