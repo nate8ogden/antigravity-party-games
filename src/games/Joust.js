@@ -244,6 +244,16 @@ export class Joust {
     }
   }
 
+  _isOverExposedLava(x, y) {
+    const activePlatforms = this.platforms || PLATFORMS;
+    for (const plat of activePlatforms) {
+      if (x >= plat.x - 6 && x <= plat.x + plat.w + 6 && plat.y >= y) {
+        return false; // Solid stone ledge protects from lava below
+      }
+    }
+    return true;
+  }
+
   _resolvePlatformPhysics(entity, dt, isEgg = false) {
     const prevY = entity.y;
     entity.x += entity.vx * dt;
@@ -264,12 +274,15 @@ export class Joust {
     const activePlatforms = this.platforms || PLATFORMS;
 
     for (const plat of activePlatforms) {
-      if (entity.x >= plat.x - 8 && entity.x <= plat.x + plat.w + 8) {
-        // Landing on top of stone platform
+      if (entity.x >= plat.x - 10 && entity.x <= plat.x + plat.w + 10) {
+        // Landing on top of stone platform:
+        // Swept foot check prevents tunneling through ledges during fast descent
+        const prevFootY = prevY + footOffset;
+        const curFootY = entity.y + footOffset;
         if (
           entity.vy >= 0 &&
-          prevY + footOffset <= plat.y + 8 &&
-          entity.y + footOffset >= plat.y
+          prevFootY <= plat.y + 12 &&
+          curFootY >= plat.y - 3
         ) {
           entity.y = plat.y - footOffset;
           if (isEgg && Math.abs(entity.vy) > 65) {
@@ -283,8 +296,8 @@ export class Joust {
         } else if (
           // Head bump from below platform
           entity.vy < 0 &&
-          prevY - 14 >= plat.y + plat.h - 6 &&
-          entity.y - 14 <= plat.y + plat.h
+          prevY - 14 >= plat.y + plat.h - 10 &&
+          entity.y - 14 <= plat.y + plat.h + 2
         ) {
           entity.y = plat.y + plat.h + 14;
           entity.vy = Math.abs(entity.vy) * 0.5;
@@ -310,7 +323,11 @@ export class Joust {
 
   update(dt) {
     if (this.state === 'MENU') {
-      if (this.input.isJustPressed('actionA') || this.input.isJustPressed('any')) {
+      if (
+        this.input.isJustPressed('actionA') ||
+        this.input.isJustPressed('actionB') ||
+        this.input.isJustPressed('any')
+      ) {
         this.audio.playMenuSelect();
         this.reset();
         this.state = 'PLAYING';
@@ -318,13 +335,21 @@ export class Joust {
       return;
     }
     if (this.state === 'PAUSED') {
-      if (this.input.isJustPressed('actionA')) {
+      if (
+        this.input.isJustPressed('actionA') ||
+        this.input.isJustPressed('actionB')
+      ) {
         this.state = 'PLAYING';
       }
       return;
     }
     if (this.state === 'GAMEOVER') {
-      if (this.input.isJustPressed('actionA') || this.input.pointer.justPressed) {
+      if (
+        this.input.isJustPressed('actionA') ||
+        this.input.isJustPressed('actionB') ||
+        this.input.isJustPressed('any') ||
+        this.input.pointer?.justPressed
+      ) {
         this.audio.playMenuSelect();
         this.reset();
         this.state = 'PLAYING';
@@ -362,27 +387,45 @@ export class Joust {
       if (p.invuln > 0) p.invuln = Math.max(0, p.invuln - dt);
       if (p.wingPhase > 0) p.wingPhase = Math.max(0, p.wingPhase - dt * 6);
 
-      // Horizontal acceleration
-      const accel = p.onGround ? 540 : 380;
-      if (this.input.isDown('left')) {
-        p.dir = -1;
-        p.vx -= accel * dt;
-      } else if (this.input.isDown('right')) {
-        p.dir = 1;
-        p.vx += accel * dt;
-      } else if (p.onGround) {
-        // Skid deceleration on stone platforms
-        p.vx *= Math.pow(0.88, dt * 60);
+      // Horizontal physics: responsive ground traction and mid-air reverse turnaround braking
+      let targetDir = 0;
+      if (this.input.isDown('left')) targetDir -= 1;
+      if (this.input.isDown('right')) targetDir += 1;
+
+      if (targetDir !== 0) {
+        p.dir = targetDir;
+        const isReversing = (targetDir < 0 && p.vx > 0) || (targetDir > 0 && p.vx < 0);
+        const accel = p.onGround ? (isReversing ? 760 : 540) : (isReversing ? 640 : 420);
+        p.vx += targetDir * accel * dt;
+      } else {
+        // Skid deceleration on stone platforms vs gentle air damping in flight
+        const damping = p.onGround ? 0.86 : 0.97;
+        p.vx *= Math.pow(damping, dt * 60);
+        if (Math.abs(p.vx) < 4) p.vx = 0;
       }
       p.vx = Math.max(-310, Math.min(310, p.vx));
 
-      // Flapping Flight Momentum (Action A, Action B, Up, or Tap)
+      // Flapping Flight Momentum (Action A, Action B, Up, Space, Z, X, or Tap)
       const flapPressed =
         this.input.isJustPressed('actionA') ||
+        this.input.isJustPressed('actionB') ||
         this.input.isJustPressed('up') ||
-        this.input.pointer.justPressed;
+        this.input.pointer?.justPressed ||
+        this.input.isKeyJustPressed('Space') ||
+        this.input.isKeyJustPressed('KeyZ') ||
+        this.input.isKeyJustPressed('KeyX') ||
+        this.input.isKeyJustPressed('ArrowUp') ||
+        this.input.isKeyJustPressed('KeyW');
+
       if (flapPressed) {
-        p.vy = Math.max(-290, Math.min(-165, p.vy - 215));
+        // Immediate upward thrust with rapid flap stacking up to -380 px/s
+        if (p.vy > 0) {
+          // Arrest falling downward momentum immediately
+          p.vy = Math.min(-190, p.vy * 0.15 - 220);
+        } else {
+          // Additive climb boost
+          p.vy = Math.max(-380, p.vy - 210);
+        }
         p.onGround = false;
         p.grabbedByTroll = false;
         p.wingPhase = 1.0;
@@ -392,9 +435,8 @@ export class Joust {
       p.vy += GRAVITY * dt;
       this._resolvePlatformPhysics(p, dt, false);
 
-      // Lava Troll Hand Hazard when flying too low near exposed left/right lava pits!
-      const overSideLava = p.x < 165 || p.x > 795;
-      if (overSideLava && p.y > LAVA_Y - 58) {
+      // Lava Troll Hand Hazard when flying too low near exposed lava (no stone platform beneath!)
+      if (this._isOverExposedLava(p.x, p.y) && p.y > LAVA_Y - 58) {
         p.vy += 260 * dt; // Troll pulls downward unless player flaps rapidly!
         p.grabbedByTroll = true;
       } else {
@@ -447,10 +489,23 @@ export class Joust {
 
       this._resolvePlatformPhysics(e, dt, false);
 
-      // Joust Lance Collision with Player!
-      if (!p.dead && Math.hypot(e.x - p.x, e.y - p.y) < 30) {
+      // Enemy falls into lava pit
+      if (e.y + 16 >= LAVA_Y) {
+        this.audio.playExplosion(0.25, 900);
+        this._spawnFeathers(e.x, LAVA_Y, e.color, 14);
+        this._addScore(e.pts, e.x, LAVA_Y - 14, `${cfg.name} LAVA +${e.pts}`, PALETTE.ORANGE);
+        this.enemies.splice(i, 1);
+        continue;
+      }
+
+      // Joust Lance Collision with Player (accounting for horizontal screen wrap)!
+      let dx = Math.abs(e.x - p.x);
+      if (dx > this.width / 2) dx = this.width - dx;
+      const dy = Math.abs(e.y - p.y);
+
+      if (!p.dead && Math.hypot(dx, dy) < 32) {
         const diffY = e.y - p.y; // > 0 means player is higher (smaller y)
-        if (diffY > 4) {
+        if (diffY > 3) {
           // Player's Lance is HIGHER -> Enemy Buzzard defeated & drops Egg!
           this._addScore(e.pts, e.x, e.y - 10, `${cfg.name} +${e.pts}`, e.color);
           this.audio.playExplosion(0.32, 1200);
@@ -458,7 +513,7 @@ export class Joust {
           this._spawnFeathers(e.x, e.y, e.color, 16);
 
           // Bounce player upward slightly
-          p.vy = -150;
+          p.vy = -160;
           p.vx = -p.vx * 0.6;
 
           // Spawn Bouncing Egg
@@ -474,20 +529,23 @@ export class Joust {
 
           this.enemies.splice(i, 1);
           continue;
-        } else if (diffY < -4 && p.invuln <= 0) {
+        } else if (diffY < -3 && p.invuln <= 0) {
           // Enemy's Lance is HIGHER -> Player unhorsed!
           e.vy = -140;
           this._killPlayer();
         } else {
           // Equal Lance Altitude -> Clang & Ricochet off each other!
-          const pushDir = p.x < e.x ? -1 : 1;
+          let relX = e.x - p.x;
+          if (relX > this.width / 2) relX -= this.width;
+          if (relX < -this.width / 2) relX += this.width;
+          const pushDir = relX >= 0 ? -1 : 1;
           p.vx = pushDir * 240;
-          p.vy = -130;
+          p.vy = -140;
           e.vx = -pushDir * 240;
-          e.vy = -130;
+          e.vy = -140;
           e.dir = -pushDir;
           this.audio.playShove();
-          this._spawnFeathers((p.x + e.x) / 2, (p.y + e.y) / 2, PALETTE.WHITE, 8);
+          this._spawnFeathers(p.x, p.y, PALETTE.WHITE, 8);
         }
       }
     }
@@ -508,8 +566,12 @@ export class Joust {
         continue;
       }
 
-      // Player Collects Egg!
-      if (!p.dead && Math.hypot(egg.x - p.x, egg.y - p.y) < 24) {
+      // Player Collects Egg (accounting for horizontal screen wrap)!
+      let edx = Math.abs(egg.x - p.x);
+      if (edx > this.width / 2) edx = this.width - edx;
+      const edy = Math.abs(egg.y - p.y);
+
+      if (!p.dead && Math.hypot(edx, edy) < 26) {
         this.eggStreak = Math.min(4, this.eggStreak + 1);
         const basePts = this.eggStreak * 250;
         const midAirBonus = !egg.onGround ? 500 : 0;
@@ -757,8 +819,12 @@ export class Joust {
       this.renderer.drawGlowCircle(b.x, b.y, b.r, PALETTE.GOLD, 8, true);
     }
 
-    // Grasping Lava Troll Hand if player flies low over left/right lava
-    if (!this.player.dead && (this.player.x < 185 || this.player.x > 775) && this.player.y > LAVA_Y - 95) {
+    // Grasping Lava Troll Hand if player flies low over exposed lava
+    if (
+      !this.player.dead &&
+      this._isOverExposedLava(this.player.x, this.player.y) &&
+      this.player.y > LAVA_Y - 95
+    ) {
       const hx = this.player.x;
       const hy = Math.max(this.player.y + 12, LAVA_Y - 34);
       ctx.save();
@@ -889,7 +955,7 @@ export class Joust {
     this.renderer.drawStateOverlay(this.state, {
       title: this.title,
       subtitle: '1982 FLYING OSTRICH LANCE COMBAT',
-      controls: 'LEFT/RIGHT: STEER MOUNT  |  Z/SPACE/UP: FLAP WINGS (HIGHER LANCE WINS!)',
+      controls: 'LEFT/RIGHT: STEER  |  FLAP: [A] / [B] / UP / SPACE  (HIGHER LANCE WINS!)',
       score: this.score,
       highScore: this.highScore,
       accent: PALETTE.GOLD
