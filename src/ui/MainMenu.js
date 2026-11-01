@@ -536,16 +536,16 @@ export const GAME_CATALOG = [
     enhancements: 'Chain-rescue score multipliers & throwable flowerpots vs Tiger Cats'
   },
   {
-    id: 'game1942',
-    icon: '🛩️',
-    title: '1942',
-    classicRef: '1984 Capcom Arcade',
+    id: 'syndicate',
+    icon: '🕶️',
+    title: 'Syndicate',
+    classicRef: '1993 Bullfrog / EA',
     category: 'vault2',
-    genre: 'Vertical Air Combat',
+    genre: 'Cyberpunk Tactical Squad',
     accent: PALETTE.CYAN,
-    mechanics: 'Pilot the P-38 Lightning over Pacific battlegrounds, execute 360° Loop rolls, and blast enemy squadrons',
-    controls: 'Move(Arrows/WASD) + Twin Machine Guns(Z/Space) + Loop Roll(X)',
-    enhancements: 'Evasive 360° loops, Twin Escort wingmen powerup, squadron bonus stars & Ayako super-bomber battles'
+    mechanics: 'Command 4 trenchcoat cyber-agents with Miniguns, Gauss Cannons & the mind-control Persuadertron',
+    controls: 'Tactical Move/Aim + Fire Arsenal(Z/Space) + IPA Overdrive(X) + Switch Weapon(C)',
+    enhancements: 'Persuadertron mind-control, 4-agent tactical squad, Gauss cannons & rainy megacity neon'
   },
   {
     id: 'circuscharlie',
@@ -1848,39 +1848,45 @@ export class MainMenu {
         break;
       }
 
-      case 'game1942':
-      case '1942': {
-        // Pacific ocean + green atoll island + P-38 Lightning fighter with dual booms & twin escorts
-        ctx.fillStyle = '#0C4A6E';
+      case 'syndicate': {
+        // Dark rainy cyberpunk megacity + Eurocorp skyscraper + trenchcoat cyber-agent + neon Persuadertron wave
+        ctx.fillStyle = '#090D16';
         ctx.fillRect(x, y, w, h);
-        // Sandy atoll island
-        ctx.fillStyle = '#F59E0B';
-        ctx.beginPath();
-        ctx.ellipse(cx + 18, cy - 8, 22, 14, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#10B981';
-        ctx.beginPath();
-        ctx.ellipse(cx + 18, cy - 8, 16, 9, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Silver P-38 Lightning center plane
-        ctx.fillStyle = '#94A3B8';
-        ctx.fillRect(cx - 16, cy - 2, 32, 4); // Wings
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(cx - 8, cy - 8, 3, 16); // Left boom
-        ctx.fillRect(cx + 5, cy - 8, 3, 16); // Right boom
-        ctx.fillRect(cx - 2, cy - 7, 4, 12); // Center pod
-        // Yellow spinning props
+        // Eurocorp skyscraper tower in background
+        ctx.fillStyle = '#1E293B';
+        ctx.fillRect(cx - 24, y + 6, 48, h - 12);
+        ctx.strokeStyle = '#00F0FF';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(cx - 24, y + 6, 48, h - 12);
+        // Holographic neon logo
+        ctx.fillStyle = '#00F0FF';
+        ctx.fillRect(cx - 16, y + 12, 32, 6);
+        // Cyber-Agent in trenchcoat (Alpha)
+        ctx.fillStyle = '#3B271E';
+        ctx.fillRect(cx - 6, cy + 4, 12, 16);
+        // Cyber visor
+        ctx.fillStyle = '#00F0FF';
+        ctx.fillRect(cx - 2, cy - 2, 5, 3);
+        // Minigun barrel & muzzle flash
         ctx.fillStyle = '#FACC15';
-        ctx.fillRect(cx - 10, cy - 9, 7, 2);
-        ctx.fillRect(cx + 3, cy - 9, 7, 2);
-        // Twin Escort mini-fighters
-        ctx.fillStyle = '#38BDF8';
-        ctx.fillRect(cx - 22, cy + 2, 8, 2);
-        ctx.fillRect(cx + 14, cy + 2, 8, 2);
-        // Red enemy formation plane
-        ctx.fillStyle = '#EF4444';
-        ctx.fillRect(cx - 12, y + 6, 12, 3);
-        ctx.fillRect(cx - 7, y + 3, 2, 8);
+        ctx.fillRect(cx + 6, cy + 8, 8, 3);
+        // Mind-control Persuadertron concentric purple wave
+        ctx.strokeStyle = '#C084FC';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(cx + 18, cy + 10, 8, -Math.PI * 0.4, Math.PI * 0.4);
+        ctx.stroke();
+        // Rain streaks
+        ctx.strokeStyle = 'rgba(186, 230, 253, 0.4)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 6; i++) {
+          const rx = x + 8 + i * 14;
+          const ry = y + 4 + (i * 9) % (h - 16);
+          ctx.beginPath();
+          ctx.moveTo(rx, ry);
+          ctx.lineTo(rx - 3, ry + 8);
+          ctx.stroke();
+        }
         break;
       }
 

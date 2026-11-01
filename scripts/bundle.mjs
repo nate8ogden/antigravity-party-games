@@ -62,7 +62,7 @@ const gameFiles = [
   { file: 'src/games/RallyX.js', className: 'RallyX' },
   { file: 'src/games/RoadFighter.js', className: 'RoadFighter' },
   { file: 'src/games/Flicky.js', className: 'Flicky' },
-  { file: 'src/games/Game1942.js', className: 'Game1942' },
+  { file: 'src/games/Syndicate.js', className: 'Syndicate' },
   { file: 'src/games/CircusCharlie.js', className: 'CircusCharlie' },
   { file: 'src/games/BattleCity.js', className: 'BattleCity' },
   { file: 'src/games/KungFuMaster.js', className: 'KungFuMaster' },

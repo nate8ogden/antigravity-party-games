@@ -864,32 +864,30 @@ if [ ! -d "\$RECALBOX_SHARE" ]; then
   echo "⚠️ Warning: \$RECALBOX_SHARE directory structure will be created."
 fi
 
-mkdir -p "\$RECALBOX_SHARE/roms/nes"
-mkdir -p "\$RECALBOX_SHARE/roms/snes"
+mkdir -p "\$RECALBOX_SHARE/roms/tic80"
+mkdir -p "\$RECALBOX_SHARE/roms/ports/Retro Arcade Studio"
 mkdir -p "\$RECALBOX_SHARE/roms/arcade/retro_arcade_data"
 mkdir -p "\$RECALBOX_SHARE/userscripts/manual"
 
-echo "1. Installing NES 6502 cartridges & metadata..."
-cp -f "\$SRC_DIR/roms/nes/"*.nes "\$RECALBOX_SHARE/roms/nes/"
-[ -f "\$SRC_DIR/roms/nes/gamelist.xml" ] && cp -f "\$SRC_DIR/roms/nes/gamelist.xml" "\$RECALBOX_SHARE/roms/nes/"
+echo "1. Installing 53 Authentic 1:1 Custom JS TIC-80 Cartridges (TIC-80 & Ports > My Custom Games)..."
+if [ -d "\$SRC_DIR/roms/tic80" ]; then
+  cp -f "\$SRC_DIR/roms/tic80/"*.tic "\$RECALBOX_SHARE/roms/tic80/"
+  cp -f "\$SRC_DIR/roms/tic80/gamelist.xml" "\$RECALBOX_SHARE/roms/tic80/"
+  cp -f "\$SRC_DIR/roms/tic80/"*.tic "\$RECALBOX_SHARE/roms/ports/Retro Arcade Studio/"
+  cp -f "\$SRC_DIR/roms/tic80/gamelist.xml" "\$RECALBOX_SHARE/roms/ports/Retro Arcade Studio/"
+fi
 
-echo "2. Installing SNES LoROM cartridge & metadata..."
-cp -f "\$SRC_DIR/roms/snes/"*.sfc "\$RECALBOX_SHARE/roms/snes/"
-[ -f "\$SRC_DIR/roms/snes/gamelist.xml" ] && cp -f "\$SRC_DIR/roms/snes/gamelist.xml" "\$RECALBOX_SHARE/roms/snes/"
-
-echo "3. Installing Arcade 50-Game Studio & Cartridges..."
+echo "2. Installing Arcade 50-Game Studio & Cartridges..."
 cp -f "\$SRC_DIR/roms/arcade/"*.rom "\$RECALBOX_SHARE/roms/arcade/"
 cp -f "\$SRC_DIR/roms/arcade/gamelist.xml" "\$RECALBOX_SHARE/roms/arcade/"
 cp -f "\$SRC_DIR/roms/arcade/retro_arcade_data/index.html" "\$RECALBOX_SHARE/roms/arcade/retro_arcade_data/"
 
-echo "4. Installing Recalbox User Scripts..."
+echo "3. Installing Recalbox User Scripts..."
 cp -f "\$SRC_DIR/userscripts/manual/"*.sh "\$RECALBOX_SHARE/userscripts/manual/"
 chmod +x "\$RECALBOX_SHARE/userscripts/manual/"*.sh
 
-echo "5. Updating EmulationStation permissions..."
-chmod 644 "\$RECALBOX_SHARE/roms/nes/"*.nes
-chmod 644 "\$RECALBOX_SHARE/roms/snes/"*.sfc
-chmod 644 "\$RECALBOX_SHARE/roms/arcade/"*.rom
+echo "4. Cleaning macOS resource forks (._*)..."
+find "\$RECALBOX_SHARE/roms/tic80" "\$RECALBOX_SHARE/roms/ports" -name '._*' -delete 2>/dev/null || true
 
 echo ""
 echo "================================================================="

@@ -485,14 +485,14 @@
     <players>1-2</players>
   </game>
   <game>
-    <path>./1942.sh</path>
-    <name>1942 (1984 Capcom Arcade)</name>
-    <desc>Pilot the P-38 Lightning over Pacific battlegrounds, execute 360° Loop rolls, and blast enemy squadrons. Enhancements: Evasive 360° loops, Twin Escort wingmen powerup, squadron bonus stars & Ayako super-bomber battles. Controls: Move(Arrows/WASD) + Twin Machine Guns(Z/Space) + Loop Roll(X)</desc>
+    <path>./Syndicate.sh</path>
+    <name>Syndicate (1993 Bullfrog / EA)</name>
+    <desc>Command 4 trenchcoat cyber-agents with Miniguns, Gauss Cannons & the mind-control Persuadertron. Enhancements: Persuadertron mind-control, 4-agent tactical squad, Gauss cannons & rainy megacity neon. Controls: Tactical Move/Aim + Fire Arsenal(Z/Space) + IPA Overdrive(X) + Switch Weapon(C)</desc>
     <rating>0.95</rating>
     <releasedate>20261019T000000</releasedate>
-    <developer>1984 Capcom Arcade</developer>
+    <developer>1993 Bullfrog / EA</developer>
     <publisher>Antigravity</publisher>
-    <genre>Vertical Air Combat</genre>
+    <genre>Cyberpunk Tactical Squad</genre>
     <players>1-2</players>
   </game>
   <game>
