@@ -20,7 +20,8 @@ assert.ok(SOUNDTRACKS.lobby_synth, 'SOUNDTRACKS.lobby_synth must exist');
 assert.ok(SOUNDTRACKS.lobby_chill, 'SOUNDTRACKS.lobby_chill must exist');
 assert.ok(SOUNDTRACKS.lobby_8bit, 'SOUNDTRACKS.lobby_8bit must exist');
 assert.equal(SOUNDTRACKS.lobby_cello.leadWave, 'cello', 'lobby_cello leadWave must be cello');
-console.log('✅ Cello Suite soundtrack verified in SOUNDTRACKS.');
+assert.ok(!SOUNDTRACKS.lobby_cello.title.includes('Bach Cello Suite'), 'Bach Cello Suite replaced with lyrical cello piece');
+console.log('✅ Lyrical Cello Elegy soundtrack verified in SOUNDTRACKS.');
 
 // Verify audio theme cycling
 audio.setLobbySoundTheme('cello');
@@ -73,7 +74,9 @@ const mockCtx = {
   moveTo() {},
   lineTo() {},
   quadraticCurveTo() {},
+  bezierCurveTo() {},
   arc() {},
+  ellipse() {},
   closePath() {},
   fill() {},
   stroke() {},
@@ -90,8 +93,10 @@ const input = new MockInput();
 const menu = new MainMenu(renderer, input, audio, () => {});
 
 assert.ok(Array.isArray(LOBBY_BACKGROUND_THEMES), 'LOBBY_BACKGROUND_THEMES must be exported array');
-assert.equal(LOBBY_BACKGROUND_THEMES.length, 6, 'Must have 6 background themes');
-console.log('✅ 6 Lobby Background Themes verified.');
+assert.equal(LOBBY_BACKGROUND_THEMES.length, 8, 'Must have 8 background themes');
+assert.ok(LOBBY_BACKGROUND_THEMES.some((t) => t.id === 'cello'), 'Cello chamber hall background must exist');
+assert.ok(LOBBY_BACKGROUND_THEMES.some((t) => t.id === 'piano'), 'Grand piano background must exist');
+console.log('✅ 8 Lobby Background Themes (including Cello & Piano) verified.');
 
 // Test background theme cycling
 const initialBg = menu.backgroundTheme;
@@ -99,7 +104,7 @@ menu.cycleBackgroundTheme();
 assert.notEqual(menu.backgroundTheme, initialBg, 'cycleBackgroundTheme must change background');
 console.log(`✅ Background cycled to ${menu.backgroundTheme}.`);
 
-// Test rendering each of the 6 background themes without errors
+// Test rendering each of the 8 background themes without errors
 for (const bg of LOBBY_BACKGROUND_THEMES) {
   menu.setBackgroundTheme(bg.id);
   assert.equal(menu.backgroundTheme, bg.id);
@@ -107,7 +112,7 @@ for (const bg of LOBBY_BACKGROUND_THEMES) {
     menu.render(mockCtx);
   }, `Rendering background theme '${bg.id}' must execute cleanly`);
 }
-console.log('✅ All 6 background themes render cleanly on Canvas.');
+console.log('✅ All 8 background themes render cleanly on Canvas.');
 
 // Test Hotkeys: KeyB for background, KeyM for sound
 input.keysJustPressed.add('KeyB');
